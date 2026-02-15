@@ -1,6 +1,6 @@
 name = "cre"
 version = "0.1.0"
-description = "CRE pack skeleton for Milestone 11."
+description = "Commercial Real Estate pack v0.1 (deterministic lowering)."
 
 [entrypoints]
 aliases = "aliases.toml"

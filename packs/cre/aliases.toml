@@ -1,2 +1,6 @@
 [aliases]
-# Milestone 11: populate CRE aliases.
+"cre.Lease" = "cre_lease"
+"cre.ExitCap" = "cre_exit_cap"
+"cre.Construction" = "cre_construction_stub"
+"cre.OperationsRevenue" = "cre_ops_revenue"
+"cre.OperationsExpense" = "cre_ops_expense"
