@@ -8,47 +8,43 @@ This file is the **current work queue** for agentic development. If you are an a
 
 ## Current sprint
 
-### Task 6 — IR emission skeleton (Milestone 6)
+### Task 7 — Results emission + deterministic engine harness (Milestone 7)
 
-**Goal:** Emit deterministic IR JSON for minimal valid models (enough to introduce the first valid fixtures).
+**Goal:** Execute a minimal valuation pipeline on emitted IR and produce deterministic results JSON.
 
 **Deliverables**
 
-* Canonical IR emitter in `crates/cfdl-compile` matching `@docs/CFDL_v0_1_IR.schema.json`
-* Deterministic ID generation
-* Provenance propagation
-* Introduce the first valid fixture + gold IR:
+* Implement a deterministic engine harness crate (recommended: `crates/cfdl-engine`) that:
 
-  * `fixtures/valid/minimal_model/` + `gold/ir/minimal_model.json`
+  * loads IR (in-memory struct or JSON)
+  * executes deterministic cash-flow aggregation + discounting
+  * produces Results JSON matching `@docs/CFDL_v0_1_Results.schema.json`
+* Minimal deterministic outputs:
+
+  * per-stream cash flow series (as emitted/normalized)
+  * entity and model totals
+  * NPV using a flat discount rate (configurable)
+  * IRR if present in results schema (optional if not yet defined)
+* Create a `gold/results/` directory and add:
+
+  * `gold/results/minimal_model.results.json`
+
+**Recommended tooling updates**
+
+* Extend `tools/golden-runner` to verify results for valid fixtures:
+
+  * run `cfdl compile ... --out <tmp_ir>`
+  * run a deterministic results command (recommended CLI subcommand `run`) to emit `<tmp_results>`
+  * compare against `gold/results/<fixture>.results.json`
 
 **Acceptance criteria**
 
 * `make fmt && make lint && make test && make gold` all pass
-* `cfdl compile ...` writes an IR JSON file that matches the IR schema
-* IR output is deterministic and canonicalizable (key order stable in canonical form)
+* Results output is deterministic across repeated runs
 
 ---
 
 ## Next up
-
-### Task 7 — Results emission + deterministic engine harness (Milestone 7)
-
-**Goal:** Execute the minimal valuation pipeline on emitted IR and produce deterministic results JSON.
-
-**Deliverables**
-
-* Results emitter matching `@docs/CFDL_v0_1_Results.schema.json`
-* Deterministic “engine harness” interface (inputs: IR + run config; outputs: results)
-* Minimal deterministic engine path:
-
-  * discounting / NPV
-  * IRR (if defined in results spec)
-  * basic aggregations (entity/stream totals)
-* Golden results for at least:
-
-  * `fixtures/valid/minimal_model/` + `gold/results/minimal_model.results.json`
-
----
 
 ### Task 8 — Scenarios + Monte Carlo (Milestone 8)
 
@@ -56,20 +52,25 @@ This file is the **current work queue** for agentic development. If you are an a
 
 **Deliverables**
 
-* Run config schema support (scenario sets, parameter overrides, seeds)
-* Monte Carlo runner with reproducible seeding and trial tracking
+* Run config supports:
+
+  * scenario sets (parameter override sets)
+  * Monte Carlo (trial count, fixed seed)
+* Monte Carlo runner produces reproducible trial outputs
 * Basic statistics in results:
 
-  * distributions of NPV/IRR (if supported)
-  * mean/median/stddev
+  * mean/median/stddev for NPV (and IRR if supported)
   * probability metrics (e.g., P(NPV<0))
 * Golden results for at least:
 
-  * scenario comparison fixture
-  * monte carlo fixture (fixed seed)
+  * `fixtures/valid/scenario_compare/` + `gold/results/scenario_compare.results.json`
+  * `fixtures/valid/monte_carlo_smoke/` + `gold/results/monte_carlo_smoke.results.json`
+
+---
 
 ## Notes / decisions
 
 * Keep the CLI thin.
 * Do not add correlation (language or IR).
-* Prefer adding **invalid fixtures first**; add valid fixtures once IR emission exists.
+* Prefer adding invalid fixtures first; add valid fixtures only when a milestone requires them.
+* Golden tests are authoritative for behavior.

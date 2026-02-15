@@ -66,6 +66,14 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         &times,
         anchor,
     );
+    if symbols.entities.is_empty() {
+        diagnostics.push(ValidationDiagnostic {
+            code: "E1109_MISSING_ENTITY",
+            message: "Model must declare at least one entity.".to_string(),
+            file: default_file.clone(),
+            span: default_span,
+        });
+    }
 
     let Some((timeline_file, timeline)) = choose_timeline(output) else {
         sort_diagnostics(&mut diagnostics);

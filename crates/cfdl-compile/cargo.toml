@@ -8,6 +8,7 @@ publish = false
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+sha2 = { workspace = true }
 cfdl-lexer = { path = "../cfdl-lexer" }
 cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }

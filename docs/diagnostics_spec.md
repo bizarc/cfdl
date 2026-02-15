@@ -169,6 +169,7 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1106_MULTIPLE_TIME`
 - `E1107_MULTIPLE_USE_PACK`
 - `E1108_USE_PACK_NOT_IN_MODEL_FILE`
+- `E1109_MISSING_ENTITY`
 
 ### 7.4 Symbols and references (E13xx)
 - `E1001_DUPLICATE_ENTITY`
@@ -220,6 +221,7 @@ Warnings:
 ### 7.9 Lowering/emission (E5xxx)
 - `E5001_ID_GENERATION_FAILED`
 - `E5002_IR_SCHEMA_VALIDATION_FAILED`
+- `E5003_IR_EMIT_FAILED`
 
 ---
 

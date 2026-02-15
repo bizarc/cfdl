@@ -1,12 +1,12 @@
 [
   {
-    "code": "E9999_NOT_IMPLEMENTED",
+    "code": "E5002_IR_SCHEMA_VALIDATION_FAILED",
     "severity": "error",
-    "message": "CFDL compiler stage 'compile' is not implemented yet.",
+    "message": "IR validation failed: at least one entity is required.",
     "file": "model.cfdl",
     "span": null,
-    "path": null,
-    "hint": "Implement lexer/parser/resolver/validate/compile per @docs/compiler_spec_v0_1.md",
+    "path": "entities",
+    "hint": "Add at least one `entity` declaration to the model.",
     "notes": []
   }
 ]
