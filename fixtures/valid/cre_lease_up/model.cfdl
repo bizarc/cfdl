@@ -1,0 +1,10 @@
+version 0.1
+model "cre-lease-up"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity real_estate property
+
+contract cre_lease {
+  term 2026-07..2027-12
+}

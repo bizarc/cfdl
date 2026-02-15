@@ -1,0 +1,118 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-lease-up",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "symbol": "real_estate.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "7d5e9fed0895133712929867be781d99",
+      "name": "cre_lease",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "a13b643c1ab5c2a0c929a40620193692",
+      "name": "cre.lease.base_rent",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "25000 * clamp((time.t - 6 + 1) / 18, 0, 1)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_base_rent_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "metrics": [],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "af3556668ef263107cd65dba12832582",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

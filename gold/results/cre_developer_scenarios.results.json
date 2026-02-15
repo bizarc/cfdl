@@ -1,6 +1,6 @@
 {
   "results_version": "0.1",
-  "model_hash": "df63f09ba6e8798d31899ee0796421374d5b2301a5db126feadd3af7d09ab217",
+  "model_hash": "a0232d3682fa70573cf8eadbf693363a3a5a16937d9934a776670f09415ea477",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -1829,8 +1829,27 @@
     }
   },
   "scenarios": {
-    "status": "not_run",
-    "summaries": []
+    "status": "ok",
+    "summaries": [
+      {
+        "name": "base",
+        "metrics": {
+          "model.npv": {
+            "amount": -37294.635542,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "name": "stress",
+        "metrics": {
+          "model.npv": {
+            "amount": -54608.550922,
+            "currency": "USD"
+          }
+        }
+      }
+    ]
   },
   "monte_carlo": {
     "status": "not_run",

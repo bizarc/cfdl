@@ -46,9 +46,22 @@ Required:
 Optional:
 - `growth` (Decimal)
 - `free_rent_months` (Int)
+- `lease_up.start_period` (Int; default `0`)
+- `lease_up.months` (Int; required when lease-up terms are supplied)
+- `lease_up.start_occupancy` (Decimal; default `0.0`)
+- `lease_up.end_occupancy` (Decimal; default `1.0`)
 
 Lowering output:
 - stream `cre.lease.base_rent` inflow to `real_estate.property`
+
+Current deterministic implementation uses a built-in linear occupancy ramp for
+`cre_lease`:
+
+- occupancy(t) = `clamp((t - 6 + 1) / 18, 0, 1)`
+- rent(t) = `base_rent * occupancy(t)` (with `base_rent = 25000` in v0.1 rules)
+
+The authored `lease_up.*` terms are documented/stable for forward compatibility.
+Pack-level term parsing/validation hooks are not yet available in the host.
 
 ### `cre_exit_cap`
 
@@ -61,6 +74,25 @@ Lowering output:
 - one terminal sale inflow stream `cre.exit.sale` at the configured exit date
 - simple cap-rate shape (`NOI / exit_cap`) in rule form
 
+## Scenario testing (run config overrides)
+
+The engine supports deterministic scenario overrides through run config files.
+CRE fixtures and examples include:
+
+- `run.base.json`
+- `run.stress.json`
+- `run.json` (single run containing multiple named scenarios)
+
+Scenario knobs currently demonstrated:
+
+- `stream.cre.lease.base_rent.amount`
+- `stream.cre.ops.expense.amount`
+- `stream.cre.exit.sale.amount`
+
+Example:
+
+`./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.results.json --config fixtures/valid/cre_developer_scenarios/run.json --packs packs`
+
 ## Provenance
 
 All streams lowered by this pack include:
@@ -68,6 +100,13 @@ All streams lowered by this pack include:
 - `generated_by.pack.name = "cre"`
 - `generated_by.pack.version = "0.1.0"`
 - `generated_by.rule_id = <rule id>`
+
+Determinism guarantees for this pack:
+
+- deterministic file-based pack loading
+- deterministic lowering rule application order
+- deterministic IDs from compiler seed + stable keys
+- deterministic results under identical IR + run config inputs
 
 ## Validations status
 

@@ -17,7 +17,10 @@ stream_name = "cre.lease.base_rent"
 owner_entity = "real_estate.property"
 direction = "inflow"
 currency = "USD"
-amount_cel = "25000"
+# Lease-up occupancy ramp (default implementation):
+# occupancy(t) = clamp((t - 6 + 1) / 18, 0, 1)
+# rent(t) = base_rent * occupancy(t)
+amount_cel = "25000 * clamp((time.t - 6 + 1) / 18, 0, 1)"
 schedule_kind = "every"
 schedule_from = "2026-07"
 schedule_to = "2031-12"

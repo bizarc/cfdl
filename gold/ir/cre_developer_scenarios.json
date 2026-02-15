@@ -1,7 +1,7 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "cre-developer-smoke",
+    "name": "cre-developer-scenarios",
     "currency": "USD"
   },
   "time": {

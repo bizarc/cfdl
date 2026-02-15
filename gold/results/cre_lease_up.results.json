@@ -1,0 +1,254 @@
+{
+  "results_version": "0.1",
+  "model_hash": "be3f64dbffecaf98148ef969c56d438335e2409aa761923f4c127d3ae5b786e4",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.1.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.real_estate.property.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 49881.499689,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      },
+      "run.discount_rate": 0.1,
+      "stream.cre.lease.base_rent.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1388.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 2777.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 5555.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 6944.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 8333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 9722.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 11111.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 12500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 13888.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 15277.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 16666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 18055.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 19444.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 20833.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 22222.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 23611.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 25000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.lease.base_rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1388.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 2777.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 5555.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 6944.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 8333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 9722.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 11111.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 12500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 13888.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 15277.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 16666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 18055.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 19444.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 20833.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 22222.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 23611.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 25000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

@@ -1,0 +1,26 @@
+version 0.1
+model "cre-developer-scenarios"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+entity real_estate property
+
+contract cre_construction_stub {
+  term 2026-01..2026-06
+}
+
+contract cre_lease {
+  term 2026-07..2031-12
+}
+
+contract cre_ops_revenue {
+  term 2028-01..2031-12
+}
+
+contract cre_ops_expense {
+  term 2028-01..2031-12
+}
+
+contract cre_exit_cap {
+  term 2031-12..2031-12
+}
