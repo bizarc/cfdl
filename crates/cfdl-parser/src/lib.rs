@@ -7,7 +7,7 @@
 //! - parser diagnostics: E0001 + E0004 with file/span
 
 pub use cfdl_lexer::Span;
-use cfdl_lexer::{Keyword, Token, TokenKind};
+use cfdl_lexer::{Keyword, Punct, Token, TokenKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompilationUnit {
@@ -77,12 +77,16 @@ impl EntityStmt {
 pub struct StreamStmt {
     pub name: String,
     pub attached_entity: String,
+    pub schedule: Option<ScheduleSpec>,
+    pub amount: bool,
     pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PhaseStmt {
     pub name: String,
+    pub from: String,
+    pub to: String,
     pub span: Span,
 }
 
@@ -95,7 +99,26 @@ pub struct AssumeStmt {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContractStmt {
     pub name: String,
+    pub has_term: bool,
+    pub has_effects: bool,
     pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScheduleSpec {
+    pub kind: ScheduleKind,
+    pub from: Option<String>,
+    pub to: Option<String>,
+    pub day_of_month: Option<i32>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ScheduleKind {
+    OnDate,
+    Every,
+    PhaseEnter { phase: String },
+    EveryPhase { phase: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -197,7 +220,9 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Model) => self.parse_model_stmt().map(Stmt::Model),
             TokenKind::Keyword(Keyword::Import) => self.parse_import_stmt().map(Stmt::Import),
             TokenKind::Keyword(Keyword::Time) => self.parse_time_stmt().map(Stmt::Time),
+            TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
+            TokenKind::Keyword(Keyword::Contract) => self.parse_contract_stmt().map(Stmt::Contract),
             TokenKind::Keyword(Keyword::Stream) => self.parse_stream_stmt().map(Stmt::Stream),
             TokenKind::Eof => None,
             _ => {
@@ -377,6 +402,86 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_phase_stmt(&mut self) -> Option<PhaseStmt> {
+        let start = self.expect_keyword(Keyword::Phase, "'phase'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected token <identifier> after 'phase'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _from_kw = self.expect_keyword(Keyword::From, "'from'")?;
+        let from_tok = self.bump();
+        let from = match from_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => {
+                self.push_expected(
+                    from_tok.span,
+                    "Expected token <date> after 'from'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _to_kw = self.expect_keyword(Keyword::To, "'to'")?;
+        let to_tok = self.bump();
+        let to = match to_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => {
+                self.push_expected(to_tok.span, "Expected token <date> after 'to'.".to_string());
+                return None;
+            }
+        };
+
+        Some(PhaseStmt {
+            name,
+            from,
+            to,
+            span: merge_spans(start.span, to_tok.span),
+        })
+    }
+
+    fn parse_contract_stmt(&mut self) -> Option<ContractStmt> {
+        let start = self.expect_keyword(Keyword::Contract, "'contract'")?;
+        let mut name: Option<String> = None;
+        let mut has_term = false;
+        let mut has_effects = false;
+        let mut end_span = start.span;
+        let mut depth = 0usize;
+
+        while !self.is_eof() {
+            if depth == 0 && is_statement_start(self.peek()) {
+                break;
+            }
+
+            let tok = self.bump();
+            end_span = tok.span;
+            match tok.kind {
+                TokenKind::Keyword(Keyword::Term) => has_term = true,
+                TokenKind::Keyword(Keyword::Effects) => has_effects = true,
+                TokenKind::Punct(Punct::LBrace) => depth += 1,
+                TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
+                TokenKind::Ident(ref ident) => {
+                    if name.is_none() {
+                        name = Some(ident.clone());
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Some(ContractStmt {
+            name: name.unwrap_or_else(|| "contract".to_string()),
+            has_term,
+            has_effects,
+            span: merge_spans(start.span, end_span),
+        })
+    }
+
     fn parse_stream_stmt(&mut self) -> Option<StreamStmt> {
         let start = self.expect_keyword(Keyword::Stream, "'stream'")?;
         let name_tok = self.bump();
@@ -406,11 +511,234 @@ impl<'a> Parser<'a> {
             }
         };
 
+        let mut schedule = None;
+        let mut amount = false;
+        let mut end_span = entity_ref_tok.span;
+
+        if matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
+            let (parsed_schedule, parsed_amount, parsed_end_span) = self.parse_stream_block();
+            schedule = parsed_schedule;
+            amount = parsed_amount;
+            end_span = parsed_end_span;
+        }
+
         Some(StreamStmt {
             name,
             attached_entity,
-            span: merge_spans(start.span, entity_ref_tok.span),
+            schedule,
+            amount,
+            span: merge_spans(start.span, end_span),
         })
+    }
+
+    fn parse_stream_block(&mut self) -> (Option<ScheduleSpec>, bool, Span) {
+        let lbrace = self.bump();
+        let mut schedule = None;
+        let mut amount = false;
+        let mut end_span = lbrace.span;
+
+        while !self.is_eof() {
+            let tok = self.peek().clone();
+            match tok.kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end_span = self.bump().span;
+                    break;
+                }
+                TokenKind::Keyword(Keyword::Schedule) => {
+                    let _ = self.bump();
+                    let parsed = self.parse_schedule_expr();
+                    if let Some(spec) = parsed {
+                        end_span = spec.span;
+                        schedule = Some(spec);
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "amount" => {
+                    amount = true;
+                    end_span = self.consume_stream_item();
+                }
+                TokenKind::Keyword(Keyword::Active) => {
+                    end_span = self.consume_stream_item();
+                }
+                _ => {
+                    end_span = self.bump().span;
+                }
+            }
+        }
+
+        (schedule, amount, end_span)
+    }
+
+    fn consume_stream_item(&mut self) -> Span {
+        let mut end_span = self.bump().span;
+        while !self.is_eof() {
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::RBrace))
+                || matches!(self.peek().kind, TokenKind::Keyword(Keyword::Schedule))
+                || matches!(self.peek().kind, TokenKind::Keyword(Keyword::Active))
+                || matches!(self.peek().kind, TokenKind::Ident(ref ident) if ident == "amount")
+            {
+                break;
+            }
+            end_span = self.bump().span;
+        }
+        end_span
+    }
+
+    fn parse_schedule_expr(&mut self) -> Option<ScheduleSpec> {
+        let start = self.current_span();
+        match self.peek().kind {
+            TokenKind::Keyword(Keyword::On) => {
+                let _ = self.bump();
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::PhaseEnter)) {
+                    let _ = self.bump();
+                    let _ = self.expect_punct(Punct::LParen, "'('")?;
+                    let phase_tok = self.bump();
+                    let phase = match phase_tok.kind {
+                        TokenKind::String(ref s) => s.clone(),
+                        _ => {
+                            self.push_expected(
+                                phase_tok.span,
+                                "Expected token <string> for phase name.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let end_tok = self.expect_punct(Punct::RParen, "')'")?;
+                    return Some(ScheduleSpec {
+                        kind: ScheduleKind::PhaseEnter { phase },
+                        from: None,
+                        to: None,
+                        day_of_month: None,
+                        span: merge_spans(start, end_tok.span),
+                    });
+                }
+
+                let date_tok = self.bump();
+                let date = match date_tok.kind {
+                    TokenKind::Date(ref d) => d.clone(),
+                    _ => {
+                        self.push_expected(
+                            date_tok.span,
+                            "Expected token <date> after 'schedule on'.".to_string(),
+                        );
+                        return None;
+                    }
+                };
+                Some(ScheduleSpec {
+                    kind: ScheduleKind::OnDate,
+                    from: Some(date.clone()),
+                    to: Some(date),
+                    day_of_month: None,
+                    span: merge_spans(start, date_tok.span),
+                })
+            }
+            TokenKind::Keyword(Keyword::Every) => {
+                let _ = self.bump();
+                if matches!(
+                    self.peek().kind,
+                    TokenKind::Keyword(Keyword::Daily)
+                        | TokenKind::Keyword(Keyword::Monthly)
+                        | TokenKind::Keyword(Keyword::Quarterly)
+                        | TokenKind::Keyword(Keyword::Annual)
+                ) {
+                    let _ = self.bump();
+                }
+
+                let mut day_of_month = None;
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::On)) {
+                    let _ = self.bump();
+                    if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Day)) {
+                        let _ = self.bump();
+                        let day_tok = self.bump();
+                        match day_tok.kind {
+                            TokenKind::Number(ref n) => {
+                                if let Ok(value) = n.parse::<i32>() {
+                                    day_of_month = Some(value);
+                                }
+                            }
+                            _ => {
+                                self.push_expected(
+                                    day_tok.span,
+                                    "Expected token <int> after 'on day'.".to_string(),
+                                );
+                                return None;
+                            }
+                        }
+                    }
+                }
+
+                let _from_kw = self.expect_keyword(Keyword::From, "'from'")?;
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::PhaseStart)) {
+                    let _ = self.bump();
+                    let _ = self.expect_punct(Punct::LParen, "'('")?;
+                    let phase_tok = self.bump();
+                    let phase = match phase_tok.kind {
+                        TokenKind::String(ref s) => s.clone(),
+                        _ => {
+                            self.push_expected(
+                                phase_tok.span,
+                                "Expected token <string> for phase name.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let _ = self.expect_punct(Punct::RParen, "')'")?;
+                    let _to_kw = self.expect_keyword(Keyword::To, "'to'")?;
+                    let _phase_end = self.expect_keyword(Keyword::PhaseEnd, "'phase_end'")?;
+                    let _ = self.expect_punct(Punct::LParen, "'('")?;
+                    let phase_end_tok = self.bump();
+                    match phase_end_tok.kind {
+                        TokenKind::String(_) => {}
+                        _ => {
+                            self.push_expected(
+                                phase_end_tok.span,
+                                "Expected token <string> for phase name.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                    let end_tok = self.expect_punct(Punct::RParen, "')'")?;
+                    return Some(ScheduleSpec {
+                        kind: ScheduleKind::EveryPhase { phase },
+                        from: None,
+                        to: None,
+                        day_of_month,
+                        span: merge_spans(start, end_tok.span),
+                    });
+                }
+
+                let from_tok = self.bump();
+                let from = match from_tok.kind {
+                    TokenKind::Date(ref d) => d.clone(),
+                    _ => {
+                        self.push_expected(
+                            from_tok.span,
+                            "Expected token <date> after 'from'.".to_string(),
+                        );
+                        return None;
+                    }
+                };
+                let _to_kw = self.expect_keyword(Keyword::To, "'to'")?;
+                let to_tok = self.bump();
+                let to = match to_tok.kind {
+                    TokenKind::Date(ref d) => d.clone(),
+                    _ => {
+                        self.push_expected(
+                            to_tok.span,
+                            "Expected token <date> after 'to'.".to_string(),
+                        );
+                        return None;
+                    }
+                };
+                Some(ScheduleSpec {
+                    kind: ScheduleKind::Every,
+                    from: Some(from),
+                    to: Some(to),
+                    day_of_month,
+                    span: merge_spans(start, to_tok.span),
+                })
+            }
+            _ => None,
+        }
     }
 
     fn synchronize_to_next_statement(&mut self) {
@@ -420,7 +748,9 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Model)
                 | TokenKind::Keyword(Keyword::Import)
                 | TokenKind::Keyword(Keyword::Time)
+                | TokenKind::Keyword(Keyword::Phase)
                 | TokenKind::Keyword(Keyword::Entity)
+                | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {
                     let _ = self.bump();
@@ -433,6 +763,23 @@ impl<'a> Parser<'a> {
         let tok = self.bump();
         match tok.kind {
             TokenKind::Keyword(k) if k == expected => Some(tok),
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    format!(
+                        "Expected token {expected_label}, found {}.",
+                        token_label(&tok)
+                    ),
+                );
+                None
+            }
+        }
+    }
+
+    fn expect_punct(&mut self, expected: Punct, expected_label: &str) -> Option<Token> {
+        let tok = self.bump();
+        match tok.kind {
+            TokenKind::Punct(p) if p == expected => Some(tok),
             _ => {
                 self.push_expected(
                     tok.span,
@@ -615,6 +962,20 @@ fn keyword_text(keyword: Keyword) -> &'static str {
     }
 }
 
+fn is_statement_start(token: &Token) -> bool {
+    matches!(
+        token.kind,
+        TokenKind::Keyword(Keyword::Version)
+            | TokenKind::Keyword(Keyword::Model)
+            | TokenKind::Keyword(Keyword::Import)
+            | TokenKind::Keyword(Keyword::Time)
+            | TokenKind::Keyword(Keyword::Phase)
+            | TokenKind::Keyword(Keyword::Entity)
+            | TokenKind::Keyword(Keyword::Contract)
+            | TokenKind::Keyword(Keyword::Stream)
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -642,7 +1003,7 @@ stream principal on entity legal.borrower
     }
 
     #[test]
-    fn reports_unexpected_token() {
+    fn parses_phase_statement() {
         let src = r#"version 0.1
 model "demo"
 phase p from 2026-01 to 2026-02
@@ -650,9 +1011,10 @@ phase p from 2026-01 to 2026-02
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
         let result = parse("model.cfdl", &tokens);
-        assert_eq!(result.diagnostics.len(), 1);
-        assert_eq!(result.diagnostics[0].code, "E0001_UNEXPECTED_TOKEN");
-        assert_eq!(result.diagnostics[0].file, "model.cfdl");
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        assert_eq!(ast.statements.len(), 3);
+        assert!(matches!(ast.statements[2], Stmt::Phase(_)));
     }
 
     #[test]

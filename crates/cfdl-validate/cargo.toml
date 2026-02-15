@@ -7,4 +7,5 @@ publish = false
 [dependencies]
 thiserror = { workspace = true }
 
+cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }

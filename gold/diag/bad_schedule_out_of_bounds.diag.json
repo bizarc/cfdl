@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E2103_SCHEDULE_OUT_OF_BOUNDS",
+    "severity": "error",
+    "message": "Stream 'principal' schedule is outside model timeline (timeline: 2026-01-01 to 2026-12-01).",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 7,
+      "start_col": 12,
+      "end_line": 7,
+      "end_col": 58
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

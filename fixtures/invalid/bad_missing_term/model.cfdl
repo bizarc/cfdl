@@ -1,0 +1,7 @@
+version 0.1
+model "bad-missing-term"
+time calendar monthly from 2026-01 for 12
+
+contract loan_a {
+  effects {}
+}

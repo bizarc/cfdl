@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1103_MISSING_TIME",
+    "severity": "error",
+    "message": "Model is missing required 'time' statement.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 1,
+      "start_col": 1,
+      "end_line": 1,
+      "end_col": 11
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]
