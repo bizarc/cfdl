@@ -8,6 +8,7 @@ publish = false
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+cfdl-lexer = { path = "../cfdl-lexer" }
 
 # These crates will be implemented later; keep commented until they exist.
 # cfdl-lexer = { path = "../cfdl-lexer" }

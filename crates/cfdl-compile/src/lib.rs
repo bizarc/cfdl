@@ -24,7 +24,32 @@ pub struct Span {
 /// Compile a model directory to an IR JSON file.
 ///
 /// v0.1 scaffolding: returns an explicit diagnostic until the compiler is implemented.
-pub fn compile_to_file(_model_root: &Path, _out_path: &Path) -> Result<(), Vec<Diagnostic>> {
+pub fn compile_to_file(model_root: &Path, _out_path: &Path) -> Result<(), Vec<Diagnostic>> {
+    let model_file = model_root.join("model.cfdl");
+    if let Ok(source) = std::fs::read_to_string(&model_file) {
+        let (_tokens, lex_diags) = cfdl_lexer::lex(&source);
+        if !lex_diags.is_empty() {
+            let diagnostics = lex_diags
+                .into_iter()
+                .map(|diag| Diagnostic {
+                    code: diag.code.to_string(),
+                    severity: "error".to_string(),
+                    message: diag.message,
+                    file: Some(PathBuf::from("model.cfdl").to_string_lossy().to_string()),
+                    span: Some(Span {
+                        start_line: diag.span.start_line,
+                        start_col: diag.span.start_col,
+                        end_line: diag.span.end_line,
+                        end_col: diag.span.end_col,
+                    }),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                })
+                .collect();
+            return Err(diagnostics);
+        }
+    }
     Err(vec![not_implemented_diag("compile")])
 }
 
@@ -43,7 +68,10 @@ fn not_implemented_diag(stage: &str) -> Diagnostic {
         file: Some(PathBuf::from("model.cfdl").to_string_lossy().to_string()),
         span: None,
         path: None,
-        hint: Some("Implement lexer/parser/resolver/validate/compile per @docs/compiler_spec_v0_1.md".to_string()),
+        hint: Some(
+            "Implement lexer/parser/resolver/validate/compile per @docs/compiler_spec_v0_1.md"
+                .to_string(),
+        ),
         notes: vec![],
     }
 }

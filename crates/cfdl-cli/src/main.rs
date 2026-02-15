@@ -32,21 +32,23 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Compile { model_root, out } => match cfdl_compile::compile_to_file(&model_root, &out) {
-            Ok(()) => Ok(()),
-            Err(diags) => {
-                if cli.json {
-                    // ONLY JSON to stdout
-                    print!("{}", serde_json::to_string_pretty(&diags)?);
-                } else {
-                    eprintln!("Compilation failed with {} diagnostic(s).", diags.len());
-                    for d in &diags {
-                        eprintln!("{}[{}] {}", d.severity.to_uppercase(), d.code, d.message);
+        Command::Compile { model_root, out } => {
+            match cfdl_compile::compile_to_file(&model_root, &out) {
+                Ok(()) => Ok(()),
+                Err(diags) => {
+                    if cli.json {
+                        // ONLY JSON to stdout
+                        print!("{}", serde_json::to_string_pretty(&diags)?);
+                    } else {
+                        eprintln!("Compilation failed with {} diagnostic(s).", diags.len());
+                        for d in &diags {
+                            eprintln!("{}[{}] {}", d.severity.to_uppercase(), d.code, d.message);
+                        }
                     }
+                    std::process::exit(1);
                 }
-                std::process::exit(1);
             }
-        },
+        }
         Command::Validate { model_root } => match cfdl_compile::validate_only(&model_root) {
             Ok(()) => Ok(()),
             Err(diags) => {
