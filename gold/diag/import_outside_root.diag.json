@@ -1,14 +1,14 @@
 [
   {
-    "code": "E0001_UNEXPECTED_TOKEN",
+    "code": "E1203_IMPORT_OUTSIDE_MODEL_ROOT",
     "severity": "error",
-    "message": "Unexpected token keyword 'phase'.",
+    "message": "Import path '../../outside_shared/outside.cfdl' escapes the model root.",
     "file": "model.cfdl",
     "span": {
       "start_line": 4,
       "start_col": 1,
       "end_line": 4,
-      "end_col": 5
+      "end_col": 42
     },
     "path": null,
     "hint": null,

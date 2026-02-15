@@ -73,6 +73,36 @@ pub fn compile_to_file(model_root: &Path, _out_path: &Path) -> Result<(), Vec<Di
                 .collect();
             return Err(diagnostics);
         }
+
+        let root_ast = parse_result
+            .ast
+            .expect("parser returns AST when diagnostics are empty");
+        let root_module = cfdl_resolver::RootModule {
+            relative_path: "model.cfdl".to_string(),
+            full_path: std::fs::canonicalize(&model_file).unwrap_or(model_file),
+            ast: root_ast,
+        };
+        if let Err(resolve_diags) = cfdl_resolver::resolve_imports(model_root, root_module) {
+            let diagnostics = resolve_diags
+                .into_iter()
+                .map(|diag| Diagnostic {
+                    code: diag.code,
+                    severity: "error".to_string(),
+                    message: diag.message,
+                    file: Some(diag.file),
+                    span: Some(Span {
+                        start_line: diag.span.start_line,
+                        start_col: diag.span.start_col,
+                        end_line: diag.span.end_line,
+                        end_col: diag.span.end_col,
+                    }),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                })
+                .collect();
+            return Err(diagnostics);
+        }
     }
     Err(vec![not_implemented_diag("compile")])
 }

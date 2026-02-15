@@ -1,2 +1,425 @@
-//! Stub crate for CFDL resolver (imports, symbols).
-//! Implementation will follow @docs/compiler_spec_v0_1.md.
+//! CFDL import resolver and deterministic module graph ordering.
+
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::fs;
+use std::path::{Component, Path, PathBuf};
+
+use cfdl_parser::{parse, CompilationUnit, Span, Stmt};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolveDiagnostic {
+    pub code: String,
+    pub message: String,
+    pub file: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolveOutput {
+    pub compilation_unit: CompilationUnit,
+    pub module_order: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RootModule {
+    pub relative_path: String,
+    pub full_path: PathBuf,
+    pub ast: CompilationUnit,
+}
+
+#[derive(Debug, Clone)]
+struct ModuleEntry {
+    full_path: PathBuf,
+    ast: CompilationUnit,
+}
+
+#[derive(Debug, Clone)]
+struct ImportEdge {
+    to_rel: String,
+    span: Span,
+}
+
+pub fn resolve_imports(
+    model_root: &Path,
+    root_module: RootModule,
+) -> Result<ResolveOutput, Vec<ResolveDiagnostic>> {
+    let root_canon = match fs::canonicalize(model_root) {
+        Ok(path) => path,
+        Err(_) => {
+            return Err(vec![ResolveDiagnostic {
+                code: "E1202_IMPORT_NOT_FOUND".to_string(),
+                message: "Model root does not exist.".to_string(),
+                file: root_module.relative_path.clone(),
+                span: root_module.ast.span,
+            }]);
+        }
+    };
+
+    let mut modules: BTreeMap<String, ModuleEntry> = BTreeMap::new();
+    let mut imports: BTreeMap<String, Vec<ImportEdge>> = BTreeMap::new();
+    let mut diagnostics = Vec::new();
+    let mut queue = VecDeque::new();
+
+    let root_rel = root_module.relative_path.clone();
+    modules.insert(
+        root_rel.clone(),
+        ModuleEntry {
+            full_path: root_module.full_path,
+            ast: root_module.ast,
+        },
+    );
+    queue.push_back(root_rel.clone());
+
+    while let Some(current_rel) = queue.pop_front() {
+        let current = modules
+            .get(&current_rel)
+            .expect("queued module exists")
+            .clone();
+        let current_imports = extract_imports(&current.ast);
+        let mut resolved_edges = Vec::new();
+
+        for import in current_imports {
+            match resolve_import_target(
+                &root_canon,
+                &current.full_path,
+                &import.path,
+                &current_rel,
+                import.span,
+            ) {
+                Ok(target_rel) => {
+                    resolved_edges.push(ImportEdge {
+                        to_rel: target_rel.clone(),
+                        span: import.span,
+                    });
+                    if !modules.contains_key(&target_rel) {
+                        match load_module(&root_canon, &target_rel) {
+                            Ok(module) => {
+                                modules.insert(target_rel.clone(), module);
+                                queue.push_back(target_rel);
+                            }
+                            Err(errs) => diagnostics.extend(errs),
+                        }
+                    }
+                }
+                Err(diag) => diagnostics.push(diag),
+            }
+        }
+
+        resolved_edges.sort_by(|a, b| a.to_rel.cmp(&b.to_rel));
+        imports.insert(current_rel, resolved_edges);
+    }
+
+    if !diagnostics.is_empty() {
+        diagnostics.sort_by(|a, b| {
+            a.file
+                .cmp(&b.file)
+                .then(a.span.start_line.cmp(&b.span.start_line))
+                .then(a.span.start_col.cmp(&b.span.start_col))
+                .then(a.code.cmp(&b.code))
+        });
+        return Err(diagnostics);
+    }
+
+    if let Some(diag) = detect_cycle(&root_rel, &imports) {
+        return Err(vec![diag]);
+    }
+
+    let order = deterministic_topological_order(&modules, &imports);
+    let merged = merge_modules(&order, &modules);
+
+    Ok(ResolveOutput {
+        compilation_unit: merged,
+        module_order: order,
+    })
+}
+
+#[derive(Debug, Clone)]
+struct ImportStmtRef {
+    path: String,
+    span: Span,
+}
+
+fn extract_imports(module: &CompilationUnit) -> Vec<ImportStmtRef> {
+    let mut result = Vec::new();
+    for stmt in &module.statements {
+        if let Stmt::Import(import) = stmt {
+            result.push(ImportStmtRef {
+                path: import.path.clone(),
+                span: import.span,
+            });
+        }
+    }
+    result
+}
+
+fn resolve_import_target(
+    root_canon: &Path,
+    importer_file: &Path,
+    import_path: &str,
+    importer_rel: &str,
+    span: Span,
+) -> Result<String, ResolveDiagnostic> {
+    let importer_dir = importer_file.parent().unwrap_or(root_canon);
+    let joined = importer_dir.join(import_path);
+
+    if import_escapes_root(root_canon, &joined) {
+        return Err(ResolveDiagnostic {
+            code: "E1203_IMPORT_OUTSIDE_MODEL_ROOT".to_string(),
+            message: format!("Import path '{import_path}' escapes the model root."),
+            file: importer_rel.to_string(),
+            span,
+        });
+    }
+
+    let target_canon = match fs::canonicalize(&joined) {
+        Ok(path) => path,
+        Err(_) => {
+            return Err(ResolveDiagnostic {
+                code: "E1202_IMPORT_NOT_FOUND".to_string(),
+                message: format!("Imported module '{import_path}' was not found."),
+                file: importer_rel.to_string(),
+                span,
+            });
+        }
+    };
+
+    if !target_canon.starts_with(root_canon) {
+        return Err(ResolveDiagnostic {
+            code: "E1203_IMPORT_OUTSIDE_MODEL_ROOT".to_string(),
+            message: format!("Import path '{import_path}' resolves outside the model root."),
+            file: importer_rel.to_string(),
+            span,
+        });
+    }
+
+    Ok(path_relative_to(root_canon, &target_canon))
+}
+
+fn load_module(
+    root_canon: &Path,
+    relative_path: &str,
+) -> Result<ModuleEntry, Vec<ResolveDiagnostic>> {
+    let full_path = root_canon.join(relative_path);
+    let source = match fs::read_to_string(&full_path) {
+        Ok(src) => src,
+        Err(_) => {
+            return Err(vec![ResolveDiagnostic {
+                code: "E1202_IMPORT_NOT_FOUND".to_string(),
+                message: format!("Imported module '{relative_path}' was not found."),
+                file: relative_path.to_string(),
+                span: Span {
+                    start_line: 1,
+                    start_col: 1,
+                    end_line: 1,
+                    end_col: 1,
+                },
+            }]);
+        }
+    };
+
+    let (tokens, lex_diags) = cfdl_lexer::lex(&source);
+    if !lex_diags.is_empty() {
+        return Err(lex_diags
+            .into_iter()
+            .map(|diag| ResolveDiagnostic {
+                code: diag.code.to_string(),
+                message: diag.message,
+                file: relative_path.to_string(),
+                span: diag.span,
+            })
+            .collect());
+    }
+
+    let parse_result = parse(relative_path, &tokens);
+    if !parse_result.diagnostics.is_empty() {
+        return Err(parse_result
+            .diagnostics
+            .into_iter()
+            .map(|diag| ResolveDiagnostic {
+                code: diag.code.to_string(),
+                message: diag.message,
+                file: diag.file,
+                span: diag.span,
+            })
+            .collect());
+    }
+
+    let ast = parse_result
+        .ast
+        .expect("parser returns AST when diagnostics are empty");
+    Ok(ModuleEntry { full_path, ast })
+}
+
+fn import_escapes_root(root_canon: &Path, import_target: &Path) -> bool {
+    if import_target.is_absolute() && !import_target.starts_with(root_canon) {
+        return true;
+    }
+    match normalize_without_fs(import_target) {
+        Some(path) => !path.starts_with(root_canon),
+        None => true,
+    }
+}
+
+fn normalize_without_fs(path: &Path) -> Option<PathBuf> {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
+            Component::RootDir => normalized.push(component.as_os_str()),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                if !normalized.pop() {
+                    return None;
+                }
+            }
+            Component::Normal(part) => normalized.push(part),
+        }
+    }
+    Some(normalized)
+}
+
+fn path_relative_to(root_canon: &Path, absolute_path: &Path) -> String {
+    absolute_path
+        .strip_prefix(root_canon)
+        .expect("path is under root")
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn detect_cycle(
+    root_rel: &str,
+    imports: &BTreeMap<String, Vec<ImportEdge>>,
+) -> Option<ResolveDiagnostic> {
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Color {
+        White,
+        Gray,
+        Black,
+    }
+
+    let mut colors: BTreeMap<String, Color> = BTreeMap::new();
+    for key in imports.keys() {
+        colors.insert(key.clone(), Color::White);
+    }
+
+    fn dfs(
+        node: &str,
+        imports: &BTreeMap<String, Vec<ImportEdge>>,
+        colors: &mut BTreeMap<String, Color>,
+    ) -> Option<ResolveDiagnostic> {
+        colors.insert(node.to_string(), Color::Gray);
+        if let Some(edges) = imports.get(node) {
+            for edge in edges {
+                let next_color = colors.get(&edge.to_rel).copied().unwrap_or(Color::White);
+                if next_color == Color::Gray {
+                    return Some(ResolveDiagnostic {
+                        code: "E1201_IMPORT_CYCLE".to_string(),
+                        message: format!(
+                            "Import cycle detected: '{node}' depends on '{}' through a cycle.",
+                            edge.to_rel
+                        ),
+                        file: node.to_string(),
+                        span: edge.span,
+                    });
+                }
+                if next_color == Color::White {
+                    if let Some(diag) = dfs(&edge.to_rel, imports, colors) {
+                        return Some(diag);
+                    }
+                }
+            }
+        }
+        colors.insert(node.to_string(), Color::Black);
+        None
+    }
+
+    dfs(root_rel, imports, &mut colors)
+}
+
+fn deterministic_topological_order(
+    modules: &BTreeMap<String, ModuleEntry>,
+    imports: &BTreeMap<String, Vec<ImportEdge>>,
+) -> Vec<String> {
+    let mut indegree: BTreeMap<String, usize> = modules.keys().map(|k| (k.clone(), 0)).collect();
+    let mut adjacency: BTreeMap<String, BTreeSet<String>> = modules
+        .keys()
+        .map(|k| (k.clone(), BTreeSet::new()))
+        .collect();
+
+    for (from, edges) in imports {
+        for edge in edges {
+            adjacency
+                .entry(edge.to_rel.clone())
+                .or_default()
+                .insert(from.clone());
+            *indegree.entry(from.clone()).or_insert(0) += 1;
+        }
+    }
+
+    let mut available: BTreeSet<String> = indegree
+        .iter()
+        .filter_map(|(node, degree)| {
+            if *degree == 0 {
+                Some(node.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+    let mut order = Vec::with_capacity(modules.len());
+
+    while let Some(next) = available.iter().next().cloned() {
+        available.remove(&next);
+        order.push(next.clone());
+        if let Some(dependents) = adjacency.get(&next) {
+            for dependent in dependents {
+                if let Some(degree) = indegree.get_mut(dependent) {
+                    *degree = degree.saturating_sub(1);
+                    if *degree == 0 {
+                        available.insert(dependent.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    order
+}
+
+fn merge_modules(order: &[String], modules: &BTreeMap<String, ModuleEntry>) -> CompilationUnit {
+    let mut statements = Vec::new();
+    for module in order {
+        if let Some(entry) = modules.get(module) {
+            statements.extend(entry.ast.statements.clone());
+        }
+    }
+
+    let span = if let Some(first) = statements.first() {
+        let start = statement_span(first);
+        let end = statement_span(statements.last().expect("non-empty"));
+        Span {
+            start_line: start.start_line,
+            start_col: start.start_col,
+            end_line: end.end_line,
+            end_col: end.end_col,
+        }
+    } else {
+        Span {
+            start_line: 1,
+            start_col: 1,
+            end_line: 1,
+            end_col: 1,
+        }
+    };
+
+    CompilationUnit { statements, span }
+}
+
+fn statement_span(stmt: &Stmt) -> Span {
+    match stmt {
+        Stmt::Version(s) => s.span,
+        Stmt::Model(s) => s.span,
+        Stmt::Import(s) => s.span,
+        Stmt::Time(s) => s.span,
+    }
+}

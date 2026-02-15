@@ -75,6 +75,7 @@ version = "0.1.0"
 dependencies = [
  "cfdl-lexer",
  "cfdl-parser",
+ "cfdl-resolver",
  "serde",
  "serde_json",
  "thiserror",
@@ -99,6 +100,7 @@ dependencies = [
 name = "cfdl-resolver"
 version = "0.1.0"
 dependencies = [
+ "cfdl-lexer",
  "cfdl-parser",
  "thiserror",
 ]

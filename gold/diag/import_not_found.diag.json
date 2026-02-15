@@ -1,14 +1,14 @@
 [
   {
-    "code": "E0001_UNEXPECTED_TOKEN",
+    "code": "E1202_IMPORT_NOT_FOUND",
     "severity": "error",
-    "message": "Unexpected token keyword 'phase'.",
+    "message": "Imported module 'missing.cfdl' was not found.",
     "file": "model.cfdl",
     "span": {
       "start_line": 4,
       "start_col": 1,
       "end_line": 4,
-      "end_col": 5
+      "end_col": 21
     },
     "path": null,
     "hint": null,

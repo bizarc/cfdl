@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1201_IMPORT_CYCLE",
+    "severity": "error",
+    "message": "Import cycle detected: 'b.cfdl' depends on 'a.cfdl' through a cycle.",
+    "file": "b.cfdl",
+    "span": {
+      "start_line": 1,
+      "start_col": 1,
+      "end_line": 1,
+      "end_col": 15
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

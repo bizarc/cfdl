@@ -21,6 +21,7 @@ pub type ModelAst = CompilationUnit;
 pub enum Stmt {
     Version(VersionStmt),
     Model(ModelStmt),
+    Import(ImportStmt),
     Time(TimeStmt),
 }
 
@@ -33,6 +34,13 @@ pub struct VersionStmt {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModelStmt {
     pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportStmt {
+    pub path: String,
+    pub alias: Option<String>,
     pub span: Span,
 }
 
@@ -123,6 +131,7 @@ impl<'a> Parser<'a> {
         match self.peek().kind {
             TokenKind::Keyword(Keyword::Version) => self.parse_version_stmt().map(Stmt::Version),
             TokenKind::Keyword(Keyword::Model) => self.parse_model_stmt().map(Stmt::Model),
+            TokenKind::Keyword(Keyword::Import) => self.parse_import_stmt().map(Stmt::Import),
             TokenKind::Keyword(Keyword::Time) => self.parse_time_stmt().map(Stmt::Time),
             TokenKind::Eof => None,
             _ => {
@@ -228,11 +237,53 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_import_stmt(&mut self) -> Option<ImportStmt> {
+        let start = self.expect_keyword(Keyword::Import, "'import'")?;
+        let path_tok = self.bump();
+        let path = match path_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    path_tok.span,
+                    "Expected token <string> after 'import'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        let mut alias = None;
+        let mut end_span = path_tok.span;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::As)) {
+            let _as_kw = self.bump();
+            let alias_tok = self.bump();
+            match alias_tok.kind {
+                TokenKind::Ident(ref ident) => {
+                    alias = Some(ident.clone());
+                    end_span = alias_tok.span;
+                }
+                _ => {
+                    self.push_expected(
+                        alias_tok.span,
+                        "Expected token <identifier> after 'as'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+
+        Some(ImportStmt {
+            path,
+            alias,
+            span: merge_spans(start.span, end_span),
+        })
+    }
+
     fn synchronize_to_next_statement(&mut self) {
         while !self.is_eof() {
             match self.peek().kind {
                 TokenKind::Keyword(Keyword::Version)
                 | TokenKind::Keyword(Keyword::Model)
+                | TokenKind::Keyword(Keyword::Import)
                 | TokenKind::Keyword(Keyword::Time) => break,
                 _ => {
                     let _ = self.bump();
@@ -303,6 +354,7 @@ fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
+        Stmt::Import(s) => s.span,
         Stmt::Time(s) => s.span,
     }
 }
@@ -466,5 +518,23 @@ time monthly from 2026-01 for 12
         assert_eq!(result.diagnostics.len(), 1);
         assert_eq!(result.diagnostics[0].code, "E0004_EXPECTED_TOKEN");
         assert_eq!(result.diagnostics[0].file, "model.cfdl");
+    }
+
+    #[test]
+    fn parses_import_statement() {
+        let src = r#"import "sub/module.cfdl" as sub"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        assert_eq!(ast.statements.len(), 1);
+        match &ast.statements[0] {
+            Stmt::Import(stmt) => {
+                assert_eq!(stmt.path, "sub/module.cfdl");
+                assert_eq!(stmt.alias.as_deref(), Some("sub"));
+            }
+            other => panic!("expected import stmt, got {other:?}"),
+        }
     }
 }
