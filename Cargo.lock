@@ -172,6 +172,7 @@ dependencies = [
  "cfdl-parser",
  "cfdl-resolver",
  "lsp-types",
+ "serde_json",
  "tokio",
  "tower-lsp",
 ]

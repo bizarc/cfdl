@@ -41,6 +41,19 @@ This plan is scoped to the **CFDL repo** and complements the CLI + Python SDK.
 - `editors/vscode/` (new)
   - extension source
 
+### Current implementation approach (post-Milestone C hardening)
+- The LSP maintains a **per-model-root analysis context** in memory, built from lexer/parser/resolver output.
+- Context currently includes:
+  - merged resolver output
+  - symbol tables
+  - per-file tokens
+  - definition bindings (for go-to-definition)
+- Refresh behavior is intentionally conservative and deterministic:
+  - debounce edit-triggered refreshes (target: ~300ms)
+  - skip expensive refresh paths when source is not parseable
+  - clear stale diagnostics/index state when refresh cannot produce valid analysis
+- This context is private to `cfdl-lsp` (no public API surface added to `cfdl-compile`).
+
 ---
 
 ## Capabilities (v0)
@@ -73,6 +86,16 @@ Server should detect model root by:
 - stream symbols
 - contract names
 - `use pack` target to pack manifest
+
+Current coverage:
+- declaration identifiers for entity/stream/contract/phase
+- `stream ... on entity <entity-ref>` to entity declaration
+- schedule phase references (`phase_enter`, `phase_start`, `phase_end`) to phase declaration
+
+Deferred to Milestone D+:
+- `use pack` target to pack manifest
+- pack alias/type-id navigation
+- richer action/reference navigation as parser surface expands
 
 ### 5) Hover
 - show symbol kind and provenance (file + location)
@@ -134,9 +157,20 @@ Suggested settings:
 - run compile/validate on model root
 - publish diagnostics
 
-### Milestone C — Symbol index + definition
+### Milestone C — Symbol index + definition (done)
 - build symbol tables from resolver output
 - go-to-definition for entities/streams/contracts
+
+### Milestone C.5 — Authoring hardening before D/E/F (done)
+- extract reusable per-root analysis context in `cfdl-lsp`
+- wire settings intake skeleton:
+  - `cfdl.packsPath`
+  - `cfdl.entryFile`
+  - `cfdl.enableLoweringValidation`
+  - `cfdl.trace.server`
+- add debounce + parseable-state refresh guardrails
+- extend definition coverage for phase declarations/references
+- add lifecycle-focused tests for analysis rebuild and stable lookup behavior
 
 ### Milestone D — Pack awareness
 - read packs
@@ -156,9 +190,12 @@ Suggested settings:
 
 ### Unit tests
 - server utilities (root detection, path mapping)
+- analysis context determinism + rebuild behavior
+- definition mapping coverage (declaration + supported references)
+- settings parsing/defaults
 
 ### Integration tests
-- golden LSP session tests (optional)
+- golden LSP session tests (optional, recommended before expanding D/E/F)
 - VSCode manual test workspace using fixtures/examples
 
 ---

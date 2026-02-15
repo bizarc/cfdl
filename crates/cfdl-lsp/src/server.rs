@@ -1,17 +1,20 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::Duration;
 
 use cfdl_compile::{CompileOptions, Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
 use cfdl_lexer::{Keyword, Token, TokenKind};
-use cfdl_parser::Stmt;
+use cfdl_parser::{ScheduleKind, Stmt};
 use cfdl_resolver::{ResolveOutput, RootModule, SymbolTables};
 use lsp_types::{
-    Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range,
-    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
+    Diagnostic, DiagnosticSeverity, DidChangeConfigurationParams, DidChangeTextDocumentParams,
+    DidCloseTextDocumentParams, DidOpenTextDocumentParams, GotoDefinitionParams,
+    GotoDefinitionResponse, InitializeParams, InitializeResult, Location, MessageType,
+    NumberOrString, OneOf, Position, Range, ServerCapabilities, TextDocumentSyncCapability,
+    TextDocumentSyncKind, Url,
 };
+use serde_json::Value;
 use tokio::sync::RwLock;
 use tower_lsp::{jsonrpc::Result, Client, LanguageServer};
 
@@ -107,11 +110,49 @@ impl SymbolIndex {
     }
 }
 
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct AnalysisContext {
+    resolve_output: ResolveOutput,
+    symbols: SymbolTables,
+    file_tokens: HashMap<String, Vec<Token>>,
+    symbol_index: SymbolIndex,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TraceServer {
+    Off,
+    Messages,
+    Verbose,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct LspSettings {
+    packs_path: Option<String>,
+    entry_file: String,
+    enable_lowering_validation: bool,
+    trace_server: TraceServer,
+}
+
+impl Default for LspSettings {
+    fn default() -> Self {
+        Self {
+            packs_path: None,
+            entry_file: "model.cfdl".to_string(),
+            enable_lowering_validation: true,
+            trace_server: TraceServer::Off,
+        }
+    }
+}
+
 pub struct Backend {
     client: Client,
     docs: Arc<RwLock<DocumentStore>>,
     published_by_root: Arc<RwLock<HashMap<PathBuf, HashSet<Url>>>>,
-    symbol_index_by_root: Arc<RwLock<HashMap<PathBuf, SymbolIndex>>>,
+    analysis_by_root: Arc<RwLock<HashMap<PathBuf, AnalysisContext>>>,
+    refresh_generation_by_root: Arc<RwLock<HashMap<PathBuf, u64>>>,
+    settings: Arc<RwLock<LspSettings>>,
 }
 
 impl Backend {
@@ -120,12 +161,16 @@ impl Backend {
             client,
             docs: Arc::new(RwLock::new(DocumentStore::default())),
             published_by_root: Arc::new(RwLock::new(HashMap::default())),
-            symbol_index_by_root: Arc::new(RwLock::new(HashMap::default())),
+            analysis_by_root: Arc::new(RwLock::new(HashMap::default())),
+            refresh_generation_by_root: Arc::new(RwLock::new(HashMap::default())),
+            settings: Arc::new(RwLock::new(LspSettings::default())),
         }
     }
 
     async fn refresh_diagnostics_for_uri(&self, source_uri: &Url) {
-        let Some(model_root) = detect_model_root(source_uri) else {
+        let settings = self.settings.read().await.clone();
+        let Some(model_root) = detect_model_root_with_entry(source_uri, &settings.entry_file)
+        else {
             self.client
                 .publish_diagnostics(source_uri.clone(), vec![], None)
                 .await;
@@ -185,22 +230,23 @@ impl Backend {
         }
     }
 
-    async fn refresh_symbol_index_for_uri(&self, source_uri: &Url) {
-        let Some(model_root) = detect_model_root(source_uri) else {
+    async fn refresh_analysis_for_uri(&self, source_uri: &Url) {
+        let settings = self.settings.read().await.clone();
+        let Some(model_root) = detect_model_root_with_entry(source_uri, &settings.entry_file)
+        else {
             return;
         };
 
         let root_for_task = model_root.clone();
         let build_result =
-            tokio::task::spawn_blocking(move || build_symbol_index(&root_for_task)).await;
+            tokio::task::spawn_blocking(move || build_analysis_context(&root_for_task)).await;
         match build_result {
-            Ok(Some(index)) => {
-                let mut indexes = self.symbol_index_by_root.write().await;
-                indexes.insert(model_root, index);
+            Ok(Some(context)) => {
+                let mut contexts = self.analysis_by_root.write().await;
+                contexts.insert(model_root, context);
             }
             Ok(None) => {
-                let mut indexes = self.symbol_index_by_root.write().await;
-                indexes.remove(&model_root);
+                self.clear_analysis_for_root(&model_root).await;
             }
             Err(err) => {
                 self.client
@@ -209,6 +255,7 @@ impl Backend {
                         format!("CFDL symbol index task failed: {err}"),
                     )
                     .await;
+                self.clear_analysis_for_root(&model_root).await;
             }
         }
     }
@@ -218,12 +265,92 @@ impl Backend {
         uri: &Url,
         position: Position,
     ) -> Option<GotoDefinitionResponse> {
-        let model_root = detect_model_root(uri)?;
-        let indexes = self.symbol_index_by_root.read().await;
-        let index = indexes.get(&model_root)?;
-        index
+        let settings = self.settings.read().await.clone();
+        let model_root = detect_model_root_with_entry(uri, &settings.entry_file)?;
+        let contexts = self.analysis_by_root.read().await;
+        let context = contexts.get(&model_root)?;
+        context
+            .symbol_index
             .lookup(uri, position)
             .map(GotoDefinitionResponse::Scalar)
+    }
+
+    async fn queue_refresh_for_uri(&self, source_uri: &Url) {
+        let settings = self.settings.read().await.clone();
+        let Some(model_root) = detect_model_root_with_entry(source_uri, &settings.entry_file)
+        else {
+            return;
+        };
+        let generation = {
+            let mut generations = self.refresh_generation_by_root.write().await;
+            let next = generations
+                .get(&model_root)
+                .copied()
+                .unwrap_or(0)
+                .saturating_add(1);
+            generations.insert(model_root.clone(), next);
+            next
+        };
+
+        tokio::time::sleep(Duration::from_millis(300)).await;
+
+        let is_latest = {
+            let generations = self.refresh_generation_by_root.read().await;
+            generations
+                .get(&model_root)
+                .copied()
+                .map(|value| value == generation)
+                .unwrap_or(false)
+        };
+        if !is_latest {
+            return;
+        }
+
+        if !self.uri_is_parseable(source_uri).await {
+            self.clear_published_diagnostics_for_root(&model_root, source_uri)
+                .await;
+            self.clear_analysis_for_root(&model_root).await;
+            return;
+        }
+
+        self.refresh_diagnostics_for_uri(source_uri).await;
+        self.refresh_analysis_for_uri(source_uri).await;
+    }
+
+    async fn uri_is_parseable(&self, source_uri: &Url) -> bool {
+        let docs = self.docs.read().await;
+        let Some(text) = docs.docs.get(source_uri) else {
+            return true;
+        };
+        source_parseable(source_uri.as_str(), text)
+    }
+
+    async fn clear_analysis_for_root(&self, model_root: &Path) {
+        let mut contexts = self.analysis_by_root.write().await;
+        contexts.remove(model_root);
+    }
+
+    async fn clear_published_diagnostics_for_root(&self, model_root: &Path, fallback_uri: &Url) {
+        let stale_uris = {
+            let mut tracked = self.published_by_root.write().await;
+            tracked
+                .remove(model_root)
+                .unwrap_or_else(|| {
+                    let mut uris = HashSet::new();
+                    uris.insert(fallback_uri.clone());
+                    uris
+                })
+                .into_iter()
+                .collect::<Vec<_>>()
+        };
+        for uri in stale_uris {
+            self.client.publish_diagnostics(uri, vec![], None).await;
+        }
+    }
+
+    async fn update_settings(&self, incoming: &Value) {
+        let mut settings = self.settings.write().await;
+        apply_settings_value(&mut settings, incoming);
     }
 }
 
@@ -259,8 +386,7 @@ impl LanguageServer for Backend {
         let mut docs = self.docs.write().await;
         docs.open(params.text_document.uri, params.text_document.text);
         drop(docs);
-        self.refresh_diagnostics_for_uri(&uri).await;
-        self.refresh_symbol_index_for_uri(&uri).await;
+        self.queue_refresh_for_uri(&uri).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
@@ -271,8 +397,7 @@ impl LanguageServer for Backend {
         let mut docs = self.docs.write().await;
         docs.change_full(&uri, change.text);
         drop(docs);
-        self.refresh_diagnostics_for_uri(&uri).await;
-        self.refresh_symbol_index_for_uri(&uri).await;
+        self.queue_refresh_for_uri(&uri).await;
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
@@ -291,21 +416,24 @@ impl LanguageServer for Backend {
         }
         tracked.retain(|_, uris| !uris.is_empty());
 
-        if let Some(model_root) = detect_model_root(&uri) {
+        let entry_file = { self.settings.read().await.entry_file.clone() };
+        if let Some(model_root) = detect_model_root_with_entry(&uri, &entry_file) {
             let has_docs_in_root = {
                 let docs = self.docs.read().await;
-                docs.docs.keys().any(|open_uri| {
-                    detect_model_root(open_uri)
-                        .as_ref()
-                        .map(|root| root == &model_root)
-                        .unwrap_or(false)
-                })
+                docs.docs
+                    .keys()
+                    .any(|open_uri| root_matches(open_uri, &model_root, &entry_file))
             };
             if !has_docs_in_root {
-                let mut indexes = self.symbol_index_by_root.write().await;
-                indexes.remove(&model_root);
+                self.clear_analysis_for_root(&model_root).await;
+                let mut generations = self.refresh_generation_by_root.write().await;
+                generations.remove(&model_root);
             }
         }
+    }
+
+    async fn did_change_configuration(&self, params: DidChangeConfigurationParams) {
+        self.update_settings(&params.settings).await;
     }
 
     async fn goto_definition(
@@ -322,7 +450,12 @@ impl LanguageServer for Backend {
     }
 }
 
+#[cfg(test)]
 fn detect_model_root(uri: &Url) -> Option<PathBuf> {
+    detect_model_root_with_entry(uri, "model.cfdl")
+}
+
+fn detect_model_root_with_entry(uri: &Url, entry_file: &str) -> Option<PathBuf> {
     let file_path = uri.to_file_path().ok()?;
     let mut current = if file_path.is_dir() {
         file_path
@@ -331,13 +464,20 @@ fn detect_model_root(uri: &Url) -> Option<PathBuf> {
     };
 
     loop {
-        if current.join("model.cfdl").is_file() {
+        if current.join(entry_file).is_file() {
             return Some(current);
         }
         if !current.pop() {
             return None;
         }
     }
+}
+
+fn root_matches(uri: &Url, model_root: &Path, entry_file: &str) -> bool {
+    detect_model_root_with_entry(uri, entry_file)
+        .as_ref()
+        .map(|root| root == model_root)
+        .unwrap_or(false)
 }
 
 fn group_diagnostics_by_uri(
@@ -406,12 +546,28 @@ fn span_to_range(span: Option<&CfdlSpan>) -> Range {
     }
 }
 
-fn build_symbol_index(model_root: &Path) -> Option<SymbolIndex> {
+fn build_analysis_context(model_root: &Path) -> Option<AnalysisContext> {
     let (resolve_output, symbols) = analyze_model_root(model_root).ok()?;
     let file_tokens = load_tokens_by_file(model_root, &resolve_output)?;
+    let symbol_index = build_symbol_index(model_root, &resolve_output, &symbols, &file_tokens)?;
+    Some(AnalysisContext {
+        resolve_output,
+        symbols,
+        file_tokens,
+        symbol_index,
+    })
+}
 
+fn build_symbol_index(
+    model_root: &Path,
+    resolve_output: &ResolveOutput,
+    symbols: &SymbolTables,
+    file_tokens: &HashMap<String, Vec<Token>>,
+) -> Option<SymbolIndex> {
     let mut index = SymbolIndex::default();
     let mut entity_targets: HashMap<String, Location> = HashMap::new();
+    let mut phase_targets: HashMap<String, Location> = HashMap::new();
+
     for entity in symbols.entities.values() {
         let uri = file_uri(model_root, &entity.file)?;
         let name_span = file_tokens
@@ -449,7 +605,26 @@ fn build_symbol_index(model_root: &Path) -> Option<SymbolIndex> {
                 .entry(contract.name.clone())
                 .or_insert((source_stmt.file.clone(), contract.span));
         }
+        if let Stmt::Phase(phase) = &source_stmt.statement {
+            let Some(uri) = file_uri(model_root, &source_stmt.file) else {
+                continue;
+            };
+            let name_span = file_tokens
+                .get(&source_stmt.file)
+                .and_then(|tokens| find_phase_decl_name_span(tokens, &phase.span, &phase.name))
+                .unwrap_or(phase.span);
+            let range = lex_span_to_range(&name_span);
+            phase_targets.insert(
+                phase.name.clone(),
+                Location {
+                    uri: uri.clone(),
+                    range,
+                },
+            );
+            index.add_binding(uri.clone(), range, uri, range);
+        }
     }
+
     for (contract_name, (contract_file, contract_span)) in contract_decls {
         let uri = file_uri(model_root, &contract_file)?;
         let name_span = file_tokens
@@ -464,26 +639,47 @@ fn build_symbol_index(model_root: &Path) -> Option<SymbolIndex> {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
         };
-        let Some(target) = entity_targets.get(&stream.attached_entity).cloned() else {
-            continue;
-        };
         let Some(tokens) = file_tokens.get(&source_stmt.file) else {
-            continue;
-        };
-        let Some(ref_span) =
-            find_stream_entity_ref_span(tokens, &stream.span, &stream.attached_entity)
-        else {
             continue;
         };
         let Some(source_uri) = file_uri(model_root, &source_stmt.file) else {
             continue;
         };
-        index.add_binding(
-            source_uri,
-            lex_span_to_range(&ref_span),
-            target.uri,
-            target.range,
-        );
+
+        if let Some(target) = entity_targets.get(&stream.attached_entity).cloned() {
+            if let Some(ref_span) =
+                find_stream_entity_ref_span(tokens, &stream.span, &stream.attached_entity)
+            {
+                index.add_binding(
+                    source_uri.clone(),
+                    lex_span_to_range(&ref_span),
+                    target.uri,
+                    target.range,
+                );
+            }
+        }
+
+        if let Some(schedule) = &stream.schedule {
+            let phase_name = match &schedule.kind {
+                ScheduleKind::PhaseEnter { phase } | ScheduleKind::EveryPhase { phase } => {
+                    Some(phase.as_str())
+                }
+                _ => None,
+            };
+            if let Some(phase_name) = phase_name {
+                if let Some(target) = phase_targets.get(phase_name).cloned() {
+                    for phase_ref in find_schedule_phase_ref_spans(tokens, &stream.span, phase_name)
+                    {
+                        index.add_binding(
+                            source_uri.clone(),
+                            lex_span_to_range(&phase_ref),
+                            target.uri.clone(),
+                            target.range,
+                        );
+                    }
+                }
+            }
+        }
     }
 
     index.sort_bindings();
@@ -512,6 +708,15 @@ fn analyze_model_root(model_root: &Path) -> std::result::Result<(ResolveOutput, 
     let resolve_output = cfdl_resolver::resolve_imports(model_root, root_module).map_err(|_| ())?;
     let symbols = cfdl_resolver::resolve_symbols(&resolve_output).map_err(|_| ())?;
     Ok((resolve_output, symbols))
+}
+
+fn source_parseable(file: &str, source: &str) -> bool {
+    let (tokens, lex_diags) = cfdl_lexer::lex(source);
+    if !lex_diags.is_empty() {
+        return false;
+    }
+    let parse_result = cfdl_parser::parse(file, &tokens);
+    parse_result.diagnostics.is_empty()
 }
 
 fn load_tokens_by_file(
@@ -612,6 +817,27 @@ fn find_contract_decl_name_span(
     None
 }
 
+fn find_phase_decl_name_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    name: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(2) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        if window[0].kind == TokenKind::Keyword(Keyword::Phase)
+            && token_text(&window[1]) == Some(name)
+        {
+            return Some(window[1].span);
+        }
+    }
+    None
+}
+
 fn find_stream_entity_ref_span(
     tokens: &[Token],
     stmt_span: &cfdl_lexer::Span,
@@ -634,9 +860,41 @@ fn find_stream_entity_ref_span(
     None
 }
 
+fn find_schedule_phase_ref_spans(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    phase: &str,
+) -> Vec<cfdl_lexer::Span> {
+    let mut spans = Vec::new();
+    for window in tokens.windows(4) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        let is_phase_ref = (window[0].kind == TokenKind::Keyword(Keyword::PhaseEnter)
+            || window[0].kind == TokenKind::Keyword(Keyword::PhaseStart)
+            || window[0].kind == TokenKind::Keyword(Keyword::PhaseEnd))
+            && window[1].kind == TokenKind::Punct(cfdl_lexer::Punct::LParen)
+            && window[3].kind == TokenKind::Punct(cfdl_lexer::Punct::RParen);
+        if is_phase_ref && token_string_value(&window[2]) == Some(phase) {
+            spans.push(window[2].span);
+        }
+    }
+    spans
+}
+
 fn token_text(token: &Token) -> Option<&str> {
     match &token.kind {
         TokenKind::Ident(value) | TokenKind::Qname(value) => Some(value.as_str()),
+        _ => None,
+    }
+}
+
+fn token_string_value(token: &Token) -> Option<&str> {
+    match &token.kind {
+        TokenKind::String(value) => Some(value.as_str()),
         _ => None,
     }
 }
@@ -682,14 +940,48 @@ fn compare_line_col(a_line: u32, a_col: u32, b_line: u32, b_col: u32) -> std::cm
     a_line.cmp(&b_line).then(a_col.cmp(&b_col))
 }
 
+fn apply_settings_value(settings: &mut LspSettings, value: &Value) {
+    let scoped = value.get("cfdl").unwrap_or(value);
+    if let Some(entry_file) = scoped.get("entryFile").and_then(Value::as_str) {
+        let trimmed = entry_file.trim();
+        if !trimmed.is_empty() {
+            settings.entry_file = trimmed.to_string();
+        }
+    }
+    settings.packs_path = scoped
+        .get("packsPath")
+        .and_then(Value::as_str)
+        .map(|value| value.to_string());
+    if let Some(enable) = scoped
+        .get("enableLoweringValidation")
+        .and_then(Value::as_bool)
+    {
+        settings.enable_lowering_validation = enable;
+    }
+    let trace_value = scoped
+        .get("trace")
+        .and_then(|value| value.get("server"))
+        .and_then(Value::as_str)
+        .or_else(|| scoped.get("trace.server").and_then(Value::as_str));
+    if let Some(trace) = trace_value {
+        settings.trace_server = match trace {
+            "messages" => TraceServer::Messages,
+            "verbose" => TraceServer::Verbose,
+            _ => TraceServer::Off,
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        build_symbol_index, cfdl_diagnostic_to_lsp, detect_model_root, group_diagnostics_by_uri,
-        server_capabilities, DocumentStore,
+        apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, detect_model_root,
+        detect_model_root_with_entry, group_diagnostics_by_uri, server_capabilities,
+        source_parseable, DocumentStore, LspSettings, TraceServer,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
     use lsp_types::{Position, TextDocumentSyncCapability, TextDocumentSyncKind, Url};
+    use serde_json::json;
     use std::fs;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -845,11 +1137,11 @@ mod tests {
         let root = make_temp_dir("symbol-index-deterministic");
         fs::write(root.join("model.cfdl"), sample_model_source().as_bytes()).expect("write model");
 
-        let first = build_symbol_index(&root).expect("first index");
-        let second = build_symbol_index(&root).expect("second index");
+        let first = build_analysis_context(&root).expect("first context");
+        let second = build_analysis_context(&root).expect("second context");
         assert_eq!(
-            format!("{first:?}"),
-            format!("{second:?}"),
+            format!("{:?}", first.symbol_index),
+            format!("{:?}", second.symbol_index),
             "symbol index must be deterministic"
         );
 
@@ -863,7 +1155,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let index = build_symbol_index(&root).expect("index");
+        let context = build_analysis_context(&root).expect("analysis");
+        let index = context.symbol_index;
 
         let entity_pos = position_of_first(&source, "borrower");
         let entity_def = index
@@ -896,7 +1189,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let index = build_symbol_index(&root).expect("index");
+        let context = build_analysis_context(&root).expect("analysis");
+        let index = context.symbol_index;
 
         let reference_pos = position_of_last(&source, "legal.borrower");
         let definition = index
@@ -917,7 +1211,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let index = build_symbol_index(&root).expect("index");
+        let context = build_analysis_context(&root).expect("analysis");
+        let index = context.symbol_index;
 
         let pos = position_of_first(&source, "version");
         assert!(index.lookup(&model_uri, pos).is_none());
@@ -929,11 +1224,100 @@ mod tests {
         r#"version 0.1
 model "demo"
 time calendar monthly from 2026-01 for 12
+phase base from 2026-01 to 2026-12
 entity legal borrower
-stream rent on entity legal.borrower
+stream rent on entity legal.borrower {
+  schedule on phase_enter("base")
+}
 contract core.lease lease_main term 2026-01..2026-12
 "#
         .to_string()
+    }
+
+    #[test]
+    fn schedule_phase_reference_resolves_to_phase_declaration() {
+        let root = make_temp_dir("phase-ref-lookup");
+        let source = sample_model_source();
+        let model_file = root.join("model.cfdl");
+        fs::write(&model_file, source.as_bytes()).expect("write model");
+        let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
+        let context = build_analysis_context(&root).expect("analysis");
+
+        let reference_pos = position_of_last(&source, "\"base\"");
+        let definition = context
+            .symbol_index
+            .lookup(&model_uri, reference_pos)
+            .expect("phase definition");
+        let expected_phase_pos = position_of_first(&source, "base");
+        assert_eq!(definition.range.start, expected_phase_pos);
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn parses_settings_defaults_and_overrides() {
+        let mut settings = LspSettings::default();
+        apply_settings_value(
+            &mut settings,
+            &json!({
+                "cfdl": {
+                    "packsPath": "/tmp/packs",
+                    "entryFile": "entry.cfdl",
+                    "enableLoweringValidation": false,
+                    "trace": { "server": "verbose" }
+                }
+            }),
+        );
+        assert_eq!(settings.packs_path.as_deref(), Some("/tmp/packs"));
+        assert_eq!(settings.entry_file, "entry.cfdl");
+        assert!(!settings.enable_lowering_validation);
+        assert_eq!(settings.trace_server, TraceServer::Verbose);
+    }
+
+    #[test]
+    fn parseable_guard_recognizes_invalid_source() {
+        assert!(source_parseable(
+            "model.cfdl",
+            "version 0.1\nmodel \"ok\"\n"
+        ));
+        assert!(!source_parseable(
+            "model.cfdl",
+            "version 0.1\nmodel \"unterminated\n"
+        ));
+    }
+
+    #[test]
+    fn analysis_context_rebuilds_consistently_across_source_changes() {
+        let root = make_temp_dir("analysis-rebuild");
+        let model_file = root.join("model.cfdl");
+        let valid = sample_model_source();
+        fs::write(&model_file, valid.as_bytes()).expect("write valid");
+        assert!(build_analysis_context(&root).is_some());
+
+        fs::write(&model_file, "version 0.1\nmodel \"broken\n".as_bytes()).expect("write broken");
+        assert!(build_analysis_context(&root).is_none());
+
+        fs::write(&model_file, valid.as_bytes()).expect("write valid again");
+        assert!(build_analysis_context(&root).is_some());
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn model_root_detection_uses_configured_entry_file() {
+        let root = make_temp_dir("entry-detect");
+        fs::write(root.join("entry.cfdl"), "version 0.1".as_bytes()).expect("write entry");
+        let nested = root.join("a").join("b");
+        fs::create_dir_all(&nested).expect("create nested");
+        let file_path = nested.join("module.cfdl");
+        fs::write(&file_path, "".as_bytes()).expect("write module");
+        let uri = Url::from_file_path(file_path).expect("uri");
+        assert!(detect_model_root(&uri).is_none());
+        assert_eq!(
+            detect_model_root_with_entry(&uri, "entry.cfdl").expect("root"),
+            root
+        );
+        fs::remove_dir_all(root).expect("cleanup temp dir");
     }
 
     fn position_of_first(source: &str, needle: &str) -> Position {
