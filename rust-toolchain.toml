@@ -1,0 +1,8 @@
+# Pin Rust toolchain for deterministic CI/dev behavior
+# Location: repo root `/rust-toolchain.toml`
+
+[toolchain]
+channel = "stable"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+

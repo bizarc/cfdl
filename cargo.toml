@@ -1,0 +1,40 @@
+# Root Rust workspace for CFDL v0.1
+# Location: repo root `/Cargo.toml`
+
+[workspace]
+resolver = "2"
+
+members = [
+  "crates/cfdl-lexer",
+  "crates/cfdl-parser",
+  "crates/cfdl-resolver",
+  "crates/cfdl-validate",
+  "crates/cfdl-compile",
+  "crates/cfdl-cli"
+]
+
+[workspace.package]
+edition = "2021"
+license = "Proprietary"
+
+# Keep these aligned across crates
+[workspace.dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+sha2 = "0.10"
+
+# CLI + UX
+clap = { version = "4", features = ["derive"] }
+
+# Optional but useful
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+
+[profile.release]
+# Smaller + faster binaries; adjust later if needed
+lto = true
+codegen-units = 1
+

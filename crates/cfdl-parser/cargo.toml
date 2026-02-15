@@ -1,0 +1,10 @@
+[package]
+name = "cfdl-parser"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+thiserror = { workspace = true }
+
+cfdl-lexer = { path = "../cfdl-lexer" }

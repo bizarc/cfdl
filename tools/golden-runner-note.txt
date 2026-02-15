@@ -1,0 +1,5 @@
+This runner assumes the CLI binary ends up at target/debug/cfdl. When you create crates/cfdl-cli, make sure its Cargo.toml sets:
+
+package name: cfdl-cli (crate)
+
+binary name: cfdl (via [[bin]] name = "cfdl")

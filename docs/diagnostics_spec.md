@@ -1,0 +1,253 @@
+# diagnostics_spec.md
+
+**CFDL Diagnostics Specification v0.1**
+
+**Status:** Draft
+
+This document defines the canonical diagnostics format, conventions, and error-code taxonomy for CFDL tooling:
+- Rust compiler/CLI
+- TypeScript editor integration
+- Python notebook tooling
+
+Diagnostics must be stable, machine-readable, and suitable for:
+- inline editor annotations
+- CI test assertions (golden diagnostics)
+- user-friendly CLI output
+
+---
+
+## 1) Goals
+
+1. **Actionable**: diagnostics should tell the user what happened, where, and what to do.
+2. **Stable codes**: error codes must be stable across versions (with deprecation policy).
+3. **Precise locations**: diagnostics should include file + span (line/col).
+4. **Non-duplicative**: avoid flooding the user with cascading errors; prefer root-cause.
+5. **Composable**: same schema for parser, validator, pack validation, and lowering.
+
+---
+
+## 2) Diagnostic object (canonical)
+
+### 2.1 JSON schema (informative)
+Tooling SHOULD represent diagnostics in this JSON shape:
+
+```json
+{
+  "code": "E2103_SCHEDULE_OUT_OF_BOUNDS",
+  "severity": "error",
+  "message": "Schedule occurrence 2032-01-31 is outside the model timeline (ends 2031-12-31).",
+  "file": "behavior.cfdl",
+  "span": { "start_line": 18, "start_col": 7, "end_line": 18, "end_col": 64 },
+  "path": "contracts[L1].effects.streams[rent].schedule",
+  "hint": "Update the schedule 'to' date or extend the model time horizon.",
+  "notes": ["Model timeline: monthly from 2026-01-01 for 72 periods."],
+  "related": [
+    {
+      "message": "Timeline defined here.",
+      "file": "time.cfdl",
+      "span": { "start_line": 1, "start_col": 1, "end_line": 1, "end_col": 44 }
+    }
+  ]
+}
+```
+
+### 2.2 Required fields
+A diagnostic MUST include:
+- `code` (string)
+- `severity` (enum)
+- `message` (string)
+
+A diagnostic SHOULD include:
+- `file` + `span` for any error tied to source location
+
+### 2.3 Field definitions
+- `code`: stable code (see §6)
+- `severity`: one of `error`, `warning`, `info`
+- `message`: concise, user-facing description
+- `file`: relative path within model root when applicable
+- `span`: source span (1-based line/col)
+- `path`: optional machine path to IR/AST node for tooling
+- `hint`: optional “how to fix it” guidance
+- `notes`: optional list of additional context lines
+- `related`: optional list of secondary locations
+
+### 2.4 Span definition
+`span` MUST be:
+- `start_line`, `start_col`, `end_line`, `end_col` (all integers ≥ 1)
+- inclusive start; inclusive end
+
+---
+
+## 3) Severity semantics
+
+### 3.1 error
+- Indicates the model cannot be compiled to IR.
+- The compiler MUST fail compilation if any `error` diagnostics exist.
+
+### 3.2 warning
+- Indicates a potential issue, ambiguity, or best-practice violation.
+- Compilation MAY proceed.
+
+### 3.3 info
+- Non-problem informational messages, e.g., pack hints.
+
+---
+
+## 4) Reporting conventions
+
+### 4.1 Prefer root-cause errors
+- When a failure would cascade, report the earliest/root issue and suppress downstream diagnostics.
+
+Example: If `time` statement is missing, do not additionally report “phase out of bounds”.
+
+### 4.2 Avoid duplicates
+- Same logical issue should produce at most one diagnostic.
+
+### 4.3 Provide hints for common fixes
+- For errors in core DSL structure (missing `term`, missing `schedule`), a `hint` SHOULD be provided.
+
+### 4.4 Provide related locations when helpful
+- Import cycle errors SHOULD include related module locations.
+- Out-of-bounds schedule errors SHOULD include timeline definition location.
+
+---
+
+## 5) Parser and recovery guidance
+
+### 5.1 Parser behavior
+- Parser SHOULD attempt recovery to continue parsing and emit multiple diagnostics.
+
+### 5.2 Recovery strategies
+Recommended recovery points:
+- End of statement (newline/keyword boundary)
+- Block boundary (`}`)
+
+### 5.3 Parser diagnostic codes
+Parser errors MUST use `E0xxx_...` codes.
+
+---
+
+## 6) Code taxonomy
+
+### 6.1 Prefixes
+- `E0xxx_*` Parse errors
+- `E1xxx_*` Module/import/symbol errors
+- `E2xxx_*` Validation errors (required fields, schedule bounds)
+- `E3xxx_*` Type-check / expression contract errors
+- `E4xxx_*` Pack-related validation errors
+- `E5xxx_*` Lowering/IR emission errors
+- `W3xxx_*` Warnings (expression inference, extraction failures)
+- `I6xxx_*` Informational
+
+### 6.2 Naming conventions
+`<Prefix><Number>_<CATEGORY>_<DETAIL>`
+- All caps, underscores.
+- Numbers are stable and monotonic within a category.
+
+---
+
+## 7) Canonical error codes (v0.1 minimum)
+
+### 7.1 Parse errors (E0xxx)
+- `E0001_UNEXPECTED_TOKEN`
+- `E0002_UNTERMINATED_STRING`
+- `E0003_UNTERMINATED_BLOCK_COMMENT`
+- `E0004_EXPECTED_TOKEN`
+- `E0005_INVALID_DATE_LITERAL`
+
+### 7.2 Module/import (E12xx)
+- `E1201_IMPORT_CYCLE`
+- `E1202_IMPORT_NOT_FOUND`
+- `E1203_IMPORT_OUTSIDE_MODEL_ROOT`
+
+### 7.3 Global structure (E11xx)
+- `E1101_MISSING_VERSION`
+- `E1102_MISSING_MODEL`
+- `E1103_MISSING_TIME`
+- `E1104_MULTIPLE_VERSION`
+- `E1105_MULTIPLE_MODEL`
+- `E1106_MULTIPLE_TIME`
+- `E1107_MULTIPLE_USE_PACK`
+- `E1108_USE_PACK_NOT_IN_MODEL_FILE`
+
+### 7.4 Symbols and references (E13xx)
+- `E1001_DUPLICATE_ENTITY`
+- `E1002_DUPLICATE_CONTRACT`
+- `E1003_DUPLICATE_STREAM`
+- `E1004_DUPLICATE_PHASE`
+- `E1005_DUPLICATE_ASSUME`
+- `E1006_DUPLICATE_OPTION`
+- `E1007_DUPLICATE_EVENT`
+- `E1008_DUPLICATE_METRIC`
+
+- `E1301_UNRESOLVED_ENTITY_REF`
+- `E1302_UNRESOLVED_STREAM_REF`
+- `E1303_UNRESOLVED_CONTRACT_REF`
+- `E1304_UNRESOLVED_OPTION_REF`
+- `E1305_UNRESOLVED_PHASE_REF`
+
+### 7.5 Contracts and streams (E20xx/E21xx)
+- `E2001_CONTRACT_MISSING_TERM`
+- `E2002_CONTRACT_MISSING_EFFECTS`
+- `E2003_CONTRACT_CURRENCY_REQUIRED`
+
+- `E2101_STREAM_MISSING_SCHEDULE`
+- `E2102_STREAM_MISSING_AMOUNT`
+- `E2103_SCHEDULE_OUT_OF_BOUNDS`
+- `E2104_SCHEDULE_INVALID_RANGE`
+- `E2105_SCHEDULE_INVALID_DAY_OF_MONTH`
+- `E2106_SCHEDULE_PHASE_NOT_FOUND`
+
+### 7.6 Events and actions (E22xx)
+- `E2201_EVENT_WHEN_NOT_BOOL`
+- `E2202_STREAM_ACTIVE_NOT_BOOL`
+- `E2203_ACTION_SET_FIELD_INVALID`
+
+### 7.7 Expressions / typing (E30xx/W30xx)
+- `E3001_EXPR_NOT_CEL`
+- `E3002_EXPR_EMPTY`
+
+Warnings:
+- `W3001_EXPR_TYPE_UNKNOWN`
+- `W3002_OBS_REF_EXTRACTION_FAILED`
+
+### 7.8 Pack errors (E4xxx)
+- `E4001_UNKNOWN_TYPE_ID`
+- `E4002_INVALID_ENTITY_ATTR`
+- `E4003_INVALID_CONTRACT_TERMS`
+- `E4004_MISSING_PACK`
+
+### 7.9 Lowering/emission (E5xxx)
+- `E5001_ID_GENERATION_FAILED`
+- `E5002_IR_SCHEMA_VALIDATION_FAILED`
+
+---
+
+## 8) Deprecation and evolution policy
+
+1. **Do not reuse codes**: once assigned, a code is never reused.
+2. **Soft deprecation**: a deprecated code may remain emitted for one minor version with a note.
+3. **Hard deprecation**: removal only in a major language version.
+
+---
+
+## 9) CLI rendering (informative)
+
+CLI tools SHOULD render diagnostics as:
+
+- Single-line summary:
+  - `error[E2103_SCHEDULE_OUT_OF_BOUNDS] behavior.cfdl:18:7 Schedule occurrence ...`
+- Then snippet with caret underline (optional)
+- Then hint and notes
+
+---
+
+## 10) Golden diagnostics files
+
+For invalid fixtures, store expected diagnostics as:
+- `gold/<fixture>.diag.json`
+
+Rules:
+- Assert `code`, `severity`, `file`, and `span`.
+- Messages may be asserted via substring match to allow minor wording changes.
+
