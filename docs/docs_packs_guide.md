@@ -201,6 +201,19 @@ This enables “explainability” and auditability.
 Lowering output order must be deterministic:
 - sort by stable key (symbol/name)
 
+### 8.5 Term payloads (current host behavior)
+Contract `terms { ... }` values are captured as a lightweight map and exposed to
+pack lowering logic.
+
+Current contract for packs:
+- terms are key/value pairs with string payloads plus source span
+- packs are responsible for explicit parsing/coercion (for example Int/Decimal/Date)
+- packs should not rely on implicit casts; invalid values must emit diagnostics
+- if term-level spans are unavailable for a rule, use contract span consistently
+
+This supports deterministic pack-origin validation during lowering (for example
+`E6xxx_*` in CRE) without introducing a separate compile stage.
+
 ---
 
 ## 9. Pack validations

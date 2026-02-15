@@ -84,6 +84,14 @@ These are engine/results concerns, not CEL concerns:
 - `irr(...)`
 - Monte Carlo summary helpers like `prob(...)`
 
+### 3.4 Deterministic numeric semantics
+- Keep numeric coercions explicit and deterministic (`Int`/`Decimal` conversions
+  must not depend on host locale or runtime-specific behavior).
+- Prefer stable helper composition when portability is needed:
+  - `min(max(x, lo), hi)` is equivalent to `clamp(x, lo, hi)`.
+- If `clamp` is used in model or pack expressions, hosts should either provide
+  `clamp` directly or rewrite to `min/max` form before evaluation.
+
 ---
 
 ## 4) Dependency extraction

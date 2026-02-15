@@ -15,7 +15,7 @@ Rules:
 
 ---
 
-## Milestone 9 — CEL Expressions + Typed ExprEnv
+## Milestone 9 — CEL Expressions + Typed ExprEnv (Done)
 
 ### Goal
 Add real CEL parsing/evaluation with a typed environment so expressions can be used for stream amounts and predicates.
@@ -78,7 +78,7 @@ Load packs from filesystem and apply deterministic lowering (contracts/templates
 
 ---
 
-## Milestone 11 — CRE Pack v0.1 (Developer workflow) (Current)
+## Milestone 11 — CRE Pack v0.1 (Developer workflow) (Done)
 
 ### Goal
 Implement `packs/cre` to support a CRE developer lifecycle: construction → lease-up → stabilized ops → exit.
@@ -105,7 +105,7 @@ Implement `packs/cre` to support a CRE developer lifecycle: construction → lea
 
 ---
 
-## Milestone 12 — Operating Business Pack v0.1
+## Milestone 12 — Operating Business Pack v0.1 (Current)
 
 ### Goal
 Implement `packs/opco` for operating business valuation: revenue/opex/WC + exit.

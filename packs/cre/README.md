@@ -32,9 +32,8 @@ in `lowering/rules.toml`:
 
 ## Expected terms (authoring contract)
 
-The parser/pack host in this SDK revision does not enforce pack-level contract
-term schemas yet. Model authors should still provide the following terms in
-their contract body for forward compatibility.
+Contract `terms { ... }` payloads are captured as a lightweight key/value map
+and validated by CRE lowering-time checks (`E6xxx_*`) during compile.
 
 ### `cre_lease`
 
@@ -62,9 +61,8 @@ Current deterministic implementation uses a built-in linear occupancy ramp for
 
 Important implementation note:
 
-- `lease_up.*` names are reserved and documented for forward compatibility.
-- In this SDK revision, pack lowering does **not** read contract term payloads,
-  so these fields are not yet wired into lowering math.
+- `lease_up.*` names are validated when present.
+- Current rent-ramp math still uses deterministic v0.1 rule defaults.
 - The active v0.1 behavior is the deterministic default ramp above.
 - Scenario testing can still vary effective lease-up economics using run-config
   overrides (for example, `stream.cre.lease.base_rent.amount`).
