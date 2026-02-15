@@ -193,7 +193,7 @@ Use this checklist as a start gate before implementing Milestone D:
   - `cargo test -p cfdl-lsp`
   - `make fmt && make lint && make test`
 
-### Milestone D — Pack awareness
+### Milestone D — Pack awareness (done)
 - read packs
 - validate `use pack`
 - show aliases in completion
@@ -201,26 +201,26 @@ Use this checklist as a start gate before implementing Milestone D:
 ### Milestone E readiness checklist
 Use this checklist as a start gate before implementing Milestone E:
 
-- [ ] Milestone D outputs are available and stable:
+- [x] Milestone D outputs are available and stable:
   - active pack detection is deterministic
   - pack aliases surfaced by LSP completion
   - `use pack` validation diagnostics include file/span
-- [ ] snippet source boundaries are explicit:
+- [x] snippet source boundaries are explicit:
   - generic snippets live in VSCode extension contributions
   - pack templates remain LSP-driven and opt-in until template contract is stable
-- [ ] template/snippet expansion uses existing analysis context:
+- [x] template/snippet expansion uses existing analysis context:
   - model root detection honors `cfdl.entryFile`
   - symbol context (entities/streams/contracts/phases) reused from analysis cache
   - no duplicate parse/resolve pipelines introduced for snippet generation
-- [ ] completion/snippet UX guardrails are defined:
+- [x] completion/snippet UX guardrails are defined:
   - deterministic ordering
   - no blocking compile/validate in completion hot path
   - graceful fallback when pack/template metadata is unavailable
-- [ ] regression baseline passes before template integration:
+- [x] regression baseline passes before template integration:
   - `cargo test -p cfdl-lsp`
   - `make fmt && make lint && make test`
 
-### Milestone E — Snippets + templates
+### Milestone E — Snippets + templates (done)
 - ship generic snippets
 - integrate pack templates once stable
 

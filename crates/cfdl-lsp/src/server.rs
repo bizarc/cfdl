@@ -5,16 +5,16 @@ use std::time::Duration;
 
 use cfdl_compile::{CompileOptions, Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
 use cfdl_lexer::{Keyword, Token, TokenKind};
-use cfdl_pack::PackRegistry;
+use cfdl_pack::{render_template, PackRegistry, PackTemplate};
 use cfdl_parser::{ScheduleKind, Stmt};
 use cfdl_resolver::{ResolveOutput, RootModule, SymbolTables};
 use lsp_types::{
     CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams, CompletionResponse,
     Diagnostic, DiagnosticSeverity, DidChangeConfigurationParams, DidChangeTextDocumentParams,
-    DidCloseTextDocumentParams, DidOpenTextDocumentParams, GotoDefinitionParams,
-    GotoDefinitionResponse, InitializeParams, InitializeResult, Location, MessageType,
-    NumberOrString, OneOf, Position, Range, ServerCapabilities, TextDocumentSyncCapability,
-    TextDocumentSyncKind, Url,
+    DidCloseTextDocumentParams, DidOpenTextDocumentParams, ExecuteCommandOptions,
+    ExecuteCommandParams, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
+    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range,
+    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
 };
 use serde_json::Value;
 use tokio::sync::RwLock;
@@ -142,6 +142,16 @@ struct ActivePack {
     version: String,
     aliases: BTreeMap<String, String>,
     manifest_uri: Option<Url>,
+    templates: Vec<TemplateInfo>,
+}
+
+#[derive(Debug, Clone)]
+struct TemplateInfo {
+    id: String,
+    label: String,
+    kind: String,
+    body: String,
+    defaults: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -179,6 +189,9 @@ pub struct Backend {
     refresh_generation_by_root: Arc<RwLock<HashMap<PathBuf, u64>>>,
     settings: Arc<RwLock<LspSettings>>,
 }
+
+const CMD_LIST_TEMPLATES: &str = "cfdl.listTemplates";
+const CMD_APPLY_TEMPLATE: &str = "cfdl.applyTemplate";
 
 impl Backend {
     pub fn new(client: Client) -> Self {
@@ -312,6 +325,67 @@ impl Backend {
         Some(CompletionResponse::Array(completion_items(context)))
     }
 
+    async fn execute_command_for_params(&self, params: ExecuteCommandParams) -> Option<Value> {
+        match params.command.as_str() {
+            CMD_LIST_TEMPLATES => {
+                let arg = params.arguments.first()?;
+                let uri = command_uri(arg)?;
+                self.list_templates_for_uri(&uri).await
+            }
+            CMD_APPLY_TEMPLATE => {
+                let arg = params.arguments.first()?;
+                let payload = parse_apply_template_request(arg)?;
+                self.apply_template_for_request(payload).await
+            }
+            _ => None,
+        }
+    }
+
+    async fn list_templates_for_uri(&self, uri: &Url) -> Option<Value> {
+        let settings = self.settings.read().await.clone();
+        let model_root = detect_model_root_with_entry(uri, &settings.entry_file)?;
+        let contexts = self.analysis_by_root.read().await;
+        let context = contexts.get(&model_root)?;
+        let active = context.pack_context.active_pack.as_ref()?;
+        let list = active
+            .templates
+            .iter()
+            .map(|template| {
+                serde_json::json!({
+                    "id": template.id,
+                    "label": template.label,
+                    "kind": template.kind,
+                    "pack": format!("{}@{}", active.name, active.version),
+                })
+            })
+            .collect::<Vec<_>>();
+        Some(Value::Array(list))
+    }
+
+    async fn apply_template_for_request(&self, request: ApplyTemplateRequest) -> Option<Value> {
+        let settings = self.settings.read().await.clone();
+        let model_root = detect_model_root_with_entry(&request.uri, &settings.entry_file)?;
+        let contexts = self.analysis_by_root.read().await;
+        let context = contexts.get(&model_root)?;
+        let active = context.pack_context.active_pack.as_ref()?;
+        let template = active
+            .templates
+            .iter()
+            .find(|template| template.id == request.template_id)?;
+
+        let expanded = render_template(
+            &PackTemplate {
+                id: template.id.clone(),
+                label: Some(template.label.clone()),
+                kind: Some(template.kind.clone()),
+                body: template.body.clone(),
+                defaults: template.defaults.clone(),
+            },
+            &request.params,
+        );
+        Some(serde_json::json!({ "text": expanded }))
+    }
+
     async fn queue_refresh_for_uri(&self, source_uri: &Url) {
         let settings = self.settings.read().await.clone();
         let Some(model_root) = detect_model_root_with_entry(source_uri, &settings.entry_file)
@@ -391,11 +465,25 @@ impl Backend {
     }
 }
 
+#[derive(Debug, Clone)]
+struct ApplyTemplateRequest {
+    uri: Url,
+    template_id: String,
+    params: BTreeMap<String, String>,
+}
+
 pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
         definition_provider: Some(OneOf::Left(true)),
         completion_provider: Some(CompletionOptions::default()),
+        execute_command_provider: Some(ExecuteCommandOptions {
+            commands: vec![
+                CMD_LIST_TEMPLATES.to_string(),
+                CMD_APPLY_TEMPLATE.to_string(),
+            ],
+            work_done_progress_options: Default::default(),
+        }),
         ..ServerCapabilities::default()
     }
 }
@@ -491,6 +579,10 @@ impl LanguageServer for Backend {
         Ok(self
             .completion_for_uri(&params.text_document_position.text_document.uri)
             .await)
+    }
+
+    async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<Value>> {
+        Ok(self.execute_command_for_params(params).await)
     }
 }
 
@@ -800,6 +892,19 @@ fn completion_items(context: &AnalysisContext) -> Vec<CompletionItem> {
                 ..CompletionItem::default()
             });
         }
+        for template in &active.templates {
+            items.push(CompletionItem {
+                label: template.label.clone(),
+                kind: Some(CompletionItemKind::SNIPPET),
+                detail: Some(format!(
+                    "template {} ({}@{})",
+                    template.kind, active.name, active.version
+                )),
+                insert_text: Some(template.body.clone()),
+                sort_text: Some(format!("3-{}", template.id)),
+                ..CompletionItem::default()
+            });
+        }
     }
 
     items.sort_by(|a, b| a.label.cmp(&b.label));
@@ -904,11 +1009,13 @@ fn build_pack_context(
         let loaded = registry.active_pack(&name, &version)?;
         let aliases = collect_aliases_for_pack(&registry, &loaded.name);
         let manifest_uri = find_pack_manifest_uri(&pack_root, &loaded.name, &loaded.version);
+        let templates = collect_templates_for_pack(&registry, &loaded.name);
         Some(ActivePack {
             name: loaded.name,
             version: loaded.version,
             aliases,
             manifest_uri,
+            templates,
         })
     });
 
@@ -934,6 +1041,28 @@ fn collect_aliases_for_pack(registry: &PackRegistry, pack_name: &str) -> BTreeMa
         }
     }
     aliases
+}
+
+fn collect_templates_for_pack(registry: &PackRegistry, pack_name: &str) -> Vec<TemplateInfo> {
+    let mut templates = registry
+        .templates(pack_name)
+        .into_iter()
+        .map(|template| TemplateInfo {
+            id: template.id.clone(),
+            label: template
+                .label
+                .clone()
+                .unwrap_or_else(|| template.id.clone()),
+            kind: template
+                .kind
+                .clone()
+                .unwrap_or_else(|| "template".to_string()),
+            body: template.body.clone(),
+            defaults: template.defaults.clone(),
+        })
+        .collect::<Vec<_>>();
+    templates.sort_by(|a, b| a.id.cmp(&b.id).then(a.label.cmp(&b.label)));
+    templates
 }
 
 fn find_pack_manifest_uri(pack_root: &Path, pack_name: &str, version: &str) -> Option<Url> {
@@ -1240,12 +1369,44 @@ fn apply_settings_value(settings: &mut LspSettings, value: &Value) {
     }
 }
 
+fn command_uri(value: &Value) -> Option<Url> {
+    if let Some(uri) = value.as_str() {
+        return Url::parse(uri).ok();
+    }
+    value
+        .get("uri")
+        .and_then(Value::as_str)
+        .and_then(|uri| Url::parse(uri).ok())
+}
+
+fn parse_apply_template_request(value: &Value) -> Option<ApplyTemplateRequest> {
+    let uri = command_uri(value)?;
+    let template_id = value.get("templateId")?.as_str()?.to_string();
+    let mut params = BTreeMap::new();
+    if let Some(object) = value.get("params").and_then(Value::as_object) {
+        for (key, raw) in object {
+            if let Some(as_str) = raw.as_str() {
+                params.insert(key.clone(), as_str.to_string());
+            } else if raw.is_number() || raw.is_boolean() {
+                params.insert(key.clone(), raw.to_string());
+            }
+        }
+    }
+    Some(ApplyTemplateRequest {
+        uri,
+        template_id,
+        params,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, detect_model_root,
-        detect_model_root_with_entry, group_diagnostics_by_uri, resolve_packs_root,
-        server_capabilities, source_parseable, DocumentStore, LspSettings, TraceServer,
+        apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, command_uri,
+        completion_items, detect_model_root, detect_model_root_with_entry,
+        group_diagnostics_by_uri, parse_apply_template_request, resolve_packs_root,
+        server_capabilities, source_parseable, ApplyTemplateRequest, DocumentStore, LspSettings,
+        TraceServer, CMD_APPLY_TEMPLATE, CMD_LIST_TEMPLATES,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
     use lsp_types::{Position, TextDocumentSyncCapability, TextDocumentSyncKind, Url};
@@ -1286,6 +1447,15 @@ mod tests {
             Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL))
         );
         assert!(capabilities.completion_provider.is_some());
+        let command_provider = capabilities
+            .execute_command_provider
+            .expect("execute command provider");
+        assert!(command_provider
+            .commands
+            .contains(&CMD_LIST_TEMPLATES.to_string()));
+        assert!(command_provider
+            .commands
+            .contains(&CMD_APPLY_TEMPLATE.to_string()));
     }
 
     #[test]
@@ -1714,7 +1884,7 @@ stream rent on entity legal.borrower
         .expect("write model");
         let settings = LspSettings::default();
         let context = build_analysis_context(&root, &settings).expect("analysis");
-        let labels = super::completion_items(&context)
+        let labels = completion_items(&context)
             .into_iter()
             .map(|item| item.label)
             .collect::<Vec<_>>();
@@ -1729,6 +1899,98 @@ stream rent on entity legal.borrower
         assert!(a_idx < z_idx);
 
         fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn completion_items_include_pack_templates() {
+        let root = make_temp_dir("template-completion");
+        let packs_root = root.join("packs");
+        let pack_dir = packs_root.join("testpack");
+        fs::create_dir_all(&pack_dir).expect("create pack dir");
+        fs::write(
+            pack_dir.join("pack.toml"),
+            r#"name = "testpack"
+version = "0.1.0"
+[entrypoints]
+templates = "templates.toml"
+"#,
+        )
+        .expect("write manifest");
+        fs::write(
+            pack_dir.join("templates.toml"),
+            r#"[[templates]]
+id = "lease.basic"
+label = "Lease Basic"
+kind = "contract"
+body = "contract core.lease ${name} term ${term_start}..${term_end}"
+
+[templates.defaults]
+name = "lease_main"
+term_start = "2026-01"
+term_end = "2026-12"
+"#,
+        )
+        .expect("write templates");
+        fs::write(
+            root.join("model.cfdl"),
+            r#"version 0.1
+model "demo"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream rent on entity legal.borrower
+"#
+            .as_bytes(),
+        )
+        .expect("write model");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
+        let labels = completion_items(&context)
+            .into_iter()
+            .map(|item| item.label)
+            .collect::<Vec<_>>();
+        assert!(labels.iter().any(|label| label == "Lease Basic"));
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn parse_apply_template_request_handles_payload() {
+        let parsed = parse_apply_template_request(&json!({
+            "uri": "file:///tmp/model.cfdl",
+            "templateId": "lease.basic",
+            "params": {
+                "name": "lease_a",
+                "term_start": "2026-01",
+                "periods": 12
+            }
+        }))
+        .expect("request parsed");
+        let ApplyTemplateRequest {
+            uri,
+            template_id,
+            params,
+        } = parsed;
+        assert_eq!(uri.as_str(), "file:///tmp/model.cfdl");
+        assert_eq!(template_id, "lease.basic");
+        assert_eq!(params.get("name"), Some(&"lease_a".to_string()));
+        assert_eq!(params.get("periods"), Some(&"12".to_string()));
+    }
+
+    #[test]
+    fn command_uri_accepts_plain_string_and_object() {
+        assert_eq!(
+            command_uri(&json!("file:///tmp/plain.cfdl"))
+                .expect("uri")
+                .as_str(),
+            "file:///tmp/plain.cfdl"
+        );
+        assert_eq!(
+            command_uri(&json!({ "uri": "file:///tmp/object.cfdl" }))
+                .expect("uri")
+                .as_str(),
+            "file:///tmp/object.cfdl"
+        );
     }
 
     fn position_of_first(source: &str, needle: &str) -> Position {

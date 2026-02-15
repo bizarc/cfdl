@@ -17,6 +17,7 @@ pub struct PackRegistry {
 pub struct LoadedPack {
     pub manifest: PackManifest,
     pub aliases: BTreeMap<String, String>,
+    pub templates: Vec<PackTemplate>,
     pub lowering_rules: Vec<LoweringRule>,
 }
 
@@ -69,11 +70,30 @@ pub struct ActivePack {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TemplateExpansionRequest {
     pub template: String,
+    pub params: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TemplateExpansion {
     pub generated_nodes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct TemplateFile {
+    #[serde(default)]
+    pub templates: Vec<PackTemplate>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct PackTemplate {
+    pub id: String,
+    #[serde(default)]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub kind: Option<String>,
+    pub body: String,
+    #[serde(default)]
+    pub defaults: BTreeMap<String, String>,
 }
 
 impl PackRegistry {
@@ -111,6 +131,7 @@ impl PackRegistry {
                     ),
                 })?;
             let aliases = load_aliases(&pack_dir, manifest.entrypoints.aliases.as_deref())?;
+            let templates = load_templates(&pack_dir, manifest.entrypoints.templates.as_deref())?;
             let lowering_rules =
                 load_lowering_rules(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
 
@@ -119,6 +140,7 @@ impl PackRegistry {
                 LoadedPack {
                     manifest,
                     aliases,
+                    templates,
                     lowering_rules,
                 },
             );
@@ -158,14 +180,44 @@ impl PackRegistry {
             .unwrap_or_default()
     }
 
-    pub fn expand_template_stub(
+    pub fn templates(&self, pack_name: &str) -> Vec<PackTemplate> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.templates.clone())
+            .unwrap_or_default()
+    }
+
+    pub fn template(&self, pack_name: &str, template_id: &str) -> Option<PackTemplate> {
+        self.packs.get(pack_name).and_then(|pack| {
+            pack.templates
+                .iter()
+                .find(|template| template.id == template_id)
+                .cloned()
+        })
+    }
+
+    pub fn expand_template(
         &self,
-        _pack_name: &str,
-        _request: TemplateExpansionRequest,
-    ) -> TemplateExpansion {
-        TemplateExpansion {
-            generated_nodes: vec![],
-        }
+        pack_name: &str,
+        request: TemplateExpansionRequest,
+    ) -> Result<TemplateExpansion, PackLoadError> {
+        let pack = self.packs.get(pack_name).ok_or_else(|| PackLoadError {
+            message: format!("Pack '{pack_name}' is not loaded."),
+        })?;
+        let template = pack
+            .templates
+            .iter()
+            .find(|template| template.id == request.template)
+            .ok_or_else(|| PackLoadError {
+                message: format!(
+                    "Template '{}' was not found in pack '{}'.",
+                    request.template, pack_name
+                ),
+            })?;
+        let text = expand_template_body(template, &request.params);
+        Ok(TemplateExpansion {
+            generated_nodes: vec![text],
+        })
     }
 }
 
@@ -197,6 +249,55 @@ fn load_lowering_rules(
         message: format!("Failed to parse lowering rules '{}': {err}", path.display()),
     })?;
     Ok(parsed.rules)
+}
+
+fn load_templates(
+    pack_dir: &Path,
+    templates_path: Option<&str>,
+) -> Result<Vec<PackTemplate>, PackLoadError> {
+    let Some(relative) = templates_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    let mut parsed: TemplateFile = toml::from_str(&raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse templates '{}': {err}", path.display()),
+    })?;
+    parsed.templates.sort_by(|a, b| a.id.cmp(&b.id));
+    Ok(parsed.templates)
+}
+
+fn expand_template_body(template: &PackTemplate, params: &BTreeMap<String, String>) -> String {
+    let mut output = String::with_capacity(template.body.len());
+    let chars = template.body.chars().collect::<Vec<_>>();
+    let mut idx = 0usize;
+    while idx < chars.len() {
+        if chars[idx] == '$' && idx + 1 < chars.len() && chars[idx + 1] == '{' {
+            idx += 2;
+            let mut key = String::new();
+            while idx < chars.len() && chars[idx] != '}' {
+                key.push(chars[idx]);
+                idx += 1;
+            }
+            if idx < chars.len() && chars[idx] == '}' {
+                idx += 1;
+            }
+            let value = params
+                .get(&key)
+                .or_else(|| template.defaults.get(&key))
+                .cloned()
+                .unwrap_or_default();
+            output.push_str(&value);
+        } else {
+            output.push(chars[idx]);
+            idx += 1;
+        }
+    }
+    output
+}
+
+pub fn render_template(template: &PackTemplate, params: &BTreeMap<String, String>) -> String {
+    expand_template_body(template, params)
 }
 
 fn io_err(err: std::io::Error) -> PackLoadError {
@@ -232,6 +333,7 @@ mod tests {
 version = "0.1.0"
 [entrypoints]
 aliases = "aliases.toml"
+templates = "templates.toml"
 lowering = "lowering/rules.toml"
 "#,
         )
@@ -243,6 +345,21 @@ Lease = "core.Contract"
 "#,
         )
         .expect("write aliases");
+        fs::write(
+            pack_dir.join("templates.toml"),
+            r#"[[templates]]
+id = "lease.basic"
+label = "Lease Basic"
+kind = "contract"
+body = "contract core.lease ${name} term ${term_start}..${term_end}"
+
+[templates.defaults]
+name = "lease_main"
+term_start = "2026-01"
+term_end = "2026-12"
+"#,
+        )
+        .expect("write templates");
         fs::write(
             lowering_dir.join("rules.toml"),
             r#"[[rules]]
@@ -266,7 +383,21 @@ schedule_to = "2026-12"
             registry.lookup_alias("testpack", "Lease"),
             Some("core.Contract")
         );
+        assert_eq!(registry.templates("testpack").len(), 1);
         assert_eq!(registry.lowering_rules("testpack").len(), 1);
+        let expansion = registry
+            .expand_template(
+                "testpack",
+                TemplateExpansionRequest {
+                    template: "lease.basic".to_string(),
+                    params: BTreeMap::from([("name".to_string(), "lease_001".to_string())]),
+                },
+            )
+            .expect("template expansion");
+        assert_eq!(
+            expansion.generated_nodes,
+            vec!["contract core.lease lease_001 term 2026-01..2026-12".to_string()]
+        );
 
         let _ = fs::remove_dir_all(&root);
     }

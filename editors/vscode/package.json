@@ -28,6 +28,18 @@
         ]
       }
     ],
+    "snippets": [
+      {
+        "language": "cfdl",
+        "path": "./snippets/cfdl.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "cfdl.applyPackTemplate",
+        "title": "CFDL: Apply Pack Template"
+      }
+    ],
     "configuration": {
       "title": "CFDL",
       "properties": {
