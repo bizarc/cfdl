@@ -105,7 +105,7 @@ Implement `packs/cre` to support a CRE developer lifecycle: construction → lea
 
 ---
 
-## Milestone 12 — Operating Business Pack v0.1 (Current)
+## Milestone 12 — Operating Business Pack v0.1 (done)
 
 ### Goal
 Implement `packs/opco` for operating business valuation: revenue/opex/WC + exit.
@@ -133,7 +133,7 @@ Implement `packs/opco` for operating business valuation: revenue/opex/WC + exit.
 
 ---
 
-## Milestone 13 — Python Package + Docs + Examples in CI
+## Milestone 13 — Python Package + Docs + Examples in CI (done)
 
 ### Goal
 Make the SDK usable by others and ready for scenario testing while EVS platform work begins.

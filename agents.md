@@ -1,1 +1,0 @@
-See docs/AGENTS_CFDL_SDK.md. This repo is the SDK.
