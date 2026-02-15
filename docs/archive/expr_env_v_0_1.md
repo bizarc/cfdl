@@ -1,4 +1,6 @@
-# expr_env_v0_1.md
+# expr_env_v0_1.md (Archived)
+
+This file is an archived snapshot of the former `docs/expr_env_v_0_1.md`.
 
 **CFDL Expression Environment Specification v0.1**
 
@@ -66,8 +68,8 @@ Engines MUST operate with the following value kinds:
 ### 3.3 Money arithmetic rules (normative)
 1. `Money + Money` requires same currency (otherwise error unless engine auto-converts via `convert`).
 2. `Money - Money` same as above.
-3. `Money * Decimal` and `Decimal * Money` → Money.
-4. `Money / Decimal` → Money.
+3. `Money * Decimal` and `Decimal * Money` -> Money.
+4. `Money / Decimal` -> Money.
 5. `Decimal / Money` is invalid.
 6. `Rate` is represented as a Decimal-like in arithmetic only when explicitly accessing `.value` or using helper functions.
 
@@ -156,13 +158,13 @@ The compiler MUST ensure that the following expressions are intended as boolean:
 - `stream.active_when`
 
 **Minimum v0.1 approach (normative):**
-- If expression source is empty → hard error.
-- If expression source is a literal `true`/`false` → ok.
+- If expression source is empty -> hard error.
+- If expression source is a literal `true`/`false` -> ok.
 - Otherwise, the compiler emits the expression and MAY:
   - (a) attempt CEL type-check with a minimal signature environment, or
   - (b) emit a warning `W3001_EXPR_TYPE_UNKNOWN` and rely on runtime.
 
-**If the compiler performs type-checking** and the expression is not boolean → emit:
+**If the compiler performs type-checking** and the expression is not boolean -> emit:
 - `E2201_EVENT_WHEN_NOT_BOOL` or `E2202_STREAM_ACTIVE_NOT_BOOL`.
 
 ### 5.2 Money amount slots
@@ -184,7 +186,7 @@ Engines SHOULD support at least:
 - comparisons: `== != < <= > >=`
 - boolean logic: `&& || !`
 - conditionals: `cond ? a : b` (recommended)
-- functions defined in §4
+- functions defined in section 4
 
 ### 6.2 Determinism
 - Engines MUST not allow non-deterministic functions (e.g., `now()`) in core.
@@ -240,7 +242,6 @@ amount cel "convert(terms.rent_eur, 'USD')"
 
 An implementation conforms to CFDL v0.1 expression environment if it:
 1. Accepts `{lang:"cel", src:"..."}` expressions.
-2. Provides required bindings and functions in §4.
+2. Provides required bindings and functions in section 4.
 3. Enforces boolean slot semantics for `event.when` and `stream.active_when`.
 4. Evaluates expressions deterministically given identical inputs.
-

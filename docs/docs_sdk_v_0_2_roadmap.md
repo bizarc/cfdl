@@ -157,7 +157,7 @@ v0.2 makes the SDK useful for real modeling and early adopters by adding:
 
 Deliverables:
 - `cfdl-expr` crate
-- `ExprEnv` spec + implementation
+- `ExprEnv` spec + implementation (`docs/cel_and_expr_env_v_0_2.md`)
 - CEL integration (parse/eval)
 - Diagnostics for expr errors (parse/type/missing symbol)
 - Golden fixtures for expr evaluation cases

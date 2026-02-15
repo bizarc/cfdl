@@ -87,7 +87,7 @@ Implement `packs/cre` to support a CRE developer lifecycle: construction → lea
 - Minimal templates/aliases and lowering rules:
   - Lease → rent streams
   - Exit cap / sale event → terminal inflow stream
-  - (Optional) construction interest-only or draw stream scaffolding
+  - Construction interest-only or draw stream scaffolding
 - CRE validations (E6xxx)
 
 ### Deliverables

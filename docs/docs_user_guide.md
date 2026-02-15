@@ -198,7 +198,7 @@ stream rent on entity asset {
 ```
 
 See:
-- `docs/CEL_AND_EXPR_ENV.md`
+- `docs/cel_and_expr_env_v_0_2.md`
 
 ---
 

@@ -14,7 +14,7 @@ It provides:
 - `docs/CFDL_v0_1_Grammar.ebnf`
 - `docs/CFDL_v0_1_IR.schema.json`
 - `docs/pack_interface_v0_1.md`
-- `docs/expr_env_v0_1.md`
+- `docs/cel_and_expr_env_v_0_2.md`
 
 ---
 
