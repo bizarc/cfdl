@@ -250,6 +250,7 @@ struct LoweringContext<'a> {
     model_currency: &'a str,
     time_calendar: &'a str,
     time_start: &'a str,
+    time_periods: u32,
     timeline_end: &'a str,
     default_owner: &'a str,
 }
@@ -583,6 +584,7 @@ fn build_ir(
             model_currency: &model_currency,
             time_calendar: &time_calendar,
             time_start: &time_start,
+            time_periods,
             timeline_end: &timeline_end,
             default_owner: &first_entity_symbol,
         },
@@ -770,7 +772,9 @@ fn lower_contract_streams(
             pack,
             source_stmt,
             contract,
+            ctx.time_calendar,
             ctx.time_start,
+            ctx.time_periods,
             ctx.timeline_end,
         ));
         if diagnostics[before..]
@@ -790,8 +794,18 @@ fn lower_contract_streams(
             } else {
                 rule.owner_entity.clone()
             };
-            let schedule =
+            let mut schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
+            let mut amount_src = rule.amount_cel.clone();
+            if pack.name == "opco" {
+                apply_opco_contract_terms(
+                    contract,
+                    ctx.time_calendar,
+                    ctx.time_start,
+                    &mut schedule,
+                    &mut amount_src,
+                );
+            }
 
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
@@ -814,7 +828,7 @@ fn lower_contract_streams(
                     schedule,
                     amount: IrExpr {
                         lang: "cel".to_string(),
-                        src: rule.amount_cel.clone(),
+                        src: amount_src,
                     },
                     active_when: IrExpr {
                         lang: "cel".to_string(),
@@ -845,120 +859,129 @@ fn validate_pack_contract(
     pack: &ActivePackContext,
     source_stmt: &cfdl_resolver::SourceStatement,
     contract: &cfdl_parser::ContractStmt,
+    _timeline_calendar: &str,
     timeline_start: &str,
+    timeline_periods: u32,
     timeline_end: &str,
 ) -> Vec<Diagnostic> {
-    if pack.name != "cre" {
-        return vec![];
-    }
     let mut diagnostics = Vec::new();
-    match contract.name.as_str() {
-        "cre_lease" => {
-            if !contract.terms.contains_key("base_rent") {
-                diagnostics.push(cre_pack_diag(
-                    "E6001_CRE_LEASE_MISSING_BASE_RENT",
-                    "CRE lease is missing required term 'base_rent'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                diagnostics.push(cre_pack_diag(
-                    "E6002_CRE_LEASE_INVALID_TERM_RANGE",
-                    "CRE lease term range is missing, invalid, or outside model timeline.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            let lease_up_enabled = contract
-                .terms
-                .keys()
-                .any(|key| key == "lease_up" || key.starts_with("lease_up."));
-            if lease_up_enabled {
-                let months_ok = contract
-                    .terms
-                    .get("lease_up.months")
-                    .and_then(|term| term.value.parse::<i32>().ok())
-                    .map(|months| months > 0)
-                    .unwrap_or(false);
-                if !months_ok {
+    match pack.name.as_str() {
+        "cre" => match contract.name.as_str() {
+            "cre_lease" => {
+                if !contract.terms.contains_key("base_rent") {
                     diagnostics.push(cre_pack_diag(
-                        "E6003_CRE_LEASE_UP_MISSING_MONTHS",
-                        "CRE lease_up requires term 'lease_up.months' > 0 when lease_up is enabled.",
+                        "E6001_CRE_LEASE_MISSING_BASE_RENT",
+                        "CRE lease is missing required term 'base_rent'.",
                         source_stmt,
                         contract.span,
                     ));
                 }
-                let start_occ = contract
-                    .terms
-                    .get("lease_up.start_occupancy")
-                    .and_then(|term| term.value.parse::<f64>().ok())
-                    .unwrap_or(0.0);
-                let end_occ = contract
-                    .terms
-                    .get("lease_up.end_occupancy")
-                    .and_then(|term| term.value.parse::<f64>().ok())
-                    .unwrap_or(1.0);
-                if !(0.0..=1.0).contains(&start_occ) || !(0.0..=1.0).contains(&end_occ) {
+                if !valid_contract_term_range(contract, timeline_start, timeline_end) {
                     diagnostics.push(cre_pack_diag(
-                        "E6004_CRE_LEASE_UP_INVALID_OCCUPANCY",
-                        "CRE lease_up occupancy must be in [0, 1] for start/end occupancy.",
+                        "E6002_CRE_LEASE_INVALID_TERM_RANGE",
+                        "CRE lease term range is missing, invalid, or outside model timeline.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                let lease_up_enabled = contract
+                    .terms
+                    .keys()
+                    .any(|key| key == "lease_up" || key.starts_with("lease_up."));
+                if lease_up_enabled {
+                    let months_ok = contract
+                        .terms
+                        .get("lease_up.months")
+                        .and_then(|term| term.value.parse::<i32>().ok())
+                        .map(|months| months > 0)
+                        .unwrap_or(false);
+                    if !months_ok {
+                        diagnostics.push(cre_pack_diag(
+                            "E6003_CRE_LEASE_UP_MISSING_MONTHS",
+                            "CRE lease_up requires term 'lease_up.months' > 0 when lease_up is enabled.",
+                            source_stmt,
+                            contract.span,
+                        ));
+                    }
+                    let start_occ = contract
+                        .terms
+                        .get("lease_up.start_occupancy")
+                        .and_then(|term| term.value.parse::<f64>().ok())
+                        .unwrap_or(0.0);
+                    let end_occ = contract
+                        .terms
+                        .get("lease_up.end_occupancy")
+                        .and_then(|term| term.value.parse::<f64>().ok())
+                        .unwrap_or(1.0);
+                    if !(0.0..=1.0).contains(&start_occ) || !(0.0..=1.0).contains(&end_occ) {
+                        diagnostics.push(cre_pack_diag(
+                            "E6004_CRE_LEASE_UP_INVALID_OCCUPANCY",
+                            "CRE lease_up occupancy must be in [0, 1] for start/end occupancy.",
+                            source_stmt,
+                            contract.span,
+                        ));
+                    }
+                }
+            }
+            "cre_exit_cap" => {
+                let exit_cap = contract
+                    .terms
+                    .get("exit_cap")
+                    .and_then(|term| term.value.parse::<f64>().ok());
+                if exit_cap.is_none() {
+                    diagnostics.push(cre_pack_diag(
+                        "E6010_CRE_EXIT_MISSING_EXIT_CAP",
+                        "CRE exit contract is missing required term 'exit_cap'.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                } else if exit_cap.unwrap_or(0.0) <= 0.0 {
+                    diagnostics.push(cre_pack_diag(
+                        "E6011_CRE_EXIT_INVALID_EXIT_CAP",
+                        "CRE exit 'exit_cap' must be greater than 0.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                let has_noi = contract.terms.contains_key("noi_ref")
+                    || contract.terms.contains_key("noi_value")
+                    || contract.terms.contains_key("noi");
+                if !has_noi {
+                    diagnostics.push(cre_pack_diag(
+                        "E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE",
+                        "CRE exit requires either 'noi_ref' or 'noi_value'.",
                         source_stmt,
                         contract.span,
                     ));
                 }
             }
-        }
-        "cre_exit_cap" => {
-            let exit_cap = contract
-                .terms
-                .get("exit_cap")
-                .and_then(|term| term.value.parse::<f64>().ok());
-            if exit_cap.is_none() {
-                diagnostics.push(cre_pack_diag(
-                    "E6010_CRE_EXIT_MISSING_EXIT_CAP",
-                    "CRE exit contract is missing required term 'exit_cap'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            } else if exit_cap.unwrap_or(0.0) <= 0.0 {
-                diagnostics.push(cre_pack_diag(
-                    "E6011_CRE_EXIT_INVALID_EXIT_CAP",
-                    "CRE exit 'exit_cap' must be greater than 0.",
-                    source_stmt,
-                    contract.span,
-                ));
+            "cre_ops_revenue" | "cre_ops_expense" => {
+                if !contract.terms.contains_key("amount") {
+                    diagnostics.push(cre_pack_diag(
+                        "E6020_CRE_OPS_MISSING_AMOUNT",
+                        "CRE ops contract is missing required term 'amount'.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                if !valid_contract_term_range(contract, timeline_start, timeline_end) {
+                    diagnostics.push(cre_pack_diag(
+                        "E6021_CRE_OPS_INVALID_SCHEDULE",
+                        "CRE ops term range is missing, invalid, or outside model timeline.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
             }
-            let has_noi = contract.terms.contains_key("noi_ref")
-                || contract.terms.contains_key("noi_value")
-                || contract.terms.contains_key("noi");
-            if !has_noi {
-                diagnostics.push(cre_pack_diag(
-                    "E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE",
-                    "CRE exit requires either 'noi_ref' or 'noi_value'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        "cre_ops_revenue" | "cre_ops_expense" => {
-            if !contract.terms.contains_key("amount") {
-                diagnostics.push(cre_pack_diag(
-                    "E6020_CRE_OPS_MISSING_AMOUNT",
-                    "CRE ops contract is missing required term 'amount'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                diagnostics.push(cre_pack_diag(
-                    "E6021_CRE_OPS_INVALID_SCHEDULE",
-                    "CRE ops term range is missing, invalid, or outside model timeline.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
+            _ => {}
+        },
+        "opco" => diagnostics.extend(validate_opco_contract(
+            source_stmt,
+            contract,
+            timeline_start,
+            timeline_end,
+            timeline_periods,
+        )),
         _ => {}
     }
     diagnostics
@@ -980,6 +1003,182 @@ fn cre_pack_diag(
         hint: None,
         notes: vec![],
     }
+}
+
+fn opco_pack_diag(
+    code: &str,
+    message: &str,
+    source_stmt: &cfdl_resolver::SourceStatement,
+    span: cfdl_parser::Span,
+) -> Diagnostic {
+    Diagnostic {
+        code: code.to_string(),
+        severity: "error".to_string(),
+        message: message.to_string(),
+        file: Some(source_stmt.file.clone()),
+        span: Some(map_span(span)),
+        path: None,
+        hint: None,
+        notes: vec![],
+    }
+}
+
+fn validate_opco_contract(
+    source_stmt: &cfdl_resolver::SourceStatement,
+    contract: &cfdl_parser::ContractStmt,
+    timeline_start: &str,
+    timeline_end: &str,
+    timeline_periods: u32,
+) -> Vec<Diagnostic> {
+    let mut diagnostics = Vec::new();
+    match contract.name.as_str() {
+        "opco_revenue_line" | "opco_opex_line" => {
+            if parse_contract_term_f64(contract, "amount").is_none() {
+                diagnostics.push(opco_pack_diag(
+                    "E7001_OPCO_LINE_MISSING_AMOUNT",
+                    "OpCo line is missing required numeric term 'amount'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
+                diagnostics.push(opco_pack_diag(
+                    "E7002_OPCO_LINE_INVALID_SCHEDULE",
+                    "OpCo line term range is missing, invalid, or outside model timeline.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if contract.terms.contains_key("growth_rate")
+                && parse_contract_term_f64(contract, "growth_rate").is_none()
+            {
+                diagnostics.push(opco_pack_diag(
+                    "E7003_OPCO_LINE_INVALID_GROWTH",
+                    "OpCo line has invalid 'growth_rate' term.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        "opco_working_capital" => {
+            if parse_contract_term_f64(contract, "amount").is_none() {
+                diagnostics.push(opco_pack_diag(
+                    "E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE",
+                    "OpCo working capital requires term 'amount' or a supported rule expression.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
+                diagnostics.push(opco_pack_diag(
+                    "E7011_OPCO_WC_INVALID_SCHEDULE",
+                    "OpCo working capital term range is missing, invalid, or outside model timeline.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        "opco_exit_multiple" => {
+            let multiple = parse_contract_term_f64(contract, "exit_multiple");
+            if multiple.is_none() {
+                diagnostics.push(opco_pack_diag(
+                    "E7020_OPCO_EXIT_MISSING_MULTIPLE",
+                    "OpCo exit is missing required term 'exit_multiple'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            } else if multiple.unwrap_or(0.0) <= 0.0 {
+                diagnostics.push(opco_pack_diag(
+                    "E7021_OPCO_EXIT_INVALID_MULTIPLE",
+                    "OpCo exit 'exit_multiple' must be greater than 0.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if parse_contract_term_f64(contract, "base_value").is_none() {
+                diagnostics.push(opco_pack_diag(
+                    "E7022_OPCO_EXIT_MISSING_BASE_VALUE",
+                    "OpCo exit requires numeric term 'base_value'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            let exit_period = parse_contract_term_i32(contract, "exit_period");
+            if exit_period.is_none()
+                || exit_period.unwrap_or(0) <= 0
+                || exit_period.unwrap_or(0) > timeline_periods as i32
+            {
+                diagnostics.push(opco_pack_diag(
+                    "E7023_OPCO_EXIT_MISSING_EXIT_PERIOD",
+                    "OpCo exit requires 'exit_period' in model timeline bounds.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        _ => {}
+    }
+    diagnostics
+}
+
+fn apply_opco_contract_terms(
+    contract: &cfdl_parser::ContractStmt,
+    timeline_calendar: &str,
+    timeline_start: &str,
+    schedule: &mut IrSchedule,
+    amount_src: &mut String,
+) {
+    match contract.name.as_str() {
+        "opco_revenue_line" | "opco_opex_line" | "opco_working_capital" => {
+            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
+                *amount_src = amount.to_string();
+            }
+            if let (Some(start), Some(end)) = (&contract.term_start, &contract.term_end) {
+                *schedule = IrSchedule {
+                    kind: "Every".to_string(),
+                    on: None,
+                    every: Some(timeline_calendar.to_string()),
+                    from: Some(normalize_date(start)),
+                    to: Some(normalize_date(end)),
+                    on_rule: None,
+                    phase: None,
+                };
+            }
+        }
+        "opco_exit_multiple" => {
+            if let (Some(base_value), Some(exit_multiple)) = (
+                parse_contract_term_f64(contract, "base_value"),
+                parse_contract_term_f64(contract, "exit_multiple"),
+            ) {
+                *amount_src = format!("{base_value} * {exit_multiple}");
+            }
+            if let Some(exit_period) = parse_contract_term_i32(contract, "exit_period") {
+                let on_date = add_periods_for_timeline_end(
+                    timeline_start,
+                    timeline_calendar,
+                    exit_period as u32,
+                );
+                *schedule = IrSchedule {
+                    kind: "OnDate".to_string(),
+                    on: Some(on_date),
+                    every: None,
+                    from: None,
+                    to: None,
+                    on_rule: None,
+                    phase: None,
+                };
+            }
+        }
+        _ => {}
+    }
+}
+
+fn parse_contract_term_f64(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<f64> {
+    contract.terms.get(key)?.value.parse::<f64>().ok()
+}
+
+fn parse_contract_term_i32(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<i32> {
+    contract.terms.get(key)?.value.parse::<i32>().ok()
 }
 
 fn valid_contract_term_range(

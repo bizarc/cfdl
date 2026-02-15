@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E7001_OPCO_LINE_MISSING_AMOUNT",
+    "severity": "error",
+    "message": "OpCo line is missing required numeric term 'amount'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

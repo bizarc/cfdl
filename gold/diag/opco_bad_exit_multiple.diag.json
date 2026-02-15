@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E7021_OPCO_EXIT_INVALID_MULTIPLE",
+    "severity": "error",
+    "message": "OpCo exit 'exit_multiple' must be greater than 0.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 15,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

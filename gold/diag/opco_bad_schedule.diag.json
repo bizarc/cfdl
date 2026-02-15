@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E7002_OPCO_LINE_INVALID_SCHEDULE",
+    "severity": "error",
+    "message": "OpCo line term range is missing, invalid, or outside model timeline.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

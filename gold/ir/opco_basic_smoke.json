@@ -1,0 +1,311 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "opco-basic-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 72
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8d92035c8631b4e85c818251ceb222af",
+      "symbol": "operating.business",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "5dfaf80322a5ec2db4cc25b3557aeead",
+      "name": "opco_exit_multiple",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "348fb1380034df89e067077f37b8ef9c",
+      "name": "opco_opex_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "b492d0b12fdfe15c3a5c48d93b86ea80",
+      "name": "opco_revenue_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "4d72e537ae73dfa88f1d593435087467",
+      "name": "opco_working_capital",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "e8d7f4378951f550ceef9ebbdbea37fb",
+      "name": "opco.exit.value",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "800000 * 6.5"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_exit_multiple_v1"
+        }
+      }
+    },
+    {
+      "id": "66a85f5ea2ffde11f1610e968b0ddfbf",
+      "name": "opco.opex.recurring",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "70000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_opex_line_v1"
+        }
+      }
+    },
+    {
+      "id": "1f234eee73bad6e55a3ea5dcde886952",
+      "name": "opco.revenue.recurring",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "120000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_revenue_line_v1"
+        }
+      }
+    },
+    {
+      "id": "462d4c259f3643ce25466e4f060bb7ed",
+      "name": "opco.working_capital.adjustment",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "3000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_working_capital_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "metrics": [],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "cf5b9f0fb3eb49fa7195f80826d7dc67",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

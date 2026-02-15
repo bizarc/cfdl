@@ -1,0 +1,9 @@
+{
+  "deterministic": {
+    "discount_rate": 0.12,
+    "parameters": {
+      "stream.opco.revenue.recurring.amount": 100000.0,
+      "stream.opco.opex.recurring.amount": 76000.0
+    }
+  }
+}
