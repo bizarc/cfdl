@@ -1,12 +1,17 @@
 [
   {
-    "code": "E5002_IR_SCHEMA_VALIDATION_FAILED",
+    "code": "E1109_MISSING_ENTITY",
     "severity": "error",
-    "message": "IR validation failed: at least one entity is required.",
+    "message": "Model must declare at least one entity.",
     "file": "model.cfdl",
-    "span": null,
-    "path": "entities",
-    "hint": "Add at least one `entity` declaration to the model.",
+    "span": {
+      "start_line": 1,
+      "start_col": 1,
+      "end_line": 1,
+      "end_col": 11
+    },
+    "path": null,
+    "hint": null,
     "notes": []
   }
 ]

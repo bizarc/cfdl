@@ -24,6 +24,7 @@ FIXT_VALID="$ROOT/fixtures/valid"
 FIXT_INVALID="$ROOT/fixtures/invalid"
 GOLD_IR="$ROOT/gold/ir"
 GOLD_DIAG="$ROOT/gold/diag"
+GOLD_RESULTS="$ROOT/gold/results"
 
 CMD="${1:-}"
 if [[ "$CMD" != "run" ]]; then
@@ -31,7 +32,7 @@ if [[ "$CMD" != "run" ]]; then
   exit 2
 fi
 
-mkdir -p "$GOLD_IR" "$GOLD_DIAG"
+mkdir -p "$GOLD_IR" "$GOLD_DIAG" "$GOLD_RESULTS"
 
 # Choose CFDL binary:
 # - If CFDL_BIN is set, use it
@@ -99,19 +100,27 @@ echo "[golden] Update mode: $UPDATE"
 run_valid_fixture() {
   local dir="$1"
   local name="$2"
-  local out_ir gold_ir
+  local out_ir out_results gold_ir gold_results
   out_ir="$(mktemp)"
+  out_results="$(mktemp)"
   gold_ir="$GOLD_IR/${name}.json"
+  gold_results="$GOLD_RESULTS/${name}.results.json"
 
   # Compile
   if ! "$CFDL_BIN" compile "$dir" --out "$out_ir" >/dev/null 2>&1; then
     echo "[golden][FAIL] valid/${name}: compile failed unexpectedly"
     return 1
   fi
+  if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 >/dev/null 2>&1; then
+    echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
+    return 1
+  fi
 
   if [[ "$UPDATE" == "1" ]]; then
     cp "$out_ir" "$gold_ir"
+    cp "$out_results" "$gold_results"
     echo "[golden][UPDATE] wrote $gold_ir"
+    echo "[golden][UPDATE] wrote $gold_results"
     return 0
   fi
 
@@ -120,9 +129,18 @@ run_valid_fixture() {
     echo "               run with CFDL_GOLD_UPDATE=1 to generate."
     return 1
   fi
+  if [[ ! -f "$gold_results" ]]; then
+    echo "[golden][FAIL] valid/${name}: missing gold results $gold_results"
+    echo "               run with CFDL_GOLD_UPDATE=1 to generate."
+    return 1
+  fi
 
   if ! compare_json_files "$out_ir" "$gold_ir"; then
     echo "[golden][FAIL] valid/${name}: IR mismatch"
+    return 1
+  fi
+  if ! compare_json_files "$out_results" "$gold_results"; then
+    echo "[golden][FAIL] valid/${name}: Results mismatch"
     return 1
   fi
 

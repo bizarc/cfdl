@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cfdl-compile",
+ "cfdl-engine",
  "clap",
  "serde",
  "serde_json",
@@ -90,6 +91,15 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror",
+]
+
+[[package]]
+name = "cfdl-engine"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]
