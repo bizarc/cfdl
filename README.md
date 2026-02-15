@@ -1,229 +1,153 @@
-# CFDL v0.1 — Language, Compiler, and Tooling
+# CFDL SDK (Cash Flow Domain Language)
 
-This repository contains the **CFDL v0.1** language documents (under `docs/`) and the implementation scaffolding for:
+CFDL is a proprietary domain language and SDK for defining **cash-flow models** (time, structure, behavior), compiling them into a deterministic **Intermediate Representation (IR)**, and executing valuation runs to produce deterministic **Results** (DCF, scenarios, Monte Carlo).
 
-- **Rust**: lexer → parser → resolver → validator → compiler (IR emitter)
-- **CLI**: `cfdl parse|validate|compile|fmt`
-- **Tooling**: TypeScript + Python bindings and editor/notebook integrations
-- **Packs**: Domain overlays (CRE, Operating Business, etc.) via a stable pack interface
+This repository is the **CFDL SDK**: language spec + compiler + schemas + engine harness + CLI + golden fixtures.
 
-The repository is designed for **agentic development**: small, testable steps with golden fixtures.
+> EVS (Enterprise Valuation SaaS) lives in a separate repository: `evs-platform`, which depends on this SDK.
 
 ---
 
-## Repository layout
+## What’s in this repo
 
-You will start with an **empty root** containing only this `README.md` (and optionally `AGENTS.md` / `CLAUDE.md`) plus an `docs/` folder pre-populated with the specification documents.
+### Language + contracts
 
-### Proposed directory structure
+* Human-authored CFDL source files (`.cfdl`)
+* Language specification and grammar (see `docs/`)
 
-```text
-.
-├─ README.md
-├─ AGENTS.md                    # optional: agent instructions, task breakdown, guardrails
-├─ docs/                       # provided: all specs created so far
-│  ├─ CFDL_v0_1_Grammar.ebnf
-│  ├─ CFDL_v0_1_IR.schema.json
-│  ├─ CFDL_v0_1_Results.schema.json
-│  ├─ compiler_spec_v0_1.md
-│  ├─ diagnostics_spec.md
-│  ├─ expr_env_v0_1.md
-│  └─ pack_interface_v0_1.md
-│
-├─ crates/                       # Rust workspace
-│  ├─ cfdl-lexer/
-│  ├─ cfdl-parser/
-│  ├─ cfdl-resolver/
-│  ├─ cfdl-validate/
-│  ├─ cfdl-compile/
-│  └─ cfdl-cli/
-│
-├─ fixtures/
-│  ├─ valid/
-│  └─ invalid/
-│
-├─ gold/
-│  ├─ ir/                         # expected canonical IR JSON outputs
-│  └─ diag/                       # expected diagnostics outputs
-│
-├─ packs/                         # local domain packs (directory form)
-│  ├─ evs-cre/
-│  │  ├─ pack.json
-│  │  └─ ...
-│  └─ evs-operating-business/
-│     ├─ pack.json
-│     └─ ...
-│
-├─ bindings/
-│  ├─ typescript/
-│  └─ python/
-│
-└─ tools/
-   ├─ golden-runner/              # compares emitted IR/diagnostics vs gold
-   └─ json-canonicalize/          # ensures stable json output (if needed)
+### Compiler toolchain
+
+* Lexer → Parser → Resolver → Symbol checks → Validation → IR emission
+* Deterministic IDs and canonical ordering
+* Diagnostics with stable codes (golden-tested)
+
+### Engine harness
+
+* Deterministic execution over IR
+* Results emission (schema-governed)
+* Scenario + Monte Carlo run configs (seeded, reproducible)
+
+### Golden fixtures
+
+* `fixtures/invalid/*` → expected diagnostics (`gold/diag/*`)
+* `fixtures/valid/*` → expected IR (`gold/ir/*`) and results (`gold/results/*`)
+
+---
+
+## Quick start
+
+### Build
+
+```bash
+cargo build -p cfdl-cli
 ```
 
-> Notes
-> - `docs/` is treated as the source of truth for language behavior.
-> - `crates/` is a Rust workspace with small crates per stage.
-> - `fixtures/` and `gold/` enable deterministic golden tests.
-> - `packs/` provides local pack folders for development.
+### Compile a model to IR
 
----
-
-## Build philosophy
-
-1. **Deterministic**: identical inputs produce identical canonical IR.
-2. **Separation of concerns**:
-   - Language spec is not the implementation.
-   - Packs extend validation and lowering; they do not change core semantics.
-3. **Golden-driven development**:
-   - Most compiler behavior is validated by fixture → expected IR/diagnostics.
-4. **Ergonomics for analysts**:
-   - Standalone `.cfdl` authoring + notebook workflows.
-
----
-
-## Implementation milestones (recommended)
-
-### Milestone 0 — Parsing
-- Implement lexer with spans and comment support.
-- Implement parser producing AST with spans (per `compiler_spec_v0_1.md`).
-- Add `cfdl parse` CLI command.
-
-### Milestone 1 — Imports + Symbol Resolution
-- Implement import graph, cycle detection, deterministic ordering.
-- Build symbol tables and resolve references.
-
-### Milestone 2 — Validation
-- Structural validation (required statements, duplicates, schedule bounds).
-- Diagnostics produced per `diagnostics_spec.md`.
-
-### Milestone 3 — Lowering + IR Emission
-- Date/literal normalization, defaulting.
-- Deterministic ID generation.
-- `obs()` / `ref()` dependency extraction.
-- Emit IR JSON conforming to `CFDL_v0_1_IR.schema.json`.
-
-### Milestone 4 — CLI and Tooling
-- `cfdl validate`, `cfdl compile`, `cfdl fmt`.
-- TypeScript/Python bindings that:
-  - call compiler/validator
-  - parse diagnostics
-  - load IR
-
-### Milestone 5 — Domain Packs
-- Implement pack loader + registries per `pack_interface_v0_1.md`.
-- Create first packs:
-  - `evs/cre`
-  - `evs/operating_business`
-
----
-
-## Canonical commands (planned)
-
-### CLI
 ```bash
-# Parse to AST (debug)
-cfdl parse <model_root>
-
-# Validate only (no IR emission)
-cfdl validate <model_root>
-
-# Compile to canonical IR JSON
-cfdl compile <model_root> --out build/model.ir.json
-
-# Format source (optional; future)
-cfdl fmt <model_root>
+./target/debug/cfdl compile fixtures/valid/minimal_model --out /tmp/model.ir.json
 ```
 
-### Golden runner
+### Run a model IR to results
+
 ```bash
-# Run all fixtures and compare output to gold/
+./target/debug/cfdl run /tmp/model.ir.json --out /tmp/model.results.json --rate 0.10
+```
+
+### Run with a config (scenarios / Monte Carlo)
+
+```bash
+./target/debug/cfdl run /tmp/model.ir.json --out /tmp/model.results.json --config fixtures/valid/monte_carlo_smoke/run.json
+```
+
+### Verify golden fixtures (authoritative behavior)
+
+```bash
 ./tools/golden-runner run
 ```
 
----
+To update gold (intentional behavior changes only):
 
-## Golden fixtures (how we test correctness)
-
-- `fixtures/valid/*.cfdl` compile successfully and produce an IR JSON identical to `gold/ir/<name>.json`.
-- `fixtures/invalid/*.cfdl` fail compilation and produce diagnostics identical to `gold/diag/<name>.diag.json`.
-
-Minimum fixture set (from compiler spec):
-- `minimal_model`
-- `contract_with_effect_stream`
-- `event_sets_entity_state`
-- `phase_enter_schedule`
-- `bad_duplicate_stream`
-- `bad_missing_term`
-- `bad_schedule_out_of_bounds`
-- `obs_ref_extraction`
+```bash
+CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
+```
 
 ---
 
-## Domain packs (industry overlays)
+## Public contracts (stable interfaces)
 
-Domain packs behave like “industry clouds”:
+The following are the contracts EVS and other consumers integrate against:
 
-- Core CFDL stays stable.
-- Packs add:
-  - ontology type registries
-  - contract term schemas
-  - aliases
-  - declarative lowering rules (contract → streams/effects)
-  - optional CEL function signatures
-
-See `docs/pack_interface_v0_1.md`.
+* CFDL source format: `docs/CFDL_v0_1_Language_Spec.md`
+* IR schema: `docs/CFDL_v0_1_IR.schema.json`
+* Results schema: `docs/CFDL_v0_1_Results.schema.json`
+* Diagnostics codes: `docs/diagnostics_spec.md`
+* Deterministic ID generation: `docs/id_generation.md`
 
 ---
 
-## Ontology and data integration (how CFDL links to external data)
+## Crates
 
-CFDL expressions can call:
-- `obs('...')` for time-varying observables
-- `ref('...')` for static reference objects
+This is a Rust workspace. Key crates include:
 
-The compiler extracts these IDs into:
-- `required_observables[]`
-- `required_refs[]`
+* `cfdl-cli` — the CLI tool (`cfdl`)
+* `cfdl-compile` — compiler pipeline (CFDL → IR)
+* `cfdl-engine` — execution engine harness (IR → Results)
+* `cfdl-validate`, `cfdl-resolver`, etc. — internal compiler stages
 
-This is the bridge to:
-- data connectors
-- data pipelines
-- ontology registries
-
-See `docs/expr_env_v0_1.md`.
+> The intended embedding surface for other repos is `cfdl-compile` and `cfdl-engine`.
 
 ---
 
-## Specs index
+## Versioning and releases
 
-All authoritative specifications live under `docs/`:
+This repo is versioned as an SDK.
 
-- `compiler_spec_v0_1.md` — stages, AST, validation, lowering, determinism
-- `diagnostics_spec.md` — diagnostics shape + codes
-- `expr_env_v0_1.md` — CEL environment contract
-- `pack_interface_v0_1.md` — domain pack interface
-- `CFDL_v0_1_Grammar.ebnf` — grammar
-- `CFDL_v0_1_IR.schema.json` — canonical IR schema
-- `CFDL_v0_1_Results.schema.json` — results schema
+* Tags (e.g., `v0.1.0`) identify released SDK snapshots.
+* EVS pins to a tag or commit SHA.
+
+To create and push a tag:
+
+```bash
+git tag -a v0.1.0 -m "CFDL SDK v0.1.0"
+git push origin v0.1.0
+```
 
 ---
 
-## Contributing / agentic workflow
+## Using this SDK from `evs-platform`
 
-When using agents:
+You can depend on this repo via Git (no crates.io required).
 
-- Work in **small PR-sized increments** (1–3 files per step).
-- Every increment must add or update:
-  - a fixture in `fixtures/` and
-  - a gold artifact in `gold/` (IR or diagnostics)
-- Never change stable error codes; add new ones if needed.
-- Keep determinism: stable ordering + stable IDs.
+In `evs-platform/Cargo.toml`:
 
-If you include `AGENTS.md` / `CLAUDE.md`, place:
-- task checklist by milestone
-- coding standards
-- “definition of done” for each crate
+```toml
+[dependencies]
+cfdl-compile = { git = "ssh://git@github.com/<ORG>/cfdl.git", tag = "v0.1.0", package = "cfdl-compile" }
+cfdl-engine  = { git = "ssh://git@github.com/<ORG>/cfdl.git", tag = "v0.1.0", package = "cfdl-engine" }
+```
 
+Notes:
+
+* Use `tag = "v0.1.0"` to pin to a release.
+* Or use `rev = "<commit sha>"` to pin precisely.
+
+---
+
+## Relationship to EVS
+
+`evs-platform` provides:
+
+* multi-tenant SaaS (projects, artifacts, jobs)
+* connectors + pipelines (Excel/CSV, PDF, APIs)
+* ontology / digital twin
+* authoring UIs (wizard) and review/comment workflows
+* domain packs (CRE, Operating Business, Private Credit)
+
+`evs-platform` depends on the CFDL SDK to compile and run models deterministically.
+
+---
+
+## License
+
+Proprietary. All rights reserved.
