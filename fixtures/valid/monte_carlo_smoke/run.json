@@ -1,0 +1,28 @@
+{
+  "deterministic": {
+    "discount_rate": 0.08,
+    "parameters": {
+      "stream.rent.amount": 1000
+    }
+  },
+  "monte_carlo": {
+    "trial_count": 10,
+    "seed": 424242,
+    "distributions": {
+      "stream.rent.amount": {
+        "kind": "normal",
+        "mean": 1000,
+        "stddev": 75
+      },
+      "stream.fee.amount": {
+        "kind": "fixed",
+        "value": 50
+      },
+      "stream.misc.amount": {
+        "kind": "uniform",
+        "min": -20,
+        "max": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "deterministic": {
+    "discount_rate": 0.1,
+    "parameters": {
+      "stream.rent.amount": 1000
+    }
+  },
+  "scenarios": {
+    "base": {
+      "parameters": {
+        "stream.rent.amount": 1000
+      }
+    },
+    "downside": {
+      "parameters": {
+        "stream.rent.amount": 1200
+      }
+    },
+    "upside": {
+      "parameters": {
+        "stream.rent.amount": 900
+      }
+    }
+  }
+}

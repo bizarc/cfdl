@@ -39,11 +39,9 @@ mkdir -p "$GOLD_IR" "$GOLD_DIAG" "$GOLD_RESULTS"
 # - Else assume target/debug/cfdl after building cfdl-cli crate
 CFDL_BIN="${CFDL_BIN:-$ROOT/target/debug/cfdl}"
 
-# Build cfdl-cli if binary not present
-if [[ ! -x "$CFDL_BIN" ]]; then
-  echo "[golden] Building CLI (crate: cfdl-cli)..."
-  (cd "$ROOT" && cargo build -p cfdl-cli)
-fi
+# Always build cfdl-cli to ensure the binary matches source edits.
+echo "[golden] Building CLI (crate: cfdl-cli)..."
+(cd "$ROOT" && cargo build -p cfdl-cli)
 
 if [[ ! -x "$CFDL_BIN" ]]; then
   echo "[golden] ERROR: CFDL binary not found or not executable: $CFDL_BIN"
@@ -100,18 +98,24 @@ echo "[golden] Update mode: $UPDATE"
 run_valid_fixture() {
   local dir="$1"
   local name="$2"
-  local out_ir out_results gold_ir gold_results
+  local out_ir out_results gold_ir gold_results run_config
   out_ir="$(mktemp)"
   out_results="$(mktemp)"
   gold_ir="$GOLD_IR/${name}.json"
   gold_results="$GOLD_RESULTS/${name}.results.json"
+  run_config="$dir/run.json"
 
   # Compile
   if ! "$CFDL_BIN" compile "$dir" --out "$out_ir" >/dev/null 2>&1; then
     echo "[golden][FAIL] valid/${name}: compile failed unexpectedly"
     return 1
   fi
-  if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 >/dev/null 2>&1; then
+  if [[ -f "$run_config" ]]; then
+    if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --config "$run_config" >/dev/null 2>&1; then
+      echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
+      return 1
+    fi
+  elif ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 >/dev/null 2>&1; then
     echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
     return 1
   fi

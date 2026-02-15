@@ -31,6 +31,8 @@ enum Command {
         ir_json_path: PathBuf,
         #[arg(long)]
         out: PathBuf,
+        #[arg(long)]
+        config: Option<PathBuf>,
         #[arg(long, default_value_t = 0.0)]
         rate: f64,
         #[arg(long)]
@@ -77,6 +79,7 @@ fn main() -> Result<()> {
         Command::Run {
             ir_json_path,
             out,
+            config,
             rate,
             as_of,
         } => {
@@ -106,13 +109,41 @@ fn main() -> Result<()> {
                 None
             };
 
-            let results = match cfdl_engine::run_from_file(
-                &ir_json_path,
+            let run_config = if let Some(config_path) = config {
+                match cfdl_engine::run_config_from_json_file(&config_path, rate, parsed_as_of) {
+                    Ok(config) => config,
+                    Err(err) => {
+                        emit_run_failure(
+                            cli.json,
+                            vec![RunDiagnostic {
+                                code: "E5002_IR_SCHEMA_VALIDATION_FAILED".to_string(),
+                                severity: "error".to_string(),
+                                message: format!(
+                                    "Failed to load run config '{}': {err}",
+                                    config_path.display()
+                                ),
+                                file: Some(config_path.to_string_lossy().to_string()),
+                                span: None,
+                                path: None,
+                                hint: Some(
+                                    "Ensure run.json is valid JSON and matches run config schema."
+                                        .to_string(),
+                                ),
+                                notes: vec![],
+                            }],
+                        )?;
+                        std::process::exit(1);
+                    }
+                }
+            } else {
                 cfdl_engine::RunConfig {
                     discount_rate: rate,
                     as_of: parsed_as_of,
-                },
-            ) {
+                    ..Default::default()
+                }
+            };
+
+            let results = match cfdl_engine::run_from_file(&ir_json_path, run_config) {
                 Ok(results) => results,
                 Err(err) => {
                     emit_run_failure(

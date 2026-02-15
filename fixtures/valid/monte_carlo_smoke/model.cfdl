@@ -1,0 +1,10 @@
+version 0.1
+model "monte-carlo-smoke"
+time calendar monthly from 2026-01 for 6
+
+entity legal borrower
+
+stream rent on entity legal.borrower {
+  schedule every monthly from 2026-01 to 2026-06
+  amount cel "1000"
+}

@@ -9,6 +9,7 @@ pub enum EngineError {
     Io(std::io::Error),
     Json(serde_json::Error),
     InvalidDate(String),
+    InvalidRunConfig(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -17,6 +18,7 @@ impl std::fmt::Display for EngineError {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
+            EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
         }
     }
 }
@@ -39,6 +41,9 @@ impl From<serde_json::Error> for EngineError {
 pub struct RunConfig {
     pub discount_rate: f64,
     pub as_of: Option<Date>,
+    pub parameter_overrides: BTreeMap<String, f64>,
+    pub scenarios: BTreeMap<String, ScenarioRunConfig>,
+    pub monte_carlo: Option<MonteCarloRunConfig>,
 }
 
 impl Default for RunConfig {
@@ -46,13 +51,162 @@ impl Default for RunConfig {
         Self {
             discount_rate: 0.0,
             as_of: None,
+            parameter_overrides: BTreeMap::new(),
+            scenarios: BTreeMap::new(),
+            monte_carlo: None,
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct ScenarioRunConfig {
+    pub discount_rate: Option<f64>,
+    pub as_of: Option<Date>,
+    pub parameter_overrides: BTreeMap<String, f64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MonteCarloRunConfig {
+    pub trial_count: u32,
+    pub seed: u64,
+    pub distributions: BTreeMap<String, DistributionSpec>,
+}
+
+#[derive(Debug, Clone)]
+pub enum DistributionSpec {
+    Fixed { value: f64 },
+    Normal { mean: f64, stddev: f64 },
+    Uniform { min: f64, max: f64 },
+}
+
+#[derive(Debug, Deserialize)]
+struct RunConfigFile {
+    #[serde(default)]
+    deterministic: DeterministicConfigFile,
+    #[serde(default)]
+    scenarios: BTreeMap<String, ScenarioConfigFile>,
+    monte_carlo: Option<MonteCarloConfigFile>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct DeterministicConfigFile {
+    discount_rate: Option<f64>,
+    as_of: Option<String>,
+    #[serde(default)]
+    parameters: BTreeMap<String, f64>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct ScenarioConfigFile {
+    discount_rate: Option<f64>,
+    as_of: Option<String>,
+    #[serde(default)]
+    parameters: BTreeMap<String, f64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MonteCarloConfigFile {
+    trial_count: u32,
+    seed: u64,
+    #[serde(default)]
+    distributions: BTreeMap<String, DistributionConfigFile>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+enum DistributionConfigFile {
+    Fixed { value: f64 },
+    Normal { mean: f64, stddev: f64 },
+    Uniform { min: f64, max: f64 },
 }
 
 pub fn run_from_file(ir_path: &Path, config: RunConfig) -> Result<Results, EngineError> {
     let raw = std::fs::read_to_string(ir_path)?;
     run_from_json_str(&raw, config)
+}
+
+pub fn run_config_from_json_file(
+    path: &Path,
+    fallback_rate: f64,
+    fallback_as_of: Option<Date>,
+) -> Result<RunConfig, EngineError> {
+    let raw = std::fs::read_to_string(path)?;
+    let config_file: RunConfigFile = serde_json::from_str(&raw)?;
+    run_config_from_value(config_file, fallback_rate, fallback_as_of)
+}
+
+fn run_config_from_value(
+    config_file: RunConfigFile,
+    fallback_rate: f64,
+    fallback_as_of: Option<Date>,
+) -> Result<RunConfig, EngineError> {
+    let mut config = RunConfig {
+        discount_rate: config_file
+            .deterministic
+            .discount_rate
+            .unwrap_or(fallback_rate),
+        as_of: fallback_as_of,
+        parameter_overrides: config_file.deterministic.parameters,
+        scenarios: BTreeMap::new(),
+        monte_carlo: None,
+    };
+
+    if let Some(as_of) = config_file.deterministic.as_of {
+        config.as_of = Some(Date::parse(&as_of)?);
+    }
+
+    for (name, scenario) in config_file.scenarios {
+        let scenario_as_of = match scenario.as_of {
+            Some(raw) => Some(Date::parse(&raw)?),
+            None => None,
+        };
+        config.scenarios.insert(
+            name,
+            ScenarioRunConfig {
+                discount_rate: scenario.discount_rate,
+                as_of: scenario_as_of,
+                parameter_overrides: scenario.parameters,
+            },
+        );
+    }
+
+    if let Some(monte_carlo) = config_file.monte_carlo {
+        if monte_carlo.trial_count == 0 {
+            return Err(EngineError::InvalidRunConfig(
+                "monte_carlo.trial_count must be >= 1".to_string(),
+            ));
+        }
+        let mut distributions = BTreeMap::new();
+        for (name, dist) in monte_carlo.distributions {
+            let parsed = match dist {
+                DistributionConfigFile::Fixed { value } => DistributionSpec::Fixed { value },
+                DistributionConfigFile::Normal { mean, stddev } => {
+                    if stddev < 0.0 {
+                        return Err(EngineError::InvalidRunConfig(format!(
+                            "distribution '{name}' has negative stddev"
+                        )));
+                    }
+                    DistributionSpec::Normal { mean, stddev }
+                }
+                DistributionConfigFile::Uniform { min, max } => {
+                    if min > max {
+                        return Err(EngineError::InvalidRunConfig(format!(
+                            "distribution '{name}' has min > max"
+                        )));
+                    }
+                    DistributionSpec::Uniform { min, max }
+                }
+            };
+            distributions.insert(name, parsed);
+        }
+        config.monte_carlo = Some(MonteCarloRunConfig {
+            trial_count: monte_carlo.trial_count,
+            seed: monte_carlo.seed,
+            distributions,
+        });
+    }
+
+    Ok(config)
 }
 
 pub fn run_from_json_str(raw_ir: &str, config: RunConfig) -> Result<Results, EngineError> {
@@ -63,6 +217,201 @@ pub fn run_from_json_str(raw_ir: &str, config: RunConfig) -> Result<Results, Eng
 }
 
 fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Results, EngineError> {
+    let base_run = run_deterministic(ir, &config)?;
+    let mut warnings = base_run.warnings.clone();
+
+    let deterministic = DeterministicSection {
+        status: "ok".to_string(),
+        metrics: base_run.metrics.clone(),
+        series: base_run.series,
+        errors: None,
+    };
+
+    let mut scenario_summaries = Vec::new();
+    for (name, scenario) in &config.scenarios {
+        let mut merged_overrides = config.parameter_overrides.clone();
+        for (key, value) in &scenario.parameter_overrides {
+            merged_overrides.insert(key.clone(), *value);
+        }
+        let scenario_run = run_deterministic(
+            ir,
+            &RunConfig {
+                discount_rate: scenario.discount_rate.unwrap_or(config.discount_rate),
+                as_of: scenario.as_of.clone().or_else(|| config.as_of.clone()),
+                parameter_overrides: merged_overrides,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )?;
+        warnings.extend(scenario_run.warnings);
+        let mut scenario_metrics = BTreeMap::new();
+        scenario_metrics.insert(
+            "model.npv".to_string(),
+            Scalar::Money(Money {
+                amount: round_amount(scenario_run.npv),
+                currency: ir.model.currency.clone(),
+            }),
+        );
+        scenario_summaries.push(ScenarioSummary {
+            name: name.clone(),
+            metrics: scenario_metrics,
+        });
+    }
+
+    let scenarios = if scenario_summaries.is_empty() {
+        ScenarioSection {
+            status: "not_run".to_string(),
+            summaries: vec![],
+            errors: None,
+        }
+    } else {
+        ScenarioSection {
+            status: "ok".to_string(),
+            summaries: scenario_summaries,
+            errors: None,
+        }
+    };
+
+    let monte_carlo = if let Some(monte_carlo_config) = &config.monte_carlo {
+        let mut trial_summaries = Vec::with_capacity(monte_carlo_config.trial_count as usize);
+        let mut npv_values = Vec::with_capacity(monte_carlo_config.trial_count as usize);
+        for trial in 0..monte_carlo_config.trial_count {
+            let mut trial_overrides = config.parameter_overrides.clone();
+            let mut rng_state = splitmix64(
+                monte_carlo_config
+                    .seed
+                    .wrapping_add((trial as u64).wrapping_mul(0x9e3779b97f4a7c15)),
+            );
+            for (name, distribution) in &monte_carlo_config.distributions {
+                let sampled = sample_distribution(distribution, &mut rng_state);
+                trial_overrides.insert(name.clone(), sampled);
+            }
+            let trial_run = run_deterministic(
+                ir,
+                &RunConfig {
+                    discount_rate: config.discount_rate,
+                    as_of: config.as_of.clone(),
+                    parameter_overrides: trial_overrides,
+                    scenarios: BTreeMap::new(),
+                    monte_carlo: None,
+                },
+            )?;
+            warnings.extend(trial_run.warnings);
+            npv_values.push(trial_run.npv);
+
+            let mut trial_metrics = BTreeMap::new();
+            trial_metrics.insert(
+                "model.npv".to_string(),
+                Scalar::Money(Money {
+                    amount: round_amount(trial_run.npv),
+                    currency: ir.model.currency.clone(),
+                }),
+            );
+            trial_summaries.push(MonteCarloTrialSummary {
+                trial,
+                metrics: trial_metrics,
+            });
+        }
+
+        let aggregates = if npv_values.is_empty() {
+            None
+        } else {
+            Some(MonteCarloAggregates {
+                npv: NpvAggregate {
+                    mean: round_amount(stats_mean(&npv_values)),
+                    median: round_amount(stats_median(&npv_values)),
+                    stddev: round_amount(stats_stddev_population(&npv_values)),
+                    p_negative: round_amount(probability_negative(&npv_values)),
+                },
+            })
+        };
+        let mut metrics = BTreeMap::new();
+        if let Some(aggregates_ref) = &aggregates {
+            metrics.insert(
+                "model.npv".to_string(),
+                MetricSummary {
+                    r#type: "money".to_string(),
+                    mean: Scalar::Money(Money {
+                        amount: aggregates_ref.npv.mean,
+                        currency: ir.model.currency.clone(),
+                    }),
+                    stdev: Some(Scalar::Money(Money {
+                        amount: aggregates_ref.npv.stddev,
+                        currency: ir.model.currency.clone(),
+                    })),
+                    min: Some(Scalar::Money(Money {
+                        amount: round_amount(
+                            npv_values.iter().copied().fold(f64::INFINITY, f64::min),
+                        ),
+                        currency: ir.model.currency.clone(),
+                    })),
+                    max: Some(Scalar::Money(Money {
+                        amount: round_amount(
+                            npv_values.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+                        ),
+                        currency: ir.model.currency.clone(),
+                    })),
+                    p01: None,
+                    p05: None,
+                    p10: None,
+                    p25: None,
+                    p50: Scalar::Money(Money {
+                        amount: aggregates_ref.npv.median,
+                        currency: ir.model.currency.clone(),
+                    }),
+                    p75: None,
+                    p90: None,
+                    p95: None,
+                    p99: None,
+                },
+            );
+        }
+
+        MonteCarloSection {
+            status: "ok".to_string(),
+            trials: monte_carlo_config.trial_count,
+            seed: monte_carlo_config.seed,
+            metrics,
+            trial_summaries,
+            aggregates,
+            errors: None,
+        }
+    } else {
+        MonteCarloSection {
+            status: "not_run".to_string(),
+            trials: 1,
+            seed: 0,
+            metrics: BTreeMap::new(),
+            trial_summaries: vec![],
+            aggregates: None,
+            errors: None,
+        }
+    };
+
+    Ok(Results {
+        results_version: "0.1".to_string(),
+        model_hash,
+        engine: EngineInfo {
+            name: "cfdl-engine".to_string(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            build: None,
+        },
+        warnings,
+        deterministic,
+        scenarios,
+        monte_carlo,
+    })
+}
+
+#[derive(Debug, Clone)]
+struct DeterministicRunOutput {
+    warnings: Vec<String>,
+    metrics: BTreeMap<String, Scalar>,
+    series: BTreeMap<String, MoneySeries>,
+    npv: f64,
+}
+
+fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
     let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, ir.time.periods as usize)?;
     let periods = timeline.len();
 
@@ -73,13 +422,19 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     let mut model_series = vec![0.0_f64; periods];
 
     for stream in &ir.streams {
-        let amount = parse_cel_decimal(&stream.amount.src).unwrap_or_else(|| {
-            warnings.push(format!(
-                "Stream '{}' amount '{}' is not a numeric literal; using 0.",
-                stream.name, stream.amount.src
-            ));
-            0.0
-        });
+        let parameter_key = format!("stream.{}.amount", stream.name);
+        let amount = if let Some(override_value) = config.parameter_overrides.get(&parameter_key) {
+            *override_value
+        } else {
+            parse_cel_decimal(&stream.amount.src).unwrap_or_else(|| {
+                warnings.push(format!(
+                    "Stream '{}' amount '{}' is not a numeric literal; using 0.",
+                    stream.name, stream.amount.src
+                ));
+                0.0
+            })
+        };
+
         let signed_amount = match stream.direction.as_str() {
             "inflow" => amount,
             "outflow" => -amount,
@@ -99,11 +454,11 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         }
 
         let total = values.iter().sum::<f64>();
-        stream_totals.insert(stream.name.clone(), round_amount(total));
+        stream_totals.insert(stream.name.clone(), total);
         entity_totals
             .entry(stream.owner.symbol.clone())
-            .and_modify(|sum| *sum = round_amount(*sum + total))
-            .or_insert_with(|| round_amount(total));
+            .and_modify(|sum| *sum += total)
+            .or_insert(total);
         stream_series.insert(stream.name.clone(), values);
     }
 
@@ -171,32 +526,15 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         "run.discount_rate".to_string(),
         Scalar::Number(round_amount(config.discount_rate)),
     );
-    if let Some(as_of) = config.as_of {
+    if let Some(as_of) = &config.as_of {
         metrics.insert("run.as_of".to_string(), Scalar::String(as_of.to_string()));
     }
 
-    Ok(Results {
-        results_version: "0.1".to_string(),
-        model_hash,
-        engine: EngineInfo {
-            name: "cfdl-engine".to_string(),
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            build: None,
-        },
+    Ok(DeterministicRunOutput {
         warnings,
-        deterministic: DeterministicSection {
-            status: "ok".to_string(),
-            metrics,
-            series: series_map,
-            errors: None,
-        },
-        monte_carlo: MonteCarloSection {
-            status: "not_run".to_string(),
-            trials: 1,
-            seed: 0,
-            metrics: BTreeMap::new(),
-            errors: None,
-        },
+        metrics,
+        series: series_map,
+        npv,
     })
 }
 
@@ -460,6 +798,7 @@ pub struct Results {
     pub engine: EngineInfo,
     pub warnings: Vec<String>,
     pub deterministic: DeterministicSection,
+    pub scenarios: ScenarioSection,
     pub monte_carlo: MonteCarloSection,
 }
 
@@ -471,7 +810,7 @@ pub struct EngineInfo {
     pub build: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct DeterministicSection {
     pub status: String,
     pub metrics: BTreeMap<String, Scalar>,
@@ -480,17 +819,53 @@ pub struct DeterministicSection {
     pub errors: Option<Vec<RuntimeError>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MonteCarloSection {
     pub status: String,
     pub trials: u32,
     pub seed: u64,
     pub metrics: BTreeMap<String, MetricSummary>,
+    pub trial_summaries: Vec<MonteCarloTrialSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aggregates: Option<MonteCarloAggregates>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RuntimeError>>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
+pub struct ScenarioSection {
+    pub status: String,
+    pub summaries: Vec<ScenarioSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<RuntimeError>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ScenarioSummary {
+    pub name: String,
+    pub metrics: BTreeMap<String, Scalar>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonteCarloTrialSummary {
+    pub trial: u32,
+    pub metrics: BTreeMap<String, Scalar>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonteCarloAggregates {
+    pub npv: NpvAggregate,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NpvAggregate {
+    pub mean: f64,
+    pub median: f64,
+    pub stddev: f64,
+    pub p_negative: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum Scalar {
     Number(f64),
@@ -498,7 +873,7 @@ pub enum Scalar {
     String(String),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MoneySeries {
     pub index: SeriesIndex,
     pub values: Vec<Money>,
@@ -529,20 +904,20 @@ impl MoneySeries {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SeriesIndex {
     pub calendar: String,
     pub start: String,
     pub periods: u32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Money {
     pub amount: f64,
     pub currency: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct RuntimeError {
     pub code: String,
     pub message: String,
@@ -552,7 +927,7 @@ pub struct RuntimeError {
     pub hint: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MetricSummary {
     pub r#type: String,
     pub mean: Scalar,
@@ -581,9 +956,82 @@ pub struct MetricSummary {
     pub p99: Option<Scalar>,
 }
 
+fn splitmix64(state: u64) -> u64 {
+    let mut z = state.wrapping_add(0x9e3779b97f4a7c15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+    z ^ (z >> 31)
+}
+
+fn next_uniform_open_closed(seed: &mut u64) -> f64 {
+    let bits = splitmix64(*seed);
+    *seed = bits;
+    ((bits as f64) + 1.0) / ((u64::MAX as f64) + 1.0)
+}
+
+fn sample_distribution(distribution: &DistributionSpec, seed: &mut u64) -> f64 {
+    match distribution {
+        DistributionSpec::Fixed { value } => *value,
+        DistributionSpec::Uniform { min, max } => {
+            if (*max - *min).abs() < f64::EPSILON {
+                *min
+            } else {
+                min + ((*max - *min) * next_uniform_open_closed(seed))
+            }
+        }
+        DistributionSpec::Normal { mean, stddev } => {
+            if *stddev == 0.0 {
+                *mean
+            } else {
+                let u1 = next_uniform_open_closed(seed);
+                let u2 = next_uniform_open_closed(seed);
+                let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                mean + stddev * z0
+            }
+        }
+    }
+}
+
+fn stats_mean(values: &[f64]) -> f64 {
+    values.iter().sum::<f64>() / values.len() as f64
+}
+
+fn stats_median(values: &[f64]) -> f64 {
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.total_cmp(b));
+    let mid = sorted.len() / 2;
+    if sorted.len().is_multiple_of(2) {
+        (sorted[mid - 1] + sorted[mid]) / 2.0
+    } else {
+        sorted[mid]
+    }
+}
+
+fn stats_stddev_population(values: &[f64]) -> f64 {
+    if values.is_empty() {
+        return 0.0;
+    }
+    let mean = stats_mean(values);
+    let variance = values
+        .iter()
+        .map(|value| {
+            let delta = value - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / values.len() as f64;
+    variance.sqrt()
+}
+
+fn probability_negative(values: &[f64]) -> f64 {
+    let negatives = values.iter().filter(|value| **value < 0.0).count();
+    negatives as f64 / values.len() as f64
+}
+
 #[cfg(test)]
 mod tests {
     use super::{run_from_json_str, RunConfig};
+    use std::collections::BTreeMap;
 
     #[test]
     fn deterministic_output_for_identical_input() {
@@ -606,6 +1054,9 @@ mod tests {
             RunConfig {
                 discount_rate: 0.05,
                 as_of: None,
+                parameter_overrides: BTreeMap::new(),
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
             },
         )
         .unwrap();
@@ -614,6 +1065,9 @@ mod tests {
             RunConfig {
                 discount_rate: 0.05,
                 as_of: None,
+                parameter_overrides: BTreeMap::new(),
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
             },
         )
         .unwrap();
