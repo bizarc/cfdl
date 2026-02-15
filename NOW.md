@@ -8,25 +8,24 @@ This file is the **current work queue** for agentic development. If you are an a
 
 ## Current sprint
 
-### Task 3 — Imports + module graph (Milestone 3)
+### Task 5 — Validation (Milestone 5)
 
-**Goal:** Implement `import "..."` resolution, deterministic module ordering, and cycle detection.
+**Goal:** Enforce structural and semantic constraints (required statements, mandatory contract term, stream schedule rules, schedule bounds).
 
 **Deliverables**
 
-* Import resolution in `crates/cfdl-resolver`
-* Deterministic module graph ordering (stable topo order)
-* Enforce “no escape” outside model root
-* Diagnostics:
+* Validation pass in `crates/cfdl-validate` (or equivalent module) enforcing:
 
-  * `E1201_IMPORT_CYCLE`
-  * `E1202_IMPORT_NOT_FOUND`
-  * `E1203_IMPORT_OUTSIDE_MODEL_ROOT`
+  * required global statements (`version`, `model`, `time`)
+  * contracts: `term` mandatory; effects required unless pack-lowered
+  * streams: schedule + amount required
+  * schedule validity + bounds within model timeline
+* Diagnostics per `@docs/diagnostics_spec.md`
 * Fixtures + gold for at least:
 
-  * `fixtures/invalid/import_cycle/` + `gold/diag/import_cycle.diag.json`
-  * `fixtures/invalid/import_not_found/` + `gold/diag/import_not_found.diag.json`
-  * `fixtures/invalid/import_outside_root/` + `gold/diag/import_outside_root.diag.json`
+  * `fixtures/invalid/missing_time/`
+  * `fixtures/invalid/bad_missing_term/`
+  * `fixtures/invalid/bad_schedule_out_of_bounds/`
 
 **Acceptance criteria**
 
@@ -37,42 +36,21 @@ This file is the **current work queue** for agentic development. If you are an a
 
 ## Next up
 
-### Task 3 — Imports + module graph (Milestone 3)
+### Task 6 — IR emission skeleton (Milestone 6)
 
-**Goal:** Implement `import "..."` resolution, deterministic module ordering, and cycle detection.
-
-**Deliverables**
-
-* Import resolution in `crates/cfdl-resolver`
-* Diagnostics:
-
-  * `E1201_IMPORT_CYCLE`
-  * `E1202_IMPORT_NOT_FOUND`
-  * `E1203_IMPORT_OUTSIDE_MODEL_ROOT`
-* Fixtures + gold for at least:
-
-  * cycle
-  * missing import
-
----
-
-### Task 4 — Symbol tables + uniqueness (Milestone 4)
-
-**Goal:** Build symbol tables and enforce uniqueness for core identifiers.
+**Goal:** Emit deterministic IR JSON for minimal valid models (enough to introduce the first valid fixtures).
 
 **Deliverables**
 
-* Symbol registry + resolution
-* Diagnostics for duplicates and unresolved refs per `@docs/diagnostics_spec.md`
-* Fixtures + gold for:
+* Canonical IR emitter in `crates/cfdl-compile` matching `@docs/CFDL_v0_1_IR.schema.json`
+* Deterministic ID generation
+* Provenance propagation
+* Fixtures + gold:
 
-  * duplicate stream
-  * unresolved entity reference
-
----
+  * `fixtures/valid/minimal_model/` + `gold/ir/minimal_model.json`
 
 ## Notes / decisions
 
 * Keep the CLI thin.
 * Do not add correlation (language or IR).
-* Prefer adding **invalid fixtures first** (valid fixtures only once IR emission exists).
+* Prefer adding **invalid fixtures first**; add valid fixtures once IR emission exists.

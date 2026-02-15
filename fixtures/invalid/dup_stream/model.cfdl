@@ -1,0 +1,6 @@
+version 0.1
+model "dup-stream"
+time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream principal on entity legal.borrower
+stream principal on entity legal.borrower

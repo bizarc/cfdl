@@ -23,6 +23,14 @@ pub enum Stmt {
     Model(ModelStmt),
     Import(ImportStmt),
     Time(TimeStmt),
+    Phase(PhaseStmt),
+    Entity(EntityStmt),
+    Assume(AssumeStmt),
+    Contract(ContractStmt),
+    Stream(StreamStmt),
+    Event(EventStmt),
+    Option(OptionStmt),
+    Metric(MetricStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,6 +57,62 @@ pub struct TimeStmt {
     pub cadence: Cadence,
     pub from: String,
     pub periods: u32,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EntityStmt {
+    pub namespace: String,
+    pub name: String,
+    pub span: Span,
+}
+
+impl EntityStmt {
+    pub fn symbol(&self) -> String {
+        format!("{}.{}", self.namespace, self.name)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StreamStmt {
+    pub name: String,
+    pub attached_entity: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PhaseStmt {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AssumeStmt {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractStmt {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventStmt {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OptionStmt {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MetricStmt {
+    pub name: String,
     pub span: Span,
 }
 
@@ -133,6 +197,8 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Model) => self.parse_model_stmt().map(Stmt::Model),
             TokenKind::Keyword(Keyword::Import) => self.parse_import_stmt().map(Stmt::Import),
             TokenKind::Keyword(Keyword::Time) => self.parse_time_stmt().map(Stmt::Time),
+            TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
+            TokenKind::Keyword(Keyword::Stream) => self.parse_stream_stmt().map(Stmt::Stream),
             TokenKind::Eof => None,
             _ => {
                 let found = token_label(self.peek());
@@ -278,13 +344,84 @@ impl<'a> Parser<'a> {
         })
     }
 
+    fn parse_entity_stmt(&mut self) -> Option<EntityStmt> {
+        let start = self.expect_keyword(Keyword::Entity, "'entity'")?;
+        let namespace_tok = self.bump();
+        let namespace = match namespace_tok.kind {
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    namespace_tok.span,
+                    "Expected token <identifier> after 'entity'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected token <identifier> for entity name.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        Some(EntityStmt {
+            namespace,
+            name,
+            span: merge_spans(start.span, name_tok.span),
+        })
+    }
+
+    fn parse_stream_stmt(&mut self) -> Option<StreamStmt> {
+        let start = self.expect_keyword(Keyword::Stream, "'stream'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected token <identifier> after 'stream'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        let _on_kw = self.expect_keyword(Keyword::On, "'on'")?;
+        let _entity_kw = self.expect_keyword(Keyword::Entity, "'entity'")?;
+        let entity_ref_tok = self.bump();
+        let attached_entity = match entity_ref_tok.kind {
+            TokenKind::Qname(ref qname) => qname.clone(),
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    entity_ref_tok.span,
+                    "Expected token <entity-ref> after 'on entity'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        Some(StreamStmt {
+            name,
+            attached_entity,
+            span: merge_spans(start.span, entity_ref_tok.span),
+        })
+    }
+
     fn synchronize_to_next_statement(&mut self) {
         while !self.is_eof() {
             match self.peek().kind {
                 TokenKind::Keyword(Keyword::Version)
                 | TokenKind::Keyword(Keyword::Model)
                 | TokenKind::Keyword(Keyword::Import)
-                | TokenKind::Keyword(Keyword::Time) => break,
+                | TokenKind::Keyword(Keyword::Time)
+                | TokenKind::Keyword(Keyword::Entity)
+                | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {
                     let _ = self.bump();
                 }
@@ -356,6 +493,14 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Model(s) => s.span,
         Stmt::Import(s) => s.span,
         Stmt::Time(s) => s.span,
+        Stmt::Phase(s) => s.span,
+        Stmt::Entity(s) => s.span,
+        Stmt::Assume(s) => s.span,
+        Stmt::Contract(s) => s.span,
+        Stmt::Stream(s) => s.span,
+        Stmt::Event(s) => s.span,
+        Stmt::Option(s) => s.span,
+        Stmt::Metric(s) => s.span,
     }
 }
 
@@ -480,16 +625,20 @@ mod tests {
         let src = r#"version 0.1
 model "demo"
 time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream principal on entity legal.borrower
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
         let result = parse("model.cfdl", &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
-        assert_eq!(ast.statements.len(), 3);
+        assert_eq!(ast.statements.len(), 5);
         assert!(matches!(ast.statements[0], Stmt::Version(_)));
         assert!(matches!(ast.statements[1], Stmt::Model(_)));
         assert!(matches!(ast.statements[2], Stmt::Time(_)));
+        assert!(matches!(ast.statements[3], Stmt::Entity(_)));
+        assert!(matches!(ast.statements[4], Stmt::Stream(_)));
     }
 
     #[test]

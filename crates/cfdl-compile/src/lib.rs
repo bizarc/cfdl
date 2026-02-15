@@ -82,8 +82,33 @@ pub fn compile_to_file(model_root: &Path, _out_path: &Path) -> Result<(), Vec<Di
             full_path: std::fs::canonicalize(&model_file).unwrap_or(model_file),
             ast: root_ast,
         };
-        if let Err(resolve_diags) = cfdl_resolver::resolve_imports(model_root, root_module) {
-            let diagnostics = resolve_diags
+        let resolve_output = match cfdl_resolver::resolve_imports(model_root, root_module) {
+            Ok(output) => output,
+            Err(resolve_diags) => {
+                let diagnostics = resolve_diags
+                    .into_iter()
+                    .map(|diag| Diagnostic {
+                        code: diag.code,
+                        severity: "error".to_string(),
+                        message: diag.message,
+                        file: Some(diag.file),
+                        span: Some(Span {
+                            start_line: diag.span.start_line,
+                            start_col: diag.span.start_col,
+                            end_line: diag.span.end_line,
+                            end_col: diag.span.end_col,
+                        }),
+                        path: None,
+                        hint: None,
+                        notes: vec![],
+                    })
+                    .collect();
+                return Err(diagnostics);
+            }
+        };
+
+        if let Err(symbol_diags) = cfdl_resolver::resolve_symbols(&resolve_output) {
+            let diagnostics = symbol_diags
                 .into_iter()
                 .map(|diag| Diagnostic {
                     code: diag.code,
