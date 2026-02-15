@@ -83,6 +83,7 @@ dependencies = [
 name = "cfdl-compile"
 version = "0.1.0"
 dependencies = [
+ "cfdl-expr",
  "cfdl-lexer",
  "cfdl-parser",
  "cfdl-resolver",
@@ -97,10 +98,15 @@ dependencies = [
 name = "cfdl-engine"
 version = "0.1.0"
 dependencies = [
+ "cfdl-expr",
  "serde",
  "serde_json",
  "sha2",
 ]
+
+[[package]]
+name = "cfdl-expr"
+version = "0.1.0"
 
 [[package]]
 name = "cfdl-lexer"

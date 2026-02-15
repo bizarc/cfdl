@@ -13,6 +13,7 @@ cfdl-lexer = { path = "../cfdl-lexer" }
 cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }
 cfdl-validate = { path = "../cfdl-validate" }
+cfdl-expr = { path = "../cfdl-expr" }
 
 # These crates will be implemented later; keep commented until they exist.
 # cfdl-lexer = { path = "../cfdl-lexer" }

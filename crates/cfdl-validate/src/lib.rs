@@ -107,7 +107,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 }
             }
             Stmt::Stream(stream) => {
-                if !stream.amount {
+                if stream.amount.is_none() {
                     diagnostics.push(ValidationDiagnostic {
                         code: "E2102_STREAM_MISSING_AMOUNT",
                         message: format!("Stream '{}' is missing required 'amount'.", stream.name),

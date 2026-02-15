@@ -36,6 +36,11 @@ pub fn compile_to_file(model_root: &Path, out_path: &Path) -> Result<(), Vec<Dia
             .collect());
     }
 
+    let expr_diags = validate_expressions(&resolve_output);
+    if !expr_diags.is_empty() {
+        return Err(expr_diags);
+    }
+
     let ir = build_ir(&resolve_output);
 
     let json = serde_json::to_string_pretty(&ir).map_err(|err| {
@@ -470,12 +475,28 @@ fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
                 currency: model_currency.clone(),
                 schedule,
                 amount: IrExpr {
-                    lang: "cel".to_string(),
-                    src: "0".to_string(),
+                    lang: stream
+                        .amount
+                        .as_ref()
+                        .map(|expr| expr.lang.clone())
+                        .unwrap_or_else(|| "cel".to_string()),
+                    src: stream
+                        .amount
+                        .as_ref()
+                        .map(|expr| expr.src.clone())
+                        .unwrap_or_else(|| "0".to_string()),
                 },
                 active_when: IrExpr {
-                    lang: "cel".to_string(),
-                    src: "true".to_string(),
+                    lang: stream
+                        .active_when
+                        .as_ref()
+                        .map(|expr| expr.lang.clone())
+                        .unwrap_or_else(|| "cel".to_string()),
+                    src: stream
+                        .active_when
+                        .as_ref()
+                        .map(|expr| expr.src.clone())
+                        .unwrap_or_else(|| "true".to_string()),
                 },
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
@@ -529,6 +550,61 @@ fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
             },
         },
     }
+}
+
+fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Diagnostic> {
+    let mut diags = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        if let Some(amount) = &stream.amount {
+            if let Err(err) = cfdl_expr::compile_expr(&amount.src) {
+                diags.push(Diagnostic {
+                    code: err.code.to_string(),
+                    severity: "error".to_string(),
+                    message: err.message,
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(amount.span)),
+                    path: None,
+                    hint: None,
+                    notes: vec![format!("stream '{}', amount expression", stream.name)],
+                });
+            }
+        }
+        if let Some(active_when) = &stream.active_when {
+            if let Err(err) = cfdl_expr::compile_expr(&active_when.src) {
+                diags.push(Diagnostic {
+                    code: err.code.to_string(),
+                    severity: "error".to_string(),
+                    message: err.message,
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(active_when.span)),
+                    path: None,
+                    hint: None,
+                    notes: vec![format!("stream '{}', active_when expression", stream.name)],
+                });
+            }
+        }
+    }
+    diags.sort_by(|a, b| {
+        a.file
+            .cmp(&b.file)
+            .then(
+                a.span
+                    .as_ref()
+                    .map(|s| s.start_line)
+                    .cmp(&b.span.as_ref().map(|s| s.start_line)),
+            )
+            .then(
+                a.span
+                    .as_ref()
+                    .map(|s| s.start_col)
+                    .cmp(&b.span.as_ref().map(|s| s.start_col)),
+            )
+            .then(a.code.cmp(&b.code))
+    });
+    diags
 }
 
 fn lower_schedule(

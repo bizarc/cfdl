@@ -18,6 +18,7 @@ pub struct CompilationUnit {
 pub type ModelAst = CompilationUnit;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::large_enum_variant)]
 pub enum Stmt {
     Version(VersionStmt),
     Model(ModelStmt),
@@ -78,7 +79,15 @@ pub struct StreamStmt {
     pub name: String,
     pub attached_entity: String,
     pub schedule: Option<ScheduleSpec>,
-    pub amount: bool,
+    pub amount: Option<ExprSlot>,
+    pub active_when: Option<ExprSlot>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExprSlot {
+    pub lang: String,
+    pub src: String,
     pub span: Span,
 }
 
@@ -512,13 +521,16 @@ impl<'a> Parser<'a> {
         };
 
         let mut schedule = None;
-        let mut amount = false;
+        let mut amount = None;
+        let mut active_when = None;
         let mut end_span = entity_ref_tok.span;
 
         if matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
-            let (parsed_schedule, parsed_amount, parsed_end_span) = self.parse_stream_block();
+            let (parsed_schedule, parsed_amount, parsed_active_when, parsed_end_span) =
+                self.parse_stream_block();
             schedule = parsed_schedule;
             amount = parsed_amount;
+            active_when = parsed_active_when;
             end_span = parsed_end_span;
         }
 
@@ -527,14 +539,23 @@ impl<'a> Parser<'a> {
             attached_entity,
             schedule,
             amount,
+            active_when,
             span: merge_spans(start.span, end_span),
         })
     }
 
-    fn parse_stream_block(&mut self) -> (Option<ScheduleSpec>, bool, Span) {
+    fn parse_stream_block(
+        &mut self,
+    ) -> (
+        Option<ScheduleSpec>,
+        Option<ExprSlot>,
+        Option<ExprSlot>,
+        Span,
+    ) {
         let lbrace = self.bump();
         let mut schedule = None;
-        let mut amount = false;
+        let mut amount = None;
+        let mut active_when = None;
         let mut end_span = lbrace.span;
 
         while !self.is_eof() {
@@ -553,11 +574,20 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Ident(ref ident) if ident == "amount" => {
-                    amount = true;
-                    end_span = self.consume_stream_item();
+                    if let Some(expr) = self.parse_amount_stmt() {
+                        end_span = expr.span;
+                        amount = Some(expr);
+                    } else {
+                        end_span = self.consume_stream_item();
+                    }
                 }
                 TokenKind::Keyword(Keyword::Active) => {
-                    end_span = self.consume_stream_item();
+                    if let Some(expr) = self.parse_active_stmt() {
+                        end_span = expr.span;
+                        active_when = Some(expr);
+                    } else {
+                        end_span = self.consume_stream_item();
+                    }
                 }
                 _ => {
                     end_span = self.bump().span;
@@ -565,7 +595,67 @@ impl<'a> Parser<'a> {
             }
         }
 
-        (schedule, amount, end_span)
+        (schedule, amount, active_when, end_span)
+    }
+
+    fn parse_amount_stmt(&mut self) -> Option<ExprSlot> {
+        let amount_tok = self.bump();
+        match amount_tok.kind {
+            TokenKind::Ident(ref ident) if ident == "amount" => {
+                self.parse_expr_slot(amount_tok.span)
+            }
+            _ => None,
+        }
+    }
+
+    fn parse_active_stmt(&mut self) -> Option<ExprSlot> {
+        let active_tok = self.bump();
+        match active_tok.kind {
+            TokenKind::Keyword(Keyword::Active) => {
+                let when_tok = self.bump();
+                match when_tok.kind {
+                    TokenKind::Keyword(Keyword::When) => self.parse_expr_slot(active_tok.span),
+                    _ => {
+                        self.push_expected(
+                            when_tok.span,
+                            "Expected token 'when' after 'active'.".to_string(),
+                        );
+                        None
+                    }
+                }
+            }
+            _ => None,
+        }
+    }
+
+    fn parse_expr_slot(&mut self, start_span: Span) -> Option<ExprSlot> {
+        let lang_tok = self.bump();
+        match lang_tok.kind {
+            TokenKind::Keyword(Keyword::Cel) => {}
+            _ => {
+                self.push_expected(
+                    lang_tok.span,
+                    "Expected token 'cel' for expression language.".to_string(),
+                );
+                return None;
+            }
+        }
+
+        let src_tok = self.bump();
+        match src_tok.kind {
+            TokenKind::String(ref src) => Some(ExprSlot {
+                lang: "cel".to_string(),
+                src: src.clone(),
+                span: merge_spans(start_span, src_tok.span),
+            }),
+            _ => {
+                self.push_expected(
+                    src_tok.span,
+                    "Expected token <string> after 'cel'.".to_string(),
+                );
+                None
+            }
+        }
     }
 
     fn consume_stream_item(&mut self) -> Span {
@@ -1047,5 +1137,39 @@ time monthly from 2026-01 for 12
             }
             other => panic!("expected import stmt, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn parses_stream_amount_expression_slot() {
+        let src = r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 2
+entity legal borrower
+stream rent on entity legal.borrower {
+  schedule every monthly from 2026-01 to 2026-02
+  amount cel "1000"
+}
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        let stream = ast
+            .statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Stream(stream) => Some(stream),
+                _ => None,
+            })
+            .expect("stream statement");
+        assert_eq!(
+            stream
+                .amount
+                .as_ref()
+                .expect("amount expression expected")
+                .src,
+            "1000"
+        );
     }
 }

@@ -1,0 +1,11 @@
+version 0.1
+model "expr-smoke"
+time calendar monthly from 2026-01 for 4
+
+entity legal borrower
+
+stream rent on entity legal.borrower {
+  schedule every monthly from 2026-01 to 2026-04
+  amount cel "cfg.base + time.t * 10"
+  active when cel "time.t < 3"
+}

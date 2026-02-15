@@ -123,7 +123,7 @@ In `evs-platform/Cargo.toml`:
 
 ```toml
 [dependencies]
-cfdl-compile = { git = "ssh://git@github.com/<ORG>/cfdl.git", tag = "v0.1.0", package = "cfdl-compile" }
+cfdl-compile = { git = "ssh://git@github.com/bizarc/cfdl.git", tag = "v0.1.0", package = "cfdl-compile" }
 cfdl-engine  = { git = "ssh://git@github.com/<ORG>/cfdl.git", tag = "v0.1.0", package = "cfdl-engine" }
 ```
 

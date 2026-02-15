@@ -1,3 +1,4 @@
+use cfdl_expr::{CompiledExpr, ExprEnv, Value as ExprValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -422,33 +423,85 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut model_series = vec![0.0_f64; periods];
 
     for stream in &ir.streams {
-        let parameter_key = format!("stream.{}.amount", stream.name);
-        let amount = if let Some(override_value) = config.parameter_overrides.get(&parameter_key) {
-            *override_value
-        } else {
-            parse_cel_decimal(&stream.amount.src).unwrap_or_else(|| {
+        if let Some(lang) = &stream.amount.lang {
+            if lang != "cel" {
                 warnings.push(format!(
-                    "Stream '{}' amount '{}' is not a numeric literal; using 0.",
-                    stream.name, stream.amount.src
+                    "Stream '{}' amount language '{}' is unsupported; expression is treated as CEL.",
+                    stream.name, lang
                 ));
-                0.0
-            })
+            }
+        }
+        let amount_expr = match cfdl_expr::compile_expr(&stream.amount.src) {
+            Ok(compiled) => compiled,
+            Err(err) => {
+                warnings.push(format!(
+                    "Stream '{}' amount expression compile failed [{}]: {}; using 0.",
+                    stream.name, err.code, err.message
+                ));
+                // Deterministic fallback expression.
+                cfdl_expr::compile_expr("0").expect("constant expression compiles")
+            }
         };
-
-        let signed_amount = match stream.direction.as_str() {
-            "inflow" => amount,
-            "outflow" => -amount,
-            _ => {
+        let active_src = stream
+            .active_when
+            .as_ref()
+            .map(|expr| expr.src.as_str())
+            .unwrap_or("true");
+        if let Some(expr) = &stream.active_when {
+            if let Some(lang) = &expr.lang {
+                if lang != "cel" {
+                    warnings.push(format!(
+                        "Stream '{}' active_when language '{}' is unsupported; expression is treated as CEL.",
+                        stream.name, lang
+                    ));
+                }
+            }
+        }
+        let active_expr = match cfdl_expr::compile_expr(active_src) {
+            Ok(compiled) => compiled,
+            Err(err) => {
                 warnings.push(format!(
-                    "Stream '{}' has unknown direction '{}'; treating as outflow.",
-                    stream.name, stream.direction
+                    "Stream '{}' active_when expression compile failed [{}]: {}; using true.",
+                    stream.name, err.code, err.message
                 ));
-                -amount
+                cfdl_expr::compile_expr("true").expect("constant expression compiles")
             }
         };
 
+        let schedule_mask = schedule_mask(&stream.schedule, &timeline)?;
         let mut values = vec![0.0_f64; periods];
-        apply_schedule(&stream.schedule, signed_amount, &timeline, &mut values)?;
+        let direction_sign = stream_direction_sign(stream, &mut warnings);
+        let parameter_key = format!("stream.{}.amount", stream.name);
+
+        for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
+            if !is_scheduled {
+                continue;
+            }
+            let env = build_expr_env(ir, stream, config, idx, &timeline[idx]);
+            let active_value = eval_bool_expr(
+                &active_expr,
+                &env,
+                &stream.name,
+                "active_when",
+                &mut warnings,
+            );
+            if !active_value {
+                continue;
+            }
+            let amount =
+                if let Some(override_value) = config.parameter_overrides.get(&parameter_key) {
+                    *override_value
+                } else {
+                    eval_amount_expr(
+                        &amount_expr,
+                        &env,
+                        &stream.name,
+                        &ir.model.currency,
+                        &mut warnings,
+                    )
+                };
+            values[idx] += amount * direction_sign;
+        }
         for (idx, value) in values.iter().enumerate() {
             model_series[idx] += *value;
         }
@@ -538,8 +591,175 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     })
 }
 
-fn parse_cel_decimal(src: &str) -> Option<f64> {
-    src.trim().parse::<f64>().ok()
+fn stream_direction_sign(stream: &IrStream, warnings: &mut Vec<String>) -> f64 {
+    match stream.direction.as_str() {
+        "inflow" => 1.0,
+        "outflow" => -1.0,
+        _ => {
+            warnings.push(format!(
+                "Stream '{}' has unknown direction '{}'; treating as outflow.",
+                stream.name, stream.direction
+            ));
+            -1.0
+        }
+    }
+}
+
+fn eval_bool_expr(
+    expr: &CompiledExpr,
+    env: &ExprEnv,
+    stream_name: &str,
+    slot: &str,
+    warnings: &mut Vec<String>,
+) -> bool {
+    match cfdl_expr::eval(expr, env) {
+        Ok(ExprValue::Bool(value)) => value,
+        Ok(other) => {
+            warnings.push(format!(
+                "Stream '{}' {} expression returned non-bool '{other:?}'; using false.",
+                stream_name, slot
+            ));
+            false
+        }
+        Err(err) => {
+            warnings.push(format!(
+                "Stream '{}' {} evaluation failed [{}]: {}; using false.",
+                stream_name, slot, err.code, err.message
+            ));
+            false
+        }
+    }
+}
+
+fn eval_amount_expr(
+    expr: &CompiledExpr,
+    env: &ExprEnv,
+    stream_name: &str,
+    model_currency: &str,
+    warnings: &mut Vec<String>,
+) -> f64 {
+    match cfdl_expr::eval(expr, env) {
+        Ok(value) => match value {
+            ExprValue::Int(v) => v as f64,
+            ExprValue::Decimal(v) => v,
+            ExprValue::Money(m) => {
+                if !m.currency.eq_ignore_ascii_case(model_currency) {
+                    warnings.push(format!(
+                        "Stream '{}' amount returned currency '{}', expected '{}'; using amount without FX conversion.",
+                        stream_name, m.currency, model_currency
+                    ));
+                }
+                m.amount
+            }
+            other => {
+                warnings.push(format!(
+                    "Stream '{}' amount returned non-numeric value '{other:?}'; using 0.",
+                    stream_name
+                ));
+                0.0
+            }
+        },
+        Err(err) => {
+            warnings.push(format!(
+                "Stream '{}' amount evaluation failed [{}]: {}; using 0.",
+                stream_name, err.code, err.message
+            ));
+            0.0
+        }
+    }
+}
+
+fn build_expr_env(
+    ir: &Ir,
+    stream: &IrStream,
+    config: &RunConfig,
+    t: usize,
+    date: &Date,
+) -> ExprEnv {
+    let mut env = ExprEnv::empty();
+    env.model.insert(
+        "id".to_string(),
+        ExprValue::String(ir.model.name.clone().unwrap_or_else(|| "model".to_string())),
+    );
+    env.model.insert(
+        "base_currency".to_string(),
+        ExprValue::Currency(ir.model.currency.clone()),
+    );
+
+    env.time.insert("t".to_string(), ExprValue::Int(t as i64));
+    env.time.insert(
+        "date".to_string(),
+        ExprValue::Date(cfdl_expr::Date {
+            year: date.year,
+            month: date.month,
+            day: date.day,
+        }),
+    );
+    env.time
+        .insert("phase".to_string(), ExprValue::Optional(None));
+
+    env.entity.insert(
+        "id".to_string(),
+        ExprValue::String(stream.owner.symbol.clone()),
+    );
+    env.entity.insert(
+        "name".to_string(),
+        ExprValue::String(stream.owner.symbol.clone()),
+    );
+    env.entity
+        .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
+
+    for (key, value) in &config.parameter_overrides {
+        if let Some(stripped) = key.strip_prefix("cfg.") {
+            insert_cfg_value(&mut env.cfg, stripped, *value);
+        }
+    }
+    env
+}
+
+fn insert_cfg_value(map: &mut BTreeMap<String, ExprValue>, path: &str, value: f64) {
+    let mut segments = path.split('.').filter(|part| !part.is_empty());
+    let Some(first) = segments.next() else {
+        return;
+    };
+    let rest = segments.collect::<Vec<_>>();
+    if rest.is_empty() {
+        map.insert(first.to_string(), ExprValue::Decimal(value));
+        return;
+    }
+    let entry = map
+        .entry(first.to_string())
+        .or_insert_with(|| ExprValue::Map(BTreeMap::new()));
+    insert_cfg_into_value(entry, &rest, value);
+}
+
+fn insert_cfg_into_value(slot: &mut ExprValue, path: &[&str], value: f64) {
+    if path.is_empty() {
+        *slot = ExprValue::Decimal(value);
+        return;
+    }
+    if !matches!(slot, ExprValue::Map(_)) {
+        *slot = ExprValue::Map(BTreeMap::new());
+    }
+    let ExprValue::Map(map) = slot else {
+        return;
+    };
+    let head = path[0];
+    let tail = &path[1..];
+    if tail.is_empty() {
+        map.insert(head.to_string(), ExprValue::Decimal(value));
+        return;
+    }
+    let entry = map
+        .entry(head.to_string())
+        .or_insert_with(|| ExprValue::Map(BTreeMap::new()));
+    insert_cfg_into_value(entry, tail, value);
+}
+
+fn schedule_mask(schedule: &IrSchedule, timeline: &[Date]) -> Result<Vec<bool>, EngineError> {
+    let mut values = vec![0.0_f64; timeline.len()];
+    apply_schedule(schedule, 1.0, timeline, &mut values)?;
+    Ok(values.into_iter().map(|value| value.abs() > 0.0).collect())
 }
 
 fn npv(values: &[f64], rate: f64) -> f64 {
@@ -754,6 +974,8 @@ struct Ir {
 
 #[derive(Debug, Deserialize)]
 struct IrModel {
+    #[serde(default)]
+    name: Option<String>,
     currency: String,
 }
 
@@ -771,6 +993,8 @@ struct IrStream {
     direction: String,
     schedule: IrSchedule,
     amount: IrExpr,
+    #[serde(default)]
+    active_when: Option<IrExpr>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -788,6 +1012,8 @@ struct IrSchedule {
 
 #[derive(Debug, Deserialize)]
 struct IrExpr {
+    #[serde(default)]
+    lang: Option<String>,
     src: String,
 }
 
@@ -1036,7 +1262,7 @@ mod tests {
     #[test]
     fn deterministic_output_for_identical_input() {
         let ir = r#"{
-            "model": { "currency": "USD" },
+            "model": { "name": "demo", "currency": "USD" },
             "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
             "streams": [
                 {
@@ -1044,17 +1270,20 @@ mod tests {
                     "owner": { "symbol": "legal.borrower" },
                     "direction": "outflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
-                    "amount": { "src": "100" }
+                    "amount": { "lang": "cel", "src": "cfg.base + time.t" },
+                    "active_when": { "lang": "cel", "src": "time.t < 2" }
                 }
             ]
         }"#;
+        let mut overrides = BTreeMap::new();
+        overrides.insert("cfg.base".to_string(), 100.0);
 
         let first = run_from_json_str(
             ir,
             RunConfig {
                 discount_rate: 0.05,
                 as_of: None,
-                parameter_overrides: BTreeMap::new(),
+                parameter_overrides: overrides.clone(),
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
             },
@@ -1065,7 +1294,7 @@ mod tests {
             RunConfig {
                 discount_rate: 0.05,
                 as_of: None,
-                parameter_overrides: BTreeMap::new(),
+                parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
             },

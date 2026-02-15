@@ -1,0 +1,94 @@
+{
+  "results_version": "0.1",
+  "model_hash": "b6cca2af1d542580548e41f5be13dd1a8915376d78f3d93e8dfce167791161e5",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.1.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.borrower.total": {
+        "amount": -330.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -299.173554,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -330.0,
+        "currency": "USD"
+      },
+      "run.discount_rate": 0.1,
+      "stream.rent.total": {
+        "amount": -330.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -110.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -110.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

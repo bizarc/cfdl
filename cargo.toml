@@ -9,6 +9,7 @@ members = [
   "crates/cfdl-parser",
   "crates/cfdl-resolver",
   "crates/cfdl-validate",
+  "crates/cfdl-expr",
   "crates/cfdl-compile",
   "crates/cfdl-engine",
   "crates/cfdl-cli"
