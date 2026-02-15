@@ -18,6 +18,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     let mut versions = Vec::new();
     let mut models = Vec::new();
     let mut times = Vec::new();
+    let mut use_packs = Vec::new();
     let mut phases = std::collections::BTreeSet::new();
 
     for source_stmt in &output.source_statements {
@@ -25,6 +26,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
             Stmt::Version(stmt) => versions.push((source_stmt.file.as_str(), stmt.span)),
             Stmt::Model(stmt) => models.push((source_stmt.file.as_str(), stmt.span)),
             Stmt::Time(stmt) => times.push((source_stmt.file.as_str(), stmt.span)),
+            Stmt::UsePack(stmt) => use_packs.push((source_stmt.file.as_str(), stmt.span)),
             Stmt::Phase(stmt) => {
                 phases.insert(stmt.name.clone());
             }
@@ -66,6 +68,24 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         &times,
         anchor,
     );
+    if use_packs.len() > 1 {
+        diagnostics.push(ValidationDiagnostic {
+            code: "E1107_MULTIPLE_USE_PACK",
+            message: "Model contains multiple 'use pack' statements.".to_string(),
+            file: use_packs[1].0.to_string(),
+            span: use_packs[1].1,
+        });
+    }
+    for (file, span) in &use_packs {
+        if *file != "model.cfdl" {
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1108_USE_PACK_NOT_IN_MODEL_FILE",
+                message: "The 'use pack' statement is only allowed in 'model.cfdl'.".to_string(),
+                file: (*file).to_string(),
+                span: *span,
+            });
+        }
+    }
     if symbols.entities.is_empty() {
         diagnostics.push(ValidationDiagnostic {
             code: "E1109_MISSING_ENTITY",
@@ -373,6 +393,7 @@ fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
+        Stmt::UsePack(s) => s.span,
         Stmt::Import(s) => s.span,
         Stmt::Time(s) => s.span,
         Stmt::Phase(s) => s.span,

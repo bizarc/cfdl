@@ -217,6 +217,11 @@ All validation emits **diagnostics** (see §10).
 - `term` is REQUIRED.
 - `currency` is REQUIRED if contract emits any monetary stream.
 - `effects` is REQUIRED unless a pack provides a lowering rule for this contract type.
+- If a matching pack lowering rule exists, core validation MUST NOT emit
+  `E2002_CONTRACT_MISSING_EFFECTS` for that contract.
+- For contracts lowered by a pack, required term/field enforcement is the
+  pack's responsibility (pack schema/rule validation), while core validation
+  continues to enforce universal structural rules (for example, `term`).
 
 ### 5.3 Stream rules
 - Streams MUST have: owner, direction, currency.

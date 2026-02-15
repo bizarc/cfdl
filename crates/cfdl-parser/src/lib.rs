@@ -22,6 +22,7 @@ pub type ModelAst = CompilationUnit;
 pub enum Stmt {
     Version(VersionStmt),
     Model(ModelStmt),
+    UsePack(UsePackStmt),
     Import(ImportStmt),
     Time(TimeStmt),
     Phase(PhaseStmt),
@@ -50,6 +51,13 @@ pub struct ModelStmt {
 pub struct ImportStmt {
     pub path: String,
     pub alias: Option<String>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UsePackStmt {
+    pub name: String,
+    pub version: String,
     pub span: Span,
 }
 
@@ -227,6 +235,7 @@ impl<'a> Parser<'a> {
         match self.peek().kind {
             TokenKind::Keyword(Keyword::Version) => self.parse_version_stmt().map(Stmt::Version),
             TokenKind::Keyword(Keyword::Model) => self.parse_model_stmt().map(Stmt::Model),
+            TokenKind::Keyword(Keyword::Use) => self.parse_use_pack_stmt().map(Stmt::UsePack),
             TokenKind::Keyword(Keyword::Import) => self.parse_import_stmt().map(Stmt::Import),
             TokenKind::Keyword(Keyword::Time) => self.parse_time_stmt().map(Stmt::Time),
             TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
@@ -334,6 +343,39 @@ impl<'a> Parser<'a> {
             from,
             periods,
             span: merge_spans(start.span, periods_tok.span),
+        })
+    }
+
+    fn parse_use_pack_stmt(&mut self) -> Option<UsePackStmt> {
+        let start = self.expect_keyword(Keyword::Use, "'use'")?;
+        let _pack_kw = self.expect_keyword(Keyword::Pack, "'pack'")?;
+        let pack_name_tok = self.bump();
+        let pack_name = match pack_name_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    pack_name_tok.span,
+                    "Expected token <string> after 'use pack'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _version_kw = self.expect_keyword(Keyword::Version, "'version'")?;
+        let version_tok = self.bump();
+        let version = match version_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    version_tok.span,
+                    "Expected token <string> after 'version'.".to_string(),
+                );
+                return None;
+            }
+        };
+        Some(UsePackStmt {
+            name: pack_name,
+            version,
+            span: merge_spans(start.span, version_tok.span),
         })
     }
 
@@ -836,6 +878,7 @@ impl<'a> Parser<'a> {
             match self.peek().kind {
                 TokenKind::Keyword(Keyword::Version)
                 | TokenKind::Keyword(Keyword::Model)
+                | TokenKind::Keyword(Keyword::Use)
                 | TokenKind::Keyword(Keyword::Import)
                 | TokenKind::Keyword(Keyword::Time)
                 | TokenKind::Keyword(Keyword::Phase)
@@ -928,6 +971,7 @@ fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
+        Stmt::UsePack(s) => s.span,
         Stmt::Import(s) => s.span,
         Stmt::Time(s) => s.span,
         Stmt::Phase(s) => s.span,
@@ -967,8 +1011,8 @@ fn keyword_text(keyword: Keyword) -> &'static str {
     match keyword {
         Keyword::Version => "version",
         Keyword::Model => "model",
-        Keyword::Currency => "currency",
         Keyword::Use => "use",
+        Keyword::Currency => "currency",
         Keyword::Pack => "pack",
         Keyword::Import => "import",
         Keyword::As => "as",
@@ -1057,6 +1101,7 @@ fn is_statement_start(token: &Token) -> bool {
         token.kind,
         TokenKind::Keyword(Keyword::Version)
             | TokenKind::Keyword(Keyword::Model)
+            | TokenKind::Keyword(Keyword::Use)
             | TokenKind::Keyword(Keyword::Import)
             | TokenKind::Keyword(Keyword::Time)
             | TokenKind::Keyword(Keyword::Phase)
@@ -1136,6 +1181,24 @@ time monthly from 2026-01 for 12
                 assert_eq!(stmt.alias.as_deref(), Some("sub"));
             }
             other => panic!("expected import stmt, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn parses_use_pack_statement() {
+        let src = r#"use pack "testpack" version "0.1.0""#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        assert_eq!(ast.statements.len(), 1);
+        match &ast.statements[0] {
+            Stmt::UsePack(stmt) => {
+                assert_eq!(stmt.name, "testpack");
+                assert_eq!(stmt.version, "0.1.0");
+            }
+            other => panic!("expected use-pack stmt, got {other:?}"),
         }
     }
 

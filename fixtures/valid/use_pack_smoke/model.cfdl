@@ -1,0 +1,10 @@
+version 0.1
+model "use-pack-smoke"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity legal borrower
+
+contract lease_contract {
+  term 2026-01..2026-12
+}

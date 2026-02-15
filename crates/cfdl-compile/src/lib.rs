@@ -4,6 +4,11 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone, Default)]
+pub struct CompileOptions {
+    pub packs_dir: Option<PathBuf>,
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct Diagnostic {
     pub code: String,
@@ -26,9 +31,24 @@ pub struct Span {
 
 /// Compile a model directory to an IR JSON file.
 pub fn compile_to_file(model_root: &Path, out_path: &Path) -> Result<(), Vec<Diagnostic>> {
+    compile_to_file_with_options(model_root, out_path, &CompileOptions::default())
+}
+
+/// Compile a model directory to an IR JSON file with options.
+pub fn compile_to_file_with_options(
+    model_root: &Path,
+    out_path: &Path,
+    options: &CompileOptions,
+) -> Result<(), Vec<Diagnostic>> {
     let (resolve_output, symbols) = pipeline(model_root)?;
 
-    let validation_diags = cfdl_validate::validate(&resolve_output, &symbols);
+    let active_pack = resolve_active_pack(model_root, &resolve_output, options)?;
+
+    let validation_diags = filter_pack_aware_validation(
+        cfdl_validate::validate(&resolve_output, &symbols),
+        &resolve_output,
+        active_pack.as_ref(),
+    );
     if !validation_diags.is_empty() {
         return Err(validation_diags
             .into_iter()
@@ -41,7 +61,7 @@ pub fn compile_to_file(model_root: &Path, out_path: &Path) -> Result<(), Vec<Dia
         return Err(expr_diags);
     }
 
-    let ir = build_ir(&resolve_output);
+    let ir = build_ir(&resolve_output, active_pack.as_ref());
 
     let json = serde_json::to_string_pretty(&ir).map_err(|err| {
         vec![Diagnostic {
@@ -213,6 +233,22 @@ fn map_validation_diag(diag: cfdl_validate::ValidationDiagnostic) -> Diagnostic 
     }
 }
 
+#[derive(Debug, Clone)]
+struct ActivePackContext {
+    name: String,
+    version: String,
+    lowering_rules: Vec<cfdl_pack::LoweringRule>,
+}
+
+struct LoweringContext<'a> {
+    id_seed: &'a str,
+    model_currency: &'a str,
+    time_calendar: &'a str,
+    time_start: &'a str,
+    timeline_end: &'a str,
+    default_owner: &'a str,
+}
+
 #[derive(Debug, Serialize)]
 struct Ir {
     ir_version: String,
@@ -255,6 +291,20 @@ struct IrDateRange {
 struct IrNodeProvenance {
     source_file: String,
     source_span: Span,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    generated_by: Option<IrGeneratedBy>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrGeneratedBy {
+    pack: IrPackRef,
+    rule_id: String,
+}
+
+#[derive(Debug, Serialize)]
+struct IrPackRef {
+    name: String,
+    version: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -353,6 +403,8 @@ struct IrProvenanceCompiler {
     name: String,
     version: String,
     hash: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    notes: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -361,15 +413,25 @@ struct IrProvenance {
     compiler: IrProvenanceCompiler,
 }
 
-fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
+fn build_ir(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    active_pack: Option<&ActivePackContext>,
+) -> Ir {
     let model_name = find_model_name(resolve_output).unwrap_or_else(|| "model".to_string());
     let model_currency = "USD".to_string();
     let (time_calendar, time_start, time_periods) = find_time(resolve_output)
         .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1));
     let timeline_end = add_periods_for_timeline_end(&time_start, &time_calendar, time_periods);
     let compiler_version = env!("CARGO_PKG_VERSION").to_string();
-    let compiler_hash = hash_hex(&format!("cfdl:{compiler_version}:"));
-    let id_seed = format!("cfdl:{compiler_version}:{compiler_hash}");
+    let pack_seed = active_pack
+        .map(|pack| format!("{}@{}", pack.name, pack.version))
+        .unwrap_or_default();
+    let compiler_hash = hash_hex(&format!("cfdl:{compiler_version}:{pack_seed}"));
+    let id_seed = if pack_seed.is_empty() {
+        format!("cfdl:{compiler_version}:{compiler_hash}")
+    } else {
+        format!("cfdl:{compiler_version}:{compiler_hash}:{pack_seed}")
+    };
 
     let mut phases: Vec<((String, String), IrPhase)> = resolve_output
         .source_statements
@@ -444,6 +506,7 @@ fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
                     source_span: map_span(contract.span),
+                    generated_by: None,
                 },
             };
             Some(((name, source_stmt.file.clone()), ir_contract))
@@ -501,11 +564,24 @@ fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
                     source_span: map_span(stream.span),
+                    generated_by: None,
                 },
             };
             Some(((stream.name.clone(), source_stmt.file.clone()), ir_stream))
         })
         .collect();
+    streams.extend(lower_contract_streams(
+        resolve_output,
+        active_pack,
+        LoweringContext {
+            id_seed: &id_seed,
+            model_currency: &model_currency,
+            time_calendar: &time_calendar,
+            time_start: &time_start,
+            timeline_end: &timeline_end,
+            default_owner: &first_entity_symbol,
+        },
+    ));
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
     let mut sources = resolve_output.module_order.clone();
@@ -547,8 +623,222 @@ fn build_ir(resolve_output: &cfdl_resolver::ResolveOutput) -> Ir {
                 name: "cfdl".to_string(),
                 version: compiler_version,
                 hash: compiler_hash,
+                notes: active_pack
+                    .map(|pack| vec![format!("active_pack={}@{}", pack.name, pack.version)]),
             },
         },
+    }
+}
+
+fn resolve_active_pack(
+    model_root: &Path,
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    options: &CompileOptions,
+) -> Result<Option<ActivePackContext>, Vec<Diagnostic>> {
+    let use_pack_stmt = resolve_output
+        .source_statements
+        .iter()
+        .find_map(|source_stmt| match &source_stmt.statement {
+            Stmt::UsePack(stmt) => Some((source_stmt.file.clone(), stmt.clone())),
+            _ => None,
+        });
+
+    let Some((file, use_pack)) = use_pack_stmt else {
+        return Ok(None);
+    };
+
+    let packs_dir = options
+        .packs_dir
+        .clone()
+        .unwrap_or_else(|| model_root.join("packs"));
+    let registry = cfdl_pack::PackRegistry::load_from_dir(&packs_dir).map_err(|err| {
+        vec![Diagnostic {
+            code: "E4004_MISSING_PACK".to_string(),
+            severity: "error".to_string(),
+            message: err.message,
+            file: Some(file.clone()),
+            span: Some(map_span(use_pack.span)),
+            path: None,
+            hint: None,
+            notes: vec![format!("pack root: {}", packs_dir.display())],
+        }]
+    })?;
+    let Some(active) = registry.active_pack(&use_pack.name, &use_pack.version) else {
+        return Err(vec![Diagnostic {
+            code: "E4004_MISSING_PACK".to_string(),
+            severity: "error".to_string(),
+            message: format!(
+                "Pack '{}@{}' was not found under '{}'.",
+                use_pack.name,
+                use_pack.version,
+                packs_dir.display()
+            ),
+            file: Some(file),
+            span: Some(map_span(use_pack.span)),
+            path: None,
+            hint: Some("Add a matching pack manifest or pass --packs <dir>.".to_string()),
+            notes: vec![],
+        }]);
+    };
+
+    Ok(Some(ActivePackContext {
+        name: active.name.clone(),
+        version: active.version.clone(),
+        lowering_rules: registry.lowering_rules(&active.name),
+    }))
+}
+
+fn filter_pack_aware_validation(
+    diagnostics: Vec<cfdl_validate::ValidationDiagnostic>,
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    active_pack: Option<&ActivePackContext>,
+) -> Vec<cfdl_validate::ValidationDiagnostic> {
+    let Some(pack) = active_pack else {
+        return diagnostics;
+    };
+    let lowered_contract_anchors: Vec<(String, cfdl_parser::Span)> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| {
+            let Stmt::Contract(contract) = &source_stmt.statement else {
+                return None;
+            };
+            if pack
+                .lowering_rules
+                .iter()
+                .any(|rule| rule.contract_name == contract.name)
+            {
+                Some((source_stmt.file.clone(), contract.span))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    diagnostics
+        .into_iter()
+        .filter(|diag| {
+            if diag.code != "E2002_CONTRACT_MISSING_EFFECTS" {
+                return true;
+            }
+            !lowered_contract_anchors.iter().any(|(file, span)| {
+                *file == diag.file
+                    && span.start_line == diag.span.start_line
+                    && span.start_col == diag.span.start_col
+            })
+        })
+        .collect()
+}
+
+fn lower_contract_streams(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    active_pack: Option<&ActivePackContext>,
+    ctx: LoweringContext<'_>,
+) -> Vec<((String, String), IrStream)> {
+    let Some(pack) = active_pack else {
+        return vec![];
+    };
+    let mut rules = pack.lowering_rules.clone();
+    rules.sort_by(|a, b| a.id.cmp(&b.id));
+
+    let mut lowered = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Contract(contract) = &source_stmt.statement else {
+            continue;
+        };
+        for rule in &rules {
+            if rule.contract_name != contract.name {
+                continue;
+            }
+
+            let stable_key = format!("{}::{}::{}", source_stmt.file, contract.name, rule.id);
+            let owner_symbol = if rule.owner_entity.is_empty() {
+                ctx.default_owner.to_string()
+            } else {
+                rule.owner_entity.clone()
+            };
+            let schedule =
+                lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
+
+            lowered.push((
+                (rule.stream_name.clone(), stable_key.clone()),
+                IrStream {
+                    id: deterministic_id("Stream", &stable_key, ctx.id_seed),
+                    name: rule.stream_name.clone(),
+                    owner: IrEntityRef {
+                        symbol: owner_symbol,
+                    },
+                    direction: if rule.direction.is_empty() {
+                        "outflow".to_string()
+                    } else {
+                        rule.direction.clone()
+                    },
+                    currency: if rule.currency.is_empty() {
+                        ctx.model_currency.to_string()
+                    } else {
+                        rule.currency.clone()
+                    },
+                    schedule,
+                    amount: IrExpr {
+                        lang: "cel".to_string(),
+                        src: rule.amount_cel.clone(),
+                    },
+                    active_when: IrExpr {
+                        lang: "cel".to_string(),
+                        src: "true".to_string(),
+                    },
+                    provenance: IrNodeProvenance {
+                        source_file: source_stmt.file.clone(),
+                        source_span: map_span(contract.span),
+                        generated_by: Some(IrGeneratedBy {
+                            pack: IrPackRef {
+                                name: pack.name.clone(),
+                                version: pack.version.clone(),
+                            },
+                            rule_id: rule.id.clone(),
+                        }),
+                    },
+                },
+            ));
+        }
+    }
+    lowered
+}
+
+fn lower_pack_rule_schedule(
+    rule: &cfdl_pack::LoweringRule,
+    time_calendar: &str,
+    time_start: &str,
+    timeline_end: &str,
+) -> IrSchedule {
+    if rule.schedule_kind.eq_ignore_ascii_case("on_date") {
+        IrSchedule {
+            kind: "OnDate".to_string(),
+            on: Some(normalize_date(&rule.schedule_from)),
+            every: None,
+            from: None,
+            to: None,
+            on_rule: None,
+            phase: None,
+        }
+    } else {
+        IrSchedule {
+            kind: "Every".to_string(),
+            on: None,
+            every: Some(time_calendar.to_string()),
+            from: Some(normalize_date(if rule.schedule_from.is_empty() {
+                time_start
+            } else {
+                &rule.schedule_from
+            })),
+            to: Some(normalize_date(if rule.schedule_to.is_empty() {
+                timeline_end
+            } else {
+                &rule.schedule_to
+            })),
+            on_rule: None,
+            phase: None,
+        }
     }
 }
 

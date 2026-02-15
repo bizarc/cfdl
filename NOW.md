@@ -4,8 +4,8 @@ This NOW.md defines the active roadmap for **CFDL SDK v0.2.0**. It is designed f
 
 Source-of-truth contracts:
 - Surface grammar: `docs/CFDL_v0_1_Grammar.ebnf.md`
-- IR contract: `docs/CFDL_v0_1_IR.schema.json` (and/or schema doc)
-- Results contract: `docs/CFDL_v0_1_Results.schema.json` (and/or schema doc)
+- IR contract: `docs/CFDL_v0_1_IR.schema.json` (mirrored in `docs/cfdl_v_0_1_ir_schema.md`)
+- Results contract: `docs/CFDL_v0_1_Results.schema.json` (mirrored in `docs/cfdl_v_0_1_results_schema.md`)
 - Diagnostics codes: `docs/diagnostics_spec.md`
 
 Rules:
@@ -46,7 +46,7 @@ Add real CEL parsing/evaluation with a typed environment so expressions can be u
 
 ---
 
-## Milestone 10 — Pack Host + Loader + Lowering Stage
+## Milestone 10 — Pack Host + Loader + Lowering Stage (Done)
 
 ### Goal
 Load packs from filesystem and apply deterministic lowering (contracts/templates → streams/events/options) with provenance.
@@ -78,7 +78,7 @@ Load packs from filesystem and apply deterministic lowering (contracts/templates
 
 ---
 
-## Milestone 11 — CRE Pack v0.1 (Developer workflow)
+## Milestone 11 — CRE Pack v0.1 (Developer workflow) (Current)
 
 ### Goal
 Implement `packs/cre` to support a CRE developer lifecycle: construction → lease-up → stabilized ops → exit.
@@ -92,7 +92,7 @@ Implement `packs/cre` to support a CRE developer lifecycle: construction → lea
 
 ### Deliverables
 - `packs/cre/`
-  - `pack.toml`, `aliases.yaml`, `lowering/rules.yaml`, `validations.yaml`, `defaults.yaml`, `README.md`
+  - `pack.toml`, `aliases.toml`, `templates.toml`, `lowering/rules.toml`, `validations.toml`, `defaults.toml`, `README.md`
 - Examples + gold
   - `examples/cre_developer/` with `model.cfdl` and run configs
   - gold IR + results
@@ -120,7 +120,7 @@ Implement `packs/opco` for operating business valuation: revenue/opex/WC + exit.
 
 ### Deliverables
 - `packs/opco/`
-  - `pack.toml`, `aliases.yaml`, `lowering/rules.yaml`, `validations.yaml`, `defaults.yaml`, `README.md`
+  - `pack.toml`, `aliases.toml`, `templates.toml`, `lowering/rules.toml`, `validations.toml`, `defaults.toml`, `README.md`
 - Examples + gold
   - `examples/opco_basic/` with `model.cfdl` and run configs
   - gold IR + results

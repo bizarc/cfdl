@@ -1,0 +1,10 @@
+name = "cre"
+version = "0.1.0"
+description = "CRE pack skeleton for Milestone 11."
+
+[entrypoints]
+aliases = "aliases.toml"
+templates = "templates.toml"
+lowering = "lowering/rules.toml"
+validations = "validations.toml"
+defaults = "defaults.toml"

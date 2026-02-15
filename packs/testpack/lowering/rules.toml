@@ -1,0 +1,11 @@
+[[rules]]
+id = "emit_testpack_stream"
+contract_name = "lease_contract"
+stream_name = "testpack.lowered"
+owner_entity = "legal.borrower"
+direction = "inflow"
+currency = "USD"
+amount_cel = "1234"
+schedule_kind = "every"
+schedule_from = "2026-01"
+schedule_to = "2026-12"

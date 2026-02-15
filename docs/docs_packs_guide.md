@@ -91,15 +91,12 @@ Packs are loaded from the filesystem (v0.2 default). Example structure:
 packs/
   cre/
     pack.toml
-    aliases.yaml
-    templates/
-      lease.yaml
-      construction_loan.yaml
+    aliases.toml
+    templates.toml
     lowering/
-      rules.yaml
-      functions.cel
-    validations.yaml
-    defaults.yaml
+      rules.toml
+    validations.toml
+    defaults.toml
     README.md
   opco/
     pack.toml
@@ -117,21 +114,26 @@ version = "0.1.0"
 description = "Commercial Real Estate pack"
 
 [entrypoints]
-aliases = "aliases.yaml"
-validations = "validations.yaml"
-defaults = "defaults.yaml"
-
-[templates]
-dir = "templates"
-
-[lowering]
-rules = "lowering/rules.yaml"
-functions = "lowering/functions.cel"
+aliases = "aliases.toml"
+templates = "templates.toml"
+lowering = "lowering/rules.toml"
 ```
 
 Notes:
 - Use `version` for pack evolution independent of SDK version.
 - Packs may declare compatibility constraints later.
+
+### 5.2 Pack formats (TOML)
+
+For the current SDK implementation, pack artifacts are TOML-based:
+
+- `pack.toml` (required manifest + entrypoints)
+- `aliases.toml` (alias map)
+- `templates.toml` (template definitions, may be stubbed)
+- `lowering/rules.toml` (lowering rule list)
+- optional pack data files like `validations.toml` and `defaults.toml`
+
+Keep pack files deterministic and avoid mixing YAML/JSON variants in the same pack.
 
 ---
 

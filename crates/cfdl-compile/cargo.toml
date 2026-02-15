@@ -14,6 +14,7 @@ cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }
 cfdl-validate = { path = "../cfdl-validate" }
 cfdl-expr = { path = "../cfdl-expr" }
+cfdl-pack = { path = "../cfdl-pack" }
 
 # These crates will be implemented later; keep commented until they exist.
 # cfdl-lexer = { path = "../cfdl-lexer" }

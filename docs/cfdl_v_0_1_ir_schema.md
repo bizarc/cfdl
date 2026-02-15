@@ -687,7 +687,11 @@
           "properties": {
             "name": { "type": "string", "minLength": 1 },
             "version": { "type": "string", "minLength": 1 },
-            "hash": { "type": "string", "minLength": 8 }
+            "hash": { "type": "string", "minLength": 8 },
+            "notes": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
           }
         }
       }
@@ -710,10 +714,37 @@
             "end_col": { "type": "integer", "minimum": 1 }
           }
         },
-        "notes": { "type": "string" }
+        "notes": { "type": "string" },
+        "generated_by": { "$ref": "#/$defs/GeneratedBy" }
+      }
+    },
+
+    "GeneratedBy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pack", "rule_id"],
+      "properties": {
+        "pack": { "$ref": "#/$defs/PackRef" },
+        "rule_id": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "PackRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
       }
     }
   }
 }
 ```
+
+Schema sync guardrail:
+- `docs/CFDL_v0_1_IR.schema.json` is the canonical machine-readable artifact.
+- The fenced JSON block in this markdown file must remain semantically identical.
+- Before merging schema changes, run a parity check that parses both and compares
+  JSON object equality to prevent drift.
 

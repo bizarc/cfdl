@@ -548,6 +548,7 @@ fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
+        Stmt::UsePack(s) => s.span,
         Stmt::Import(s) => s.span,
         Stmt::Time(s) => s.span,
         Stmt::Phase(s) => s.span,

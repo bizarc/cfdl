@@ -20,6 +20,8 @@ enum Command {
         model_root: PathBuf,
         #[arg(long)]
         out: PathBuf,
+        #[arg(long)]
+        packs: Option<PathBuf>,
     },
     Validate {
         model_root: PathBuf,
@@ -37,6 +39,20 @@ enum Command {
         rate: f64,
         #[arg(long)]
         as_of: Option<String>,
+        #[arg(long)]
+        packs: Option<PathBuf>,
+    },
+    Pack {
+        #[command(subcommand)]
+        command: PackCommand,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum PackCommand {
+    List {
+        #[arg(long)]
+        path: PathBuf,
     },
 }
 
@@ -44,8 +60,15 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Compile { model_root, out } => {
-            match cfdl_compile::compile_to_file(&model_root, &out) {
+        Command::Compile {
+            model_root,
+            out,
+            packs,
+        } => {
+            let options = cfdl_compile::CompileOptions {
+                packs_dir: packs.or_else(default_packs_dir),
+            };
+            match cfdl_compile::compile_to_file_with_options(&model_root, &out, &options) {
                 Ok(()) => Ok(()),
                 Err(diags) => {
                     if cli.json {
@@ -82,7 +105,26 @@ fn main() -> Result<()> {
             config,
             rate,
             as_of,
+            packs,
         } => {
+            if let Some(pack_dir) = packs.or_else(default_packs_dir) {
+                if let Err(err) = cfdl_pack::PackRegistry::load_from_dir(&pack_dir) {
+                    emit_run_failure(
+                        cli.json,
+                        vec![RunDiagnostic {
+                            code: "E4004_MISSING_PACK".to_string(),
+                            severity: "error".to_string(),
+                            message: err.message,
+                            file: None,
+                            span: None,
+                            path: None,
+                            hint: None,
+                            notes: vec![format!("pack root: {}", pack_dir.display())],
+                        }],
+                    )?;
+                    std::process::exit(1);
+                }
+            }
             let parsed_as_of = if let Some(as_of) = as_of {
                 match cfdl_engine::Date::parse(&as_of) {
                     Ok(date) => Some(date),
@@ -202,6 +244,50 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
+        Command::Pack { command } => match command {
+            PackCommand::List { path } => match cfdl_pack::PackRegistry::load_from_dir(&path) {
+                Ok(registry) => {
+                    if cli.json {
+                        let entries: Vec<serde_json::Value> = registry
+                            .list()
+                            .into_iter()
+                            .map(|pack| {
+                                serde_json::json!({
+                                    "name": pack.manifest.name,
+                                    "version": pack.manifest.version
+                                })
+                            })
+                            .collect();
+                        print!("{}", serde_json::to_string_pretty(&entries)?);
+                    } else {
+                        for pack in registry.list() {
+                            println!("{} {}", pack.manifest.name, pack.manifest.version);
+                        }
+                    }
+                    Ok(())
+                }
+                Err(err) => {
+                    if cli.json {
+                        print!(
+                            "{}",
+                            serde_json::to_string_pretty(&vec![RunDiagnostic {
+                                code: "E4004_MISSING_PACK".to_string(),
+                                severity: "error".to_string(),
+                                message: err.message,
+                                file: None,
+                                span: None,
+                                path: None,
+                                hint: None,
+                                notes: vec![],
+                            }])?
+                        );
+                    } else {
+                        eprintln!("ERROR[E4004_MISSING_PACK] {}", err.message);
+                    }
+                    std::process::exit(1);
+                }
+            },
+        },
     }
 }
 
@@ -235,4 +321,13 @@ fn emit_run_failure(json_mode: bool, diags: Vec<RunDiagnostic>) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn default_packs_dir() -> Option<PathBuf> {
+    let candidate = PathBuf::from("packs");
+    if candidate.is_dir() {
+        Some(candidate)
+    } else {
+        None
+    }
 }

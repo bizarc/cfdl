@@ -1,0 +1,118 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "use-pack-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "513fc944c484e5a50889d8b6de7c2a49",
+      "symbol": "legal.borrower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "fe88fbc69188634c54c2144bfe41f13c",
+      "name": "lease_contract",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "legal.borrower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "9978aa4115d0083e0378a9abaa5f0363",
+      "name": "testpack.lowered",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "1234"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 10,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "testpack",
+            "version": "0.1.0"
+          },
+          "rule_id": "emit_testpack_stream"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "metrics": [],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "b1e2957690b6b7327f64c9cfd21e84ab",
+      "notes": [
+        "active_pack=testpack@0.1.0"
+      ]
+    }
+  }
+}
