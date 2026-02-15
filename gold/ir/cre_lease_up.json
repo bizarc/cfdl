@@ -45,7 +45,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 10,
+          "end_line": 17,
           "end_col": 1
         }
       }
@@ -79,7 +79,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 10,
+          "end_line": 17,
           "end_col": 1
         },
         "generated_by": {

@@ -61,7 +61,7 @@ pub fn compile_to_file_with_options(
         return Err(expr_diags);
     }
 
-    let ir = build_ir(&resolve_output, active_pack.as_ref());
+    let ir = build_ir(&resolve_output, active_pack.as_ref())?;
 
     let json = serde_json::to_string_pretty(&ir).map_err(|err| {
         vec![Diagnostic {
@@ -240,6 +240,11 @@ struct ActivePackContext {
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
 }
 
+struct PackLoweringOutput {
+    streams: Vec<((String, String), IrStream)>,
+    diagnostics: Vec<Diagnostic>,
+}
+
 struct LoweringContext<'a> {
     id_seed: &'a str,
     model_currency: &'a str,
@@ -416,7 +421,7 @@ struct IrProvenance {
 fn build_ir(
     resolve_output: &cfdl_resolver::ResolveOutput,
     active_pack: Option<&ActivePackContext>,
-) -> Ir {
+) -> Result<Ir, Vec<Diagnostic>> {
     let model_name = find_model_name(resolve_output).unwrap_or_else(|| "model".to_string());
     let model_currency = "USD".to_string();
     let (time_calendar, time_start, time_periods) = find_time(resolve_output)
@@ -570,7 +575,7 @@ fn build_ir(
             Some(((stream.name.clone(), source_stmt.file.clone()), ir_stream))
         })
         .collect();
-    streams.extend(lower_contract_streams(
+    let lowered = lower_contract_streams(
         resolve_output,
         active_pack,
         LoweringContext {
@@ -581,13 +586,23 @@ fn build_ir(
             timeline_end: &timeline_end,
             default_owner: &first_entity_symbol,
         },
-    ));
+    );
+    if lowered
+        .diagnostics
+        .iter()
+        .any(|diag| diag.severity == "error")
+    {
+        let mut diagnostics = lowered.diagnostics;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+    streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
     let mut sources = resolve_output.module_order.clone();
     sources.sort();
 
-    Ir {
+    Ok(Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
             name: model_name,
@@ -627,7 +642,7 @@ fn build_ir(
                     .map(|pack| vec![format!("active_pack={}@{}", pack.name, pack.version)]),
             },
         },
-    }
+    })
 }
 
 fn resolve_active_pack(
@@ -734,18 +749,36 @@ fn lower_contract_streams(
     resolve_output: &cfdl_resolver::ResolveOutput,
     active_pack: Option<&ActivePackContext>,
     ctx: LoweringContext<'_>,
-) -> Vec<((String, String), IrStream)> {
+) -> PackLoweringOutput {
     let Some(pack) = active_pack else {
-        return vec![];
+        return PackLoweringOutput {
+            streams: vec![],
+            diagnostics: vec![],
+        };
     };
     let mut rules = pack.lowering_rules.clone();
     rules.sort_by(|a, b| a.id.cmp(&b.id));
 
     let mut lowered = Vec::new();
+    let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Contract(contract) = &source_stmt.statement else {
             continue;
         };
+        let before = diagnostics.len();
+        diagnostics.extend(validate_pack_contract(
+            pack,
+            source_stmt,
+            contract,
+            ctx.time_start,
+            ctx.timeline_end,
+        ));
+        if diagnostics[before..]
+            .iter()
+            .any(|diag| diag.severity == "error")
+        {
+            continue;
+        }
         for rule in &rules {
             if rule.contract_name != contract.name {
                 continue;
@@ -802,7 +835,173 @@ fn lower_contract_streams(
             ));
         }
     }
-    lowered
+    PackLoweringOutput {
+        streams: lowered,
+        diagnostics,
+    }
+}
+
+fn validate_pack_contract(
+    pack: &ActivePackContext,
+    source_stmt: &cfdl_resolver::SourceStatement,
+    contract: &cfdl_parser::ContractStmt,
+    timeline_start: &str,
+    timeline_end: &str,
+) -> Vec<Diagnostic> {
+    if pack.name != "cre" {
+        return vec![];
+    }
+    let mut diagnostics = Vec::new();
+    match contract.name.as_str() {
+        "cre_lease" => {
+            if !contract.terms.contains_key("base_rent") {
+                diagnostics.push(cre_pack_diag(
+                    "E6001_CRE_LEASE_MISSING_BASE_RENT",
+                    "CRE lease is missing required term 'base_rent'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
+                diagnostics.push(cre_pack_diag(
+                    "E6002_CRE_LEASE_INVALID_TERM_RANGE",
+                    "CRE lease term range is missing, invalid, or outside model timeline.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            let lease_up_enabled = contract
+                .terms
+                .keys()
+                .any(|key| key == "lease_up" || key.starts_with("lease_up."));
+            if lease_up_enabled {
+                let months_ok = contract
+                    .terms
+                    .get("lease_up.months")
+                    .and_then(|term| term.value.parse::<i32>().ok())
+                    .map(|months| months > 0)
+                    .unwrap_or(false);
+                if !months_ok {
+                    diagnostics.push(cre_pack_diag(
+                        "E6003_CRE_LEASE_UP_MISSING_MONTHS",
+                        "CRE lease_up requires term 'lease_up.months' > 0 when lease_up is enabled.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                let start_occ = contract
+                    .terms
+                    .get("lease_up.start_occupancy")
+                    .and_then(|term| term.value.parse::<f64>().ok())
+                    .unwrap_or(0.0);
+                let end_occ = contract
+                    .terms
+                    .get("lease_up.end_occupancy")
+                    .and_then(|term| term.value.parse::<f64>().ok())
+                    .unwrap_or(1.0);
+                if !(0.0..=1.0).contains(&start_occ) || !(0.0..=1.0).contains(&end_occ) {
+                    diagnostics.push(cre_pack_diag(
+                        "E6004_CRE_LEASE_UP_INVALID_OCCUPANCY",
+                        "CRE lease_up occupancy must be in [0, 1] for start/end occupancy.",
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+            }
+        }
+        "cre_exit_cap" => {
+            let exit_cap = contract
+                .terms
+                .get("exit_cap")
+                .and_then(|term| term.value.parse::<f64>().ok());
+            if exit_cap.is_none() {
+                diagnostics.push(cre_pack_diag(
+                    "E6010_CRE_EXIT_MISSING_EXIT_CAP",
+                    "CRE exit contract is missing required term 'exit_cap'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            } else if exit_cap.unwrap_or(0.0) <= 0.0 {
+                diagnostics.push(cre_pack_diag(
+                    "E6011_CRE_EXIT_INVALID_EXIT_CAP",
+                    "CRE exit 'exit_cap' must be greater than 0.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            let has_noi = contract.terms.contains_key("noi_ref")
+                || contract.terms.contains_key("noi_value")
+                || contract.terms.contains_key("noi");
+            if !has_noi {
+                diagnostics.push(cre_pack_diag(
+                    "E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE",
+                    "CRE exit requires either 'noi_ref' or 'noi_value'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        "cre_ops_revenue" | "cre_ops_expense" => {
+            if !contract.terms.contains_key("amount") {
+                diagnostics.push(cre_pack_diag(
+                    "E6020_CRE_OPS_MISSING_AMOUNT",
+                    "CRE ops contract is missing required term 'amount'.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
+                diagnostics.push(cre_pack_diag(
+                    "E6021_CRE_OPS_INVALID_SCHEDULE",
+                    "CRE ops term range is missing, invalid, or outside model timeline.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        _ => {}
+    }
+    diagnostics
+}
+
+fn cre_pack_diag(
+    code: &str,
+    message: &str,
+    source_stmt: &cfdl_resolver::SourceStatement,
+    span: cfdl_parser::Span,
+) -> Diagnostic {
+    Diagnostic {
+        code: code.to_string(),
+        severity: "error".to_string(),
+        message: message.to_string(),
+        file: Some(source_stmt.file.clone()),
+        span: Some(map_span(span)),
+        path: None,
+        hint: None,
+        notes: vec![],
+    }
+}
+
+fn valid_contract_term_range(
+    contract: &cfdl_parser::ContractStmt,
+    timeline_start: &str,
+    timeline_end: &str,
+) -> bool {
+    let Some(start) = contract.term_start.as_ref() else {
+        return false;
+    };
+    let Some(end) = contract.term_end.as_ref() else {
+        return false;
+    };
+    let start = normalize_date(start);
+    let end = normalize_date(end);
+    if parse_ymd(&start).is_none() || parse_ymd(&end).is_none() {
+        return false;
+    }
+    if start > end {
+        return false;
+    }
+    start.as_str() >= timeline_start && end.as_str() <= timeline_end
 }
 
 fn lower_pack_rule_schedule(
@@ -877,6 +1076,11 @@ fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Di
             }
         }
     }
+    sort_compile_diagnostics(&mut diags);
+    diags
+}
+
+fn sort_compile_diagnostics(diags: &mut [Diagnostic]) {
     diags.sort_by(|a, b| {
         a.file
             .cmp(&b.file)
@@ -894,7 +1098,6 @@ fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Di
             )
             .then(a.code.cmp(&b.code))
     });
-    diags
 }
 
 fn lower_schedule(

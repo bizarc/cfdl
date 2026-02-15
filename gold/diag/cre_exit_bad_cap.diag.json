@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E6011_CRE_EXIT_INVALID_EXIT_CAP",
+    "severity": "error",
+    "message": "CRE exit 'exit_cap' must be greater than 0.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

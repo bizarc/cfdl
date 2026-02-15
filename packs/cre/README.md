@@ -116,6 +116,18 @@ Determinism guarantees for this pack:
 
 ## Validations status
 
-Pack-level validations are not wired into the host pipeline yet. Planned CRE
-diagnostics are reserved in the `E6xxx_*` range and can be implemented once
-pack validation hooks are available.
+CRE domain checks are enforced during lowering-time validation (compile path)
+and emitted as standard diagnostics (`E6xxx_*`), without a separate pack
+validation stage.
+
+Current codes:
+
+- `E6001_CRE_LEASE_MISSING_BASE_RENT`
+- `E6002_CRE_LEASE_INVALID_TERM_RANGE`
+- `E6003_CRE_LEASE_UP_MISSING_MONTHS`
+- `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY`
+- `E6010_CRE_EXIT_MISSING_EXIT_CAP`
+- `E6011_CRE_EXIT_INVALID_EXIT_CAP`
+- `E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE`
+- `E6020_CRE_OPS_MISSING_AMOUNT`
+- `E6021_CRE_OPS_INVALID_SCHEDULE`

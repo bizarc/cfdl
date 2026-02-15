@@ -8,6 +8,7 @@
 
 pub use cfdl_lexer::Span;
 use cfdl_lexer::{Keyword, Punct, Token, TokenKind};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompilationUnit {
@@ -118,6 +119,15 @@ pub struct ContractStmt {
     pub name: String,
     pub has_term: bool,
     pub has_effects: bool,
+    pub term_start: Option<String>,
+    pub term_end: Option<String>,
+    pub terms: BTreeMap<String, ContractTerm>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractTerm {
+    pub value: String,
     pub span: Span,
 }
 
@@ -501,6 +511,9 @@ impl<'a> Parser<'a> {
         let mut name: Option<String> = None;
         let mut has_term = false;
         let mut has_effects = false;
+        let mut term_start = None;
+        let mut term_end = None;
+        let mut terms = BTreeMap::new();
         let mut end_span = start.span;
         let mut depth = 0usize;
 
@@ -512,7 +525,22 @@ impl<'a> Parser<'a> {
             let tok = self.bump();
             end_span = tok.span;
             match tok.kind {
-                TokenKind::Keyword(Keyword::Term) => has_term = true,
+                TokenKind::Keyword(Keyword::Term) => {
+                    has_term = true;
+                    if let Some((from, to, span)) = self.parse_contract_term_range() {
+                        term_start = Some(from);
+                        term_end = Some(to);
+                        end_span = span;
+                    }
+                }
+                TokenKind::Keyword(Keyword::Terms) => {
+                    if let Some((parsed_terms, span)) = self.parse_contract_terms_block() {
+                        for (key, value) in parsed_terms {
+                            terms.insert(key, value);
+                        }
+                        end_span = span;
+                    }
+                }
                 TokenKind::Keyword(Keyword::Effects) => has_effects = true,
                 TokenKind::Punct(Punct::LBrace) => depth += 1,
                 TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
@@ -529,8 +557,78 @@ impl<'a> Parser<'a> {
             name: name.unwrap_or_else(|| "contract".to_string()),
             has_term,
             has_effects,
+            term_start,
+            term_end,
+            terms,
             span: merge_spans(start.span, end_span),
         })
+    }
+
+    fn parse_contract_term_range(&mut self) -> Option<(String, String, Span)> {
+        let from_tok = self.peek().clone();
+        let from = match from_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => return None,
+        };
+        let _ = self.bump();
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::DotDot)) {
+            return None;
+        }
+        let _ = self.bump();
+        let to_tok = self.peek().clone();
+        let to = match to_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => return None,
+        };
+        let _ = self.bump();
+        Some((from, to, merge_spans(from_tok.span, to_tok.span)))
+    }
+
+    fn parse_contract_terms_block(&mut self) -> Option<(BTreeMap<String, ContractTerm>, Span)> {
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
+            return None;
+        }
+        let lbrace = self.bump();
+        let mut depth = 1usize;
+        let mut terms = BTreeMap::new();
+        let mut end_span = lbrace.span;
+
+        while !self.is_eof() && depth > 0 {
+            let tok = self.bump();
+            end_span = tok.span;
+            match tok.kind {
+                TokenKind::Punct(Punct::LBrace) => depth += 1,
+                TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
+                TokenKind::Ident(ref key) | TokenKind::Qname(ref key) if depth == 1 => {
+                    if !matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                        continue;
+                    }
+                    let _ = self.bump();
+                    let value_tok = self.bump();
+                    let value = match value_tok.kind {
+                        TokenKind::String(ref s) => s.clone(),
+                        TokenKind::Number(ref n) => n.clone(),
+                        TokenKind::Date(ref d) => d.clone(),
+                        TokenKind::Ident(ref ident) => ident.clone(),
+                        TokenKind::Qname(ref qname) => qname.clone(),
+                        TokenKind::Keyword(Keyword::True) => "true".to_string(),
+                        TokenKind::Keyword(Keyword::False) => "false".to_string(),
+                        _ => continue,
+                    };
+                    end_span = value_tok.span;
+                    terms.insert(
+                        key.clone(),
+                        ContractTerm {
+                            value,
+                            span: merge_spans(tok.span, value_tok.span),
+                        },
+                    );
+                }
+                _ => {}
+            }
+        }
+
+        Some((terms, end_span))
     }
 
     fn parse_stream_stmt(&mut self) -> Option<StreamStmt> {

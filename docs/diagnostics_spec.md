@@ -136,6 +136,7 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E3xxx_*` Type-check / expression contract errors
 - `E4xxx_*` Pack-related validation errors
 - `E5xxx_*` Lowering/IR emission errors
+- `E6xxx_*` Pack lowering-time domain errors
 - `W3xxx_*` Warnings (expression inference, extraction failures)
 - `I6xxx_*` Informational
 
@@ -224,6 +225,24 @@ Warnings:
 - `E5001_ID_GENERATION_FAILED`
 - `E5002_IR_SCHEMA_VALIDATION_FAILED`
 - `E5003_IR_EMIT_FAILED`
+
+### 7.10 Pack lowering-time domain errors (E6xxx)
+
+These diagnostics are emitted by pack lowering logic during compile. They are
+pack-origin diagnostics and must include file/span (contract span when
+term-level span is unavailable).
+
+CRE pack (`packs/cre`) codes:
+
+- `E6001_CRE_LEASE_MISSING_BASE_RENT`
+- `E6002_CRE_LEASE_INVALID_TERM_RANGE`
+- `E6003_CRE_LEASE_UP_MISSING_MONTHS`
+- `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY`
+- `E6010_CRE_EXIT_MISSING_EXIT_CAP`
+- `E6011_CRE_EXIT_INVALID_EXIT_CAP`
+- `E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE`
+- `E6020_CRE_OPS_MISSING_AMOUNT`
+- `E6021_CRE_OPS_INVALID_SCHEDULE`
 
 ---
 

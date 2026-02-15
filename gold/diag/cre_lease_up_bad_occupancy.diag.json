@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E6004_CRE_LEASE_UP_INVALID_OCCUPANCY",
+    "severity": "error",
+    "message": "CRE lease_up occupancy must be in [0, 1] for start/end occupancy.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

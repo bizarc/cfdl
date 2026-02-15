@@ -69,9 +69,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 33,
           "start_col": 1,
-          "end_line": 26,
+          "end_line": 39,
           "end_col": 1
         }
       }
@@ -97,7 +97,7 @@
         "source_span": {
           "start_line": 12,
           "start_col": 1,
-          "end_line": 14,
+          "end_line": 17,
           "end_col": 1
         }
       }
@@ -121,9 +121,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 20,
+          "start_line": 26,
           "start_col": 1,
-          "end_line": 22,
+          "end_line": 31,
           "end_col": 1
         }
       }
@@ -147,9 +147,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 16,
+          "start_line": 19,
           "start_col": 1,
-          "end_line": 18,
+          "end_line": 24,
           "end_col": 1
         }
       }
@@ -218,9 +218,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 33,
           "start_col": 1,
-          "end_line": 26,
+          "end_line": 39,
           "end_col": 1
         },
         "generated_by": {
@@ -259,7 +259,7 @@
         "source_span": {
           "start_line": 12,
           "start_col": 1,
-          "end_line": 14,
+          "end_line": 17,
           "end_col": 1
         },
         "generated_by": {
@@ -296,9 +296,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 20,
+          "start_line": 26,
           "start_col": 1,
-          "end_line": 22,
+          "end_line": 31,
           "end_col": 1
         },
         "generated_by": {
@@ -335,9 +335,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 16,
+          "start_line": 19,
           "start_col": 1,
-          "end_line": 18,
+          "end_line": 24,
           "end_col": 1
         },
         "generated_by": {
