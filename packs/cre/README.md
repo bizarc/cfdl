@@ -60,8 +60,14 @@ Current deterministic implementation uses a built-in linear occupancy ramp for
 - occupancy(t) = `clamp((t - 6 + 1) / 18, 0, 1)`
 - rent(t) = `base_rent * occupancy(t)` (with `base_rent = 25000` in v0.1 rules)
 
-The authored `lease_up.*` terms are documented/stable for forward compatibility.
-Pack-level term parsing/validation hooks are not yet available in the host.
+Important implementation note:
+
+- `lease_up.*` names are reserved and documented for forward compatibility.
+- In this SDK revision, pack lowering does **not** read contract term payloads,
+  so these fields are not yet wired into lowering math.
+- The active v0.1 behavior is the deterministic default ramp above.
+- Scenario testing can still vary effective lease-up economics using run-config
+  overrides (for example, `stream.cre.lease.base_rent.amount`).
 
 ### `cre_exit_cap`
 
