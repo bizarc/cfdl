@@ -25,7 +25,33 @@
         ],
         "extensions": [
           ".cfdl"
-        ]
+        ],
+        "semanticTokenScopes": {
+          "keyword": [
+            "keyword.control.cfdl"
+          ],
+          "string": [
+            "string.quoted.double.cfdl"
+          ],
+          "number": [
+            "constant.numeric.cfdl"
+          ],
+          "type": [
+            "entity.name.type.cfdl"
+          ],
+          "property": [
+            "variable.other.property.cfdl"
+          ],
+          "variable": [
+            "variable.other.readwrite.cfdl"
+          ],
+          "function": [
+            "entity.name.function.cfdl"
+          ],
+          "enumMember": [
+            "variable.other.enummember.cfdl"
+          ]
+        }
       }
     ],
     "snippets": [
@@ -79,7 +105,9 @@
   "scripts": {
     "compile": "tsc -p .",
     "watch": "tsc -p . -w",
-    "lint": "tsc -p . --noEmit"
+    "lint": "tsc -p . --noEmit",
+    "prepackage:vsix": "npm run compile",
+    "package:vsix": "npx @vscode/vsce package --out cfdl-vscode-$npm_package_version.vsix"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

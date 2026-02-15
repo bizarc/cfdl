@@ -13,8 +13,12 @@ use lsp_types::{
     Diagnostic, DiagnosticSeverity, DidChangeConfigurationParams, DidChangeTextDocumentParams,
     DidCloseTextDocumentParams, DidOpenTextDocumentParams, ExecuteCommandOptions,
     ExecuteCommandParams, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range,
-    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
+    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range, SemanticToken,
+    SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensDelta,
+    SemanticTokensDeltaParams, SemanticTokensEdit, SemanticTokensFullDeltaResult,
+    SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams,
+    SemanticTokensResult, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
+    Url,
 };
 use serde_json::Value;
 use tokio::sync::RwLock;
@@ -122,6 +126,39 @@ struct AnalysisContext {
     pack_context: PackContext,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct SemanticTokenCacheEntry {
+    result_id: String,
+    data: Vec<SemanticToken>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum SemanticKind {
+    Keyword = 0,
+    String = 1,
+    Number = 2,
+    Type = 3,
+    Property = 4,
+    Variable = 5,
+    Function = 6,
+    EnumMember = 7,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum SemanticModifierKind {
+    Declaration = 0,
+    Readonly = 1,
+}
+
+#[derive(Debug, Clone)]
+struct SemanticAtom {
+    line: u32,
+    start: u32,
+    length: u32,
+    kind: SemanticKind,
+    modifiers: u32,
+}
+
 #[derive(Debug, Clone, Default)]
 #[allow(dead_code)]
 struct PackContext {
@@ -186,6 +223,7 @@ pub struct Backend {
     docs: Arc<RwLock<DocumentStore>>,
     published_by_root: Arc<RwLock<HashMap<PathBuf, HashSet<Url>>>>,
     analysis_by_root: Arc<RwLock<HashMap<PathBuf, AnalysisContext>>>,
+    semantic_tokens_by_uri: Arc<RwLock<HashMap<Url, SemanticTokenCacheEntry>>>,
     refresh_generation_by_root: Arc<RwLock<HashMap<PathBuf, u64>>>,
     settings: Arc<RwLock<LspSettings>>,
 }
@@ -200,6 +238,7 @@ impl Backend {
             docs: Arc::new(RwLock::new(DocumentStore::default())),
             published_by_root: Arc::new(RwLock::new(HashMap::default())),
             analysis_by_root: Arc::new(RwLock::new(HashMap::default())),
+            semantic_tokens_by_uri: Arc::new(RwLock::new(HashMap::default())),
             refresh_generation_by_root: Arc::new(RwLock::new(HashMap::default())),
             settings: Arc::new(RwLock::new(LspSettings::default())),
         }
@@ -325,6 +364,59 @@ impl Backend {
         Some(CompletionResponse::Array(completion_items(context)))
     }
 
+    async fn semantic_tokens_full_for_uri(&self, uri: &Url) -> Option<SemanticTokensResult> {
+        let data = self.semantic_tokens_for_uri(uri).await?;
+        let result_id = next_semantic_result_id(&data);
+        let tokens = SemanticTokens {
+            result_id: Some(result_id.clone()),
+            data: data.clone(),
+        };
+        let mut cache = self.semantic_tokens_by_uri.write().await;
+        cache.insert(uri.clone(), SemanticTokenCacheEntry { result_id, data });
+        Some(SemanticTokensResult::Tokens(tokens))
+    }
+
+    async fn semantic_tokens_delta_for_uri(
+        &self,
+        uri: &Url,
+        previous_result_id: &str,
+    ) -> Option<SemanticTokensFullDeltaResult> {
+        let next_data = self.semantic_tokens_for_uri(uri).await?;
+        let next_result_id = next_semantic_result_id(&next_data);
+        let mut cache = self.semantic_tokens_by_uri.write().await;
+        let previous = cache.get(uri).cloned();
+        let result = compute_semantic_delta_result(
+            previous.as_ref(),
+            previous_result_id,
+            next_data.clone(),
+            next_result_id.clone(),
+        );
+        cache.insert(
+            uri.clone(),
+            SemanticTokenCacheEntry {
+                result_id: next_result_id,
+                data: next_data,
+            },
+        );
+        Some(result)
+    }
+
+    async fn semantic_tokens_for_uri(&self, uri: &Url) -> Option<Vec<SemanticToken>> {
+        let docs = self.docs.read().await;
+        if !docs.docs.contains_key(uri) {
+            return Some(vec![]);
+        }
+        drop(docs);
+
+        let settings = self.settings.read().await.clone();
+        let model_root = detect_model_root_with_entry(uri, &settings.entry_file)?;
+        let contexts = self.analysis_by_root.read().await;
+        let context = contexts.get(&model_root)?;
+        let relative_file = path_relative_to_root(uri, &model_root)?;
+        let tokens = context.file_tokens.get(&relative_file)?;
+        Some(encode_semantic_tokens(tokens))
+    }
+
     async fn execute_command_for_params(&self, params: ExecuteCommandParams) -> Option<Value> {
         match params.command.as_str() {
             CMD_LIST_TEMPLATES => {
@@ -439,6 +531,13 @@ impl Backend {
     async fn clear_analysis_for_root(&self, model_root: &Path) {
         let mut contexts = self.analysis_by_root.write().await;
         contexts.remove(model_root);
+        let mut semantic = self.semantic_tokens_by_uri.write().await;
+        semantic.retain(|uri, _| {
+            uri.to_file_path()
+                .ok()
+                .map(|path| !path.starts_with(model_root))
+                .unwrap_or(true)
+        });
     }
 
     async fn clear_published_diagnostics_for_root(&self, model_root: &Path, fallback_uri: &Url) {
@@ -484,6 +583,15 @@ pub fn server_capabilities() -> ServerCapabilities {
             ],
             work_done_progress_options: Default::default(),
         }),
+        semantic_tokens_provider: Some(
+            SemanticTokensOptions {
+                work_done_progress_options: Default::default(),
+                legend: semantic_tokens_legend(),
+                range: None,
+                full: Some(SemanticTokensFullOptions::Delta { delta: Some(true) }),
+            }
+            .into(),
+        ),
         ..ServerCapabilities::default()
     }
 }
@@ -583,6 +691,24 @@ impl LanguageServer for Backend {
 
     async fn execute_command(&self, params: ExecuteCommandParams) -> Result<Option<Value>> {
         Ok(self.execute_command_for_params(params).await)
+    }
+
+    async fn semantic_tokens_full(
+        &self,
+        params: SemanticTokensParams,
+    ) -> Result<Option<SemanticTokensResult>> {
+        Ok(self
+            .semantic_tokens_full_for_uri(&params.text_document.uri)
+            .await)
+    }
+
+    async fn semantic_tokens_full_delta(
+        &self,
+        params: SemanticTokensDeltaParams,
+    ) -> Result<Option<SemanticTokensFullDeltaResult>> {
+        Ok(self
+            .semantic_tokens_delta_for_uri(&params.text_document.uri, &params.previous_result_id)
+            .await)
     }
 }
 
@@ -1399,17 +1525,207 @@ fn parse_apply_template_request(value: &Value) -> Option<ApplyTemplateRequest> {
     })
 }
 
+fn semantic_tokens_legend() -> SemanticTokensLegend {
+    SemanticTokensLegend {
+        token_types: vec![
+            SemanticTokenType::KEYWORD,
+            SemanticTokenType::STRING,
+            SemanticTokenType::NUMBER,
+            SemanticTokenType::TYPE,
+            SemanticTokenType::PROPERTY,
+            SemanticTokenType::VARIABLE,
+            SemanticTokenType::FUNCTION,
+            SemanticTokenType::ENUM_MEMBER,
+        ],
+        token_modifiers: vec![
+            SemanticTokenModifier::DECLARATION,
+            SemanticTokenModifier::READONLY,
+        ],
+    }
+}
+
+fn encode_semantic_tokens(tokens: &[Token]) -> Vec<SemanticToken> {
+    let mut atoms = tokens
+        .iter()
+        .filter_map(classify_semantic_atom)
+        .collect::<Vec<_>>();
+    atoms.sort_by(|a, b| {
+        a.line
+            .cmp(&b.line)
+            .then(a.start.cmp(&b.start))
+            .then(a.length.cmp(&b.length))
+            .then(a.kind.cmp(&b.kind))
+            .then(a.modifiers.cmp(&b.modifiers))
+    });
+
+    let mut encoded = Vec::with_capacity(atoms.len());
+    let mut prev_line = 0u32;
+    let mut prev_start = 0u32;
+    for atom in atoms {
+        let delta_line = atom.line.saturating_sub(prev_line);
+        let delta_start = if delta_line == 0 {
+            atom.start.saturating_sub(prev_start)
+        } else {
+            atom.start
+        };
+        encoded.push(SemanticToken {
+            delta_line,
+            delta_start,
+            length: atom.length,
+            token_type: atom.kind as u32,
+            token_modifiers_bitset: atom.modifiers,
+        });
+        prev_line = atom.line;
+        prev_start = atom.start;
+    }
+    encoded
+}
+
+fn classify_semantic_atom(token: &Token) -> Option<SemanticAtom> {
+    let line = token.span.start_line.saturating_sub(1);
+    let start = token.span.start_col.saturating_sub(1);
+    let length = token
+        .span
+        .end_col
+        .saturating_sub(token.span.start_col)
+        .saturating_add(1);
+    if length == 0 {
+        return None;
+    }
+
+    let (kind, modifiers) = match &token.kind {
+        TokenKind::Keyword(keyword) => {
+            let semantic_kind = match keyword {
+                Keyword::Model | Keyword::Entity | Keyword::Contract | Keyword::Type => {
+                    SemanticKind::Type
+                }
+                Keyword::Phase | Keyword::Pack => SemanticKind::EnumMember,
+                _ => SemanticKind::Keyword,
+            };
+            let mut modifier_kinds = Vec::new();
+            if matches!(
+                keyword,
+                Keyword::Entity | Keyword::Stream | Keyword::Contract | Keyword::Phase
+            ) {
+                modifier_kinds.push(SemanticModifierKind::Declaration);
+            }
+            if matches!(keyword, Keyword::True | Keyword::False | Keyword::None) {
+                modifier_kinds.push(SemanticModifierKind::Readonly);
+            }
+            let modifiers = modifier_bitset(&modifier_kinds);
+            (semantic_kind, modifiers)
+        }
+        TokenKind::String(_) => (SemanticKind::String, 0),
+        TokenKind::Number(_) | TokenKind::Date(_) => (SemanticKind::Number, 0),
+        TokenKind::Ident(value) => {
+            let semantic_kind = if value.starts_with("is_") || value.starts_with("has_") {
+                SemanticKind::Function
+            } else {
+                SemanticKind::Variable
+            };
+            (semantic_kind, 0)
+        }
+        TokenKind::Qname(value) => {
+            let semantic_kind = if value.contains('.') {
+                SemanticKind::Property
+            } else {
+                SemanticKind::Type
+            };
+            (semantic_kind, 0)
+        }
+        TokenKind::Punct(_) | TokenKind::Eof => return None,
+    };
+
+    Some(SemanticAtom {
+        line,
+        start,
+        length,
+        kind,
+        modifiers,
+    })
+}
+
+fn modifier_bitset(modifiers: &[SemanticModifierKind]) -> u32 {
+    modifiers
+        .iter()
+        .fold(0u32, |acc, modifier| acc | (1u32 << (*modifier as u32)))
+}
+
+fn next_semantic_result_id(tokens: &[SemanticToken]) -> String {
+    format!("v{}-{}", tokens.len(), semantic_checksum(tokens))
+}
+
+fn compute_semantic_delta_result(
+    previous: Option<&SemanticTokenCacheEntry>,
+    previous_result_id: &str,
+    next_data: Vec<SemanticToken>,
+    next_result_id: String,
+) -> SemanticTokensFullDeltaResult {
+    match previous {
+        Some(prev) if prev.result_id == previous_result_id => {
+            if prev.data == next_data {
+                SemanticTokensFullDeltaResult::Tokens(SemanticTokens {
+                    result_id: Some(next_result_id),
+                    data: next_data,
+                })
+            } else {
+                let edit = SemanticTokensEdit {
+                    start: 0,
+                    delete_count: prev.data.len() as u32 * 5,
+                    data: Some(next_data),
+                };
+                SemanticTokensFullDeltaResult::TokensDelta(SemanticTokensDelta {
+                    result_id: Some(next_result_id),
+                    edits: vec![edit],
+                })
+            }
+        }
+        _ => SemanticTokensFullDeltaResult::Tokens(SemanticTokens {
+            result_id: Some(next_result_id),
+            data: next_data,
+        }),
+    }
+}
+
+fn semantic_checksum(tokens: &[SemanticToken]) -> u64 {
+    tokens.iter().fold(1469598103934665603u64, |acc, token| {
+        let mut hash = acc;
+        for value in [
+            token.delta_line as u64,
+            token.delta_start as u64,
+            token.length as u64,
+            token.token_type as u64,
+            token.token_modifiers_bitset as u64,
+        ] {
+            hash ^= value.wrapping_add(0x9e3779b97f4a7c15);
+            hash = hash.wrapping_mul(1099511628211);
+        }
+        hash
+    })
+}
+
+fn path_relative_to_root(uri: &Url, model_root: &Path) -> Option<String> {
+    let path = uri.to_file_path().ok()?;
+    let relative = path.strip_prefix(model_root).ok()?;
+    Some(relative.to_string_lossy().replace('\\', "/"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, command_uri,
-        completion_items, detect_model_root, detect_model_root_with_entry,
-        group_diagnostics_by_uri, parse_apply_template_request, resolve_packs_root,
+        completion_items, compute_semantic_delta_result, detect_model_root,
+        detect_model_root_with_entry, encode_semantic_tokens, group_diagnostics_by_uri,
+        modifier_bitset, parse_apply_template_request, resolve_packs_root, semantic_tokens_legend,
         server_capabilities, source_parseable, ApplyTemplateRequest, DocumentStore, LspSettings,
-        TraceServer, CMD_APPLY_TEMPLATE, CMD_LIST_TEMPLATES,
+        SemanticModifierKind, TraceServer, CMD_APPLY_TEMPLATE, CMD_LIST_TEMPLATES,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
-    use lsp_types::{Position, TextDocumentSyncCapability, TextDocumentSyncKind, Url};
+    use cfdl_lexer::{Keyword, Token, TokenKind};
+    use lsp_types::{
+        Position, SemanticToken, SemanticTokensFullDeltaResult, TextDocumentSyncCapability,
+        TextDocumentSyncKind, Url,
+    };
     use serde_json::json;
     use std::fs;
     use std::path::PathBuf;
@@ -1456,6 +1772,116 @@ mod tests {
         assert!(command_provider
             .commands
             .contains(&CMD_APPLY_TEMPLATE.to_string()));
+        assert!(capabilities.semantic_tokens_provider.is_some());
+    }
+
+    #[test]
+    fn semantic_tokens_legend_is_stable() {
+        let legend = semantic_tokens_legend();
+        assert_eq!(legend.token_types.len(), 8);
+        assert_eq!(legend.token_modifiers.len(), 2);
+    }
+
+    #[test]
+    fn semantic_token_encoding_is_deterministic() {
+        let tokens = vec![
+            Token {
+                kind: TokenKind::Keyword(Keyword::Model),
+                span: cfdl_lexer::Span {
+                    start_line: 1,
+                    start_col: 1,
+                    end_line: 1,
+                    end_col: 5,
+                },
+            },
+            Token {
+                kind: TokenKind::String("demo".to_string()),
+                span: cfdl_lexer::Span {
+                    start_line: 1,
+                    start_col: 7,
+                    end_line: 1,
+                    end_col: 12,
+                },
+            },
+        ];
+        let first = encode_semantic_tokens(&tokens);
+        let second = encode_semantic_tokens(&tokens);
+        assert_eq!(first, second);
+    }
+
+    #[test]
+    fn semantic_token_modifier_bitset_is_consistent() {
+        let declaration = modifier_bitset(&[SemanticModifierKind::Declaration]);
+        let readonly = modifier_bitset(&[SemanticModifierKind::Readonly]);
+        assert_eq!(declaration, 1);
+        assert_eq!(readonly, 2);
+    }
+
+    #[test]
+    fn semantic_delta_returns_edit_on_cache_hit_and_changed_tokens() {
+        let previous = super::SemanticTokenCacheEntry {
+            result_id: "old".to_string(),
+            data: vec![SemanticToken {
+                delta_line: 0,
+                delta_start: 0,
+                length: 5,
+                token_type: 0,
+                token_modifiers_bitset: 0,
+            }],
+        };
+        let next = vec![SemanticToken {
+            delta_line: 0,
+            delta_start: 0,
+            length: 6,
+            token_type: 1,
+            token_modifiers_bitset: 0,
+        }];
+        let result =
+            compute_semantic_delta_result(Some(&previous), "old", next.clone(), "next".to_string());
+        match result {
+            SemanticTokensFullDeltaResult::TokensDelta(delta) => {
+                assert_eq!(delta.edits.len(), 1);
+                assert_eq!(delta.edits[0].start, 0);
+                assert_eq!(delta.edits[0].delete_count, 5);
+                assert_eq!(delta.edits[0].data, Some(next));
+            }
+            SemanticTokensFullDeltaResult::Tokens(_) => panic!("expected delta edits"),
+            SemanticTokensFullDeltaResult::PartialTokensDelta { .. } => {
+                panic!("expected delta edits with result id")
+            }
+        }
+    }
+
+    #[test]
+    fn semantic_delta_falls_back_to_full_for_unknown_previous_id() {
+        let previous = super::SemanticTokenCacheEntry {
+            result_id: "known".to_string(),
+            data: vec![],
+        };
+        let next = vec![SemanticToken {
+            delta_line: 0,
+            delta_start: 1,
+            length: 3,
+            token_type: 0,
+            token_modifiers_bitset: 0,
+        }];
+        let result = compute_semantic_delta_result(
+            Some(&previous),
+            "unknown",
+            next.clone(),
+            "next".to_string(),
+        );
+        match result {
+            SemanticTokensFullDeltaResult::Tokens(tokens) => {
+                assert_eq!(tokens.data, next);
+            }
+            SemanticTokensFullDeltaResult::TokensDelta(_) => {
+                panic!("expected full fallback tokens")
+            }
+            SemanticTokensFullDeltaResult::PartialTokensDelta { .. } => {
+                panic!("expected full fallback tokens")
+            }
+        }
     }
 
     #[test]

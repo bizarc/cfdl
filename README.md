@@ -99,6 +99,16 @@ This is a Rust workspace. Key crates include:
 
 ---
 
+## VSCode extension
+
+The CFDL VSCode extension lives in `editors/vscode`.
+
+- Development and smoke-test guide: `editors/vscode/README.md`
+- End-user install and configuration: `distribution/install-configure.md`
+- Language server binary used by the extension: `cfdl-lsp`
+
+---
+
 ## Versioning and releases
 
 This repo is versioned as an SDK.

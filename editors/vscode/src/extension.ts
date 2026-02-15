@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { delimiter } from "node:path";
 import * as vscode from "vscode";
 import {
   LanguageClient,
@@ -117,15 +118,42 @@ function resolveServerPath(): string | undefined {
     return undefined;
   }
 
+  const binaryName = process.platform === "win32" ? "cfdl-lsp.exe" : "cfdl-lsp";
+  const onPath = resolveFromPath(binaryName);
+  if (onPath) {
+    return onPath;
+  }
+
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!workspaceFolder) {
     return undefined;
   }
 
-  const binaryName = process.platform === "win32" ? "cfdl-lsp.exe" : "cfdl-lsp";
   const fallbackPath = path.join(workspaceFolder, "target", "debug", binaryName);
   if (fs.existsSync(fallbackPath)) {
     return fallbackPath;
+  }
+  const releaseFallbackPath = path.join(workspaceFolder, "target", "release", binaryName);
+  if (fs.existsSync(releaseFallbackPath)) {
+    return releaseFallbackPath;
+  }
+  return undefined;
+}
+
+function resolveFromPath(binaryName: string): string | undefined {
+  const rawPath = process.env.PATH ?? "";
+  if (!rawPath) {
+    return undefined;
+  }
+  for (const dir of rawPath.split(delimiter)) {
+    const trimmed = dir.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const candidate = path.join(trimmed, binaryName);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
   }
   return undefined;
 }

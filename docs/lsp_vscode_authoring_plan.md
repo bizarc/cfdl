@@ -227,30 +227,30 @@ Use this checklist as a start gate before implementing Milestone E:
 ### Milestone F readiness checklist
 Use this checklist as a start gate before implementing Milestone F:
 
-- [ ] token classification inputs are available from the shared analysis context:
+- [x] token classification inputs are available from the shared analysis context:
   - per-file token maps
   - statement/symbol metadata sufficient for semantic categories
   - stable source ranges for declarations and supported references
-- [ ] semantic token taxonomy is defined and versioned:
+- [x] semantic token taxonomy is defined and versioned:
   - token types (keywords, types, entities, streams, contracts, phases, references)
   - token modifiers (declaration/reference, readonly, etc.) where applicable
   - explicit fallback behavior for unknown categories
-- [ ] rendering strategy is deterministic and incremental-safe:
+- [x] rendering strategy is deterministic and incremental-safe:
   - full-document token response works first
   - incremental/delta token support is deferred until correctness is proven
   - ordering and range encoding are stable across identical inputs
-- [ ] interaction contract with existing TextMate grammar is documented:
+- [x] interaction contract with existing TextMate grammar is documented:
   - semantic tokens augment rather than conflict with baseline highlighting
   - feature can be toggled safely during rollout
-- [ ] performance guardrails are in place:
+- [x] performance guardrails are in place:
   - semantic token generation reuses cached analysis
   - no redundant compile/resolve path per token request
   - cancellation-safe behavior for rapid edits
-- [ ] regression baseline passes before enabling by default:
+- [x] regression baseline passes before enabling by default:
   - `cargo test -p cfdl-lsp`
   - `make fmt && make lint && make test`
 
-### Milestone F — Semantic tokens (optional)
+### Milestone F — Semantic tokens (optional) (done)
 - richer highlighting
 
 ---
