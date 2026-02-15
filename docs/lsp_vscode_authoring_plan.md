@@ -130,7 +130,7 @@ Suggested settings:
 - implement initialize/shutdown
 - file open/change notifications
 
-### Milestone B — Diagnostics MVP
+### Milestone B — Diagnostics MVP (done)
 - run compile/validate on model root
 - publish diagnostics
 

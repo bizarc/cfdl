@@ -13,3 +13,6 @@ tokio = { workspace = true }
 tower-lsp = { workspace = true }
 lsp-types = { workspace = true }
 cfdl-compile = { path = "../cfdl-compile" }
+cfdl-lexer = { path = "../cfdl-lexer" }
+cfdl-parser = { path = "../cfdl-parser" }
+cfdl-resolver = { path = "../cfdl-resolver" }

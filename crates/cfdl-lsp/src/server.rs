@@ -3,10 +3,14 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use cfdl_compile::{CompileOptions, Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
+use cfdl_lexer::{Keyword, Token, TokenKind};
+use cfdl_parser::Stmt;
+use cfdl_resolver::{ResolveOutput, RootModule, SymbolTables};
 use lsp_types::{
     Diagnostic, DiagnosticSeverity, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams, InitializeParams, InitializeResult, MessageType, NumberOrString,
-    Position, Range, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
+    DidOpenTextDocumentParams, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
+    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range,
+    ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, Url,
 };
 use tokio::sync::RwLock;
 use tower_lsp::{jsonrpc::Result, Client, LanguageServer};
@@ -37,10 +41,77 @@ impl DocumentStore {
     }
 }
 
+#[derive(Debug, Clone)]
+struct DefinitionBinding {
+    source_range: Range,
+    target: Location,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SymbolIndex {
+    bindings_by_uri: HashMap<Url, Vec<DefinitionBinding>>,
+}
+
+impl SymbolIndex {
+    fn add_binding(
+        &mut self,
+        source_uri: Url,
+        source_range: Range,
+        target_uri: Url,
+        target_range: Range,
+    ) {
+        self.bindings_by_uri
+            .entry(source_uri)
+            .or_default()
+            .push(DefinitionBinding {
+                source_range,
+                target: Location {
+                    uri: target_uri,
+                    range: target_range,
+                },
+            });
+    }
+
+    fn lookup(&self, uri: &Url, position: Position) -> Option<Location> {
+        let bindings = self.bindings_by_uri.get(uri)?;
+        bindings
+            .iter()
+            .find(|binding| range_contains_position(&binding.source_range, position))
+            .map(|binding| binding.target.clone())
+    }
+
+    fn sort_bindings(&mut self) {
+        for bindings in self.bindings_by_uri.values_mut() {
+            bindings.sort_by(|a, b| {
+                a.source_range
+                    .start
+                    .line
+                    .cmp(&b.source_range.start.line)
+                    .then(
+                        a.source_range
+                            .start
+                            .character
+                            .cmp(&b.source_range.start.character),
+                    )
+                    .then(a.target.uri.as_str().cmp(b.target.uri.as_str()))
+                    .then(a.target.range.start.line.cmp(&b.target.range.start.line))
+                    .then(
+                        a.target
+                            .range
+                            .start
+                            .character
+                            .cmp(&b.target.range.start.character),
+                    )
+            });
+        }
+    }
+}
+
 pub struct Backend {
     client: Client,
     docs: Arc<RwLock<DocumentStore>>,
     published_by_root: Arc<RwLock<HashMap<PathBuf, HashSet<Url>>>>,
+    symbol_index_by_root: Arc<RwLock<HashMap<PathBuf, SymbolIndex>>>,
 }
 
 impl Backend {
@@ -49,6 +120,7 @@ impl Backend {
             client,
             docs: Arc::new(RwLock::new(DocumentStore::default())),
             published_by_root: Arc::new(RwLock::new(HashMap::default())),
+            symbol_index_by_root: Arc::new(RwLock::new(HashMap::default())),
         }
     }
 
@@ -112,11 +184,53 @@ impl Backend {
                 .await;
         }
     }
+
+    async fn refresh_symbol_index_for_uri(&self, source_uri: &Url) {
+        let Some(model_root) = detect_model_root(source_uri) else {
+            return;
+        };
+
+        let root_for_task = model_root.clone();
+        let build_result =
+            tokio::task::spawn_blocking(move || build_symbol_index(&root_for_task)).await;
+        match build_result {
+            Ok(Some(index)) => {
+                let mut indexes = self.symbol_index_by_root.write().await;
+                indexes.insert(model_root, index);
+            }
+            Ok(None) => {
+                let mut indexes = self.symbol_index_by_root.write().await;
+                indexes.remove(&model_root);
+            }
+            Err(err) => {
+                self.client
+                    .log_message(
+                        MessageType::ERROR,
+                        format!("CFDL symbol index task failed: {err}"),
+                    )
+                    .await;
+            }
+        }
+    }
+
+    async fn definition_for_position(
+        &self,
+        uri: &Url,
+        position: Position,
+    ) -> Option<GotoDefinitionResponse> {
+        let model_root = detect_model_root(uri)?;
+        let indexes = self.symbol_index_by_root.read().await;
+        let index = indexes.get(&model_root)?;
+        index
+            .lookup(uri, position)
+            .map(GotoDefinitionResponse::Scalar)
+    }
 }
 
 pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
+        definition_provider: Some(OneOf::Left(true)),
         ..ServerCapabilities::default()
     }
 }
@@ -146,6 +260,7 @@ impl LanguageServer for Backend {
         docs.open(params.text_document.uri, params.text_document.text);
         drop(docs);
         self.refresh_diagnostics_for_uri(&uri).await;
+        self.refresh_symbol_index_for_uri(&uri).await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
@@ -157,6 +272,7 @@ impl LanguageServer for Backend {
         docs.change_full(&uri, change.text);
         drop(docs);
         self.refresh_diagnostics_for_uri(&uri).await;
+        self.refresh_symbol_index_for_uri(&uri).await;
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
@@ -174,6 +290,35 @@ impl LanguageServer for Backend {
             uris.remove(&uri);
         }
         tracked.retain(|_, uris| !uris.is_empty());
+
+        if let Some(model_root) = detect_model_root(&uri) {
+            let has_docs_in_root = {
+                let docs = self.docs.read().await;
+                docs.docs.keys().any(|open_uri| {
+                    detect_model_root(open_uri)
+                        .as_ref()
+                        .map(|root| root == &model_root)
+                        .unwrap_or(false)
+                })
+            };
+            if !has_docs_in_root {
+                let mut indexes = self.symbol_index_by_root.write().await;
+                indexes.remove(&model_root);
+            }
+        }
+    }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
+        let text_document_position_params = params.text_document_position_params;
+        Ok(self
+            .definition_for_position(
+                &text_document_position_params.text_document.uri,
+                text_document_position_params.position,
+            )
+            .await)
     }
 }
 
@@ -261,14 +406,290 @@ fn span_to_range(span: Option<&CfdlSpan>) -> Range {
     }
 }
 
+fn build_symbol_index(model_root: &Path) -> Option<SymbolIndex> {
+    let (resolve_output, symbols) = analyze_model_root(model_root).ok()?;
+    let file_tokens = load_tokens_by_file(model_root, &resolve_output)?;
+
+    let mut index = SymbolIndex::default();
+    let mut entity_targets: HashMap<String, Location> = HashMap::new();
+    for entity in symbols.entities.values() {
+        let uri = file_uri(model_root, &entity.file)?;
+        let name_span = file_tokens
+            .get(&entity.file)
+            .and_then(|tokens| {
+                let (namespace, name) = split_entity_symbol(&entity.name)?;
+                find_entity_decl_name_span(tokens, &entity.span, namespace, name)
+            })
+            .unwrap_or(entity.span);
+        let range = lex_span_to_range(&name_span);
+        entity_targets.insert(
+            entity.name.clone(),
+            Location {
+                uri: uri.clone(),
+                range,
+            },
+        );
+        index.add_binding(uri.clone(), range, uri, range);
+    }
+
+    for stream in symbols.streams.values() {
+        let uri = file_uri(model_root, &stream.file)?;
+        let name_span = file_tokens
+            .get(&stream.file)
+            .and_then(|tokens| find_stream_decl_name_span(tokens, &stream.span, &stream.name))
+            .unwrap_or(stream.span);
+        let range = lex_span_to_range(&name_span);
+        index.add_binding(uri.clone(), range, uri, range);
+    }
+
+    let mut contract_decls = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Contract(contract) = &source_stmt.statement {
+            contract_decls
+                .entry(contract.name.clone())
+                .or_insert((source_stmt.file.clone(), contract.span));
+        }
+    }
+    for (contract_name, (contract_file, contract_span)) in contract_decls {
+        let uri = file_uri(model_root, &contract_file)?;
+        let name_span = file_tokens
+            .get(&contract_file)
+            .and_then(|tokens| find_contract_decl_name_span(tokens, &contract_span, &contract_name))
+            .unwrap_or(contract_span);
+        let range = lex_span_to_range(&name_span);
+        index.add_binding(uri.clone(), range, uri, range);
+    }
+
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        let Some(target) = entity_targets.get(&stream.attached_entity).cloned() else {
+            continue;
+        };
+        let Some(tokens) = file_tokens.get(&source_stmt.file) else {
+            continue;
+        };
+        let Some(ref_span) =
+            find_stream_entity_ref_span(tokens, &stream.span, &stream.attached_entity)
+        else {
+            continue;
+        };
+        let Some(source_uri) = file_uri(model_root, &source_stmt.file) else {
+            continue;
+        };
+        index.add_binding(
+            source_uri,
+            lex_span_to_range(&ref_span),
+            target.uri,
+            target.range,
+        );
+    }
+
+    index.sort_bindings();
+    Some(index)
+}
+
+fn analyze_model_root(model_root: &Path) -> std::result::Result<(ResolveOutput, SymbolTables), ()> {
+    let model_file = model_root.join("model.cfdl");
+    let source = std::fs::read_to_string(&model_file).map_err(|_| ())?;
+    let (tokens, lex_diags) = cfdl_lexer::lex(&source);
+    if !lex_diags.is_empty() {
+        return Err(());
+    }
+
+    let parse_result = cfdl_parser::parse("model.cfdl", &tokens);
+    if !parse_result.diagnostics.is_empty() {
+        return Err(());
+    }
+
+    let root_ast = parse_result.ast.ok_or(())?;
+    let root_module = RootModule {
+        relative_path: "model.cfdl".to_string(),
+        full_path: std::fs::canonicalize(&model_file).unwrap_or(model_file),
+        ast: root_ast,
+    };
+    let resolve_output = cfdl_resolver::resolve_imports(model_root, root_module).map_err(|_| ())?;
+    let symbols = cfdl_resolver::resolve_symbols(&resolve_output).map_err(|_| ())?;
+    Ok((resolve_output, symbols))
+}
+
+fn load_tokens_by_file(
+    model_root: &Path,
+    output: &ResolveOutput,
+) -> Option<HashMap<String, Vec<Token>>> {
+    let mut files = output
+        .source_statements
+        .iter()
+        .map(|stmt| stmt.file.clone())
+        .collect::<Vec<_>>();
+    files.sort();
+    files.dedup();
+
+    let mut map = HashMap::new();
+    for file in files {
+        let source = std::fs::read_to_string(model_root.join(&file)).ok()?;
+        let (tokens, lex_diags) = cfdl_lexer::lex(&source);
+        if !lex_diags.is_empty() {
+            return None;
+        }
+        map.insert(file, tokens);
+    }
+    Some(map)
+}
+
+fn file_uri(model_root: &Path, relative_file: &str) -> Option<Url> {
+    Url::from_file_path(model_root.join(relative_file)).ok()
+}
+
+fn split_entity_symbol(symbol: &str) -> Option<(&str, &str)> {
+    let (namespace, name) = symbol.split_once('.')?;
+    Some((namespace, name))
+}
+
+fn find_entity_decl_name_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    namespace: &str,
+    name: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(3) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        if window[0].kind == TokenKind::Keyword(Keyword::Entity)
+            && token_text(&window[1]) == Some(namespace)
+            && token_text(&window[2]) == Some(name)
+        {
+            return Some(window[2].span);
+        }
+    }
+    None
+}
+
+fn find_stream_decl_name_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    name: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(2) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        if window[0].kind == TokenKind::Keyword(Keyword::Stream)
+            && token_text(&window[1]) == Some(name)
+        {
+            return Some(window[1].span);
+        }
+    }
+    None
+}
+
+fn find_contract_decl_name_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    name: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(3) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        if window[0].kind == TokenKind::Keyword(Keyword::Contract)
+            && token_text(&window[2]) == Some(name)
+        {
+            return Some(window[2].span);
+        }
+    }
+    None
+}
+
+fn find_stream_entity_ref_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    entity_ref: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(3) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        if window[0].kind == TokenKind::Keyword(Keyword::On)
+            && window[1].kind == TokenKind::Keyword(Keyword::Entity)
+            && token_text(&window[2]) == Some(entity_ref)
+        {
+            return Some(window[2].span);
+        }
+    }
+    None
+}
+
+fn token_text(token: &Token) -> Option<&str> {
+    match &token.kind {
+        TokenKind::Ident(value) | TokenKind::Qname(value) => Some(value.as_str()),
+        _ => None,
+    }
+}
+
+fn token_within_span(token: &Token, outer: &cfdl_lexer::Span) -> bool {
+    span_contains(outer, &token.span)
+}
+
+fn span_contains(outer: &cfdl_lexer::Span, inner: &cfdl_lexer::Span) -> bool {
+    compare_line_col(
+        inner.start_line,
+        inner.start_col,
+        outer.start_line,
+        outer.start_col,
+    ) != std::cmp::Ordering::Less
+        && compare_line_col(inner.end_line, inner.end_col, outer.end_line, outer.end_col)
+            != std::cmp::Ordering::Greater
+}
+
+fn lex_span_to_range(span: &cfdl_lexer::Span) -> Range {
+    Range {
+        start: Position::new(
+            span.start_line.saturating_sub(1),
+            span.start_col.saturating_sub(1),
+        ),
+        end: Position::new(
+            span.end_line.saturating_sub(1),
+            span.end_col.saturating_sub(1),
+        ),
+    }
+}
+
+fn range_contains_position(range: &Range, position: Position) -> bool {
+    compare_positions(position, range.start) != std::cmp::Ordering::Less
+        && compare_positions(position, range.end) != std::cmp::Ordering::Greater
+}
+
+fn compare_positions(a: Position, b: Position) -> std::cmp::Ordering {
+    a.line.cmp(&b.line).then(a.character.cmp(&b.character))
+}
+
+fn compare_line_col(a_line: u32, a_col: u32, b_line: u32, b_col: u32) -> std::cmp::Ordering {
+    a_line.cmp(&b_line).then(a_col.cmp(&b_col))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        cfdl_diagnostic_to_lsp, detect_model_root, group_diagnostics_by_uri, server_capabilities,
-        DocumentStore,
+        build_symbol_index, cfdl_diagnostic_to_lsp, detect_model_root, group_diagnostics_by_uri,
+        server_capabilities, DocumentStore,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
-    use lsp_types::{TextDocumentSyncCapability, TextDocumentSyncKind, Url};
+    use lsp_types::{Position, TextDocumentSyncCapability, TextDocumentSyncKind, Url};
     use std::fs;
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -417,6 +838,129 @@ mod tests {
         assert_eq!(uris, sorted);
 
         fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn symbol_index_is_deterministic_for_same_model() {
+        let root = make_temp_dir("symbol-index-deterministic");
+        fs::write(root.join("model.cfdl"), sample_model_source().as_bytes()).expect("write model");
+
+        let first = build_symbol_index(&root).expect("first index");
+        let second = build_symbol_index(&root).expect("second index");
+        assert_eq!(
+            format!("{first:?}"),
+            format!("{second:?}"),
+            "symbol index must be deterministic"
+        );
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn symbol_declaration_lookup_returns_own_location() {
+        let root = make_temp_dir("symbol-decl-lookup");
+        let source = sample_model_source();
+        let model_file = root.join("model.cfdl");
+        fs::write(&model_file, source.as_bytes()).expect("write model");
+        let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
+        let index = build_symbol_index(&root).expect("index");
+
+        let entity_pos = position_of_first(&source, "borrower");
+        let entity_def = index
+            .lookup(&model_uri, entity_pos)
+            .expect("entity definition");
+        assert_eq!(entity_def.uri, model_uri);
+        assert_eq!(entity_def.range.start, entity_pos);
+
+        let stream_pos = position_of_first(&source, "rent");
+        let stream_def = index
+            .lookup(&model_uri, stream_pos)
+            .expect("stream definition");
+        assert_eq!(stream_def.uri, model_uri);
+        assert_eq!(stream_def.range.start, stream_pos);
+
+        let contract_pos = position_of_first(&source, "lease_main");
+        let contract_def = index
+            .lookup(&model_uri, contract_pos)
+            .expect("contract definition");
+        assert_eq!(contract_def.uri, model_uri);
+        assert_eq!(contract_def.range.start, contract_pos);
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn stream_entity_reference_resolves_to_entity_declaration() {
+        let root = make_temp_dir("entity-ref-lookup");
+        let source = sample_model_source();
+        let model_file = root.join("model.cfdl");
+        fs::write(&model_file, source.as_bytes()).expect("write model");
+        let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
+        let index = build_symbol_index(&root).expect("index");
+
+        let reference_pos = position_of_last(&source, "legal.borrower");
+        let definition = index
+            .lookup(&model_uri, reference_pos)
+            .expect("entity definition");
+        let expected_entity_pos = position_of_first(&source, "borrower");
+
+        assert_eq!(definition.uri, model_uri);
+        assert_eq!(definition.range.start, expected_entity_pos);
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn lookup_returns_none_for_non_symbol_position() {
+        let root = make_temp_dir("symbol-none");
+        let source = sample_model_source();
+        let model_file = root.join("model.cfdl");
+        fs::write(&model_file, source.as_bytes()).expect("write model");
+        let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
+        let index = build_symbol_index(&root).expect("index");
+
+        let pos = position_of_first(&source, "version");
+        assert!(index.lookup(&model_uri, pos).is_none());
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    fn sample_model_source() -> String {
+        r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream rent on entity legal.borrower
+contract core.lease lease_main term 2026-01..2026-12
+"#
+        .to_string()
+    }
+
+    fn position_of_first(source: &str, needle: &str) -> Position {
+        let offset = source.find(needle).expect("needle present");
+        offset_to_position(source, offset)
+    }
+
+    fn position_of_last(source: &str, needle: &str) -> Position {
+        let offset = source.rfind(needle).expect("needle present");
+        offset_to_position(source, offset)
+    }
+
+    fn offset_to_position(source: &str, offset: usize) -> Position {
+        let mut line = 0u32;
+        let mut character = 0u32;
+        for (idx, ch) in source.char_indices() {
+            if idx == offset {
+                return Position::new(line, character);
+            }
+            if ch == '\n' {
+                line += 1;
+                character = 0;
+            } else {
+                character += 1;
+            }
+        }
+        Position::new(line, character)
     }
 
     fn make_temp_dir(prefix: &str) -> PathBuf {
