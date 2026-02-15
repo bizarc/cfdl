@@ -27,7 +27,7 @@ pub struct Span {
 pub fn compile_to_file(model_root: &Path, _out_path: &Path) -> Result<(), Vec<Diagnostic>> {
     let model_file = model_root.join("model.cfdl");
     if let Ok(source) = std::fs::read_to_string(&model_file) {
-        let (_tokens, lex_diags) = cfdl_lexer::lex(&source);
+        let (tokens, lex_diags) = cfdl_lexer::lex(&source);
         if !lex_diags.is_empty() {
             let diagnostics = lex_diags
                 .into_iter()
@@ -36,6 +36,30 @@ pub fn compile_to_file(model_root: &Path, _out_path: &Path) -> Result<(), Vec<Di
                     severity: "error".to_string(),
                     message: diag.message,
                     file: Some(PathBuf::from("model.cfdl").to_string_lossy().to_string()),
+                    span: Some(Span {
+                        start_line: diag.span.start_line,
+                        start_col: diag.span.start_col,
+                        end_line: diag.span.end_line,
+                        end_col: diag.span.end_col,
+                    }),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                })
+                .collect();
+            return Err(diagnostics);
+        }
+
+        let parse_result = cfdl_parser::parse("model.cfdl", &tokens);
+        if !parse_result.diagnostics.is_empty() {
+            let diagnostics = parse_result
+                .diagnostics
+                .into_iter()
+                .map(|diag| Diagnostic {
+                    code: diag.code.to_string(),
+                    severity: "error".to_string(),
+                    message: diag.message,
+                    file: Some(diag.file),
                     span: Some(Span {
                         start_line: diag.span.start_line,
                         start_col: diag.span.start_col,

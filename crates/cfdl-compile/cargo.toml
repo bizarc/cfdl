@@ -9,6 +9,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 cfdl-lexer = { path = "../cfdl-lexer" }
+cfdl-parser = { path = "../cfdl-parser" }
 
 # These crates will be implemented later; keep commented until they exist.
 # cfdl-lexer = { path = "../cfdl-lexer" }

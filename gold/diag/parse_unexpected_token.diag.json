@@ -1,0 +1,12 @@
+[
+  {
+    "code": "E9999_NOT_IMPLEMENTED",
+    "severity": "error",
+    "message": "CFDL compiler stage 'compile' is not implemented yet.",
+    "file": "model.cfdl",
+    "span": null,
+    "path": null,
+    "hint": "Implement lexer/parser/resolver/validate/compile per @docs/compiler_spec_v0_1.md",
+    "notes": []
+  }
+]

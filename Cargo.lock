@@ -74,6 +74,7 @@ name = "cfdl-compile"
 version = "0.1.0"
 dependencies = [
  "cfdl-lexer",
+ "cfdl-parser",
  "serde",
  "serde_json",
  "thiserror",
