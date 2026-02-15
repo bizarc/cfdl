@@ -1,0 +1,55 @@
+{
+  "name": "cfdl-vscode",
+  "displayName": "CFDL",
+  "description": "VSCode extension for the CFDL language server",
+  "version": "0.0.1",
+  "publisher": "cfdl",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:cfdl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "cfdl",
+        "aliases": [
+          "CFDL",
+          "cfdl"
+        ],
+        "extensions": [
+          ".cfdl"
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "CFDL",
+      "properties": {
+        "cfdl.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the cfdl-lsp binary. If empty, extension uses a local development fallback."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "lint": "tsc -p . --noEmit"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

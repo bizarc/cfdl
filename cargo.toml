@@ -14,7 +14,8 @@ members = [
   "crates/cfdl-compile",
   "crates/cfdl-engine",
   "crates/cfdl-cli",
-  "crates/cfdl-py"
+  "crates/cfdl-py",
+  "crates/cfdl-lsp"
 ]
 
 [workspace.package]
@@ -37,6 +38,9 @@ clap = { version = "4", features = ["derive"] }
 # Optional but useful
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tokio = { version = "1", features = ["io-std", "macros", "rt-multi-thread", "sync"] }
+tower-lsp = "0.20"
+lsp-types = "0.94"
 
 [profile.release]
 # Smaller + faster binaries; adjust later if needed
