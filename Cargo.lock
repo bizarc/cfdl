@@ -167,6 +167,7 @@ dependencies = [
 name = "cfdl-lsp"
 version = "0.1.0"
 dependencies = [
+ "cfdl-compile",
  "lsp-types",
  "tokio",
  "tower-lsp",

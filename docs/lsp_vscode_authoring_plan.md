@@ -125,7 +125,7 @@ Suggested settings:
 
 ## Implementation Milestones
 
-### Milestone A — Baseline VSCode extension + server boot
+### Milestone A — Baseline VSCode extension + server boot (done)
 - scaffold `crates/cfdl-lsp`
 - implement initialize/shutdown
 - file open/change notifications
