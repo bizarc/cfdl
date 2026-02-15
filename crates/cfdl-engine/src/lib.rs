@@ -132,7 +132,15 @@ pub fn run_config_from_json_file(
     fallback_as_of: Option<Date>,
 ) -> Result<RunConfig, EngineError> {
     let raw = std::fs::read_to_string(path)?;
-    let config_file: RunConfigFile = serde_json::from_str(&raw)?;
+    run_config_from_json_str(&raw, fallback_rate, fallback_as_of)
+}
+
+pub fn run_config_from_json_str(
+    raw: &str,
+    fallback_rate: f64,
+    fallback_as_of: Option<Date>,
+) -> Result<RunConfig, EngineError> {
+    let config_file: RunConfigFile = serde_json::from_str(raw)?;
     run_config_from_value(config_file, fallback_rate, fallback_as_of)
 }
 

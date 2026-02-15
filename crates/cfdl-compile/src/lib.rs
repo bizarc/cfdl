@@ -34,12 +34,11 @@ pub fn compile_to_file(model_root: &Path, out_path: &Path) -> Result<(), Vec<Dia
     compile_to_file_with_options(model_root, out_path, &CompileOptions::default())
 }
 
-/// Compile a model directory to an IR JSON file with options.
-pub fn compile_to_file_with_options(
+/// Compile a model directory to an IR JSON string with options.
+pub fn compile_to_json_with_options(
     model_root: &Path,
-    out_path: &Path,
     options: &CompileOptions,
-) -> Result<(), Vec<Diagnostic>> {
+) -> Result<String, Vec<Diagnostic>> {
     let (resolve_output, symbols) = pipeline(model_root)?;
 
     let active_pack = resolve_active_pack(model_root, &resolve_output, options)?;
@@ -62,8 +61,7 @@ pub fn compile_to_file_with_options(
     }
 
     let ir = build_ir(&resolve_output, active_pack.as_ref())?;
-
-    let json = serde_json::to_string_pretty(&ir).map_err(|err| {
+    serde_json::to_string_pretty(&ir).map_err(|err| {
         vec![Diagnostic {
             code: "E5003_IR_EMIT_FAILED".to_string(),
             severity: "error".to_string(),
@@ -74,7 +72,16 @@ pub fn compile_to_file_with_options(
             hint: None,
             notes: vec![],
         }]
-    })?;
+    })
+}
+
+/// Compile a model directory to an IR JSON file with options.
+pub fn compile_to_file_with_options(
+    model_root: &Path,
+    out_path: &Path,
+    options: &CompileOptions,
+) -> Result<(), Vec<Diagnostic>> {
+    let json = compile_to_json_with_options(model_root, options)?;
 
     std::fs::write(out_path, json).map_err(|err| {
         vec![Diagnostic {

@@ -13,7 +13,8 @@ members = [
   "crates/cfdl-pack",
   "crates/cfdl-compile",
   "crates/cfdl-engine",
-  "crates/cfdl-cli"
+  "crates/cfdl-cli",
+  "crates/cfdl-py"
 ]
 
 [workspace.package]
