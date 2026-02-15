@@ -35,6 +35,31 @@
           "type": "string",
           "default": "",
           "description": "Absolute path to the cfdl-lsp binary. If empty, extension uses a local development fallback."
+        },
+        "cfdl.packsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to CFDL packs root. Absolute paths are used as-is; relative paths resolve from the model root."
+        },
+        "cfdl.entryFile": {
+          "type": "string",
+          "default": "model.cfdl",
+          "description": "Entrypoint filename used to detect the CFDL model root."
+        },
+        "cfdl.enableLoweringValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable lowering-time validation checks when supported by the language server."
+        },
+        "cfdl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace level for CFDL language server communication."
         }
       }
     }

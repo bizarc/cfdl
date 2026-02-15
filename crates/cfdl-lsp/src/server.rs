@@ -1,13 +1,15 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
 use cfdl_compile::{CompileOptions, Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
 use cfdl_lexer::{Keyword, Token, TokenKind};
+use cfdl_pack::PackRegistry;
 use cfdl_parser::{ScheduleKind, Stmt};
 use cfdl_resolver::{ResolveOutput, RootModule, SymbolTables};
 use lsp_types::{
+    CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams, CompletionResponse,
     Diagnostic, DiagnosticSeverity, DidChangeConfigurationParams, DidChangeTextDocumentParams,
     DidCloseTextDocumentParams, DidOpenTextDocumentParams, GotoDefinitionParams,
     GotoDefinitionResponse, InitializeParams, InitializeResult, Location, MessageType,
@@ -117,6 +119,29 @@ struct AnalysisContext {
     symbols: SymbolTables,
     file_tokens: HashMap<String, Vec<Token>>,
     symbol_index: SymbolIndex,
+    pack_context: PackContext,
+}
+
+#[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
+struct PackContext {
+    loaded_packs: Vec<PackSummary>,
+    active_pack: Option<ActivePack>,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct PackSummary {
+    name: String,
+    version: String,
+}
+
+#[derive(Debug, Clone)]
+struct ActivePack {
+    name: String,
+    version: String,
+    aliases: BTreeMap<String, String>,
+    manifest_uri: Option<Url>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -178,8 +203,9 @@ impl Backend {
         };
 
         let compile_root = model_root.clone();
+        let compile_options = compile_options_for_root(&model_root, &settings);
         let compile_result = tokio::task::spawn_blocking(move || {
-            cfdl_compile::compile_to_json_with_options(&compile_root, &CompileOptions::default())
+            cfdl_compile::compile_to_json_with_options(&compile_root, &compile_options)
         })
         .await;
 
@@ -238,8 +264,11 @@ impl Backend {
         };
 
         let root_for_task = model_root.clone();
-        let build_result =
-            tokio::task::spawn_blocking(move || build_analysis_context(&root_for_task)).await;
+        let settings_for_task = settings.clone();
+        let build_result = tokio::task::spawn_blocking(move || {
+            build_analysis_context(&root_for_task, &settings_for_task)
+        })
+        .await;
         match build_result {
             Ok(Some(context)) => {
                 let mut contexts = self.analysis_by_root.write().await;
@@ -273,6 +302,14 @@ impl Backend {
             .symbol_index
             .lookup(uri, position)
             .map(GotoDefinitionResponse::Scalar)
+    }
+
+    async fn completion_for_uri(&self, uri: &Url) -> Option<CompletionResponse> {
+        let settings = self.settings.read().await.clone();
+        let model_root = detect_model_root_with_entry(uri, &settings.entry_file)?;
+        let contexts = self.analysis_by_root.read().await;
+        let context = contexts.get(&model_root)?;
+        Some(CompletionResponse::Array(completion_items(context)))
     }
 
     async fn queue_refresh_for_uri(&self, source_uri: &Url) {
@@ -358,6 +395,7 @@ pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
         definition_provider: Some(OneOf::Left(true)),
+        completion_provider: Some(CompletionOptions::default()),
         ..ServerCapabilities::default()
     }
 }
@@ -446,6 +484,12 @@ impl LanguageServer for Backend {
                 &text_document_position_params.text_document.uri,
                 text_document_position_params.position,
             )
+            .await)
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        Ok(self
+            .completion_for_uri(&params.text_document_position.text_document.uri)
             .await)
     }
 }
@@ -546,15 +590,23 @@ fn span_to_range(span: Option<&CfdlSpan>) -> Range {
     }
 }
 
-fn build_analysis_context(model_root: &Path) -> Option<AnalysisContext> {
+fn build_analysis_context(model_root: &Path, settings: &LspSettings) -> Option<AnalysisContext> {
     let (resolve_output, symbols) = analyze_model_root(model_root).ok()?;
     let file_tokens = load_tokens_by_file(model_root, &resolve_output)?;
-    let symbol_index = build_symbol_index(model_root, &resolve_output, &symbols, &file_tokens)?;
+    let pack_context = build_pack_context(model_root, settings, &resolve_output);
+    let symbol_index = build_symbol_index(
+        model_root,
+        &resolve_output,
+        &symbols,
+        &file_tokens,
+        &pack_context,
+    )?;
     Some(AnalysisContext {
         resolve_output,
         symbols,
         file_tokens,
         symbol_index,
+        pack_context,
     })
 }
 
@@ -563,6 +615,7 @@ fn build_symbol_index(
     resolve_output: &ResolveOutput,
     symbols: &SymbolTables,
     file_tokens: &HashMap<String, Vec<Token>>,
+    pack_context: &PackContext,
 ) -> Option<SymbolIndex> {
     let mut index = SymbolIndex::default();
     let mut entity_targets: HashMap<String, Location> = HashMap::new();
@@ -636,6 +689,37 @@ fn build_symbol_index(
     }
 
     for source_stmt in &resolve_output.source_statements {
+        if let Stmt::UsePack(use_pack) = &source_stmt.statement {
+            let Some(target_uri) = pack_context.active_pack.as_ref().and_then(|active| {
+                if active.name == use_pack.name && active.version == use_pack.version {
+                    active.manifest_uri.clone()
+                } else {
+                    None
+                }
+            }) else {
+                continue;
+            };
+            let Some(source_uri) = file_uri(model_root, &source_stmt.file) else {
+                continue;
+            };
+            let Some(tokens) = file_tokens.get(&source_stmt.file) else {
+                continue;
+            };
+            let Some(pack_name_span) =
+                find_use_pack_name_span(tokens, &use_pack.span, &use_pack.name, &use_pack.version)
+            else {
+                continue;
+            };
+            index.add_binding(
+                source_uri,
+                lex_span_to_range(&pack_name_span),
+                target_uri,
+                Range::new(Position::new(0, 0), Position::new(0, 0)),
+            );
+        }
+    }
+
+    for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
         };
@@ -686,6 +770,51 @@ fn build_symbol_index(
     Some(index)
 }
 
+fn completion_items(context: &AnalysisContext) -> Vec<CompletionItem> {
+    let mut items = vec![
+        keyword_completion("version"),
+        keyword_completion("model"),
+        keyword_completion("use"),
+        keyword_completion("pack"),
+        keyword_completion("import"),
+        keyword_completion("time"),
+        keyword_completion("phase"),
+        keyword_completion("entity"),
+        keyword_completion("contract"),
+        keyword_completion("stream"),
+        keyword_completion("schedule"),
+        keyword_completion("every"),
+        keyword_completion("on"),
+    ];
+
+    if let Some(active) = &context.pack_context.active_pack {
+        for (alias, canonical) in &active.aliases {
+            items.push(CompletionItem {
+                label: alias.clone(),
+                kind: Some(CompletionItemKind::CLASS),
+                detail: Some(format!(
+                    "{} ({}@{})",
+                    canonical, active.name, active.version
+                )),
+                sort_text: Some(format!("2-{alias}")),
+                ..CompletionItem::default()
+            });
+        }
+    }
+
+    items.sort_by(|a, b| a.label.cmp(&b.label));
+    items
+}
+
+fn keyword_completion(label: &str) -> CompletionItem {
+    CompletionItem {
+        label: label.to_string(),
+        kind: Some(CompletionItemKind::KEYWORD),
+        sort_text: Some(format!("1-{label}")),
+        ..CompletionItem::default()
+    }
+}
+
 fn analyze_model_root(model_root: &Path) -> std::result::Result<(ResolveOutput, SymbolTables), ()> {
     let model_file = model_root.join("model.cfdl");
     let source = std::fs::read_to_string(&model_file).map_err(|_| ())?;
@@ -717,6 +846,119 @@ fn source_parseable(file: &str, source: &str) -> bool {
     }
     let parse_result = cfdl_parser::parse(file, &tokens);
     parse_result.diagnostics.is_empty()
+}
+
+fn compile_options_for_root(model_root: &Path, settings: &LspSettings) -> CompileOptions {
+    CompileOptions {
+        packs_dir: Some(resolve_packs_root(model_root, settings)),
+    }
+}
+
+fn resolve_packs_root(model_root: &Path, settings: &LspSettings) -> PathBuf {
+    let configured = settings
+        .packs_path
+        .as_ref()
+        .map(|raw| raw.trim())
+        .filter(|raw| !raw.is_empty())
+        .map(PathBuf::from);
+    match configured {
+        Some(path) if path.is_absolute() => path,
+        Some(path) => model_root.join(path),
+        None => model_root.join("packs"),
+    }
+}
+
+fn build_pack_context(
+    model_root: &Path,
+    settings: &LspSettings,
+    resolve_output: &ResolveOutput,
+) -> PackContext {
+    let pack_root = resolve_packs_root(model_root, settings);
+    let registry = match PackRegistry::load_from_dir(&pack_root) {
+        Ok(value) => value,
+        Err(_) => {
+            return PackContext::default();
+        }
+    };
+
+    let mut loaded_packs = registry
+        .list()
+        .into_iter()
+        .map(|pack| PackSummary {
+            name: pack.manifest.name.clone(),
+            version: pack.manifest.version.clone(),
+        })
+        .collect::<Vec<_>>();
+    loaded_packs.sort_by(|a, b| a.name.cmp(&b.name).then(a.version.cmp(&b.version)));
+
+    let active_use_pack = resolve_output
+        .source_statements
+        .iter()
+        .find_map(|source_stmt| {
+            let Stmt::UsePack(use_pack) = &source_stmt.statement else {
+                return None;
+            };
+            Some((use_pack.name.clone(), use_pack.version.clone()))
+        });
+    let active_pack = active_use_pack.and_then(|(name, version)| {
+        let loaded = registry.active_pack(&name, &version)?;
+        let aliases = collect_aliases_for_pack(&registry, &loaded.name);
+        let manifest_uri = find_pack_manifest_uri(&pack_root, &loaded.name, &loaded.version);
+        Some(ActivePack {
+            name: loaded.name,
+            version: loaded.version,
+            aliases,
+            manifest_uri,
+        })
+    });
+
+    PackContext {
+        loaded_packs,
+        active_pack,
+    }
+}
+
+fn collect_aliases_for_pack(registry: &PackRegistry, pack_name: &str) -> BTreeMap<String, String> {
+    let mut aliases = BTreeMap::new();
+    let Some(pack) = registry
+        .list()
+        .into_iter()
+        .find(|loaded| loaded.manifest.name == pack_name)
+    else {
+        return aliases;
+    };
+    let keys = pack.aliases.keys().cloned().collect::<BTreeSet<_>>();
+    for alias in keys {
+        if let Some(canonical) = registry.lookup_alias(pack_name, &alias) {
+            aliases.insert(alias, canonical.to_string());
+        }
+    }
+    aliases
+}
+
+fn find_pack_manifest_uri(pack_root: &Path, pack_name: &str, version: &str) -> Option<Url> {
+    let mut dirs = std::fs::read_dir(pack_root)
+        .ok()?
+        .filter_map(|entry| entry.ok().map(|value| value.path()))
+        .filter(|path| path.is_dir())
+        .collect::<Vec<_>>();
+    dirs.sort();
+    for dir in dirs {
+        let manifest = dir.join("pack.toml");
+        if !manifest.is_file() {
+            continue;
+        }
+        let Ok(raw) = std::fs::read_to_string(&manifest) else {
+            continue;
+        };
+        let Ok(parsed) = toml::from_str::<cfdl_pack::PackManifest>(&raw) else {
+            continue;
+        };
+        if parsed.name == pack_name && parsed.version == version {
+            return Url::from_file_path(manifest).ok();
+        }
+    }
+    None
 }
 
 fn load_tokens_by_file(
@@ -810,6 +1052,32 @@ fn find_contract_decl_name_span(
         }
         if window[0].kind == TokenKind::Keyword(Keyword::Contract)
             && token_text(&window[2]) == Some(name)
+        {
+            return Some(window[2].span);
+        }
+    }
+    None
+}
+
+fn find_use_pack_name_span(
+    tokens: &[Token],
+    stmt_span: &cfdl_lexer::Span,
+    name: &str,
+    version: &str,
+) -> Option<cfdl_lexer::Span> {
+    for window in tokens.windows(5) {
+        if !window
+            .iter()
+            .all(|token| token_within_span(token, stmt_span))
+        {
+            continue;
+        }
+        let matches_shape = window[0].kind == TokenKind::Keyword(Keyword::Use)
+            && window[1].kind == TokenKind::Keyword(Keyword::Pack)
+            && window[3].kind == TokenKind::Keyword(Keyword::Version);
+        if matches_shape
+            && token_string_value(&window[2]) == Some(name)
+            && token_string_value(&window[4]) == Some(version)
         {
             return Some(window[2].span);
         }
@@ -976,8 +1244,8 @@ fn apply_settings_value(settings: &mut LspSettings, value: &Value) {
 mod tests {
     use super::{
         apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, detect_model_root,
-        detect_model_root_with_entry, group_diagnostics_by_uri, server_capabilities,
-        source_parseable, DocumentStore, LspSettings, TraceServer,
+        detect_model_root_with_entry, group_diagnostics_by_uri, resolve_packs_root,
+        server_capabilities, source_parseable, DocumentStore, LspSettings, TraceServer,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
     use lsp_types::{Position, TextDocumentSyncCapability, TextDocumentSyncKind, Url};
@@ -1017,6 +1285,7 @@ mod tests {
             capabilities.text_document_sync,
             Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL))
         );
+        assert!(capabilities.completion_provider.is_some());
     }
 
     #[test]
@@ -1137,8 +1406,9 @@ mod tests {
         let root = make_temp_dir("symbol-index-deterministic");
         fs::write(root.join("model.cfdl"), sample_model_source().as_bytes()).expect("write model");
 
-        let first = build_analysis_context(&root).expect("first context");
-        let second = build_analysis_context(&root).expect("second context");
+        let settings = LspSettings::default();
+        let first = build_analysis_context(&root, &settings).expect("first context");
+        let second = build_analysis_context(&root, &settings).expect("second context");
         assert_eq!(
             format!("{:?}", first.symbol_index),
             format!("{:?}", second.symbol_index),
@@ -1155,7 +1425,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let context = build_analysis_context(&root).expect("analysis");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
         let index = context.symbol_index;
 
         let entity_pos = position_of_first(&source, "borrower");
@@ -1189,7 +1460,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let context = build_analysis_context(&root).expect("analysis");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
         let index = context.symbol_index;
 
         let reference_pos = position_of_last(&source, "legal.borrower");
@@ -1211,7 +1483,8 @@ mod tests {
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let context = build_analysis_context(&root).expect("analysis");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
         let index = context.symbol_index;
 
         let pos = position_of_first(&source, "version");
@@ -1241,7 +1514,8 @@ contract core.lease lease_main term 2026-01..2026-12
         let model_file = root.join("model.cfdl");
         fs::write(&model_file, source.as_bytes()).expect("write model");
         let model_uri = Url::from_file_path(&model_file).expect("valid model uri");
-        let context = build_analysis_context(&root).expect("analysis");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
 
         let reference_pos = position_of_last(&source, "\"base\"");
         let definition = context
@@ -1292,13 +1566,14 @@ contract core.lease lease_main term 2026-01..2026-12
         let model_file = root.join("model.cfdl");
         let valid = sample_model_source();
         fs::write(&model_file, valid.as_bytes()).expect("write valid");
-        assert!(build_analysis_context(&root).is_some());
+        let settings = LspSettings::default();
+        assert!(build_analysis_context(&root, &settings).is_some());
 
         fs::write(&model_file, "version 0.1\nmodel \"broken\n".as_bytes()).expect("write broken");
-        assert!(build_analysis_context(&root).is_none());
+        assert!(build_analysis_context(&root, &settings).is_none());
 
         fs::write(&model_file, valid.as_bytes()).expect("write valid again");
-        assert!(build_analysis_context(&root).is_some());
+        assert!(build_analysis_context(&root, &settings).is_some());
 
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }
@@ -1317,6 +1592,142 @@ contract core.lease lease_main term 2026-01..2026-12
             detect_model_root_with_entry(&uri, "entry.cfdl").expect("root"),
             root
         );
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn resolves_packs_root_with_configured_and_default_paths() {
+        let root = make_temp_dir("packs-root");
+        let mut settings = LspSettings::default();
+        assert_eq!(resolve_packs_root(&root, &settings), root.join("packs"));
+
+        settings.packs_path = Some("custom-packs".to_string());
+        assert_eq!(
+            resolve_packs_root(&root, &settings),
+            root.join("custom-packs")
+        );
+
+        settings.packs_path = Some("/tmp/abs-packs".to_string());
+        assert_eq!(
+            resolve_packs_root(&root, &settings),
+            PathBuf::from("/tmp/abs-packs")
+        );
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn use_pack_adds_manifest_definition_and_aliases() {
+        let root = make_temp_dir("use-pack-context");
+        let packs_root = root.join("packs");
+        let pack_dir = packs_root.join("testpack");
+        fs::create_dir_all(pack_dir.join("lowering")).expect("create pack dirs");
+        fs::write(
+            pack_dir.join("pack.toml"),
+            r#"name = "testpack"
+version = "0.1.0"
+[entrypoints]
+aliases = "aliases.toml"
+"#,
+        )
+        .expect("write manifest");
+        fs::write(
+            pack_dir.join("aliases.toml"),
+            r#"[aliases]
+Lease = "core.Contract"
+Debt = "core.Debt"
+"#,
+        )
+        .expect("write aliases");
+
+        let source = r#"version 0.1
+model "demo"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+phase base from 2026-01 to 2026-12
+entity legal borrower
+stream rent on entity legal.borrower {
+  schedule on phase_enter("base")
+}
+"#;
+        let model_file = root.join("model.cfdl");
+        fs::write(&model_file, source.as_bytes()).expect("write model");
+        let model_uri = Url::from_file_path(&model_file).expect("uri");
+
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
+        let active = context.pack_context.active_pack.expect("active pack");
+        assert_eq!(active.name, "testpack");
+        assert_eq!(active.version, "0.1.0");
+        assert_eq!(
+            active.aliases.get("Lease"),
+            Some(&"core.Contract".to_string())
+        );
+
+        let use_pack_pos = position_of_first(source, "testpack");
+        let manifest_def = context
+            .symbol_index
+            .lookup(&model_uri, use_pack_pos)
+            .expect("manifest definition");
+        assert!(manifest_def
+            .uri
+            .as_str()
+            .ends_with("/packs/testpack/pack.toml"));
+
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn completion_items_include_sorted_pack_aliases() {
+        let root = make_temp_dir("pack-completion");
+        let packs_root = root.join("packs");
+        let pack_dir = packs_root.join("testpack");
+        fs::create_dir_all(&pack_dir).expect("create pack dir");
+        fs::write(
+            pack_dir.join("pack.toml"),
+            r#"name = "testpack"
+version = "0.1.0"
+[entrypoints]
+aliases = "aliases.toml"
+"#,
+        )
+        .expect("write manifest");
+        fs::write(
+            pack_dir.join("aliases.toml"),
+            r#"[aliases]
+ZZZ = "core.z"
+AAA = "core.a"
+"#,
+        )
+        .expect("write aliases");
+        fs::write(
+            root.join("model.cfdl"),
+            r#"version 0.1
+model "demo"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream rent on entity legal.borrower
+"#
+            .as_bytes(),
+        )
+        .expect("write model");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
+        let labels = super::completion_items(&context)
+            .into_iter()
+            .map(|item| item.label)
+            .collect::<Vec<_>>();
+        let a_idx = labels
+            .iter()
+            .position(|label| label == "AAA")
+            .expect("AAA completion");
+        let z_idx = labels
+            .iter()
+            .position(|label| label == "ZZZ")
+            .expect("ZZZ completion");
+        assert!(a_idx < z_idx);
+
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }
 

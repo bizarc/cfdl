@@ -172,14 +172,83 @@ Suggested settings:
 - extend definition coverage for phase declarations/references
 - add lifecycle-focused tests for analysis rebuild and stable lookup behavior
 
+### Milestone D readiness checklist
+Use this checklist as a start gate before implementing Milestone D:
+
+- [x] analysis context remains the single source for symbol + token + reference data (no duplicate ad hoc pipelines)
+- [x] settings are consumed from LSP config with safe defaults:
+  - `cfdl.packsPath`
+  - `cfdl.entryFile`
+  - `cfdl.enableLoweringValidation`
+  - `cfdl.trace.server`
+- [x] refresh lifecycle remains stable under edits:
+  - debounce active
+  - parseability guard active
+  - stale diagnostics and stale analysis clear deterministically on failure
+- [x] current definition behavior remains green:
+  - declaration lookups (entity/stream/contract/phase)
+  - stream entity references
+  - schedule phase references
+- [x] test baseline passes before adding pack behaviors:
+  - `cargo test -p cfdl-lsp`
+  - `make fmt && make lint && make test`
+
 ### Milestone D — Pack awareness
 - read packs
 - validate `use pack`
 - show aliases in completion
 
+### Milestone E readiness checklist
+Use this checklist as a start gate before implementing Milestone E:
+
+- [ ] Milestone D outputs are available and stable:
+  - active pack detection is deterministic
+  - pack aliases surfaced by LSP completion
+  - `use pack` validation diagnostics include file/span
+- [ ] snippet source boundaries are explicit:
+  - generic snippets live in VSCode extension contributions
+  - pack templates remain LSP-driven and opt-in until template contract is stable
+- [ ] template/snippet expansion uses existing analysis context:
+  - model root detection honors `cfdl.entryFile`
+  - symbol context (entities/streams/contracts/phases) reused from analysis cache
+  - no duplicate parse/resolve pipelines introduced for snippet generation
+- [ ] completion/snippet UX guardrails are defined:
+  - deterministic ordering
+  - no blocking compile/validate in completion hot path
+  - graceful fallback when pack/template metadata is unavailable
+- [ ] regression baseline passes before template integration:
+  - `cargo test -p cfdl-lsp`
+  - `make fmt && make lint && make test`
+
 ### Milestone E — Snippets + templates
 - ship generic snippets
 - integrate pack templates once stable
+
+### Milestone F readiness checklist
+Use this checklist as a start gate before implementing Milestone F:
+
+- [ ] token classification inputs are available from the shared analysis context:
+  - per-file token maps
+  - statement/symbol metadata sufficient for semantic categories
+  - stable source ranges for declarations and supported references
+- [ ] semantic token taxonomy is defined and versioned:
+  - token types (keywords, types, entities, streams, contracts, phases, references)
+  - token modifiers (declaration/reference, readonly, etc.) where applicable
+  - explicit fallback behavior for unknown categories
+- [ ] rendering strategy is deterministic and incremental-safe:
+  - full-document token response works first
+  - incremental/delta token support is deferred until correctness is proven
+  - ordering and range encoding are stable across identical inputs
+- [ ] interaction contract with existing TextMate grammar is documented:
+  - semantic tokens augment rather than conflict with baseline highlighting
+  - feature can be toggled safely during rollout
+- [ ] performance guardrails are in place:
+  - semantic token generation reuses cached analysis
+  - no redundant compile/resolve path per token request
+  - cancellation-safe behavior for rapid edits
+- [ ] regression baseline passes before enabling by default:
+  - `cargo test -p cfdl-lsp`
+  - `make fmt && make lint && make test`
 
 ### Milestone F — Semantic tokens (optional)
 - richer highlighting

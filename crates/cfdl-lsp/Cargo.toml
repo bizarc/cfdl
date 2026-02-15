@@ -16,4 +16,6 @@ cfdl-compile = { path = "../cfdl-compile" }
 cfdl-lexer = { path = "../cfdl-lexer" }
 cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }
+cfdl-pack = { path = "../cfdl-pack" }
 serde_json = { workspace = true }
+toml = { workspace = true }
