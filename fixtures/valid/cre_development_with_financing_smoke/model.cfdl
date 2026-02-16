@@ -7,32 +7,32 @@ entity real_estate property
 entity loan construction
 entity loan permanent
 
-contract cre_construction_stub {
+contract cre_construction_stub on entity real_estate.property {
   term 2026-01..2026-06
 }
 
-contract cre_lease {
+contract cre_lease on entity real_estate.property {
   term 2026-07..2031-12
   terms {
     base_rent = 25000
   }
 }
 
-contract cre_ops_revenue {
+contract cre_ops_revenue on entity real_estate.property {
   term 2028-01..2031-12
   terms {
     amount = 30000
   }
 }
 
-contract cre_ops_expense {
+contract cre_ops_expense on entity real_estate.property {
   term 2028-01..2031-12
   terms {
     amount = 12000
   }
 }
 
-contract cre_exit_cap {
+contract cre_exit_cap on entity real_estate.property {
   term 2031-12..2031-12
   terms {
     exit_cap = 0.06

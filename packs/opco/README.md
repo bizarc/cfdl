@@ -25,6 +25,7 @@ use pack "opco" version "0.1.0"
 - Revenue/Opex/WC contracts lower to recurring streams using contract `term` range.
 - Exit multiple lowers to one terminal inflow at `exit_period`.
 - Exit amount uses simple deterministic math: `base_value * exit_multiple`.
+- Lowered stream owner defaults to the contract subject entity (`on entity ...`).
 
 ## Required terms
 

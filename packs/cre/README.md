@@ -51,7 +51,7 @@ Optional:
 - `lease_up.end_occupancy` (Decimal; default `1.0`)
 
 Lowering output:
-- stream `cre.lease.base_rent` inflow to `real_estate.property`
+- stream `cre.lease.base_rent` inflow to the contract subject entity (`on entity ...`)
 
 Current deterministic implementation uses a built-in linear occupancy ramp for
 `cre_lease`:
@@ -111,6 +111,12 @@ Determinism guarantees for this pack:
 - deterministic lowering rule application order
 - deterministic IDs from compiler seed + stable keys
 - deterministic results under identical IR + run config inputs
+
+Owner binding notes:
+
+- Lowering rules use `owner_entity = "${subject}"`.
+- `${subject}` resolves to the contract subject entity declared in source.
+- If a contract omits `on entity`, compiler compatibility fallback binds to the model's first declared entity.
 
 ## Validations status
 

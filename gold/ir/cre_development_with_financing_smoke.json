@@ -43,7 +43,7 @@
       "name": "cre_construction_stub",
       "type": "core.Contract",
       "subject": {
-        "symbol": "loan.construction"
+        "symbol": "real_estate.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -69,7 +69,7 @@
       "name": "cre_exit_cap",
       "type": "core.Contract",
       "subject": {
-        "symbol": "loan.construction"
+        "symbol": "real_estate.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -95,7 +95,7 @@
       "name": "cre_lease",
       "type": "core.Contract",
       "subject": {
-        "symbol": "loan.construction"
+        "symbol": "real_estate.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -121,7 +121,7 @@
       "name": "cre_ops_expense",
       "type": "core.Contract",
       "subject": {
-        "symbol": "loan.construction"
+        "symbol": "real_estate.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -147,7 +147,7 @@
       "name": "cre_ops_revenue",
       "type": "core.Contract",
       "subject": {
-        "symbol": "loan.construction"
+        "symbol": "real_estate.property"
       },
       "term": {
         "start": "2026-01-01",

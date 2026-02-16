@@ -87,6 +87,65 @@ compare_json_files() {
   return 0
 }
 
+check_ir_subject_owner_only_changes() {
+  local old_json="$1"
+  local new_json="$2"
+  python3 - "$old_json" "$new_json" <<'PY'
+import json
+import sys
+
+old_path, new_path = sys.argv[1], sys.argv[2]
+with open(old_path, "r", encoding="utf-8") as f:
+    old = json.load(f)
+with open(new_path, "r", encoding="utf-8") as f:
+    new = json.load(f)
+
+changed = []
+
+def walk(a, b, path):
+    if isinstance(a, dict) and isinstance(b, dict):
+        keys = sorted(set(a.keys()) | set(b.keys()))
+        for key in keys:
+            if key not in a or key not in b:
+                changed.append(path + [str(key)])
+            else:
+                walk(a[key], b[key], path + [str(key)])
+        return
+    if isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            changed.append(path + ["__len__"])
+            return
+        for idx, (av, bv) in enumerate(zip(a, b)):
+            walk(av, bv, path + [str(idx)])
+        return
+    if a != b:
+        changed.append(path)
+
+walk(old, new, [])
+
+allowed = {
+    "contracts.*.subject.symbol",
+    "streams.*.owner.symbol",
+}
+
+def is_allowed(path):
+    dot = ".".join(path)
+    parts = dot.split(".")
+    if len(parts) == 4 and parts[0] == "contracts" and parts[2] == "subject" and parts[3] == "symbol":
+        return parts[1].isdigit()
+    if len(parts) == 4 and parts[0] == "streams" and parts[2] == "owner" and parts[3] == "symbol":
+        return parts[1].isdigit()
+    return False
+
+disallowed = [p for p in changed if not is_allowed(p)]
+if disallowed:
+    print("Disallowed IR changes detected (expected only subject/owner symbol updates):")
+    for path in disallowed[:100]:
+        print(" - " + ".".join(path))
+    sys.exit(1)
+PY
+}
+
 UPDATE="${CFDL_GOLD_UPDATE:-0}"
 
 fail_count=0
@@ -121,6 +180,12 @@ run_valid_fixture() {
   fi
 
   if [[ "$UPDATE" == "1" ]]; then
+    if [[ -f "$gold_ir" ]]; then
+      if ! check_ir_subject_owner_only_changes "$gold_ir" "$out_ir"; then
+        echo "[golden][FAIL] valid/${name}: non-subject/owner IR changes detected during update"
+        return 1
+      fi
+    fi
     cp "$out_ir" "$gold_ir"
     cp "$out_results" "$gold_results"
     echo "[golden][UPDATE] wrote $gold_ir"

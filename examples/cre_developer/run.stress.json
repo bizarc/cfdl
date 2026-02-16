@@ -3,7 +3,7 @@
     "discount_rate": 0.1,
     "parameters": {
       "stream.cre.lease.base_rent.amount": 22500.0,
-      "stream.cre.ops.expense.amount": 13200.0,
+      "stream.ops_expense.amount": 13200.0,
       "stream.cre.exit.sale.amount": 2571428.571429
     }
   }

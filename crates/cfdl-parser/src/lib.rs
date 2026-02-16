@@ -87,6 +87,10 @@ impl EntityStmt {
 pub struct StreamStmt {
     pub name: String,
     pub attached_entity: String,
+    /// Optional: "inflow" or "outflow". Default when lowering is "outflow".
+    pub direction: Option<String>,
+    /// Optional: currency code (e.g. "USD"). Default when lowering is model currency.
+    pub currency: Option<String>,
     pub schedule: Option<ScheduleSpec>,
     pub amount: Option<ExprSlot>,
     pub active_when: Option<ExprSlot>,
@@ -117,6 +121,7 @@ pub struct AssumeStmt {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContractStmt {
     pub name: String,
+    pub subject_entity: Option<String>,
     pub has_term: bool,
     pub has_effects: bool,
     pub term_start: Option<String>,
@@ -509,6 +514,7 @@ impl<'a> Parser<'a> {
     fn parse_contract_stmt(&mut self) -> Option<ContractStmt> {
         let start = self.expect_keyword(Keyword::Contract, "'contract'")?;
         let mut name: Option<String> = None;
+        let mut subject_entity: Option<String> = None;
         let mut has_term = false;
         let mut has_effects = false;
         let mut term_start = None;
@@ -542,6 +548,32 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Keyword(Keyword::Effects) => has_effects = true,
+                TokenKind::Keyword(Keyword::On) if depth == 0 => {
+                    let entity_kw = self.bump();
+                    if !matches!(entity_kw.kind, TokenKind::Keyword(Keyword::Entity)) {
+                        self.push_expected(
+                            entity_kw.span,
+                            "Expected token 'entity' after 'on'.".to_string(),
+                        );
+                        continue;
+                    }
+                    let entity_ref_tok = self.bump();
+                    let parsed = match entity_ref_tok.kind {
+                        TokenKind::Qname(ref qname) => Some(qname.clone()),
+                        TokenKind::Ident(ref ident) => Some(ident.clone()),
+                        _ => {
+                            self.push_expected(
+                                entity_ref_tok.span,
+                                "Expected token <entity-ref> after 'on entity'.".to_string(),
+                            );
+                            None
+                        }
+                    };
+                    if let Some(entity_ref) = parsed {
+                        subject_entity = Some(entity_ref);
+                        end_span = entity_ref_tok.span;
+                    }
+                }
                 TokenKind::Punct(Punct::LBrace) => depth += 1,
                 TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
                 TokenKind::Ident(ref ident) => {
@@ -555,6 +587,7 @@ impl<'a> Parser<'a> {
 
         Some(ContractStmt {
             name: name.unwrap_or_else(|| "contract".to_string()),
+            subject_entity,
             has_term,
             has_effects,
             term_start,
@@ -660,6 +693,24 @@ impl<'a> Parser<'a> {
             }
         };
 
+        let mut direction = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Inflow)) {
+            let _ = self.bump();
+            direction = Some("inflow".to_string());
+        } else if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Outflow)) {
+            let _ = self.bump();
+            direction = Some("outflow".to_string());
+        }
+
+        let mut currency = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Currency)) {
+            let _ = self.bump();
+            let curr_tok = self.bump();
+            if let TokenKind::Ident(ref c) = curr_tok.kind {
+                currency = Some(c.clone());
+            }
+        }
+
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
@@ -677,6 +728,8 @@ impl<'a> Parser<'a> {
         Some(StreamStmt {
             name,
             attached_entity,
+            direction,
+            currency,
             schedule,
             amount,
             active_when,
@@ -1332,5 +1385,57 @@ stream rent on entity legal.borrower {
                 .src,
             "1000"
         );
+    }
+
+    #[test]
+    fn parses_contract_subject_entity_when_present() {
+        let src = r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 2
+entity legal borrower
+contract lease_one on entity legal.borrower {
+  term 2026-01..2026-02
+}
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        let contract = ast
+            .statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Contract(contract) => Some(contract),
+                _ => None,
+            })
+            .expect("contract statement");
+        assert_eq!(contract.subject_entity.as_deref(), Some("legal.borrower"));
+    }
+
+    #[test]
+    fn keeps_contract_subject_entity_optional_for_compatibility() {
+        let src = r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 2
+entity legal borrower
+contract lease_one {
+  term 2026-01..2026-02
+}
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        let contract = ast
+            .statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Contract(contract) => Some(contract),
+                _ => None,
+            })
+            .expect("contract statement");
+        assert_eq!(contract.subject_entity, None);
     }
 }

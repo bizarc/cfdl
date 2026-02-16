@@ -1,0 +1,125 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-subject-implicit-fallback",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "ca127dc06cf97c0ddf07866a896436c2",
+      "symbol": "real_estate.first_entity",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "ed8e9777d5f54d33a8e6bd0f6b2c8b96",
+      "symbol": "real_estate.second_entity",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "2d92bef97db392c2d865c48b205c06fc",
+      "name": "cre_ops_expense",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.first_entity"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "ebb52f66c0e1ef55eef50f113f4d762b",
+      "name": "cre.ops.expense",
+      "owner": {
+        "symbol": "real_estate.first_entity"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2028-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "12000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_expense_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "metrics": [],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "af3556668ef263107cd65dba12832582",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

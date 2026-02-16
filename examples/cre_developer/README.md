@@ -21,5 +21,5 @@ Run stress case:
 The provided run configs demonstrate deterministic override testing with:
 
 - `stream.cre.lease.base_rent.amount`
-- `stream.cre.ops.expense.amount`
+- `stream.ops_expense.amount`
 - `stream.cre.exit.sale.amount`

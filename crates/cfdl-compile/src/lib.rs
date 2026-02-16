@@ -507,7 +507,10 @@ fn build_ir(
                 name: name.clone(),
                 r#type: "core.Contract".to_string(),
                 subject: IrEntityRef {
-                    symbol: first_entity_symbol.clone(),
+                    symbol: contract
+                        .subject_entity
+                        .clone()
+                        .unwrap_or_else(|| first_entity_symbol.clone()),
                 },
                 term: IrDateRange {
                     start: time_start.clone(),
@@ -547,8 +550,12 @@ fn build_ir(
                 owner: IrEntityRef {
                     symbol: stream.attached_entity.clone(),
                 },
-                direction: "outflow".to_string(),
-                currency: model_currency.clone(),
+                direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
+                currency: stream
+                    .currency
+                    .as_ref()
+                    .cloned()
+                    .unwrap_or_else(|| model_currency.clone()),
                 schedule,
                 amount: IrExpr {
                     lang: stream
@@ -796,8 +803,12 @@ fn lower_contract_streams(
             }
 
             let stable_key = format!("{}::{}::{}", source_stmt.file, contract.name, rule.id);
-            let owner_symbol = if rule.owner_entity.is_empty() {
-                ctx.default_owner.to_string()
+            let owner_symbol = if rule.owner_entity.is_empty() || rule.owner_entity == "${subject}"
+            {
+                contract
+                    .subject_entity
+                    .clone()
+                    .unwrap_or_else(|| ctx.default_owner.to_string())
             } else {
                 rule.owner_entity.clone()
             };

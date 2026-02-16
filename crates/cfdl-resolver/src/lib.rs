@@ -165,6 +165,7 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
     let mut tables = SymbolTables::default();
     let mut diagnostics = Vec::new();
     let mut stream_decls = Vec::new();
+    let mut contract_decls = Vec::new();
 
     for source_stmt in &output.source_statements {
         match &source_stmt.statement {
@@ -211,6 +212,14 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                     stream: stream.clone(),
                 });
             }
+            Stmt::Contract(contract) => {
+                contract_decls.push(ContractDecl {
+                    file: source_stmt.file.clone(),
+                    name: contract.name.clone(),
+                    subject_entity: contract.subject_entity.clone(),
+                    span: contract.span,
+                });
+            }
             _ => {}
         }
     }
@@ -228,6 +237,23 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                 ),
                 file: stream_decl.file,
                 span: stream_decl.stream.span,
+            });
+        }
+    }
+
+    for contract_decl in contract_decls {
+        let Some(subject_entity) = contract_decl.subject_entity else {
+            continue;
+        };
+        if !tables.entities.contains_key(&subject_entity) {
+            diagnostics.push(ResolveDiagnostic {
+                code: "E1301_UNRESOLVED_ENTITY_REF".to_string(),
+                message: format!(
+                    "Contract '{}' references unknown entity '{}'.",
+                    contract_decl.name, subject_entity
+                ),
+                file: contract_decl.file,
+                span: contract_decl.span,
             });
         }
     }
@@ -497,6 +523,14 @@ fn deterministic_topological_order(
 struct StreamDecl {
     file: String,
     stream: StreamStmt,
+}
+
+#[derive(Debug, Clone)]
+struct ContractDecl {
+    file: String,
+    name: String,
+    subject_entity: Option<String>,
+    span: Span,
 }
 
 fn collect_source_statements(
