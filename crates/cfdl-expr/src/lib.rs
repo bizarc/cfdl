@@ -202,6 +202,7 @@ fn validate_roots(expr: &Expr) -> Result<(), ExprError> {
                         | "max"
                         | "clamp"
                         | "round"
+                        | "pow"
                         | "obs.rate"
                         | "obs.fx"
                         | "obs.index"
@@ -384,7 +385,7 @@ fn infer_call_type(name: &[String], args: &[Expr]) -> Result<Ty, ExprError> {
         }
         "money_amount" => Ok(Ty::Decimal),
         "money_currency" => Ok(Ty::Currency),
-        "min" | "max" | "clamp" | "round" | "yearfrac" => Ok(Ty::Decimal),
+        "min" | "max" | "clamp" | "round" | "yearfrac" | "pow" => Ok(Ty::Decimal),
         "add_days" | "add_months" => Ok(Ty::Date),
         "days_between" => Ok(Ty::Int),
         "obs.rate" | "obs.index" | "obs.fx" => Ok(Ty::Optional),
@@ -606,6 +607,14 @@ fn eval_call(name: &[String], args: &[Expr], env: &ExprEnv) -> Result<Value, Exp
             let dp = to_int(eval_args[1].clone())?;
             let scale = 10_f64.powi(dp as i32);
             Ok(Value::Decimal((x * scale).round() / scale))
+        }
+        "pow" => {
+            if eval_args.len() != 2 {
+                return Err(type_error("pow(base, exponent) expects 2 arguments"));
+            }
+            let base = to_decimal(eval_args[0].clone())?;
+            let exponent = to_decimal(eval_args[1].clone())?;
+            Ok(Value::Decimal(base.powf(exponent)))
         }
         "add_days" => {
             if eval_args.len() != 2 {
@@ -1284,6 +1293,26 @@ mod tests {
         let value = eval(&compiled, &env).expect("eval");
         match value {
             Value::Decimal(v) => assert!((v - 120.0).abs() < 1e-12),
+            other => panic!("expected decimal, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn evaluates_pow() {
+        let compiled = compile_expr("pow(1.03, 2)").expect("compile");
+        let env = ExprEnv::empty();
+        let value = eval(&compiled, &env).expect("eval");
+        match value {
+            Value::Decimal(v) => assert!((v - 1.03_f64.powi(2)).abs() < 1e-12),
+            other => panic!("expected decimal, got {other:?}"),
+        }
+        // time.t - 1 as exponent (as in opco_with_growth)
+        let compiled2 = compile_expr("120000 * pow(1.03, time.t - 1)").expect("compile");
+        let mut env2 = ExprEnv::empty();
+        env2.time.insert("t".to_string(), Value::Int(1));
+        let value2 = eval(&compiled2, &env2).expect("eval");
+        match value2 {
+            Value::Decimal(v) => assert!((v - 120000.0).abs() < 1e-6),
             other => panic!("expected decimal, got {other:?}"),
         }
     }
