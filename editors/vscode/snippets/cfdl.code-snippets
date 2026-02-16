@@ -13,6 +13,7 @@
     "prefix": "cfdl-entity-stream",
     "body": [
       "entity ${1:legal} ${2:borrower}",
+      "",
       "stream ${3:rent} on entity ${1}.${2} {",
       "  schedule every ${4:monthly} from ${5:2026-01} to ${6:2026-12}",
       "  amount cel \"${7:0}\"",
@@ -24,9 +25,11 @@
   "CFDL Contract Skeleton": {
     "prefix": "cfdl-contract",
     "body": [
-      "contract ${1:core.lease} ${2:lease_main} term ${3:2026-01}..${4:2026-12}",
+      "contract ${1:core.lease} ${2:lease_main} on entity ${3:legal}.${4:borrower} term ${5:2026-01}..${6:2026-12} {",
+      "  ${7}",
+      "}",
       ""
     ],
-    "description": "Insert contract skeleton."
+    "description": "Insert contract skeleton with entity and term."
   }
 }

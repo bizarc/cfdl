@@ -1,0 +1,99 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "CFDL",
+  "scopeName": "source.cfdl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#dates" },
+    { "include": "#keywords" },
+    { "include": "#identifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.cfdl",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.cfdl",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.cfdl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.cfdl",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.cfdl",
+          "match": "\\b[0-9][0-9_]*(\\.[0-9_]+)?\\b"
+        }
+      ]
+    },
+    "dates": {
+      "patterns": [
+        {
+          "name": "constant.other.date.cfdl",
+          "match": "\\b[0-9]{4}-[0-9]{2}(-[0-9]{2})?\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.cfdl",
+          "match": "\\b(version|model|use|pack|import|as|time|calendar|from|for|to|phase|entity|assume|contract|on|term|terms|effects|parties|tags|stream|owner|direction|inflow|outflow|schedule|every|phase_enter|phase_start|phase_end|day|eom|convention|stub|except|also|event|when|set|activate|deactivate|exercise|option|type|exercisable|in|payoff|run|metric|cel|active|currency)\\b"
+        },
+        {
+          "name": "keyword.control.frequency.cfdl",
+          "match": "\\b(daily|monthly|quarterly|annual)\\b"
+        },
+        {
+          "name": "keyword.control.weekday.cfdl",
+          "match": "\\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\\b"
+        },
+        {
+          "name": "keyword.control.convention.cfdl",
+          "match": "\\b(none|following|modified_following|preceding|modified_preceding|short_front|short_back|long_front|long_back)\\b"
+        },
+        {
+          "name": "keyword.control.run.cfdl",
+          "match": "\\b(deterministic|monte_carlo|trials|seed)\\b"
+        },
+        {
+          "name": "constant.language.boolean.cfdl",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "support.type.distribution.cfdl",
+          "match": "\\b(Normal|LogNormal|Uniform|Triangular|clip)\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.cfdl",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*\\b"
+        }
+      ]
+    }
+  }
+}

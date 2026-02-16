@@ -54,6 +54,13 @@
         }
       }
     ],
+    "grammars": [
+      {
+        "language": "cfdl",
+        "scopeName": "source.cfdl",
+        "path": "./syntaxes/cfdl.tmLanguage.json"
+      }
+    ],
     "snippets": [
       {
         "language": "cfdl",
