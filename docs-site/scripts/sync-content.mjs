@@ -243,15 +243,13 @@ const exampleDirs = fs
 const exampleIndexLines = [
   "---",
   "id: examples",
-  'title: "Language Examples"',
+  'title: "Examples"',
   'slug: "/examples"',
   "---",
   "",
-  "> This section is generated from `examples/language_tutorial/`.",
+  "Use these examples to learn the language and run real models.",
   "",
-  "Use these examples in sequence to learn the language with real models.",
-  "",
-  "## Example set",
+  "## Tutorial (language_tutorial)",
   ""
 ];
 
@@ -288,6 +286,11 @@ for (const name of exampleDirs) {
   exampleIndexLines.push(`- [${name}](/examples/${name})`);
 }
 
+exampleIndexLines.push("");
+exampleIndexLines.push("## Domain examples");
+exampleIndexLines.push("");
+exampleIndexLines.push("- [CRE examples](/examples/cre-examples) — Commercial Real Estate: lease-up, full lifecycle, phased, multi-file, development with financing.");
+exampleIndexLines.push("- [Operating Business examples](/examples/operating-business-examples) — OpCo: revenue, opex, working capital, exit multiple, growth, multi-file.");
 exampleIndexLines.push("");
 writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
 

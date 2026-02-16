@@ -14,7 +14,9 @@ const sidebars: SidebarsConfig = {
         "examples/example-first_stream",
         "examples/example-simple_contract",
         "examples/example-with_pack",
-        "examples/example-multi_file"
+        "examples/example-multi_file",
+        "examples/cre-examples",
+        "examples/operating-business-examples"
       ]
     },
     {

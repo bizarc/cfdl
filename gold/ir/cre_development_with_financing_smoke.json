@@ -1,0 +1,454 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-development-with-financing",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 72
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "1908a409a81be05bd7bcb647bc22e7c9",
+      "symbol": "loan.construction",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "e191348eb1c0e97586c899cd33355b0c",
+      "symbol": "loan.permanent",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "symbol": "real_estate.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "215b0105000348b3006e5fb3d9882ada",
+      "name": "cre_construction_stub",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "loan.construction"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "3010b2c37f857692ba4ba69f66c72ee0",
+      "name": "cre_exit_cap",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "loan.construction"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 35,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "7d5e9fed0895133712929867be781d99",
+      "name": "cre_lease",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "loan.construction"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "2d92bef97db392c2d865c48b205c06fc",
+      "name": "cre_ops_expense",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "loan.construction"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e51a292f4ff656196a5d6c0511bf0725",
+      "name": "cre_ops_revenue",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "loan.construction"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2031-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "123f3aa79d12e6ee6b34b11a33b7844c",
+      "name": "construction_interest",
+      "owner": {
+        "symbol": "loan.construction"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "40000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9841a08f9366feb952ec3891a59d8827",
+      "name": "cre.construction.draws",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "45000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_construction_stub_draws_v1"
+        }
+      }
+    },
+    {
+      "id": "2780099c47303f5a53bab017b83b19ff",
+      "name": "cre.exit.sale",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "180000 / 0.06"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 35,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_cap_sale_v1"
+        }
+      }
+    },
+    {
+      "id": "a13b643c1ab5c2a0c929a40620193692",
+      "name": "cre.lease.base_rent",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "25000 * clamp((time.t - 6 + 1) / 18, 0, 1)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_base_rent_v1"
+        }
+      }
+    },
+    {
+      "id": "ebb52f66c0e1ef55eef50f113f4d762b",
+      "name": "cre.ops.expense",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2028-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "12000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_expense_v1"
+        }
+      }
+    },
+    {
+      "id": "35077f906bfaf5ac31d35767cc405544",
+      "name": "cre.ops.revenue",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2028-01-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "30000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_revenue_v1"
+        }
+      }
+    },
+    {
+      "id": "e7c83165297fa195942209761911cb1c",
+      "name": "permanent_debt_service",
+      "owner": {
+        "symbol": "loan.permanent"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-07-01",
+        "to": "2031-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "55000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 48,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "metrics": [],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "af3556668ef263107cd65dba12832582",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

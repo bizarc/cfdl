@@ -1,0 +1,54 @@
+version 0.1
+model "cre-development-with-financing"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+entity real_estate property
+entity loan construction
+entity loan permanent
+
+// CRE pack: property-level lifecycle (construction stub, lease, ops, exit)
+contract cre_construction_stub {
+  term 2026-01..2026-06
+}
+
+contract cre_lease {
+  term 2026-07..2031-12
+  terms {
+    base_rent = 25000
+  }
+}
+
+contract cre_ops_revenue {
+  term 2028-01..2031-12
+  terms {
+    amount = 30000
+  }
+}
+
+contract cre_ops_expense {
+  term 2028-01..2031-12
+  terms {
+    amount = 12000
+  }
+}
+
+contract cre_exit_cap {
+  term 2031-12..2031-12
+  terms {
+    exit_cap = 0.06
+    noi_ref = ops.noi
+  }
+}
+
+// Construction-phase financing: interest-only stream (fixed dates, no events)
+stream construction_interest on entity loan.construction {
+  schedule every monthly from 2026-01 to 2027-06
+  amount cel "40000"
+}
+
+// Permanent financing: debt service stream starts when construction period ends (hardcoded transition)
+stream permanent_debt_service on entity loan.permanent {
+  schedule every monthly from 2027-07 to 2031-12
+  amount cel "55000"
+}
