@@ -1,0 +1,71 @@
+---
+id: example-cre-phased
+title: "cre phased"
+slug: "/examples/cre_phased"
+---
+
+Full developer lifecycle with **phases** aligning to industry stages: `construction`, `lease_up`, `perm` (stabilized). Same pack contracts as cre_developer; phases document the timeline and enable phase-relative schedules in the spec.
+
+## Compile
+
+```bash
+./target/debug/cfdl compile examples/cre_phased --out /tmp/cre_phased.ir.json --packs packs
+```
+
+## Run
+
+```bash
+./target/debug/cfdl run /tmp/cre_phased.ir.json --out /tmp/cre_phased.results.json --config examples/cre_phased/run.json --packs packs
+```
+
+---
+
+> Generated from `examples/cre_phased/`. Code is shown below so you can see structure and elements without repo access.
+
+## model.cfdl
+
+```cfdl
+version 0.1
+model "cre-phased-example"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+phase construction from 2026-01 to 2026-12
+phase lease_up from 2027-01 to 2027-12
+phase perm from 2028-01 to 2031-12
+
+entity real_estate property
+
+contract cre_construction_stub {
+  term 2026-01..2026-06
+}
+
+contract cre_lease {
+  term 2026-07..2031-12
+  terms {
+    base_rent = 25000
+  }
+}
+
+contract cre_ops_revenue {
+  term 2028-01..2031-12
+  terms {
+    amount = 30000
+  }
+}
+
+contract cre_ops_expense {
+  term 2028-01..2031-12
+  terms {
+    amount = 12000
+  }
+}
+
+contract cre_exit_cap {
+  term 2031-12..2031-12
+  terms {
+    exit_cap = 0.06
+    noi_ref = ops.noi
+  }
+}
+```

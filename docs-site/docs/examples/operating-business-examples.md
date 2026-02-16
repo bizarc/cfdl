@@ -11,9 +11,9 @@ Operating Business (OpCo) examples show revenue, opex, working capital, and exit
 | Example | Purpose |
 |---------|---------|
 | [with_pack](/examples/with_pack) | Revenue + opex only (tutorial). |
-| [opco_with_growth](https://github.com/bizarc/cfdl/blob/main/examples/opco_with_growth/) | Revenue line with **growth_rate** > 0. |
-| [opco_basic](https://github.com/bizarc/cfdl/blob/main/examples/opco_basic/) | Full OpCo: revenue, opex, **working capital**, exit multiple. |
-| [opco_multi_file](https://github.com/bizarc/cfdl/blob/main/examples/opco_multi_file/) | Full OpCo split across `structure.cfdl`, `contracts.cfdl`. |
+| [opco_with_growth](/examples/opco_with_growth) | Revenue line with **growth_rate** > 0. |
+| [opco_basic](/examples/opco_basic) | Full OpCo: revenue, opex, **working capital**, exit multiple. |
+| [opco_multi_file](/examples/opco_multi_file) | Full OpCo split across `structure.cfdl`, `contracts.cfdl`. |
 
 ## Run configs
 

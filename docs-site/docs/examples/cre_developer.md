@@ -1,0 +1,78 @@
+---
+id: example-cre-developer
+title: "cre developer"
+slug: "/examples/cre_developer"
+---
+
+This example mirrors the `fixtures/valid/cre_developer_smoke` model and uses
+the `cre` pack (`0.1.0`) for deterministic contract lowering.
+
+## Run
+
+Compile:
+
+`./target/debug/cfdl compile examples/cre_developer --out /tmp/cre.ir.json --packs packs`
+
+Run base case:
+
+`./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.base.results.json --config examples/cre_developer/run.base.json --packs packs`
+
+Run stress case:
+
+`./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.stress.results.json --config examples/cre_developer/run.stress.json --packs packs`
+
+## Scenario knobs
+
+The provided run configs demonstrate deterministic override testing with:
+
+- `stream.cre.lease.base_rent.amount`
+- `stream.cre.ops.expense.amount`
+- `stream.cre.exit.sale.amount`
+
+---
+
+> Generated from `examples/cre_developer/`. Code is shown below so you can see structure and elements without repo access.
+
+## model.cfdl
+
+```cfdl
+version 0.1
+model "cre-developer-example"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+entity real_estate property
+
+contract cre_construction_stub {
+  term 2026-01..2026-06
+}
+
+contract cre_lease {
+  term 2026-07..2031-12
+  terms {
+    base_rent = 25000
+  }
+}
+
+contract cre_ops_revenue {
+  term 2028-01..2031-12
+  terms {
+    amount = 30000
+  }
+}
+
+contract cre_ops_expense {
+  term 2028-01..2031-12
+  terms {
+    amount = 12000
+  }
+}
+
+contract cre_exit_cap {
+  term 2031-12..2031-12
+  terms {
+    exit_cap = 0.06
+    noi_ref = ops.noi
+  }
+}
+```

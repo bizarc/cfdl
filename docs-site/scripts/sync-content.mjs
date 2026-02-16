@@ -307,6 +307,66 @@ exampleIndexLines.push("- [Operating Business examples](/examples/operating-busi
 exampleIndexLines.push("");
 writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
 
+// Domain examples (CRE and OpCo): generate pages that embed code so the site shows structure without repo access
+const domainExampleOrder = [
+  "cre_lease_up",
+  "cre_developer",
+  "cre_phased",
+  "cre_multi_file",
+  "cre_development_with_financing",
+  "opco_with_growth",
+  "opco_basic",
+  "opco_multi_file"
+];
+const domainExampleRoot = path.resolve(repoRoot, "examples");
+
+for (const name of domainExampleOrder) {
+  const dir = path.resolve(domainExampleRoot, name);
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) continue;
+
+  const modelPath = path.resolve(dir, "model.cfdl");
+  if (!fs.existsSync(modelPath)) continue;
+
+  const cfdlFiles = ["model.cfdl"];
+  const optionalFiles = ["time.cfdl", "structure.cfdl", "contracts.cfdl"];
+  for (const f of optionalFiles) {
+    if (fs.existsSync(path.resolve(dir, f))) cfdlFiles.push(f);
+  }
+
+  const body = [
+    `> Generated from \`examples/${name}/\`. Code is shown below so you can see structure and elements without repo access.`,
+    ""
+  ];
+
+  for (const file of cfdlFiles) {
+    const content = fs.readFileSync(path.resolve(dir, file), "utf8").trimEnd();
+    body.push(`## ${file}`);
+    body.push("");
+    body.push("```cfdl");
+    body.push(content);
+    body.push("```");
+    body.push("");
+  }
+
+  const readmePath = path.resolve(dir, "README.md");
+  if (fs.existsSync(readmePath)) {
+    const readme = stripLeadingH1(fs.readFileSync(readmePath, "utf8")).trimEnd();
+    body.unshift(readme, "", "---", "");
+  }
+
+  const examplePage = [
+    "---",
+    `id: example-${name.replaceAll("_", "-")}`,
+    `title: "${name.replaceAll("_", " ")}"`,
+    `slug: "/examples/${name}"`,
+    "---",
+    "",
+    ...body
+  ].join("\n");
+
+  writeGenerated(`examples/${name}.md`, examplePage);
+}
+
 const referenceIndex = [
   "---",
   "id: reference",

@@ -11,11 +11,11 @@ Commercial Real Estate (CRE) examples show construction → lease-up → stabili
 | Example | Purpose |
 |---------|---------|
 | [simple_contract](/examples/simple_contract) | Single lease (tutorial). |
-| [cre_lease_up](https://github.com/bizarc/cfdl/blob/main/examples/cre_lease_up/) | Lease with explicit lease-up ramp terms. |
-| [cre_developer](https://github.com/bizarc/cfdl/blob/main/examples/cre_developer/) | Full lifecycle: construction stub, lease, ops revenue/expense, exit cap. |
-| [cre_phased](https://github.com/bizarc/cfdl/blob/main/examples/cre_phased/) | Same as full lifecycle with **phases** (construction, lease_up, perm). |
-| [cre_multi_file](https://github.com/bizarc/cfdl/blob/main/examples/cre_multi_file/) | Full lifecycle split across `time.cfdl`, `structure.cfdl`, `contracts.cfdl`. |
-| [cre_development_with_financing](https://github.com/bizarc/cfdl/blob/main/examples/cre_development_with_financing/) | Full lifecycle plus **construction** and **permanent** loan streams (time-bounded; no events). |
+| [cre_lease_up](/examples/cre_lease_up) | Lease with explicit lease-up ramp terms. |
+| [cre_developer](/examples/cre_developer) | Full lifecycle: construction stub, lease, ops revenue/expense, exit cap. |
+| [cre_phased](/examples/cre_phased) | Same as full lifecycle with **phases** (construction, lease_up, perm). |
+| [cre_multi_file](/examples/cre_multi_file) | Full lifecycle split across `time.cfdl`, `structure.cfdl`, `contracts.cfdl`. |
+| [cre_development_with_financing](/examples/cre_development_with_financing) | Full lifecycle plus **construction** and **permanent** loan streams (time-bounded; no events). |
 
 ## Run configs
 
