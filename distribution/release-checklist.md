@@ -13,7 +13,6 @@ Use this checklist before publishing a release tag.
 ## Artifact Validation
 
 - [ ] `cfdl-lsp-darwin-arm64` present
-- [ ] `cfdl-lsp-darwin-x64` present
 - [ ] `cfdl-lsp-linux-x64` present
 - [ ] `cfdl-lsp-windows-x64.exe` present
 - [ ] `cfdl-vscode-<version>.vsix` present

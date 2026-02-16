@@ -13,7 +13,6 @@ Follow `distribution/install-configure.md` for end-user setup instructions.
 ## Artifacts
 
 - `cfdl-lsp-darwin-arm64`
-- `cfdl-lsp-darwin-x64`
 - `cfdl-lsp-linux-x64`
 - `cfdl-lsp-windows-x64.exe`
 - `cfdl-vscode-<version>.vsix`

@@ -9,7 +9,6 @@ From a GitHub Release, download:
 - the VSCode extension package: `cfdl-vscode-<version>.vsix`
 - one `cfdl-lsp` binary for your operating system:
   - macOS Apple Silicon: `cfdl-lsp-darwin-arm64`
-  - macOS Intel: `cfdl-lsp-darwin-x64`
   - Linux x64: `cfdl-lsp-linux-x64`
   - Windows x64: `cfdl-lsp-windows-x64.exe`
 

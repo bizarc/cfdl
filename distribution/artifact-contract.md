@@ -5,7 +5,6 @@ This document defines the canonical release artifact set for each CFDL SDK versi
 ## Required Artifacts
 
 - `cfdl-lsp-darwin-arm64`
-- `cfdl-lsp-darwin-x64`
 - `cfdl-lsp-linux-x64`
 - `cfdl-lsp-windows-x64.exe`
 - `cfdl-vscode-<version>.vsix`
