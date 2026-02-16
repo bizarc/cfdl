@@ -6,6 +6,28 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.3] - 2026-02-16
+
+### Added
+- Contract subject parsing support for `contract ... on entity <EntityRef>`.
+- Contract subject entity resolution checks with unresolved entity diagnostics.
+- New fixtures and goldens:
+  - `fixtures/valid/cre_subject_non_first_entity`
+  - `fixtures/valid/cre_subject_implicit_fallback`
+  - `fixtures/invalid/unresolved_contract_subject_ref`
+
+### Changed
+- IR contract `subject` now uses contract subject when present.
+- Pack-lowered stream owner selection now supports subject-driven ownership (`owner_entity = "${subject}"`) with backward-compatible fallback for omitted subject.
+- CRE and OpCo pack lowering rules were migrated from hardcoded owners to subject-based ownership defaults.
+- CRE/OpCo pack documentation and examples were updated to align with subject-based lowering behavior.
+
+### Fixed
+- Deterministic compatibility path for existing fixtures that omit `on entity`.
+- Golden coverage for subject-based lowering behavior and unresolved contract subject diagnostics.
+
+---
+
 ## [0.2.0] - 2026-02-15
 
 ### Overview
