@@ -234,11 +234,24 @@ for (const spec of docSpecs) {
 }
 
 const exampleRoot = path.resolve(repoRoot, "examples/language_tutorial");
-const exampleDirs = fs
-  .readdirSync(exampleRoot, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .map((d) => d.name)
-  .sort();
+// Fixed tutorial order (learning sequence), not alphabetical
+const tutorialOrder = [
+  "minimal_model",
+  "first_stream",
+  "simple_contract",
+  "with_pack",
+  "multi_file"
+];
+const existingDirs = new Set(
+  fs
+    .readdirSync(exampleRoot, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+);
+const exampleDirs = tutorialOrder.filter((name) => existingDirs.has(name));
+// Append any extra dirs not in tutorialOrder (e.g. future examples), sorted
+const extraDirs = [...existingDirs].filter((name) => !tutorialOrder.includes(name)).sort();
+exampleDirs.push(...extraDirs);
 
 const exampleIndexLines = [
   "---",
