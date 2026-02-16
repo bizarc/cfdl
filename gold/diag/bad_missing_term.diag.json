@@ -17,7 +17,7 @@
   {
     "code": "E2001_CONTRACT_MISSING_TERM",
     "severity": "error",
-    "message": "Contract 'loan_a' is missing required 'term'.",
+    "message": "Contract 'test.loan_a' is missing required 'term'.",
     "file": "model.cfdl",
     "span": {
       "start_line": 5,

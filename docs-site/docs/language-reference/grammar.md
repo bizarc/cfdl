@@ -82,7 +82,7 @@ dist_arg        = IDENT "=" literal
                 ;
 
 // --- contracts ---
-contract_stmt   = "contract" qname IDENT
+contract_stmt   = "contract" qname qname
                   "on" "entity" entity_ref
                   "term" date_lit ".." date_lit
                   contract_block ;
@@ -103,13 +103,13 @@ parties_block   = "parties" map_block ;
 tags_block      = "tags" map_block ;
 
 map_block       = "{" { map_entry } "}" ;
-map_entry       = IDENT literal_or_expr ;
+map_entry       = qname literal_or_expr ;
 
 // --- effects (streams in v0.1 core) ---
 effects_block   = "effects" "{" { effect_stmt } "}" ;
 effect_stmt     = stream_effect_stmt ;
 
-stream_effect_stmt = "stream" IDENT
+stream_effect_stmt = "stream" qname
                      "owner" "entity" entity_ref
                      "direction" direction
                      "currency" IDENT
@@ -118,7 +118,7 @@ stream_effect_stmt = "stream" IDENT
 direction       = "inflow" | "outflow" ;
 
 // --- standalone streams ---
-stream_stmt     = "stream" IDENT
+stream_stmt     = "stream" qname
                   "on" "entity" entity_ref
                   direction
                   "currency" IDENT
@@ -175,7 +175,7 @@ stub_policy     = "none" | "short_front" | "short_back" | "long_front" | "long_b
 list_date       = "[" date_lit { "," date_lit } "]" ;
 
 // --- events ---
-event_stmt      = "event" IDENT "when" expr event_block ;
+event_stmt      = "event" qname "when" expr event_block ;
 event_block     = "{" { action_stmt } "}" ;
 
 action_stmt     = set_entity_stmt
@@ -188,18 +188,18 @@ action_stmt     = set_entity_stmt
 
 set_entity_stmt = "set" "entity" entity_ref "." IDENT "=" literal_or_expr ;
 
-activate_stream_stmt   = "activate" "stream" IDENT ;
-deactivate_stream_stmt = "deactivate" "stream" IDENT ;
+activate_stream_stmt   = "activate" "stream" qname ;
+deactivate_stream_stmt = "deactivate" "stream" qname ;
 
-activate_contract_stmt   = "activate" "contract" IDENT ;
-deactivate_contract_stmt = "deactivate" "contract" IDENT ;
+activate_contract_stmt   = "activate" "contract" qname ;
+deactivate_contract_stmt = "deactivate" "contract" qname ;
 
-exercise_option_stmt   = "exercise" "option" IDENT ;
+exercise_option_stmt   = "exercise" "option" qname ;
 
 // --- options ---
-option_stmt     = "option" IDENT
+option_stmt     = "option" qname
                   "type" qname
-                  [ "exercisable" "in" IDENT ]
+                  [ "exercisable" "in" qname ]
                   option_block ;
 
 option_block    = "{" option_item* "}" ;
@@ -211,7 +211,7 @@ option_item     = "exercise" "when" expr
 run_stmt        = "run" ( "deterministic" | mc_run ) ;
 mc_run          = "monte_carlo" "trials" INT "seed" INT ;
 
-metric_stmt     = "metric" IDENT "=" expr ;
+metric_stmt     = "metric" qname "=" expr ;
 
 // --- expressions & literals ---
 expr            = "cel" string_lit ;
@@ -224,11 +224,11 @@ money_lit       = number IDENT ;  // e.g., 42000 USD
 
 list            = "[" [ literal { "," literal } ] "]" ;
 
-map_inline      = "{" [ IDENT literal_or_expr { IDENT literal_or_expr } ] "}" ;
+map_inline      = "{" [ qname literal_or_expr { qname literal_or_expr } ] "}" ;
 
 list_number     = "[" number { "," number } "]" ;
 
-entity_ref      = IDENT "." IDENT ;
+entity_ref      = IDENT "." IDENT { "." IDENT } ;
 qname           = IDENT { "." IDENT } ;
 
 string_lit      = STRING ;

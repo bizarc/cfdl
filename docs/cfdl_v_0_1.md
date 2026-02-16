@@ -243,7 +243,7 @@ contract Contract.Lease L1
 
 Rules:
 - `contract <TypeId> <Name> on entity <EntityRef> term <Date> .. <Date> { ... }`
-- `<Name>` SHOULD be a qualified name for ontology/domain alignment (e.g., `cre.lease.primary`).
+- `<Name>` MUST be a qualified name with at least two segments (e.g., `cre.lease.primary`).
 - `term` is REQUIRED.
 - `currency` is REQUIRED if any monetary effects are emitted by this contract.
 - `terms` is OPTIONAL.
@@ -266,7 +266,7 @@ Pack interaction:
 
 ### 8.4 Contract names and references
 - Contract instance names MUST be unique across the model.
-- Contract instance names MAY be qualified names; uniqueness applies to the full name.
+- Contract instance names MUST be qualified names with at least two segments; uniqueness applies to the full name.
 - Contracts may be referenced by name via `contract("L1")` in expressions (see §12).
 
 ---
@@ -289,7 +289,7 @@ Rules:
 - Streams MUST be owned by exactly one entity.
 - Streams MUST declare direction: `inflow` or `outflow`.
 - Streams MUST declare a currency.
-- Stream names MAY be qualified names; dotted names are recommended for domain/ontology-aligned models.
+- Stream names MUST be qualified names with at least two segments (e.g., `cre.lease.base_rent`, `real_estate.ops_expense`).
 
 ### 9.2 Stream declaration inside contract effects
 Syntax:

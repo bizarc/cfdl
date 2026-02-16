@@ -195,12 +195,14 @@ Lowering is the core pack power: turning contract terms into executable cash flo
 - events
 - options
 - required observables
+- generated names should follow qualified dotted conventions (for example `cre.lease.base_rent`)
 
 ### 8.3 Provenance requirements
 Lowered outputs must include provenance:
 - source contract ID/name
 - pack name/version
 - rule identifier
+- generated stream owner entity symbol (qualified) for ownership traceability
 
 This enables “explainability” and auditability.
 

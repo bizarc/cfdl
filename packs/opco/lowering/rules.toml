@@ -1,6 +1,6 @@
 [[rules]]
 id = "opco_revenue_line_v1"
-contract_name = "opco_revenue_line"
+contract_name = "opco.revenue_line"
 stream_name = "opco.revenue.recurring"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -12,7 +12,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "opco_opex_line_v1"
-contract_name = "opco_opex_line"
+contract_name = "opco.opex_line"
 stream_name = "opco.opex.recurring"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -24,7 +24,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "opco_working_capital_v1"
-contract_name = "opco_working_capital"
+contract_name = "opco.working_capital"
 stream_name = "opco.working_capital.adjustment"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -36,7 +36,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "opco_exit_multiple_v1"
-contract_name = "opco_exit_multiple"
+contract_name = "opco.exit_multiple"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
 direction = "inflow"

@@ -39,8 +39,8 @@
   },
   "contracts": [
     {
-      "id": "215b0105000348b3006e5fb3d9882ada",
-      "name": "cre_construction_stub",
+      "id": "edf70044a49f20469e4d3401eeb1fd04",
+      "name": "cre.construction_stub",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -65,8 +65,8 @@
       }
     },
     {
-      "id": "3010b2c37f857692ba4ba69f66c72ee0",
-      "name": "cre_exit_cap",
+      "id": "9ab87b81b1f2755309909fdf80a44a29",
+      "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -91,8 +91,8 @@
       }
     },
     {
-      "id": "7d5e9fed0895133712929867be781d99",
-      "name": "cre_lease",
+      "id": "02f286e6ad8c8b57adfd218b7e6c2a91",
+      "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -117,8 +117,8 @@
       }
     },
     {
-      "id": "2d92bef97db392c2d865c48b205c06fc",
-      "name": "cre_ops_expense",
+      "id": "15b6ebfc4d0e6adba8b6648567606317",
+      "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -143,8 +143,8 @@
       }
     },
     {
-      "id": "e51a292f4ff656196a5d6c0511bf0725",
-      "name": "cre_ops_revenue",
+      "id": "93a2a86096f9bb31a4dc6ef04df535f9",
+      "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -171,39 +171,7 @@
   ],
   "streams": [
     {
-      "id": "123f3aa79d12e6ee6b34b11a33b7844c",
-      "name": "construction_interest",
-      "owner": {
-        "symbol": "loan.construction"
-      },
-      "direction": "outflow",
-      "currency": "USD",
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2027-06-01"
-      },
-      "amount": {
-        "lang": "cel",
-        "src": "40000"
-      },
-      "active_when": {
-        "lang": "cel",
-        "src": "true"
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 43,
-          "start_col": 1,
-          "end_line": 46,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "id": "9841a08f9366feb952ec3891a59d8827",
+      "id": "c5d921514a90ee4e997d0680ca348b15",
       "name": "cre.construction.draws",
       "owner": {
         "symbol": "real_estate.property"
@@ -242,7 +210,7 @@
       }
     },
     {
-      "id": "2780099c47303f5a53bab017b83b19ff",
+      "id": "3cdac401258a8f678ecaaa1be0c6a0c1",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -279,7 +247,7 @@
       }
     },
     {
-      "id": "a13b643c1ab5c2a0c929a40620193692",
+      "id": "9f9f6a5b0c5d3160c9aae5d794526cf7",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -318,7 +286,7 @@
       }
     },
     {
-      "id": "ebb52f66c0e1ef55eef50f113f4d762b",
+      "id": "180e7245113d8e7fcbd36e06881d5e85",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.property"
@@ -357,7 +325,7 @@
       }
     },
     {
-      "id": "35077f906bfaf5ac31d35767cc405544",
+      "id": "e4a8e1959421f3fe17228f4789396607",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.property"
@@ -396,8 +364,40 @@
       }
     },
     {
-      "id": "e7c83165297fa195942209761911cb1c",
-      "name": "permanent_debt_service",
+      "id": "7222beafc683007feff6ef9639b8ef46",
+      "name": "loan.construction_interest",
+      "owner": {
+        "symbol": "loan.construction"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "40000"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "d463a1523defc4997fdd64e19e306d5c",
+      "name": "loan.permanent_debt_service",
       "owner": {
         "symbol": "loan.permanent"
       },

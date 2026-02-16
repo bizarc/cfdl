@@ -5,7 +5,7 @@ time calendar monthly from 2026-01 for 72
 
 entity operating business
 
-contract opco_revenue_line {
+contract opco.revenue_line {
   term 2026-01..2031-12
   terms {
     amount = 120000
@@ -13,21 +13,21 @@ contract opco_revenue_line {
   }
 }
 
-contract opco_opex_line {
+contract opco.opex_line {
   term 2026-01..2031-12
   terms {
     amount = 70000
   }
 }
 
-contract opco_working_capital {
+contract opco.working_capital {
   term 2026-01..2031-12
   terms {
     amount = 3000
   }
 }
 
-contract opco_exit_multiple {
+contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
     exit_period = 72

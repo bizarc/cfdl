@@ -5,7 +5,7 @@ time calendar monthly from 2026-01 for 72
 
 entity real_estate property
 
-contract cre_exit_cap {
+contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
     exit_cap = 0

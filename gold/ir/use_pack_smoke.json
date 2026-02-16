@@ -25,8 +25,8 @@
   },
   "contracts": [
     {
-      "id": "fe88fbc69188634c54c2144bfe41f13c",
-      "name": "lease_contract",
+      "id": "c96b918ad164509e0b22523cd0f92824",
+      "name": "test.lease_contract",
       "type": "core.Contract",
       "subject": {
         "symbol": "legal.borrower"
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "9978aa4115d0083e0378a9abaa5f0363",
+      "id": "dfcfb2700e7aa9fe2b846ecb3152d967",
       "name": "testpack.lowered",
       "owner": {
         "symbol": "legal.borrower"

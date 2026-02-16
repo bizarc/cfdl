@@ -187,7 +187,7 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1303_UNRESOLVED_CONTRACT_REF`
 - `E1304_UNRESOLVED_OPTION_REF`
 - `E1305_UNRESOLVED_PHASE_REF`
-- `E1306_INVALID_ENTITY_REF_FORMAT`
+- `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).
 
 ### 7.5 Contracts and streams (E20xx/E21xx)
 - `E2001_CONTRACT_MISSING_TERM`

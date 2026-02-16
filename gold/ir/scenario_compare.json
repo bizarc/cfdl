@@ -26,8 +26,8 @@
   "contracts": [],
   "streams": [
     {
-      "id": "cac1bc237d2ca4804be585d9050e5ddb",
-      "name": "rent",
+      "id": "0f82b0c4b4eaceeea331a2b8e1049be1",
+      "name": "legal.rent",
       "owner": {
         "symbol": "legal.borrower"
       },

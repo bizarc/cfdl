@@ -24,7 +24,7 @@ time calendar monthly from 2026-01 for 48
 
 entity real_estate property
 
-contract cre_lease {
+contract cre.lease {
   term 2026-01..2029-12
   terms {
     base_rent = 25000

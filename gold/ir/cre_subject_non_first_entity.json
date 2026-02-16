@@ -32,8 +32,8 @@
   },
   "contracts": [
     {
-      "id": "e51a292f4ff656196a5d6c0511bf0725",
-      "name": "cre_ops_revenue",
+      "id": "93a2a86096f9bb31a4dc6ef04df535f9",
+      "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.annex"
@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "35077f906bfaf5ac31d35767cc405544",
+      "id": "e4a8e1959421f3fe17228f4789396607",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.annex"

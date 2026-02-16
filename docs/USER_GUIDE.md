@@ -51,7 +51,7 @@ Run-config is JSON consumed by the engine. The currently supported structure is:
     "discount_rate": 0.1,
     "as_of": "2026-01-01",
     "parameters": {
-      "stream.some_stream.amount": 1000.0
+      "stream.cre.lease.base_rent:amount": 1000.0
     }
   },
   "scenarios": {
@@ -59,7 +59,7 @@ Run-config is JSON consumed by the engine. The currently supported structure is:
       "discount_rate": 0.12,
       "as_of": "2026-01-01",
       "parameters": {
-        "stream.some_stream.amount": 800.0
+        "stream.cre.lease.base_rent:amount": 800.0
       }
     }
   },
@@ -76,8 +76,7 @@ Run-config is JSON consumed by the engine. The currently supported structure is:
 ```
 
 Parameter key conventions:
-- Legacy (still supported): `stream.<stream_name>.amount`
-- Structured (recommended for dotted stream names): `stream["<stream_name>"].amount`
+- Stream amount overrides use colon boundary only: `stream.<dotted_stream_name>:amount` (e.g. `stream.cre.lease.base_rent:amount`).
 - Config namespace values use `cfg.<path>` keys (for CEL `cfg.*` access).
 
 Reference configs are included in:

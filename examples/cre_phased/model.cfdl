@@ -9,11 +9,11 @@ phase perm from 2028-01 to 2031-12
 
 entity real_estate property
 
-contract cre_construction_stub {
+contract cre.construction_stub {
   term 2026-01..2026-06
 }
 
-contract cre_lease {
+contract cre.lease {
   term 2026-07..2031-12
   terms {
     base_rent = 25000
@@ -21,17 +21,17 @@ contract cre_lease {
 }
 
 // Ops as standalone streams (individual revenue/expense items per guidance)
-stream ops_revenue on entity real_estate.property inflow currency USD {
+stream real_estate.ops_revenue on entity real_estate.property inflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
   amount cel "30000"
 }
 
-stream ops_expense on entity real_estate.property outflow currency USD {
+stream real_estate.ops_expense on entity real_estate.property outflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
   amount cel "12000"
 }
 
-contract cre_exit_cap {
+contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
     exit_cap = 0.06

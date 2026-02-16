@@ -2,7 +2,7 @@
   {
     "code": "E1301_UNRESOLVED_ENTITY_REF",
     "severity": "error",
-    "message": "Contract 'cre_ops_revenue' references unknown entity 'real_estate.missing'.",
+    "message": "Contract 'cre.ops_revenue' references unknown entity 'real_estate.missing'.",
     "file": "model.cfdl",
     "span": {
       "start_line": 8,

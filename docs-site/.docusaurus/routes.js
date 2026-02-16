@@ -9,15 +9,15 @@ export default [
   },
   {
     path: '/cfdl/',
-    component: ComponentCreator('/cfdl/', '3de'),
+    component: ComponentCreator('/cfdl/', '93d'),
     routes: [
       {
         path: '/cfdl/',
-        component: ComponentCreator('/cfdl/', 'cb6'),
+        component: ComponentCreator('/cfdl/', 'd26'),
         routes: [
           {
             path: '/cfdl/',
-            component: ComponentCreator('/cfdl/', 'b08'),
+            component: ComponentCreator('/cfdl/', '414'),
             routes: [
               {
                 path: '/cfdl/examples',
@@ -27,27 +27,27 @@ export default [
               },
               {
                 path: '/cfdl/examples/cre_developer',
-                component: ComponentCreator('/cfdl/examples/cre_developer', '594'),
+                component: ComponentCreator('/cfdl/examples/cre_developer', '82b'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/cre_development_with_financing',
-                component: ComponentCreator('/cfdl/examples/cre_development_with_financing', 'c27'),
+                component: ComponentCreator('/cfdl/examples/cre_development_with_financing', '9b9'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/cre_lease_up',
-                component: ComponentCreator('/cfdl/examples/cre_lease_up', '2d5'),
+                component: ComponentCreator('/cfdl/examples/cre_lease_up', 'f3b'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/cre_multi_file',
-                component: ComponentCreator('/cfdl/examples/cre_multi_file', '5d7'),
+                component: ComponentCreator('/cfdl/examples/cre_multi_file', '655'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/cre_phased',
-                component: ComponentCreator('/cfdl/examples/cre_phased', 'f9c'),
+                component: ComponentCreator('/cfdl/examples/cre_phased', 'fa5'),
                 exact: true
               },
               {
@@ -58,35 +58,35 @@ export default [
               },
               {
                 path: '/cfdl/examples/first_stream',
-                component: ComponentCreator('/cfdl/examples/first_stream', 'ca3'),
+                component: ComponentCreator('/cfdl/examples/first_stream', 'a12'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
               {
                 path: '/cfdl/examples/minimal_model',
-                component: ComponentCreator('/cfdl/examples/minimal_model', 'b17'),
+                component: ComponentCreator('/cfdl/examples/minimal_model', 'b52'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
               {
                 path: '/cfdl/examples/multi_file',
-                component: ComponentCreator('/cfdl/examples/multi_file', '2b8'),
+                component: ComponentCreator('/cfdl/examples/multi_file', '1aa'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
               {
                 path: '/cfdl/examples/opco_basic',
-                component: ComponentCreator('/cfdl/examples/opco_basic', '759'),
+                component: ComponentCreator('/cfdl/examples/opco_basic', 'f8f'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/opco_multi_file',
-                component: ComponentCreator('/cfdl/examples/opco_multi_file', 'b4f'),
+                component: ComponentCreator('/cfdl/examples/opco_multi_file', '613'),
                 exact: true
               },
               {
                 path: '/cfdl/examples/opco_with_growth',
-                component: ComponentCreator('/cfdl/examples/opco_with_growth', '091'),
+                component: ComponentCreator('/cfdl/examples/opco_with_growth', '219'),
                 exact: true
               },
               {
@@ -97,13 +97,13 @@ export default [
               },
               {
                 path: '/cfdl/examples/simple_contract',
-                component: ComponentCreator('/cfdl/examples/simple_contract', 'fa9'),
+                component: ComponentCreator('/cfdl/examples/simple_contract', '4f7'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
               {
                 path: '/cfdl/examples/with_pack',
-                component: ComponentCreator('/cfdl/examples/with_pack', 'bd8'),
+                component: ComponentCreator('/cfdl/examples/with_pack', '824'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
@@ -121,7 +121,7 @@ export default [
               },
               {
                 path: '/cfdl/language-guide',
-                component: ComponentCreator('/cfdl/language-guide', '0e4'),
+                component: ComponentCreator('/cfdl/language-guide', '2e9'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },
@@ -151,7 +151,7 @@ export default [
               },
               {
                 path: '/cfdl/language-reference/language-spec',
-                component: ComponentCreator('/cfdl/language-reference/language-spec', 'f3b'),
+                component: ComponentCreator('/cfdl/language-reference/language-spec', '22b'),
                 exact: true,
                 sidebar: "tutorialSidebar"
               },

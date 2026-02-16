@@ -32,8 +32,8 @@
   },
   "contracts": [
     {
-      "id": "2d92bef97db392c2d865c48b205c06fc",
-      "name": "cre_ops_expense",
+      "id": "15b6ebfc4d0e6adba8b6648567606317",
+      "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.first_entity"
@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "ebb52f66c0e1ef55eef50f113f4d762b",
+      "id": "180e7245113d8e7fcbd36e06881d5e85",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.first_entity"

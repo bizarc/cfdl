@@ -190,7 +190,17 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                 }
             }
             Stmt::Stream(stream) => {
-                if tables.streams.contains_key(&stream.name) {
+                if !is_valid_entity_ref(&stream.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1306_INVALID_ENTITY_REF_FORMAT".to_string(),
+                        message: format!(
+                            "Stream name '{}' must be a qualified name with at least two segments (e.g. cre.lease.rent).",
+                            stream.name
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: stream.span,
+                    });
+                } else if tables.streams.contains_key(&stream.name) {
                     diagnostics.push(ResolveDiagnostic {
                         code: "E1003_DUPLICATE_STREAM".to_string(),
                         message: format!("Duplicate stream '{}'.", stream.name),
@@ -254,6 +264,17 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
     }
 
     for contract_decl in contract_decls {
+        if contract_decl.name != "contract" && !is_valid_entity_ref(&contract_decl.name) {
+            diagnostics.push(ResolveDiagnostic {
+                code: "E1306_INVALID_ENTITY_REF_FORMAT".to_string(),
+                message: format!(
+                    "Contract name '{}' must be a qualified name with at least two segments (e.g. cre.lease.primary).",
+                    contract_decl.name
+                ),
+                file: contract_decl.file.clone(),
+                span: contract_decl.span,
+            });
+        }
         let Some(subject_entity) = contract_decl.subject_entity else {
             continue;
         };

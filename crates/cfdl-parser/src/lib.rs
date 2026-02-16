@@ -514,6 +514,7 @@ impl<'a> Parser<'a> {
     fn parse_contract_stmt(&mut self) -> Option<ContractStmt> {
         let start = self.expect_keyword(Keyword::Contract, "'contract'")?;
         let mut name: Option<String> = None;
+        let mut name_span: Option<Span> = None;
         let mut subject_entity: Option<String> = None;
         let mut has_term = false;
         let mut has_effects = false;
@@ -529,10 +530,12 @@ impl<'a> Parser<'a> {
         if let Some(first_head) = self.parse_name_like_token() {
             if let Some(second_head) = self.parse_name_like_token() {
                 name = Some(second_head.0);
+                name_span = Some(second_head.1);
                 end_span = second_head.1;
                 let _ = first_head;
             } else {
                 name = Some(first_head.0);
+                name_span = Some(first_head.1);
                 end_span = first_head.1;
             }
         }
@@ -583,8 +586,18 @@ impl<'a> Parser<'a> {
             }
         }
 
+        let final_name = name.unwrap_or_else(|| "contract".to_string());
+        if let Some(span) = name_span {
+            if final_name != "contract" && !is_valid_entity_ref(&final_name) {
+                self.push_expected(
+                    span,
+                    "Contract name must be a dotted qualified name with at least two segments (e.g. cre.lease.primary).".to_string(),
+                );
+            }
+        }
+
         Some(ContractStmt {
-            name: name.unwrap_or_else(|| "contract".to_string()),
+            name: final_name,
             subject_entity,
             has_term,
             has_effects,
@@ -665,12 +678,28 @@ impl<'a> Parser<'a> {
     fn parse_stream_stmt(&mut self) -> Option<StreamStmt> {
         let start = self.expect_keyword(Keyword::Stream, "'stream'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref ident) | TokenKind::Qname(ref ident) => ident.clone(),
+        let name = match &name_tok.kind {
+            TokenKind::Qname(qname) => {
+                if !is_valid_entity_ref(qname) {
+                    self.push_expected(
+                        name_tok.span,
+                        "Stream name must be a dotted qualified name with at least two segments (e.g. cre.lease.rent).".to_string(),
+                    );
+                    return None;
+                }
+                qname.clone()
+            }
+            TokenKind::Ident(_) => {
+                self.push_expected(
+                    name_tok.span,
+                    "Stream name must be a dotted qualified name (e.g. cre.lease.rent), not a single identifier.".to_string(),
+                );
+                return None;
+            }
             _ => {
                 self.push_expected(
                     name_tok.span,
-                    "Expected token <identifier-or-qname> after 'stream'.".to_string(),
+                    "Expected token <qname> after 'stream'; stream name must be a dotted qualified name.".to_string(),
                 );
                 return None;
             }
@@ -1322,7 +1351,7 @@ mod tests {
 model "demo"
 time calendar monthly from 2026-01 for 12
 entity legal borrower
-stream principal on entity legal.borrower
+stream legal.principal on entity legal.borrower
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
@@ -1408,7 +1437,7 @@ time monthly from 2026-01 for 12
 model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
-stream rent on entity legal.borrower {
+stream legal.rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-02
   amount cel "1000"
 }
@@ -1442,7 +1471,7 @@ stream rent on entity legal.borrower {
 model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
-contract lease_one on entity legal.borrower {
+contract cre.lease_one on entity legal.borrower {
   term 2026-01..2026-02
 }
 "#;
@@ -1468,7 +1497,7 @@ contract lease_one on entity legal.borrower {
 model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
-contract lease_one {
+contract cre.lease_one {
   term 2026-01..2026-02
 }
 "#;
@@ -1533,7 +1562,7 @@ stream cre.lease.base_rent on entity legal.borrower {
 model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
-stream rent on entity borrower {
+stream legal.rent on entity borrower {
   schedule every monthly from 2026-01 to 2026-02
   amount cel "1000"
 }

@@ -909,7 +909,7 @@ fn validate_pack_contract(
     let mut diagnostics = Vec::new();
     match pack.name.as_str() {
         "cre" => match contract.name.as_str() {
-            "cre_lease" => {
+            "cre.lease" => {
                 if !contract.terms.contains_key("base_rent") {
                     diagnostics.push(cre_pack_diag(
                         "E6001_CRE_LEASE_MISSING_BASE_RENT",
@@ -965,7 +965,7 @@ fn validate_pack_contract(
                     }
                 }
             }
-            "cre_exit_cap" => {
+            "cre.exit_cap" => {
                 let exit_cap = contract
                     .terms
                     .get("exit_cap")
@@ -997,7 +997,7 @@ fn validate_pack_contract(
                     ));
                 }
             }
-            "cre_ops_revenue" | "cre_ops_expense" => {
+            "cre.ops_revenue" | "cre.ops_expense" => {
                 if !contract.terms.contains_key("amount") {
                     diagnostics.push(cre_pack_diag(
                         "E6020_CRE_OPS_MISSING_AMOUNT",
@@ -1092,7 +1092,7 @@ fn validate_opco_contract(
 ) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
     match contract.name.as_str() {
-        "opco_revenue_line" | "opco_opex_line" => {
+        "opco.revenue_line" | "opco.opex_line" => {
             if parse_contract_term_f64(contract, "amount").is_none() {
                 diagnostics.push(opco_pack_diag(
                     "E7001_OPCO_LINE_MISSING_AMOUNT",
@@ -1120,7 +1120,7 @@ fn validate_opco_contract(
                 ));
             }
         }
-        "opco_working_capital" => {
+        "opco.working_capital" => {
             if parse_contract_term_f64(contract, "amount").is_none() {
                 diagnostics.push(opco_pack_diag(
                     "E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE",
@@ -1138,7 +1138,7 @@ fn validate_opco_contract(
                 ));
             }
         }
-        "opco_exit_multiple" => {
+        "opco.exit_multiple" => {
             let multiple = parse_contract_term_f64(contract, "exit_multiple");
             if multiple.is_none() {
                 diagnostics.push(opco_pack_diag(
@@ -1189,7 +1189,7 @@ fn apply_opco_contract_terms(
     amount_src: &mut String,
 ) {
     match contract.name.as_str() {
-        "opco_revenue_line" | "opco_opex_line" | "opco_working_capital" => {
+        "opco.revenue_line" | "opco.opex_line" | "opco.working_capital" => {
             if let Some(amount) = parse_contract_term_f64(contract, "amount") {
                 *amount_src = amount.to_string();
             }
@@ -1205,7 +1205,7 @@ fn apply_opco_contract_terms(
                 };
             }
         }
-        "opco_exit_multiple" => {
+        "opco.exit_multiple" => {
             if let (Some(base_value), Some(exit_multiple)) = (
                 parse_contract_term_f64(contract, "base_value"),
                 parse_contract_term_f64(contract, "exit_multiple"),

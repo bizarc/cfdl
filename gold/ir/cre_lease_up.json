@@ -25,8 +25,8 @@
   },
   "contracts": [
     {
-      "id": "7d5e9fed0895133712929867be781d99",
-      "name": "cre_lease",
+      "id": "02f286e6ad8c8b57adfd218b7e6c2a91",
+      "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
         "symbol": "real_estate.property"
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "a13b643c1ab5c2a0c929a40620193692",
+      "id": "9f9f6a5b0c5d3160c9aae5d794526cf7",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"

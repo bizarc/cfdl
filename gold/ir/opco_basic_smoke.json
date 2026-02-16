@@ -25,8 +25,8 @@
   },
   "contracts": [
     {
-      "id": "5dfaf80322a5ec2db4cc25b3557aeead",
-      "name": "opco_exit_multiple",
+      "id": "7b8564298940865e7a8054b1ae16a93d",
+      "name": "opco.exit_multiple",
       "type": "core.Contract",
       "subject": {
         "symbol": "operating.business"
@@ -51,8 +51,8 @@
       }
     },
     {
-      "id": "348fb1380034df89e067077f37b8ef9c",
-      "name": "opco_opex_line",
+      "id": "2f747295351ae999b2ccd304a5b110eb",
+      "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
         "symbol": "operating.business"
@@ -77,8 +77,8 @@
       }
     },
     {
-      "id": "b492d0b12fdfe15c3a5c48d93b86ea80",
-      "name": "opco_revenue_line",
+      "id": "70a2f20971a338776f99e19aa26ec9e1",
+      "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
         "symbol": "operating.business"
@@ -103,8 +103,8 @@
       }
     },
     {
-      "id": "4d72e537ae73dfa88f1d593435087467",
-      "name": "opco_working_capital",
+      "id": "c0917a713e75832e6862db3279516c35",
+      "name": "opco.working_capital",
       "type": "core.Contract",
       "subject": {
         "symbol": "operating.business"
@@ -131,7 +131,7 @@
   ],
   "streams": [
     {
-      "id": "e8d7f4378951f550ceef9ebbdbea37fb",
+      "id": "3d214703175bc60ba84122fe6c0b9299",
       "name": "opco.exit.value",
       "owner": {
         "symbol": "operating.business"
@@ -168,7 +168,7 @@
       }
     },
     {
-      "id": "66a85f5ea2ffde11f1610e968b0ddfbf",
+      "id": "3a0a1d5e6ddabc658a54d3e2c39b24f4",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -207,7 +207,7 @@
       }
     },
     {
-      "id": "1f234eee73bad6e55a3ea5dcde886952",
+      "id": "fb81d0f5e27c2a84da4aed2150c40dca",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -246,7 +246,7 @@
       }
     },
     {
-      "id": "462d4c259f3643ce25466e4f060bb7ed",
+      "id": "cdea364d6ac72cae6456dd6c1c37f49a",
       "name": "opco.working_capital.adjustment",
       "owner": {
         "symbol": "operating.business"

@@ -45,7 +45,7 @@ time calendar monthly from 2026-01 for 12
 
 entity legal borrower
 
-stream rent on entity legal.borrower {
+stream legal.rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-12
   amount cel "1000"
 }
@@ -71,6 +71,7 @@ See `examples/language_tutorial/minimal_model/model.cfdl`.
 
 - `entity <namespace> <name>`
 - Example: `entity real_estate property`
+- Entity references use qualified names with at least two segments: `real_estate.property`, `org.real_estate.property`
 
 ### Behavior
 
@@ -78,6 +79,15 @@ See `examples/language_tutorial/minimal_model/model.cfdl`.
 - `contract` for domain contracts (especially when using packs)
 - `event` for conditional actions
 - `option` for optional exercise behavior
+
+### Naming conventions (recommended)
+
+- Use dot notation for hierarchy and ownership boundaries.
+  - Preferred: `cre.lease.base_rent`, `opco.working_capital.adjustment`
+  - Allowed but less expressive: `ops_revenue`
+- Use underscore only within a segment when needed (`working_capital`).
+- Prefer qualified names for stream and contract instances in domain models.
+- Keep entity symbols qualified and stable so ontology/data-source mappings can hydrate deterministically.
 
 ### When to use streams vs contracts
 
@@ -202,7 +212,7 @@ Rules to remember:
 - **Missing required model header fields**
   - Add `version`, `model`, and `time` once each.
 - **Unresolved entity refs**
-  - Confirm `entity` exists and reference uses `namespace.name`.
+  - Confirm `entity` exists and reference uses a qualified name (`namespace.name` or deeper).
 - **Schedule range issues**
   - Ensure `from <= to` and dates align with timeline.
 - **Unterminated string/comment**

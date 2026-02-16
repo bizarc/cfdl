@@ -724,12 +724,8 @@ fn build_expr_env(
 }
 
 fn stream_amount_override(config: &RunConfig, stream_name: &str) -> Option<f64> {
-    let legacy_key = format!("stream.{stream_name}.amount");
-    if let Some(value) = config.parameter_overrides.get(&legacy_key) {
-        return Some(*value);
-    }
-    let structured_key = format!("stream[\"{stream_name}\"].amount");
-    config.parameter_overrides.get(&structured_key).copied()
+    let key = format!("stream.{stream_name}:amount");
+    config.parameter_overrides.get(&key).copied()
 }
 
 fn insert_cfg_value(map: &mut BTreeMap<String, ExprValue>, path: &str, value: f64) {
@@ -1321,7 +1317,7 @@ mod tests {
     }
 
     #[test]
-    fn supports_legacy_and_structured_stream_amount_override_keys() {
+    fn supports_colon_boundary_stream_amount_override_key() {
         let ir = r#"{
             "model": { "name": "demo", "currency": "USD" },
             "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
@@ -1337,8 +1333,35 @@ mod tests {
             ]
         }"#;
 
+        let mut overrides = BTreeMap::new();
+        overrides.insert("stream.cre.lease.base_rent:amount".to_string(), 25.0);
+        let results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: overrides,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("colon-boundary override run");
+
+        let total = results
+            .deterministic
+            .metrics
+            .get("stream.cre.lease.base_rent.total")
+            .expect("stream metric");
+        let total = match total {
+            super::Scalar::Money(money) => money.amount,
+            other => panic!("expected money scalar, got {other:?}"),
+        };
+        // Override 25 per period, 2 periods => total 50
+        assert!((total - 50.0).abs() < 1e-9);
+
+        // Legacy and bracket key forms must not be accepted
         let mut legacy = BTreeMap::new();
-        legacy.insert("stream.cre.lease.base_rent.amount".to_string(), 25.0);
+        legacy.insert("stream.cre.lease.base_rent.amount".to_string(), 99.0);
         let legacy_results = run_from_json_str(
             ir,
             RunConfig {
@@ -1349,41 +1372,47 @@ mod tests {
                 monte_carlo: None,
             },
         )
-        .expect("legacy override run");
-
-        let mut structured = BTreeMap::new();
-        structured.insert("stream[\"cre.lease.base_rent\"].amount".to_string(), 25.0);
-        let structured_results = run_from_json_str(
-            ir,
-            RunConfig {
-                discount_rate: 0.0,
-                as_of: None,
-                parameter_overrides: structured,
-                scenarios: BTreeMap::new(),
-                monte_carlo: None,
-            },
-        )
-        .expect("structured override run");
-
+        .expect("run with legacy key");
         let legacy_total = legacy_results
             .deterministic
             .metrics
             .get("stream.cre.lease.base_rent.total")
-            .expect("stream metric");
-        let structured_total = structured_results
+            .and_then(|s| match s {
+                super::Scalar::Money(m) => Some(m.amount),
+                _ => None,
+            })
+            .unwrap_or(0.0);
+        // Default amount 10 per period, 2 periods => 20 when legacy key is ignored
+        assert!(
+            (legacy_total - 20.0).abs() < 1e-9,
+            "legacy key must be ignored"
+        );
+
+        let mut bracket = BTreeMap::new();
+        bracket.insert("stream[\"cre.lease.base_rent\"].amount".to_string(), 99.0);
+        let bracket_results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: bracket,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("run with bracket key");
+        let bracket_total = bracket_results
             .deterministic
             .metrics
             .get("stream.cre.lease.base_rent.total")
-            .expect("stream metric");
-        let legacy_total = match legacy_total {
-            super::Scalar::Money(money) => money.amount,
-            other => panic!("expected money scalar, got {other:?}"),
-        };
-        let structured_total = match structured_total {
-            super::Scalar::Money(money) => money.amount,
-            other => panic!("expected money scalar, got {other:?}"),
-        };
-        assert_eq!(legacy_total, structured_total);
-        assert_eq!(legacy_total, 50.0);
+            .and_then(|s| match s {
+                super::Scalar::Money(m) => Some(m.amount),
+                _ => None,
+            })
+            .unwrap_or(0.0);
+        assert!(
+            (bracket_total - 20.0).abs() < 1e-9,
+            "bracket key must be ignored"
+        );
     }
 }

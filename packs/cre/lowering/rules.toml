@@ -1,6 +1,6 @@
 [[rules]]
 id = "cre_construction_stub_draws_v1"
-contract_name = "cre_construction_stub"
+contract_name = "cre.construction_stub"
 stream_name = "cre.construction.draws"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -12,7 +12,7 @@ schedule_to = "2026-06"
 
 [[rules]]
 id = "cre_lease_base_rent_v1"
-contract_name = "cre_lease"
+contract_name = "cre.lease"
 stream_name = "cre.lease.base_rent"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -27,7 +27,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "cre_ops_revenue_v1"
-contract_name = "cre_ops_revenue"
+contract_name = "cre.ops_revenue"
 stream_name = "cre.ops.revenue"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -39,7 +39,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "cre_ops_expense_v1"
-contract_name = "cre_ops_expense"
+contract_name = "cre.ops_expense"
 stream_name = "cre.ops.expense"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -51,7 +51,7 @@ schedule_to = "2031-12"
 
 [[rules]]
 id = "cre_exit_cap_sale_v1"
-contract_name = "cre_exit_cap"
+contract_name = "cre.exit_cap"
 stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
 direction = "inflow"

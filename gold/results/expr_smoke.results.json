@@ -1,6 +1,6 @@
 {
   "results_version": "0.1",
-  "model_hash": "b6cca2af1d542580548e41f5be13dd1a8915376d78f3d93e8dfce167791161e5",
+  "model_hash": "7008e0f204d448f8ab0012d120e01e737d8e7fd876d90cf542ab8200cb66859a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -22,7 +22,7 @@
         "currency": "USD"
       },
       "run.discount_rate": 0.1,
-      "stream.rent.total": {
+      "stream.legal.rent.total": {
         "amount": -330.0,
         "currency": "USD"
       }
@@ -53,7 +53,7 @@
           }
         ]
       },
-      "stream.rent": {
+      "stream.legal.rent": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",

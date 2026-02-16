@@ -126,6 +126,8 @@ walk(old, new, [])
 allowed = {
     "contracts.*.subject.symbol",
     "streams.*.owner.symbol",
+    "streams.*.name",
+    "streams.*.id",
 }
 
 def is_allowed(path):
@@ -135,6 +137,8 @@ def is_allowed(path):
         return parts[1].isdigit()
     if len(parts) == 4 and parts[0] == "streams" and parts[2] == "owner" and parts[3] == "symbol":
         return parts[1].isdigit()
+    if len(parts) == 3 and parts[0] == "streams" and parts[2] in ("name", "id") and parts[1].isdigit():
+        return True
     return False
 
 disallowed = [p for p in changed if not is_allowed(p)]
@@ -180,7 +184,8 @@ run_valid_fixture() {
   fi
 
   if [[ "$UPDATE" == "1" ]]; then
-    if [[ -f "$gold_ir" ]]; then
+    # When intentionally updating gold (e.g. platform naming migration), allow any IR changes.
+    if [[ -f "$gold_ir" ]] && [[ "${CFDL_GOLD_UPDATE_ALLOW_IR_CHANGES:-0}" != "1" ]]; then
       if ! check_ir_subject_owner_only_changes "$gold_ir" "$out_ir"; then
         echo "[golden][FAIL] valid/${name}: non-subject/owner IR changes detected during update"
         return 1

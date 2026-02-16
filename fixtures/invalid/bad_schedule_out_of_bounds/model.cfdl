@@ -3,7 +3,7 @@ model "bad-schedule-out-of-bounds"
 time calendar monthly from 2026-01 for 12
 entity legal borrower
 
-stream principal on entity legal.borrower {
+stream legal.principal on entity legal.borrower {
   schedule every monthly on day 15 from 2025-01 to 2025-12
   amount cel "100"
 }

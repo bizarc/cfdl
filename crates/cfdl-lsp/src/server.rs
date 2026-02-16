@@ -2032,14 +2032,14 @@ mod tests {
         assert_eq!(entity_def.uri, model_uri);
         assert_eq!(entity_def.range.start, entity_pos);
 
-        let stream_pos = position_of_first(&source, "rent");
+        let stream_pos = position_of_first(&source, "cre.rent");
         let stream_def = index
             .lookup(&model_uri, stream_pos)
             .expect("stream definition");
         assert_eq!(stream_def.uri, model_uri);
         assert_eq!(stream_def.range.start, stream_pos);
 
-        let contract_pos = position_of_first(&source, "lease_main");
+        let contract_pos = position_of_first(&source, "cre.lease_main");
         let contract_def = index
             .lookup(&model_uri, contract_pos)
             .expect("contract definition");
@@ -2095,10 +2095,10 @@ model "demo"
 time calendar monthly from 2026-01 for 12
 phase base from 2026-01 to 2026-12
 entity legal borrower
-stream rent on entity legal.borrower {
+stream cre.rent on entity legal.borrower {
   schedule on phase_enter("base")
 }
-contract core.lease lease_main term 2026-01..2026-12
+contract core.lease cre.lease_main term 2026-01..2026-12
 "#
         .to_string()
     }
@@ -2242,7 +2242,7 @@ use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 phase base from 2026-01 to 2026-12
 entity legal borrower
-stream rent on entity legal.borrower {
+stream cre.rent on entity legal.borrower {
   schedule on phase_enter("base")
 }
 "#;
@@ -2303,7 +2303,7 @@ model "demo"
 use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 entity legal borrower
-stream rent on entity legal.borrower
+stream cre.rent on entity legal.borrower
 "#
             .as_bytes(),
         )
@@ -2364,7 +2364,7 @@ model "demo"
 use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 entity legal borrower
-stream rent on entity legal.borrower
+stream cre.rent on entity legal.borrower
 "#
             .as_bytes(),
         )

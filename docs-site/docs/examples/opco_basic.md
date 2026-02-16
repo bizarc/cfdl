@@ -33,24 +33,24 @@ time calendar monthly from 2026-01 for 72
 entity operating business
 
 // Revenue and opex as standalone streams (individual items per guidance)
-stream revenue on entity operating.business inflow currency USD {
+stream operating.revenue on entity operating.business inflow currency USD {
   schedule every monthly from 2026-01 to 2031-12
   amount cel "120000"
 }
 
-stream opex on entity operating.business outflow currency USD {
+stream operating.opex on entity operating.business outflow currency USD {
   schedule every monthly from 2026-01 to 2031-12
   amount cel "70000"
 }
 
-contract opco_working_capital {
+contract opco.working_capital {
   term 2026-01..2031-12
   terms {
     amount = 3000
   }
 }
 
-contract opco_exit_multiple {
+contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
     exit_period = 72

@@ -5,7 +5,7 @@ time calendar monthly from 2026-01 for 24
 
 entity operating business
 
-contract opco_opex_line {
+contract opco.opex_line {
   term 2027-12..2026-01
   terms {
     amount = 50000
