@@ -75,6 +75,11 @@ Run-config is JSON consumed by the engine. The currently supported structure is:
 }
 ```
 
+Parameter key conventions:
+- Legacy (still supported): `stream.<stream_name>.amount`
+- Structured (recommended for dotted stream names): `stream["<stream_name>"].amount`
+- Config namespace values use `cfg.<path>` keys (for CEL `cfg.*` access).
+
 Reference configs are included in:
 - `examples/cre_developer/run.base.json`
 - `examples/cre_developer/run.stress.json`

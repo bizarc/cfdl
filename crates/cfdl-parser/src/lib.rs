@@ -523,6 +523,20 @@ impl<'a> Parser<'a> {
         let mut end_span = start.span;
         let mut depth = 0usize;
 
+        // Parse leading contract signature:
+        // - Legacy form: contract <name> { ... }
+        // - Typed form:  contract <type_id> <name> ...
+        if let Some(first_head) = self.parse_name_like_token() {
+            if let Some(second_head) = self.parse_name_like_token() {
+                name = Some(second_head.0);
+                end_span = second_head.1;
+                let _ = first_head;
+            } else {
+                name = Some(first_head.0);
+                end_span = first_head.1;
+            }
+        }
+
         while !self.is_eof() {
             if depth == 0 && is_statement_start(self.peek()) {
                 break;
@@ -558,29 +572,13 @@ impl<'a> Parser<'a> {
                         continue;
                     }
                     let entity_ref_tok = self.bump();
-                    let parsed = match entity_ref_tok.kind {
-                        TokenKind::Qname(ref qname) => Some(qname.clone()),
-                        TokenKind::Ident(ref ident) => Some(ident.clone()),
-                        _ => {
-                            self.push_expected(
-                                entity_ref_tok.span,
-                                "Expected token <entity-ref> after 'on entity'.".to_string(),
-                            );
-                            None
-                        }
-                    };
-                    if let Some(entity_ref) = parsed {
+                    if let Some(entity_ref) = self.parse_entity_ref_token(&entity_ref_tok) {
                         subject_entity = Some(entity_ref);
                         end_span = entity_ref_tok.span;
                     }
                 }
                 TokenKind::Punct(Punct::LBrace) => depth += 1,
                 TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
-                TokenKind::Ident(ref ident) => {
-                    if name.is_none() {
-                        name = Some(ident.clone());
-                    }
-                }
                 _ => {}
             }
         }
@@ -668,11 +666,11 @@ impl<'a> Parser<'a> {
         let start = self.expect_keyword(Keyword::Stream, "'stream'")?;
         let name_tok = self.bump();
         let name = match name_tok.kind {
-            TokenKind::Ident(ref ident) => ident.clone(),
+            TokenKind::Ident(ref ident) | TokenKind::Qname(ref ident) => ident.clone(),
             _ => {
                 self.push_expected(
                     name_tok.span,
-                    "Expected token <identifier> after 'stream'.".to_string(),
+                    "Expected token <identifier-or-qname> after 'stream'.".to_string(),
                 );
                 return None;
             }
@@ -681,17 +679,7 @@ impl<'a> Parser<'a> {
         let _on_kw = self.expect_keyword(Keyword::On, "'on'")?;
         let _entity_kw = self.expect_keyword(Keyword::Entity, "'entity'")?;
         let entity_ref_tok = self.bump();
-        let attached_entity = match entity_ref_tok.kind {
-            TokenKind::Qname(ref qname) => qname.clone(),
-            TokenKind::Ident(ref ident) => ident.clone(),
-            _ => {
-                self.push_expected(
-                    entity_ref_tok.span,
-                    "Expected token <entity-ref> after 'on entity'.".to_string(),
-                );
-                return None;
-            }
-        };
+        let attached_entity = self.parse_entity_ref_token(&entity_ref_tok)?;
 
         let mut direction = None;
         if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Inflow)) {
@@ -1043,6 +1031,49 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn parse_entity_ref_token(&mut self, token: &Token) -> Option<String> {
+        let qname = match &token.kind {
+            TokenKind::Qname(value) => value,
+            TokenKind::Ident(_) => {
+                self.push_expected(
+                    token.span,
+                    "Expected token <entity-ref> after 'on entity'; entity refs must be qualified (e.g. legal.borrower).".to_string(),
+                );
+                return None;
+            }
+            _ => {
+                self.push_expected(
+                    token.span,
+                    "Expected token <entity-ref> after 'on entity'.".to_string(),
+                );
+                return None;
+            }
+        };
+        if !is_valid_entity_ref(qname) {
+            self.push_expected(
+                token.span,
+                "Expected token <entity-ref> after 'on entity'; entity refs must contain at least two identifier segments.".to_string(),
+            );
+            return None;
+        }
+        Some(qname.clone())
+    }
+
+    fn parse_name_like_token(&mut self) -> Option<(String, Span)> {
+        let tok = self.peek().clone();
+        match tok.kind {
+            TokenKind::Ident(ident) => {
+                let _ = self.bump();
+                Some((ident, tok.span))
+            }
+            TokenKind::Qname(qname) => {
+                let _ = self.bump();
+                Some((qname, tok.span))
+            }
+            _ => None,
+        }
+    }
+
     fn expect_keyword(&mut self, expected: Keyword, expected_label: &str) -> Option<Token> {
         let tok = self.bump();
         match tok.kind {
@@ -1262,6 +1293,24 @@ fn is_statement_start(token: &Token) -> bool {
     )
 }
 
+fn is_valid_entity_ref(value: &str) -> bool {
+    let mut parts = value.split('.');
+    let Some(first) = parts.next() else {
+        return false;
+    };
+    if first.is_empty() {
+        return false;
+    }
+    let mut count = 1usize;
+    for part in parts {
+        if part.is_empty() {
+            return false;
+        }
+        count += 1;
+    }
+    count >= 2
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1437,5 +1486,65 @@ contract lease_one {
             })
             .expect("contract statement");
         assert_eq!(contract.subject_entity, None);
+    }
+
+    #[test]
+    fn parses_dotted_stream_and_contract_names() {
+        let src = r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 2
+entity legal borrower
+contract lease.core.primary on entity legal.borrower {
+  term 2026-01..2026-02
+}
+stream cre.lease.base_rent on entity legal.borrower {
+  schedule every monthly from 2026-01 to 2026-02
+  amount cel "1000"
+}
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(result.diagnostics.is_empty());
+        let ast = result.ast.expect("AST expected");
+        let contract = ast
+            .statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Contract(contract) => Some(contract),
+                _ => None,
+            })
+            .expect("contract statement");
+        assert_eq!(contract.name, "lease.core.primary");
+        let stream = ast
+            .statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Stream(stream) => Some(stream),
+                _ => None,
+            })
+            .expect("stream statement");
+        assert_eq!(stream.name, "cre.lease.base_rent");
+    }
+
+    #[test]
+    fn rejects_unqualified_entity_ref() {
+        let src = r#"version 0.1
+model "demo"
+time calendar monthly from 2026-01 for 2
+entity legal borrower
+stream rent on entity borrower {
+  schedule every monthly from 2026-01 to 2026-02
+  amount cel "1000"
+}
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", &tokens);
+        assert!(!result.diagnostics.is_empty());
+        assert!(result
+            .diagnostics
+            .iter()
+            .any(|diag| diag.message.contains("entity refs must be qualified")));
     }
 }

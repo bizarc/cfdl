@@ -801,6 +801,18 @@ fn lower_contract_streams(
             if rule.contract_name != contract.name {
                 continue;
             }
+            if !is_qualified_name(&rule.stream_name) {
+                diagnostics.push(lowering_rule_diag(
+                    "E5004_INVALID_LOWERING_RULE",
+                    &format!(
+                        "Pack lowering rule '{}' generated invalid stream_name '{}'; expected dotted qualified name.",
+                        rule.id, rule.stream_name
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
 
             let stable_key = format!("{}::{}::{}", source_stmt.file, contract.name, rule.id);
             let owner_symbol = if rule.owner_entity.is_empty() || rule.owner_entity == "${subject}"
@@ -812,6 +824,18 @@ fn lower_contract_streams(
             } else {
                 rule.owner_entity.clone()
             };
+            if !is_qualified_name(&owner_symbol) {
+                diagnostics.push(lowering_rule_diag(
+                    "E5004_INVALID_LOWERING_RULE",
+                    &format!(
+                        "Pack lowering rule '{}' resolved invalid owner_entity '{}'; expected dotted qualified entity symbol.",
+                        rule.id, owner_symbol
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
             let mut schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
             let mut amount_src = rule.amount_cel.clone();
@@ -1024,6 +1048,24 @@ fn cre_pack_diag(
 }
 
 fn opco_pack_diag(
+    code: &str,
+    message: &str,
+    source_stmt: &cfdl_resolver::SourceStatement,
+    span: cfdl_parser::Span,
+) -> Diagnostic {
+    Diagnostic {
+        code: code.to_string(),
+        severity: "error".to_string(),
+        message: message.to_string(),
+        file: Some(source_stmt.file.clone()),
+        span: Some(map_span(span)),
+        path: None,
+        hint: None,
+        notes: vec![],
+    }
+}
+
+fn lowering_rule_diag(
     code: &str,
     message: &str,
     source_stmt: &cfdl_resolver::SourceStatement,
@@ -1510,4 +1552,33 @@ fn map_span(span: cfdl_parser::Span) -> Span {
 
 fn stable_key(source_file: &str, symbol_or_name: &str) -> String {
     format!("{source_file}::{symbol_or_name}")
+}
+
+fn is_qualified_name(value: &str) -> bool {
+    let mut parts = value.split('.');
+    let Some(first) = parts.next() else {
+        return false;
+    };
+    if !is_ident_segment(first) {
+        return false;
+    }
+    let mut count = 1usize;
+    for part in parts {
+        if !is_ident_segment(part) {
+            return false;
+        }
+        count += 1;
+    }
+    count >= 2
+}
+
+fn is_ident_segment(segment: &str) -> bool {
+    let mut chars = segment.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_alphabetic() || first == '_') {
+        return false;
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
 }

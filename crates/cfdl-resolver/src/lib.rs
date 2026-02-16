@@ -225,6 +225,18 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
     }
 
     for stream_decl in stream_decls {
+        if !is_valid_entity_ref(&stream_decl.stream.attached_entity) {
+            diagnostics.push(ResolveDiagnostic {
+                code: "E1306_INVALID_ENTITY_REF_FORMAT".to_string(),
+                message: format!(
+                    "Stream '{}' has invalid entity reference '{}'; expected a qualified name with at least two segments.",
+                    stream_decl.stream.name, stream_decl.stream.attached_entity
+                ),
+                file: stream_decl.file,
+                span: stream_decl.stream.span,
+            });
+            continue;
+        }
         if !tables
             .entities
             .contains_key(&stream_decl.stream.attached_entity)
@@ -245,6 +257,18 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
         let Some(subject_entity) = contract_decl.subject_entity else {
             continue;
         };
+        if !is_valid_entity_ref(&subject_entity) {
+            diagnostics.push(ResolveDiagnostic {
+                code: "E1306_INVALID_ENTITY_REF_FORMAT".to_string(),
+                message: format!(
+                    "Contract '{}' has invalid entity reference '{}'; expected a qualified name with at least two segments.",
+                    contract_decl.name, subject_entity
+                ),
+                file: contract_decl.file,
+                span: contract_decl.span,
+            });
+            continue;
+        }
         if !tables.entities.contains_key(&subject_entity) {
             diagnostics.push(ResolveDiagnostic {
                 code: "E1301_UNRESOLVED_ENTITY_REF".to_string(),
@@ -604,4 +628,115 @@ fn sort_diagnostics(diagnostics: &mut [ResolveDiagnostic]) {
             .then(a.span.start_col.cmp(&b.span.start_col))
             .then(a.code.cmp(&b.code))
     });
+}
+
+fn is_valid_entity_ref(value: &str) -> bool {
+    let mut parts = value.split('.');
+    let Some(first) = parts.next() else {
+        return false;
+    };
+    if first.is_empty() {
+        return false;
+    }
+    let mut count = 1usize;
+    for part in parts {
+        if part.is_empty() {
+            return false;
+        }
+        count += 1;
+    }
+    count >= 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    fn span() -> Span {
+        Span {
+            start_line: 1,
+            start_col: 1,
+            end_line: 1,
+            end_col: 1,
+        }
+    }
+
+    #[test]
+    fn reports_invalid_entity_ref_format_for_streams() {
+        let output = ResolveOutput {
+            compilation_unit: CompilationUnit {
+                statements: vec![],
+                span: span(),
+            },
+            module_order: vec!["model.cfdl".to_string()],
+            source_statements: vec![
+                SourceStatement {
+                    file: "model.cfdl".to_string(),
+                    statement: Stmt::Entity(cfdl_parser::EntityStmt {
+                        namespace: "legal".to_string(),
+                        name: "borrower".to_string(),
+                        span: span(),
+                    }),
+                },
+                SourceStatement {
+                    file: "model.cfdl".to_string(),
+                    statement: Stmt::Stream(cfdl_parser::StreamStmt {
+                        name: "rent".to_string(),
+                        attached_entity: "borrower".to_string(),
+                        direction: Some("inflow".to_string()),
+                        currency: Some("USD".to_string()),
+                        schedule: None,
+                        amount: None,
+                        active_when: None,
+                        span: span(),
+                    }),
+                },
+            ],
+        };
+
+        let diags = resolve_symbols(&output).expect_err("expected resolve diagnostics");
+        assert!(diags
+            .iter()
+            .any(|diag| diag.code == "E1306_INVALID_ENTITY_REF_FORMAT"));
+    }
+
+    #[test]
+    fn reports_invalid_entity_ref_format_for_contracts() {
+        let output = ResolveOutput {
+            compilation_unit: CompilationUnit {
+                statements: vec![],
+                span: span(),
+            },
+            module_order: vec!["model.cfdl".to_string()],
+            source_statements: vec![
+                SourceStatement {
+                    file: "model.cfdl".to_string(),
+                    statement: Stmt::Entity(cfdl_parser::EntityStmt {
+                        namespace: "legal".to_string(),
+                        name: "borrower".to_string(),
+                        span: span(),
+                    }),
+                },
+                SourceStatement {
+                    file: "model.cfdl".to_string(),
+                    statement: Stmt::Contract(cfdl_parser::ContractStmt {
+                        name: "lease.core.primary".to_string(),
+                        subject_entity: Some("borrower".to_string()),
+                        has_term: true,
+                        has_effects: false,
+                        term_start: None,
+                        term_end: None,
+                        terms: BTreeMap::new(),
+                        span: span(),
+                    }),
+                },
+            ],
+        };
+
+        let diags = resolve_symbols(&output).expect_err("expected resolve diagnostics");
+        assert!(diags
+            .iter()
+            .any(|diag| diag.code == "E1306_INVALID_ENTITY_REF_FORMAT"));
+    }
 }

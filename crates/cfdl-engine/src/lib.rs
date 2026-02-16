@@ -479,8 +479,6 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         let schedule_mask = schedule_mask(&stream.schedule, &timeline)?;
         let mut values = vec![0.0_f64; periods];
         let direction_sign = stream_direction_sign(stream, &mut warnings);
-        let parameter_key = format!("stream.{}.amount", stream.name);
-
         for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
             if !is_scheduled {
                 continue;
@@ -496,18 +494,18 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             if !active_value {
                 continue;
             }
-            let amount =
-                if let Some(override_value) = config.parameter_overrides.get(&parameter_key) {
-                    *override_value
-                } else {
-                    eval_amount_expr(
-                        &amount_expr,
-                        &env,
-                        &stream.name,
-                        &ir.model.currency,
-                        &mut warnings,
-                    )
-                };
+            let amount = if let Some(override_value) = stream_amount_override(config, &stream.name)
+            {
+                override_value
+            } else {
+                eval_amount_expr(
+                    &amount_expr,
+                    &env,
+                    &stream.name,
+                    &ir.model.currency,
+                    &mut warnings,
+                )
+            };
             values[idx] += amount * direction_sign;
         }
         for (idx, value) in values.iter().enumerate() {
@@ -723,6 +721,15 @@ fn build_expr_env(
         }
     }
     env
+}
+
+fn stream_amount_override(config: &RunConfig, stream_name: &str) -> Option<f64> {
+    let legacy_key = format!("stream.{stream_name}.amount");
+    if let Some(value) = config.parameter_overrides.get(&legacy_key) {
+        return Some(*value);
+    }
+    let structured_key = format!("stream[\"{stream_name}\"].amount");
+    config.parameter_overrides.get(&structured_key).copied()
 }
 
 fn insert_cfg_value(map: &mut BTreeMap<String, ExprValue>, path: &str, value: f64) {
@@ -1311,5 +1318,72 @@ mod tests {
         let a = serde_json::to_string(&first).unwrap();
         let b = serde_json::to_string(&second).unwrap();
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn supports_legacy_and_structured_stream_amount_override_keys() {
+        let ir = r#"{
+            "model": { "name": "demo", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "streams": [
+                {
+                    "name": "cre.lease.base_rent",
+                    "owner": { "symbol": "legal.borrower" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cel", "src": "10" },
+                    "active_when": { "lang": "cel", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let mut legacy = BTreeMap::new();
+        legacy.insert("stream.cre.lease.base_rent.amount".to_string(), 25.0);
+        let legacy_results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: legacy,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("legacy override run");
+
+        let mut structured = BTreeMap::new();
+        structured.insert("stream[\"cre.lease.base_rent\"].amount".to_string(), 25.0);
+        let structured_results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: structured,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("structured override run");
+
+        let legacy_total = legacy_results
+            .deterministic
+            .metrics
+            .get("stream.cre.lease.base_rent.total")
+            .expect("stream metric");
+        let structured_total = structured_results
+            .deterministic
+            .metrics
+            .get("stream.cre.lease.base_rent.total")
+            .expect("stream metric");
+        let legacy_total = match legacy_total {
+            super::Scalar::Money(money) => money.amount,
+            other => panic!("expected money scalar, got {other:?}"),
+        };
+        let structured_total = match structured_total {
+            super::Scalar::Money(money) => money.amount,
+            other => panic!("expected money scalar, got {other:?}"),
+        };
+        assert_eq!(legacy_total, structured_total);
+        assert_eq!(legacy_total, 50.0);
     }
 }

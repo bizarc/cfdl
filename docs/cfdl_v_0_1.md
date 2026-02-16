@@ -91,6 +91,8 @@ Core language semantics MUST NOT change based on pack selection.
 ### 4.1 Identifiers
 - Identifiers match: `[A-Za-z_][A-Za-z0-9_]*`
 - Qualified identifiers (Type IDs, namespaces) use dot notation: `A.B.C`
+- Dot (`.`) is structural: it separates hierarchical name segments.
+- Underscore (`_`) is lexical: it is allowed *within* a segment but does not create hierarchy.
 
 ### 4.2 Literals
 - String: `"..."` with escapes.
@@ -191,7 +193,7 @@ entity asset Sunset : CRE.Asset {
 
 Rules:
 - `entity <namespace> <name> : <TypeId> { ... }`
-- The full entity symbol is `<namespace>.<name>` (e.g., `asset.Sunset`).
+- The full entity symbol is a qualified name with at least two segments (e.g., `asset.Sunset`, `org.asset.Sunset`).
 - `<TypeId>` MUST resolve in the active type registry (core + pack).
 - Attributes MUST type-check against the ontology when a pack provides schemas; otherwise attributes are permitted but only minimally typed.
 
@@ -241,6 +243,7 @@ contract Contract.Lease L1
 
 Rules:
 - `contract <TypeId> <Name> on entity <EntityRef> term <Date> .. <Date> { ... }`
+- `<Name>` SHOULD be a qualified name for ontology/domain alignment (e.g., `cre.lease.primary`).
 - `term` is REQUIRED.
 - `currency` is REQUIRED if any monetary effects are emitted by this contract.
 - `terms` is OPTIONAL.
@@ -249,6 +252,7 @@ Rules:
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.
 - Term names are scoped to the contract instance and accessible in expressions as `terms.<name>`.
+- Term keys MAY be qualified names (e.g., `lease_up.months`).
 
 Pack interaction:
 - A pack MAY provide a schema for `<TypeId>` and validate `terms`.
@@ -262,6 +266,7 @@ Pack interaction:
 
 ### 8.4 Contract names and references
 - Contract instance names MUST be unique across the model.
+- Contract instance names MAY be qualified names; uniqueness applies to the full name.
 - Contracts may be referenced by name via `contract("L1")` in expressions (see §12).
 
 ---
@@ -284,6 +289,7 @@ Rules:
 - Streams MUST be owned by exactly one entity.
 - Streams MUST declare direction: `inflow` or `outflow`.
 - Streams MUST declare a currency.
+- Stream names MAY be qualified names; dotted names are recommended for domain/ontology-aligned models.
 
 ### 9.2 Stream declaration inside contract effects
 Syntax:

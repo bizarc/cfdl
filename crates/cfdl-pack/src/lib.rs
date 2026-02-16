@@ -248,6 +248,27 @@ fn load_lowering_rules(
     let parsed: LoweringFile = toml::from_str(&raw).map_err(|err| PackLoadError {
         message: format!("Failed to parse lowering rules '{}': {err}", path.display()),
     })?;
+    for rule in &parsed.rules {
+        if !is_qualified_name(&rule.stream_name) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Lowering rule '{}' has invalid stream_name '{}'; expected dotted qualified name.",
+                    rule.id, rule.stream_name
+                ),
+            });
+        }
+        if !(rule.owner_entity.is_empty()
+            || rule.owner_entity == "${subject}"
+            || is_qualified_name(&rule.owner_entity))
+        {
+            return Err(PackLoadError {
+                message: format!(
+                    "Lowering rule '{}' has invalid owner_entity '{}'; expected '${{subject}}' or dotted qualified entity symbol.",
+                    rule.id, rule.owner_entity
+                ),
+            });
+        }
+    }
     Ok(parsed.rules)
 }
 
@@ -304,6 +325,35 @@ fn io_err(err: std::io::Error) -> PackLoadError {
     PackLoadError {
         message: format!("I/O error while loading packs: {err}"),
     }
+}
+
+fn is_qualified_name(value: &str) -> bool {
+    let mut parts = value.split('.');
+    let Some(first) = parts.next() else {
+        return false;
+    };
+    if !is_ident_segment(first) {
+        return false;
+    }
+    let mut count = 1usize;
+    for part in parts {
+        if !is_ident_segment(part) {
+            return false;
+        }
+        count += 1;
+    }
+    count >= 2
+}
+
+fn is_ident_segment(segment: &str) -> bool {
+    let mut chars = segment.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_alphabetic() || first == '_') {
+        return false;
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -365,7 +415,7 @@ term_end = "2026-12"
             r#"[[rules]]
 id = "rule"
 contract_name = "lease_contract"
-stream_name = "s"
+stream_name = "pack.stream"
 owner_entity = "legal.borrower"
 direction = "inflow"
 currency = "USD"
@@ -399,6 +449,47 @@ schedule_to = "2026-12"
             vec!["contract core.lease lease_001 term 2026-01..2026-12".to_string()]
         );
 
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn rejects_non_qualified_stream_name_in_lowering_rule() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("cfdl-pack-test-invalid-stream-{unique}"));
+        let pack_dir = root.join("testpack");
+        let lowering_dir = pack_dir.join("lowering");
+        fs::create_dir_all(&lowering_dir).expect("create dirs");
+        fs::write(
+            pack_dir.join("pack.toml"),
+            r#"name = "testpack"
+version = "0.1.0"
+[entrypoints]
+lowering = "lowering/rules.toml"
+"#,
+        )
+        .expect("write manifest");
+        fs::write(
+            lowering_dir.join("rules.toml"),
+            r#"[[rules]]
+id = "rule_bad"
+contract_name = "lease_contract"
+stream_name = "flatname"
+owner_entity = "legal.borrower"
+direction = "inflow"
+currency = "USD"
+amount_cel = "1"
+schedule_kind = "every"
+schedule_from = "2026-01"
+schedule_to = "2026-12"
+"#,
+        )
+        .expect("write lowering");
+
+        let err = PackRegistry::load_from_dir(&root).expect_err("invalid lowering");
+        assert!(err.message.contains("invalid stream_name"));
         let _ = fs::remove_dir_all(&root);
     }
 }

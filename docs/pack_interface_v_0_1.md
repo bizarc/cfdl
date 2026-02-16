@@ -177,6 +177,8 @@ A pack MAY provide lowering rules that generate `effects` from `terms`.
 Lowering rule semantics:
 - Inputs: contract instance (type, terms, subject, term date range)
 - Output: one or more streams and/or derived term expansions
+- Naming convention: generated stream names SHOULD be qualified names (dot-separated hierarchy), e.g. `cre.lease.base_rent`.
+- Ownership convention: `owner` SHOULD resolve to a qualified entity symbol.
 
 Rule interface options:
 - **Declarative lowering** (recommended for v0.1)
@@ -210,6 +212,7 @@ Template rules:
 Compiler behavior:
 - Lowering runs after core validation.
 - Generated streams MUST carry provenance notes referencing the contract.
+- Generated streams SHOULD use deterministic dotted naming to preserve ontology/data-source mapping stability.
 - If lowering fails, emit `E500x` and fail compilation.
 
 ### 6.5 Ontology observable and reference IDs
