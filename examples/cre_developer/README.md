@@ -1,7 +1,6 @@
 # CRE Developer Example
 
-This example mirrors the `fixtures/valid/cre_developer_smoke` model and uses
-the `cre` pack (`0.1.0`) for deterministic contract lowering.
+This example uses the `cre` pack (`0.1.0`) for deterministic contract lowering: **contracts** for the formal lease and construction stub; pack contracts for ops revenue/expense and exit (per guidance, individual ops items could be modeled as streams). It mirrors `fixtures/valid/cre_developer_smoke`.
 
 ## Run
 

@@ -1,6 +1,6 @@
 # Simple Contract (Pack-Based)
 
-This example uses the CRE pack with a single contract.
+This example uses the CRE pack with a single **contract** for a formal lease agreement (lease = formal agreement with another party).
 
 Compile:
 

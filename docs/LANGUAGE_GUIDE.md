@@ -72,6 +72,19 @@ See `examples/language_tutorial/minimal_model/model.cfdl`.
 - `event` for conditional actions
 - `option` for optional exercise behavior
 
+### When to use streams vs contracts
+
+Use this when choosing streams or contracts:
+
+| Situation | Use |
+|-----------|-----|
+| **Formal agreement with another party** (lease, loan, signed revenue agreement) | **Contract** |
+| **Informal agreement** (handshake, memo, internal forecast) | **Contract or Stream** (either is acceptable) |
+| **Individual expense (or revenue) items** (line-item opex, revenue line, one-off items) | **Stream** |
+| **If in doubt** | **Start with a stream** |
+
+See also: `docs/cfdl_v_0_1.md` (Contracts §8 and Streams §9).
+
 ### Analysis
 
 - `assume` for assumptions

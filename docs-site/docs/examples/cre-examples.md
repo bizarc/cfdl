@@ -4,7 +4,7 @@ title: "CRE Examples"
 slug: "/examples/cre-examples"
 ---
 
-Commercial Real Estate (CRE) examples show construction → lease-up → stabilized lifecycle, NOI, exit cap rate, and optional construction-to-permanent financing. All use the CRE pack (`use pack "cre"`).
+Commercial Real Estate (CRE) examples show construction → lease-up → stabilized lifecycle, NOI, exit cap rate, and optional construction-to-permanent financing. All use the CRE pack (`use pack "cre"`). For when to use **streams vs contracts** (e.g. formal lease → contract; individual ops items → stream), see the [Language Guide](/language-guide#when-to-use-streams-vs-contracts).
 
 ## Example ladder
 

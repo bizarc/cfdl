@@ -1,5 +1,7 @@
 # OpCo Basic Example
 
+This example uses pack **contracts** for revenue, opex, working capital, and exit multiple. Per guidance, individual revenue/opex items are often modeled as **streams**; see the Language Guide "When to use streams vs contracts."
+
 Compile:
 
 `./target/debug/cfdl compile examples/opco_basic --out /tmp/opco.ir.json --packs packs`

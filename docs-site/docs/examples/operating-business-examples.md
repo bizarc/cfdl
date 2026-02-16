@@ -4,7 +4,7 @@ title: "Operating Business Examples"
 slug: "/examples/operating-business-examples"
 ---
 
-Operating Business (OpCo) examples show revenue, opex, working capital, and exit multiple for DCF-style valuation. All use the OpCo pack (`use pack "opco"`).
+Operating Business (OpCo) examples show revenue, opex, working capital, and exit multiple for DCF-style valuation. All use the OpCo pack (`use pack "opco"`). For when to use **streams vs contracts** (e.g. individual revenue/opex items → stream), see the [Language Guide](/language-guide#when-to-use-streams-vs-contracts).
 
 ## Example ladder
 

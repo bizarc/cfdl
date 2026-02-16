@@ -1,5 +1,7 @@
 # CRE Phased Example
 
+This example uses pack **contracts** for lease, construction stub, ops revenue/expense, and exit (same as cre_developer; per guidance, individual ops items could be streams).
+
 Full developer lifecycle with **phases** aligning to industry stages: `construction`, `lease_up`, `perm` (stabilized). Same pack contracts as cre_developer; phases document the timeline and enable phase-relative schedules in the spec.
 
 ## Compile

@@ -2,6 +2,8 @@
 
 These examples map directly to `docs/LANGUAGE_GUIDE.md`.
 
+For when to use **streams vs contracts** (formal agreement → contract; individual expense/revenue items → stream; if in doubt → stream), see the Language Guide section **"When to use streams vs contracts"**.
+
 ## Examples
 
 - `minimal_model/` - smallest practical model

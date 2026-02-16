@@ -1,5 +1,7 @@
 # CRE Lease-Up Example
 
+This example uses a pack **contract** for a formal lease (formal agreement with another party).
+
 Single lease with explicit **lease-up ramp** terms: `lease_up.start_period`, `lease_up.months`, `lease_up.start_occupancy`, `lease_up.end_occupancy`. Industry-standard occupancy ramp from lease commencement to stabilized.
 
 ## Compile

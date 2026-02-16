@@ -5,7 +5,7 @@ This example models a development lifecycle with **construction-phase financing*
 - **Construction interest:** `loan.construction` — stream runs from 2026-01 to 2027-06 (18 months).
 - **Permanent debt service:** `loan.permanent` — stream runs from 2027-07 to 2031-12 (after conversion).
 
-Property-side cash flows use the CRE pack (construction stub, lease, ops, exit). Loan-side streams are core streams with fixed schedule ranges.
+Property-side cash flows use the CRE pack (construction stub, lease, ops, exit). Loan-side cash flows use **standalone streams** (construction interest, permanent debt service) with fixed schedule ranges—per guidance, individual financing items are modeled as streams. Ops revenue/expense here use pack contracts; per guidance, those could also be streams.
 
 ## Compile
 

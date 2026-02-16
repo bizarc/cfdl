@@ -1,5 +1,7 @@
 # OpCo With Growth Example
 
+This example uses pack **contracts** for revenue, opex, and exit (per guidance, individual revenue/opex items could be streams).
+
 Revenue line with **growth_rate** > 0 (e.g. 3%). Demonstrates the industry lever for recurring revenue growth in DCF.
 
 ## Compile

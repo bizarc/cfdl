@@ -1,5 +1,7 @@
 # CRE Multi-File Example
 
+This example uses pack **contracts** in `contracts.cfdl` for lease, construction stub, ops revenue/expense, and exit (per guidance, individual ops items could be streams).
+
 Full developer lifecycle split across files: `time.cfdl` (phases), `structure.cfdl` (entities), `contracts.cfdl` (CRE pack contracts). Entry is `model.cfdl` with version, model, use pack, time, and imports.
 
 ## Compile
