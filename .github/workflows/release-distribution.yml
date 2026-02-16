@@ -119,16 +119,89 @@ jobs:
           bash distribution/scripts/package_vsix.sh \
             "${GITHUB_WORKSPACE}/release-assets/${{ steps.vsix-name.outputs.name }}"
 
+      - name: Verify VSIX bundled docs and packs
+        run: |
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/docs/LANGUAGE_GUIDE.md"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/docs/install-configure.md"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/packs/cre/pack.toml"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/packs/opco/pack.toml"
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.vsix-name.outputs.name }}
           path: release-assets/${{ steps.vsix-name.outputs.name }}
 
+  package-docs:
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      docs_name: ${{ steps.docs-name.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve docs artifact name
+        id: docs-name
+        run: |
+          VERSION="$(node -p "require('./editors/vscode/package.json').version")"
+          echo "name=cfdl-docs-${VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build docs archive
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/package_docs.sh \
+            "${GITHUB_WORKSPACE}/release-assets/${{ steps.docs-name.outputs.name }}"
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.docs-name.outputs.name }}
+          path: release-assets/${{ steps.docs-name.outputs.name }}
+
+  package-packs:
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      packs_name: ${{ steps.packs-name.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve packs artifact name
+        id: packs-name
+        run: |
+          VERSION="$(node -p "require('./editors/vscode/package.json').version")"
+          echo "name=cfdl-packs-${VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build packs archive
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/package_packs.sh \
+            "${GITHUB_WORKSPACE}/release-assets/${{ steps.packs-name.outputs.name }}"
+
+      - name: Upload packs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.packs-name.outputs.name }}
+          path: release-assets/${{ steps.packs-name.outputs.name }}
+
   publish-release:
     needs:
       - build-lsp
       - package-vsix
+      - package-docs
+      - package-packs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -149,12 +222,17 @@ jobs:
         run: |
           VERSION="${{ needs.package-vsix.outputs.extension_version }}"
           TAG="${GITHUB_REF_NAME}"
-          ARTIFACTS="$(cd release-assets && ls -1 | tr '\n' ' ')"
+          mapfile -t ARTIFACTS < <(cd release-assets && ls -1)
           python3 distribution/scripts/write_release_manifest.py \
             "${VERSION}" \
             "${TAG}" \
             "release-assets/release-manifest-${VERSION}.json" \
-            ${ARTIFACTS}
+            "${ARTIFACTS[@]}"
+
+      - name: Verify release assets
+        run: |
+          VERSION="${{ needs.package-vsix.outputs.extension_version }}"
+          python3 distribution/scripts/verify_release_assets.py "${VERSION}" "release-assets"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2

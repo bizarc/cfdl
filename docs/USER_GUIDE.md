@@ -2,6 +2,8 @@
 
 This guide documents the current SDK command-line behavior and example workflows.
 
+For first-time language onboarding (syntax, minimum model, packs, and examples), start with `docs/LANGUAGE_GUIDE.md`.
+
 ## Build CLI
 
 From repo root:

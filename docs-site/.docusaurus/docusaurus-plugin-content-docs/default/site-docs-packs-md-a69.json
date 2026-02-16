@@ -1,0 +1,29 @@
+{
+  "id": "packs",
+  "title": "Packs",
+  "description": "Packs extend CFDL with domain validation and lowering behavior while keeping core language deterministic.",
+  "source": "@site/docs/packs.md",
+  "sourceDirName": ".",
+  "slug": "/packs",
+  "permalink": "/cfdl/packs",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/packs.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "packs",
+    "title": "Packs"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Language Guide",
+    "permalink": "/cfdl/language-guide"
+  },
+  "next": {
+    "title": "Install and Configure",
+    "permalink": "/cfdl/install-configure"
+  }
+}

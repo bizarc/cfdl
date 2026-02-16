@@ -3,6 +3,7 @@
 This extension provides CFDL language features (diagnostics, completion, go-to-definition, semantic highlighting, and pack-template commands) through `cfdl-lsp`.
 
 For end-user installation and configuration, see `../../distribution/install-configure.md`.
+For language onboarding content, see `../../docs/LANGUAGE_GUIDE.md`.
 
 ## Prerequisites
 

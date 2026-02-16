@@ -4,11 +4,14 @@ This release includes:
 
 - `cfdl-lsp` binaries for macOS, Linux, and Windows
 - CFDL VSCode extension package (`.vsix`)
+- language docs bundle (`cfdl-docs-<version>.tar.gz`)
+- packs bundle (`cfdl-packs-<version>.tar.gz`)
 - checksums (`SHA256SUMS.txt`)
 
 ## Install
 
 Follow `distribution/install-configure.md` for end-user setup instructions.
+Hosted docs: `https://bizarc.github.io/cfdl/`
 
 ## Artifacts
 

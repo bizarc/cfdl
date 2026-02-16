@@ -42,6 +42,12 @@ This repository is the **CFDL SDK**: language spec + compiler + schemas + engine
 cargo build -p cfdl-cli
 ```
 
+### Learn CFDL language basics
+
+- Language onboarding guide: `docs/LANGUAGE_GUIDE.md`
+- Tutorial examples: `examples/language_tutorial/`
+- Hosted docs site: `https://bizarc.github.io/cfdl/`
+
 ### Compile a model to IR
 
 ```bash
@@ -106,6 +112,7 @@ The CFDL VSCode extension lives in `editors/vscode`.
 - Development and smoke-test guide: `editors/vscode/README.md`
 - End-user install and configuration: `distribution/install-configure.md`
 - Language server binary used by the extension: `cfdl-lsp`
+- Language onboarding guide for authors: `docs/LANGUAGE_GUIDE.md`
 
 ---
 

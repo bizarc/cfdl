@@ -1,0 +1,63 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/cfdl/",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/cfdl/",
+          "mainDocId": "index",
+          "docs": [
+            {
+              "id": "getting-started",
+              "path": "/cfdl/getting-started",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "index",
+              "path": "/cfdl/",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "install-configure",
+              "path": "/cfdl/install-configure",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "language-guide",
+              "path": "/cfdl/language-guide",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "packs",
+              "path": "/cfdl/packs",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "reference",
+              "path": "/cfdl/reference",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "troubleshooting",
+              "path": "/cfdl/troubleshooting",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/cfdl/",
+                "label": "index"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

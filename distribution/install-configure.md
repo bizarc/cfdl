@@ -2,11 +2,15 @@
 
 This guide is for domain experts and model authors who want to use CFDL in VSCode.
 
+Online onboarding docs: `https://bizarc.github.io/cfdl/`
+
 ## What you install
 
 From a GitHub Release, download:
 
 - the VSCode extension package: `cfdl-vscode-<version>.vsix`
+- language docs bundle: `cfdl-docs-<version>.tar.gz` (optional, for offline docs)
+- packs bundle: `cfdl-packs-<version>.tar.gz` (recommended for pack-enabled models)
 - one `cfdl-lsp` binary for your operating system:
   - macOS Apple Silicon: `cfdl-lsp-darwin-arm64`
   - Linux x64: `cfdl-lsp-linux-x64`
@@ -50,6 +54,27 @@ Optional settings:
 - `cfdl.packsPath`: pack directory path
 - `cfdl.enableLoweringValidation`: set to `true` or `false`
 - `cfdl.trace.server`: `off`, `messages`, or `verbose`
+
+## Step 3.5: Configure packs path (if using packs)
+
+If you downloaded `cfdl-packs-<version>.tar.gz`, extract it to a stable path.
+
+Example:
+
+```bash
+mkdir -p ~/.cfdl
+tar -xzf cfdl-packs-<version>.tar.gz -C ~/.cfdl
+```
+
+Then set:
+
+```json
+{
+  "cfdl.packsPath": "/absolute/path/to/extracted/packs"
+}
+```
+
+Note: the VSIX also includes bundled packs/docs, but setting `cfdl.packsPath` to an explicit packs directory is the most predictable production setup.
 
 ## Step 4: Start authoring
 

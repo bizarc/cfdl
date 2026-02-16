@@ -1,0 +1,26 @@
+{
+  "id": "index",
+  "title": "CFDL Docs",
+  "description": "CFDL is a deterministic language and SDK for cash-flow modeling.",
+  "source": "@site/docs/index.md",
+  "sourceDirName": ".",
+  "slug": "/",
+  "permalink": "/cfdl/",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/index.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "index",
+    "title": "CFDL Docs",
+    "slug": "/"
+  },
+  "sidebar": "tutorialSidebar",
+  "next": {
+    "title": "Getting Started",
+    "permalink": "/cfdl/getting-started"
+  }
+}

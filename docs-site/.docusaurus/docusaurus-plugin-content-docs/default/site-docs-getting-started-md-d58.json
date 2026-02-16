@@ -1,0 +1,29 @@
+{
+  "id": "getting-started",
+  "title": "Getting Started",
+  "description": "Build CLI",
+  "source": "@site/docs/getting-started.md",
+  "sourceDirName": ".",
+  "slug": "/getting-started",
+  "permalink": "/cfdl/getting-started",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/getting-started.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "getting-started",
+    "title": "Getting Started"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "CFDL Docs",
+    "permalink": "/cfdl/"
+  },
+  "next": {
+    "title": "Language Guide",
+    "permalink": "/cfdl/language-guide"
+  }
+}

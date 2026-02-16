@@ -1,0 +1,29 @@
+{
+  "id": "troubleshooting",
+  "title": "Troubleshooting",
+  "description": "Missing language features in VSCode",
+  "source": "@site/docs/troubleshooting.md",
+  "sourceDirName": ".",
+  "slug": "/troubleshooting",
+  "permalink": "/cfdl/troubleshooting",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/troubleshooting.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "troubleshooting",
+    "title": "Troubleshooting"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Install and Configure",
+    "permalink": "/cfdl/install-configure"
+  },
+  "next": {
+    "title": "Reference",
+    "permalink": "/cfdl/reference"
+  }
+}

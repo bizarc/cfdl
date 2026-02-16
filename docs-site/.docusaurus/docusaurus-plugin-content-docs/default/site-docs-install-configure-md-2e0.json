@@ -1,0 +1,29 @@
+{
+  "id": "install-configure",
+  "title": "Install and Configure",
+  "description": "Use release assets:",
+  "source": "@site/docs/install-configure.md",
+  "sourceDirName": ".",
+  "slug": "/install-configure",
+  "permalink": "/cfdl/install-configure",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/install-configure.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "install-configure",
+    "title": "Install and Configure"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Packs",
+    "permalink": "/cfdl/packs"
+  },
+  "next": {
+    "title": "Troubleshooting",
+    "permalink": "/cfdl/troubleshooting"
+  }
+}

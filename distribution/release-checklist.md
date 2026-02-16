@@ -16,14 +16,18 @@ Use this checklist before publishing a release tag.
 - [ ] `cfdl-lsp-linux-x64` present
 - [ ] `cfdl-lsp-windows-x64.exe` present
 - [ ] `cfdl-vscode-<version>.vsix` present
+- [ ] `cfdl-docs-<version>.tar.gz` present
+- [ ] `cfdl-packs-<version>.tar.gz` present
 - [ ] `SHA256SUMS.txt` present and complete
 - [ ] `release-manifest-<version>.json` present
+- [ ] VSIX contains bundled docs and packs payload
 
 ## End-User Documentation Validation
 
 - [ ] `distribution/install-configure.md` matches artifact names and version flow
 - [ ] Root `README.md` links to install/configure guide
 - [ ] `editors/vscode/README.md` links to install/configure guide
+- [ ] Root `README.md` links to language onboarding guide
 
 ## Publish
 

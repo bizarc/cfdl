@@ -1,0 +1,25 @@
+{
+  "id": "reference",
+  "title": "Reference",
+  "description": "Authoritative references live in repository docs:",
+  "source": "@site/docs/reference.md",
+  "sourceDirName": ".",
+  "slug": "/reference",
+  "permalink": "/cfdl/reference",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/reference.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": null,
+  "frontMatter": {
+    "id": "reference",
+    "title": "Reference"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Troubleshooting",
+    "permalink": "/cfdl/troubleshooting"
+  }
+}
