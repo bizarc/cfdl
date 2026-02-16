@@ -2,6 +2,8 @@
 
 This directory contains tooling to run each example model via the CLI, capture results, recompute key metrics from the engine output, and compare to detect discrepancies. The output is a report summarizing accuracy and any issues.
 
+For recommended next steps to improve engine accuracy (tests, golden locking, independent recomputation, scenarios/Monte Carlo, CI), see [docs/engine_accuracy_next_steps.md](../docs/engine_accuracy_next_steps.md).
+
 ## Quick run
 
 From the repository root:

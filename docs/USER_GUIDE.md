@@ -103,6 +103,10 @@ Reference configs are included in:
 ./target/debug/cfdl run /tmp/opco.ir.json --out /tmp/opco.stress.results.json --config examples/opco_basic/run.stress.json --packs packs
 ```
 
+## Engine accuracy
+
+To validate engine results (recompute metrics from output and compare), run the engine-accuracy pipeline from repo root: `./tools/engine-accuracy/run_all.sh`. See `tools/engine-accuracy/README.md`. For recommended next steps to improve accuracy, see [engine_accuracy_next_steps.md](engine_accuracy_next_steps.md).
+
 ## Golden Runner (Authoritative)
 
 Golden outputs remain the source of truth for fixture behavior:
