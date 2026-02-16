@@ -4,6 +4,8 @@ title: "opco with growth"
 slug: "/examples/opco_with_growth"
 ---
 
+This example uses **standalone streams** for revenue and opex (per guidance); pack **contract** for exit.
+
 Revenue line with **growth_rate** > 0 (e.g. 3%). Demonstrates the industry lever for recurring revenue growth in DCF.
 
 ## Compile
@@ -32,19 +34,15 @@ time calendar monthly from 2026-01 for 72
 
 entity operating business
 
-contract opco_revenue_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 120000
-    growth_rate = 0.03
-  }
+// Revenue and opex as standalone streams (individual items per guidance). Growth via CEL.
+stream revenue on entity operating.business inflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "120000 * pow(1.03, time.t - 1)"
 }
 
-contract opco_opex_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 70000
-  }
+stream opex on entity operating.business outflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "70000"
 }
 
 contract opco_exit_multiple {

@@ -4,6 +4,8 @@ title: "opco basic"
 slug: "/examples/opco_basic"
 ---
 
+This example uses **standalone streams** for revenue and opex (per guidance); pack **contracts** for working capital and exit multiple. See the Language Guide "When to use streams vs contracts."
+
 Compile:
 
 `./target/debug/cfdl compile examples/opco_basic --out /tmp/opco.ir.json --packs packs`
@@ -30,19 +32,15 @@ time calendar monthly from 2026-01 for 72
 
 entity operating business
 
-contract opco_revenue_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 120000
-    growth_rate = 0.0
-  }
+// Revenue and opex as standalone streams (individual items per guidance)
+stream revenue on entity operating.business inflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "120000"
 }
 
-contract opco_opex_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 70000
-  }
+stream opex on entity operating.business outflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "70000"
 }
 
 contract opco_working_capital {

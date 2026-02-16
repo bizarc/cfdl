@@ -4,6 +4,8 @@ title: "opco multi file"
 slug: "/examples/opco_multi_file"
 ---
 
+This example uses **standalone streams** in `contracts.cfdl` for revenue and opex (per guidance); pack **contracts** for working capital and exit.
+
 Full OpCo valuation (revenue, opex, working capital, exit multiple) split across files: `structure.cfdl` (entities), `contracts.cfdl` (pack contracts). Entry is `model.cfdl` with version, model, use pack, time, and imports.
 
 ## Compile
@@ -43,19 +45,15 @@ entity operating business
 ## contracts.cfdl
 
 ```cfdl
-contract opco_revenue_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 120000
-    growth_rate = 0.0
-  }
+// Revenue and opex as standalone streams (individual items per guidance)
+stream revenue on entity operating.business inflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "120000"
 }
 
-contract opco_opex_line {
-  term 2026-01..2031-12
-  terms {
-    amount = 70000
-  }
+stream opex on entity operating.business outflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount cel "70000"
 }
 
 contract opco_working_capital {

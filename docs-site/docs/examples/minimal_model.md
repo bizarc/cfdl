@@ -12,6 +12,8 @@ This is the smallest practical CFDL model:
 - one entity
 - one stream
 
+This example uses a **standalone stream** for rent (guidance: if in doubt, start with a stream).
+
 Compile:
 
 ```bash

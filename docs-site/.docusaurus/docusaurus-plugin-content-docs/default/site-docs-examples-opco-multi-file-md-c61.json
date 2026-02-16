@@ -1,0 +1,21 @@
+{
+  "id": "examples/example-opco-multi-file",
+  "title": "opco multi file",
+  "description": "This example uses standalone streams in contracts.cfdl for revenue and opex (per guidance); pack contracts for working capital and exit.",
+  "source": "@site/docs/examples/opco_multi_file.md",
+  "sourceDirName": "examples",
+  "slug": "/examples/opco_multi_file",
+  "permalink": "/cfdl/examples/opco_multi_file",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/examples/opco_multi_file.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771261196000,
+  "frontMatter": {
+    "id": "example-opco-multi-file",
+    "title": "opco multi file",
+    "slug": "/examples/opco_multi_file"
+  }
+}

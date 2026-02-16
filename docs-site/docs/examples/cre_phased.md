@@ -4,6 +4,8 @@ title: "cre phased"
 slug: "/examples/cre_phased"
 ---
 
+This example uses pack **contracts** for lease, construction stub, and exit; **standalone streams** for ops revenue and ops expense (per guidance).
+
 Full developer lifecycle with **phases** aligning to industry stages: `construction`, `lease_up`, `perm` (stabilized). Same pack contracts as cre_developer; phases document the timeline and enable phase-relative schedules in the spec.
 
 ## Compile
@@ -47,18 +49,15 @@ contract cre_lease {
   }
 }
 
-contract cre_ops_revenue {
-  term 2028-01..2031-12
-  terms {
-    amount = 30000
-  }
+// Ops as standalone streams (individual revenue/expense items per guidance)
+stream ops_revenue on entity real_estate.property inflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "30000"
 }
 
-contract cre_ops_expense {
-  term 2028-01..2031-12
-  terms {
-    amount = 12000
-  }
+stream ops_expense on entity real_estate.property outflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "12000"
 }
 
 contract cre_exit_cap {

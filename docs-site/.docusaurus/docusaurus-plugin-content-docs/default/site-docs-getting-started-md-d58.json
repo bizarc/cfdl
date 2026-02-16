@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/getting-started.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": null,
-  "lastUpdatedAt": null,
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771253475000,
   "frontMatter": {
     "id": "getting-started",
     "title": "Getting Started"

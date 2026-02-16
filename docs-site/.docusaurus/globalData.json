@@ -11,6 +11,78 @@
           "mainDocId": "index",
           "docs": [
             {
+              "id": "examples/cre-examples",
+              "path": "/cfdl/examples/cre-examples",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/example-cre-developer",
+              "path": "/cfdl/examples/cre_developer"
+            },
+            {
+              "id": "examples/example-cre-development-with-financing",
+              "path": "/cfdl/examples/cre_development_with_financing"
+            },
+            {
+              "id": "examples/example-cre-lease-up",
+              "path": "/cfdl/examples/cre_lease_up"
+            },
+            {
+              "id": "examples/example-cre-multi-file",
+              "path": "/cfdl/examples/cre_multi_file"
+            },
+            {
+              "id": "examples/example-cre-phased",
+              "path": "/cfdl/examples/cre_phased"
+            },
+            {
+              "id": "examples/example-first_stream",
+              "path": "/cfdl/examples/first_stream",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/example-minimal_model",
+              "path": "/cfdl/examples/minimal_model",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/example-multi_file",
+              "path": "/cfdl/examples/multi_file",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/example-opco-basic",
+              "path": "/cfdl/examples/opco_basic"
+            },
+            {
+              "id": "examples/example-opco-multi-file",
+              "path": "/cfdl/examples/opco_multi_file"
+            },
+            {
+              "id": "examples/example-opco-with-growth",
+              "path": "/cfdl/examples/opco_with_growth"
+            },
+            {
+              "id": "examples/example-simple_contract",
+              "path": "/cfdl/examples/simple_contract",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/example-with_pack",
+              "path": "/cfdl/examples/with_pack",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/examples",
+              "path": "/cfdl/examples",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "examples/operating-business-examples",
+              "path": "/cfdl/examples/operating-business-examples",
+              "sidebar": "tutorialSidebar"
+            },
+            {
               "id": "getting-started",
               "path": "/cfdl/getting-started",
               "sidebar": "tutorialSidebar"
@@ -31,13 +103,38 @@
               "sidebar": "tutorialSidebar"
             },
             {
+              "id": "language-reference/compiler-spec",
+              "path": "/cfdl/language-reference/compiler-spec",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "language-reference/diagnostics",
+              "path": "/cfdl/language-reference/diagnostics",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "language-reference/grammar",
+              "path": "/cfdl/language-reference/grammar",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "language-reference/language-spec",
+              "path": "/cfdl/language-reference/language-spec",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "language-reference/pack-interface",
+              "path": "/cfdl/language-reference/pack-interface",
+              "sidebar": "tutorialSidebar"
+            },
+            {
               "id": "packs",
               "path": "/cfdl/packs",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "reference",
-              "path": "/cfdl/reference",
+              "path": "/cfdl/language-reference",
               "sidebar": "tutorialSidebar"
             },
             {

@@ -1,6 +1,6 @@
 # OpCo Multi-File Example
 
-This example uses pack **contracts** in `contracts.cfdl` for revenue, opex, working capital, and exit (per guidance, individual revenue/opex items could be streams).
+This example uses **standalone streams** in `contracts.cfdl` for revenue and opex (per guidance); pack **contracts** for working capital and exit.
 
 Full OpCo valuation (revenue, opex, working capital, exit multiple) split across files: `structure.cfdl` (entities), `contracts.cfdl` (pack contracts). Entry is `model.cfdl` with version, model, use pack, time, and imports.
 

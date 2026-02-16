@@ -4,6 +4,8 @@ title: "cre multi file"
 slug: "/examples/cre_multi_file"
 ---
 
+This example uses pack **contracts** in `contracts.cfdl` for lease, construction stub, and exit; **standalone streams** for ops revenue and ops expense (per guidance).
+
 Full developer lifecycle split across files: `time.cfdl` (phases), `structure.cfdl` (entities), `contracts.cfdl` (CRE pack contracts). Entry is `model.cfdl` with version, model, use pack, time, and imports.
 
 ## Compile
@@ -63,18 +65,15 @@ contract cre_lease {
   }
 }
 
-contract cre_ops_revenue {
-  term 2028-01..2031-12
-  terms {
-    amount = 30000
-  }
+// Ops as standalone streams (individual revenue/expense items per guidance)
+stream ops_revenue on entity real_estate.property inflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "30000"
 }
 
-contract cre_ops_expense {
-  term 2028-01..2031-12
-  terms {
-    amount = 12000
-  }
+stream ops_expense on entity real_estate.property outflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "12000"
 }
 
 contract cre_exit_cap {

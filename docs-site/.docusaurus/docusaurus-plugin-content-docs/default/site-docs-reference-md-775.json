@@ -1,25 +1,30 @@
 {
   "id": "reference",
-  "title": "Reference",
-  "description": "Authoritative references live in repository docs:",
+  "title": "Language Reference",
+  "description": "This section contains language reference material generated from canonical source files.",
   "source": "@site/docs/reference.md",
   "sourceDirName": ".",
-  "slug": "/reference",
-  "permalink": "/cfdl/reference",
+  "slug": "/language-reference",
+  "permalink": "/cfdl/language-reference",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/reference.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": null,
-  "lastUpdatedAt": null,
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771256055000,
   "frontMatter": {
     "id": "reference",
-    "title": "Reference"
+    "title": "Language Reference",
+    "slug": "/language-reference"
   },
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "Troubleshooting",
-    "permalink": "/cfdl/troubleshooting"
+    "title": "Operating Business Examples",
+    "permalink": "/cfdl/examples/operating-business-examples"
+  },
+  "next": {
+    "title": "Language Spec (v0.1)",
+    "permalink": "/cfdl/language-reference/language-spec"
   }
 }

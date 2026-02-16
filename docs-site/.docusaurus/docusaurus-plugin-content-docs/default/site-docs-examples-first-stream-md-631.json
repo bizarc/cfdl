@@ -1,0 +1,30 @@
+{
+  "id": "examples/example-first_stream",
+  "title": "first stream",
+  "description": "Generated from examples/languagetutorial/firststream/.",
+  "source": "@site/docs/examples/first_stream.md",
+  "sourceDirName": "examples",
+  "slug": "/examples/first_stream",
+  "permalink": "/cfdl/examples/first_stream",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/examples/first_stream.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771256055000,
+  "frontMatter": {
+    "id": "example-first_stream",
+    "title": "first stream",
+    "slug": "/examples/first_stream"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "minimal model",
+    "permalink": "/cfdl/examples/minimal_model"
+  },
+  "next": {
+    "title": "simple contract",
+    "permalink": "/cfdl/examples/simple_contract"
+  }
+}

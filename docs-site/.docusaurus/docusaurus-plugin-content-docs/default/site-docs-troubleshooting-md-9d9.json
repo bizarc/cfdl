@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/troubleshooting.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": null,
-  "lastUpdatedAt": null,
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771253475000,
   "frontMatter": {
     "id": "troubleshooting",
     "title": "Troubleshooting"
@@ -21,9 +21,5 @@
   "previous": {
     "title": "Install and Configure",
     "permalink": "/cfdl/install-configure"
-  },
-  "next": {
-    "title": "Reference",
-    "permalink": "/cfdl/reference"
   }
 }

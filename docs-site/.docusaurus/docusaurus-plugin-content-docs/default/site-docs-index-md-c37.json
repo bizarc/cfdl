@@ -11,8 +11,8 @@
   "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/index.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": null,
-  "lastUpdatedAt": null,
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771256055000,
   "frontMatter": {
     "id": "index",
     "title": "CFDL Docs",

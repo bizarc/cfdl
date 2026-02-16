@@ -12,6 +12,8 @@ This example demonstrates splitting model content by concern:
 - `structure.cfdl` for entities
 - `contracts.cfdl` for streams/contracts/events
 
+This example uses a **standalone stream** for rent (same pattern as minimal_model).
+
 Compile:
 
 ```bash

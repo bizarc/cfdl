@@ -6,7 +6,7 @@ slug: "/examples/simple_contract"
 
 > Generated from `examples/language_tutorial/simple_contract/`.
 
-This example uses the CRE pack with a single contract.
+This example uses the CRE pack with a single **contract** for a formal lease agreement (lease = formal agreement with another party).
 
 Compile:
 

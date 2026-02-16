@@ -4,8 +4,7 @@ title: "cre developer"
 slug: "/examples/cre_developer"
 ---
 
-This example mirrors the `fixtures/valid/cre_developer_smoke` model and uses
-the `cre` pack (`0.1.0`) for deterministic contract lowering.
+This example uses the `cre` pack (`0.1.0`) for the formal lease and construction stub and exit; **standalone streams** for ops revenue and ops expense (per guidance: individual revenue/expense items → stream). It mirrors `fixtures/valid/cre_developer_smoke`.
 
 ## Run
 
@@ -26,7 +25,7 @@ Run stress case:
 The provided run configs demonstrate deterministic override testing with:
 
 - `stream.cre.lease.base_rent.amount`
-- `stream.cre.ops.expense.amount`
+- `stream.ops_expense.amount`
 - `stream.cre.exit.sale.amount`
 
 ---
@@ -54,18 +53,15 @@ contract cre_lease {
   }
 }
 
-contract cre_ops_revenue {
-  term 2028-01..2031-12
-  terms {
-    amount = 30000
-  }
+// Ops as standalone streams (individual revenue/expense items per guidance)
+stream ops_revenue on entity real_estate.property inflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "30000"
 }
 
-contract cre_ops_expense {
-  term 2028-01..2031-12
-  terms {
-    amount = 12000
-  }
+stream ops_expense on entity real_estate.property outflow currency USD {
+  schedule every monthly from 2028-01 to 2031-12
+  amount cel "12000"
 }
 
 contract cre_exit_cap {

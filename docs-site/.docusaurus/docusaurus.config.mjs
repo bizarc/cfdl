@@ -65,8 +65,23 @@ export default {
       "title": "CFDL",
       "items": [
         {
-          "to": "/",
-          "label": "Docs",
+          "to": "/getting-started",
+          "label": "Getting Started",
+          "position": "left"
+        },
+        {
+          "to": "/language-guide",
+          "label": "Language Guide",
+          "position": "left"
+        },
+        {
+          "to": "/examples",
+          "label": "Examples",
+          "position": "left"
+        },
+        {
+          "to": "/language-reference",
+          "label": "Reference",
           "position": "left"
         },
         {
@@ -92,6 +107,10 @@ export default {
               "to": "/language-guide"
             },
             {
+              "label": "Examples",
+              "to": "/examples"
+            },
+            {
               "label": "Install and Configure",
               "to": "/install-configure"
             }
@@ -101,8 +120,16 @@ export default {
           "title": "Reference",
           "items": [
             {
+              "label": "Reference Index",
+              "to": "/language-reference"
+            },
+            {
               "label": "Language Spec",
-              "to": "/reference"
+              "to": "/language-reference/language-spec"
+            },
+            {
+              "label": "Diagnostics",
+              "to": "/language-reference/diagnostics"
             },
             {
               "label": "Repository",
@@ -328,7 +355,7 @@ export default {
     },
     "announcementBar": {
       "id": "onboarding",
-      "content": "Start with Getting Started, then move to Language Guide and Packs.",
+      "content": "Start with Getting Started, then Language Guide, Examples, and full Reference.",
       "isCloseable": true
     },
     "docs": {

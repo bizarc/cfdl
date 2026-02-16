@@ -5,44 +5,128 @@
       "plugin": "138e0e15"
     }
   },
-  "/cfdl/-340": {
+  "/cfdl/-3de": {
     "__comp": "5e95c892",
     "__context": {
       "plugin": "aba21aa0"
     }
   },
-  "/cfdl/-f4e": {
+  "/cfdl/-cb6": {
     "__comp": "a7bd4aaa",
     "__props": "6860cd6a"
   },
-  "/cfdl/-224": {
+  "/cfdl/-b08": {
     "__comp": "a94703ab"
   },
-  "/cfdl/getting-started-8dd": {
+  "/cfdl/examples-9e1": {
+    "__comp": "17896441",
+    "content": "bf614533"
+  },
+  "/cfdl/examples/cre_developer-594": {
+    "__comp": "17896441",
+    "content": "74f946c0"
+  },
+  "/cfdl/examples/cre_development_with_financing-c27": {
+    "__comp": "17896441",
+    "content": "87821f83"
+  },
+  "/cfdl/examples/cre_lease_up-2d5": {
+    "__comp": "17896441",
+    "content": "2a4af5cb"
+  },
+  "/cfdl/examples/cre_multi_file-5d7": {
+    "__comp": "17896441",
+    "content": "4c4471e8"
+  },
+  "/cfdl/examples/cre_phased-f9c": {
+    "__comp": "17896441",
+    "content": "bc5279cb"
+  },
+  "/cfdl/examples/cre-examples-1e0": {
+    "__comp": "17896441",
+    "content": "1d66b1c0"
+  },
+  "/cfdl/examples/first_stream-ca3": {
+    "__comp": "17896441",
+    "content": "631b2d51"
+  },
+  "/cfdl/examples/minimal_model-b17": {
+    "__comp": "17896441",
+    "content": "7ef590af"
+  },
+  "/cfdl/examples/multi_file-2b8": {
+    "__comp": "17896441",
+    "content": "9964add4"
+  },
+  "/cfdl/examples/opco_basic-759": {
+    "__comp": "17896441",
+    "content": "edb90571"
+  },
+  "/cfdl/examples/opco_multi_file-b4f": {
+    "__comp": "17896441",
+    "content": "c61d35ba"
+  },
+  "/cfdl/examples/opco_with_growth-091": {
+    "__comp": "17896441",
+    "content": "6743e9a0"
+  },
+  "/cfdl/examples/operating-business-examples-cc8": {
+    "__comp": "17896441",
+    "content": "c5e9807d"
+  },
+  "/cfdl/examples/simple_contract-fa9": {
+    "__comp": "17896441",
+    "content": "783977c0"
+  },
+  "/cfdl/examples/with_pack-bd8": {
+    "__comp": "17896441",
+    "content": "27ca7a5b"
+  },
+  "/cfdl/getting-started-ce6": {
     "__comp": "17896441",
     "content": "d589d3a7"
   },
-  "/cfdl/install-configure-fd2": {
+  "/cfdl/install-configure-e2c": {
     "__comp": "17896441",
     "content": "2e054d3e"
   },
-  "/cfdl/language-guide-940": {
+  "/cfdl/language-guide-0e4": {
     "__comp": "17896441",
     "content": "877ba948"
   },
-  "/cfdl/packs-c19": {
-    "__comp": "17896441",
-    "content": "a69786fd"
-  },
-  "/cfdl/reference-259": {
+  "/cfdl/language-reference-5ef": {
     "__comp": "17896441",
     "content": "77587487"
   },
-  "/cfdl/troubleshooting-087": {
+  "/cfdl/language-reference/compiler-spec-a2f": {
+    "__comp": "17896441",
+    "content": "e668f40c"
+  },
+  "/cfdl/language-reference/diagnostics-f7f": {
+    "__comp": "17896441",
+    "content": "97911201"
+  },
+  "/cfdl/language-reference/grammar-055": {
+    "__comp": "17896441",
+    "content": "57aa11d7"
+  },
+  "/cfdl/language-reference/language-spec-f3b": {
+    "__comp": "17896441",
+    "content": "c030b582"
+  },
+  "/cfdl/language-reference/pack-interface-dc8": {
+    "__comp": "17896441",
+    "content": "52b7f25f"
+  },
+  "/cfdl/packs-3f4": {
+    "__comp": "17896441",
+    "content": "a69786fd"
+  },
+  "/cfdl/troubleshooting-dbf": {
     "__comp": "17896441",
     "content": "9d9f8394"
   },
-  "/cfdl/-abe": {
+  "/cfdl/-c15": {
     "__comp": "17896441",
     "content": "c377a04b"
   }

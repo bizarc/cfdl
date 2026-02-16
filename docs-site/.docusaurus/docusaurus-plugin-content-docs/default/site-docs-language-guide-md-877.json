@@ -1,7 +1,7 @@
 {
   "id": "language-guide",
   "title": "Language Guide",
-  "description": "The canonical onboarding guide lives at docs/LANGUAGE_GUIDE.md.",
+  "description": "This page is generated from docs/LANGUAGE_GUIDE.md.",
   "source": "@site/docs/language-guide.md",
   "sourceDirName": ".",
   "slug": "/language-guide",
@@ -11,11 +11,12 @@
   "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/language-guide.md",
   "tags": [],
   "version": "current",
-  "lastUpdatedBy": null,
-  "lastUpdatedAt": null,
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771256055000,
   "frontMatter": {
     "id": "language-guide",
-    "title": "Language Guide"
+    "title": "Language Guide",
+    "slug": "/language-guide"
   },
   "sidebar": "tutorialSidebar",
   "previous": {
@@ -23,7 +24,7 @@
     "permalink": "/cfdl/getting-started"
   },
   "next": {
-    "title": "Packs",
-    "permalink": "/cfdl/packs"
+    "title": "Examples",
+    "permalink": "/cfdl/examples"
   }
 }

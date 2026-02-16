@@ -1,0 +1,21 @@
+{
+  "id": "examples/example-cre-lease-up",
+  "title": "cre lease up",
+  "description": "This example uses a pack contract for a formal lease (formal agreement with another party).",
+  "source": "@site/docs/examples/cre_lease_up.md",
+  "sourceDirName": "examples",
+  "slug": "/examples/cre_lease_up",
+  "permalink": "/cfdl/examples/cre_lease_up",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/examples/cre_lease_up.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771261196000,
+  "frontMatter": {
+    "id": "example-cre-lease-up",
+    "title": "cre lease up",
+    "slug": "/examples/cre_lease_up"
+  }
+}

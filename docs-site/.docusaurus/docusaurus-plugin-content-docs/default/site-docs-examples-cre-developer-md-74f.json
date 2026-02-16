@@ -1,0 +1,21 @@
+{
+  "id": "examples/example-cre-developer",
+  "title": "cre developer",
+  "description": "This example uses the cre pack (0.1.0) for the formal lease and construction stub and exit; standalone streams for ops revenue and ops expense (per guidance: individual revenue/expense items → stream). It mirrors fixtures/valid/credevelopersmoke.",
+  "source": "@site/docs/examples/cre_developer.md",
+  "sourceDirName": "examples",
+  "slug": "/examples/cre_developer",
+  "permalink": "/cfdl/examples/cre_developer",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/examples/cre_developer.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771261196000,
+  "frontMatter": {
+    "id": "example-cre-developer",
+    "title": "cre developer",
+    "slug": "/examples/cre_developer"
+  }
+}

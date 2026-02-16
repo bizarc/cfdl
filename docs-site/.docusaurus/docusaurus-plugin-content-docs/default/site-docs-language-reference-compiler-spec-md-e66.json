@@ -1,0 +1,30 @@
+{
+  "id": "language-reference/compiler-spec",
+  "title": "Compiler Spec (v0.1)",
+  "description": "This page is generated from docs/compilerspecv01.md.",
+  "source": "@site/docs/language-reference/compiler-spec.md",
+  "sourceDirName": "language-reference",
+  "slug": "/language-reference/compiler-spec",
+  "permalink": "/cfdl/language-reference/compiler-spec",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/language-reference/compiler-spec.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771256055000,
+  "frontMatter": {
+    "id": "compiler-spec",
+    "title": "Compiler Spec (v0.1)",
+    "slug": "/language-reference/compiler-spec"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "Grammar (EBNF)",
+    "permalink": "/cfdl/language-reference/grammar"
+  },
+  "next": {
+    "title": "Diagnostics Reference",
+    "permalink": "/cfdl/language-reference/diagnostics"
+  }
+}

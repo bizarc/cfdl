@@ -1,0 +1,30 @@
+{
+  "id": "examples/cre-examples",
+  "title": "CRE Examples",
+  "description": "Commercial Real Estate (CRE) examples show construction → lease-up → stabilized lifecycle, NOI, exit cap rate, and optional construction-to-permanent financing. All use the CRE pack (use pack \"cre\"). For when to use streams vs contracts (e.g. formal lease → contract; individual ops items → stream), see the Language Guide.",
+  "source": "@site/docs/examples/cre-examples.md",
+  "sourceDirName": "examples",
+  "slug": "/examples/cre-examples",
+  "permalink": "/cfdl/examples/cre-examples",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/bizarc/cfdl/tree/main/docs-site/docs/examples/cre-examples.md",
+  "tags": [],
+  "version": "current",
+  "lastUpdatedBy": "Matthew McCrea",
+  "lastUpdatedAt": 1771262884000,
+  "frontMatter": {
+    "id": "cre-examples",
+    "title": "CRE Examples",
+    "slug": "/examples/cre-examples"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "multi file",
+    "permalink": "/cfdl/examples/multi_file"
+  },
+  "next": {
+    "title": "Operating Business Examples",
+    "permalink": "/cfdl/examples/operating-business-examples"
+  }
+}
