@@ -16,7 +16,7 @@ Use this site as the onboarding entrypoint, then use the source specs for exact 
 2. Walk through [Language Guide](language-guide)
 3. Learn [Packs](packs)
 4. Configure authoring with [Install and Configure](install-configure)
-5. Use [Reference](reference) for authoritative spec links
+5. Use [Language Reference](language-reference) for authoritative spec links
 
 ## Source links
 

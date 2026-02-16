@@ -38,6 +38,13 @@ jobs:
         run: npm ci
         working-directory: docs-site
 
+      - name: Sync docs content
+        run: npm run sync:content
+        working-directory: docs-site
+
+      - name: Verify generated content is committed
+        run: git diff --exit-code -- docs-site/docs
+
       - name: Build site
         run: npm run build
         working-directory: docs-site

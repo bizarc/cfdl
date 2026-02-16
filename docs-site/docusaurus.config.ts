@@ -45,7 +45,10 @@ const config: Config = {
     navbar: {
       title: "CFDL",
       items: [
-        { to: "/", label: "Docs", position: "left" },
+        { to: "/getting-started", label: "Getting Started", position: "left" },
+        { to: "/language-guide", label: "Language Guide", position: "left" },
+        { to: "/examples", label: "Examples", position: "left" },
+        { to: "/language-reference", label: "Reference", position: "left" },
         {
           href: "https://github.com/bizarc/cfdl",
           label: "GitHub",
@@ -61,13 +64,16 @@ const config: Config = {
           items: [
             { label: "Getting Started", to: "/getting-started" },
             { label: "Language Guide", to: "/language-guide" },
+            { label: "Examples", to: "/examples" },
             { label: "Install and Configure", to: "/install-configure" }
           ]
         },
         {
           title: "Reference",
           items: [
-            { label: "Language Spec", to: "/reference" },
+            { label: "Reference Index", to: "/language-reference" },
+            { label: "Language Spec", to: "/language-reference/language-spec" },
+            { label: "Diagnostics", to: "/language-reference/diagnostics" },
             {
               label: "Repository",
               href: "https://github.com/bizarc/cfdl"
@@ -89,7 +95,7 @@ const config: Config = {
     announcementBar: {
       id: "onboarding",
       content:
-        "Start with Getting Started, then move to Language Guide and Packs.",
+        "Start with Getting Started, then Language Guide, Examples, and full Reference.",
       isCloseable: true
     }
   } satisfies Preset.ThemeConfig

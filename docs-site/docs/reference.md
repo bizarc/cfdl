@@ -1,17 +1,22 @@
 ---
 id: reference
-title: Reference
+title: "Language Reference"
+slug: "/language-reference"
 ---
 
-# Reference
+This section contains language reference material generated from canonical source files.
 
-Authoritative references live in repository docs:
+## How to use this section
 
-- Core language: `docs/cfdl_v_0_1.md`
-- Grammar: `docs/CFDL_v0_1_Grammar.ebnf.md`
-- Compiler behavior: `docs/compiler_spec_v_0_1.md`
-- Diagnostics: `docs/diagnostics_spec.md`
-- Pack interface: `docs/pack_interface_v_0_1.md`
-- SDK CLI usage: `docs/USER_GUIDE.md`
+- Start with **Language Spec** for grammar/semantics.
+- Use **Grammar** for syntax form.
+- Use **Compiler Spec** digest for implementation flow and jump to full source when needed.
+- Use **Diagnostics** when fixing errors.
 
-These documents govern behavior when there is any ambiguity in onboarding material.
+## Reference pages
+
+- [Language Spec](/language-reference/language-spec)
+- [Grammar](/language-reference/grammar)
+- [Compiler Spec](/language-reference/compiler-spec)
+- [Diagnostics](/language-reference/diagnostics)
+- [Pack Interface](/language-reference/pack-interface)

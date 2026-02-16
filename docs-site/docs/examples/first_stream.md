@@ -1,0 +1,38 @@
+---
+id: example-first_stream
+title: "first stream"
+slug: "/examples/first_stream"
+---
+
+> Generated from `examples/language_tutorial/first_stream/`.
+
+This example expands from minimal model by adding:
+
+- two streams
+- monthly schedule variants
+
+Compile:
+
+```bash
+./target/debug/cfdl compile examples/language_tutorial/first_stream --out /tmp/tutorial_first_stream.ir.json
+```
+
+## model.cfdl
+
+```cfdl
+version 0.1
+model "tutorial-first-stream"
+time calendar monthly from 2026-01 for 24
+
+entity legal tenant
+
+stream subscription_revenue on entity legal.tenant {
+  schedule every monthly on day 15 from 2026-01 to 2027-12
+  amount cel "1200"
+}
+
+stream support_expense on entity legal.tenant {
+  schedule every monthly from 2026-01 to 2027-12
+  amount cel "250"
+}
+```

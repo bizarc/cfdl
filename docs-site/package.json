@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync:content": "node ./scripts/sync-content.mjs",
+    "sync:check": "node ./scripts/sync-content.mjs --check",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "npm run sync:content && docusaurus build",
     "serve": "docusaurus serve",
     "typecheck": "tsc"
   },
