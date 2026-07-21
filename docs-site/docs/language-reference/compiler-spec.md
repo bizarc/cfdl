@@ -4,8 +4,8 @@ title: "Compiler Spec (v0.1)"
 slug: "/language-reference/compiler-spec"
 ---
 
-> This page is generated from `docs/compiler_spec_v_0_1.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/compiler_spec_v_0_1.md
+> This page is generated from `docs/04_compiler_spec.md`.
+> Source: https://github.com/bizarc/cfdl/blob/main/docs/04_compiler_spec.md
 
 This page is a usability-focused digest of the compiler spec for model authors and SDK integrators.
 
@@ -40,6 +40,6 @@ This page is a usability-focused digest of the compiler spec for model authors a
 
 ## Full compiler spec
 
-- [Open full compiler spec source](https://github.com/bizarc/cfdl/blob/main/docs/compiler_spec_v_0_1.md)
+- [Open full compiler spec source](https://github.com/bizarc/cfdl/blob/main/docs/04_compiler_spec.md)
 
 If you need strict implementation-level details, use the full source spec above as authoritative.

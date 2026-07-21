@@ -25,6 +25,12 @@ function stripLeadingH1(markdown) {
 function normalizeLinks(markdown) {
   return markdown
     .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language Guide](/language-guide)")
+    .replaceAll("`docs/09_user_guide.md`", "[Language Guide](/language-guide)")
+    .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/language-reference/language-spec)")
+    .replaceAll("`docs/02_grammar.md`", "[Grammar](/language-reference/grammar)")
+    .replaceAll("`docs/04_compiler_spec.md`", "[Compiler Spec](/language-reference/compiler-spec)")
+    .replaceAll("`docs/08_diagnostics.md`", "[Diagnostics](/language-reference/diagnostics)")
+    .replaceAll("`docs/07_pack_interface.md`", "[Pack Interface](/language-reference/pack-interface)")
     .replaceAll("`docs/cfdl_v_0_1.md`", "[Language Spec](/language-reference/language-spec)")
     .replaceAll(
       "`docs/CFDL_v0_1_Grammar.ebnf.md`",
@@ -151,7 +157,7 @@ function writeGenerated(relativePath, content) {
 
 const docSpecs = [
   {
-    source: "docs/LANGUAGE_GUIDE.md",
+    source: "docs/09_user_guide.md",
     output: "language-guide.md",
     frontmatter: {
       id: "language-guide",
@@ -160,7 +166,7 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/docs_packs_guide.md",
+    source: "docs/07_pack_interface.md",
     output: "packs.md",
     frontmatter: {
       id: "packs",
@@ -178,7 +184,7 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/cfdl_v_0_1.md",
+    source: "docs/01_language_spec.md",
     output: "language-reference/language-spec.md",
     frontmatter: {
       id: "language-spec",
@@ -187,7 +193,7 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/CFDL_v0_1_Grammar.ebnf.md",
+    source: "docs/02_grammar.md",
     output: "language-reference/grammar.md",
     frontmatter: {
       id: "grammar",
@@ -196,7 +202,7 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/compiler_spec_v_0_1.md",
+    source: "docs/04_compiler_spec.md",
     output: "language-reference/compiler-spec.md",
     frontmatter: {
       id: "compiler-spec",
@@ -206,7 +212,7 @@ const docSpecs = [
     digestOnly: true
   },
   {
-    source: "docs/diagnostics_spec.md",
+    source: "docs/08_diagnostics.md",
     output: "language-reference/diagnostics.md",
     frontmatter: {
       id: "diagnostics",
@@ -215,7 +221,7 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/pack_interface_v_0_1.md",
+    source: "docs/07_pack_interface.md",
     output: "language-reference/pack-interface.md",
     frontmatter: {
       id: "pack-interface",

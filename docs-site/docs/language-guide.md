@@ -4,39 +4,27 @@ title: "Language Guide"
 slug: "/language-guide"
 ---
 
-> This page is generated from `docs/LANGUAGE_GUIDE.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/LANGUAGE_GUIDE.md
+> This page is generated from `docs/09_user_guide.md`.
+> Source: https://github.com/bizarc/cfdl/blob/main/docs/09_user_guide.md
 
-This guide is the fastest path to writing valid CFDL models.
+This guide covers CFDL language basics, CLI usage, and common workflows. For exact grammar and semantics, see the spec docs (`01_language_spec.md` – `08_diagnostics.md`).
 
-Use it as an onboarding guide. Use the specs in `docs/` as the final source of truth for exact grammar and semantics.
+---
 
-## Who this is for
-
-- First-time CFDL authors
-- Engineers onboarding to pack-based models
-- Users moving from examples to production model structure
-
-## What CFDL models
+## 1) What CFDL models
 
 CFDL models cash-flow behavior with a deterministic language:
 
 - **Time**: model timeline and optional phases
 - **Structure**: entities (what things exist)
 - **Behavior**: streams, contracts, events, options
-- **Analysis**: assumptions, run mode, and metrics
+- **Analysis**: assumptions and run mode (output metrics are engine-computed per pack)
 
-## Minimum valid model
+---
 
-At minimum, a practical model should include:
+## 2) Minimum valid model
 
-- `version`
-- `model`
-- `time`
-- one `entity`
-- one behavior block (usually a `stream` or a pack-lowered `contract`)
-
-Minimal example:
+At minimum, a practical model should include `version`, `model`, `time`, one `entity`, and one behavior block:
 
 ```cfdl
 version 0.1
@@ -53,147 +41,122 @@ stream legal.rent on entity legal.borrower {
 
 See `examples/language_tutorial/minimal_model/model.cfdl`.
 
-## Language elements (quick map)
+---
+
+## 3) Language elements
 
 ### Header and modules
-
 - `version 0.1`
 - `model "name"`
 - `use pack "<pack-id>" version "<pack-version>"`
 - `import "relative_file.cfdl"`
 
 ### Time
-
 - `time calendar monthly from 2026-01 for 72`
 - `phase lease_up from 2026-01 to 2027-06`
 
 ### Structure
-
-- `entity <namespace> <name>`
-- Example: `entity real_estate property`
-- Entity references use qualified names with at least two segments: `real_estate.property`, `org.real_estate.property`
+- `entity <namespace> <name>` — e.g. `entity real_estate property`
+- Entity references use qualified names: `real_estate.property`
 
 ### Behavior
+- `stream` — direct cash-flow definitions
+- `contract` — domain contracts (especially when using packs)
+- `event` — conditional actions
+- `option` — optional exercise behavior
 
-- `stream` for direct cash-flow definitions
-- `contract` for domain contracts (especially when using packs)
-- `event` for conditional actions
-- `option` for optional exercise behavior
-
-### Naming conventions (recommended)
-
-- Use dot notation for hierarchy and ownership boundaries.
-  - Preferred: `cre.lease.base_rent`, `opco.working_capital.adjustment`
-  - Allowed but less expressive: `ops_revenue`
-- Use underscore only within a segment when needed (`working_capital`).
-- Prefer qualified names for stream and contract instances in domain models.
-- Keep entity symbols qualified and stable so ontology/data-source mappings can hydrate deterministically.
+### Analysis
+- `assume` for assumptions
+- `run deterministic` or `run monte_carlo trials <n> seed <s>`
+- Output metrics (NPV, IRR, etc.) are computed by the engine per the pack's output specification
 
 ### When to use streams vs contracts
 
-Use this when choosing streams or contracts:
-
 | Situation | Use |
 |-----------|-----|
-| **Formal agreement with another party** (lease, loan, signed revenue agreement) | **Contract** |
-| **Informal agreement** (handshake, memo, internal forecast) | **Contract or Stream** (either is acceptable) |
-| **Individual expense (or revenue) items** (line-item opex, revenue line, one-off items) | **Stream** |
-| **If in doubt** | **Start with a stream** |
+| Formal agreement with another party (lease, loan) | **Contract** |
+| Informal agreement (handshake, memo, internal forecast) | Contract or Stream |
+| Individual expense/revenue items (line-item opex, one-off) | **Stream** |
+| If in doubt | **Start with a stream** |
 
-See also: [Language Spec](/language-reference/language-spec) (Contracts §8 and Streams §9).
+---
 
-### Analysis
+## 4) Expressions and literals
 
-- `assume` for assumptions
-- `run deterministic` or `run monte_carlo trials <n> seed <s>`
-- `metric` for computed outputs
-
-## Expressions and literals
-
-CFDL uses CEL string expressions for executable expressions:
+CFDL uses CEL string expressions for executable logic:
 
 ```cfdl
 amount cel "inputs.base_rent * 1.02"
 ```
 
 Common literals:
-
 - Strings: `"hello"`
 - Numbers: `1000`, `0.05`
 - Dates: `2026-01`, `2026-01-15`
 - Booleans: `true`, `false`
 
 Notes:
+- `YYYY-MM` dates are normalized to first-of-month.
+- Expressions must be deterministic (no random/time/network behavior).
 
-- `YYYY-MM` dates are normalized to first day of month by compiler behavior.
-- Keep expressions deterministic (no random/time/network behavior).
+---
 
-## Schedules (most common patterns)
+## 5) Schedule patterns
 
 ### One-time payment
-
 ```cfdl
 schedule on 2026-06
 ```
 
 ### Monthly recurring
-
 ```cfdl
 schedule every monthly from 2026-01 to 2026-12
 ```
 
 ### Day rule example
-
 ```cfdl
 schedule every monthly on day 15 from 2026-01 to 2026-12
 ```
 
-## Packs: when and how to use them
+---
 
-Packs add domain behavior and validation while keeping core language stable.
+## 6) Naming conventions
 
-Use a pack at the top of `model.cfdl`:
+- Use dot notation for hierarchy: `cre.lease.base_rent`, `opco.working_capital.adjustment`
+- Use underscore only within a segment: `working_capital`
+- Keep entity symbols qualified and stable for ontology/data-source mapping
+
+---
+
+## 7) Using packs
+
+Packs add domain behavior and validation. Use at the top of `model.cfdl`:
 
 ```cfdl
 use pack "cre" version "0.1.0"
 ```
 
-What packs commonly provide:
-
-- Type and alias registries
-- Contract `terms` validation
-- Lowering rules (`contract` -> streams/events/options)
-- Domain diagnostics
-
-When to use packs:
-
-- You want domain templates and validated `terms`
-- You want contracts lowered automatically into executable effects
-
-When not required:
-
-- You are building a simple model with direct streams only
+When to use packs: domain templates, validated `terms`, automatic contract lowering.
+When not required: simple models with direct streams only.
 
 ### Migrating from no-pack to pack
-
-Use this sequence to migrate safely:
 
 1. Keep existing timeline and entities unchanged.
 2. Add `use pack "<id>" version "<ver>"` in `model.cfdl`.
 3. Replace manual stream logic with pack-supported `contract` blocks gradually.
 4. Run compile with `--packs packs` and resolve pack diagnostics.
-5. Keep model behavior deterministic and verify expected IR/results deltas intentionally.
+5. Verify expected IR/results deltas intentionally.
 
-## Multi-file models
+---
 
-As models grow, split by concern:
+## 8) Multi-file models
 
-- `model.cfdl` -> header and imports
-- `time.cfdl` -> phases and timeline helpers
-- `structure.cfdl` -> entities
-- `contracts.cfdl` -> contracts/streams/events
+Split by concern as models grow:
 
-Example import in `model.cfdl`:
+- `model.cfdl` → header and imports
+- `time.cfdl` → phases and timeline
+- `structure.cfdl` → entities
+- `contracts.cfdl` → contracts/streams/events
 
 ```cfdl
 import "time.cfdl"
@@ -201,28 +164,115 @@ import "structure.cfdl"
 import "contracts.cfdl"
 ```
 
-Rules to remember:
+Rules: imports are relative, no cycles, do not import outside model root.
 
-- Imports are relative to importing file
-- Avoid cycles
-- Do not import outside model root
+---
 
-## Common errors and fixes
+## 9) CLI
 
-- **Missing required model header fields**
-  - Add `version`, `model`, and `time` once each.
-- **Unresolved entity refs**
-  - Confirm `entity` exists and reference uses a qualified name (`namespace.name` or deeper).
-- **Schedule range issues**
-  - Ensure `from <= to` and dates align with timeline.
-- **Unterminated string/comment**
-  - Close all quotes and block comments.
-- **Pack validation errors**
-  - Re-check `use pack` statement and contract `terms` shape.
+### Build
 
-For authoritative diagnostic codes, see [Diagnostics](/language-reference/diagnostics).
+```bash
+cargo build -p cfdl-cli
+```
 
-## Progressive tutorial examples
+### Compile a model
+
+```bash
+./target/debug/cfdl compile <model_dir> --out <ir.json> [--packs <packs_dir>]
+```
+
+- `--packs` is optional; a local `packs/` directory is used automatically if present.
+
+### Run IR
+
+```bash
+./target/debug/cfdl run <ir.json> --out <results.json> [--config <run.json>] [--rate <f64>] [--as-of <YYYY-MM-DD>] [--packs <packs_dir>]
+```
+
+### Run-config JSON
+
+```json
+{
+  "deterministic": {
+    "discount_rate": 0.1,
+    "as_of": "2026-01-01",
+    "parameters": {
+      "stream.cre.lease.base_rent:amount": 1000.0
+    }
+  },
+  "scenarios": {
+    "stress": {
+      "discount_rate": 0.12,
+      "parameters": {
+        "stream.cre.lease.base_rent:amount": 800.0
+      }
+    }
+  },
+  "monte_carlo": {
+    "trial_count": 1000,
+    "seed": 12345,
+    "distributions": {
+      "cfg.exit_multiple": { "kind": "normal", "mean": 8.0, "stddev": 1.0 },
+      "cfg.growth": { "kind": "uniform", "min": 0.01, "max": 0.05 }
+    }
+  }
+}
+```
+
+Parameter key conventions:
+- Stream overrides: `stream.<dotted_stream_name>:amount`
+- Config namespace: `cfg.<path>` (for CEL `cfg.*` access)
+
+---
+
+## 10) Running examples
+
+### CRE Developer
+
+```bash
+./target/debug/cfdl compile examples/cre_developer --out /tmp/cre.ir.json --packs packs
+./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.results.json --config examples/cre_developer/run.base.json --packs packs
+```
+
+### OpCo Basic
+
+```bash
+./target/debug/cfdl compile examples/opco_basic --out /tmp/opco.ir.json --packs packs
+./target/debug/cfdl run /tmp/opco.ir.json --out /tmp/opco.results.json --config examples/opco_basic/run.base.json --packs packs
+```
+
+---
+
+## 11) Golden runner
+
+Golden outputs are the source of truth for fixture behavior:
+
+```bash
+./tools/golden-runner run
+```
+
+Update gold files only when intentionally changing behavior:
+
+```bash
+CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
+```
+
+---
+
+## 12) Common errors and fixes
+
+- **Missing required model header fields** — Add `version`, `model`, and `time` once each.
+- **Unresolved entity refs** — Confirm `entity` exists and reference uses a qualified name.
+- **Schedule range issues** — Ensure `from <= to` and dates align with timeline.
+- **Unterminated string/comment** — Close all quotes and block comments.
+- **Pack validation errors** — Re-check `use pack` statement and contract `terms` shape.
+
+For diagnostic codes, see `08_diagnostics.md`.
+
+---
+
+## 13) Progressive tutorial examples
 
 - `examples/language_tutorial/minimal_model/`
 - `examples/language_tutorial/first_stream/`
@@ -230,19 +280,21 @@ For authoritative diagnostic codes, see [Diagnostics](/language-reference/diagno
 - `examples/language_tutorial/with_pack/`
 - `examples/language_tutorial/multi_file/`
 
-## Recommended workflow
+Recommended workflow: start with minimal → add streams → contracts with packs → multi-file.
 
-1. Start with `minimal_model`
-2. Add a second stream and schedule variants (`first_stream`)
-3. Move to contract-driven modeling with packs (`simple_contract` and `with_pack`)
-4. Split into imports (`multi_file`)
-5. Run compile/run and iterate diagnostics
+---
 
-## Authoritative references
+## 14) Authoritative references
 
-- Core language: [Language Spec](/language-reference/language-spec)
-- Grammar: [Grammar](/language-reference/grammar)
-- Compiler behavior: [Compiler Spec](/language-reference/compiler-spec)
-- Packs: [Pack Interface](/language-reference/pack-interface)
-- Diagnostics: [Diagnostics](/language-reference/diagnostics)
-- CLI usage: [SDK User Guide](https://github.com/bizarc/cfdl/blob/main/docs/USER_GUIDE.md)
+| Doc | Content |
+|-----|---------|
+| `01_language_spec.md` | Core language spec |
+| `02_grammar.md` | Formal EBNF grammar |
+| `03_expression_environment.md` | CEL expression environment |
+| `04_compiler_spec.md` | Compiler pipeline spec |
+| `05_ir_schema.md` | IR schema (human-readable) |
+| `06_results_schema.md` | Results schema (human-readable) |
+| `07_pack_interface.md` | Pack interface and API |
+| `08_diagnostics.md` | Error codes and diagnostic format |
+| `schemas/ir.schema.json` | Machine-readable IR schema |
+| `schemas/results.schema.json` | Machine-readable results schema |

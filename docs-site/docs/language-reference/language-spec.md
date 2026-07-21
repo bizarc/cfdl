@@ -4,8 +4,8 @@ title: "Language Spec (v0.1)"
 slug: "/language-reference/language-spec"
 ---
 
-> This page is generated from `docs/cfdl_v_0_1.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/cfdl_v_0_1.md
+> This page is generated from `docs/01_language_spec.md`.
+> Source: https://github.com/bizarc/cfdl/blob/main/docs/01_language_spec.md
 
 **Status:** Draft (Greenfield v0.1)
 
@@ -76,7 +76,7 @@ Rules:
 Syntax:
 
 ```cfdl
-use pack "evs/cre" version "0.1"
+use pack "cfdl/cre" version "0.1"
 ```
 
 Rules:
@@ -288,7 +288,7 @@ Syntax:
 ```cfdl
 stream taxes on entity asset.Sunset outflow currency USD {
   schedule every year on 2026-12-31 from 2026-01-01 to 2031-12-31
-  amount cel "ref('TaxRates.County').rate * entity('asset.Sunset').assessed_value"
+  amount cel "ref.tax_rates_county.rate * entity.assessed_value"
 }
 ```
 
@@ -311,7 +311,7 @@ effects {
 Streams MAY include an activation predicate:
 
 ```cfdl
-active when cel "entity('loan.Senior').status != 'refinanced'"
+active when cel "entity.status != 'refinanced'"
 ```
 
 If omitted, streams are active for all scheduled occurrences.
@@ -441,7 +441,7 @@ Supported distributions (v0.1 core):
 Syntax:
 
 ```cfdl
-event refi_if_rates_drop when cel "obs('Rates.SOFR.1M') < 0.035" {
+event refi_if_rates_drop when cel "obs.rate('SOFR_1M') < 0.035" {
   set entity loan.Senior.status = "refinanced"
   deactivate stream debt_service
 }
@@ -464,7 +464,7 @@ Supported actions:
 Contracts and streams SHOULD use entity state as the primary activation mechanism:
 
 ```cfdl
-active when cel "entity('loan.Senior').status != 'refinanced'"
+active when cel "entity.status != 'refinanced'"
 ```
 
 ---
@@ -476,8 +476,8 @@ Syntax:
 
 ```cfdl
 option refi_1 type Option.Refinance exercisable in construction {
-  exercise when cel "obs('Rates.SOFR.1M') < 0.035"
-  payoff cel "npv(stream('debt_service_old') - stream('debt_service_new'), discount=assume('discount_rate')) - 250000 USD"
+  exercise when cel "obs.rate('SOFR_1M') < 0.035"
+  payoff cel "cfg.refi_savings_estimate - 250000"
 }
 ```
 
@@ -488,9 +488,9 @@ Rules:
 
 ---
 
-## 14. Runs and metrics
+## 14. Runs
 
-### 14.1 Runs
+### 14.1 Run declarations
 ```cfdl
 run deterministic
 run monte_carlo trials 20000 seed 42
@@ -499,17 +499,10 @@ run monte_carlo trials 20000 seed 42
 Rules:
 - `monte_carlo` MUST provide `trials` and `seed`.
 
-### 14.2 Metrics
-```cfdl
-metric npv_base = cel "npv(model.cashflows, discount=assume('discount_rate'))"
-metric irr_equity = cel "irr(stream('equity_cashflows'))"
-metric prob_irr_gt15 = cel "prob(metric('irr_equity') > 0.15)"
-```
+### 14.2 Engine-computed outputs
+Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification. CFDL models do not declare output metrics.
 
-Rules:
-- Metrics are named expressions.
-- In deterministic runs, metrics evaluate to scalars.
-- In Monte Carlo runs, metric values produce distributions and summary stats.
+See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
 ---
 
@@ -535,28 +528,26 @@ The expression environment MUST support:
 
 **Inputs**
 - `inputs.<name>` for stochastic assumptions
-- `assume('<name>')` for deterministic/stochastic values
+- `cfg.<name>` for run config values (deterministic/stochastic)
 
 **Entities**
-- `entity('<symbol>')` returns an entity view
-- `entity('<symbol>').<attr_or_state>` accesses attributes/state
+- `entity.<attr>` accesses entity attributes in context
+- `entity.state` accesses mutable entity state
 
 **Observables and references**
-- `obs('<OntologyId>')` returns an observable value at `t.date` (or a series)
-- `ref('<OntologyId>')` returns a reference object (table/static)
+- `obs.rate(<name>)` returns an observable rate at `t.date`
+- `obs.index(<name>)` returns an observable index value
+- `obs.fx(<from>, <to>)` returns an FX rate
+- `ref.<name>` returns a reference object (table/static)
 
 **Streams**
-- `stream('<name>')` returns a stream series
-- `model.cashflows` returns aggregated model cashflows (Money series)
+- `stream.<name>.amount` accesses a stream's current-period amount
 
-**Finance/math**
-- `npv(series, discount=<rate>)`
-- `irr(series)`
+**Math**
+- Standard arithmetic: `+`, `-`, `*`, `/`
+- `min()`, `max()`, `abs()`, `round()`
 - `convert(money, '<currency>')`
-- `fx('<from>','<to>', date)` (optional in v0.1; recommended)
-
-**Probability (MC)**
-- `prob(condition)`
+- `obs.fx('<from>','<to>')` for FX conversion
 
 ### 15.3 Currency literals
 The language MAY support syntactic sugar:
@@ -581,8 +572,8 @@ These MUST compile to typed values in IR.
 
 ### 16.3 Required external inputs
 - The IR MUST include lists of required inputs inferred from expressions:
-  - `required_observables`: list of ontology observable ids referenced via `obs('...')`
-  - `required_refs`: list of ontology ref ids referenced via `ref('...')`
+  - `required_observables`: list of ontology observable ids referenced via `obs.*()` calls
+  - `required_refs`: list of ontology ref ids referenced via `ref.*`
 
 ### 16.4 No correlation
 - The IR MUST NOT contain any correlation field/slot.
@@ -596,7 +587,7 @@ These MUST compile to typed values in IR.
 `inflow`, `outflow`, `schedule`, `on`, `every`, `day`, `eom`, `week`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`,
 `convention`, `calendar`, `stub`, `except`, `also`,
 `assume`, `run`, `deterministic`, `monte_carlo`, `trials`, `seed`,
-`metric`, `cel`,
+`cel`,
 `event`, `when`, `set`, `activate`, `deactivate`,
 `option`, `type`, `exercisable`, `exercise`, `payoff`.
 
@@ -608,13 +599,13 @@ These MUST compile to typed values in IR.
 ```cfdl
 version 0.1
 model "Sunset" currency USD
-use pack "evs/cre" version "0.1"
+use pack "cfdl/cre" version "0.1"
 
 import "time.cfdl"
 import "structure.cfdl"
 import "assumptions.cfdl"
 import "behavior.cfdl"
-import "metrics.cfdl"
+import "runs.cfdl"
 ```
 
 **time.cfdl**
@@ -659,24 +650,22 @@ contract Contract.Loan D1
   currency USD
   effects {
     stream debt_service owner entity loan.Senior direction outflow currency USD {
-      active when cel "entity('loan.Senior').status != 'refinanced'"
+      active when cel "entity.status != 'refinanced'"
       schedule every month on eom from 2026-01-01 to 2031-12-31 convention modified_following calendar "NYSE"
       amount cel "/* engine-provided pmt(...) */ 0"
     }
   }
 }
 
-event refi_if_rates_drop when cel "obs('Rates.SOFR.1M') < 0.035" {
+event refi_if_rates_drop when cel "obs.rate('SOFR_1M') < 0.035" {
   set entity loan.Senior.status = "refinanced"
 }
 ```
 
-**metrics.cfdl**
+**runs.cfdl**
 ```cfdl
 run deterministic
 run monte_carlo trials 20000 seed 42
-
-metric npv_base = cel "npv(model.cashflows, discount=assume('discount_rate'))"
 ```
 
 ---

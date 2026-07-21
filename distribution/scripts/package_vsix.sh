@@ -20,7 +20,7 @@ trap cleanup EXIT
 
 mkdir -p "${BUNDLED_DIR}/docs"
 mkdir -p "${BUNDLED_DIR}/packs"
-cp "${REPO_ROOT}/docs/LANGUAGE_GUIDE.md" "${BUNDLED_DIR}/docs/LANGUAGE_GUIDE.md"
+cp "${REPO_ROOT}/docs/09_user_guide.md" "${BUNDLED_DIR}/docs/LANGUAGE_GUIDE.md"
 cp "${REPO_ROOT}/distribution/install-configure.md" "${BUNDLED_DIR}/docs/install-configure.md"
 cp -R "${REPO_ROOT}/examples/language_tutorial" "${BUNDLED_DIR}/docs/language_tutorial"
 cp -R "${REPO_ROOT}/packs/cre" "${BUNDLED_DIR}/packs/cre"

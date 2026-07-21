@@ -4,8 +4,8 @@ title: "Diagnostics Reference"
 slug: "/language-reference/diagnostics"
 ---
 
-> This page is generated from `docs/diagnostics_spec.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/diagnostics_spec.md
+> This page is generated from `docs/08_diagnostics.md`.
+> Source: https://github.com/bizarc/cfdl/blob/main/docs/08_diagnostics.md
 
 **CFDL Diagnostics Specification v0.1**
 
@@ -187,7 +187,6 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1005_DUPLICATE_ASSUME`
 - `E1006_DUPLICATE_OPTION`
 - `E1007_DUPLICATE_EVENT`
-- `E1008_DUPLICATE_METRIC`
 
 - `E1301_UNRESOLVED_ENTITY_REF`
 - `E1302_UNRESOLVED_STREAM_REF`

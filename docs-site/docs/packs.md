@@ -4,85 +4,37 @@ title: "Packs Guide"
 slug: "/packs"
 ---
 
-> This page is generated from `docs/docs_packs_guide.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/docs_packs_guide.md
+> This page is generated from `docs/07_pack_interface.md`.
+> Source: https://github.com/bizarc/cfdl/blob/main/docs/07_pack_interface.md
 
-This document explains **CFDL Packs**: how domain packs extend the CFDL SDK to provide templates, aliases, lowering rules (contracts → streams/events/options), validations, and defaults.
+**CFDL Domain Pack Interface v0.1**
 
-Packs are the mechanism that enables a **single core language** to support multiple industries (similar to Salesforce “clouds”) while keeping domain logic versioned and modular.
+Domain Packs provide *additions and overrides* similar to "industry clouds" (e.g., Financial Services Cloud) while preserving a single core language.
+
+Core principle: **Packs may extend validation and provide defaults/templates, but MUST NOT change core language semantics.**
 
 ---
 
-## 1. What is a Pack?
+## 1) Overview
 
 A **pack** is a versioned module that can:
 
+- Provide **type registries** (domain entity/contract/option types)
 - Provide **aliases** (domain names → canonical core concepts)
-- Provide **templates** (standard contract/entity patterns)
-- Provide **lowering rules** that translate:
-  - contracts + terms → streams / events / options
-- Provide **validations** (domain constraints)
-- Provide **defaults**:
-  - required observables
-  - common metrics to compute
-  - reporting conventions
+- Provide **contract term schemas** and **lowering rules** (contracts → streams/events/options)
+- Provide **validations** (domain constraints with stable diagnostic codes)
+- Provide **defaults** (required observables, output specification, reporting conventions)
 
 ### Non-goals
 - Packs do not change core syntax.
 - Packs do not add nondeterministic behavior.
 - Packs do not embed external network calls.
 
----
+### Why packs (and why not bake domains into core)
 
-## 2. Why Packs (and why not bake domains into core)
+CFDL core must remain simple, strongly typed, and stable. Domain logic — contract forms, regulatory constraints, industry assumptions — changes frequently. Packs isolate that volatility.
 
-CFDL core must remain:
-- simple
-- strongly typed
-- stable and versionable
-
-Domain logic changes frequently:
-- contract forms
-- regulatory constraints
-- industry assumptions
-
-Packs isolate that volatility.
-
----
-
-## 3. Salesforce / Palantir analogy
-
-### Salesforce “Clouds” analogy
-- Core platform + objects
-- Clouds add managed packages: objects, workflows, validations, UI forms
-
-CFDL mapping:
-- Core CFDL language + IR
-- Packs add: templates, lowering, validations, default observables/metrics
-
-### Palantir analogy
-- Core platform + ontology + pipelines
-- Domain apps configure transformations and constraints
-
-CFDL mapping:
-- Packs are domain modules used by engines and by EVS platform authoring/UI.
-
----
-
-## 4. Pack interface (conceptual)
-
-Packs interact with the SDK via a stable host interface.
-
-### 4.1 Capabilities
-A pack may implement any subset of:
-
-- Alias registry
-- Template registry
-- Lowering hooks
-- Validation rules
-- Defaults provider
-
-### 4.2 Determinism rules
+### Determinism rules
 Packs must be deterministic:
 - same inputs ⇒ same lowered outputs
 - stable ordering in any emitted lists
@@ -90,7 +42,52 @@ Packs must be deterministic:
 
 ---
 
-## 5. Pack structure on disk (filesystem loader)
+## 2) Pack selection in CFDL
+
+CFDL models MAY select a pack:
+
+```cfdl
+use pack "cfdl/cre" version "0.1"
+```
+
+Compiler rules:
+- `use pack` MAY appear **only** in `model.cfdl`.
+- At most one pack MAY be active in v0.1.
+
+If no pack is selected:
+- Compilation still works using core rules.
+- Unknown type IDs are permitted (with warnings) except where the compiler is configured to require a pack.
+
+---
+
+## 3) Pack identity and versioning
+
+### 3.1 Pack ID
+A pack MUST have a stable ID string:
+- Format recommendation: `publisher/name` (e.g., `cfdl/cre`, `cfdl/operating_business`)
+
+### 3.2 Pack version
+A pack MUST have a semver-like version string:
+- `MAJOR.MINOR[.PATCH]`
+
+### 3.3 Compatibility
+- Compiler version and pack version are **independently versioned**.
+- A pack MUST declare supported compiler IR versions.
+
+---
+
+## 4) Pack distribution formats
+
+A pack MAY be distributed as:
+- a local directory (dev mode)
+- a signed bundle file (zip/tar)
+- a registry artifact (future)
+
+v0.1 minimum: **local directory packs**.
+
+---
+
+## 5) Pack structure on disk
 
 Packs are loaded from the filesystem (v0.2 default). Example structure:
 
@@ -104,128 +101,206 @@ packs/
       rules.toml
     validations.toml
     defaults.toml
+    outputs.toml
     README.md
   opco/
     pack.toml
     ...
 ```
 
-### 5.1 `pack.toml`
-Declares identity and entrypoints.
+### 5.1 Required manifest (`pack.toml`)
 
-Example:
+A pack directory MUST include `pack.toml`:
 
 ```toml
-name = "cre"
-version = "0.1.0"
-description = "Commercial Real Estate pack"
+pack_id = "cre"
+version = "0.1"
+description = "Commercial Real Estate domain pack"
+ir_versions = ["0.1"]
 
 [entrypoints]
+types = "ontology/types.toml"
 aliases = "aliases.toml"
-templates = "templates.toml"
-lowering = "lowering/rules.toml"
+contract_schemas = "contracts/schemas.toml"
+lowering_rules = "contracts/lowering.toml"
+cel_extensions = "cel/extensions.toml"
+outputs = "outputs.toml"
+docs = "docs/index.toml"
 ```
 
-Notes:
-- Use `version` for pack evolution independent of SDK version.
-- Packs may declare compatibility constraints later.
+Rules:
+- `pack_id`, `version`, `ir_versions`, and `entrypoints.types` are REQUIRED.
+- `entrypoints.outputs` is REQUIRED for packs that define domain-specific metrics and aggregations.
+- Other entrypoints are optional.
 
-### 5.2 Pack formats (TOML)
-
-For the current SDK implementation, pack artifacts are TOML-based:
-
-- `pack.toml` (required manifest + entrypoints)
-- `aliases.toml` (alias map)
-- `templates.toml` (template definitions, may be stubbed)
-- `lowering/rules.toml` (lowering rule list)
-- optional pack data files like `validations.toml` and `defaults.toml`
-
-Keep pack files deterministic and avoid mixing YAML/JSON variants in the same pack.
+### 5.2 Pack formats
+- All pack artifacts are TOML-based.
+- Keep pack files deterministic and avoid mixing YAML/JSON variants in the same pack.
 
 ---
 
-## 6. Aliases
+## 6) Pack capabilities (what a pack can provide)
 
-Aliases allow domain-friendly names to map to canonical names.
+### 6.1 Type registry (ontology types)
+A pack MAY define types used by:
+- `entity ... : <TypeId>`
+- `contract <TypeId> ...`
+- `option ... type <TypeId>`
 
-Examples:
-- `Lease` → canonical contract kind `contract.lease`
-- `RentRoll` → canonical entity/stream pattern
+**Required:**
+- A pack MUST provide a type registry file for at least the types it claims.
 
-Aliases live in packs but can be referenced by users.
+Minimum shape:
+```json
+{
+  "types": [
+    {
+      "type_id": "CRE.Asset",
+      "kind": "entity",
+      "fields": {
+        "city": {"type": "String", "required": false},
+        "units": {"type": "Int", "required": false}
+      }
+    }
+  ]
+}
+```
+
+Type registry semantics:
+- Packs MUST NOT remove core types.
+- Packs MAY extend fields.
+- Packs MAY provide documentation strings and examples.
+
+### 6.2 Alias registry
+Aliases map domain-friendly names to canonical TypeIds or contract templates.
+
+Example:
+```json
+{
+  "aliases": [
+    {"alias": "Lease", "resolves_to": "Contract.Lease"},
+    {"alias": "SeniorLoan", "resolves_to": "Contract.Loan.Senior"}
+  ]
+}
+```
+
+Compiler usage:
+- Aliases are used by editors/CLI for suggestions.
+- Aliases MAY be expanded during lowering if present in source.
 
 Rules:
-- alias resolution must be deterministic
-- packs must not create ambiguous alias collisions within a single loaded environment
+- Alias resolution must be deterministic.
+- Packs must not create ambiguous alias collisions within a single loaded environment.
 
----
+### 6.3 Contract term schemas
+A pack MAY provide schemas for contract terms per TypeId.
 
-## 7. Templates
+Example:
+```json
+{
+  "contracts": [
+    {
+      "type_id": "Contract.Lease",
+      "terms": {
+        "base_rent": {"type": "Money", "required": true},
+        "rent_growth": {"type": "Rate", "required": false},
+        "start_date": {"type": "Date", "required": false}
+      }
+    }
+  ]
+}
+```
 
-Templates are reusable definitions that expand into canonical objects.
+Compiler usage:
+- If schema exists, the compiler MUST validate required terms and types.
+- Schema validation errors are `E4003_INVALID_CONTRACT_TERMS`.
 
-Types of templates:
+### 6.4 Lowering rules (contract → effects)
+A pack MAY provide lowering rules that generate `effects` from `terms`.
 
-- **Contract templates**: lease, loan, revenue line
-- **Entity templates**: property, unit mix, business unit
-- **Stream templates**: rent, expense, debt service
+**Core guarantee:**
+- If a pack declares a lowering rule for a contract type, the compiler MAY allow `effects` to be omitted in source.
 
-Templates can be parameterized.
+Lowering rule semantics:
+- Inputs: contract instance (type, terms, subject, term date range)
+- Output: one or more streams and/or derived term expansions
+- Naming convention: generated stream names SHOULD be qualified names (dot-separated hierarchy), e.g. `cre.lease.base_rent`.
+- Ownership convention: `owner` SHOULD resolve to a qualified entity symbol.
 
-Parameter sources:
-- user-provided values
-- ontology bindings (EVS platform)
+Rule interface options:
+- **Declarative lowering** (recommended for v0.1)
+- **Plugin function** (future)
 
-v0.2 template format is implementation-defined, but must compile into canonical CFDL/IR structures.
+v0.1 recommended declarative structure:
+```json
+{
+  "lowering": [
+    {
+      "type_id": "Contract.Lease",
+      "generates": [
+        {
+          "stream_name": "rent",
+          "owner": "${subject}",
+          "direction": "inflow",
+          "currency": "${contract.currency}",
+          "schedule": {"kind": "Every", "every": "monthly", "on_rule": {"kind": "EndOfMonth"}},
+          "amount_expr": {"lang": "cel", "src": "terms.base_rent"}
+        }
+      ]
+    }
+  ]
+}
+```
 
----
+Template rules:
+- `${subject}` resolves to the contract subject entity symbol.
+- `${contract.currency}` resolves to the contract currency.
 
-## 8. Lowering (contracts → streams/events/options)
+Compiler behavior:
+- Lowering runs after core validation.
+- Generated streams MUST carry provenance notes referencing the contract.
+- Generated streams SHOULD use deterministic dotted naming to preserve ontology/data-source mapping stability.
+- If lowering fails, emit `E500x` and fail compilation.
 
-Lowering is the core pack power: turning contract terms into executable cash flows.
-
-### 8.1 Inputs
-- canonical contract objects and terms
-- related entities (lessor/lessee, borrower/lender)
-- time model and phases
-- assumptions and observables requirements
-
-### 8.2 Outputs
-- streams
-- events
-- options
-- required observables
-- generated names should follow qualified dotted conventions (for example `cre.lease.base_rent`)
-
-### 8.3 Provenance requirements
-Lowered outputs must include provenance:
-- source contract ID/name
-- pack name/version
-- rule identifier
-- generated stream owner entity symbol (qualified) for ownership traceability
-
-This enables “explainability” and auditability.
-
-### 8.4 Ordering
-Lowering output order must be deterministic:
-- sort by stable key (symbol/name)
-
-### 8.5 Term payloads (current host behavior)
-Contract `terms { ... }` values are captured as a lightweight map and exposed to
-pack lowering logic.
+### 6.5 Term payloads (current host behavior)
+Contract `terms { ... }` values are captured as a lightweight map and exposed to pack lowering logic.
 
 Current contract for packs:
-- terms are key/value pairs with string payloads plus source span
-- packs are responsible for explicit parsing/coercion (for example Int/Decimal/Date)
-- packs should not rely on implicit casts; invalid values must emit diagnostics
-- if term-level spans are unavailable for a rule, use contract span consistently
+- Terms are key/value pairs with string payloads plus source span.
+- Packs are responsible for explicit parsing/coercion (e.g. Int/Decimal/Date).
+- Packs should not rely on implicit casts; invalid values must emit diagnostics.
+- If term-level spans are unavailable for a rule, use contract span consistently.
 
-This supports deterministic pack-origin validation during lowering (for example
-`E6xxx_*` in CRE) without introducing a separate compile stage.
+### 6.6 Ontology observable and reference IDs
+Packs define canonical IDs for:
+- `obs.rate(<name>)`, `obs.index(<name>)`, `obs.fx(<from>, <to>)`
+- `ref.<name>`
 
----
+Packs MAY provide registries:
+- `observables.json`
+- `refs.json`
 
-## 9. Pack validations
+Compiler behavior:
+- If pack provides registries, the compiler MAY validate that referenced IDs exist.
+- Missing observable IDs SHOULD be warnings in v0.1 (allow offline modeling).
+
+### 6.7 CEL extensions
+A pack MAY add CEL functions or macros.
+
+Rules:
+- Pack functions MUST NOT override core function names.
+- Pack functions MUST declare signatures.
+
+Example:
+```json
+{
+  "functions": [
+    {"name": "pmt", "args": ["Money", "Rate", "Int"], "returns": "Money"}
+  ]
+}
+```
+
+### 6.8 Pack validations
 
 Packs can add domain-specific validations, e.g.:
 - Lease must have start/end
@@ -233,32 +308,176 @@ Packs can add domain-specific validations, e.g.:
 - Exit cap must be within bounds
 
 Validation must:
-- produce diagnostics with stable codes
-- include file/span when possible
-- never crash
+- Produce diagnostics with stable codes
+- Include file/span when possible
+- Never crash
 
-Diagnostics codes for pack validations should be reserved per-pack (recommended convention):
+Diagnostics codes for pack validations should be reserved per-pack:
 - `E6xxx_*` for CRE
 - `E7xxx_*` for OpCo
 
+### 6.9 Documentation metadata
+Packs SHOULD provide docs for:
+- types and fields
+- contract templates
+- output definitions
+- examples
+
+Editors may use this for hover hints and snippet insertion.
+
+### 6.10 Output specification (engine-computed metrics and aggregations)
+
+A pack MUST provide an output specification if it defines domain-specific metrics. Output metrics (NPV, IRR, NOI, DSCR, etc.) are NOT defined in CFDL — they are computed by the engine based on the pack's output spec.
+
+**Core principle:** CFDL defines time, structure, and behavior (streams, events, options). The engine reads the IR + the pack output spec and produces domain-appropriate results. Different packs produce different output sets from the same IR.
+
+#### 6.10.1 Stream categorization
+
+The output spec defines **categories** that group streams by semantic purpose. Categories match streams using:
+- **Contract type + direction:** For streams inside contract `effects` blocks
+- **Stream name prefix + direction:** For standalone streams
+
+```toml
+[categories.operating_revenue]
+description = "Operating revenue streams"
+match = [
+  { contract_type = "Contract.Lease", direction = "inflow" },
+  { stream_prefix = "cre.ops_revenue", direction = "inflow" },
+  { stream_prefix = "cre.projected_leaseup", direction = "inflow" }
+]
+
+[categories.operating_expense]
+description = "Operating expenses"
+match = [
+  { contract_type = "Contract.OperatingExpense", direction = "outflow" },
+  { stream_prefix = "cre.ops_expense", direction = "outflow" }
+]
+
+[categories.debt_service]
+description = "Debt service payments"
+match = [
+  { contract_type = "Contract.Loan", direction = "outflow" },
+  { contract_type = "Contract.ConstructionLoan", direction = "outflow" }
+]
+
+[categories.exit]
+description = "Exit/disposition proceeds"
+match = [
+  { contract_type = "Contract.ExitCap", direction = "inflow" }
+]
+```
+
+Matching rules:
+- A stream matches a category if ANY match rule is satisfied.
+- A stream MAY match multiple categories (engine resolves by priority).
+- Streams that match no category still appear in net cashflows.
+
+#### 6.10.2 Aggregations
+
+Aggregations combine categories into domain-meaningful time series:
+
+```toml
+[aggregations.noi]
+description = "Net Operating Income"
+formula = "categories.operating_revenue - categories.operating_expense"
+frequency = "period"
+
+[aggregations.cfads]
+description = "Cash Flow Available for Debt Service"
+formula = "aggregations.noi - categories.debt_service"
+frequency = "period"
+
+[aggregations.net_cashflow]
+description = "Total net cashflows across all streams"
+formula = "sum(all_streams)"
+frequency = "period"
+```
+
+Aggregation rules:
+- Aggregations produce per-period time series in the Results `series` map.
+- Aggregations MAY reference other aggregations (engine resolves order).
+- The engine MUST detect circular references and emit an error.
+
+#### 6.10.3 Ratios
+
+Ratios express relationships between aggregations:
+
+```toml
+[ratios.dscr]
+description = "Debt Service Coverage Ratio"
+numerator = "aggregations.noi"
+denominator = "categories.debt_service"
+frequency = "period"
+```
+
+Ratio rules:
+- Ratios produce per-period time series.
+- Division by zero SHOULD emit a warning and produce `null` for that period.
+
+#### 6.10.4 Derived values
+
+Derived values are domain-specific computations the engine performs:
+
+```toml
+[derived.terminal_value]
+description = "Exit sale proceeds from cap rate valuation"
+kind = "exit_cap"
+noi_source = "aggregations.noi"
+cap_rate_term = "exit_cap"
+schedule = "on_exit"
+```
+
+Derived rules:
+- The `kind` field tells the engine which computation to apply.
+- Inputs reference aggregations, categories, or contract terms by name.
+- Derived values may insert additional cashflows into the model (e.g., terminal value).
+
+#### 6.10.5 Summary metrics
+
+Summary metrics are computed from aggregated series or net cashflows:
+
+```toml
+[metrics.npv]
+description = "Net Present Value"
+source = "aggregations.net_cashflow"
+method = "discount"
+discount = "assume.discount_rate"
+
+[metrics.irr]
+description = "Internal Rate of Return"
+source = "aggregations.net_cashflow"
+method = "solve_irr"
+```
+
+Metric rules:
+- Metrics produce scalar values in the Results `metrics` map.
+- For Monte Carlo runs, metrics produce `MetricSummary` distributions.
+- The engine MUST support at minimum: `discount` (NPV), `solve_irr` (IRR).
+- Packs MAY define custom method names if the engine supports them.
+
 ---
 
-## 10. Defaults
+## 7) Compiler ↔ Pack API (programmatic)
 
-Packs can provide defaults for:
+### 7.1 Pack loader interface
+The compiler should expose a minimal interface:
 
-- required observables
-- default reporting currency rules
-- default metrics
-- recommended scenarios (e.g., cap rate up/down)
+- `load_pack(pack_id, version) -> Pack`
+- `Pack.type_registry() -> TypeRegistry`
+- `Pack.aliases() -> AliasRegistry`
+- `Pack.contract_schema(type_id) -> Option<ContractSchema>`
+- `Pack.lowering_rule(type_id) -> Option<LoweringRule>`
+- `Pack.observable_registry() -> Option<ObservableRegistry>`
+- `Pack.ref_registry() -> Option<RefRegistry>`
+- `Pack.cel_extensions() -> Option<CelExtensions>`
+- `Pack.output_spec() -> Option<OutputSpec>`
 
-Defaults should be treated as suggestions by hosts.
+### 7.2 Error behavior
+- Pack not found: `E4004_MISSING_PACK`
+- Pack manifest invalid: `E4004_MISSING_PACK` with details
+- Unsupported IR version: `E4004_MISSING_PACK` with details
 
----
-
-## 11. Loading packs
-
-### 11.1 CLI
+### 7.3 CLI
 Recommended CLI behaviors:
 
 - `cfdl pack list --path packs/`
@@ -266,92 +485,45 @@ Recommended CLI behaviors:
 - `cfdl compile <model> --packs packs/`
 - `cfdl run <ir> --packs packs/ --config run.json`
 
-The CLI should allow:
-- choosing pack search path
-- selecting a subset of packs
+---
 
-### 11.2 Embedded usage (Rust)
-Hosts can load packs by providing:
-- filesystem root
-- enabled pack list
+## 8) Determinism and provenance with packs
+
+### 8.1 Determinism
+Pack identity MUST participate in determinism:
+- ID generation seed includes `pack_id@version` if present.
+
+### 8.2 Provenance
+The compiler SHOULD record pack info in top-level provenance notes.
 
 ---
 
-## 12. Pack versioning and compatibility
-
-Recommended rules:
-- Packs have their own semantic versions.
-- SDK v0.2 supports packs with declared compatibility range.
-
-Example:
-- SDK v0.2 loads packs compatible with `sdk >=0.2,<0.3`
-
-This can be introduced incrementally.
-
----
-
-## 13. CRE pack (initial scope)
-
-The CRE pack should support the developer workflow:
-
-- Construction
-- Lease-up
-- Stabilized operations
-- Exit
-
-Initial templates:
-- Lease (simplified)
-- Construction loan (simplified)
-- Operating revenue/expense scaffolding
-- Exit cap-rate
-
-Required observables (examples):
-- discount rate
-- CPI growth (optional)
-- exit cap distribution (for MC)
-
----
-
-## 14. Operating Business pack (initial scope)
-
-Initial templates:
-- revenue line item
-- COGS / opex
-- working capital (simple)
-- exit multiple
-
-Required observables (examples):
-- discount rate
-- inflation (optional)
-- terminal multiple
-
----
-
-## 15. Testing packs
+## 9) Testing packs
 
 Packs must be tested via golden fixtures.
 
 Recommended test types:
-
-- pack load tests
-- alias resolution tests
-- template expansion tests
-- lowering tests (contract → streams)
-- end-to-end example fixtures (compile + run results)
+- Pack load tests
+- Alias resolution tests
+- Template expansion tests
+- Lowering tests (contract → streams)
+- End-to-end example fixtures (compile + run results)
 
 For each pack, include:
 - `examples/<pack>/...` models
 - `fixtures/valid/...` that use the pack
-- gold IR and results
+- Gold IR and results
 
 ---
 
-## 16. Migration to EVS platform
+## 10) Future-proofing (non-normative)
 
-EVS platform will:
-- mount packs into the runtime
-- use pack defaults to generate UI forms
-- use pack templates to generate CFDL from the wizard
-- use lowering to hydrate models from ontology contracts
+v0.2+ may add:
+- multi-pack layering (base + overlays)
+- signed pack artifacts
+- executable lowering plugins (WASM)
+- richer ontology reasoning
+- sensitivity analysis definitions in output spec
+- custom engine computation plugins
 
-The pack interface and determinism rules are what make this possible.
+This v0.1 interface is designed to evolve without breaking core models.
