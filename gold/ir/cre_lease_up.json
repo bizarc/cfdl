@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "id": "decd44881d55d1c95cbf6c652aa4aa16",
       "symbol": "real_estate.property",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "02f286e6ad8c8b57adfd218b7e6c2a91",
+      "id": "2148bb776aafa593d9bea52cf346be00",
       "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "9f9f6a5b0c5d3160c9aae5d794526cf7",
+      "id": "b6c53821e522fbc8058f1cf9ca6cfc59",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -107,8 +107,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "af3556668ef263107cd65dba12832582",
+      "version": "0.3.0",
+      "hash": "d646b49bb0a0581aca01fe4366077210",
       "notes": [
         "active_pack=cre@0.1.0"
       ]

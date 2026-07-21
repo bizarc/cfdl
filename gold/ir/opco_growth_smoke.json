@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "8d92035c8631b4e85c818251ceb222af",
+      "id": "802f21f42d3230da4f27b396fe082729",
       "symbol": "operating.business",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "2f747295351ae999b2ccd304a5b110eb",
+      "id": "1c53087d7f653b5bcb735d2e8991857d",
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "70a2f20971a338776f99e19aa26ec9e1",
+      "id": "fc9cb2b6f9b366c6017d2d79254001b1",
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
@@ -79,7 +79,7 @@
   ],
   "streams": [
     {
-      "id": "3a0a1d5e6ddabc658a54d3e2c39b24f4",
+      "id": "684c6fb7994970f29d40074e05861d70",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -118,7 +118,7 @@
       }
     },
     {
-      "id": "fb81d0f5e27c2a84da4aed2150c40dca",
+      "id": "7052ce6852707a74d72b13f488a2bfc6",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -172,8 +172,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "cf5b9f0fb3eb49fa7195f80826d7dc67",
+      "version": "0.3.0",
+      "hash": "7e5128c3a7dfdeaeb1b2fb990dc45fc8",
       "notes": [
         "active_pack=opco@0.1.0"
       ]

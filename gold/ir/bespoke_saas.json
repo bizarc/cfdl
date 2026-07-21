@@ -11,21 +11,21 @@
   },
   "phases": [
     {
-      "id": "4a34536b882fd13ccc4c2b8ae8eaa3a9",
+      "id": "6b590b3622b9a03830f8e7414c169654",
       "range": {
         "start": "2026-07-01",
         "end": "2027-12-01"
       }
     },
     {
-      "id": "faa586cce9363e1e5f088749ec1eca5b",
+      "id": "0c0bd23784918a23ef5ae45d30832759",
       "range": {
         "start": "2026-01-01",
         "end": "2026-06-01"
       }
     },
     {
-      "id": "ae1e063ca331067ef2be03ade5f528a1",
+      "id": "60f200f2416268300c1c4a8e417459a6",
       "range": {
         "start": "2028-01-01",
         "end": "2028-12-01"
@@ -34,14 +34,14 @@
   ],
   "entities": [
     {
-      "id": "9fb8ca6c29389cbad6adaae2bbc328e5",
+      "id": "d97fc0f1bcdf109a620e1f26b5c71fba",
       "symbol": "ops.team",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "bbb42c6ad54f6e2b8b02924703416e25",
+      "id": "b40536477daef6d40910ca542941687f",
       "symbol": "saas.product",
       "type": "core.Entity",
       "attrs": {},
@@ -55,7 +55,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "c963b68e4f7e961e7955b4da5257be07",
+      "id": "35935cfc8579cd1df3472f8adab08892",
       "name": "ops.seed_investment",
       "owner": {
         "symbol": "ops.team"
@@ -86,7 +86,7 @@
       }
     },
     {
-      "id": "78e5a2e6c9f84528f4c4b2a0b9a11e5b",
+      "id": "e2491ade7e64a37b2e2b0cced37284ee",
       "name": "ops.team_cost",
       "owner": {
         "symbol": "ops.team"
@@ -118,7 +118,7 @@
       }
     },
     {
-      "id": "06f6bd1c45e98213232fcab2982b3d83",
+      "id": "7da9a876db3104b4c0bfd3d8df455bfe",
       "name": "saas.infra_cost",
       "owner": {
         "symbol": "saas.product"
@@ -150,7 +150,7 @@
       }
     },
     {
-      "id": "1a337dc097a71a12d34ab4c2f8f98b4c",
+      "id": "c5953a8fb5dfc65be7cddf37bf83ad08",
       "name": "saas.mrr",
       "owner": {
         "symbol": "saas.product"
@@ -197,8 +197,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "8814dec7c5f5d7f34d1cde693abca1e7"
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
     }
   }
 }

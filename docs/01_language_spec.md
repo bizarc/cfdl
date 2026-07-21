@@ -69,7 +69,7 @@ Rules:
 Syntax:
 
 ```cfdl
-use pack "evs/cre" version "0.1"
+use pack "cfdl/cre" version "0.1"
 ```
 
 Rules:
@@ -592,7 +592,7 @@ These MUST compile to typed values in IR.
 ```cfdl
 version 0.1
 model "Sunset" currency USD
-use pack "evs/cre" version "0.1"
+use pack "cfdl/cre" version "0.1"
 
 import "time.cfdl"
 import "structure.cfdl"

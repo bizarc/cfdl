@@ -12,14 +12,14 @@
   "phases": [],
   "entities": [
     {
-      "id": "1544999db05bbc25b2f6662966e75d34",
+      "id": "f9addf1fa7a0e1b82c880f98ea630a6e",
       "symbol": "capital.equity",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "06f09096d7a45525be5c81ca412c4722",
+      "id": "823b82fae163439beba146b032b4f08c",
       "symbol": "operating.firm",
       "type": "core.Entity",
       "attrs": {},
@@ -33,7 +33,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "a6d53b733c850d6b21d6675900c82d3d",
+      "id": "a057575bdb550cc5d7ed29b33e9c3374",
       "name": "exit.pe_sale",
       "owner": {
         "symbol": "capital.equity"
@@ -63,7 +63,7 @@
       }
     },
     {
-      "id": "8d317928ce784f6205903fe3173a6eac",
+      "id": "e39fccecf3af8de5ed357abf8388ca1c",
       "name": "opex.compensation",
       "owner": {
         "symbol": "operating.firm"
@@ -95,7 +95,7 @@
       }
     },
     {
-      "id": "9f42d0e99b36c13e801771caeea95e0a",
+      "id": "ed02e63ea5587fd784a62f530db64460",
       "name": "opex.facilities",
       "owner": {
         "symbol": "operating.firm"
@@ -127,7 +127,7 @@
       }
     },
     {
-      "id": "435e703d8bfbe4b893a1cf4b3a65a6f6",
+      "id": "ca1a6e95f0b4d1bf6fb6c170c39165e5",
       "name": "opex.ga",
       "owner": {
         "symbol": "operating.firm"
@@ -159,7 +159,7 @@
       }
     },
     {
-      "id": "44acadb405de0c0f8bf67a034c43219c",
+      "id": "cf409bf3f61d2a417d69e6d6802824ce",
       "name": "opex.sales_marketing",
       "owner": {
         "symbol": "operating.firm"
@@ -191,7 +191,7 @@
       }
     },
     {
-      "id": "015a1ee4561e4aef6d15382a91d5c22d",
+      "id": "45c368280b2250bfe07cd201ad9c08f2",
       "name": "opex.working_capital",
       "owner": {
         "symbol": "operating.firm"
@@ -223,7 +223,7 @@
       }
     },
     {
-      "id": "6286ce206416f38c78e76ee145befde4",
+      "id": "f222d8f97499849f19f64e97a77ef09b",
       "name": "rev.licensing",
       "owner": {
         "symbol": "operating.firm"
@@ -255,7 +255,7 @@
       }
     },
     {
-      "id": "b9789a7d6523a52f236750472567ea26",
+      "id": "372a227234696d695fcace0568d9b73b",
       "name": "rev.project_fees",
       "owner": {
         "symbol": "operating.firm"
@@ -287,7 +287,7 @@
       }
     },
     {
-      "id": "06417bc929aba9bbfb81b6a509ef1d27",
+      "id": "74f8ddd92f9d8647e9677771d34f3c02",
       "name": "rev.retainers",
       "owner": {
         "symbol": "operating.firm"
@@ -334,8 +334,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "8814dec7c5f5d7f34d1cde693abca1e7"
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
     }
   }
 }

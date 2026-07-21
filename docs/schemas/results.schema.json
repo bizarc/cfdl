@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://evs.example/schemas/CFDL_v0_1_Results.schema.json",
+  "$id": "https://cfdl.dev/schemas/CFDL_v0_1_Results.schema.json",
   "title": "CFDL v0.1 Results",
   "type": "object",
   "additionalProperties": false,

@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "513fc944c484e5a50889d8b6de7c2a49",
+      "id": "75235dee3cc1f46502c40cfe2d196c9b",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "c96b918ad164509e0b22523cd0f92824",
+      "id": "14b7834a6c035174a1d2521b93c1439d",
       "name": "test.lease_contract",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "dfcfb2700e7aa9fe2b846ecb3152d967",
+      "id": "3cdf075e87049b0f3756902b1ea85f76",
       "name": "testpack.lowered",
       "owner": {
         "symbol": "legal.borrower"
@@ -107,8 +107,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "b1e2957690b6b7327f64c9cfd21e84ab",
+      "version": "0.3.0",
+      "hash": "18c350564eee484f998d2023949cc25b",
       "notes": [
         "active_pack=testpack@0.1.0"
       ]

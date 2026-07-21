@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "8d92035c8631b4e85c818251ceb222af",
+      "id": "802f21f42d3230da4f27b396fe082729",
       "symbol": "operating.business",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "7b8564298940865e7a8054b1ae16a93d",
+      "id": "16d964769ff401e5936f3902b4ee421c",
       "name": "opco.exit_multiple",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "2f747295351ae999b2ccd304a5b110eb",
+      "id": "1c53087d7f653b5bcb735d2e8991857d",
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "70a2f20971a338776f99e19aa26ec9e1",
+      "id": "fc9cb2b6f9b366c6017d2d79254001b1",
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
@@ -103,7 +103,7 @@
       }
     },
     {
-      "id": "c0917a713e75832e6862db3279516c35",
+      "id": "9669566b96fafd135e7d5f7961dafd3e",
       "name": "opco.working_capital",
       "type": "core.Contract",
       "subject": {
@@ -131,7 +131,7 @@
   ],
   "streams": [
     {
-      "id": "3d214703175bc60ba84122fe6c0b9299",
+      "id": "4099ffbb318aa8ea951fccfafcc70f91",
       "name": "opco.exit.value",
       "owner": {
         "symbol": "operating.business"
@@ -168,7 +168,7 @@
       }
     },
     {
-      "id": "3a0a1d5e6ddabc658a54d3e2c39b24f4",
+      "id": "684c6fb7994970f29d40074e05861d70",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -207,7 +207,7 @@
       }
     },
     {
-      "id": "fb81d0f5e27c2a84da4aed2150c40dca",
+      "id": "7052ce6852707a74d72b13f488a2bfc6",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -246,7 +246,7 @@
       }
     },
     {
-      "id": "cdea364d6ac72cae6456dd6c1c37f49a",
+      "id": "cdfa60231fe00a23f49117a0fa6bd888",
       "name": "opco.working_capital.adjustment",
       "owner": {
         "symbol": "operating.business"
@@ -300,8 +300,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "cf5b9f0fb3eb49fa7195f80826d7dc67",
+      "version": "0.3.0",
+      "hash": "7e5128c3a7dfdeaeb1b2fb990dc45fc8",
       "notes": [
         "active_pack=opco@0.1.0"
       ]

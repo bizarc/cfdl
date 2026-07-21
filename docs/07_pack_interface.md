@@ -40,7 +40,7 @@ Packs must be deterministic:
 CFDL models MAY select a pack:
 
 ```cfdl
-use pack "evs/cre" version "0.1"
+use pack "cfdl/cre" version "0.1"
 ```
 
 Compiler rules:
@@ -57,7 +57,7 @@ If no pack is selected:
 
 ### 3.1 Pack ID
 A pack MUST have a stable ID string:
-- Format recommendation: `publisher/name` (e.g., `evs/cre`, `evs/operating_business`)
+- Format recommendation: `publisher/name` (e.g., `cfdl/cre`, `cfdl/operating_business`)
 
 ### 3.2 Pack version
 A pack MUST have a semver-like version string:

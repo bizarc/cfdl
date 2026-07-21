@@ -12,14 +12,14 @@
   "phases": [],
   "entities": [
     {
-      "id": "d005efc8124f3f9b0c8b2ed51fa5d9a6",
+      "id": "c79f4e109cf36b8d4479ebd3b0deb5de",
       "symbol": "real_estate.annex",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "d8e103732a47a73abd69c0b9872fd831",
+      "id": "72780aa0fe22e499e0adab409b02851e",
       "symbol": "real_estate.primary",
       "type": "core.Entity",
       "attrs": {},
@@ -32,7 +32,7 @@
   },
   "contracts": [
     {
-      "id": "93a2a86096f9bb31a4dc6ef04df535f9",
+      "id": "7628e4e7d897fc7f1c5a429097a24df2",
       "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "e4a8e1959421f3fe17228f4789396607",
+      "id": "602551dfec6eee617b49d6754a332481",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.annex"
@@ -114,8 +114,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "af3556668ef263107cd65dba12832582",
+      "version": "0.3.0",
+      "hash": "d646b49bb0a0581aca01fe4366077210",
       "notes": [
         "active_pack=cre@0.1.0"
       ]

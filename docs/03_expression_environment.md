@@ -108,7 +108,7 @@ Dependency extraction is a compiler-stage responsibility and is required for pla
 
 ### 4.2 Why this is required
 - enables pre-run checks for missing inputs
-- enables EVS connector planning/pipelines
+- enables host-platform connector planning/pipelines
 - enables authoring UX to show required inputs
 
 ### 4.3 Allowed implementation approaches

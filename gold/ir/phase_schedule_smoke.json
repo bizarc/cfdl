@@ -11,14 +11,14 @@
   },
   "phases": [
     {
-      "id": "45cdea226ea22d6852e81fd7c64635c8",
+      "id": "01830c2f00432d6927fbf6a252c9593f",
       "range": {
         "start": "2025-01-01",
         "end": "2025-12-01"
       }
     },
     {
-      "id": "7e7ea33c99cb41db2fe324ea8328da2c",
+      "id": "cd79704e58c05649d69c045ac6a33e2e",
       "range": {
         "start": "2026-01-01",
         "end": "2026-12-01"
@@ -27,7 +27,7 @@
   ],
   "entities": [
     {
-      "id": "3de358de30e7892e99041157a142afaf",
+      "id": "bfac47172516af037732148ffc39112a",
       "symbol": "legal.property",
       "type": "core.Entity",
       "attrs": {},
@@ -41,7 +41,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "34977f612dd13e0b4617c7ba4981d782",
+      "id": "b17f9cc96a67a00dd18267324c2b1998",
       "name": "legal.construction_draw",
       "owner": {
         "symbol": "legal.property"
@@ -72,7 +72,7 @@
       }
     },
     {
-      "id": "32635a110c4ab7002088a2e11def60a4",
+      "id": "aba9064466bf55cc9285bd5782b4397a",
       "name": "legal.operating_revenue",
       "owner": {
         "symbol": "legal.property"
@@ -120,8 +120,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "8814dec7c5f5d7f34d1cde693abca1e7"
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
     }
   }
 }

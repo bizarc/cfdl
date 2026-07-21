@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "id": "decd44881d55d1c95cbf6c652aa4aa16",
       "symbol": "real_estate.property",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "9ab87b81b1f2755309909fdf80a44a29",
+      "id": "db20544d56f4f6b2f59e26727579e49c",
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "15b6ebfc4d0e6adba8b6648567606317",
+      "id": "0239963313bbd2b220e6a1d55f925ad3",
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "93a2a86096f9bb31a4dc6ef04df535f9",
+      "id": "7628e4e7d897fc7f1c5a429097a24df2",
       "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
@@ -105,7 +105,7 @@
   ],
   "streams": [
     {
-      "id": "481d9db23d18a703a6b2898530edbcca",
+      "id": "42d04cd7e98368fcf20febf92af56d8a",
       "name": "ancillary.income",
       "owner": {
         "symbol": "real_estate.property"
@@ -137,7 +137,7 @@
       }
     },
     {
-      "id": "3cdac401258a8f678ecaaa1be0c6a0c1",
+      "id": "20e9d5b2f3a171910859ba623d49c4cc",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -174,7 +174,7 @@
       }
     },
     {
-      "id": "180e7245113d8e7fcbd36e06881d5e85",
+      "id": "59319321c2a987d75e48f62d79cd89a8",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.property"
@@ -213,7 +213,7 @@
       }
     },
     {
-      "id": "e4a8e1959421f3fe17228f4789396607",
+      "id": "602551dfec6eee617b49d6754a332481",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.property"
@@ -267,8 +267,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.1.0",
-      "hash": "af3556668ef263107cd65dba12832582",
+      "version": "0.3.0",
+      "hash": "d646b49bb0a0581aca01fe4366077210",
       "notes": [
         "active_pack=cre@0.1.0"
       ]
