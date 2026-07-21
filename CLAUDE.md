@@ -1,30 +1,32 @@
-You are an implementation agent for the CFDL v0.1 compiler workspace.
+# CLAUDE.md — CFDL Operating Rules
 
-Read and follow:
-- CLAUDE.md (operating rules)
-- AGENTS.md (milestones + acceptance criteria)
-- @docs/* (authoritative specs)
+You are an implementation agent for **CFDL** (Cash Flow Domain Language), being launched
+at CFDL.dev as a standalone, source-available product.
 
-TASK (Milestone 1 — Lexer scaffolding):
-1) Implement the lexer in crates/cfdl-lexer per @docs/compiler_spec_v0_1.md and docs/CFDL_v0_1_Grammar.ebnf:
-   - Tokenize identifiers, keywords, punctuation, string literals, numeric literals, date literals.
-   - Support line comments // and block comments /* */.
-   - Produce spans (start_line/start_col/end_line/end_col) for every token and for lexer diagnostics.
-   - Deterministic behavior only.
+## Start here
 
-2) Add TWO invalid fixtures and golden diagnostics:
-   - fixtures/invalid/lex_unterminated_string/model.cfdl
-   - fixtures/invalid/lex_unterminated_block_comment/model.cfdl
-   The expected error codes must match @docs/diagnostics_spec.md (E0002_UNTERMINATED_STRING and E0003_UNTERMINATED_BLOCK_COMMENT). Ensure diagnostics include file and span.
+1. **`LAUNCH_PLAN.md`** — locked decisions, workstreams (A–G), file ownership,
+   coordination rules. Your work belongs to exactly one workstream.
+2. `docs/0*.md` + `docs/schemas/` — authoritative language/IR/results specs.
+3. `CONTRIBUTING.md` — conventions, golden workflow, change checklist.
 
-3) Wire the CLI parse command minimally ONLY if required for golden tests. Prefer unit tests in crates/cfdl-lexer. If you do touch the CLI, keep it thin and do not change the existing CLI interface (compile/validate contract) or diagnostic code meanings.
+## Hard rules
 
-DONE WHEN:
-- make fmt && make lint && make test && make gold all pass
-- golden outputs are updated ONLY via CFDL_GOLD_UPDATE=1 when generating new gold files
-- No changes to existing diagnostic codes; only add if unavoidable.
+- **Determinism**: same inputs + same pack + same compiler version → identical output.
+- **Golden-first**: `make ci` must pass; never hand-edit `gold/`; re-bless only
+  intentional changes via `CFDL_GOLD_UPDATE=1 ./tools/golden-runner run`, explained in
+  the commit message. Only one workstream re-blesses per merge (see LAUNCH_PLAN.md §5).
+- **Diagnostic codes are stable** — add, never rename/reuse.
+- **Branching**: one workstream = one branch (`ws/<letter>-<slug>`); merge to `main`
+  only with `make ci` green.
+- **Licensing language**: CFDL is "source available" (BSL 1.1), never "open source".
+- **No publishing without human approval**: no public repo flip, crates.io, PyPI,
+  Marketplace, Pages deploys, or GitHub Releases.
+- Strict Rust: `cargo fmt`, `cargo clippy -D warnings`. Conventional Commits.
 
-Deliverables in the PR:
-- lexer implementation in crates/cfdl-lexer
-- the two fixture directories + their gold/diag/*.diag.json files
-- brief notes describing token model + how spans are computed
+## Build & test
+
+```bash
+make ci      # fmt + clippy + tests + golden suite (42 fixtures must pass)
+make gold    # golden suite only
+```

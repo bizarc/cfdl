@@ -1,170 +1,112 @@
-# CFDL SDK (Cash Flow Domain Language)
+# CFDL — the Cash Flow Domain Language
 
-CFDL is a proprietary domain language and SDK for defining **cash-flow models** (time, structure, behavior), compiling them into a deterministic **Intermediate Representation (IR)**, and executing valuation runs to produce deterministic **Results** (DCF, scenarios, Monte Carlo).
+CFDL is a **source-available domain language for modeling cash-flowing assets**: real
+estate, energy projects and microgrids, loans and credit portfolios, operating
+businesses — anything that produces or consumes cash over time.
 
-This repository is the **CFDL SDK**: language spec + compiler + schemas + engine harness + CLI + golden fixtures.
+Models are written as human-readable `.cfdl` files that separate **Time** (calendars,
+phases), **Structure** (entities, contracts), and **Behavior** (streams, events,
+assumptions). The compiler turns them into a deterministic, canonical **IR** (JSON), and
+the engine executes valuation runs — DCF, scenarios, seeded Monte Carlo — into
+schema-governed **Results** (JSON). Same inputs, same version → byte-identical outputs.
 
-> EVS (Enterprise Valuation SaaS) lives in a separate repository: `evs-platform`, which depends on this SDK.
+```text
+model.cfdl ──► cfdl compile ──► model.ir.json ──► cfdl run ──► results.json
+              (lexer → parser → resolver →        (NPV, IRR, scenarios,
+               validate → IR emission)             Monte Carlo, metrics)
+```
 
----
+```cfdl
+version 0.1
+model "solar-ppa"
+time calendar monthly from 2027-01 for 300
+entity project plant
 
-## What’s in this repo
+stream plant.ppa_revenue on entity project.plant inflow currency USD {
+  schedule every monthly from 2027-01 to 2051-12
+  amount cel "mwh_p50 * ppa_price * pow(1 - degradation, time.t / 12.0)"
+}
+```
 
-### Language + contracts
+> **Status:** pre-1.0, under active development toward the CFDL.dev launch. The current
+> language/IR spec is v0.1; interfaces may change until 1.0 freezes the IR and Results
+> schemas. See `LAUNCH_PLAN.md` for the roadmap.
 
-* Human-authored CFDL source files (`.cfdl`)
-* Language specification and grammar (see `docs/`)
+## Use CFDL from…
 
-### Compiler toolchain
-
-* Lexer → Parser → Resolver → Symbol checks → Validation → IR emission
-* Deterministic IDs and canonical ordering
-* Diagnostics with stable codes (golden-tested)
-
-### Engine harness
-
-* Deterministic execution over IR
-* Results emission (schema-governed)
-* Scenario + Monte Carlo run configs (seeded, reproducible)
-
-### Golden fixtures
-
-* `fixtures/invalid/*` → expected diagnostics (`gold/diag/*`)
-* `fixtures/valid/*` → expected IR (`gold/ir/*`) and results (`gold/results/*`)
-
----
+- **Files + CLI** — `cfdl compile`, `cfdl run`, `cfdl validate` (this repo, works today)
+- **Python / Jupyter** — `cfdl_sdk` bindings under `python/` (pandas-friendly SDK in progress)
+- **VS Code** — extension with LSP diagnostics under `editors/vscode`
+- **API / playground** — planned; see `LAUNCH_PLAN.md`
 
 ## Quick start
 
-### Build
-
 ```bash
 cargo build -p cfdl-cli
-```
 
-### Learn CFDL language basics
-
-- Language onboarding guide: `docs/LANGUAGE_GUIDE.md`
-- Tutorial examples: `examples/language_tutorial/`
-- Hosted docs site: `https://bizarc.github.io/cfdl/`
-
-### Compile a model to IR
-
-```bash
+# compile a model to IR
 ./target/debug/cfdl compile fixtures/valid/minimal_model --out /tmp/model.ir.json
-```
 
-### Run a model IR to results
-
-```bash
+# run the IR to results (10% discount rate)
 ./target/debug/cfdl run /tmp/model.ir.json --out /tmp/model.results.json --rate 0.10
+
+# scenarios / Monte Carlo via a run config
+./target/debug/cfdl run /tmp/model.ir.json --out /tmp/model.results.json \
+  --config fixtures/valid/monte_carlo_smoke/run.json
 ```
 
-### Run with a config (scenarios / Monte Carlo)
+Learn the language:
 
-```bash
-./target/debug/cfdl run /tmp/model.ir.json --out /tmp/model.results.json --config fixtures/valid/monte_carlo_smoke/run.json
-```
-
-### Verify golden fixtures (authoritative behavior)
-
-```bash
-./tools/golden-runner run
-```
-
-To update gold (intentional behavior changes only):
-
-```bash
-CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
-```
-
----
+- Language tour and user guide: `docs/09_user_guide.md`
+- Tutorial examples: `examples/language_tutorial/`
+- Worked examples: `examples/` (CRE development, lease-up, operating businesses)
 
 ## Public contracts (stable interfaces)
 
-The following are the contracts EVS and other consumers integrate against:
+- Language spec: `docs/01_language_spec.md` · grammar: `docs/02_grammar.md`,
+  `docs/schemas/CFDL_v0_1_Grammar.ebnf`
+- Expression environment: `docs/03_expression_environment.md`
+- Compiler: `docs/04_compiler_spec.md` · diagnostics codes: `docs/08_diagnostics.md`
+- IR schema: `docs/schemas/ir.schema.json` (`docs/05_ir_schema.md`)
+- Results schema: `docs/schemas/results.schema.json` (`docs/06_results_schema.md`)
+- Domain pack interface: `docs/07_pack_interface.md`
 
-* CFDL source format: `docs/CFDL_v0_1_Language_Spec.md`
-* IR schema: `docs/CFDL_v0_1_IR.schema.json`
-* Results schema: `docs/CFDL_v0_1_Results.schema.json`
-* Diagnostics codes: `docs/diagnostics_spec.md`
-* Deterministic ID generation: `docs/id_generation.md`
+Determinism is a contract: deterministic IDs, canonical ordering, stable diagnostic
+codes, all enforced by the golden suite (`fixtures/` + `gold/`, run via
+`./tools/golden-runner run`).
 
----
+## Repository layout
 
-## Crates
+| Path | Contents |
+|---|---|
+| `crates/` | Rust workspace: `cfdl-cli`, `cfdl-compile`, `cfdl-engine`, `cfdl-lsp`, compiler stages (`cfdl-lexer`, `cfdl-parser`, `cfdl-resolver`, `cfdl-validate`), `cfdl-expr`, `cfdl-pack`, `cfdl-metrics`, `cfdl-py` |
+| `packs/` | Domain packs (`cre`, `opco`) — contract types, defaults, lowering rules (TOML) |
+| `docs/` | Numbered spec set + JSON schemas + grammar |
+| `docs-site/` | Docusaurus documentation site |
+| `python/` | Python SDK (`cfdl_sdk`, maturin/pyo3) |
+| `editors/vscode/` | VS Code extension (syntax, snippets, LSP client) |
+| `fixtures/`, `gold/` | Golden test fixtures and expected outputs |
+| `examples/` | Worked example models |
 
-This is a Rust workspace. Key crates include:
+Rust embedders: the intended surface is `cfdl-compile` and `cfdl-engine`.
 
-* `cfdl-cli` — the CLI tool (`cfdl`)
-* `cfdl-compile` — compiler pipeline (CFDL → IR)
-* `cfdl-engine` — execution engine harness (IR → Results)
-* `cfdl-validate`, `cfdl-resolver`, etc. — internal compiler stages
-
-> The intended embedding surface for other repos is `cfdl-compile` and `cfdl-engine`.
-
----
-
-## VSCode extension
-
-The CFDL VSCode extension lives in `editors/vscode`.
-
-- Development and smoke-test guide: `editors/vscode/README.md`
-- End-user install and configuration: `distribution/install-configure.md`
-- Language server binary used by the extension: `cfdl-lsp`
-- Language onboarding guide for authors: `docs/LANGUAGE_GUIDE.md`
-
----
-
-## Versioning and releases
-
-This repo is versioned as an SDK.
-
-* Tags (e.g., `v0.1.0`) identify released SDK snapshots.
-* EVS pins to a tag or commit SHA.
-
-To create and push a tag:
+## Build & test
 
 ```bash
-git tag -a v0.1.0 -m "CFDL SDK v0.1.0"
-git push origin v0.1.0
+make ci      # fmt + clippy (-D warnings) + tests + golden suite
+make gold    # golden suite only
 ```
 
----
+Gold updates are intentional-only: `CFDL_GOLD_UPDATE=1 ./tools/golden-runner run`.
 
-## Using this SDK from `evs-platform`
+## License & contributions
 
-You can depend on this repo via Git (no crates.io required).
+CFDL is **source available** under the [Business Source License 1.1](LICENSE): you may
+read, copy, modify, and make non-production and permitted production use of the code;
+offering CFDL to third parties as a hosted or embedded commercial product or service
+requires a commercial license. Each released version converts to Apache-2.0 four years
+after release. See `LICENSE` and `NOTICE`.
 
-In `evs-platform/Cargo.toml`:
-
-```toml
-[dependencies]
-cfdl-compile = { git = "ssh://git@github.com/bizarc/cfdl.git", tag = "v0.1.0", package = "cfdl-compile" }
-cfdl-engine  = { git = "ssh://git@github.com/<ORG>/cfdl.git", tag = "v0.1.0", package = "cfdl-engine" }
-```
-
-Notes:
-
-* Use `tag = "v0.1.0"` to pin to a release.
-* Or use `rev = "<commit sha>"` to pin precisely.
-
----
-
-## Relationship to EVS
-
-`evs-platform` provides:
-
-* multi-tenant SaaS (projects, artifacts, jobs)
-* connectors + pipelines (Excel/CSV, PDF, APIs)
-* ontology / digital twin
-* authoring UIs (wizard) and review/comment workflows
-* domain packs (CRE, Operating Business, Private Credit)
-
-`evs-platform` depends on the CFDL SDK to compile and run models deterministically.
-
----
-
-## License
-
-Proprietary. All rights reserved.
+CFDL is maintained by a small internal team at EVS. **External pull requests are not
+accepted at this time.** Bug reports via GitHub issues are welcome — see
+`CONTRIBUTING.md`.
