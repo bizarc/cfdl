@@ -1,0 +1,4 @@
+# Normalize all text files to LF on checkout, on every platform.
+# Diagnostics spans are byte/column-exact and golden-tested; CRLF checkouts
+# shift lexer columns and break the golden suite on Windows.
+* text=auto eol=lf
