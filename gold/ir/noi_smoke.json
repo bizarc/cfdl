@@ -1,0 +1,245 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "noi-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 13
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "symbol": "real_estate.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "9ab87b81b1f2755309909fdf80a44a29",
+      "name": "cre.exit_cap",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "15b6ebfc4d0e6adba8b6648567606317",
+      "name": "cre.ops_expense",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 17,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "93a2a86096f9bb31a4dc6ef04df535f9",
+      "name": "cre.ops_revenue",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "3cdac401258a8f678ecaaa1be0c6a0c1",
+      "name": "cre.exit.sale",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "36000.0 / 0.09"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_cap_sale_v1"
+        }
+      }
+    },
+    {
+      "id": "180e7245113d8e7fcbd36e06881d5e85",
+      "name": "cre.ops.expense",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "2000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 17,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_expense_v1"
+        }
+      }
+    },
+    {
+      "id": "e4a8e1959421f3fe17228f4789396607",
+      "name": "cre.ops.revenue",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "5000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_revenue_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "af3556668ef263107cd65dba12832582",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

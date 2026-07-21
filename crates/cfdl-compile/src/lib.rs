@@ -275,7 +275,7 @@ struct Ir {
     events: Vec<serde_json::Value>,
     options: Vec<serde_json::Value>,
     runs: Vec<IrRun>,
-    metrics: Vec<serde_json::Value>,
+
     required_observables: Vec<String>,
     required_refs: Vec<String>,
     provenance: IrProvenance,
@@ -467,6 +467,16 @@ fn build_ir(
         .collect();
     phases.sort_by(|a, b| a.0.cmp(&b.0));
 
+    let phase_map: BTreeMap<String, (String, String)> = phases
+        .iter()
+        .map(|((name, _file), ir_phase)| {
+            (
+                name.clone(),
+                (ir_phase.range.start.clone(), ir_phase.range.end.clone()),
+            )
+        })
+        .collect();
+
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
         .iter()
@@ -530,66 +540,76 @@ fn build_ir(
         .collect();
     contracts.sort_by(|a, b| a.0.cmp(&b.0));
 
-    let mut streams: Vec<((String, String), IrStream)> = resolve_output
-        .source_statements
-        .iter()
-        .filter_map(|source_stmt| {
-            let Stmt::Stream(stream) = &source_stmt.statement else {
-                return None;
-            };
-            let stable_key = stable_key(&source_stmt.file, &stream.name);
-            let schedule = lower_schedule(
-                stream.schedule.as_ref(),
-                &time_calendar,
-                &time_start,
-                &timeline_end,
-            );
-            let ir_stream = IrStream {
-                id: deterministic_id("Stream", &stable_key, &id_seed),
-                name: stream.name.clone(),
-                owner: IrEntityRef {
-                    symbol: stream.attached_entity.clone(),
-                },
-                direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
-                currency: stream
-                    .currency
+    let mut streams: Vec<((String, String), IrStream)> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        let stable_key = stable_key(&source_stmt.file, &stream.name);
+        let schedule = lower_schedule(
+            stream.schedule.as_ref(),
+            &time_calendar,
+            &time_start,
+            &timeline_end,
+            &phase_map,
+        )
+        .map_err(|msg| {
+            vec![Diagnostic {
+                code: "E5005_PHASE_NOT_FOUND".to_string(),
+                severity: "error".to_string(),
+                message: msg,
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(stream.span)),
+                path: None,
+                hint: None,
+                notes: vec![],
+            }]
+        })?;
+        let ir_stream = IrStream {
+            id: deterministic_id("Stream", &stable_key, &id_seed),
+            name: stream.name.clone(),
+            owner: IrEntityRef {
+                symbol: stream.attached_entity.clone(),
+            },
+            direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
+            currency: stream
+                .currency
+                .as_ref()
+                .cloned()
+                .unwrap_or_else(|| model_currency.clone()),
+            schedule,
+            amount: IrExpr {
+                lang: stream
+                    .amount
                     .as_ref()
-                    .cloned()
-                    .unwrap_or_else(|| model_currency.clone()),
-                schedule,
-                amount: IrExpr {
-                    lang: stream
-                        .amount
-                        .as_ref()
-                        .map(|expr| expr.lang.clone())
-                        .unwrap_or_else(|| "cel".to_string()),
-                    src: stream
-                        .amount
-                        .as_ref()
-                        .map(|expr| expr.src.clone())
-                        .unwrap_or_else(|| "0".to_string()),
-                },
-                active_when: IrExpr {
-                    lang: stream
-                        .active_when
-                        .as_ref()
-                        .map(|expr| expr.lang.clone())
-                        .unwrap_or_else(|| "cel".to_string()),
-                    src: stream
-                        .active_when
-                        .as_ref()
-                        .map(|expr| expr.src.clone())
-                        .unwrap_or_else(|| "true".to_string()),
-                },
-                provenance: IrNodeProvenance {
-                    source_file: source_stmt.file.clone(),
-                    source_span: map_span(stream.span),
-                    generated_by: None,
-                },
-            };
-            Some(((stream.name.clone(), source_stmt.file.clone()), ir_stream))
-        })
-        .collect();
+                    .map(|expr| expr.lang.clone())
+                    .unwrap_or_else(|| "cel".to_string()),
+                src: stream
+                    .amount
+                    .as_ref()
+                    .map(|expr| expr.src.clone())
+                    .unwrap_or_else(|| "0".to_string()),
+            },
+            active_when: IrExpr {
+                lang: stream
+                    .active_when
+                    .as_ref()
+                    .map(|expr| expr.lang.clone())
+                    .unwrap_or_else(|| "cel".to_string()),
+                src: stream
+                    .active_when
+                    .as_ref()
+                    .map(|expr| expr.src.clone())
+                    .unwrap_or_else(|| "true".to_string()),
+            },
+            provenance: IrNodeProvenance {
+                source_file: source_stmt.file.clone(),
+                source_span: map_span(stream.span),
+                generated_by: None,
+            },
+        };
+        streams.push(((stream.name.clone(), source_stmt.file.clone()), ir_stream));
+    }
     let lowered = lower_contract_streams(
         resolve_output,
         active_pack,
@@ -639,13 +659,21 @@ fn build_ir(
             .into_iter()
             .map(|(_, contract)| contract)
             .collect(),
-        streams: streams.into_iter().map(|(_, stream)| stream).collect(),
+        streams: streams
+            .into_iter()
+            .map(|(_, stream)| {
+                let mut s = stream;
+                s.amount.src = coerce_numeric_literals(&s.amount.src);
+                s.active_when.src = coerce_numeric_literals(&s.active_when.src);
+                s
+            })
+            .collect(),
         events: vec![],
         options: vec![],
         runs: vec![IrRun {
             kind: "deterministic".to_string(),
         }],
-        metrics: vec![],
+
         required_observables: vec![],
         required_refs: vec![],
         provenance: IrProvenance {
@@ -847,6 +875,8 @@ fn lower_contract_streams(
                     &mut schedule,
                     &mut amount_src,
                 );
+            } else if pack.name == "cre" {
+                apply_cre_contract_terms(contract, &mut schedule, &mut amount_src);
             }
 
             lowered.push((
@@ -1189,7 +1219,28 @@ fn apply_opco_contract_terms(
     amount_src: &mut String,
 ) {
     match contract.name.as_str() {
-        "opco.revenue_line" | "opco.opex_line" | "opco.working_capital" => {
+        "opco.revenue_line" | "opco.opex_line" => {
+            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
+                let growth = parse_contract_term_f64(contract, "growth_rate").unwrap_or(0.0);
+                if growth != 0.0 {
+                    *amount_src = format!("{amount} * pow(1.0 + {growth}, time.t / 12.0)");
+                } else {
+                    *amount_src = amount.to_string();
+                }
+            }
+            if let (Some(start), Some(end)) = (&contract.term_start, &contract.term_end) {
+                *schedule = IrSchedule {
+                    kind: "Every".to_string(),
+                    on: None,
+                    every: Some(timeline_calendar.to_string()),
+                    from: Some(normalize_date(start)),
+                    to: Some(normalize_date(end)),
+                    on_rule: None,
+                    phase: None,
+                };
+            }
+        }
+        "opco.working_capital" => {
             if let Some(amount) = parse_contract_term_f64(contract, "amount") {
                 *amount_src = amount.to_string();
             }
@@ -1228,6 +1279,63 @@ fn apply_opco_contract_terms(
                     phase: None,
                 };
             }
+        }
+        _ => {}
+    }
+}
+
+/// For CRE contracts, substitute data-driven values from contract terms into the
+/// lowering rule's schedule and amount expression.
+///
+/// `cre.exit_cap`:
+/// - Schedule: the exit date is taken from the contract's `term_start` so models
+///   can place the exit at any date rather than the rule's hard-coded default.
+/// - Amount: when `noi_value` and `exit_cap` are both present, the terminal sale
+///   value is `noi_value / exit_cap`.  The rule's `amount_cel` is kept as a fallback
+///   when `noi_value` is absent (e.g. the contract specifies only `noi_ref` for
+///   future dynamic resolution).
+fn apply_cre_contract_terms(
+    contract: &cfdl_parser::ContractStmt,
+    schedule: &mut IrSchedule,
+    amount_src: &mut String,
+) {
+    match contract.name.as_str() {
+        // Ops contracts: override the schedule's from/to with the contract term range
+        // so the `term` clause in the fixture controls when the stream is active.
+        "cre.ops_revenue" | "cre.ops_expense" => {
+            if let (Some(from), Some(to)) = (&contract.term_start, &contract.term_end) {
+                schedule.from = Some(normalize_date(from));
+                schedule.to = Some(normalize_date(to));
+            }
+            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
+                *amount_src = format!("{amount}");
+            }
+        }
+        // Exit cap: override date and amount from declared noi_value / exit_cap.
+        "cre.exit_cap" => {
+            // Override the exit date from the contract term (term_start == term_end
+            // for a point-in-time exit).
+            if let Some(exit_date) = &contract.term_start {
+                *schedule = IrSchedule {
+                    kind: "OnDate".to_string(),
+                    on: Some(normalize_date(exit_date)),
+                    every: None,
+                    from: None,
+                    to: None,
+                    on_rule: None,
+                    phase: None,
+                };
+            }
+            // Override the amount with the data-driven formula when noi_value is provided.
+            let noi_value = parse_contract_term_f64(contract, "noi_value");
+            let exit_cap = parse_contract_term_f64(contract, "exit_cap");
+            if let (Some(noi), Some(cap)) = (noi_value, exit_cap) {
+                if cap > 0.0 {
+                    *amount_src = format!("{noi} / {cap}");
+                }
+            }
+            // If noi_value is absent (e.g. only noi_ref is specified), leave amount_src
+            // unchanged so the rule's default expression applies.
         }
         _ => {}
     }
@@ -1364,9 +1472,10 @@ fn lower_schedule(
     time_calendar: &str,
     time_start: &str,
     timeline_end: &str,
-) -> IrSchedule {
+    phase_map: &BTreeMap<String, (String, String)>,
+) -> Result<IrSchedule, String> {
     let Some(schedule) = schedule else {
-        return IrSchedule {
+        return Ok(IrSchedule {
             kind: "OnDate".to_string(),
             on: Some(time_start.to_string()),
             every: None,
@@ -1374,7 +1483,7 @@ fn lower_schedule(
             to: None,
             on_rule: None,
             phase: None,
-        };
+        });
     };
 
     let on_rule = schedule.day_of_month.map(|day| IrOnRule {
@@ -1382,7 +1491,7 @@ fn lower_schedule(
         day,
     });
     match &schedule.kind {
-        ScheduleKind::OnDate => IrSchedule {
+        ScheduleKind::OnDate => Ok(IrSchedule {
             kind: "OnDate".to_string(),
             on: Some(normalize_date(
                 schedule.from.as_deref().unwrap_or(time_start),
@@ -1392,8 +1501,8 @@ fn lower_schedule(
             to: None,
             on_rule: None,
             phase: None,
-        },
-        ScheduleKind::Every => IrSchedule {
+        }),
+        ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
             on: None,
             every: Some(time_calendar.to_string()),
@@ -1405,25 +1514,35 @@ fn lower_schedule(
             )),
             on_rule,
             phase: None,
-        },
-        ScheduleKind::PhaseEnter { phase } => IrSchedule {
-            kind: "PhaseEnter".to_string(),
-            on: None,
-            every: None,
-            from: None,
-            to: None,
-            on_rule: None,
-            phase: Some(phase.clone()),
-        },
-        ScheduleKind::EveryPhase { phase } => IrSchedule {
-            kind: "EveryPhase".to_string(),
-            on: None,
-            every: Some(time_calendar.to_string()),
-            from: None,
-            to: None,
-            on_rule,
-            phase: Some(phase.clone()),
-        },
+        }),
+        ScheduleKind::PhaseEnter { phase } => {
+            let (start, _end) = phase_map.get(phase).ok_or_else(|| {
+                format!("Schedule references unknown phase '{phase}'; no matching phase declaration found.")
+            })?;
+            Ok(IrSchedule {
+                kind: "OnDate".to_string(),
+                on: Some(start.clone()),
+                every: None,
+                from: None,
+                to: None,
+                on_rule: None,
+                phase: Some(phase.clone()),
+            })
+        }
+        ScheduleKind::EveryPhase { phase } => {
+            let (start, end) = phase_map.get(phase).ok_or_else(|| {
+                format!("Schedule references unknown phase '{phase}'; no matching phase declaration found.")
+            })?;
+            Ok(IrSchedule {
+                kind: "Every".to_string(),
+                on: None,
+                every: Some(time_calendar.to_string()),
+                from: Some(start.clone()),
+                to: Some(end.clone()),
+                on_rule,
+                phase: Some(phase.clone()),
+            })
+        }
     }
 }
 
@@ -1581,4 +1700,88 @@ fn is_ident_segment(segment: &str) -> bool {
         return false;
     }
     chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+// Minimal tokenizer to coerce integer literals to floats in CEL expressions
+// e.g. "x + 5" -> "x + 5.0", "10 / 2" -> "10.0 / 2.0" at compilation time.
+fn coerce_numeric_literals(expr: &str) -> String {
+    let mut out = String::with_capacity(expr.len() + 10);
+    let mut current_token = String::new();
+    let chars: Vec<char> = expr.chars().collect();
+    let len = chars.len();
+    let mut i = 0;
+
+    fn flush(out: &mut String, token: &mut String) {
+        if token.is_empty() {
+            return;
+        }
+        // Check if pure integer
+        if token.chars().all(|c| c.is_ascii_digit()) {
+            out.push_str(token);
+            out.push_str(".0");
+        } else {
+            out.push_str(token);
+        }
+        token.clear();
+    }
+
+    while i < len {
+        let c = chars[i];
+
+        // String handling: skip content
+        if c == '"' || c == '\'' {
+            flush(&mut out, &mut current_token);
+            out.push(c);
+            let quote = c;
+            i += 1;
+            while i < len {
+                let sc = chars[i];
+                out.push(sc);
+                if sc == quote {
+                    // unexpected end of string or escaped?
+                    // Simple check: not escaped by backslash
+                    if i == 0 || chars[i - 1] != '\\' {
+                        break;
+                    }
+                }
+                i += 1;
+            }
+            i += 1;
+            continue;
+        }
+
+        if c.is_ascii_digit() {
+            current_token.push(c);
+        } else if c == '.' || c.is_alphabetic() || c == '_' {
+            // Identifier or float or property access
+            current_token.push(c);
+        } else {
+            // Delimiter
+            if !current_token.is_empty() {
+                // If token contains non-digits, just flush as is.
+                // If strictly digits, append .0
+                if current_token.chars().all(|tc| tc.is_ascii_digit()) {
+                    out.push_str(&current_token);
+                    out.push_str(".0");
+                } else {
+                    out.push_str(&current_token);
+                }
+                current_token.clear();
+            }
+            out.push(c);
+        }
+        i += 1;
+    }
+
+    // Final flush
+    if !current_token.is_empty() {
+        if current_token.chars().all(|tc| tc.is_ascii_digit()) {
+            out.push_str(&current_token);
+            out.push_str(".0");
+        } else {
+            out.push_str(&current_token);
+        }
+    }
+
+    out
 }

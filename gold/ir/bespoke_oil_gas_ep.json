@@ -1,0 +1,275 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "bespoke-oil-gas-ep",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 60
+  },
+  "phases": [
+    {
+      "id": "caf1808d81ea57e27ef37767ba8fa304",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-06-01"
+      }
+    },
+    {
+      "id": "462c9b4a85be2122f083a3e1554fbec1",
+      "range": {
+        "start": "2027-01-01",
+        "end": "2030-12-01"
+      }
+    },
+    {
+      "id": "faa586cce9363e1e5f088749ec1eca5b",
+      "range": {
+        "start": "2026-07-01",
+        "end": "2026-12-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "15579064a0974dca9b3b4ed0f817a3db",
+      "symbol": "capital.drillco",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "e419f1b5ae434a0e36faea4b1b584695",
+      "symbol": "operations.opco",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "27f496b2cbbb0da7c30880c0e86de13e",
+      "symbol": "wellbore.asset",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "2734f0a99daaf809f13df75d034b0514",
+      "name": "capital.drilling_costs",
+      "owner": {
+        "symbol": "capital.drillco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "250000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 20,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "b7baf8f24cb69c49dfb02b97f7298c9e",
+      "name": "capital.well_capex",
+      "owner": {
+        "symbol": "capital.drillco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01",
+        "phase": "drilling"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "3500000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "435e703d8bfbe4b893a1cf4b3a65a6f6",
+      "name": "opex.ga",
+      "owner": {
+        "symbol": "operations.opco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "12000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 49,
+          "start_col": 1,
+          "end_line": 52,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "27b278a1f29d3eda32e33874b87bb365",
+      "name": "opex.loe",
+      "owner": {
+        "symbol": "operations.opco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "28000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "time.t >= 6.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "f72babf8a431500a16d44fae51b06758",
+      "name": "rev.gross_production",
+      "owner": {
+        "symbol": "wellbore.asset"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "180000.0 * pow(0.94, time.t - 12.0)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "time.t >= 12.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "82170d97dc33f7e73de4123f7905f943",
+      "name": "rev.royalty_burden",
+      "owner": {
+        "symbol": "wellbore.asset"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "33750.0 * pow(0.94, time.t - 12.0)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "time.t >= 12.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 35,
+          "start_col": 1,
+          "end_line": 39,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "8814dec7c5f5d7f34d1cde693abca1e7"
+    }
+  }
+}

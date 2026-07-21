@@ -1,0 +1,9 @@
+[package]
+name = "cfdl-metrics"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+serde = { workspace = true }
+cfdl-engine = { path = "../cfdl-engine" }

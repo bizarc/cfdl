@@ -42,7 +42,7 @@ pub struct SymbolTables {
     pub contracts: BTreeMap<String, SymbolEntry>,
     pub options: BTreeMap<String, SymbolEntry>,
     pub events: BTreeMap<String, SymbolEntry>,
-    pub metrics: BTreeMap<String, SymbolEntry>,
+
     pub assumptions: BTreeMap<String, SymbolEntry>,
 }
 
@@ -637,7 +637,6 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
-        Stmt::Metric(s) => s.span,
     }
 }
 

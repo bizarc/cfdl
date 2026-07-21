@@ -41,7 +41,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "1000"
+        "src": "1000.0"
       },
       "active_when": {
         "lang": "cel",
@@ -65,7 +65,6 @@
       "kind": "deterministic"
     }
   ],
-  "metrics": [],
   "required_observables": [],
   "required_refs": [],
   "provenance": {

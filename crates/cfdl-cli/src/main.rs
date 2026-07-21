@@ -41,6 +41,9 @@ enum Command {
         as_of: Option<String>,
         #[arg(long)]
         packs: Option<PathBuf>,
+        /// Domain pack name for post-engine metrics (e.g. "cre", "opco")
+        #[arg(long)]
+        pack: Option<String>,
     },
     Pack {
         #[command(subcommand)]
@@ -106,6 +109,7 @@ fn main() -> Result<()> {
             rate,
             as_of,
             packs,
+            pack,
         } => {
             if let Some(pack_dir) = packs.or_else(default_packs_dir) {
                 if let Err(err) = cfdl_pack::PackRegistry::load_from_dir(&pack_dir) {
@@ -185,7 +189,7 @@ fn main() -> Result<()> {
                 }
             };
 
-            let results = match cfdl_engine::run_from_file(&ir_json_path, run_config) {
+            let mut results = match cfdl_engine::run_from_file(&ir_json_path, run_config) {
                 Ok(results) => results,
                 Err(err) => {
                     emit_run_failure(
@@ -207,6 +211,9 @@ fn main() -> Result<()> {
                     std::process::exit(1);
                 }
             };
+            if let Some(pack_name) = &pack {
+                results.domain_metrics = cfdl_metrics::compute(pack_name, &results);
+            }
             let json = match serde_json::to_string_pretty(&results) {
                 Ok(json) => json,
                 Err(err) => {

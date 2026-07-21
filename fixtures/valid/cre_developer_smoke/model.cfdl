@@ -35,5 +35,6 @@ contract cre.exit_cap {
   terms {
     exit_cap = 0.06
     noi_ref = ops.noi
+    noi_value = 216000
   }
 }

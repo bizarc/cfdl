@@ -68,7 +68,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "25000 * clamp((time.t - 6 + 1) / 18, 0, 1)"
+        "src": "25000.0 * clamp((time.t - 6.0 + 1.0) / 18.0, 0.0, 1.0)"
       },
       "active_when": {
         "lang": "cel",
@@ -99,7 +99,6 @@
       "kind": "deterministic"
     }
   ],
-  "metrics": [],
   "required_observables": [],
   "required_refs": [],
   "provenance": {

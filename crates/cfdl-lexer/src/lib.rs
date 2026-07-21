@@ -139,7 +139,7 @@ pub enum Keyword {
     MonteCarlo,
     Trials,
     Seed,
-    Metric,
+
     Cel,
     True,
     False,
@@ -612,7 +612,7 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "monte_carlo" => Keyword::MonteCarlo,
         "trials" => Keyword::Trials,
         "seed" => Keyword::Seed,
-        "metric" => Keyword::Metric,
+
         "cel" => Keyword::Cel,
         "true" => Keyword::True,
         "false" => Keyword::False,

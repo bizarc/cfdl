@@ -11,6 +11,7 @@ pub enum EngineError {
     Json(serde_json::Error),
     InvalidDate(String),
     InvalidRunConfig(String),
+    Schedule(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -20,6 +21,7 @@ impl std::fmt::Display for EngineError {
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
+            EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
         }
     }
 }
@@ -91,6 +93,7 @@ struct RunConfigFile {
 
 #[derive(Debug, Default, Deserialize)]
 struct DeterministicConfigFile {
+    #[serde(rename = "annual_discount_rate")]
     discount_rate: Option<f64>,
     as_of: Option<String>,
     #[serde(default)]
@@ -99,6 +102,7 @@ struct DeterministicConfigFile {
 
 #[derive(Debug, Default, Deserialize)]
 struct ScenarioConfigFile {
+    #[serde(rename = "annual_discount_rate")]
     discount_rate: Option<f64>,
     as_of: Option<String>,
     #[serde(default)]
@@ -233,6 +237,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         status: "ok".to_string(),
         metrics: base_run.metrics.clone(),
         series: base_run.series,
+        annual_rollup: base_run.annual_rollup,
         errors: None,
     };
 
@@ -398,7 +403,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     };
 
     Ok(Results {
-        results_version: "0.1".to_string(),
+        results_version: "0.2".to_string(),
         model_hash,
         engine: EngineInfo {
             name: "cfdl-engine".to_string(),
@@ -409,6 +414,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         deterministic,
         scenarios,
         monte_carlo,
+        domain_metrics: None,
     })
 }
 
@@ -418,6 +424,7 @@ struct DeterministicRunOutput {
     metrics: BTreeMap<String, Scalar>,
     series: BTreeMap<String, MoneySeries>,
     npv: f64,
+    annual_rollup: Option<AnnualRollupSection>,
 }
 
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
@@ -522,7 +529,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     }
 
     let mut series_map = BTreeMap::new();
-    for (name, values) in stream_series {
+    for (name, values) in &stream_series {
         series_map.insert(
             format!("stream.{name}"),
             MoneySeries::from_values(
@@ -530,7 +537,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 &ir.time.start,
                 periods as u32,
                 &ir.model.currency,
-                &values,
+                values,
             ),
         );
     }
@@ -566,7 +573,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     }
 
     let model_total = model_series.iter().sum::<f64>();
-    let npv = npv(&model_series, config.discount_rate);
+    let ppy = periods_per_year(&ir.time.calendar);
+    let per_period_rate = (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0;
+    let npv = npv(&model_series, per_period_rate);
     metrics.insert(
         "model.total".to_string(),
         Scalar::Money(Money {
@@ -581,20 +590,100 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             currency: ir.model.currency.clone(),
         }),
     );
+    if let Some(pp_irr) = irr(&model_series) {
+        let annual_irr = (1.0 + pp_irr).powf(ppy) - 1.0;
+        metrics.insert(
+            "model.irr".to_string(),
+            Scalar::Number(round_amount(annual_irr)),
+        );
+    }
     metrics.insert(
-        "run.discount_rate".to_string(),
+        "run.annual_discount_rate".to_string(),
         Scalar::Number(round_amount(config.discount_rate)),
     );
     if let Some(as_of) = &config.as_of {
         metrics.insert("run.as_of".to_string(), Scalar::String(as_of.to_string()));
     }
 
+    let annual_rollup = if ir.time.calendar == "annual" {
+        None
+    } else {
+        Some(build_annual_rollup(
+            &timeline,
+            &stream_series,
+            &model_series,
+            &ir.model.currency,
+        ))
+    };
+
     Ok(DeterministicRunOutput {
         warnings,
         metrics,
         series: series_map,
         npv,
+        annual_rollup,
     })
+}
+
+/// Aggregate per-period series values by calendar year.
+///
+/// Each distinct calendar year present in `timeline` becomes one entry in the
+/// output `MoneySeries`.  Values for all periods that fall within a given year
+/// are summed.  The resulting index uses `calendar = "annual"` and `start =
+/// "{first_year}-01-01"`.
+fn build_annual_rollup(
+    timeline: &[Date],
+    stream_series: &BTreeMap<String, Vec<f64>>,
+    model_series: &[f64],
+    currency: &str,
+) -> AnnualRollupSection {
+    // Collect the ordered, distinct calendar years.
+    let mut seen = std::collections::BTreeSet::new();
+    let mut years: Vec<i32> = Vec::new();
+    for date in timeline {
+        if seen.insert(date.year) {
+            years.push(date.year);
+        }
+    }
+
+    let n_years = years.len() as u32;
+    let start = format!("{:04}-01-01", years[0]);
+
+    // Sum a flat slice of per-period floats into one value per calendar year.
+    let aggregate = |values: &[f64]| -> Vec<f64> {
+        years
+            .iter()
+            .map(|&yr| {
+                timeline
+                    .iter()
+                    .zip(values.iter())
+                    .filter_map(|(d, v)| if d.year == yr { Some(*v) } else { None })
+                    .sum::<f64>()
+            })
+            .collect()
+    };
+
+    let mut rollup = BTreeMap::new();
+
+    rollup.insert(
+        "model.net_cash_flow".to_string(),
+        MoneySeries::from_values(
+            "annual",
+            &start,
+            n_years,
+            currency,
+            &aggregate(model_series),
+        ),
+    );
+
+    for (name, values) in stream_series {
+        rollup.insert(
+            format!("stream.{name}"),
+            MoneySeries::from_values("annual", &start, n_years, currency, &aggregate(values)),
+        );
+    }
+
+    AnnualRollupSection { series: rollup }
 }
 
 fn stream_direction_sign(stream: &IrStream, warnings: &mut Vec<String>) -> f64 {
@@ -718,6 +807,8 @@ fn build_expr_env(
     for (key, value) in &config.parameter_overrides {
         if let Some(stripped) = key.strip_prefix("cfg.") {
             insert_cfg_value(&mut env.cfg, stripped, *value);
+        } else if let Some(stripped) = key.strip_prefix("obs.") {
+            insert_cfg_value(&mut env.obs, stripped, *value);
         }
     }
     env
@@ -773,6 +864,16 @@ fn schedule_mask(schedule: &IrSchedule, timeline: &[Date]) -> Result<Vec<bool>, 
     Ok(values.into_iter().map(|value| value.abs() > 0.0).collect())
 }
 
+fn periods_per_year(calendar: &str) -> f64 {
+    match calendar {
+        "daily" => 365.0,
+        "monthly" => 12.0,
+        "quarterly" => 4.0,
+        "annual" => 1.0,
+        _ => 1.0,
+    }
+}
+
 fn npv(values: &[f64], rate: f64) -> f64 {
     let mut total = 0.0_f64;
     for (i, value) in values.iter().enumerate() {
@@ -780,6 +881,33 @@ fn npv(values: &[f64], rate: f64) -> f64 {
         total += *value / discount;
     }
     total
+}
+
+/// IRR via bisection. Returns None if no sign change in cashflows (undefined) or no convergence.
+fn irr(values: &[f64]) -> Option<f64> {
+    let has_pos = values.iter().any(|&v| v > 0.0);
+    let has_neg = values.iter().any(|&v| v < 0.0);
+    if !has_pos || !has_neg {
+        return None;
+    }
+    let f = |r: f64| npv(values, r);
+    let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
+    if f(lo).signum() == f(hi).signum() {
+        return None;
+    }
+    for _ in 0..300 {
+        let mid = (lo + hi) / 2.0;
+        let v = f(mid);
+        if v.abs() < 1e-4 || (hi - lo) < 1e-12 {
+            return Some(mid);
+        }
+        if f(lo).signum() == v.signum() {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    Some((lo + hi) / 2.0)
 }
 
 fn apply_schedule(
@@ -816,7 +944,11 @@ fn apply_schedule(
                 }
             }
         }
-        _ => {}
+        other => {
+            return Err(EngineError::Schedule(format!(
+                "unsupported schedule kind: {other}"
+            )));
+        }
     }
     Ok(())
 }
@@ -1014,11 +1146,16 @@ struct IrEntityRef {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct IrSchedule {
     kind: String,
     on: Option<String>,
+    #[serde(default)]
+    every: Option<String>,
     from: Option<String>,
     to: Option<String>,
+    #[serde(default)]
+    phase: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1026,6 +1163,20 @@ struct IrExpr {
     #[serde(default)]
     lang: Option<String>,
     src: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DomainMetrics {
+    pub pack: String,
+    pub metrics: BTreeMap<String, Scalar>,
+    pub lineage: BTreeMap<String, MetricLineage>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MetricLineage {
+    pub numerator_streams: Vec<String>,
+    pub denominator_streams: Vec<String>,
+    pub formula: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -1037,6 +1188,8 @@ pub struct Results {
     pub deterministic: DeterministicSection,
     pub scenarios: ScenarioSection,
     pub monte_carlo: MonteCarloSection,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain_metrics: Option<DomainMetrics>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1052,6 +1205,8 @@ pub struct DeterministicSection {
     pub status: String,
     pub metrics: BTreeMap<String, Scalar>,
     pub series: BTreeMap<String, MoneySeries>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annual_rollup: Option<AnnualRollupSection>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RuntimeError>>,
 }
@@ -1081,6 +1236,13 @@ pub struct ScenarioSection {
 pub struct ScenarioSummary {
     pub name: String,
     pub metrics: BTreeMap<String, Scalar>,
+}
+
+/// Calendar-year aggregates of all per-period series.
+/// Omitted when the model frequency is already "annual".
+#[derive(Debug, Clone, Serialize)]
+pub struct AnnualRollupSection {
+    pub series: BTreeMap<String, MoneySeries>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -1317,6 +1479,159 @@ mod tests {
     }
 
     #[test]
+    fn obs_map_flows_into_cel_context() {
+        let ir = r#"{
+            "model": { "name": "obs_test", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "streams": [
+                {
+                    "name": "test.payment",
+                    "owner": { "symbol": "legal.borrower" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cel", "src": "obs.rate" },
+                    "active_when": { "lang": "cel", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let mut overrides = BTreeMap::new();
+        overrides.insert("obs.rate".to_string(), 500.0);
+
+        let results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: overrides,
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("obs_map_flows run");
+
+        let total = results
+            .deterministic
+            .metrics
+            .get("stream.test.payment.total")
+            .expect("stream metric");
+        let amount = match total {
+            super::Scalar::Money(m) => m.amount,
+            other => panic!("expected money scalar, got {other:?}"),
+        };
+        // 500 per period × 2 periods = 1000
+        assert!(
+            (amount - 1000.0).abs() < 1e-9,
+            "expected 1000.0, got {amount}"
+        );
+    }
+
+    fn assert_money(m: &BTreeMap<String, super::Scalar>, key: &str, expected: f64) {
+        let amount = match m
+            .get(key)
+            .unwrap_or_else(|| panic!("missing metric: {key}"))
+        {
+            super::Scalar::Money(v) => v.amount,
+            other => panic!("expected Money for {key}, got {other:?}"),
+        };
+        assert!(
+            (amount - expected).abs() < 1e-9,
+            "{key}: expected {expected}, got {amount}"
+        );
+    }
+
+    #[test]
+    fn multi_stream_period_aggregation() {
+        // Three concurrent streams: two ops (inflow/outflow) active periods 0–1,
+        // one exit event at period 2. Verifies:
+        //   - per-period net = inflow - outflow (sign handling correct)
+        //   - stream totals accumulate correctly across periods
+        //   - a terminal stream fires exactly once at the right period
+        //   - model total = sum of all stream contributions
+        let ir = r#"{
+            "model": { "name": "agg_test", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "entity.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cel", "src": "3000.0" },
+                    "active_when": { "lang": "cel", "src": "true" }
+                },
+                {
+                    "name": "ops.expense",
+                    "owner": { "symbol": "entity.a" },
+                    "direction": "outflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cel", "src": "1000.0" },
+                    "active_when": { "lang": "cel", "src": "true" }
+                },
+                {
+                    "name": "exit.proceeds",
+                    "owner": { "symbol": "entity.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "OnDate", "on": "2026-03-01" },
+                    "amount": { "lang": "cel", "src": "50000.0" },
+                    "active_when": { "lang": "cel", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let results = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                as_of: None,
+                parameter_overrides: BTreeMap::new(),
+                scenarios: BTreeMap::new(),
+                monte_carlo: None,
+            },
+        )
+        .expect("aggregation run");
+
+        let m = &results.deterministic.metrics;
+        let s = &results.deterministic.series;
+
+        // --- Totals (scalar metrics) ---
+        assert_money(m, "stream.ops.revenue.total", 6000.0); // 3000 x 2 periods
+        assert_money(m, "stream.ops.expense.total", -2000.0); // -1000 x 2 periods
+        assert_money(m, "stream.exit.proceeds.total", 50000.0); // single event
+        assert_money(m, "model.total", 54000.0); // 6000 - 2000 + 50000
+
+        // --- Per-stream monthly series (the T-12 / pro-forma interface) ---
+        // Revenue: active periods 0 and 1, zero at period 2
+        let rev = &s["stream.ops.revenue"].values;
+        assert_eq!(rev.len(), 3);
+        assert!((rev[0].amount - 3000.0).abs() < 1e-9, "revenue[0]");
+        assert!((rev[1].amount - 3000.0).abs() < 1e-9, "revenue[1]");
+        assert!((rev[2].amount).abs() < 1e-9, "revenue[2] should be 0");
+
+        // Expense: outflow sign, active periods 0 and 1, zero at period 2
+        let exp = &s["stream.ops.expense"].values;
+        assert_eq!(exp.len(), 3);
+        assert!((exp[0].amount - (-1000.0)).abs() < 1e-9, "expense[0]");
+        assert!((exp[1].amount - (-1000.0)).abs() < 1e-9, "expense[1]");
+        assert!((exp[2].amount).abs() < 1e-9, "expense[2] should be 0");
+
+        // Exit: zero for first two periods, fires only at period 2
+        let exit = &s["stream.exit.proceeds"].values;
+        assert_eq!(exit.len(), 3);
+        assert!((exit[0].amount).abs() < 1e-9, "exit[0] should be 0");
+        assert!((exit[1].amount).abs() < 1e-9, "exit[1] should be 0");
+        assert!((exit[2].amount - 50000.0).abs() < 1e-9, "exit[2]");
+
+        // --- Aggregate net cash flow series ---
+        // Period 0: 3000 - 1000 = 2000; Period 1: same; Period 2: 50000 (exit only)
+        let net = &s["model.net_cash_flow"].values;
+        assert_eq!(net.len(), 3);
+        assert!((net[0].amount - 2000.0).abs() < 1e-9, "net[0]");
+        assert!((net[1].amount - 2000.0).abs() < 1e-9, "net[1]");
+        assert!((net[2].amount - 50000.0).abs() < 1e-9, "net[2]");
+    }
+
+    #[test]
     fn supports_colon_boundary_stream_amount_override_key() {
         let ir = r#"{
             "model": { "name": "demo", "currency": "USD" },
@@ -1414,5 +1729,21 @@ mod tests {
             (bracket_total - 20.0).abs() < 1e-9,
             "bracket key must be ignored"
         );
+    }
+
+    #[test]
+    fn irr_simple_two_period() {
+        // Invest $1000, receive $1100 one period later → IRR = 10%
+        let result = super::irr(&[-1000.0, 1100.0]).expect("IRR should be defined");
+        assert!(
+            (result - 0.10).abs() < 1e-6,
+            "expected IRR ≈ 0.10, got {result}"
+        );
+    }
+
+    #[test]
+    fn irr_undefined_all_positive() {
+        // No sign change → IRR undefined
+        assert!(super::irr(&[100.0, 200.0]).is_none());
     }
 }

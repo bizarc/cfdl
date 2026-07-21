@@ -1,6 +1,6 @@
 {
-  "results_version": "0.1",
-  "model_hash": "43462e37cb8a19e074b9ba7a25c2ffff0018eb1fcc7e26847bd61a2dd71b5c99",
+  "results_version": "0.2",
+  "model_hash": "21cd282550e748ca86c04122abfc8d34a09538e5d0ec905bbccaa1afa3a370be",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -14,14 +14,14 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": -4790.786769,
+        "amount": -5882.578445,
         "currency": "USD"
       },
       "model.total": {
         "amount": -6000.0,
         "currency": "USD"
       },
-      "run.discount_rate": 0.1,
+      "run.annual_discount_rate": 0.1,
       "stream.legal.rent.total": {
         "amount": -6000.0,
         "currency": "USD"
@@ -94,6 +94,36 @@
           }
         ]
       }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -6000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.legal.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -6000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
     }
   },
   "scenarios": {
@@ -103,7 +133,7 @@
         "name": "base",
         "metrics": {
           "model.npv": {
-            "amount": -4790.786769,
+            "amount": -5882.578445,
             "currency": "USD"
           }
         }
@@ -112,7 +142,7 @@
         "name": "downside",
         "metrics": {
           "model.npv": {
-            "amount": -5748.944123,
+            "amount": -7059.094134,
             "currency": "USD"
           }
         }
@@ -121,7 +151,7 @@
         "name": "upside",
         "metrics": {
           "model.npv": {
-            "amount": -4311.708092,
+            "amount": -5294.3206,
             "currency": "USD"
           }
         }

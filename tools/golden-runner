@@ -173,12 +173,20 @@ run_valid_fixture() {
     echo "[golden][FAIL] valid/${name}: compile failed unexpectedly"
     return 1
   fi
+  # Optionally pass --pack if the fixture declares a pack name
+  local pack_arg=""
+  if [[ -f "$dir/pack" ]]; then
+    pack_arg="--pack $(tr -d '[:space:]' < "$dir/pack")"
+  fi
+
   if [[ -f "$run_config" ]]; then
-    if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --config "$run_config" >/dev/null 2>&1; then
+    # shellcheck disable=SC2086
+    if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --config "$run_config" $pack_arg >/dev/null 2>&1; then
       echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
       return 1
     fi
-  elif ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 >/dev/null 2>&1; then
+  # shellcheck disable=SC2086
+  elif ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 $pack_arg >/dev/null 2>&1; then
     echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
     return 1
   fi

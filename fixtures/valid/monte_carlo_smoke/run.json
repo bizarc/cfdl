@@ -1,6 +1,6 @@
 {
   "deterministic": {
-    "discount_rate": 0.08,
+    "annual_discount_rate": 0.08,
     "parameters": {
       "stream.legal.rent:amount": 1000
     }

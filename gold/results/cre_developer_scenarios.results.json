@@ -1,6 +1,6 @@
 {
-  "results_version": "0.1",
-  "model_hash": "b584de9216638eb980bb725c335e622ae0b75e143ae54f8a39de7012486a30e2",
+  "results_version": "0.2",
+  "model_hash": "6e16f4affdf4ec50f503752cd577c82cf560e3418a6164d2093b3a8ed86a2149",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -13,15 +13,16 @@
         "amount": 5031500.0,
         "currency": "USD"
       },
+      "model.irr": 1.239035,
       "model.npv": {
-        "amount": -114723.927169,
+        "amount": 3073220.218421,
         "currency": "USD"
       },
       "model.total": {
         "amount": 5031500.0,
         "currency": "USD"
       },
-      "run.discount_rate": 0.1,
+      "run.annual_discount_rate": 0.1,
       "stream.cre.construction.draws.total": {
         "amount": -270000.0,
         "currency": "USD"
@@ -1826,6 +1827,208 @@
           }
         ]
       }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": -240833.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3516000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.construction.draws": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": -270000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.exit.sale": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3000000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.lease.base_rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 29166.666667,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.ops.expense": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.ops.revenue": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
     }
   },
   "scenarios": {
@@ -1835,7 +2038,7 @@
         "name": "base",
         "metrics": {
           "model.npv": {
-            "amount": -37294.635542,
+            "amount": 3267530.48719,
             "currency": "USD"
           }
         }
@@ -1844,7 +2047,7 @@
         "name": "stress",
         "metrics": {
           "model.npv": {
-            "amount": -54608.550922,
+            "amount": 2861020.717459,
             "currency": "USD"
           }
         }

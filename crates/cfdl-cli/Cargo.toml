@@ -17,4 +17,5 @@ anyhow = { workspace = true }
 # Internal crates (to be implemented)
 cfdl-compile = { path = "../cfdl-compile" }
 cfdl-engine = { path = "../cfdl-engine" }
+cfdl-metrics = { path = "../cfdl-metrics" }
 cfdl-pack = { path = "../cfdl-pack" }

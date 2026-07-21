@@ -1,6 +1,6 @@
 {
-  "results_version": "0.1",
-  "model_hash": "6df2bab0ae1c40e3662596d0d74e4997c1b8ceacdb75ea2d9d667dee3d82f378",
+  "results_version": "0.2",
+  "model_hash": "14d66e24b6a56b569d734e9667c1590152c5fb3b8e6e1813420f580c8e6fd4eb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -14,14 +14,14 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 9248.90528,
+        "amount": 14180.3838,
         "currency": "USD"
       },
       "model.total": {
         "amount": 14808.0,
         "currency": "USD"
       },
-      "run.discount_rate": 0.1,
+      "run.annual_discount_rate": 0.1,
       "stream.testpack.lowered.total": {
         "amount": 14808.0,
         "currency": "USD"
@@ -141,6 +141,36 @@
             "currency": "USD"
           }
         ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 14808.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.testpack.lowered": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 14808.0,
+              "currency": "USD"
+            }
+          ]
+        }
       }
     }
   },

@@ -1,3 +1,0 @@
-# Deterministic ID generation (v0.1)
-
-CFDL IR identifiers are deterministic and derived from stable inputs only. For each node kind (`Entity`, `Contract`, `Stream`, `Phase`, and later `Event`/`Option`/`Metric`), the compiler builds a stable key using the merged module-relative source path plus the fully-qualified symbol or declaration name (`<source_file>::<symbol_or_name>`), then computes `sha256("<kind>:<stable_key>:<seed>")` and emits the first 16 bytes as 32 lowercase hex characters. The `seed` is stable for a given compiler build and pack context, so identical sources + pack + compiler version produce identical IDs across runs.

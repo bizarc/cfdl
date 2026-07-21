@@ -1,0 +1,60 @@
+version 0.1
+model "opco-professional-services"
+time calendar monthly from 2026-01 for 60
+
+entity operating firm
+entity capital equity
+
+// Recurring client retainers: $280k/mo base, 8% annual compound growth
+stream rev.retainers on entity operating.firm inflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "280000 * pow(1.08, time.t / 12.0)"
+}
+
+// Project & transaction fees: $95k/mo base, 12% annual compound growth
+stream rev.project_fees on entity operating.firm inflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "95000 * pow(1.12, time.t / 12.0)"
+}
+
+// Software licensing / IP royalties: $45k/mo base, 18% annual compound growth
+stream rev.licensing on entity operating.firm inflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "45000 * pow(1.18, time.t / 12.0)"
+}
+
+// Compensation & benefits (billable staff + management team)
+stream opex.compensation on entity operating.firm outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "230000"
+}
+
+// G&A: finance, legal, HR, executive overhead
+stream opex.ga on entity operating.firm outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "45000"
+}
+
+// Facilities, IT infrastructure, software licenses
+stream opex.facilities on entity operating.firm outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "22000"
+}
+
+// Sales & marketing, business development
+stream opex.sales_marketing on entity operating.firm outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "18000"
+}
+
+// Working capital requirement
+stream opex.working_capital on entity operating.firm outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "14000"
+}
+
+// PE exit: Y5 annualized EBITDA ~$4.27M; 8.5x multiple → $36,300,000
+stream exit.pe_sale on entity capital.equity inflow currency USD {
+  schedule on 2030-12
+  amount cel "36300000"
+}

@@ -33,7 +33,6 @@ pub enum Stmt {
     Stream(StreamStmt),
     Event(EventStmt),
     Option(OptionStmt),
-    Metric(MetricStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -161,12 +160,6 @@ pub struct EventStmt {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OptionStmt {
-    pub name: String,
-    pub span: Span,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct MetricStmt {
     pub name: String,
     pub span: Span,
 }
@@ -1192,7 +1185,6 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
-        Stmt::Metric(s) => s.span,
     }
 }
 
@@ -1294,7 +1286,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::MonteCarlo => "monte_carlo",
         Keyword::Trials => "trials",
         Keyword::Seed => "seed",
-        Keyword::Metric => "metric",
+
         Keyword::Cel => "cel",
         Keyword::True => "true",
         Keyword::False => "false",

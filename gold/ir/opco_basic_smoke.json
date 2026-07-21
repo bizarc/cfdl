@@ -144,7 +144,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "800000 * 6.5"
+        "src": "800000.0 * 6.5"
       },
       "active_when": {
         "lang": "cel",
@@ -183,7 +183,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "70000"
+        "src": "70000.0"
       },
       "active_when": {
         "lang": "cel",
@@ -222,7 +222,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "120000"
+        "src": "120000.0"
       },
       "active_when": {
         "lang": "cel",
@@ -261,7 +261,7 @@
       },
       "amount": {
         "lang": "cel",
-        "src": "3000"
+        "src": "3000.0"
       },
       "active_when": {
         "lang": "cel",
@@ -292,7 +292,6 @@
       "kind": "deterministic"
     }
   ],
-  "metrics": [],
   "required_observables": [],
   "required_refs": [],
   "provenance": {

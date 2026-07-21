@@ -1,0 +1,354 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-mixed-use-io-construction",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 96
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "1908a409a81be05bd7bcb647bc22e7c9",
+      "symbol": "loan.construction",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "e191348eb1c0e97586c899cd33355b0c",
+      "symbol": "loan.permanent",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "9fdcbdb27dc14223c14678c72801aa3a",
+      "symbol": "real_estate.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "9ab87b81b1f2755309909fdf80a44a29",
+      "name": "cre.exit_cap",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2033-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "15b6ebfc4d0e6adba8b6648567606317",
+      "name": "cre.ops_expense",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2033-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 12,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "3cdac401258a8f678ecaaa1be0c6a0c1",
+      "name": "cre.exit.sale",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "1740000.0 / 0.055"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_cap_sale_v1"
+        }
+      }
+    },
+    {
+      "id": "180e7245113d8e7fcbd36e06881d5e85",
+      "name": "cre.ops.expense",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2029-01-01",
+        "to": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "55000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 12,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_ops_expense_v1"
+        }
+      }
+    },
+    {
+      "id": "bd0878bec479050c5fbeb3a8e4985e85",
+      "name": "loan.io_interest",
+      "owner": {
+        "symbol": "loan.construction"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2028-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "75000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "439f195bd1b3fd9a3e587a0caf717cad",
+      "name": "loan.perm_debt_service",
+      "owner": {
+        "symbol": "loan.permanent"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2029-01-01",
+        "to": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "68500.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 58,
+          "start_col": 1,
+          "end_line": 61,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "0df1e9c4614faaf84d58c148b8725f64",
+      "name": "office.base_rent",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2029-01-01",
+        "to": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "120000.0 * clamp((time.t - 36.0 + 1.0) / 18.0, 0.0, 1.0)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "993e805a24b7bf0a8c8be74482417138",
+      "name": "resi.base_rent",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2029-01-01",
+        "to": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "45000.0 * clamp((time.t - 36.0 + 1.0) / 3.0, 0.0, 1.0)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 51,
+          "start_col": 1,
+          "end_line": 54,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9c31a9faab2893f445ce01f68bc05995",
+      "name": "retail.base_rent",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2029-01-01",
+        "to": "2033-12-01"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "35000.0 * clamp((time.t - 36.0 + 1.0) / 6.0, 0.0, 1.0)"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 47,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "af3556668ef263107cd65dba12832582",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

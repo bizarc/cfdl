@@ -70,12 +70,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2028-01-01",
-        "to": "2031-12-01"
+        "from": "2026-01-01",
+        "to": "2027-12-01"
       },
       "amount": {
         "lang": "cel",
-        "src": "30000"
+        "src": "30000.0"
       },
       "active_when": {
         "lang": "cel",
@@ -106,7 +106,6 @@
       "kind": "deterministic"
     }
   ],
-  "metrics": [],
   "required_observables": [],
   "required_refs": [],
   "provenance": {

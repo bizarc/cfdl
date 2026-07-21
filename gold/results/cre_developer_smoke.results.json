@@ -1,6 +1,6 @@
 {
-  "results_version": "0.1",
-  "model_hash": "c6489554d54d82b2e794bf312e3e1b5af78d1b11f5fd721dfbcbec4b646f6a5a",
+  "results_version": "0.2",
+  "model_hash": "9280b76626df46b699d0c5eb37260b32ea5074942587cdb94b58c2866ccdc400",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -10,24 +10,25 @@
     "status": "ok",
     "metrics": {
       "entity.real_estate.property.total": {
-        "amount": 5031500.0,
+        "amount": 5631500.0,
         "currency": "USD"
       },
+      "model.irr": 1.257675,
       "model.npv": {
-        "amount": -114723.927169,
+        "amount": 3414605.293085,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 5031500.0,
+        "amount": 5631500.0,
         "currency": "USD"
       },
-      "run.discount_rate": 0.1,
+      "run.annual_discount_rate": 0.1,
       "stream.cre.construction.draws.total": {
         "amount": -270000.0,
         "currency": "USD"
       },
       "stream.cre.exit.sale.total": {
-        "amount": 3000000.0,
+        "amount": 3600000.0,
         "currency": "USD"
       },
       "stream.cre.lease.base_rent.total": {
@@ -336,7 +337,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3043000.0,
+            "amount": 3643000.0,
             "currency": "USD"
           }
         ]
@@ -930,7 +931,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3000000.0,
+            "amount": 3600000.0,
             "currency": "USD"
           }
         ]
@@ -1825,6 +1826,208 @@
             "currency": "USD"
           }
         ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": -240833.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 4116000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.construction.draws": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": -270000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.exit.sale": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3600000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.lease.base_rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 29166.666667,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.ops.expense": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.ops.revenue": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 360000.0,
+              "currency": "USD"
+            }
+          ]
+        }
       }
     }
   },

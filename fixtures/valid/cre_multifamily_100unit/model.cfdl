@@ -1,0 +1,39 @@
+version 0.1
+model "cre-multifamily-100unit"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+entity real_estate property
+
+// 100 units × $1,850/mo market rent, 5% vacancy → $175,750/mo effective rental income
+contract cre.ops_revenue on entity real_estate.property {
+  term 2026-01..2030-12
+  terms {
+    amount = 175750
+  }
+}
+
+// Ancillary income: parking + laundry + storage ($7,200/mo)
+stream ancillary.income on entity real_estate.property inflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "7200"
+}
+
+// Operating expenses: mgmt 6% ($11,100) + maintenance ($18,500) + insurance ($6,500)
+// + RE taxes ($14,200) + utilities ($8,800) + capex reserves ($4,500) = $63,600/mo
+contract cre.ops_expense on entity real_estate.property {
+  term 2026-01..2030-12
+  terms {
+    amount = 63600
+  }
+}
+
+// Exit at month 60: NOI = ($175,750 + $7,200 - $63,600) * 12 = $1,432,200/yr
+// Cap rate 5.20% → sale price = $1,432,200 / 0.052 = $27,542,307.69
+contract cre.exit_cap on entity real_estate.property {
+  term 2030-12..2030-12
+  terms {
+    exit_cap = 0.052
+    noi_value = 1432200
+  }
+}

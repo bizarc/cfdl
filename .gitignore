@@ -57,3 +57,7 @@ distribution/out/
 # Generated golden outputs (keep gold/ committed, but ignore transient run outputs)
 gold/.generated/
 tools/**/.generated/
+# Compiled native artifacts
+*.so
+*.dylib
+cfdl-lsp-darwin-*

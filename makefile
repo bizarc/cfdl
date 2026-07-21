@@ -30,6 +30,7 @@ build:
 
 clean:
 	cargo clean
+	rm -f *.ir.json *.results.json *.txt
 
 gold:
 	@./tools/golden-runner run

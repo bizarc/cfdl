@@ -1,6 +1,6 @@
 {
-  "results_version": "0.1",
-  "model_hash": "99b67185bfd3494289ba439de0386db399cd373a1e870ba94263fae805c61486",
+  "results_version": "0.2",
+  "model_hash": "6f601d6e88635e116cc0ec0d2139e6af0bae965bdc99beb1a2ecce3bc1c006fb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.1.0"
@@ -14,14 +14,14 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": -4992.710037,
+        "amount": -5904.920004,
         "currency": "USD"
       },
       "model.total": {
         "amount": -6000.0,
         "currency": "USD"
       },
-      "run.discount_rate": 0.08,
+      "run.annual_discount_rate": 0.08,
       "stream.legal.rent.total": {
         "amount": -6000.0,
         "currency": "USD"
@@ -94,6 +94,36 @@
           }
         ]
       }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -6000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.legal.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -6000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
     }
   },
   "scenarios": {
@@ -108,23 +138,23 @@
       "model.npv": {
         "type": "money",
         "mean": {
-          "amount": -4818.436678,
+          "amount": -5698.805441,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 472.405002,
+          "amount": 558.717355,
           "currency": "USD"
         },
         "min": {
-          "amount": -5692.273318,
+          "amount": -6732.299359,
           "currency": "USD"
         },
         "max": {
-          "amount": -4094.004888,
+          "amount": -4842.013891,
           "currency": "USD"
         },
         "p50": {
-          "amount": -4814.347111,
+          "amount": -5693.968676,
           "currency": "USD"
         }
       }
@@ -134,7 +164,7 @@
         "trial": 0,
         "metrics": {
           "model.npv": {
-            "amount": -4254.009134,
+            "amount": -5031.252255,
             "currency": "USD"
           }
         }
@@ -143,7 +173,7 @@
         "trial": 1,
         "metrics": {
           "model.npv": {
-            "amount": -4981.462702,
+            "amount": -5891.617687,
             "currency": "USD"
           }
         }
@@ -152,7 +182,7 @@
         "trial": 2,
         "metrics": {
           "model.npv": {
-            "amount": -5130.988436,
+            "amount": -6068.463025,
             "currency": "USD"
           }
         }
@@ -161,7 +191,7 @@
         "trial": 3,
         "metrics": {
           "model.npv": {
-            "amount": -4656.321742,
+            "amount": -5507.070748,
             "currency": "USD"
           }
         }
@@ -170,7 +200,7 @@
         "trial": 4,
         "metrics": {
           "model.npv": {
-            "amount": -4094.004888,
+            "amount": -4842.013891,
             "currency": "USD"
           }
         }
@@ -179,7 +209,7 @@
         "trial": 5,
         "metrics": {
           "model.npv": {
-            "amount": -5692.273318,
+            "amount": -6732.299359,
             "currency": "USD"
           }
         }
@@ -188,7 +218,7 @@
         "trial": 6,
         "metrics": {
           "model.npv": {
-            "amount": -5340.006884,
+            "amount": -6315.670895,
             "currency": "USD"
           }
         }
@@ -197,7 +227,7 @@
         "trial": 7,
         "metrics": {
           "model.npv": {
-            "amount": -4972.37248,
+            "amount": -5880.866605,
             "currency": "USD"
           }
         }
@@ -206,7 +236,7 @@
         "trial": 8,
         "metrics": {
           "model.npv": {
-            "amount": -4614.253585,
+            "amount": -5457.316387,
             "currency": "USD"
           }
         }
@@ -215,7 +245,7 @@
         "trial": 9,
         "metrics": {
           "model.npv": {
-            "amount": -4448.673607,
+            "amount": -5261.483558,
             "currency": "USD"
           }
         }
@@ -223,9 +253,9 @@
     ],
     "aggregates": {
       "npv": {
-        "mean": -4818.436678,
-        "median": -4814.347111,
-        "stddev": 472.405002,
+        "mean": -5698.805441,
+        "median": -5693.968676,
+        "stddev": 558.717355,
         "p_negative": 1.0
       }
     }

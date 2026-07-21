@@ -1,0 +1,127 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "phase-schedule-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2025-01-01",
+    "periods": 24
+  },
+  "phases": [
+    {
+      "id": "45cdea226ea22d6852e81fd7c64635c8",
+      "range": {
+        "start": "2025-01-01",
+        "end": "2025-12-01"
+      }
+    },
+    {
+      "id": "7e7ea33c99cb41db2fe324ea8328da2c",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "3de358de30e7892e99041157a142afaf",
+      "symbol": "legal.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "34977f612dd13e0b4617c7ba4981d782",
+      "name": "legal.construction_draw",
+      "owner": {
+        "symbol": "legal.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2025-01-01",
+        "phase": "construction"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "500000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "32635a110c4ab7002088a2e11def60a4",
+      "name": "legal.operating_revenue",
+      "owner": {
+        "symbol": "legal.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01",
+        "phase": "operations"
+      },
+      "amount": {
+        "lang": "cel",
+        "src": "10000.0"
+      },
+      "active_when": {
+        "lang": "cel",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.1.0",
+      "hash": "8814dec7c5f5d7f34d1cde693abca1e7"
+    }
+  }
+}

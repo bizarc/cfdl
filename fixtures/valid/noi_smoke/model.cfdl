@@ -1,0 +1,32 @@
+version 0.1
+model "noi-smoke"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 13
+
+entity real_estate property
+
+// Ops streams: revenue $5k/mo, expense $2k/mo, 12 months
+// Monthly ops net = $3,000; annual = $36,000
+contract cre.ops_revenue {
+  term 2026-01..2026-12
+  terms {
+    amount = 5000
+  }
+}
+
+contract cre.ops_expense {
+  term 2026-01..2026-12
+  terms {
+    amount = 2000
+  }
+}
+
+// Terminal value: noi_value / exit_cap = 36000 / 0.09 = 400000
+// noi_value equals the annualized ops net from the contracts above
+contract cre.exit_cap on entity real_estate.property {
+  term 2027-01..2027-01
+  terms {
+    exit_cap = 0.09
+    noi_value = 36000
+  }
+}

@@ -1,0 +1,52 @@
+version 0.1
+model "bespoke-oil-gas-ep"
+time calendar monthly from 2026-01 for 60
+
+phase drilling   from 2026-01 to 2026-06
+phase ramp       from 2026-07 to 2026-12
+phase production from 2027-01 to 2030-12
+
+entity wellbore asset
+entity capital drillco
+entity operations opco
+
+// Initial capex: spud-to-TD, casing, wellhead at t=0
+stream capital.well_capex on entity capital.drillco outflow currency USD {
+  schedule on phase_enter("drilling")
+  amount cel "3500000"
+}
+
+// Monthly drilling & completion costs during drilling phase (t=0..5)
+stream capital.drilling_costs on entity capital.drillco outflow currency USD {
+  schedule every monthly from 2026-01 to 2026-06
+  amount cel "250000"
+}
+
+// Gross production revenue: $180k/mo at peak, 6%/mo exponential decline
+// t=12: $180,000; t=24: $84,843; t=36: $37,592; t=48: $18,827
+stream rev.gross_production on entity wellbore.asset inflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "180000 * pow(0.94, time.t - 12.0)"
+  active when cel "time.t >= 12"
+}
+
+// Royalty burden: 18.75% of gross revenue (landowner + overriding royalties)
+// NRI = 81.25%; royalty declines with production at same 6%/mo rate
+stream rev.royalty_burden on entity wellbore.asset outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "33750 * pow(0.94, time.t - 12.0)"
+  active when cel "time.t >= 12"
+}
+
+// LOE: pumping unit, chemicals, water disposal, field labor — begins at ramp phase
+stream opex.loe on entity operations.opco outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "28000"
+  active when cel "time.t >= 6"
+}
+
+// G&A overhead: corporate allocation, land, accounting (all 60 months)
+stream opex.ga on entity operations.opco outflow currency USD {
+  schedule every monthly from 2026-01 to 2030-12
+  amount cel "12000"
+}
