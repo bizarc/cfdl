@@ -199,7 +199,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-cli"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "cfdl-compile",
@@ -213,7 +213,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-compile"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-expr",
  "cfdl-lexer",
@@ -229,7 +229,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-engine"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-expr",
  "serde",
@@ -239,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-expr"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cel-interpreter",
  "cel-parser",
@@ -247,14 +247,14 @@ dependencies = [
 
 [[package]]
 name = "cfdl-lexer"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "cfdl-lsp"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-lexer",
@@ -270,7 +270,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-metrics"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-engine",
  "serde",
@@ -278,7 +278,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-pack"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "serde",
  "toml",
@@ -286,7 +286,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-parser"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-lexer",
  "thiserror",
@@ -294,7 +294,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-py"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-engine",
@@ -305,7 +305,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-resolver"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-lexer",
  "cfdl-parser",
@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-validate"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "cfdl-parser",
  "cfdl-resolver",

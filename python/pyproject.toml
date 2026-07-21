@@ -4,16 +4,20 @@ build-backend = "maturin"
 
 [project]
 name = "cfdl-sdk"
-version = "0.1.0"
+version = "0.3.0"
 description = "Python bindings for the CFDL SDK"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Proprietary" }
-authors = [{ name = "CFDL SDK Team" }]
+license = { text = "BUSL-1.1" }
+authors = [{ name = "EVS" }]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Rust",
 ]
+
+[project.urls]
+Homepage = "https://cfdl.dev"
+Repository = "https://github.com/bizarc/cfdl"
 
 [tool.maturin]
 manifest-path = "../crates/cfdl-py/Cargo.toml"

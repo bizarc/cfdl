@@ -16,8 +16,11 @@ members = [
 ]
 
 [workspace.package]
+version = "0.3.0"
 edition = "2021"
-license = "Proprietary"
+license = "BUSL-1.1"
+repository = "https://github.com/bizarc/cfdl"
+homepage = "https://cfdl.dev"
 
 [workspace.dependencies]
 anyhow = "1"
