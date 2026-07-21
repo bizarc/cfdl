@@ -24,6 +24,10 @@ function stripLeadingH1(markdown) {
 
 function normalizeLinks(markdown) {
   return markdown
+    .replaceAll(
+      "](schemas/CFDL_v0_1_Grammar.ebnf)",
+      `](${REPO_HTTP_BASE}/docs/schemas/CFDL_v0_1_Grammar.ebnf)`
+    )
     .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language Guide](/language-guide)")
     .replaceAll("`docs/09_user_guide.md`", "[Language Guide](/language-guide)")
     .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/language-reference/language-spec)")

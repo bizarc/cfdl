@@ -2203,11 +2203,9 @@ contract core.lease cre.lease_main term 2026-01..2026-12
             root.join("custom-packs")
         );
 
-        settings.packs_path = Some("/tmp/abs-packs".to_string());
-        assert_eq!(
-            resolve_packs_root(&root, &settings),
-            PathBuf::from("/tmp/abs-packs")
-        );
+        let abs_packs = std::env::temp_dir().join("abs-packs");
+        settings.packs_path = Some(abs_packs.to_string_lossy().into_owned());
+        assert_eq!(resolve_packs_root(&root, &settings), abs_packs);
 
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }

@@ -32,7 +32,7 @@ Recommended tokens:
 
 The formal EBNF grammar is maintained as a standalone file for use with grammar tooling (railroad diagram generators, parser generators, etc.):
 
-📄 **[`schemas/CFDL_v0_1_Grammar.ebnf`](schemas/CFDL_v0_1_Grammar.ebnf)**
+📄 **[`schemas/CFDL_v0_1_Grammar.ebnf`](https://github.com/bizarc/cfdl/blob/main/docs/schemas/CFDL_v0_1_Grammar.ebnf)**
 
 ---
 

@@ -61,3 +61,7 @@ tools/**/.generated/
 *.so
 *.dylib
 cfdl-lsp-darwin-*
+
+# Docusaurus build artifacts
+docs-site/.docusaurus/
+docs-site/build/

@@ -29,6 +29,13 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
+      # Before any cargo build: pyo3 (cfdl-py) resolves the interpreter from
+      # PATH, and runner-default Python can be newer than pyo3 supports.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Format
         if: runner.os == 'Linux'
         run: cargo fmt --all -- --check
@@ -45,11 +52,6 @@ jobs:
         run: |
           chmod +x ./tools/golden-runner
           ./tools/golden-runner run
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Install Python test tooling
         run: |
