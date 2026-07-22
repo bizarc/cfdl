@@ -13,32 +13,36 @@ The same model file gives you the point-estimate answer **and** the
 distribution around it: models are natively stochastic, deterministically
 seeded, and byte-reproducible.
 
-## Use CFDL from…
+## Start here
 
-- **Files + CLI** — `cfdl compile`, `cfdl run`, `cfdl validate`
-- **Python / Jupyter** — the [`cfdl_sdk` package](python-sdk) with pandas
-  result accessors
-- **Playground** — [compile and run in the browser](/playground), nothing to
-  install
-- **API server** — a [self-hostable HTTP API](api-server) over the compiler
-  and engine
-- **VS Code** — extension with LSP diagnostics, hover, and completion
+1. [How CFDL Works](concepts) — the two-minute mental model.
+2. [Getting Started](getting-started) — run your first model in the
+   browser, then with the CLI.
+3. [Install & Setup](install) — pick your surface and set it up.
 
-## Recommended path
+## Pick your surface
 
-1. Read [Getting Started](getting-started)
-2. Walk through the [Language Guide](language-guide)
-3. Learn [Domain Packs](/packs) and the per-pack guides
-4. See how parity is proven in [Benchmarks](benchmarks)
-5. Model uncertainty with [Stochastic Modeling](stochastic-modeling)
-6. Use the [Language Reference](language-reference) for authoritative spec
-   links
+| | Setup |
+|---|---|
+| **[Playground](/playground)** — compile + run in the browser, zero install | [about](install/playground) |
+| **CLI** — `cfdl compile / run / validate` for files, git, and CI | [install](install/cli) |
+| **[Python SDK](python-sdk)** — pandas accessors over results, notebooks | [install](install/python) |
+| **[API server](api-server)** — self-hostable HTTP API | [setup](install/api-server) |
+| **VS Code** — diagnostics, hover, completion via the CFDL LSP | [setup](install/vscode) |
 
-## Source links
+## Learn and build
 
-- Repository: [https://github.com/bizarc/cfdl](https://github.com/bizarc/cfdl)
-- Onboarding guide source: `docs/09_user_guide.md`
-- Tutorial models: `examples/language_tutorial/`
+- [Language Guide](language-guide) and the progressive
+  [tutorial examples](/examples)
+- [Domain Packs](/packs): [Energy](/cookbooks/energy) ·
+  [CRE](/cookbooks/cre) · [Credit](/cookbooks/credit) ·
+  [OpCo](/cookbooks/opco)
+- [Stochastic Modeling](stochastic-modeling) — assumptions, Monte Carlo,
+  percentile outputs
+- [Benchmarks](benchmarks) — how parity with Excel/Argus-grade references
+  is proven
+- [Language Reference](language-reference) — authoritative specs and
+  schemas
 
 ## Licensing
 

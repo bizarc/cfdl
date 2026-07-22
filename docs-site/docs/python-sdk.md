@@ -13,15 +13,8 @@ byte-identical to the CLI's.
 
 ## Install
 
-From a repository checkout:
-
-```bash
-pip install -e "python/[dev,viz]"
-```
-
-`pandas>=2.0` is a hard dependency; the optional `viz` extra adds matplotlib
-plotting. Wheels are built for CPython ≥ 3.10 (abi3) on Linux
-(x86_64/aarch64), macOS (universal2), and Windows.
+See [Install for Python](install/python). Short version, from a checkout:
+`pip install -e "python/[dev,viz]"`.
 
 ## Quickstart
 

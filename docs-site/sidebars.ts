@@ -6,12 +6,19 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "Introduction",
       collapsed: false,
-      items: ["index", "getting-started"]
+      items: ["index", "concepts", "getting-started"]
     },
     {
       type: "category",
       label: "Install & Setup",
-      items: ["install/install-vscode"]
+      items: [
+        "install/install-index",
+        "install/install-cli",
+        "install/install-python",
+        "install/install-api-server",
+        "install/install-vscode",
+        "install/install-playground"
+      ]
     },
     {
       type: "category",
