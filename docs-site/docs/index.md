@@ -28,7 +28,7 @@ seeded, and byte-reproducible.
 
 1. Read [Getting Started](getting-started)
 2. Walk through the [Language Guide](language-guide)
-3. Learn [Packs](packs) and the per-domain [Cookbooks](/cookbooks)
+3. Learn [Domain Packs](/packs) and the per-pack guides
 4. See how parity is proven in [Benchmarks](benchmarks)
 5. Model uncertainty with [Stochastic Modeling](stochastic-modeling)
 6. Use the [Language Reference](language-reference) for authoritative spec

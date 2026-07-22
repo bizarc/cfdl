@@ -1,6 +1,6 @@
 ---
 id: cookbook-opco
-title: "opco pack"
+title: "OpCo pack guide"
 slug: "/cookbooks/opco"
 ---
 

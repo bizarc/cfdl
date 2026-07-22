@@ -2,37 +2,61 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
-    "index",
-    "getting-started",
-    "language-guide",
     {
       type: "category",
-      label: "Examples",
+      label: "Introduction",
+      collapsed: false,
+      items: ["index", "getting-started"]
+    },
+    {
+      type: "category",
+      label: "Install & Setup",
+      items: ["install/install-vscode"]
+    },
+    {
+      type: "category",
+      label: "Learn the Language",
       items: [
+        "language-guide",
         "examples/examples",
         "examples/example-minimal_model",
         "examples/example-first_stream",
         "examples/example-simple_contract",
         "examples/example-with_pack",
-        "examples/example-multi_file",
+        "examples/example-multi_file"
+      ]
+    },
+    {
+      type: "category",
+      label: "Guides",
+      items: ["stochastic-modeling"]
+    },
+    {
+      type: "category",
+      label: "Domain Packs",
+      items: [
+        "packs/packs-overview",
+        "cookbooks/cookbook-energy",
+        "cookbooks/cookbook-cre",
+        "cookbooks/cookbook-credit",
+        "cookbooks/cookbook-opco",
+        "cookbooks/cookbooks",
         "examples/cre-examples",
         "examples/operating-business-examples"
       ]
     },
     {
       type: "category",
-      label: "Cookbooks",
+      label: "Surfaces",
       items: [
-        "cookbooks/cookbooks",
-        "cookbooks/cookbook-energy",
-        "cookbooks/cookbook-cre",
-        "cookbooks/cookbook-credit",
-        "cookbooks/cookbook-opco"
+        "python-sdk",
+        "api-server",
+        { type: "link", label: "Playground", href: "/playground" }
       ]
     },
     {
       type: "category",
-      label: "Language Reference",
+      label: "Reference",
       items: [
         "reference",
         "language-reference/language-spec",
@@ -42,21 +66,19 @@ const sidebars: SidebarsConfig = {
         "language-reference/diagnostics",
         "language-reference/pack-interface",
         "language-reference/ir-schema",
-        "language-reference/results-schema",
-        "language-reference/implementation-status"
+        "language-reference/results-schema"
       ]
     },
-    "packs",
-    "benchmarks",
-    "stochastic-modeling",
     {
       type: "category",
-      label: "Surfaces",
-      items: ["python-sdk", "api-server"]
-    },
-    "install-configure",
-    "troubleshooting",
-    "licensing"
+      label: "Project",
+      items: [
+        "benchmarks",
+        "language-reference/implementation-status",
+        "troubleshooting",
+        "licensing"
+      ]
+    }
   ]
 };
 
