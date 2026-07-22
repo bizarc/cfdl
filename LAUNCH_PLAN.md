@@ -117,7 +117,10 @@ unstarted.
 Grammar gaps remain tracked in **docs/10_implementation_status.md** (the
 implement-or-remove worklist for the 1.0 gate).
 
-**E (Python SDK) and F (surfaces) remain unstarted** and are fully unblocked.
+**E (Python SDK) is COMPLETE** (E1–E4: object model + pandas accessors,
+golden pytest parity, abi3 wheel matrix, industry notebooks — all build-only,
+no publishing). **F (surfaces) is next**; F2 (source-string compile API) also
+enables an SDK `compile_source()` follow-up.
 
 ## 4. Build & test (all agents)
 
@@ -310,15 +313,20 @@ file gives you the Argus number AND the distribution around it."
 
 Post-1.0: scenario trees / optimal exercise, full HLBV under uncertainty.
 
-### Workstream E — Python/Jupyter SDK (M, start anytime; final polish after B)
-**Owns:** `crates/cfdl-py`, `python/**`, `examples/notebooks/**` (new).
-- Pandas accessors in the Python layer (`results.cashflows()/.metrics()/.scenarios()`
-  parsing Results JSON — keep the native module thin); plotting behind `[viz]` extra.
-- pytest suite against golden fixtures (currently zero tests).
-- maturin CI wheel matrix (abi3 via `pyo3/abi3-py310`; manylinux x86_64/aarch64, macOS
-  universal2, Windows). Build only — publishing to PyPI needs human approval.
-- Example notebooks per industry (solar microgrid, CRE acquisition, loan pool, LBO);
-  they double as docs content for F.
+### Workstream E — Python/Jupyter SDK (M) — **COMPLETE (increments E1–E4)**
+**Owns:** `crates/cfdl-py`, `python/**`, `examples/notebooks/**`.
+- ✅ Pandas accessors (`cashflows()/metrics()/metrics_frame()/scenarios()/`
+  `monte_carlo()/annual()`) over a `Model`/`Results` object model; structured
+  `CompileError.diagnostics`/`RunError`; plotting behind the `[viz]` extra.
+  Native module kept thin — it gained `rate/as_of/pack` so the SDK applies the
+  fallback rate and pack domain metrics (E1).
+- ✅ pytest suite: byte-exact golden parity over all 37 valid fixtures, plus
+  DataFrame/error/API tests; runs in CI on three OSes (E2).
+- ✅ maturin abi3 wheel matrix (manylinux x86_64/aarch64, macOS universal2,
+  Windows) + sdist + wheel-install smoke, build-only on tags/dispatch (E3).
+- ✅ Four industry notebooks (solar microgrid, CRE office, loan pool, LBO) on
+  the benchmark models, executed in CI (Linux); double as F docs content (E4).
+- Deferred to human approval: publishing wheels to PyPI (rule 5.6).
 
 ### Workstream F — Surfaces: docs site, playground, VSIX, API server (M–L)
 **Owns:** `docs-site/**`, new `crates/cfdl-wasm`, new `crates/cfdl-server`,

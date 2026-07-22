@@ -39,6 +39,10 @@ This project follows Semantic Versioning: https://semver.org/
   Linux wheel and runs the SDK suite against it. Triggers on `workflow_dispatch`
   and `v*` tags; **no publish step** (rule 5.6). Local `make py-wheel` builds
   from `python/` so the `module-name` remap applies.
+- **Industry notebooks** (E4): `examples/notebooks/` — solar PPA microgrid
+  (energy), office acquisition (CRE), level-pay loan pool (credit), services
+  LBO (opco), each on the matching benchmark model. Executed in CI (Linux) via
+  nbconvert; committed output-stripped. Workstream E is complete.
 
 ---
 
