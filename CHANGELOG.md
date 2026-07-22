@@ -79,6 +79,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.15] - 2026-07-22
+
+### Added
+- **API server** (Workstream F, increment F4): new `crates/cfdl-server` — an
+  axum service exposing `POST /v1/compile|validate|run`, `GET /healthz`, an
+  OpenAPI document at `/openapi.json`, and Swagger UI at `/docs`. Filesystem-
+  free (in-memory `files` map, embedded packs only); bounded by a 1 MiB body,
+  a 10 s timeout, and a Monte Carlo trial cap (rejected, not truncated). The
+  engine runs on `spawn_blocking`. Eight `tower::oneshot` integration tests
+  (happy paths, 422 diagnostics, embedded-pack metrics, 413 body limit, MC-cap
+  rejection, OpenAPI doc).
+- Multi-stage `Dockerfile` (distroless runtime) → `ghcr.io/bizarc/cfdl-server`;
+  a build-only CI job in the release workflow builds and saves the image as an
+  artifact (never pushes — rule 5.6).
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added
