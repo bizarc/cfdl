@@ -9,7 +9,7 @@
 #     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
 #     so sums over mixed streams net correctly.
 #   - Cash sweeps and revolver draws need per-period persistent state and
-#     ship with Workstream H3 (see LAUNCH_PLAN §6H); term debt here is
+#     ship with Workstream H3 (a planned engine allocation pass); term debt here is
 #     scheduled (IO period + level-pay amortization + balloon at maturity).
 #   - No NOL carryforwards in cash taxes (losses floor at zero tax per
 #     period); carryforwards need H3-style state.

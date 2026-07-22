@@ -26,7 +26,7 @@
 #   - floating-rate LEVEL-PAY pools (the balance path depends on the rate
 #     path; no closed form). Floating IO/bullet pools are supported via
 #     `credit.pool_float_io_bullet` + a model `curve` declaration.
-#   - stochastic rate paths (LAUNCH_PLAN stochastic roadmap item 4)
+#   - stochastic rate paths (stochastic roadmap item 4)
 
 # ---------------------------------------------------------------------------
 # credit.pool_level_pay — amortizing (level-pay) pool.

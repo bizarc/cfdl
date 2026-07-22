@@ -244,7 +244,7 @@ jobs:
 
   build-server-image:
     # Build the API server container image and save it as an artifact.
-    # Publishing to ghcr.io is a human-approved step (LAUNCH_PLAN rule 5.6):
+    # Publishing to ghcr.io is a human-approved step:
     # this job never pushes.
     needs: verify
     runs-on: ubuntu-latest

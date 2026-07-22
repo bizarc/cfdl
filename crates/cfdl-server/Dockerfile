@@ -1,7 +1,7 @@
 # CFDL API server — multi-stage build to a distroless runtime image.
 # Build context is the repository root:
 #   docker build -f crates/cfdl-server/Dockerfile -t ghcr.io/bizarc/cfdl-server .
-# Publishing to ghcr.io is a human-approved step (LAUNCH_PLAN rule 5.6).
+# Publishing to ghcr.io is a human-approved step.
 
 FROM rust:1-slim AS builder
 WORKDIR /src

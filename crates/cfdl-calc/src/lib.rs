@@ -1,6 +1,6 @@
 //! cfdl-calc — the CFDL expression engine.
 //!
-//! Design contract (LAUNCH_PLAN.md §6, Workstream B):
+//! Design contract (Workstream B):
 //! - Bare, Excel-familiar expression syntax: `base_rent * (1 + escalation)^years`,
 //!   `if(dscr < 1.20, cash_trap, distribute)`.
 //! - snake_case function vocabulary (`pmt`, `eomonth`, `year_frac`).

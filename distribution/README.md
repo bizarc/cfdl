@@ -34,7 +34,7 @@ brew install --formula ./cfdl.rb
 ```
 
 **Publishing** (creating/pushing a `bizarc/homebrew-tap` repo) is a separate,
-human-approved step — CI never pushes a tap (LAUNCH_PLAN rule 5.6).
+human-approved step — CI never pushes a tap.
 
 ## VS Code Marketplace and Open VSX (build-only)
 

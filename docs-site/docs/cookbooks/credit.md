@@ -10,7 +10,7 @@ slug: "/cookbooks/credit"
 Credit / lending pack: fixed-rate loan pools with CPR prepayments, CDR
 defaults, loss severity and a recovery lag. Benchmarked in
 `benchmarks/credit/` against independent month-by-month reference
-implementations (LAUNCH_PLAN §6D).
+implementations.
 
 ## Contract types
 
@@ -43,7 +43,7 @@ Streams (all suffixed by contract instance): `credit.pool.interest`,
 `servicing_fee` and `prepay_penalty_rate` are available on every pool type.
 The penalty is a flat rate on prepaid balance (simplified yield
 maintenance); a discounted make-whole needs an engine primitive and stays
-on the parity worklist (LAUNCH_PLAN §6D).
+on the parity worklist.
 
 The contract `term` must span `term_months + recovery_lag_months` schedule
 periods so the recovery tail has periods to land in; the expressions gate
@@ -114,6 +114,6 @@ benchmark purchases at a 1-point discount.
 ## Not in v0.1
 
 - **Floating-rate loans** — needs the `curve` input concept and
-  mean-reverting rate paths (LAUNCH_PLAN stochastic roadmap item 4).
+  mean-reverting rate paths (stochastic roadmap item 4).
 - Zero note rate on `pool_level_pay` (closed form divides by `r`).
 - Delinquency states, servicer advances, loan-level heterogeneity.

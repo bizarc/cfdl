@@ -3,7 +3,7 @@
 # Produced by distribution/scripts/gen_homebrew.sh from a release's assets.
 # The placeholders below are filled with the tagged version, the GitHub
 # release download URLs, and each binary's sha256. Publishing to a tap is a
-# separate, human-approved step (LAUNCH_PLAN rule 5.6) — this file is built
+# separate, human-approved step — this file is built
 # and audited locally, never pushed to a tap by CI.
 class Cfdl < Formula
   desc "Cash Flow Domain Language — compiler, engine, and CLI"

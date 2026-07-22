@@ -1,6 +1,6 @@
 # Benchmark case: $10mm IO/bullet bridge pool, 7.25% / 60mo bullet, 5 CPR,
 # 1.5 CDR, 40% severity, 4mo recovery lag, purchased at par.
 # Reference: reference_gen.py (independent implementation).
-# Status: pending practitioner Excel review (LAUNCH_PLAN risk 3).
+# Status: pending practitioner Excel review.
 pack = "credit"
 period_tolerance = 0.01

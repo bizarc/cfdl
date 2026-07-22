@@ -9,7 +9,7 @@ scratch — NOT by calling cfdl — so the benchmark is a genuine cross-check:
 - NPV: per-period rate (1 + annual) ** (1/12) - 1, cash at period start
 
 PROVENANCE: generated implementation; pending practitioner (Excel) review —
-see LAUNCH_PLAN.md risk register item 3.
+it is flagged in the internal risk register.
 
 Regenerate: python3 reference_gen.py  (writes expected.csv, expected_metrics.json)
 """

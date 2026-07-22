@@ -205,7 +205,7 @@ predates them and was not previously logged here:
   `.servicing`, `.penalties` added; all three credit benchmark references
   extended and re-verified.
 - Workstream H (waterfalls & capital stack distributions) documented in
-  LAUNCH_PLAN as core scope with launch-gate benchmarks.
+  the launch plan as core scope with launch-gate benchmarks.
 
 ---
 
@@ -228,7 +228,7 @@ predates them and was not previously logged here:
   fixtures `credit_float_smoke` (linear curve) and invalid `curve_duplicate`.
 
 ### Deferred
-- Stochastic (per-trial mean-reverting) rate paths — LAUNCH_PLAN stochastic
+- Stochastic (per-trial mean-reverting) rate paths — stochastic
   roadmap item 4. Run-config curve overrides.
 
 ---
@@ -251,7 +251,7 @@ predates them and was not previously logged here:
 
 ### Deferred
 - Floating-rate loans off rate curves: needs the `curve` input concept and
-  per-trial rate paths (LAUNCH_PLAN stochastic roadmap item 4).
+  per-trial rate paths (stochastic roadmap item 4).
 
 ---
 

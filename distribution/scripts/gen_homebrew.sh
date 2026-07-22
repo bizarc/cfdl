@@ -7,7 +7,7 @@
 #
 # Build-only: this writes a formula and (optionally) you run `brew audit` /
 # `brew install --formula <output.rb>` locally. Pushing to a Homebrew tap is a
-# separate, human-approved step (LAUNCH_PLAN rule 5.6).
+# separate, human-approved step.
 set -euo pipefail
 
 if [[ $# -lt 3 ]]; then

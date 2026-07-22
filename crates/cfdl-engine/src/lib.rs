@@ -803,7 +803,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Scalar::Number(round_amount(annual_irr)),
         );
     }
-    // Engine-universal return metrics (LAUNCH_PLAN §6C.5): MOIC, payback
+    // Engine-universal return metrics: MOIC, payback
     // period, WAL. Domain metrics live in pack metrics.toml files.
     let total_inflows: f64 = model_series.iter().filter(|v| **v > 0.0).sum();
     let total_outflows: f64 = -model_series.iter().filter(|v| **v < 0.0).sum::<f64>();
