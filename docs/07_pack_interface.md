@@ -116,7 +116,6 @@ types = "ontology/types.toml"
 aliases = "aliases.toml"
 contract_schemas = "contracts/schemas.toml"
 lowering_rules = "contracts/lowering.toml"
-cel_extensions = "cel/extensions.toml"
 outputs = "outputs.toml"
 docs = "docs/index.toml"
 ```
@@ -277,21 +276,12 @@ Compiler behavior:
 - If pack provides registries, the compiler MAY validate that referenced IDs exist.
 - Missing observable IDs SHOULD be warnings in v0.1 (allow offline modeling).
 
-### 6.7 CEL extensions
-A pack MAY add CEL functions or macros.
+### 6.7 Expression functions
 
-Rules:
-- Pack functions MUST NOT override core function names.
-- Pack functions MUST declare signatures.
-
-Example:
-```json
-{
-  "functions": [
-    {"name": "pmt", "args": ["Money", "Rate", "Int"], "returns": "Money"}
-  ]
-}
-```
+The expression function vocabulary is fixed and built into the engine
+(`cfdl-calc`) — `pmt`, `year_frac`, `cpr_to_smm`, `curve_value`, and so on
+(see the [Expression Environment](/language-reference/expression-environment)).
+Packs do **not** define their own expression functions in v0.1.
 
 ### 6.8 Pack validations
 
@@ -462,7 +452,6 @@ The compiler should expose a minimal interface:
 - `Pack.lowering_rule(type_id) -> Option<LoweringRule>`
 - `Pack.observable_registry() -> Option<ObservableRegistry>`
 - `Pack.ref_registry() -> Option<RefRegistry>`
-- `Pack.cel_extensions() -> Option<CelExtensions>`
 - `Pack.output_spec() -> Option<OutputSpec>`
 
 ### 7.2 Error behavior

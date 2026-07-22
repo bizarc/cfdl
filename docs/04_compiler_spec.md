@@ -226,7 +226,7 @@ All validation emits **diagnostics** (see §10).
 ### 5.3 Stream rules
 - Streams MUST have: owner, direction, currency.
 - Streams MUST include `schedule` and `amount`.
-- If `active_when` omitted, it defaults to `cel "true"`.
+- If `active_when` omitted, it defaults to the expression `true`.
 
 ### 5.4 Schedule validation
 - Schedule `from`/`to` MUST be within the master timeline.
@@ -265,7 +265,7 @@ If no pack:
 - `42000 USD` MUST normalize to Money `{ amount: 42000, currency: "USD" }`.
 
 ### 6.3 Defaulting
-- Stream `active_when`: default to `{lang:"cel", src:"true"}`.
+- Stream `active_when`: default to `{lang:"cfdl", src:"true"}`.
 - Optional schedule options default to:
   - convention: `none`
   - stub: `none`
@@ -303,8 +303,8 @@ The top-level `provenance` MUST include:
 
 ### 6.6 Required observables/refs inference
 The compiler MUST populate:
-- `required_observables`: all unique IDs referenced in `obs.rate(...)`, `obs.index(...)`, `obs.fx(...)` calls inside CEL strings
-- `required_refs`: all unique IDs referenced in `ref.*` accessors inside CEL strings
+- `required_observables`: all unique IDs referenced in `obs.rate(...)`, `obs.index(...)`, `obs.fx(...)` calls inside expressions
+- `required_refs`: all unique IDs referenced in `ref.*` accessors inside expressions
 
 **v0.1 requirement:**
 - Implement a **lexical extractor** (regex/finite scan) that finds `obs.rate('X')` / `obs.index('X')` / `obs.fx('X','Y')` and `ref.<name>` patterns.
