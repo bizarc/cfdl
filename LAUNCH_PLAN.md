@@ -100,7 +100,7 @@ unstarted.
   anywhere); all v1 contracts templated with behavior-preserving defaults;
   new working_capital_policy (DSO/DPO/DIO), capex_line, term_debt
   (proceeds + ipmt/ppmt interest/principal split), cash_taxes,
-  exit_ebitda (forward-EBITDA multiple via series_sum), acquisition.
+  exit_ebitda (TRAILING-twelve-month EBITDA multiple via series_sum — the LBO convention, unlike CRE's forward NOI), acquisition.
   Benchmark: lbo_buyout vs independent recursive reference.
 
 **Remaining for Workstream D:**
