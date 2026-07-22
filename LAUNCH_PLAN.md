@@ -254,8 +254,13 @@ H (waterfalls / capital stack)── needs D pack conventions; blocks launch gat
   - *Post-1.0*: roll-rate/delinquency transition models, servicer advances,
     loan-level (vs rep-line) granularity, SOFR lookback/compounding
     mechanics.
-- `cfdl/opco` deepened: working capital (DSO/DPO/DIO), capex/depreciation, debt schedules
-  with sweeps (sweeps need H3-style state — coordinate), LBO returns.
+- `cfdl/opco` deepened — **shipped (increment 11)**: DSO/DPO/DIO working
+  capital, capex (fixed + % of revenue), scheduled term debt (IO/amort/
+  balloon), cash taxes (no NOLs), trailing-EBITDA exit, acquisition;
+  lbo_buyout benchmark; legacy apply_opco_contract_terms retired.
+  Remaining: **cash sweeps / revolvers / PIK and NOL carryforwards need
+  H3-style state**; depreciation is a declared schedule (no fixed-asset
+  roll-forward yet).
 - Flag any reference model that lacks expert verification — parity claims against wrong
   references are worse than none.
 
