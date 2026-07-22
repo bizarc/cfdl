@@ -242,6 +242,30 @@ jobs:
           name: ${{ steps.packs-name.outputs.name }}
           path: release-assets/${{ steps.packs-name.outputs.name }}
 
+  build-server-image:
+    # Build the API server container image and save it as an artifact.
+    # Publishing to ghcr.io is a human-approved step (LAUNCH_PLAN rule 5.6):
+    # this job never pushes.
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image (no push)
+        run: |
+          docker build -f crates/cfdl-server/Dockerfile \
+            -t ghcr.io/bizarc/cfdl-server:ci .
+
+      - name: Save image tarball
+        run: docker save ghcr.io/bizarc/cfdl-server:ci -o cfdl-server-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfdl-server-image
+          path: cfdl-server-image.tar
+
   publish-release:
     needs:
       - build-lsp
