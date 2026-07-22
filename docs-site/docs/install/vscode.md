@@ -1,7 +1,7 @@
 ---
-id: install-configure
-title: "Install and Configure"
-slug: "/install-configure"
+id: install-vscode
+title: "VS Code and LSP"
+slug: "/install/vscode"
 ---
 
 > This page is generated from `distribution/install-configure.md`.

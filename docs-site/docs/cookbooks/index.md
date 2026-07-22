@@ -9,10 +9,10 @@ with worked example notebooks. Generated from each pack's README.
 
 ## Packs
 
-- [energy pack](/cookbooks/energy)
-- [cre pack](/cookbooks/cre)
-- [credit pack](/cookbooks/credit)
-- [opco pack](/cookbooks/opco)
+- [Energy pack guide](/cookbooks/energy)
+- [CRE pack guide](/cookbooks/cre)
+- [Credit pack guide](/cookbooks/credit)
+- [OpCo pack guide](/cookbooks/opco)
 
 ## Example notebooks
 

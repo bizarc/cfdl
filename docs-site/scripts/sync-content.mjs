@@ -58,7 +58,7 @@ function normalizeLinks(markdown) {
     )
     .replaceAll(
       "`distribution/install-configure.md`",
-      "[Install and Configure](/install-configure)"
+      "[VS Code and LSP setup](/install/vscode)"
     )
     .replaceAll(
       "`examples/language_tutorial/`",
@@ -170,21 +170,12 @@ const docSpecs = [
     }
   },
   {
-    source: "docs/07_pack_interface.md",
-    output: "packs.md",
-    frontmatter: {
-      id: "packs",
-      title: '"Packs Guide"',
-      slug: '"/packs"'
-    }
-  },
-  {
     source: "distribution/install-configure.md",
-    output: "install-configure.md",
+    output: "install/vscode.md",
     frontmatter: {
-      id: "install-configure",
-      title: '"Install and Configure"',
-      slug: '"/install-configure"'
+      id: "install-vscode",
+      title: '"VS Code and LSP"',
+      slug: '"/install/vscode"'
     }
   },
   {
@@ -443,6 +434,7 @@ writeGenerated("reference.md", referenceIndex);
 
 // --- Cookbooks: one page per pack, synced from packs/<pack>/README.md -------
 const cookbookPacks = ["energy", "cre", "credit", "opco"];
+const packTitles = { energy: "Energy", cre: "CRE", credit: "Credit", opco: "OpCo" };
 const cookbookIndexLines = [
   "---",
   "id: cookbooks",
@@ -464,14 +456,14 @@ for (const pack of cookbookPacks) {
   const page = renderDoc(
     {
       id: `cookbook-${pack}`,
-      title: `"${pack} pack"`,
+      title: `"${packTitles[pack] ?? pack} pack guide"`,
       slug: `"/cookbooks/${pack}"`
     },
     `packs/${pack}/README.md`,
     body
   );
   writeGenerated(`cookbooks/${pack}.md`, page);
-  cookbookIndexLines.push(`- [${pack} pack](/cookbooks/${pack})`);
+  cookbookIndexLines.push(`- [${packTitles[pack] ?? pack} pack guide](/cookbooks/${pack})`);
 }
 
 cookbookIndexLines.push("");

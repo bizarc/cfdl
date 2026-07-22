@@ -1,6 +1,6 @@
 ---
 id: cookbook-cre
-title: "cre pack"
+title: "CRE pack guide"
 slug: "/cookbooks/cre"
 ---
 

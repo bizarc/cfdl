@@ -21,7 +21,16 @@ const config: Config = {
     locales: ["en"]
   },
   themes: ["@easyops-cn/docusaurus-search-local"],
-  plugins: [],
+  plugins: [
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          { from: "/install-configure", to: "/install/vscode" }
+        ]
+      }
+    ]
+  ],
   presets: [
     [
       "classic",
@@ -46,9 +55,9 @@ const config: Config = {
     navbar: {
       title: "CFDL",
       items: [
-        { to: "/getting-started", label: "Getting Started", position: "left" },
-        { to: "/language-guide", label: "Language Guide", position: "left" },
-        { to: "/examples", label: "Examples", position: "left" },
+        { to: "/getting-started", label: "Get Started", position: "left" },
+        { to: "/language-guide", label: "Learn", position: "left" },
+        { to: "/packs", label: "Packs", position: "left" },
         { to: "/language-reference", label: "Reference", position: "left" },
         { to: "/playground", label: "Playground", position: "left" },
         {
@@ -69,7 +78,8 @@ const config: Config = {
             { label: "Examples", to: "/examples" },
             { label: "Stochastic Modeling", to: "/stochastic-modeling" },
             { label: "Python SDK", to: "/python-sdk" },
-            { label: "Install and Configure", to: "/install-configure" }
+            { label: "Domain Packs", to: "/packs" },
+            { label: "VS Code Setup", to: "/install/vscode" }
           ]
         },
         {

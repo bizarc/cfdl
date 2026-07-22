@@ -1,6 +1,6 @@
 ---
 id: cookbook-energy
-title: "energy pack"
+title: "Energy pack guide"
 slug: "/cookbooks/energy"
 ---
 

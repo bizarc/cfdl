@@ -1,6 +1,6 @@
 ---
 id: cookbook-credit
-title: "credit pack"
+title: "Credit pack guide"
 slug: "/cookbooks/credit"
 ---
 
