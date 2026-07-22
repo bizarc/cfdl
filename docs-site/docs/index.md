@@ -39,7 +39,7 @@ seeded, and byte-reproducible.
   [OpCo](/cookbooks/opco)
 - [Stochastic Modeling](stochastic-modeling) — assumptions, Monte Carlo,
   percentile outputs
-- [Benchmarks](benchmarks) — how parity with Excel/Argus-grade references
+- [Benchmarks](benchmarks) — how parity with institutional-grade references
   is proven
 - [Language Reference](language-reference) — authoritative specs and
   schemas

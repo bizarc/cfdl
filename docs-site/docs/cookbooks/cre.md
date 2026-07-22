@@ -144,7 +144,7 @@ Current codes:
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
 
 
-## Argus-parity lease-by-lease contracts (v2)
+## Lease-by-lease contracts (v2, institutional DCF parity)
 
 Per-tenant contracts use suffixed names (`cre.lease_unit.tenant_a`); one rule
 lowers every instance, emitting per-instance streams
@@ -166,7 +166,7 @@ Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the
 stop set to year-0 grossed-up opex.
 
-Rollover downtime now follows Argus expected-value semantics: the window
+Rollover downtime follows industry-standard expected-value semantics: the window
 starts at expiry, the first `downtime_months` pay only the renewal-scenario
 rent (p × renewal), and the full probability-weighted blend applies after.
 `cre.exit_forward` derives the sale-year NOI from the modeled streams over
@@ -251,6 +251,6 @@ contract cre.property_opex on entity asset.tower {
 of expected-value blending; see `fixtures/valid/cre_stochastic_rollover/`
 and the stochastic-modeling docs.
 
-Full worked models: `benchmarks/cre/office_two_tenant/` (full Argus-parity
+Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-parity
 case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
 rent), and the CRE office notebook in `examples/notebooks/`.

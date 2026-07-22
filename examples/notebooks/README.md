@@ -8,7 +8,7 @@ results with the pandas accessors.
 | Notebook | Pack | Model |
 |---|---|---|
 | `01_energy_solar_microgrid.ipynb` | energy | solar-plus-storage PPA microgrid |
-| `02_cre_office_acquisition.ipynb` | cre | two-tenant office, Argus-style |
+| `02_cre_office_acquisition.ipynb` | cre | two-tenant office, lease-by-lease DCF |
 | `03_credit_loan_pool.ipynb` | credit | level-pay loan pool |
 | `04_opco_lbo.ipynb` | opco | five-year services LBO |
 

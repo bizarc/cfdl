@@ -38,4 +38,4 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | opco | `lbo_buyout` |
 
 > Reference models are independent implementations; those still awaiting
-> practitioner Excel/Argus verification say so in their `case.toml`.
+> practitioner verification say so in their `case.toml`.

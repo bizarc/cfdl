@@ -536,7 +536,7 @@ const benchLines = [
   ...benchCases.map((c) => `| ${c.pack} | \`${c.name}\` |`),
   "",
   "> Reference models are independent implementations; those still awaiting",
-  "> practitioner Excel/Argus verification say so in their `case.toml`.",
+  "> practitioner verification say so in their `case.toml`.",
   ""
 ];
 writeGenerated("benchmarks.md", benchLines.join("\n"));

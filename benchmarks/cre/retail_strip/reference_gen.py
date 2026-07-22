@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent reference for retail_strip (base-year gross-up + pct rent).
 
-PROVENANCE: generated implementation; pending practitioner Argus/Excel review.
+PROVENANCE: generated implementation; pending practitioner review against institutional-grade references.
 Regenerate: python3 reference_gen.py
 """
 import csv

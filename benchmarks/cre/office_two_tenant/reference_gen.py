@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent reference for office_two_tenant (Argus-style lease-by-lease DCF).
+"""Independent reference for office_two_tenant (institutional lease-by-lease DCF).
 
 Conventions mirrored from the documented pack contract (packs/cre/README.md):
 - lease-anniversary anchoring: escalations step at floor(months_since_lease_start/12)
@@ -7,7 +7,7 @@ Conventions mirrored from the documented pack contract (packs/cre/README.md):
 - rollover: renewal-probability-blended rent and TI/LC; window start set by analyst
 - exit at forward NOI / cap, net of selling costs; NPV per (1+r)^(1/12)-1
 
-PROVENANCE: generated implementation; pending practitioner Argus/Excel review.
+PROVENANCE: generated implementation; pending practitioner review against institutional-grade references.
 Regenerate: python3 reference_gen.py
 """
 import csv

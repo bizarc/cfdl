@@ -89,7 +89,7 @@ exit_cap = "0.06"
 term_start = "2031-12"
 
 # ---------------------------------------------------------------------------
-# Argus-parity lease-by-lease contract types (v2, template-driven).
+# Lease-by-lease contract types at institutional DCF parity (v2, template-driven).
 # Lease-anniversary anchoring: lease_t = months_between(term_start, time.date).
 # ---------------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ stream_name = "cre.rollover.rent.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-# Argus-style market leasing assumption. The window starts AT EXPIRY
+# Industry-standard market leasing assumption. The window starts AT EXPIRY
 # (term_start = expiry). During the first downtime_months, only the renewal
 # scenario pays (p * renewal rent — the re-lease scenario sits vacant);
 # afterwards rent is the full probability-weighted blend. Escalation steps on
@@ -176,7 +176,7 @@ stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 currency = "USD"
-# Argus timing: the renewal-scenario turnover cost (p * renewal_ti_lc) pays
+# Industry-standard timing: the renewal-scenario turnover cost (p * renewal_ti_lc) pays
 # at expiry; the re-lease cost ((1-p) * new_ti_lc) pays after downtime, when
 # the new tenant takes occupancy. With downtime_months = 0 both pay at the
 # window start.
