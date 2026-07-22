@@ -1,0 +1,140 @@
+{
+  "results_version": "0.2",
+  "model_hash": "c5b337c936d50597d9c562adbde7b9b2792ffbaa632c3ef1e6351cf71cf0b3c0",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.borrower.total": {
+        "amount": 1545.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1514.76395,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1545.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.1,
+      "stream.legal.fee.total": {
+        "amount": 1545.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.legal.fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 257.5,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1545.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.legal.fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1545.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

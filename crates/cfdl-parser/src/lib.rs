@@ -118,7 +118,21 @@ pub struct PhaseStmt {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AssumeStmt {
     pub name: String,
+    /// Deterministic form: `assume x = <expr>` (raw expression source).
+    pub value: Option<String>,
+    /// Stochastic form: `assume x ~ Dist(...)`.
+    pub dist: Option<AssumeDist>,
     pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AssumeDist {
+    /// "normal" | "lognormal" | "uniform" | "triangular"
+    pub name: String,
+    /// Named numeric args in source order, e.g. [("mean", "0.03"), ("stdev", "0.01")].
+    pub args: Vec<(String, String)>,
+    /// Optional `clip=[lo, hi]`.
+    pub clip: Option<(String, String)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -295,6 +309,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Time) => self.parse_time_stmt().map(Stmt::Time),
             TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
+            TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Contract) => self.parse_contract_stmt().map(Stmt::Contract),
             TokenKind::Keyword(Keyword::Stream) => self.parse_stream_stmt().map(Stmt::Stream),
             TokenKind::Eof => None,
@@ -1120,6 +1135,158 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// `assume <ident> = <expr>` or `assume <ident> ~ Dist(name=num, ..., clip=[lo, hi])`
+    fn parse_assume_stmt(&mut self) -> Option<AssumeStmt> {
+        let start = self.expect_keyword(Keyword::Assume, "'assume'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'assume'.".to_string(),
+                );
+                return None;
+            }
+        };
+        match self.peek().kind {
+            TokenKind::Punct(Punct::Equal) => {
+                let _ = self.bump();
+                // Consume expression tokens until the next top-level statement.
+                let mut first: Option<Span> = None;
+                let mut last: Option<Span> = None;
+                loop {
+                    match self.peek().kind {
+                        TokenKind::Eof
+                        | TokenKind::Keyword(Keyword::Version)
+                        | TokenKind::Keyword(Keyword::Model)
+                        | TokenKind::Keyword(Keyword::Use)
+                        | TokenKind::Keyword(Keyword::Import)
+                        | TokenKind::Keyword(Keyword::Time)
+                        | TokenKind::Keyword(Keyword::Phase)
+                        | TokenKind::Keyword(Keyword::Entity)
+                        | TokenKind::Keyword(Keyword::Assume)
+                        | TokenKind::Keyword(Keyword::Contract)
+                        | TokenKind::Keyword(Keyword::Stream)
+                        | TokenKind::Keyword(Keyword::Event)
+                        | TokenKind::Keyword(Keyword::Option)
+                        | TokenKind::Keyword(Keyword::Run) => break,
+                        _ => {
+                            let tok = self.bump();
+                            if first.is_none() {
+                                first = Some(tok.span);
+                            }
+                            last = Some(tok.span);
+                        }
+                    }
+                }
+                let (Some(first), Some(last)) = (first, last) else {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected expression after '='.".to_string(),
+                    );
+                    return None;
+                };
+                let expr_span = merge_spans(first, last);
+                Some(AssumeStmt {
+                    name,
+                    value: Some(self.slice_source(expr_span)),
+                    dist: None,
+                    span: merge_spans(start.span, expr_span),
+                })
+            }
+            TokenKind::Punct(Punct::Tilde) => {
+                let _ = self.bump();
+                let dist_tok = self.bump();
+                let dist_name = match dist_tok.kind {
+                    TokenKind::Keyword(Keyword::Normal) => "normal",
+                    TokenKind::Keyword(Keyword::LogNormal) => "lognormal",
+                    TokenKind::Keyword(Keyword::Uniform) => "uniform",
+                    TokenKind::Keyword(Keyword::Triangular) => "triangular",
+                    _ => {
+                        self.push_expected(
+                            dist_tok.span,
+                            "Expected distribution (Normal, LogNormal, Uniform, Triangular) after '~'.".to_string(),
+                        );
+                        return None;
+                    }
+                };
+                let _ = self.expect_punct(Punct::LParen, "'('")?;
+                let mut args: Vec<(String, String)> = Vec::new();
+                let mut clip: Option<(String, String)> = None;
+                loop {
+                    if matches!(self.peek().kind, TokenKind::Punct(Punct::RParen)) {
+                        break;
+                    }
+                    let key_tok = self.bump();
+                    let is_clip = matches!(key_tok.kind, TokenKind::Keyword(Keyword::Clip));
+                    let key = match key_tok.kind {
+                        TokenKind::Ident(ref s) => s.clone(),
+                        TokenKind::Keyword(Keyword::Clip) => "clip".to_string(),
+                        _ => {
+                            self.push_expected(
+                                key_tok.span,
+                                "Expected argument name in distribution.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    if is_clip {
+                        let _ = self.expect_punct(Punct::LBracket, "'['")?;
+                        let lo = self.parse_signed_number()?;
+                        let _ = self.expect_punct(Punct::Comma, "','")?;
+                        let hi = self.parse_signed_number()?;
+                        let _ = self.expect_punct(Punct::RBracket, "']'")?;
+                        clip = Some((lo, hi));
+                    } else {
+                        let value = self.parse_signed_number()?;
+                        args.push((key, value));
+                    }
+                    if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                        let _ = self.bump();
+                    } else {
+                        break;
+                    }
+                }
+                let end = self.expect_punct(Punct::RParen, "')'")?;
+                Some(AssumeStmt {
+                    name,
+                    value: None,
+                    dist: Some(AssumeDist {
+                        name: dist_name.to_string(),
+                        args,
+                        clip,
+                    }),
+                    span: merge_spans(start.span, end.span),
+                })
+            }
+            _ => {
+                self.push_expected(
+                    self.current_span(),
+                    "Expected '=' or '~' after assumption name.".to_string(),
+                );
+                None
+            }
+        }
+    }
+
+    fn parse_signed_number(&mut self) -> Option<String> {
+        let mut negative = false;
+        if matches!(self.peek().kind, TokenKind::Punct(Punct::Minus)) {
+            let _ = self.bump();
+            negative = true;
+        }
+        let tok = self.bump();
+        match tok.kind {
+            TokenKind::Number(ref n) => Some(if negative { format!("-{n}") } else { n.clone() }),
+            _ => {
+                self.push_expected(tok.span, "Expected number.".to_string());
+                None
+            }
+        }
+    }
+
     /// Parse trailing schedule options: `convention <roll>`, `calendar <str>`,
     /// `except [dates]`, `also [dates]`. Order-insensitive, each at most once.
     fn parse_schedule_opts(&mut self, spec: &mut ScheduleSpec) {
@@ -1221,6 +1388,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Time)
                 | TokenKind::Keyword(Keyword::Phase)
                 | TokenKind::Keyword(Keyword::Entity)
+                | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {

@@ -643,6 +643,13 @@ fn build_ir(
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
+    let (assume_constants, assume_random, assume_diags) = lower_assumptions(resolve_output);
+    if !assume_diags.is_empty() {
+        let mut diagnostics = assume_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let mut sources = resolve_output.module_order.clone();
     sources.sort();
 
@@ -660,8 +667,8 @@ fn build_ir(
         phases: phases.into_iter().map(|(_, phase)| phase).collect(),
         entities: entities.into_iter().map(|(_, entity)| entity).collect(),
         assumptions: IrAssumptions {
-            constants: BTreeMap::new(),
-            random: BTreeMap::new(),
+            constants: assume_constants,
+            random: assume_random,
         },
         contracts: contracts
             .into_iter()
@@ -1438,6 +1445,137 @@ fn lower_pack_rule_schedule(
             also_dates: Vec::new(),
         }
     }
+}
+
+type AssumeMaps = (
+    BTreeMap<String, serde_json::Value>,
+    BTreeMap<String, serde_json::Value>,
+    Vec<Diagnostic>,
+);
+
+/// Lower `assume` statements into IR assumptions (constants + random), per
+/// docs/schemas/ir.schema.json $defs AssumeConstant / AssumeRandom.
+fn lower_assumptions(resolve_output: &cfdl_resolver::ResolveOutput) -> AssumeMaps {
+    let mut constants = BTreeMap::new();
+    let mut random = BTreeMap::new();
+    let mut diags = Vec::new();
+
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Assume(assume) = &source_stmt.statement else {
+            continue;
+        };
+        let make_diag = |code: &str, message: String| Diagnostic {
+            code: code.to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(source_stmt.file.clone()),
+            span: Some(map_span(assume.span)),
+            path: None,
+            hint: None,
+            notes: vec![format!("assumption '{}'", assume.name)],
+        };
+
+        if constants.contains_key(&assume.name) || random.contains_key(&assume.name) {
+            diags.push(make_diag(
+                "E1005_DUPLICATE_ASSUME",
+                format!("Assumption '{}' is declared more than once.", assume.name),
+            ));
+            continue;
+        }
+
+        if let Some(value_src) = &assume.value {
+            if let Err(err) = cfdl_expr::compile_expr(value_src) {
+                diags.push(make_diag(&err.code, err.message));
+                continue;
+            }
+            constants.insert(
+                assume.name.clone(),
+                serde_json::json!({
+                    "name": assume.name,
+                    "expr": { "lang": "cfdl", "src": value_src },
+                    "type": "Decimal",
+                }),
+            );
+        } else if let Some(dist) = &assume.dist {
+            let required: &[&[&str]] = match dist.name.as_str() {
+                "normal" => &[&["mean"], &["stdev", "stddev"]],
+                "lognormal" => &[&["mu"], &["sigma"]],
+                "uniform" => &[&["min"], &["max"]],
+                "triangular" => &[&["min"], &["mode"], &["max"]],
+                other => {
+                    diags.push(make_diag(
+                        "E2301_ASSUME_UNKNOWN_DIST",
+                        format!("Unknown distribution '{other}'."),
+                    ));
+                    continue;
+                }
+            };
+            let mut params = serde_json::Map::new();
+            let mut bad = false;
+            for (key, raw) in &dist.args {
+                match raw.parse::<f64>() {
+                    Ok(v) => {
+                        params.insert(key.clone(), serde_json::json!(v));
+                    }
+                    Err(_) => {
+                        diags.push(make_diag(
+                            "E2302_ASSUME_INVALID_PARAM",
+                            format!("Distribution parameter '{key}' is not a number: {raw}"),
+                        ));
+                        bad = true;
+                    }
+                }
+            }
+            for aliases in required {
+                if !aliases.iter().any(|a| params.contains_key(*a)) {
+                    diags.push(make_diag(
+                        "E2303_ASSUME_MISSING_PARAM",
+                        format!(
+                            "Distribution '{}' requires parameter '{}'.",
+                            dist.name, aliases[0]
+                        ),
+                    ));
+                    bad = true;
+                }
+            }
+            let clip = match &dist.clip {
+                Some((lo, hi)) => match (lo.parse::<f64>(), hi.parse::<f64>()) {
+                    (Ok(lo), Ok(hi)) if lo <= hi => Some(serde_json::json!([lo, hi])),
+                    _ => {
+                        diags.push(make_diag(
+                            "E2304_ASSUME_INVALID_CLIP",
+                            format!("Invalid clip range [{lo}, {hi}]."),
+                        ));
+                        bad = true;
+                        None
+                    }
+                },
+                None => None,
+            };
+            if bad {
+                continue;
+            }
+            let kind = match dist.name.as_str() {
+                "normal" => "Normal",
+                "lognormal" => "LogNormal",
+                "uniform" => "Uniform",
+                _ => "Triangular",
+            };
+            let mut dist_json = serde_json::json!({ "kind": kind, "params": params });
+            if let Some(clip) = clip {
+                dist_json["clip"] = clip;
+            }
+            random.insert(
+                assume.name.clone(),
+                serde_json::json!({
+                    "name": assume.name,
+                    "dist": dist_json,
+                    "type": "Decimal",
+                }),
+            );
+        }
+    }
+    (constants, random, diags)
 }
 
 fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Diagnostic> {

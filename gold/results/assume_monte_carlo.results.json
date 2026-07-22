@@ -1,0 +1,245 @@
+{
+  "results_version": "0.2",
+  "model_hash": "ccbe99d75108b88746c3e5bd4839a99df7f1bd23b3425343c7b7da791323216a",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.borrower.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 5532.620796,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.06,
+      "stream.legal.rent.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.legal.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 5600.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.legal.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 5600.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "ok",
+    "trials": 8,
+    "seed": 20260721,
+    "metrics": {
+      "model.npv": {
+        "type": "money",
+        "mean": {
+          "amount": 5548.984299,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 398.637827,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5071.578691,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6182.491346,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 5401.958813,
+          "currency": "USD"
+        }
+      }
+    },
+    "trial_summaries": [
+      {
+        "trial": 0,
+        "metrics": {
+          "model.npv": {
+            "amount": 5709.233441,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 1,
+        "metrics": {
+          "model.npv": {
+            "amount": 6182.491346,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 2,
+        "metrics": {
+          "model.npv": {
+            "amount": 5071.578691,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 3,
+        "metrics": {
+          "model.npv": {
+            "amount": 5409.220159,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 4,
+        "metrics": {
+          "model.npv": {
+            "amount": 5291.599134,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 5,
+        "metrics": {
+          "model.npv": {
+            "amount": 5394.697468,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 6,
+        "metrics": {
+          "model.npv": {
+            "amount": 5177.062223,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 7,
+        "metrics": {
+          "model.npv": {
+            "amount": 6155.991927,
+            "currency": "USD"
+          }
+        }
+      }
+    ],
+    "aggregates": {
+      "npv": {
+        "mean": 5548.984299,
+        "median": 5401.958813,
+        "stddev": 398.637827,
+        "p_negative": 0.0
+      }
+    }
+  }
+}

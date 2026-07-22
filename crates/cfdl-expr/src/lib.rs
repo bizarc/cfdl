@@ -54,6 +54,8 @@ pub struct ExprEnv {
     pub entity: BTreeMap<String, Value>,
     pub cfg: BTreeMap<String, Value>,
     pub obs: BTreeMap<String, Value>,
+    /// Assumption values (`assume` statements), referenced as `inputs.<name>`.
+    pub inputs: BTreeMap<String, Value>,
 }
 
 impl ExprEnv {
@@ -64,6 +66,7 @@ impl ExprEnv {
             entity: BTreeMap::new(),
             cfg: BTreeMap::new(),
             obs: BTreeMap::new(),
+            inputs: BTreeMap::new(),
         }
     }
 }
@@ -158,6 +161,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
             "entity" => &self.env.entity,
             "cfg" => &self.env.cfg,
             "obs" => &self.env.obs,
+            "inputs" => &self.env.inputs,
             _ => return None,
         };
         let mut current = map.get(parts.next()?)?;
