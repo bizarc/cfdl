@@ -1,6 +1,6 @@
 # OpCo Basic Example
 
-This example uses **standalone streams** for revenue and opex (per guidance); pack **contracts** for working capital and exit multiple. See the Language Guide "When to use streams vs contracts."
+This example uses **standalone streams** for revenue and opex (per guidance); pack **contracts** for working capital and exit multiple. See "When to use streams vs contracts" in `docs/09_user_guide.md`.
 
 Compile:
 

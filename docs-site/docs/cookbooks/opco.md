@@ -166,3 +166,10 @@ contract opco.exit_ebitda on entity operating.target {
 Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
 independent recursive reference) and the LBO notebook in
 `examples/notebooks/`.
+
+## Worked example models
+
+- [Operating Business examples overview](/examples/operating-business-examples)
+- [Basic OpCo](/examples/opco_basic)
+- [Growth via expressions](/examples/opco_with_growth)
+- [Multi-file model](/examples/opco_multi_file)
