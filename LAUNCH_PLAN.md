@@ -124,6 +124,23 @@ G (evs-platform re-point) ── needs first tagged release
 **Owns:** new `crates/cfdl-calc`, `crates/cfdl-expr`, `crates/cfdl-lexer`,
 `crates/cfdl-parser` (expression grammar), `docs/03_expression_environment.md`,
 `docs/schemas/CFDL_v0_1_Grammar.ebnf`, `docs/02_grammar.md`.
+
+**Locked design decisions (2026-07-21, user-approved):**
+- **Bare native expressions** in `.cfdl`: `amount = base_rent * (1 + escalation)^years`
+  — no keyword, no quoted string; expressions are first-class grammar with spans.
+- **snake_case function vocabulary**: `pmt()`, `eomonth()`, `year_frac()` — no Excel
+  uppercase aliases.
+- **Dual-mode numerics ("best, plus match-or-explain Excel")**:
+  - Default **decimal mode**: `rust_decimal` for money; ISDA/SIFMA day counts;
+    `round()` = Excel half-away-from-zero; float64 escape ONLY for transcendental ops
+    (fractional `^`, IRR solving) at documented conversion points.
+  - **`excel_compat` mode**: identical expressions evaluated in IEEE-754 float64 to
+    reproduce Excel artifacts. Benchmark harness runs BOTH modes per reference model:
+    compat proves Excel parity; decimal-vs-compat delta explains any difference.
+  - Rationale: day counts/accrual are standardized (ISDA/ICMA/SIFMA); decimal money is
+    the accounting convention (ISO 4217 minor units); Excel float64 is a de-facto quirk,
+    not a standard; IRR solvers have no standard (document solver + tolerance).
+- Comparisons: `==` / `!=` canonical; `<>` accepted as alias. `and/or/not` keywords.
 - New crate `cfdl-calc`: Excel-familiar syntax (`base_rent * (1 + escalation)^t`,
   `if(dscr < 1.20, a, b)`), `rust_decimal` arithmetic with documented rounding rules,
   first-class date/period types (`year_frac(d1,d2,"30/360")`, `eomonth`, `edate`),
