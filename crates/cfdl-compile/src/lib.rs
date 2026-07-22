@@ -39,9 +39,43 @@ pub fn compile_to_json_with_options(
     model_root: &Path,
     options: &CompileOptions,
 ) -> Result<String, Vec<Diagnostic>> {
-    let (resolve_output, symbols) = pipeline(model_root)?;
+    let provider = cfdl_resolver::FsProvider::new(model_root.to_path_buf());
+    // Preserve the historical filesystem default: <model_root>/packs when the
+    // caller does not specify a pack directory.
+    let effective = CompileOptions {
+        packs_dir: Some(
+            options
+                .packs_dir
+                .clone()
+                .unwrap_or_else(|| model_root.join("packs")),
+        ),
+    };
+    compile_json_from_provider(&provider, "model.cfdl", &effective)
+}
 
-    let active_pack = resolve_active_pack(model_root, &resolve_output, options)?;
+/// Compile a model from an in-memory file map (root-relative path -> source).
+///
+/// `root_file` names the entry module (typically `"model.cfdl"`). Pack
+/// resolution uses `options.packs_dir` when set, else the embedded pack
+/// registry (see [`resolve_active_pack`]). This is the filesystem-free entry
+/// point used by the WASM playground and the API server.
+pub fn compile_sources_to_json(
+    files: &std::collections::BTreeMap<String, String>,
+    root_file: &str,
+    options: &CompileOptions,
+) -> Result<String, Vec<Diagnostic>> {
+    let provider = cfdl_resolver::MemoryProvider::new(files.clone());
+    compile_json_from_provider(&provider, root_file, options)
+}
+
+fn compile_json_from_provider(
+    provider: &dyn cfdl_resolver::SourceProvider,
+    root_file: &str,
+    options: &CompileOptions,
+) -> Result<String, Vec<Diagnostic>> {
+    let (resolve_output, symbols) = pipeline_with(provider, root_file)?;
+
+    let active_pack = resolve_active_pack_from(&resolve_output, options)?;
 
     let validation_diags = filter_pack_aware_validation(
         cfdl_validate::validate(&resolve_output, &symbols),
@@ -105,7 +139,8 @@ pub fn compile_to_file_with_options(
 /// Validate a model directory without emitting IR.
 ///
 pub fn validate_only(model_root: &Path) -> Result<(), Vec<Diagnostic>> {
-    let (resolve_output, symbols) = pipeline(model_root)?;
+    let provider = cfdl_resolver::FsProvider::new(model_root.to_path_buf());
+    let (resolve_output, symbols) = pipeline_with(&provider, "model.cfdl")?;
     let diagnostics = cfdl_validate::validate(&resolve_output, &symbols);
     if diagnostics.is_empty() {
         Ok(())
@@ -114,16 +149,31 @@ pub fn validate_only(model_root: &Path) -> Result<(), Vec<Diagnostic>> {
     }
 }
 
-fn pipeline(
-    model_root: &Path,
+/// Validate a model from an in-memory file map without emitting IR.
+pub fn validate_sources(
+    files: &std::collections::BTreeMap<String, String>,
+    root_file: &str,
+) -> Result<(), Vec<Diagnostic>> {
+    let provider = cfdl_resolver::MemoryProvider::new(files.clone());
+    let (resolve_output, symbols) = pipeline_with(&provider, root_file)?;
+    let diagnostics = cfdl_validate::validate(&resolve_output, &symbols);
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics.into_iter().map(map_validation_diag).collect())
+    }
+}
+
+fn pipeline_with(
+    provider: &dyn cfdl_resolver::SourceProvider,
+    root_file: &str,
 ) -> Result<(cfdl_resolver::ResolveOutput, cfdl_resolver::SymbolTables), Vec<Diagnostic>> {
-    let model_file = model_root.join("model.cfdl");
-    let source = std::fs::read_to_string(&model_file).map_err(|_| {
+    let source = provider.read(root_file).ok_or_else(|| {
         vec![Diagnostic {
             code: "E1202_IMPORT_NOT_FOUND".to_string(),
             severity: "error".to_string(),
-            message: "Model root is missing required file 'model.cfdl'.".to_string(),
-            file: Some(PathBuf::from("model.cfdl").to_string_lossy().to_string()),
+            message: format!("Model root is missing required file '{root_file}'."),
+            file: Some(root_file.to_string()),
             span: None,
             path: None,
             hint: None,
@@ -136,7 +186,7 @@ fn pipeline(
         return Err(lex_diags.into_iter().map(map_lex_diag).collect());
     }
 
-    let parse_result = cfdl_parser::parse("model.cfdl", &source, &tokens);
+    let parse_result = cfdl_parser::parse(root_file, &source, &tokens);
     if !parse_result.diagnostics.is_empty() {
         return Err(parse_result
             .diagnostics
@@ -149,11 +199,11 @@ fn pipeline(
         .ast
         .expect("parser returns AST when diagnostics are empty");
     let root_module = cfdl_resolver::RootModule {
-        relative_path: "model.cfdl".to_string(),
-        full_path: std::fs::canonicalize(&model_file).unwrap_or(model_file),
+        relative_path: root_file.to_string(),
+        full_path: PathBuf::from(root_file),
         ast: root_ast,
     };
-    let resolve_output = match cfdl_resolver::resolve_imports(model_root, root_module) {
+    let resolve_output = match cfdl_resolver::resolve_imports_with(provider, root_module) {
         Ok(output) => output,
         Err(resolve_diags) => {
             return Err(resolve_diags.into_iter().map(map_resolve_diag).collect())
@@ -792,10 +842,19 @@ fn build_ir(
     })
 }
 
-fn resolve_active_pack(
-    model_root: &Path,
+/// Pack resolution: use `options.packs_dir` if set, else
+/// the embedded pack registry (WASM/server). Requires the `embedded-packs`
+/// feature for the embedded fallback.
+fn resolve_active_pack_from(
     resolve_output: &cfdl_resolver::ResolveOutput,
     options: &CompileOptions,
+) -> Result<Option<ActivePackContext>, Vec<Diagnostic>> {
+    resolve_active_pack_inner(resolve_output, options.packs_dir.clone())
+}
+
+fn resolve_active_pack_inner(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    packs_dir: Option<PathBuf>,
 ) -> Result<Option<ActivePackContext>, Vec<Diagnostic>> {
     let use_pack_stmt = resolve_output
         .source_statements
@@ -809,38 +868,42 @@ fn resolve_active_pack(
         return Ok(None);
     };
 
-    let packs_dir = options
-        .packs_dir
-        .clone()
-        .unwrap_or_else(|| model_root.join("packs"));
-    let registry = cfdl_pack::PackRegistry::load_from_dir(&packs_dir).map_err(|err| {
+    let pack_diag = |message: String, hint: Option<String>, notes: Vec<String>| {
         vec![Diagnostic {
             code: "E4004_MISSING_PACK".to_string(),
             severity: "error".to_string(),
-            message: err.message,
+            message,
             file: Some(file.clone()),
             span: Some(map_span(use_pack.span)),
             path: None,
-            hint: None,
-            notes: vec![format!("pack root: {}", packs_dir.display())],
+            hint,
+            notes,
         }]
-    })?;
+    };
+
+    let registry = match packs_dir.as_ref() {
+        Some(dir) => cfdl_pack::PackRegistry::load_from_dir(dir).map_err(|err| {
+            pack_diag(
+                err.message,
+                None,
+                vec![format!("pack root: {}", dir.display())],
+            )
+        })?,
+        None => load_embedded_registry(&pack_diag)?,
+    };
     let Some(active) = registry.active_pack(&use_pack.name, &use_pack.version) else {
-        return Err(vec![Diagnostic {
-            code: "E4004_MISSING_PACK".to_string(),
-            severity: "error".to_string(),
-            message: format!(
-                "Pack '{}@{}' was not found under '{}'.",
-                use_pack.name,
-                use_pack.version,
-                packs_dir.display()
+        let where_ = match packs_dir.as_ref() {
+            Some(dir) => format!("under '{}'", dir.display()),
+            None => "in the embedded pack registry".to_string(),
+        };
+        return Err(pack_diag(
+            format!(
+                "Pack '{}@{}' was not found {where_}.",
+                use_pack.name, use_pack.version
             ),
-            file: Some(file),
-            span: Some(map_span(use_pack.span)),
-            path: None,
-            hint: Some("Add a matching pack manifest or pass --packs <dir>.".to_string()),
-            notes: vec![],
-        }]);
+            Some("Add a matching pack manifest or pass --packs <dir>.".to_string()),
+            vec![],
+        ));
     };
 
     Ok(Some(ActivePackContext {
@@ -848,6 +911,30 @@ fn resolve_active_pack(
         version: active.version.clone(),
         lowering_rules: registry.lowering_rules(&active.name),
     }))
+}
+
+#[cfg(feature = "embedded-packs")]
+fn load_embedded_registry(
+    pack_diag: &dyn Fn(String, Option<String>, Vec<String>) -> Vec<Diagnostic>,
+) -> Result<cfdl_pack::PackRegistry, Vec<Diagnostic>> {
+    cfdl_pack::PackRegistry::load_embedded().map_err(|err| {
+        pack_diag(
+            err.message,
+            None,
+            vec!["embedded pack registry".to_string()],
+        )
+    })
+}
+
+#[cfg(not(feature = "embedded-packs"))]
+fn load_embedded_registry(
+    pack_diag: &dyn Fn(String, Option<String>, Vec<String>) -> Vec<Diagnostic>,
+) -> Result<cfdl_pack::PackRegistry, Vec<Diagnostic>> {
+    Err(pack_diag(
+        "No pack directory was provided and this build has no embedded packs.".to_string(),
+        Some("Pass a packs directory, or build with the `embedded-packs` feature.".to_string()),
+        vec![],
+    ))
 }
 
 fn filter_pack_aware_validation(

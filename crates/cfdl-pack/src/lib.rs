@@ -150,7 +150,39 @@ mod embedded {
         ),
     ];
 
-    pub const ALL: &[&[EmbeddedFile]] = &[CRE, OPCO];
+    pub const CREDIT: &[EmbeddedFile] = &[
+        ("pack.toml", include_str!("../../../packs/credit/pack.toml")),
+        (
+            "aliases.toml",
+            include_str!("../../../packs/credit/aliases.toml"),
+        ),
+        (
+            "lowering/rules.toml",
+            include_str!("../../../packs/credit/lowering/rules.toml"),
+        ),
+        (
+            "metrics.toml",
+            include_str!("../../../packs/credit/metrics.toml"),
+        ),
+    ];
+
+    pub const ENERGY: &[EmbeddedFile] = &[
+        ("pack.toml", include_str!("../../../packs/energy/pack.toml")),
+        (
+            "aliases.toml",
+            include_str!("../../../packs/energy/aliases.toml"),
+        ),
+        (
+            "lowering/rules.toml",
+            include_str!("../../../packs/energy/lowering/rules.toml"),
+        ),
+        (
+            "metrics.toml",
+            include_str!("../../../packs/energy/metrics.toml"),
+        ),
+    ];
+
+    pub const ALL: &[&[EmbeddedFile]] = &[CRE, CREDIT, ENERGY, OPCO];
 }
 
 impl PackRegistry {
