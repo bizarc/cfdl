@@ -54,4 +54,4 @@ py-test:
 	python3 -m pytest -q python/tests
 
 py-wheel:
-	maturin build --release -m crates/cfdl-py/Cargo.toml
+	cd python && maturin build --release
