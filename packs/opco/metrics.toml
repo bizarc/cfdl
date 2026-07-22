@@ -4,15 +4,15 @@
 id = "domain.opco.revenue"
 kind = "money"
 op = "sum"
-numerator_streams = ["opco.revenue.recurring"]
+numerator_streams = ["opco.revenue.recurring.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
 id = "domain.opco.ebitda"
 kind = "money"
 op = "sum"
-numerator_streams = ["opco.revenue.recurring"]
-denominator_streams = ["opco.opex.recurring"]
+numerator_streams = ["opco.revenue.recurring.*"]
+denominator_streams = ["opco.opex.recurring.*"]
 formula = "sum(numerator_streams) + sum(denominator_streams)"
 
 [[metrics]]
@@ -22,3 +22,64 @@ op = "ratio"
 numerator_metric = "domain.opco.ebitda"
 denominator_metric = "domain.opco.revenue"
 formula = "domain.opco.ebitda / domain.opco.revenue"
+
+[[metrics]]
+id = "domain.opco.capex"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["opco.capex.*"]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+# Net working-capital investment over the model (signed; releases net out).
+[[metrics]]
+id = "domain.opco.working_capital"
+kind = "money"
+op = "negated_sum"
+numerator_streams = [
+  "opco.working_capital.adjustment.*",
+]
+formula = "-sum(numerator_streams)"
+
+[[metrics]]
+id = "domain.opco.taxes"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["opco.taxes.*"]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+[[metrics]]
+id = "domain.opco.debt_service"
+kind = "money"
+op = "negated_sum"
+numerator_streams = [
+  "opco.debt.interest.*",
+  "opco.debt.principal.*",
+]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+# Free cash flow from operating streams (EBITDA - capex - working capital -
+# cash taxes; signed sum). NOTE: cash taxes as modeled deduct interest, so
+# this is FCF after the interest tax shield; see the pack README.
+[[metrics]]
+id = "domain.opco.fcf"
+kind = "money"
+op = "sum"
+numerator_streams = ["opco.revenue.recurring.*"]
+denominator_streams = [
+  "opco.opex.recurring.*",
+  "opco.capex.*",
+  "opco.working_capital.adjustment.*",
+  "opco.taxes.*",
+]
+formula = "sum(numerator_streams) + sum(denominator_streams)"
+
+[[metrics]]
+id = "domain.opco.fcf_to_debt_service"
+kind = "number"
+op = "ratio"
+numerator_metric = "domain.opco.fcf"
+denominator_metric = "domain.opco.debt_service"
+formula = "domain.opco.fcf / domain.opco.debt_service"

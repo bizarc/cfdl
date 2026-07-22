@@ -1,0 +1,644 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "opco-lbo-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "efbef7a25d1a719652b18edef423ac9b",
+      "symbol": "operating.target",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "aeab02c4db6430e79a463070831e5765",
+      "name": "opco.acquisition",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 61,
+          "start_col": 1,
+          "end_line": 66,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a545550cbbfbc8c8d06f89392dc88bd9",
+      "name": "opco.capex_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "cd0c9b8a7a5bcccc0d2c7689b6e602a1",
+      "name": "opco.cash_taxes",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 53,
+          "start_col": 1,
+          "end_line": 59,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a99a884630a62477e4a7dc011ed6a808",
+      "name": "opco.exit_ebitda",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 68,
+          "start_col": 1,
+          "end_line": 74,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "1c53087d7f653b5bcb735d2e8991857d",
+      "name": "opco.opex_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "fc9cb2b6f9b366c6017d2d79254001b1",
+      "name": "opco.revenue_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "7e6bbe21162cf5bc7a3f3a983eb37454",
+      "name": "opco.term_debt",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9285f6b922b90a049890421ea4910c46",
+      "name": "opco.working_capital_policy",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "b686b25eeb6f167266b3b1bd721b0afd",
+      "name": "opco.acquisition.price",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 61,
+          "start_col": 1,
+          "end_line": 66,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_acquisition_price_v1"
+        }
+      }
+    },
+    {
+      "id": "e1345cf979fb719e3f934f99e0b919f5",
+      "name": "opco.capex",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000.0 * pow(1.0 + 0.0, time.t / 12.0) + 0.02 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_capex_line_v1"
+        }
+      }
+    },
+    {
+      "id": "c30f9f382e14375cd283ec6352a0cb34",
+      "name": "opco.debt.interest",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 6.0, 3000000.0 * (0.09 / 12.0), -ipmt(0.09 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 6.0 + 1.0, 36.0, 3000000.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_interest_v1"
+        }
+      }
+    },
+    {
+      "id": "e578ad8341bc0ec57a4d424b47b0ac93",
+      "name": "opco.debt.principal",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 6.0, 0.0, -ppmt(0.09 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 6.0 + 1.0, 36.0, 3000000.0)) + if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, -fv(0.09 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 6.0 + 1.0, pmt(0.09 / 12.0, 36.0, 3000000.0), 3000000.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_principal_v1"
+        }
+      }
+    },
+    {
+      "id": "027695b373879c520e29fbe26d965425",
+      "name": "opco.debt.proceeds",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "3000000.0 * 1.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_proceeds_v1"
+        }
+      }
+    },
+    {
+      "id": "76b9b33f6c960f2517db4c4abd6490b2",
+      "name": "opco.exit.value",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "7.0 * (series_sum(\"opco.revenue.recurring.*\", time.t - 11.0, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 11.0, time.t)) * (1.0 - 0.02)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 68,
+          "start_col": 1,
+          "end_line": 74,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_exit_ebitda_v1"
+        }
+      }
+    },
+    {
+      "id": "684c6fb7994970f29d40074e05861d70",
+      "name": "opco.opex.recurring",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "120000.0 * pow(1.0 + 0.03, time.t / 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_opex_line_v1"
+        }
+      }
+    },
+    {
+      "id": "7052ce6852707a74d72b13f488a2bfc6",
+      "name": "opco.revenue.recurring",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "200000.0 * pow(1.0 + 0.05, time.t / 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 8,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_revenue_line_v1"
+        }
+      }
+    },
+    {
+      "id": "cc156d60e1e2fb24a98be399966386fc",
+      "name": "opco.taxes",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "max(0.0, 0.25 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - 20000.0 * pow(1.0 + 0.0, time.t / 12.0)))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 53,
+          "start_col": 1,
+          "end_line": 59,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_cash_taxes_v1"
+        }
+      }
+    },
+    {
+      "id": "86b6c0f0085312695695240e8a3cd6a8",
+      "name": "opco.working_capital.adjustment",
+      "owner": {
+        "symbol": "operating.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * 40.0 - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * (15.0 - 25.0)) - if(months_between(parse_date(\"2026-01-01\"), time.date) == 0.0, 0.0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t - 1.0, time.t - 1.0)) * 40.0 - (series_sum(\"opco.opex.recurring.*\", time.t - 1.0, time.t - 1.0)) * (15.0 - 25.0))) - if(1.0 == 1.0 and months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * 40.0 - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * (15.0 - 25.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_working_capital_policy_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "7e5128c3a7dfdeaeb1b2fb990dc45fc8",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

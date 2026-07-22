@@ -1,0 +1,46 @@
+{
+  "model.npv": {
+    "value": 14134430.76,
+    "tolerance": 1.0
+  },
+  "model.moic": {
+    "value": 3.467004,
+    "tolerance": 0.0001
+  },
+  "domain.opco.revenue": {
+    "value": 69485786.14,
+    "tolerance": 1.0
+  },
+  "domain.opco.ebitda": {
+    "value": 26469420.78,
+    "tolerance": 1.0
+  },
+  "domain.opco.ebitda_margin": {
+    "value": 0.380933,
+    "tolerance": 0.0001
+  },
+  "domain.opco.capex": {
+    "value": 2084573.58,
+    "tolerance": 1.0
+  },
+  "domain.opco.working_capital": {
+    "value": 0.0,
+    "tolerance": 1.0
+  },
+  "domain.opco.taxes": {
+    "value": 2648405.28,
+    "tolerance": 1.0
+  },
+  "domain.opco.debt_service": {
+    "value": 28283246.61,
+    "tolerance": 1.0
+  },
+  "domain.opco.fcf": {
+    "value": 21736441.91,
+    "tolerance": 1.0
+  },
+  "domain.opco.fcf_to_debt_service": {
+    "value": 0.768527,
+    "tolerance": 0.0001
+  }
+}

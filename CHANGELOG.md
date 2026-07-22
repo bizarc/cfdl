@@ -6,6 +6,37 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.11] - 2026-07-22
+
+### Added
+- **OpCo pack deepening** (Workstream D increment 11):
+  `opco.working_capital_policy` (DSO/DPO/DIO working capital derived from
+  modeled streams, initial build + deltas + optional release at exit),
+  `opco.capex_line` (fixed + %-of-revenue), `opco.term_debt` (IO period,
+  level-pay amortization, balloon at maturity; proceeds at close),
+  `opco.cash_taxes` (rate on max(0, EBITDA − D&A − interest), no NOLs),
+  `opco.exit_ebitda` (trailing-12 EBITDA multiple net of selling costs),
+  `opco.acquisition`. New metrics: capex, working_capital, taxes,
+  debt_service, fcf, fcf_to_debt_service. Diagnostics E7024/E7030/E7031.
+- Benchmark `benchmarks/opco/lbo_buyout` (5-year services LBO, 8.0x entry /
+  8.5x exit, $21mm 12mo-IO term loan) vs an independent month-by-month
+  reference; golden fixture `opco_lbo_smoke`.
+
+### Changed
+- **Legacy `apply_opco_contract_terms` compile path retired** — opco v1
+  contracts (revenue/opex/working_capital/exit_multiple) now lower through
+  `{{contract.*}}` templates with instance-suffix support; results verified
+  byte-identical. `opco.exit_multiple` exits at the contract's `term_start`
+  (`exit_period` is inert; E7023 now validates the term range).
+
+### Fixed
+- Series and metric wildcard double-counting: `name.*` also matches the
+  unsuffixed stream `name`, so listing both double-counted it. Pack rules
+  and metrics (cre/credit/opco) now use the wildcard form alone. Only
+  metric lineage lists changed for existing goldens; no values.
+
+---
+
 ## [0.2.10] - 2026-07-22
 
 ### Added

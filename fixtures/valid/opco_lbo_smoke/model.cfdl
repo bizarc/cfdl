@@ -1,0 +1,74 @@
+version 0.1
+model "opco-lbo-smoke"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity operating target
+
+contract opco.revenue_line on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    amount = 200000
+    growth_rate = 0.05
+  }
+}
+
+contract opco.opex_line on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    amount = 120000
+    growth_rate = 0.03
+  }
+}
+
+contract opco.working_capital_policy on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    ar_days = 40
+    ap_days = 25
+    inv_days = 15
+    release_at_end = 1
+  }
+}
+
+contract opco.capex_line on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    amount = 5000
+    pct_of_revenue = 0.02
+  }
+}
+
+// 6-month IO, then amortizing over 36 months, balloon at maturity.
+contract opco.term_debt on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    rate = 0.09
+    io_months = 6
+    amort_months = 36
+  }
+}
+
+contract opco.cash_taxes on entity operating.target {
+  term 2026-01..2027-12
+  terms {
+    tax_rate = 0.25
+    da_monthly = 20000
+  }
+}
+
+contract opco.acquisition on entity operating.target {
+  term 2026-01..2026-01
+  terms {
+    price = 5000000
+  }
+}
+
+contract opco.exit_ebitda on entity operating.target {
+  term 2027-12..2027-12
+  terms {
+    exit_multiple = 7.0
+    selling_costs = 0.02
+  }
+}

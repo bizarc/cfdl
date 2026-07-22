@@ -4,7 +4,7 @@
 id = "domain.credit.interest"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.interest", "credit.pool.interest.*"]
+numerator_streams = ["credit.pool.interest.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
@@ -12,11 +12,8 @@ id = "domain.credit.principal"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "credit.pool.sched_principal",
   "credit.pool.sched_principal.*",
-  "credit.pool.prepay",
   "credit.pool.prepay.*",
-  "credit.pool.bullet",
   "credit.pool.bullet.*",
 ]
 formula = "sum(numerator_streams)"
@@ -25,21 +22,21 @@ formula = "sum(numerator_streams)"
 id = "domain.credit.recoveries"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.recoveries", "credit.pool.recoveries.*"]
+numerator_streams = ["credit.pool.recoveries.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
 id = "domain.credit.penalties"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.penalty", "credit.pool.penalty.*"]
+numerator_streams = ["credit.pool.penalty.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
 id = "domain.credit.servicing"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["credit.pool.servicing", "credit.pool.servicing.*"]
+numerator_streams = ["credit.pool.servicing.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true
 
@@ -51,13 +48,9 @@ id = "domain.credit.wal_years"
 kind = "number"
 op = "wal_years"
 numerator_streams = [
-  "credit.pool.sched_principal",
   "credit.pool.sched_principal.*",
-  "credit.pool.prepay",
   "credit.pool.prepay.*",
-  "credit.pool.bullet",
   "credit.pool.bullet.*",
-  "credit.pool.recoveries",
   "credit.pool.recoveries.*",
 ]
 formula = "wal_years(numerator_streams)"
@@ -67,17 +60,11 @@ id = "domain.credit.collections"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "credit.pool.interest",
   "credit.pool.interest.*",
-  "credit.pool.sched_principal",
   "credit.pool.sched_principal.*",
-  "credit.pool.prepay",
   "credit.pool.prepay.*",
-  "credit.pool.bullet",
   "credit.pool.bullet.*",
-  "credit.pool.recoveries",
   "credit.pool.recoveries.*",
-  "credit.pool.penalty",
   "credit.pool.penalty.*",
 ]
 formula = "sum(numerator_streams)"
@@ -86,7 +73,7 @@ formula = "sum(numerator_streams)"
 id = "domain.credit.purchase"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["credit.purchase.price", "credit.purchase.price.*"]
+numerator_streams = ["credit.purchase.price.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true
 
