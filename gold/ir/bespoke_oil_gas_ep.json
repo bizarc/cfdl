@@ -12,6 +12,7 @@
   "phases": [
     {
       "id": "0bc8706fb35e94da41195f7167818d4c",
+      "name": "drilling",
       "range": {
         "start": "2026-01-01",
         "end": "2026-06-01"
@@ -19,6 +20,7 @@
     },
     {
       "id": "b3ac172b8235a7f4bfe64c9b8b97e037",
+      "name": "production",
       "range": {
         "start": "2027-01-01",
         "end": "2030-12-01"
@@ -26,6 +28,7 @@
     },
     {
       "id": "0c0bd23784918a23ef5ae45d30832759",
+      "name": "ramp",
       "range": {
         "start": "2026-07-01",
         "end": "2026-12-01"

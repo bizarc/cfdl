@@ -251,7 +251,8 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "range"
+        "range",
+        "name"
       ],
       "properties": {
         "id": {
@@ -259,6 +260,9 @@
         },
         "range": {
           "$ref": "#/$defs/DateRange"
+        },
+        "name": {
+          "$ref": "#/$defs/Id"
         }
       }
     },

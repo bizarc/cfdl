@@ -328,6 +328,7 @@ struct IrEntityRef {
 #[derive(Debug, Serialize)]
 struct IrPhase {
     id: String,
+    name: String,
     range: IrDateRange,
 }
 
@@ -465,6 +466,7 @@ fn build_ir(
             let stable_key = stable_key(&source_stmt.file, &name);
             let ir_phase = IrPhase {
                 id: deterministic_id("Phase", &stable_key, &id_seed),
+                name: name.clone(),
                 range: IrDateRange {
                     start: normalize_date(&phase.from),
                     end: normalize_date(&phase.to),
@@ -650,6 +652,13 @@ fn build_ir(
         return Err(diagnostics);
     }
 
+    let (ir_events, ir_options, event_diags) = lower_events_options(resolve_output, &id_seed);
+    if !event_diags.is_empty() {
+        let mut diagnostics = event_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let mut sources = resolve_output.module_order.clone();
     sources.sort();
 
@@ -683,8 +692,8 @@ fn build_ir(
                 s
             })
             .collect(),
-        events: vec![],
-        options: vec![],
+        events: ir_events,
+        options: ir_options,
         runs: vec![IrRun {
             kind: "deterministic".to_string(),
         }],
@@ -1445,6 +1454,151 @@ fn lower_pack_rule_schedule(
             also_dates: Vec::new(),
         }
     }
+}
+
+type EventOptionMaps = (
+    Vec<serde_json::Value>,
+    Vec<serde_json::Value>,
+    Vec<Diagnostic>,
+);
+
+/// Lower event/option statements into IR per $defs Event / Option / Action.
+fn lower_events_options(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    id_seed: &str,
+) -> EventOptionMaps {
+    let mut events = Vec::new();
+    let mut options = Vec::new();
+    let mut diags = Vec::new();
+
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Event(event) => {
+                let diag = |code: &str, message: String| Diagnostic {
+                    code: code.to_string(),
+                    severity: "error".to_string(),
+                    message,
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(event.span)),
+                    path: None,
+                    hint: None,
+                    notes: vec![format!("event '{}'", event.name)],
+                };
+                if let Err(err) = cfdl_expr::compile_expr(&event.when) {
+                    diags.push(diag(&err.code, err.message));
+                    continue;
+                }
+                let mut actions = Vec::new();
+                let mut bad = false;
+                for action in &event.actions {
+                    use cfdl_parser::EventAction as A;
+                    let value = match action {
+                        A::SetEntityField {
+                            entity,
+                            field,
+                            value,
+                        } => {
+                            if let Err(err) = cfdl_expr::compile_expr(value) {
+                                diags.push(diag(&err.code, err.message));
+                                bad = true;
+                                continue;
+                            }
+                            serde_json::json!({
+                                "kind": "SetEntityField",
+                                "entity": { "symbol": entity },
+                                "field": field,
+                                "value": { "lang": "cfdl", "src": value },
+                            })
+                        }
+                        A::ActivateStream(name) => {
+                            serde_json::json!({ "kind": "ActivateStream", "stream": name })
+                        }
+                        A::DeactivateStream(name) => {
+                            serde_json::json!({ "kind": "DeactivateStream", "stream": name })
+                        }
+                        A::ActivateContract(name) => {
+                            serde_json::json!({ "kind": "ActivateContract", "contract": name })
+                        }
+                        A::DeactivateContract(name) => {
+                            serde_json::json!({ "kind": "DeactivateContract", "contract": name })
+                        }
+                        A::ExerciseOption(name) => {
+                            serde_json::json!({ "kind": "ExerciseOption", "option": name })
+                        }
+                    };
+                    actions.push(value);
+                }
+                if bad {
+                    continue;
+                }
+                let stable = stable_key(&source_stmt.file, &event.name);
+                events.push(serde_json::json!({
+                    "id": deterministic_id("Event", &stable, id_seed),
+                    "name": event.name,
+                    "when": { "lang": "cfdl", "src": event.when },
+                    "actions": actions,
+                    "provenance": {
+                        "source_file": source_stmt.file,
+                        "source_span": map_span(event.span),
+                    },
+                }));
+            }
+            Stmt::Option(option) => {
+                let diag = |code: &str, message: String| Diagnostic {
+                    code: code.to_string(),
+                    severity: "error".to_string(),
+                    message,
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(option.span)),
+                    path: None,
+                    hint: None,
+                    notes: vec![format!("option '{}'", option.name)],
+                };
+                let Some(exercise_when) = &option.exercise_when else {
+                    diags.push(diag(
+                        "E2401_OPTION_MISSING_EXERCISE",
+                        "Option requires an 'exercise when' clause.".to_string(),
+                    ));
+                    continue;
+                };
+                let Some(payoff) = &option.payoff else {
+                    diags.push(diag(
+                        "E2402_OPTION_MISSING_PAYOFF",
+                        "Option requires a 'payoff' clause.".to_string(),
+                    ));
+                    continue;
+                };
+                let mut bad = false;
+                for src in [exercise_when, payoff] {
+                    if let Err(err) = cfdl_expr::compile_expr(src) {
+                        diags.push(diag(&err.code, err.message));
+                        bad = true;
+                    }
+                }
+                if bad {
+                    continue;
+                }
+                let stable = stable_key(&source_stmt.file, &option.name);
+                let mut obj = serde_json::json!({
+                    "id": deterministic_id("Option", &stable, id_seed),
+                    "name": option.name,
+                    "type": option.type_name,
+                    "exercise_when": { "lang": "cfdl", "src": exercise_when },
+                    "payoff": { "lang": "cfdl", "src": payoff },
+                    "provenance": {
+                        "source_file": source_stmt.file,
+                        "source_span": map_span(option.span),
+                    },
+                });
+                if let Some(phase) = &option.exercisable_in {
+                    obj["exercisable_in_phase"] = serde_json::json!(phase);
+                }
+                options.push(obj);
+            }
+            _ => {}
+        }
+    }
+    (events, options, diags)
 }
 
 type AssumeMaps = (
