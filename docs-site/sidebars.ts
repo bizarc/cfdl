@@ -36,7 +36,16 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Guides",
-      items: ["stochastic-modeling"]
+      items: [
+        "guides/guide-schedules",
+        "guides/guide-contracts-packs",
+        "guides/guide-multi-file",
+        "guides/guide-scenarios",
+        "stochastic-modeling",
+        "guides/guide-curves",
+        "guides/guide-metrics",
+        "guides/guide-reading-results"
+      ]
     },
     {
       type: "category",
@@ -66,6 +75,8 @@ const sidebars: SidebarsConfig = {
       label: "Reference",
       items: [
         "reference",
+        "reference/reference-cli",
+        "reference/reference-run-config",
         "language-reference/language-spec",
         "language-reference/grammar",
         "language-reference/expression-environment",

@@ -267,7 +267,7 @@ cargo build -p cfdl-cli
 ```json
 {
   "deterministic": {
-    "discount_rate": 0.1,
+    "annual_discount_rate": 0.1,
     "as_of": "2026-01-01",
     "parameters": {
       "stream.cre.lease.base_rent:amount": 1000.0
@@ -275,7 +275,7 @@ cargo build -p cfdl-cli
   },
   "scenarios": {
     "stress": {
-      "discount_rate": 0.12,
+      "annual_discount_rate": 0.12,
       "parameters": {
         "stream.cre.lease.base_rent:amount": 800.0
       }

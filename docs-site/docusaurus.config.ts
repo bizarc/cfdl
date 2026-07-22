@@ -57,6 +57,7 @@ const config: Config = {
       items: [
         { to: "/getting-started", label: "Get Started", position: "left" },
         { to: "/language-guide", label: "Learn", position: "left" },
+        { to: "/guides/schedules-and-calendars", label: "Guides", position: "left" },
         { to: "/packs", label: "Packs", position: "left" },
         { to: "/language-reference", label: "Reference", position: "left" },
         { to: "/playground", label: "Playground", position: "left" },
