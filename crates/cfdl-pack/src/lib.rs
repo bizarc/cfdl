@@ -456,6 +456,24 @@ fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLo
     for spec in &parsed.metrics {
         match spec.op.as_str() {
             "sum" | "negated_sum" => {}
+            "wal_years" => {
+                if spec.numerator_streams.is_empty() {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Metric '{}': op 'wal_years' requires numerator_streams.",
+                            spec.id
+                        ),
+                    });
+                }
+                if spec.kind != "number" {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Metric '{}': op 'wal_years' requires kind 'number'.",
+                            spec.id
+                        ),
+                    });
+                }
+            }
             "ratio" => {
                 if spec.numerator_metric.is_none() || spec.denominator_metric.is_none() {
                     return Err(PackLoadError {
@@ -469,7 +487,7 @@ fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLo
             other => {
                 return Err(PackLoadError {
                     message: format!(
-                        "Metric '{}': unknown op '{other}' (expected sum, negated_sum, ratio).",
+                        "Metric '{}': unknown op '{other}' (expected sum, negated_sum, ratio, wal_years).",
                         spec.id
                     ),
                 });

@@ -853,6 +853,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         "run.annual_discount_rate".to_string(),
         Scalar::Number(round_amount(config.discount_rate)),
     );
+    // Published for downstream metric evaluation (e.g. cfdl-metrics
+    // `wal_years`, which needs to convert period indices to years).
+    metrics.insert("run.periods_per_year".to_string(), Scalar::Number(ppy));
     if let Some(as_of) = &config.as_of {
         metrics.insert("run.as_of".to_string(), Scalar::String(as_of.to_string()));
     }

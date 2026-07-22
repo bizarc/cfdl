@@ -27,6 +27,7 @@
       },
       "model.wal_years": 12.945879,
       "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
       "stream.energy.capacity.revenue.total": {
         "amount": 1500000.0,
         "currency": "USD"

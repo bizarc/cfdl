@@ -25,10 +25,18 @@ Terms:
 | `cdr` | annual conditional default rate | `0` |
 | `severity` | loss severity on defaulted balance | `0` |
 | `recovery_lag_months` | months from default to recovery cash | `0` |
+| `servicing_fee` | annual servicing strip on performing balance | `0` |
+| `prepay_penalty_rate` | flat penalty rate on voluntary prepayments | `0` |
 
 Streams (all suffixed by contract instance): `credit.pool.interest`,
 `credit.pool.sched_principal`, `credit.pool.prepay`,
-`credit.pool.recoveries`.
+`credit.pool.recoveries`, `credit.pool.servicing` (outflow),
+`credit.pool.penalty`.
+
+`servicing_fee` and `prepay_penalty_rate` are available on every pool type.
+The penalty is a flat rate on prepaid balance (simplified yield
+maintenance); a discounted make-whole needs an engine primitive and stays
+on the parity worklist (LAUNCH_PLAN §6D).
 
 The contract `term` must span `term_months + recovery_lag_months` schedule
 periods so the recovery tail has periods to land in; the expressions gate
@@ -72,7 +80,9 @@ expressions.
 ### `credit.purchase`
 
 Acquisition price paid at `term_start` (`price` term), stream
-`credit.purchase.price`.
+`credit.purchase.price`. Discount/premium purchases are just a `price`
+different from face (e.g. 99.0 = `0.99 * balance`); the level_pay_pool
+benchmark purchases at a 1-point discount.
 
 ## Conventions
 
@@ -88,8 +98,11 @@ Acquisition price paid at `term_start` (`price` term), stream
 ## Metrics
 
 `domain.credit.interest`, `.principal` (scheduled + prepay + bullet),
-`.recoveries`, `.collections`, `.purchase`, `.collections_multiple`
-(collections / purchase).
+`.recoveries`, `.penalties`, `.servicing` (omitted when zero),
+`.collections` (interest + principal + recoveries + penalties),
+`.purchase`, `.collections_multiple` (collections / purchase), and
+`.wal_years` — principal-weighted average life over principal returned
+(scheduled + prepay + bullet + recoveries; interest/penalties excluded).
 
 ## Not in v0.1
 

@@ -239,8 +239,9 @@ H (waterfalls / capital stack)── needs D pack conventions; blocks launch gat
 - `cfdl/credit`: level-pay/IO/bullet, CPR/SMM, CDR, severity/recovery lag, floaters off
   rate curves — **shipped (increments 8–9)**. Remaining parity worklist
   (2026-07-22 assessment vs Intex/Bloomberg-class tools):
-  - *Achievable now*: servicing-fee / prepayment-penalty streams,
-    discount/premium purchase, principal-weighted WAL + credit analytics
+  - *Achievable now* — **shipped (increment 10)**: servicing-fee /
+    prepayment-penalty streams, discount/premium purchase,
+    principal-weighted WAL (`wal_years` metric op) + servicing/penalty
     metrics.
   - *Needs an engine primitive*: **vectored CPR/CDR** (PSA-style ramps, CDR
     curves) and **floating level-pay** — the balance path becomes a

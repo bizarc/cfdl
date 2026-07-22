@@ -572,7 +572,7 @@ order, so ratios may reference earlier ids.
 [[metrics]]
 id = "domain.cre.noi"           # output key
 kind = "money"                  # money | number
-op = "sum"                      # sum | negated_sum | ratio
+op = "sum"                      # sum | negated_sum | ratio | wal_years
 numerator_streams = ["cre.lease.base_rent", "cre.ops.revenue"]
 denominator_streams = ["cre.ops.expense"]
 formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
@@ -593,6 +593,16 @@ numerator_metric = "domain.cre.noi"
 denominator_metric = "domain.cre.debt_service"
 formula = "domain.cre.noi / domain.cre.debt_service"
 # ratios are omitted when either input metric is absent or the denominator ~ 0
+
+[[metrics]]
+id = "domain.credit.wal_years"
+kind = "number"                  # wal_years requires kind = "number"
+op = "wal_years"
+numerator_streams = ["credit.pool.sched_principal.*", "credit.pool.prepay.*"]
+formula = "wal_years(numerator_streams)"
+# weighted average life in years of the matched streams' positive per-period
+# amounts: sum(t/ppy * v) / sum(v), using the engine's run.periods_per_year;
+# omitted when the matched streams have no positive amounts
 ```
 
 Engine-universal metrics are computed for every model regardless of pack:
