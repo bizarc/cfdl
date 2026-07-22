@@ -420,13 +420,22 @@ const referenceIndex = [
   "- Use **Compiler Spec** digest for implementation flow and jump to full source when needed.",
   "- Use **Diagnostics** when fixing errors.",
   "",
-  "## Reference pages",
+  "## Language",
   "",
   "- [Language Spec](/language-reference/language-spec)",
   "- [Grammar](/language-reference/grammar)",
+  "- [Expression Environment](/language-reference/expression-environment)",
   "- [Compiler Spec](/language-reference/compiler-spec)",
   "- [Diagnostics](/language-reference/diagnostics)",
   "- [Pack Interface](/language-reference/pack-interface)",
+  "- [Implementation Status](/language-reference/implementation-status)",
+  "",
+  "## Tools and data contracts",
+  "",
+  "- [CLI Reference](/reference/cli)",
+  "- [Run-Config Reference](/reference/run-config)",
+  "- [IR Schema](/language-reference/ir-schema)",
+  "- [Results Schema](/language-reference/results-schema)",
   ""
 ].join("\n");
 
