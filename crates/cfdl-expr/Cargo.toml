@@ -9,5 +9,5 @@ description = "Expression evaluation environment for CFDL"
 publish = false
 
 [dependencies]
-cel-interpreter = "0.10.0"
-cel-parser = "0.10.1"
+cfdl-calc = { path = "../cfdl-calc" }
+rust_decimal = "1"
