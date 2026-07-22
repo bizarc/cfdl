@@ -76,9 +76,12 @@ to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
   for acquisition pricing; collections/loss metrics incl. collections
   multiple. Benchmarks: level_pay_pool, io_bullet_loan — validated against
   independent month-by-month RECURSIVE references (the closed form must
-  match the recursion to the penny, and does). Deferred (documented in the
-  pack README): zero-rate level-pay pools, floating-rate loans (needs the
-  `curve` input concept + rate paths — stochastic roadmap item 4).
+  match the recursion to the penny, and does). Increment 9 added the
+  `curve` model statement (step/linear interpolation, curve_value() in
+  expressions) and `credit.pool_float_io_bullet` — floating-rate pools with
+  margin/floor/cap off a named index curve (benchmark float_bridge_pool).
+  Still deferred: zero-rate level-pay pools; STOCHASTIC rate paths (curves
+  are deterministic inputs today — stochastic roadmap item 4).
 - **Language additions shipped for D**: `series_sum`/`series_avg`
   cross-stream references (two-phase, cycle-free), `time ... project <n>`
   projection tail, `parse_date`/`months_between` lease-anniversary
@@ -94,8 +97,9 @@ to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
 2. **Practitioner review** of all 6 benchmark references (LAUNCH_PLAN risk 3
    — every case.toml carries a provenance note; references are independent
    implementations, not yet Excel/Argus-verified by a practitioner).
-3. Stochastic roadmap items 1–4 (see the differentiator section below),
-   including `curve` inputs + rate paths that unlock credit floaters.
+3. Stochastic roadmap items 1–4 (see the differentiator section below).
+   Deterministic `curve` inputs shipped (increment 9); item 4 is now
+   specifically per-trial stochastic rate paths on those curves.
 
 Grammar gaps remain tracked in **docs/10_implementation_status.md** (the
 implement-or-remove worklist for the 1.0 gate).
