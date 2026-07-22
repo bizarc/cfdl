@@ -171,3 +171,79 @@ splitting the new-lease portion to after downtime.
 Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`,
 `cre.construction_stub`) are now fully template-driven — the hardcoded
 compiler path is gone; they remain supported for existing models.
+
+## Quick start
+
+A two-tenant office tower, lease-by-lease with recoveries and rollover:
+
+```cfdl
+version 0.1
+model "my-office"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 120 project 12
+
+entity asset tower
+
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 3
+    escalation = 0.03
+    opex_year = 300000
+    expense_stop_year = 300000
+    pro_rata_share = 0.40
+    ti_total = 120000
+    lc_total = 80000
+  }
+}
+
+contract cre.rollover.tenant_a on entity asset.tower {
+  term 2031-01..2036-12
+  terms {
+    renewal_probability = 0.7
+    renewal_rent_year = 520000
+    market_rent_year = 560000
+    downtime_months = 3
+  }
+}
+```
+
+The `project 12` tail extends evaluation past the hold so exit valuation
+sees a full forward year. Rollover windows start AT EXPIRY; escalations
+step on lease anniversaries.
+
+## Run it
+
+```bash
+cfdl compile my-office --packs packs --out my-office/ir.json
+cfdl run my-office/ir.json --packs packs --pack cre --out my-office/results.json --rate 0.07
+```
+
+## Recipes
+
+**Exit on engine-derived forward NOI**:
+
+```cfdl
+contract cre.exit_forward on entity asset.tower {
+  term 2035-12..2035-12
+  terms { exit_cap = 0.0625 }
+}
+```
+
+**Property-level opex** (escalating):
+
+```cfdl
+contract cre.property_opex on entity asset.tower {
+  term 2026-01..2035-12
+  terms { opex_year = 300000 escalation = 0.025 }
+}
+```
+
+**Stochastic rollover** — draw the renew/re-lease outcome per trial instead
+of expected-value blending; see `fixtures/valid/cre_stochastic_rollover/`
+and the stochastic-modeling docs.
+
+Full worked models: `benchmarks/cre/office_two_tenant/` (full Argus-parity
+case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
+rent), and the CRE office notebook in `examples/notebooks/`.

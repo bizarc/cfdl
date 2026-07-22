@@ -83,6 +83,7 @@ const sidebars: SidebarsConfig = {
         "benchmarks",
         "language-reference/implementation-status",
         "troubleshooting",
+        "faq",
         "licensing"
       ]
     }

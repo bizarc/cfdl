@@ -101,7 +101,86 @@ Notes:
 
 ---
 
-## 5) Schedule patterns
+## 5) Assumptions and uncertainty
+
+`assume` declares a named input; expressions read it as `inputs.<name>`.
+
+### Fixed assumption
+
+```cfdl
+assume discount_rate = 0.10
+```
+
+### Stochastic assumption
+
+Replace the constant with a distribution and the model becomes stochastic —
+no other change required:
+
+```cfdl
+assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
+assume vacancy ~ Triangular(min=0.0, mode=0.05, max=0.15)
+```
+
+Supported distributions: `Normal(mean, stdev, clip?)`,
+`LogNormal(mu, sigma, clip?)`, `Uniform(min, max)`,
+`Triangular(min, mode, max)`.
+
+### Running Monte Carlo
+
+Enable Monte Carlo in the run-config JSON (see the run-config section):
+
+```json
+{ "monte_carlo": { "trial_count": 1000, "seed": 42 } }
+```
+
+Every run declares an explicit seed, and each assumption gets its own
+deterministic draw stream — adding an assumption never reshuffles another
+assumption's draws, and runs are byte-reproducible across machines. The
+results' `monte_carlo` section summarizes every metric with mean, stdev,
+min/max, and percentiles (p01–p99).
+
+Because draws are ordinary values, expressions can branch on them to model
+coherent per-trial outcomes (e.g. binary renew-vs-rollover decisions)
+instead of expected-value blends:
+
+```cfdl
+amount = if(inputs.renewal_draw < 0.70, renewal_rent, market_rent)
+```
+
+Run-config `distributions` can add or override distributions without
+touching the model file.
+
+---
+
+## 6) Curves (date-indexed inputs)
+
+`curve` declares a named, date-indexed series — rate curves, price decks,
+escalation paths — looked up from expressions with `curve_value`:
+
+```cfdl
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+stream loan.interest on entity fund.buyer inflow currency USD {
+  schedule every monthly from 2026-01 to 2026-12
+  amount = 1000000 * (curve_value("sofr", time.date) + 0.0275) / 12
+}
+```
+
+- `step` holds each value flat-forward until the next point; `linear`
+  interpolates by calendar day.
+- Lookups outside the declared range clamp to the first/last point.
+- Duplicate names, duplicate point dates, or malformed points fail
+  compilation with `E5008_INVALID_CURVE`.
+
+Curves are deterministic inputs; the credit pack's floating-rate contracts
+(`credit.pool_float_io_bullet`) read coupon indices from them.
+
+---
+
+## 7) Schedule patterns
 
 ### One-time payment
 ```cfdl
@@ -120,7 +199,7 @@ schedule every monthly on day 15 from 2026-01 to 2026-12
 
 ---
 
-## 6) Naming conventions
+## 8) Naming conventions
 
 - Use dot notation for hierarchy: `cre.lease.base_rent`, `opco.working_capital.adjustment`
 - Use underscore only within a segment: `working_capital`
@@ -128,7 +207,7 @@ schedule every monthly on day 15 from 2026-01 to 2026-12
 
 ---
 
-## 7) Using packs
+## 9) Using packs
 
 Packs add domain behavior and validation. Use at the top of `model.cfdl`:
 
@@ -149,7 +228,7 @@ When not required: simple models with direct streams only.
 
 ---
 
-## 8) Multi-file models
+## 10) Multi-file models
 
 Split by concern as models grow:
 
@@ -168,7 +247,7 @@ Rules: imports are relative, no cycles, do not import outside model root.
 
 ---
 
-## 9) CLI
+## 11) CLI
 
 ### Build
 
@@ -226,7 +305,7 @@ Parameter key conventions:
 
 ---
 
-## 10) Running examples
+## 12) Running examples
 
 ### CRE Developer
 
@@ -244,7 +323,7 @@ Parameter key conventions:
 
 ---
 
-## 11) Golden runner
+## 13) Golden runner
 
 Golden outputs are the source of truth for fixture behavior:
 
@@ -260,7 +339,7 @@ CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
 
 ---
 
-## 12) Common errors and fixes
+## 14) Common errors and fixes
 
 - **Missing required model header fields** — Add `version`, `model`, and `time` once each.
 - **Unresolved entity refs** — Confirm `entity` exists and reference uses a qualified name.
@@ -272,7 +351,7 @@ For diagnostic codes, see `08_diagnostics.md`.
 
 ---
 
-## 13) Progressive tutorial examples
+## 15) Progressive tutorial examples
 
 - `examples/language_tutorial/minimal_model/`
 - `examples/language_tutorial/first_stream/`
@@ -284,7 +363,7 @@ Recommended workflow: start with minimal → add streams → contracts with pack
 
 ---
 
-## 14) Authoritative references
+## 16) Authoritative references
 
 | Doc | Content |
 |-----|---------|
