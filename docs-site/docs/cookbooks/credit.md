@@ -117,3 +117,87 @@ benchmark purchases at a 1-point discount.
   mean-reverting rate paths (stochastic roadmap item 4).
 - Zero note rate on `pool_level_pay` (closed form divides by `r`).
 - Delinquency states, servicer advances, loan-level heterogeneity.
+
+## Quick start
+
+A $25mm level-pay pool with prepayments, defaults, and a servicing strip:
+
+```cfdl
+version 0.1
+model "my-pool"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 126
+
+entity fund buyer
+
+contract credit.pool_level_pay.auto_a on entity fund.buyer {
+  term 2026-01..2036-06
+  terms {
+    balance = 25000000
+    rate = 0.065
+    term_months = 120
+    cpr = 0.08
+    cdr = 0.02
+    severity = 0.35
+    recovery_lag_months = 6
+    servicing_fee = 0.005
+  }
+}
+
+contract credit.purchase.auto_a on entity fund.buyer {
+  term 2026-01..2026-01
+  terms { price = 24750000 }
+}
+```
+
+`credit.purchase` takes the dollar purchase amount — a 1-point discount
+(99.0) on the $25mm balance here.
+
+Let the contract term span `term_months + recovery_lag_months` so lagged
+recoveries have periods to land in.
+
+## Run it
+
+```bash
+cfdl compile my-pool --packs packs --out my-pool/ir.json
+cfdl run my-pool/ir.json --packs packs --pack credit --out my-pool/results.json --rate 0.08
+```
+
+Domain metrics include interest/principal/recoveries/collections, the
+collections multiple, servicing, penalties, and principal WAL
+(`domain.credit.wal_years`).
+
+## Recipes
+
+**Floating-rate IO bullet off a rate curve** (margin/floor/cap against a
+model-declared curve):
+
+```cfdl
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+contract credit.pool_float_io_bullet.bridge on entity fund.buyer {
+  term 2026-01..2028-12
+  terms {
+    balance = 15000000
+    index_curve = "sofr"
+    margin = 0.0275
+    rate_floor = 0.065
+    rate_cap = 0.095
+    term_months = 36
+    cpr = 0.05
+    cdr = 0.01
+    severity = 0.30
+    recovery_lag_months = 3
+  }
+}
+```
+
+**IO pool with bullet maturity**: `credit.pool_io_bullet` — same loss
+vocabulary, interest-only until the balloon.
+
+Full worked models: `benchmarks/credit/level_pay_pool/`,
+`io_bullet_loan/`, `float_bridge_pool/`, and the loan-pool notebook in
+`examples/notebooks/`.

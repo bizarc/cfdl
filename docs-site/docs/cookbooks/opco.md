@@ -99,3 +99,70 @@ deduct interest, so this is FCF after the interest tax shield),
 Generated streams carry source contract file/span and
 `generated_by.pack/rule_id`; rule ordering, diagnostics ordering, IDs and
 results are deterministic under identical inputs.
+
+## Quick start
+
+A services business bought in an LBO — revenue/opex lines, working capital,
+capex, term debt:
+
+```cfdl
+version 0.1
+model "my-buyout"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+entity operating target
+
+contract opco.revenue_line on entity operating.target {
+  term 2026-01..2030-12
+  terms { amount = 1000000 growth_rate = 0.06 }
+}
+
+contract opco.opex_line on entity operating.target {
+  term 2026-01..2030-12
+  terms { amount = 650000 growth_rate = 0.04 }
+}
+
+contract opco.working_capital_policy on entity operating.target {
+  term 2026-01..2030-12
+  terms { ar_days = 45 ap_days = 30 inv_days = 10 release_at_end = 1 }
+}
+```
+
+## Run it
+
+```bash
+cfdl compile my-buyout --packs packs --out my-buyout/ir.json
+cfdl run my-buyout/ir.json --packs packs --pack opco --out my-buyout/results.json --rate 0.10
+```
+
+## Recipes
+
+**Scheduled term debt** (IO period, level-pay amortization via
+`ipmt`/`ppmt`, balloon at maturity, proceeds at close):
+
+```cfdl
+contract opco.term_debt on entity operating.target {
+  term 2026-01..2030-12
+  terms {
+    principal = 14000000
+    rate = 0.085
+    io_months = 12
+    amort_months = 84
+  }
+}
+```
+
+**Trailing-EBITDA exit** (the LBO convention — trailing twelve months, not
+forward):
+
+```cfdl
+contract opco.exit_ebitda on entity operating.target {
+  term 2030-12..2030-12
+  terms { exit_multiple = 8.5 }
+}
+```
+
+Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
+independent recursive reference) and the LBO notebook in
+`examples/notebooks/`.
