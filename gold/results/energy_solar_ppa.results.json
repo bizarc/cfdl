@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "6054272e1ec83e546e8eb73eee35e2ee756968f42a9682b3bf8bb7d8e4b4f35f",
+  "model_hash": "e6532b7bdbfe0beb6af72ad2a961819c620c328bb2fd52a36640daece9c44a9c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.3.0"
@@ -10637,6 +10637,10 @@
       "domain.energy.revenue": {
         "amount": 12594004.522827,
         "currency": "USD"
+      },
+      "domain.energy.tax_benefits": {
+        "amount": 720000.0,
+        "currency": "USD"
       }
     },
     "lineage": {
@@ -10681,6 +10685,15 @@
           "energy.merchant.revenue",
           "energy.storage.margin",
           "energy.capacity.revenue"
+        ],
+        "denominator_streams": [],
+        "formula": "sum(numerator_streams)"
+      },
+      "domain.energy.tax_benefits": {
+        "numerator_streams": [
+          "energy.itc.credit",
+          "energy.ptc.credit",
+          "energy.macrs.shield"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"

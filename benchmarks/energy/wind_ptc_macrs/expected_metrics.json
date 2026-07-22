@@ -1,0 +1,26 @@
+{
+  "model.npv": {
+    "value": -5306418.13,
+    "tolerance": 1.0
+  },
+  "domain.energy.revenue": {
+    "value": 90382400.52,
+    "tolerance": 1.0
+  },
+  "domain.energy.ebitda": {
+    "value": 58795819.78,
+    "tolerance": 1.0
+  },
+  "domain.energy.tax_benefits": {
+    "value": 37894379.52,
+    "tolerance": 1.0
+  },
+  "domain.energy.debt_service": {
+    "value": 36768755.46,
+    "tolerance": 1.0
+  },
+  "domain.energy.dscr": {
+    "value": 1.59907,
+    "tolerance": 0.0001
+  }
+}

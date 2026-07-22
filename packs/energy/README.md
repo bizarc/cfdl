@@ -18,17 +18,22 @@ no hardcoded amounts.
 
 | Contract | Required terms | Optional (default) |
 |---|---|---|
-| `energy.ppa` | `mwh_year`, `ppa_price` | `escalation` (0), `degradation` (0) |
-| `energy.merchant` | `mwh_year`, `price` | `price_escalation` (0), `degradation` (0) |
+| `energy.ppa` | `mwh_year`, `ppa_price` | `escalation` (0), `degradation` (0), `availability` (1) |
+| `energy.merchant` | `mwh_year`, `price` | `price_escalation` (0), `degradation` (0), `availability` (1) |
 | `energy.storage_arbitrage` | `mwh_cycled_year`, `spread` | `degradation` (0) |
 | `energy.capacity` | `payment_year` | — |
 | `energy.om` | `om_year` | `escalation` (0) |
 | `energy.itc` | `credit` | — (fires on `term_start`) |
 | `energy.capex` | `amount` | — (fires on `term_start`) |
 | `energy.debt_service` | `rate`, `term_months`, `principal` | — |
+| `energy.ptc` | `mwh_year`, `credit_per_mwh` | `escalation` (0), `degradation` (0), `availability` (1); term bounds the credit window |
+| `energy.macrs_shield` | `basis`, `tax_rate` | `life` (5; also 7/15/20) — IRS Pub 946 GDS half-year tables via `macrs_rate()` |
+
+Tax attributes (ITC, PTC, MACRS shield) report under
+`domain.energy.tax_benefits` and are excluded from revenue/EBITDA.
 
 ## Not yet modeled (roadmap)
 
-MACRS depreciation / tax equity, partnership flip structures (HLBV),
-DSCR-sculpted debt sizing, availability/curtailment adjustments, PTC.
-These arrive in later Workstream D increments; see LAUNCH_PLAN.md.
+Tax equity / partnership flip structures (HLBV), DSCR-sculpted debt sizing,
+full tax computation (the MACRS stream models the shield value, not taxable
+income). Later Workstream D increments; see LAUNCH_PLAN.md.
