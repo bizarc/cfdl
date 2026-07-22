@@ -12,8 +12,9 @@ use lsp_types::{
     CompletionItem, CompletionItemKind, CompletionOptions, CompletionParams, CompletionResponse,
     Diagnostic, DiagnosticSeverity, DidChangeConfigurationParams, DidChangeTextDocumentParams,
     DidCloseTextDocumentParams, DidOpenTextDocumentParams, ExecuteCommandOptions,
-    ExecuteCommandParams, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializeResult, Location, MessageType, NumberOrString, OneOf, Position, Range, SemanticToken,
+    ExecuteCommandParams, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverContents,
+    HoverParams, HoverProviderCapability, InitializeParams, InitializeResult, Location,
+    MarkupContent, MarkupKind, MessageType, NumberOrString, OneOf, Position, Range, SemanticToken,
     SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensDelta,
     SemanticTokensDeltaParams, SemanticTokensEdit, SemanticTokensFullDeltaResult,
     SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, SemanticTokensParams,
@@ -44,7 +45,6 @@ impl DocumentStore {
         self.docs.remove(uri);
     }
 
-    #[cfg(test)]
     pub fn get(&self, uri: &Url) -> Option<&str> {
         self.docs.get(uri).map(String::as_str)
     }
@@ -575,6 +575,7 @@ pub fn server_capabilities() -> ServerCapabilities {
     ServerCapabilities {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
         definition_provider: Some(OneOf::Left(true)),
+        hover_provider: Some(HoverProviderCapability::Simple(true)),
         completion_provider: Some(CompletionOptions::default()),
         execute_command_provider: Some(ExecuteCommandOptions {
             commands: vec![
@@ -681,6 +682,16 @@ impl LanguageServer for Backend {
                 text_document_position_params.position,
             )
             .await)
+    }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        let uri = params.text_document_position_params.text_document.uri;
+        let position = params.text_document_position_params.position;
+        let docs = self.docs.read().await;
+        let Some(text) = docs.get(&uri) else {
+            return Ok(None);
+        };
+        Ok(hover_at(text, position))
     }
 
     async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
@@ -1033,8 +1044,94 @@ fn completion_items(context: &AnalysisContext) -> Vec<CompletionItem> {
         }
     }
 
+    for (name, sig, doc) in EXPR_BUILTINS {
+        items.push(CompletionItem {
+            label: (*name).to_string(),
+            kind: Some(CompletionItemKind::FUNCTION),
+            detail: Some((*sig).to_string()),
+            documentation: Some(lsp_types::Documentation::String((*doc).to_string())),
+            sort_text: Some(format!("4-{name}")),
+            ..CompletionItem::default()
+        });
+    }
+
     items.sort_by(|a, b| a.label.cmp(&b.label));
     items
+}
+
+/// Builtin expression functions (see docs/03_expression_environment.md §4).
+/// (name, signature, documentation)
+pub const EXPR_BUILTINS: &[(&str, &str, &str)] = &[
+    ("if", "if(cond, a, b)", "Lazy conditional: only the taken branch is evaluated."),
+    ("min", "min(a, b, ...)", "Smallest of the arguments."),
+    ("max", "max(a, b, ...)", "Largest of the arguments."),
+    ("sum", "sum(a, b, ...)", "Sum of the arguments."),
+    ("avg", "avg(a, b, ...)", "Arithmetic mean of the arguments."),
+    ("abs", "abs(x)", "Absolute value."),
+    ("round", "round(x, [digits])", "Excel-style rounding: half away from zero."),
+    ("round_down", "round_down(x, [digits])", "Round toward zero."),
+    ("round_up", "round_up(x, [digits])", "Round away from zero."),
+    ("pow", "pow(base, exp)", "Function form of `^`. Integer exponents are decimal-exact; fractional exponents use the float64 escape."),
+    ("clamp", "clamp(x, lo, hi)", "Constrain `x` to the range [lo, hi]."),
+    ("pmt", "pmt(rate, nper, pv, [fv], [due])", "Periodic payment of an annuity (Excel sign conventions)."),
+    ("pv", "pv(rate, nper, pmt, [fv], [due])", "Present value of an annuity."),
+    ("fv", "fv(rate, nper, pmt, [pv], [due])", "Future value of an annuity."),
+    ("nper", "nper(rate, pmt, pv, [fv], [due])", "Number of periods for an annuity."),
+    ("rate", "rate(nper, pmt, pv, [fv], [due], [guess])", "Periodic interest rate (Newton solver, tolerance 1e-12)."),
+    ("cpr_to_smm", "cpr_to_smm(cpr)", "Convert an annual prepayment rate (CPR) to the single-monthly mortality rate (SMM)."),
+    ("date", "date(y, m, d)", "Construct a calendar date."),
+    ("edate", "edate(d, months)", "Shift a date by whole months, clamping to month end (Excel EDATE)."),
+    ("eomonth", "eomonth(d, months)", "End of the month `months` away (Excel EOMONTH)."),
+    ("year_frac", "year_frac(d1, d2, basis)", "Year fraction per ISDA/SIFMA day-count basis: \"30/360\", \"act/360\", \"act/365\"."),
+];
+
+/// Well-known namespace variables available in expressions.
+pub const EXPR_NAMESPACE_DOCS: &[(&str, &str)] = &[
+    ("time.t", "0-based period index of the evaluation step."),
+    ("time.date", "Calendar date of the evaluation step."),
+    ("time.phase", "Active phase name, if any."),
+    ("model.id", "Model identifier."),
+    ("model.base_currency", "Model base currency code."),
+];
+
+/// Extract the identifier (with dots) under `position` in `text`.
+fn word_at(text: &str, position: Position) -> Option<String> {
+    let line = text.lines().nth(position.line as usize)?;
+    let chars: Vec<char> = line.chars().collect();
+    let col = (position.character as usize).min(chars.len().saturating_sub(1));
+    let is_word = |c: char| c.is_ascii_alphanumeric() || c == '_' || c == '.';
+    if chars.is_empty() || !is_word(chars[col]) {
+        return None;
+    }
+    let mut start = col;
+    while start > 0 && is_word(chars[start - 1]) {
+        start -= 1;
+    }
+    let mut end = col;
+    while end + 1 < chars.len() && is_word(chars[end + 1]) {
+        end += 1;
+    }
+    Some(chars[start..=end].iter().collect())
+}
+
+fn hover_at(text: &str, position: Position) -> Option<Hover> {
+    let word = word_at(text, position)?;
+    let markdown = if let Some((_, sig, doc)) =
+        EXPR_BUILTINS.iter().find(|(name, _, _)| *name == word)
+    {
+        format!("```cfdl\n{sig}\n```\n\n{doc}")
+    } else if let Some((name, doc)) = EXPR_NAMESPACE_DOCS.iter().find(|(name, _)| *name == word) {
+        format!("`{name}` — {doc}")
+    } else {
+        return None;
+    };
+    Some(Hover {
+        contents: HoverContents::Markup(MarkupContent {
+            kind: MarkupKind::Markdown,
+            value: markdown,
+        }),
+        range: None,
+    })
 }
 
 fn keyword_completion(label: &str) -> CompletionItem {
@@ -1715,13 +1812,14 @@ mod tests {
     use super::{
         apply_settings_value, build_analysis_context, cfdl_diagnostic_to_lsp, command_uri,
         completion_items, compute_semantic_delta_result, detect_model_root,
-        detect_model_root_with_entry, encode_semantic_tokens, group_diagnostics_by_uri,
+        detect_model_root_with_entry, encode_semantic_tokens, group_diagnostics_by_uri, hover_at,
         modifier_bitset, parse_apply_template_request, resolve_packs_root, semantic_tokens_legend,
         server_capabilities, source_parseable, ApplyTemplateRequest, DocumentStore, LspSettings,
         SemanticModifierKind, TraceServer, CMD_APPLY_TEMPLATE, CMD_LIST_TEMPLATES,
     };
     use cfdl_compile::{Diagnostic as CfdlDiagnostic, Span as CfdlSpan};
     use cfdl_lexer::{Keyword, Token, TokenKind};
+    use lsp_types::{CompletionItemKind, HoverContents};
     use lsp_types::{
         Position, SemanticToken, SemanticTokensFullDeltaResult, TextDocumentSyncCapability,
         TextDocumentSyncKind, Url,
@@ -2268,6 +2366,51 @@ stream cre.rent on entity legal.borrower {
             .as_str()
             .ends_with("/packs/testpack/pack.toml"));
 
+        fs::remove_dir_all(root).expect("cleanup temp dir");
+    }
+
+    #[test]
+    fn hover_documents_expression_builtins() {
+        let text = "stream a.b on entity a.b {\n  amount = pmt(0.005, 360, 100000)\n}\n";
+        // cursor on "pmt" (line 1, col 11)
+        let hover = hover_at(text, Position::new(1, 11)).expect("hover on builtin");
+        match hover.contents {
+            HoverContents::Markup(m) => {
+                assert!(m.value.contains("pmt(rate, nper, pv"), "{}", m.value)
+            }
+            other => panic!("unexpected hover contents: {other:?}"),
+        }
+        // cursor on "amount" (not a builtin) -> no hover
+        assert!(hover_at(text, Position::new(1, 3)).is_none());
+    }
+
+    #[test]
+    fn hover_documents_namespace_vars() {
+        let text = "  active when time.t >= 6\n";
+        let hover = hover_at(text, Position::new(0, 17)).expect("hover on time.t");
+        match hover.contents {
+            HoverContents::Markup(m) => assert!(m.value.contains("period index")),
+            other => panic!("unexpected hover contents: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn completion_includes_expression_builtins() {
+        let root = make_temp_dir("builtin-completion");
+        fs::write(
+            root.join("model.cfdl"),
+            b"version 0.1\nmodel \"demo\"\ntime calendar monthly from 2026-01 for 2\n",
+        )
+        .expect("write model");
+        let settings = LspSettings::default();
+        let context = build_analysis_context(&root, &settings).expect("analysis");
+        let items = completion_items(&context);
+        let pmt = items
+            .iter()
+            .find(|i| i.label == "pmt")
+            .expect("pmt completion");
+        assert_eq!(pmt.kind, Some(CompletionItemKind::FUNCTION));
+        assert!(pmt.detail.as_deref().unwrap_or("").contains("rate, nper"));
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }
 

@@ -1414,37 +1414,52 @@ fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Di
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
         };
-        if let Some(amount) = &stream.amount {
-            if let Err(err) = cfdl_expr::compile_expr(&amount.src) {
+        for (slot, what) in [
+            (stream.amount.as_ref(), "amount"),
+            (stream.active_when.as_ref(), "active_when"),
+        ] {
+            let Some(slot) = slot else { continue };
+            if let Err(err) = cfdl_expr::compile_expr(&slot.src) {
                 diags.push(Diagnostic {
                     code: err.code.to_string(),
                     severity: "error".to_string(),
                     message: err.message,
                     file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(amount.span)),
+                    span: Some(expr_error_span(slot, err.span.as_ref())),
                     path: None,
                     hint: None,
-                    notes: vec![format!("stream '{}', amount expression", stream.name)],
-                });
-            }
-        }
-        if let Some(active_when) = &stream.active_when {
-            if let Err(err) = cfdl_expr::compile_expr(&active_when.src) {
-                diags.push(Diagnostic {
-                    code: err.code.to_string(),
-                    severity: "error".to_string(),
-                    message: err.message,
-                    file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(active_when.span)),
-                    path: None,
-                    hint: None,
-                    notes: vec![format!("stream '{}', active_when expression", stream.name)],
+                    notes: vec![format!("stream '{}', {} expression", stream.name, what)],
                 });
             }
         }
     }
     sort_compile_diagnostics(&mut diags);
     diags
+}
+
+/// Map an expression-internal byte-offset span onto file coordinates.
+///
+/// `slot.src` is the exact source slice covered by `slot.expr_span`, so for a
+/// single-line expression the file column is `expr_span.start_col + offset`.
+/// Multi-line expressions (rare) fall back to the whole expression span, as do
+/// errors without a span.
+fn expr_error_span(slot: &cfdl_parser::ExprSlot, err_span: Option<&cfdl_expr::ExprSpan>) -> Span {
+    let e = slot.expr_span;
+    match err_span {
+        Some(s) if e.start_line == e.end_line => {
+            let width = slot.src.chars().count() as u32;
+            let start = (s.start as u32).min(width.saturating_sub(1));
+            // Error spans are byte-exclusive at the end; file cols are inclusive.
+            let end = (s.end as u32).clamp(start + 1, width);
+            Span {
+                start_line: e.start_line,
+                start_col: e.start_col + start,
+                end_line: e.start_line,
+                end_col: e.start_col + end - 1,
+            }
+        }
+        _ => map_span(e),
+    }
 }
 
 fn sort_compile_diagnostics(diags: &mut [Diagnostic]) {
