@@ -1,0 +1,41 @@
+version 0.1
+model "energy-construction-cod"
+time calendar monthly from 2026-01 for 48
+
+entity project microgrid
+
+// Construction: 12 months of capex draws before COD. No revenue.
+phase construction from 2026-01 to 2026-12
+phase operations from 2027-01 to 2029-12
+
+use pack "energy" version "0.1.0"
+
+contract energy.capex on entity project.microgrid {
+  term 2026-01..2026-01
+  terms { amount = 500000 }
+}
+
+contract energy.capex.final_draw on entity project.microgrid {
+  term 2026-12..2026-12
+  terms { amount = 700000 }
+}
+
+// PPA begins at COD (contract term_start = 2027-01). Degradation and
+// escalation anniversaries count from COD, not from model start.
+contract energy.ppa on entity project.microgrid {
+  term 2027-01..2029-12
+  terms {
+    mwh_year = 2400
+    ppa_price = 90
+    escalation = 0.02
+    degradation = 0.01
+  }
+}
+
+contract energy.om on entity project.microgrid {
+  term 2027-01..2029-12
+  terms {
+    om_year = 36000
+    escalation = 0.02
+  }
+}

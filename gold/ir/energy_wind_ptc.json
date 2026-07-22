@@ -274,7 +274,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "42000000.0 * macrs_rate(round_down(time.t / 12.0, 0.0), 5.0) / 12.0 * 0.21"
+        "src": "42000000.0 * macrs_rate(round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0), 5.0) / 12.0 * 0.21"
       },
       "active_when": {
         "lang": "cfdl",
@@ -313,7 +313,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(time.t / 12.0, 0.0)) * 42.0 * pow(1.0 + 0.015, round_down(time.t / 12.0, 0.0))"
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0)) * 42.0 * pow(1.0 + 0.015, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -352,7 +352,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(1300000.0 / 12.0) * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
+        "src": "(1300000.0 / 12.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -391,7 +391,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(time.t / 12.0, 0.0)) * 27.5 * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0)) * 27.5 * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
