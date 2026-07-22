@@ -117,10 +117,14 @@ unstarted.
 Grammar gaps remain tracked in **docs/10_implementation_status.md** (the
 implement-or-remove worklist for the 1.0 gate).
 
-**E (Python SDK) is COMPLETE** (E1–E4: object model + pandas accessors,
-golden pytest parity, abi3 wheel matrix, industry notebooks — all build-only,
-no publishing). **F (surfaces) is next**; F2 (source-string compile API) also
-enables an SDK `compile_source()` follow-up.
+**E (Python SDK) and F (surfaces) are COMPLETE.** E1–E4: object model + pandas
+accessors, golden pytest parity, abi3 wheel matrix, industry notebooks. F1–F5:
+docs refresh (kept Docusaurus), source-string compile API + `SourceProvider`
+seam, WASM playground (`crates/cfdl-wasm` + Monaco page, verified in-browser),
+axum API server (`crates/cfdl-server` + Dockerfile), and distribution polish
+(Homebrew formula + generator, Open VSX prep; kept the hand-rolled pipeline).
+All build-only — no publishing without human approval. A source-string SDK
+`compile_source()` remains an available follow-up on the F2 foundation.
 
 ## 4. Build & test (all agents)
 
@@ -177,8 +181,9 @@ H (waterfalls / capital stack)── needs D pack conventions; blocks launch gat
 - Rewrite `CONTRIBUTING.md` for closed-contribution model; add `SECURITY.md` and a
   bug-report-only issue template.
 - Modernize `.github/workflows/ci.yml` (pre-existing from old repo — audit): fmt, clippy
-  `-D warnings`, test, golden job; linux/mac/windows matrix. Set up **cargo-dist** for
-  tag-triggered releases (mac arm/x86, linux x86/arm, windows) + Homebrew tap formula.
+  `-D warnings`, test, golden job; linux/mac/windows matrix. **F5 decision: kept
+  the hand-rolled release pipeline instead of cargo-dist** (rationale in
+  `distribution/README.md`); Homebrew formula template + generator shipped.
   Dry-run only; no public publishing.
 - Reserve names (needs human approval per rule 5.6): `cfdl` + crate names on crates.io,
   `cfdl` on PyPI, `cfdl` publisher on VS Code Marketplace.

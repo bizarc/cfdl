@@ -111,6 +111,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.17] - 2026-07-22
+
+### Added
+- **Distribution polish** (Workstream F, increment F5): Homebrew formula
+  template (`distribution/homebrew/cfdl.rb`) + generator
+  (`scripts/gen_homebrew.sh`) that fills version/URLs/sha256 from built CLI
+  assets; Open VSX prep (`ovsx` dev dependency on `editors/vscode`, documented
+  publish steps). Decision recorded: **keep the hand-rolled release pipeline**
+  (not cargo-dist). All publishing (Homebrew tap, Marketplace, Open VSX)
+  remains human-approved — nothing is pushed by CI (rule 5.6). Workstream F is
+  complete.
+
+### Changed
+- `editors/vscode` now declares SPDX license `BUSL-1.1` (was `UNLICENSED`).
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added
