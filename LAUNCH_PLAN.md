@@ -36,27 +36,33 @@ Full original plan: `~/.claude/plans/i-want-to-be-logical-teapot.md` (evs-platfo
 
 ## 3. Current state (as of 2026-07-21)
 
-Done, committed on `main` (87cc99c..8556666):
-- Monorepo `cfdl-core` synced in (v0.2.7 state); superseded flat docs removed; tracked
-  build binaries removed and gitignored. Repo-unique assets preserved: `docs-site/`
-  (Docusaurus), `bindings/typescript`, `editors/vscode`.
-- Relicensed: `LICENSE` (BSL 1.1), `NOTICE`, all 12 crates at workspace `version = 0.3.0`,
-  `license = "BUSL-1.1"`, repository/homepage/description set; `python/pyproject.toml` 0.3.0.
-- Rebrand scrub: schema `$id`s → `https://cfdl.dev/schemas/...`; doc pack-namespace
-  examples `evs/cre` → `cfdl/cre` (pack dirs were already plain `cre`/`opco` — no code rename
-  was needed).
-- Goldens re-blessed for 0.3.0 (compiler version is embedded in IR provenance and
-  deterministic IDs): `PASS=42 FAIL=0`.
+**Workstreams A, B, and C are complete** (all merged to `main`, three-OS CI green;
+golden suite at 49 fixtures). Highlights:
 
-Known loose ends (small, folded into workstreams below):
-- `README.md` still frames CFDL as an internal EVS SDK — rewrite pending (Workstream A).
-- `AGENTS.md` / `CLAUDE.md` in this repo are stale (v0.1/v0.2 milestones) — refresh or
-  replace with a pointer to this file (Workstream A).
-- `docs/archive/*` still mentions EVS (historical; acceptable, but review before public flip).
-- Names not yet reserved on crates.io / PyPI / VS Code Marketplace (Workstream A — do early).
-- `make ci` note: run `make gold` after any change that alters compiler output;
-  re-bless only intentional changes with
-  `CFDL_GOLD_UPDATE=1 CFDL_GOLD_UPDATE_ALLOW_IR_CHANGES=1 ./tools/golden-runner run`.
+- **A (repo hygiene)**: BSL 1.1 relicense, standalone README/policy files,
+  linux/mac/windows CI, release pipeline builds cfdl CLI + LSP binaries + VSIX.
+- **B (cfdl-calc)**: CEL fully removed. Bare native expressions
+  (`amount = base_rent * (1 + esc)^t`), decimal-first numerics with
+  `excel_compat` mode, snake_case builtins (pmt/pv/fv/rate/year_frac/...),
+  expression-level diagnostics, LSP hover/completion.
+- **C (engine completeness)**: day-count/business-day calendar engine
+  (US/TARGET/UK, ISDA rolls) wired into schedules; in-language `assume`
+  distributions with per-assumption seeded Monte Carlo; event/option execution
+  (latch semantics, entity state, option payoffs); parameterized pack lowering
+  (`{{contract.*}}` templates + defaults, E5006); declarative pack metrics
+  (metrics.toml) + engine universals (MOIC/payback/WAL); embedded pack registry
+  (`embedded-packs` feature) for WASM/server hosts; `run` statements; `cfdl
+  parse` AST dump; parser fuzz tests; cfdl-validate unit tests.
+
+Remaining grammar gaps are tracked in **docs/10_implementation_status.md** —
+the implement-or-remove worklist for the 1.0 gate. Legacy hardcoded
+`apply_cre/opco_contract_terms` in cfdl-compile are removed when Workstream D
+rebuilds those packs on lowering templates.
+
+**Next up: Workstream D** (industry packs + Excel-parity benchmarks, energy
+first) — its dependencies (C's pack templates, metrics, events) are all done.
+E (Python SDK) and F (surfaces) can also start; F's playground depends only on
+B (done) and C6 (done).
 
 ## 4. Build & test (all agents)
 
