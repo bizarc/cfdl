@@ -8,7 +8,7 @@
 //! Engine-universal metrics (NPV, IRR, MOIC, payback, WAL) live in
 //! `cfdl-engine`, not here.
 
-use cfdl_engine::{DomainMetrics, MetricLineage, Money, Results, Scalar};
+use cfdl_engine::{DomainMetrics, MetricLineage, Money, MoneySeries, Results, Scalar};
 use cfdl_pack::MetricSpec;
 use std::collections::BTreeMap;
 
@@ -58,6 +58,10 @@ pub fn compute(pack: &str, specs: &[MetricSpec], results: &Results) -> Option<Do
                     _ => None,
                 };
                 (value, vec![num_id.clone()], vec![den_id.clone()])
+            }
+            "wal_years" => {
+                let value = wal_years(results, &spec.numerator_streams);
+                (value, spec.numerator_streams.clone(), vec![])
             }
             _ => continue,
         };
@@ -124,6 +128,41 @@ fn sum_stream_totals(metrics: &BTreeMap<String, Scalar>, streams: &[String]) -> 
         }
     }
     total
+}
+
+/// Weighted average life in years of the matched streams' positive
+/// per-period amounts: sum(t/ppy * v) / sum(v). Periods-per-year comes from
+/// the engine's `run.periods_per_year` metric (default 12). Omitted when the
+/// matched streams have no positive amounts.
+fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
+    let series = &results.deterministic.series;
+    let ppy = match results.deterministic.metrics.get("run.periods_per_year") {
+        Some(Scalar::Number(v)) if *v > 0.0 => *v,
+        _ => 12.0,
+    };
+    let mut weighted = 0.0_f64;
+    let mut total = 0.0_f64;
+    for name in streams {
+        let matched: Vec<&MoneySeries> = if let Some(prefix) = name.strip_suffix(".*") {
+            let key_prefix = format!("stream.{prefix}.");
+            series
+                .iter()
+                .filter(|(key, _)| key.starts_with(&key_prefix))
+                .map(|(_, s)| s)
+                .collect()
+        } else {
+            series.get(&format!("stream.{name}")).into_iter().collect()
+        };
+        for s in matched {
+            for (t, money) in s.values.iter().enumerate() {
+                if money.amount > 0.0 {
+                    weighted += (t as f64 / ppy) * money.amount;
+                    total += money.amount;
+                }
+            }
+        }
+    }
+    (total > 0.0).then(|| weighted / total)
 }
 
 fn currency_from_results(results: &Results) -> String {
@@ -323,5 +362,90 @@ mod tests {
     fn empty_specs_return_none() {
         let results = make_results_with_metrics(vec![]);
         assert!(compute("anything", &[], &results).is_none());
+    }
+
+    #[test]
+    fn wal_years_weights_positive_amounts_by_period() {
+        use cfdl_engine::{MoneySeries, SeriesIndex};
+        let mut results = make_results_with_metrics(vec![]);
+        results
+            .deterministic
+            .metrics
+            .insert("run.periods_per_year".to_string(), Scalar::Number(12.0));
+        let series = |values: &[f64]| MoneySeries {
+            index: SeriesIndex {
+                calendar: "monthly".to_string(),
+                start: "2026-01-01".to_string(),
+                periods: values.len() as u32,
+            },
+            values: values
+                .iter()
+                .map(|v| Money {
+                    amount: *v,
+                    currency: "USD".to_string(),
+                })
+                .collect(),
+        };
+        // 100 at t=0 and 100 at t=24 -> WAL = 12 months = 1.0 years.
+        results.deterministic.series.insert(
+            "stream.credit.pool.prepay.a".to_string(),
+            series(&[100.0, 0.0, 0.0, 0.0]),
+        );
+        let mut tail = vec![0.0; 25];
+        tail[24] = 100.0;
+        results
+            .deterministic
+            .series
+            .insert("stream.credit.pool.bullet.a".to_string(), series(&tail));
+        // Negative amounts are excluded from the weighting.
+        results
+            .deterministic
+            .series
+            .insert("stream.credit.pool.other".to_string(), series(&[-50.0]));
+        let specs = vec![spec(
+            "domain.credit.wal_years",
+            "number",
+            "wal_years",
+            &[
+                "credit.pool.prepay.*",
+                "credit.pool.bullet.*",
+                "credit.pool.other",
+            ],
+            &[],
+            None,
+            None,
+            "wal_years(numerator_streams)",
+            false,
+        )];
+        let dm = compute("credit", &specs, &results).expect("metrics");
+        let wal = match dm.metrics.get("domain.credit.wal_years").expect("wal") {
+            Scalar::Number(v) => *v,
+            other => panic!("expected number, got {other:?}"),
+        };
+        assert!((wal - 1.0).abs() < 1e-9, "wal = {wal}");
+
+        // No positive amounts anywhere -> metric omitted.
+        let mut empty = make_results_with_metrics(vec![]);
+        empty
+            .deterministic
+            .series
+            .insert("stream.credit.pool.other".to_string(), series(&[-1.0]));
+        let dm = compute(
+            "credit",
+            &[spec(
+                "domain.credit.wal_years",
+                "number",
+                "wal_years",
+                &["credit.pool.other"],
+                &[],
+                None,
+                None,
+                "wal_years(numerator_streams)",
+                false,
+            )],
+            &empty,
+        )
+        .expect("metrics");
+        assert!(!dm.metrics.contains_key("domain.credit.wal_years"));
     }
 }

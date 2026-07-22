@@ -18,7 +18,8 @@ import json
 PERIODS = 126
 BALANCE, RATE, TERM_MONTHS = 25_000_000.0, 0.065, 120
 CPR, CDR, SEVERITY, RECOVERY_LAG = 0.08, 0.02, 0.35, 6
-PRICE = 25_000_000.0
+SERVICING_FEE, PREPAY_PENALTY_RATE = 0.005, 0.01
+PRICE = 24_750_000.0  # 99.0 (1-point discount)
 ANNUAL_DISCOUNT = 0.06
 
 
@@ -33,24 +34,31 @@ def main():
 
     recoveries = [0.0] * PERIODS
     interest_total = principal_total = recovery_total = 0.0
-    rows = []
+    servicing_total = penalty_total = 0.0
+    principal_flows = [0.0] * PERIODS
     net = [0.0] * PERIODS
     bal = BALANCE
     for p in range(TERM_MONTHS):
         default = bal * mdr
         performing = bal - default
         interest = performing * r
+        servicing = performing * SERVICING_FEE / 12.0
         c = r / ((1.0 + r) ** (TERM_MONTHS - p) - 1.0)
         sched = performing * c
         prepay = (performing - sched) * smm
+        penalty = prepay * PREPAY_PENALTY_RATE
         bal = performing - sched - prepay
         recoveries[p + RECOVERY_LAG] += default * (1.0 - SEVERITY)
-        net[p] += interest + sched + prepay
+        net[p] += interest + sched + prepay + penalty - servicing
+        principal_flows[p] += sched + prepay
         interest_total += interest
         principal_total += sched + prepay
+        servicing_total += servicing
+        penalty_total += penalty
 
     for p in range(PERIODS):
         net[p] += recoveries[p]
+        principal_flows[p] += recoveries[p]
         recovery_total += recoveries[p]
     net[0] -= PRICE
 
@@ -60,7 +68,10 @@ def main():
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows
     wal_years = sum((t / 12.0) * v for t, v in enumerate(net) if v > 0.0) / inflows
-    collections = interest_total + principal_total + recovery_total
+    principal_wal = sum(
+        (t / 12.0) * v for t, v in enumerate(principal_flows) if v > 0.0
+    ) / sum(v for v in principal_flows if v > 0.0)
+    collections = interest_total + principal_total + recovery_total + penalty_total
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
@@ -77,6 +88,9 @@ def main():
                 "domain.credit.interest": {"value": round(interest_total, 2), "tolerance": 1.0},
                 "domain.credit.principal": {"value": round(principal_total, 2), "tolerance": 1.0},
                 "domain.credit.recoveries": {"value": round(recovery_total, 2), "tolerance": 1.0},
+                "domain.credit.servicing": {"value": round(servicing_total, 2), "tolerance": 1.0},
+                "domain.credit.penalties": {"value": round(penalty_total, 2), "tolerance": 1.0},
+                "domain.credit.wal_years": {"value": round(principal_wal, 6), "tolerance": 1e-4},
                 "domain.credit.collections": {"value": round(collections, 2), "tolerance": 1.0},
                 "domain.credit.purchase": {"value": round(PRICE, 2), "tolerance": 1.0},
                 "domain.credit.collections_multiple": {

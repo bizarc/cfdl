@@ -23,6 +23,7 @@
       },
       "model.wal_years": 0.208333,
       "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
       "stream.testpack.fee.total": {
         "amount": 1500.0,
         "currency": "USD"

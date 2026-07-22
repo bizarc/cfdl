@@ -23,6 +23,10 @@
     "value": 386643.46,
     "tolerance": 1.0
   },
+  "domain.credit.wal_years": {
+    "value": 4.245605,
+    "tolerance": 0.0001
+  },
   "domain.credit.collections": {
     "value": 12831500.78,
     "tolerance": 1.0

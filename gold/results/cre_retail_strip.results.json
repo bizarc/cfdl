@@ -27,6 +27,7 @@
       },
       "model.wal_years": 5.876106,
       "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
       "stream.cre.exit.proceeds.total": {
         "amount": 9339259.259259,
         "currency": "USD"

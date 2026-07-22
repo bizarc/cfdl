@@ -29,6 +29,7 @@ def main():
 
     recoveries = [0.0] * PERIODS
     interest_total = principal_total = recovery_total = 0.0
+    principal_flows = [0.0] * PERIODS
     net = [0.0] * PERIODS
     bal = BALANCE
     for p in range(TERM_MONTHS):
@@ -44,11 +45,13 @@ def main():
         bal = performing - prepay - bullet
         recoveries[p + RECOVERY_LAG] += default * (1.0 - SEVERITY)
         net[p] += interest + prepay + bullet
+        principal_flows[p] += prepay + bullet
         interest_total += interest
         principal_total += prepay + bullet
 
     for p in range(PERIODS):
         net[p] += recoveries[p]
+        principal_flows[p] += recoveries[p]
         recovery_total += recoveries[p]
     net[0] -= PRICE
 
@@ -58,6 +61,9 @@ def main():
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows
     wal_years = sum((t / 12.0) * v for t, v in enumerate(net) if v > 0.0) / inflows
+    principal_wal = sum(
+        (t / 12.0) * v for t, v in enumerate(principal_flows) if v > 0.0
+    ) / sum(v for v in principal_flows if v > 0.0)
     collections = interest_total + principal_total + recovery_total
 
     with open("expected.csv", "w", newline="") as fh:
@@ -75,6 +81,7 @@ def main():
                 "domain.credit.interest": {"value": round(interest_total, 2), "tolerance": 1.0},
                 "domain.credit.principal": {"value": round(principal_total, 2), "tolerance": 1.0},
                 "domain.credit.recoveries": {"value": round(recovery_total, 2), "tolerance": 1.0},
+                "domain.credit.wal_years": {"value": round(principal_wal, 6), "tolerance": 1e-4},
                 "domain.credit.collections": {"value": round(collections, 2), "tolerance": 1.0},
                 "domain.credit.purchase": {"value": round(PRICE, 2), "tolerance": 1.0},
                 "domain.credit.collections_multiple": {

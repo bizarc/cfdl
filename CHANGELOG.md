@@ -6,6 +6,25 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.10] - 2026-07-22
+
+### Added
+- **Credit parity quick wins** (Workstream D increment 10): `servicing_fee`
+  (strip on performing balance, outflow stream `credit.pool.servicing`) and
+  `prepay_penalty_rate` (flat penalty on voluntary prepayments, stream
+  `credit.pool.penalty`) on all three pool types; discount/premium purchase
+  documented (level_pay_pool benchmark now buys at 99.0 with a 50bp strip and
+  1% penalty).
+- **`wal_years` metric op** in cfdl-metrics: principal-weighted average life
+  over matched streams' positive per-period amounts (engine now publishes
+  `run.periods_per_year` for metric evaluation). `domain.credit.wal_years`,
+  `.servicing`, `.penalties` added; all three credit benchmark references
+  extended and re-verified.
+- Workstream H (waterfalls & capital stack distributions) documented in
+  LAUNCH_PLAN as core scope with launch-gate benchmarks.
+
+---
+
 ## [0.2.9] - 2026-07-22
 
 ### Added

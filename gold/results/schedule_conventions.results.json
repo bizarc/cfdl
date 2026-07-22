@@ -26,6 +26,7 @@
       },
       "model.wal_years": 0.013699,
       "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 365.0,
       "stream.legal.daily_fee.total": {
         "amount": -50.0,
         "currency": "USD"

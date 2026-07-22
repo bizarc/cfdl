@@ -22,6 +22,7 @@
         "currency": "USD"
       },
       "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
       "stream.legal.rent.total": {
         "amount": -12000.0,
         "currency": "USD"
