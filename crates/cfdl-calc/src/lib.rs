@@ -21,7 +21,7 @@ mod parser;
 mod token;
 mod value;
 
-pub use date::CalcDate;
+pub use date::{CalcDate, DayCount, HolidayCalendar, RollConvention};
 pub use eval::{eval, Env, MapEnv, Mode};
 pub use parser::{parse, BinOp, Expr, ExprKind, UnOp};
 pub use token::Span;
@@ -232,6 +232,68 @@ mod tests {
         // ACT/365
         let v = n("round(year_frac(date(2026, 1, 15), date(2026, 7, 15), \"act/365\"), 8)");
         assert_eq!(v, dec("0.49589041"));
+    }
+
+    #[test]
+    fn business_day_calendars_match_known_dates() {
+        let env = MapEnv::new();
+        let b = |src: &str| match eval_str(src, &env, Mode::Decimal).unwrap() {
+            Value::Bool(v) => v,
+            other => panic!("expected bool, got {other:?}"),
+        };
+        // 2026-07-21 is a Tuesday.
+        assert!(b("is_business_day(date(2026, 7, 21), \"weekend\")"));
+        // 2026-07-03 (Friday) is the observed US Independence Day (Jul 4 is Sat).
+        assert!(!b("is_business_day(date(2026, 7, 3), \"us\")"));
+        assert!(b("is_business_day(date(2026, 7, 3), \"target\")"));
+        // MLK Day 2026: 3rd Monday of January = Jan 19.
+        assert!(!b("is_business_day(date(2026, 1, 19), \"us\")"));
+        // Thanksgiving 2026: 4th Thursday of November = Nov 26.
+        assert!(!b("is_business_day(date(2026, 11, 26), \"us\")"));
+        // Easter 2026 is April 5 -> Good Friday Apr 3 (TARGET + UK closed, US open).
+        assert!(!b("is_business_day(date(2026, 4, 3), \"target\")"));
+        assert!(!b("is_business_day(date(2026, 4, 3), \"uk\")"));
+        assert!(b("is_business_day(date(2026, 4, 3), \"us\")"));
+        // UK spring bank holiday 2026: last Monday of May = May 25.
+        assert!(!b("is_business_day(date(2026, 5, 25), \"uk\")"));
+    }
+
+    #[test]
+    fn roll_conventions_match_isda_semantics() {
+        let env = MapEnv::new();
+        let d = |src: &str| match eval_str(src, &env, Mode::Decimal).unwrap() {
+            Value::Date(v) => v,
+            other => panic!("expected date, got {other:?}"),
+        };
+        // 2026-05-31 is a Sunday: following -> Jun 1; modified_following stays
+        // in May -> Fri May 29.
+        assert_eq!(
+            d("roll(date(2026, 5, 31), \"following\", \"weekend\")"),
+            CalcDate::new(2026, 6, 1).unwrap()
+        );
+        assert_eq!(
+            d("roll(date(2026, 5, 31), \"modified_following\", \"weekend\")"),
+            CalcDate::new(2026, 5, 29).unwrap()
+        );
+        // Business day is unchanged under any convention.
+        assert_eq!(
+            d("roll(date(2026, 7, 21), \"modified_following\", \"us\")"),
+            CalcDate::new(2026, 7, 21).unwrap()
+        );
+        // add_business_days skips the observed July 4 holiday:
+        // Thu Jul 2 + 2 business days = Tue Jul 7 (skips Fri 3 observed, weekend).
+        assert_eq!(
+            d("add_business_days(date(2026, 7, 2), 2, \"us\")"),
+            CalcDate::new(2026, 7, 7).unwrap()
+        );
+    }
+
+    #[test]
+    fn year_frac_30e_360() {
+        // Aug 31 -> Feb 28: 30E/360 counts d1=30, d2=28.
+        let v = n("round(year_frac(date(2026, 8, 31), date(2027, 2, 28), \"30e/360\"), 8)");
+        // days = (2027-2026)*360 + (2-8)*30 + (28-30) = 360 - 180 - 2 = 178
+        assert_eq!(v, dec("0.49444444"));
     }
 
     #[test]

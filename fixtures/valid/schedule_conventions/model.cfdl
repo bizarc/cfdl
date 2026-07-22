@@ -1,0 +1,18 @@
+version 0.1
+model "schedule-conventions"
+time calendar daily from 2026-07-01 for 10
+
+entity legal borrower
+
+// Jul 4 2026 is a Saturday; "following" on the US calendar rolls the payment
+// to Monday Jul 6 (Fri Jul 3 is the observed Independence Day holiday).
+stream legal.rolled_payment on entity legal.borrower inflow currency USD {
+  schedule on 2026-07-04 convention following calendar "us"
+  amount = 100
+}
+
+// Daily accrual with one explicit skip and one explicit extra date.
+stream legal.daily_fee on entity legal.borrower outflow currency USD {
+  schedule every daily from 2026-07-01 to 2026-07-05 except [2026-07-03] also [2026-07-08]
+  amount = 10
+}

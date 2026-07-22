@@ -1,0 +1,118 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "schedule-conventions",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "daily",
+    "start": "2026-07-01",
+    "periods": 10
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "02d065fa981a81e0d9a2ee9671805e57",
+      "symbol": "legal.borrower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "c023c2ac68c50bbc79e91d1511126614",
+      "name": "legal.daily_fee",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "daily",
+        "from": "2026-07-01",
+        "to": "2026-07-05",
+        "except_dates": [
+          "2026-07-03"
+        ],
+        "also_dates": [
+          "2026-07-08"
+        ]
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "49450d78dcc7fac4d5163b1095e3214e",
+      "name": "legal.rolled_payment",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-07-04",
+        "convention": "following",
+        "calendar": "us"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

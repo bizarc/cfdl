@@ -145,6 +145,15 @@ pub struct ScheduleSpec {
     pub from: Option<String>,
     pub to: Option<String>,
     pub day_of_month: Option<i32>,
+    /// Business-day roll convention: none/following/modified_following/
+    /// preceding/modified_preceding.
+    pub convention: Option<String>,
+    /// Holiday calendar name (e.g. "us", "target", "uk", "weekend").
+    pub calendar: Option<String>,
+    /// Dates removed from the schedule (`except [d1, d2]`).
+    pub except_dates: Vec<String>,
+    /// Dates added to the schedule (`also [d1, d2]`).
+    pub also_dates: Vec<String>,
     pub span: Span,
 }
 
@@ -949,13 +958,19 @@ impl<'a> Parser<'a> {
                         }
                     };
                     let end_tok = self.expect_punct(Punct::RParen, "')'")?;
-                    return Some(ScheduleSpec {
+                    let mut spec = ScheduleSpec {
                         kind: ScheduleKind::PhaseEnter { phase },
                         from: None,
                         to: None,
                         day_of_month: None,
+                        convention: None,
+                        calendar: None,
+                        except_dates: Vec::new(),
+                        also_dates: Vec::new(),
                         span: merge_spans(start, end_tok.span),
-                    });
+                    };
+                    self.parse_schedule_opts(&mut spec);
+                    return Some(spec);
                 }
 
                 let date_tok = self.bump();
@@ -969,13 +984,19 @@ impl<'a> Parser<'a> {
                         return None;
                     }
                 };
-                Some(ScheduleSpec {
+                let mut spec = ScheduleSpec {
                     kind: ScheduleKind::OnDate,
                     from: Some(date.clone()),
                     to: Some(date),
                     day_of_month: None,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                     span: merge_spans(start, date_tok.span),
-                })
+                };
+                self.parse_schedule_opts(&mut spec);
+                Some(spec)
             }
             TokenKind::Keyword(Keyword::Every) => {
                 let _ = self.bump();
@@ -1043,13 +1064,19 @@ impl<'a> Parser<'a> {
                         }
                     }
                     let end_tok = self.expect_punct(Punct::RParen, "')'")?;
-                    return Some(ScheduleSpec {
+                    let mut spec = ScheduleSpec {
                         kind: ScheduleKind::EveryPhase { phase },
                         from: None,
                         to: None,
                         day_of_month,
+                        convention: None,
+                        calendar: None,
+                        except_dates: Vec::new(),
+                        also_dates: Vec::new(),
                         span: merge_spans(start, end_tok.span),
-                    });
+                    };
+                    self.parse_schedule_opts(&mut spec);
+                    return Some(spec);
                 }
 
                 let from_tok = self.bump();
@@ -1075,16 +1102,113 @@ impl<'a> Parser<'a> {
                         return None;
                     }
                 };
-                Some(ScheduleSpec {
+                let mut spec = ScheduleSpec {
                     kind: ScheduleKind::Every,
                     from: Some(from),
                     to: Some(to),
                     day_of_month,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                     span: merge_spans(start, to_tok.span),
-                })
+                };
+                self.parse_schedule_opts(&mut spec);
+                Some(spec)
             }
             _ => None,
         }
+    }
+
+    /// Parse trailing schedule options: `convention <roll>`, `calendar <str>`,
+    /// `except [dates]`, `also [dates]`. Order-insensitive, each at most once.
+    fn parse_schedule_opts(&mut self, spec: &mut ScheduleSpec) {
+        loop {
+            match self.peek().kind {
+                TokenKind::Keyword(Keyword::Convention) => {
+                    let _ = self.bump();
+                    let tok = self.bump();
+                    let value = match tok.kind {
+                        TokenKind::Keyword(Keyword::None) => "none",
+                        TokenKind::Keyword(Keyword::Following) => "following",
+                        TokenKind::Keyword(Keyword::ModifiedFollowing) => "modified_following",
+                        TokenKind::Keyword(Keyword::Preceding) => "preceding",
+                        TokenKind::Keyword(Keyword::ModifiedPreceding) => "modified_preceding",
+                        _ => {
+                            self.push_expected(
+                                tok.span,
+                                "Expected roll convention after 'convention' (none, following, modified_following, preceding, modified_preceding).".to_string(),
+                            );
+                            return;
+                        }
+                    };
+                    spec.convention = Some(value.to_string());
+                    spec.span = merge_spans(spec.span, tok.span);
+                }
+                TokenKind::Keyword(Keyword::Calendar) => {
+                    let _ = self.bump();
+                    let tok = self.bump();
+                    match tok.kind {
+                        TokenKind::String(ref s) => {
+                            spec.calendar = Some(s.clone());
+                            spec.span = merge_spans(spec.span, tok.span);
+                        }
+                        _ => {
+                            self.push_expected(
+                                tok.span,
+                                "Expected token <string> after 'calendar'.".to_string(),
+                            );
+                            return;
+                        }
+                    }
+                }
+                TokenKind::Keyword(Keyword::Except) => {
+                    let _ = self.bump();
+                    match self.parse_date_list() {
+                        Some((dates, end)) => {
+                            spec.except_dates = dates;
+                            spec.span = merge_spans(spec.span, end);
+                        }
+                        None => return,
+                    }
+                }
+                TokenKind::Keyword(Keyword::Also) => {
+                    let _ = self.bump();
+                    match self.parse_date_list() {
+                        Some((dates, end)) => {
+                            spec.also_dates = dates;
+                            spec.span = merge_spans(spec.span, end);
+                        }
+                        None => return,
+                    }
+                }
+                _ => return,
+            }
+        }
+    }
+
+    /// `[ date, date, ... ]`
+    fn parse_date_list(&mut self) -> Option<(Vec<String>, Span)> {
+        let _ = self.expect_punct(Punct::LBracket, "'['")?;
+        let mut dates = Vec::new();
+        loop {
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Date(ref d) => dates.push(d.clone()),
+                _ => {
+                    self.push_expected(tok.span, "Expected token <date> in date list.".to_string());
+                    return None;
+                }
+            }
+            match self.peek().kind {
+                TokenKind::Punct(Punct::Comma) => {
+                    let _ = self.bump();
+                }
+                _ => break,
+            }
+        }
+        let end = self.expect_punct(Punct::RBracket, "']'")?;
+        Some((dates, end.span))
     }
 
     fn synchronize_to_next_statement(&mut self) {

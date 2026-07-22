@@ -1,4 +1,4 @@
-use crate::date::{CalcDate, DayCount};
+use crate::date::{CalcDate, DayCount, HolidayCalendar, RollConvention};
 use crate::eval::{from_f64, pow_mode, powi_decimal, to_f64, Mode};
 use crate::token::Span;
 use crate::value::Value;
@@ -123,6 +123,21 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             };
             let (days, denom) = convention.year_frac(&date(d1)?, &date(d2)?);
             Ok(Value::Number(Decimal::from(days) / Decimal::from(denom)))
+        }
+        "is_business_day" => {
+            let [d, cal] = exactly::<2>(name, args, span)?;
+            Ok(Value::Bool(calendar(cal)?.is_business_day(&date(d)?)))
+        }
+        "roll" => {
+            let [d, conv, cal] = exactly::<3>(name, args, span)?;
+            let convention = roll_convention(conv)?;
+            Ok(Value::Date(calendar(cal)?.roll(&date(d)?, convention)))
+        }
+        "add_business_days" => {
+            let [d, n, cal] = exactly::<3>(name, args, span)?;
+            Ok(Value::Date(
+                calendar(cal)?.add_business_days(&date(d)?, int(n)?),
+            ))
         }
         other => Err(CalcError::new(
             format!("unknown function `{other}`"),
@@ -432,4 +447,36 @@ fn fold_nums(
         acc = pick(acc, num(a)?);
     }
     Ok(Value::Number(acc))
+}
+
+fn calendar(arg: &Arg) -> Result<HolidayCalendar, CalcError> {
+    match &arg.0 {
+        Value::Text(s) => HolidayCalendar::parse(s).ok_or_else(|| {
+            CalcError::new(
+                format!("unknown calendar `{s}` (use \"weekend\", \"us\", \"target\", \"uk\")"),
+                Some(arg.1),
+            )
+        }),
+        other => Err(CalcError::new(
+            format!("expected calendar name text, got {}", other.type_name()),
+            Some(arg.1),
+        )),
+    }
+}
+
+fn roll_convention(arg: &Arg) -> Result<RollConvention, CalcError> {
+    match &arg.0 {
+        Value::Text(s) => RollConvention::parse(s).ok_or_else(|| {
+            CalcError::new(
+                format!(
+                    "unknown roll convention `{s}` (use \"none\", \"following\", \"modified_following\", \"preceding\", \"modified_preceding\")"
+                ),
+                Some(arg.1),
+            )
+        }),
+        other => Err(CalcError::new(
+            format!("expected roll convention text, got {}", other.type_name()),
+            Some(arg.1),
+        )),
+    }
 }

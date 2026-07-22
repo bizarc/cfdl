@@ -391,6 +391,14 @@ struct IrSchedule {
     on_rule: Option<IrOnRule>,
     #[serde(skip_serializing_if = "Option::is_none")]
     phase: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    convention: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    calendar: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    except_dates: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    also_dates: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1237,6 +1245,10 @@ fn apply_opco_contract_terms(
                     to: Some(normalize_date(end)),
                     on_rule: None,
                     phase: None,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                 };
             }
         }
@@ -1253,6 +1265,10 @@ fn apply_opco_contract_terms(
                     to: Some(normalize_date(end)),
                     on_rule: None,
                     phase: None,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                 };
             }
         }
@@ -1277,6 +1293,10 @@ fn apply_opco_contract_terms(
                     to: None,
                     on_rule: None,
                     phase: None,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                 };
             }
         }
@@ -1324,6 +1344,10 @@ fn apply_cre_contract_terms(
                     to: None,
                     on_rule: None,
                     phase: None,
+                    convention: None,
+                    calendar: None,
+                    except_dates: Vec::new(),
+                    also_dates: Vec::new(),
                 };
             }
             // Override the amount with the data-driven formula when noi_value is provided.
@@ -1386,6 +1410,10 @@ fn lower_pack_rule_schedule(
             to: None,
             on_rule: None,
             phase: None,
+            convention: None,
+            calendar: None,
+            except_dates: Vec::new(),
+            also_dates: Vec::new(),
         }
     } else {
         IrSchedule {
@@ -1404,6 +1432,10 @@ fn lower_pack_rule_schedule(
             })),
             on_rule: None,
             phase: None,
+            convention: None,
+            calendar: None,
+            except_dates: Vec::new(),
+            also_dates: Vec::new(),
         }
     }
 }
@@ -1498,6 +1530,10 @@ fn lower_schedule(
             to: None,
             on_rule: None,
             phase: None,
+            convention: None,
+            calendar: None,
+            except_dates: Vec::new(),
+            also_dates: Vec::new(),
         });
     };
 
@@ -1516,6 +1552,18 @@ fn lower_schedule(
             to: None,
             on_rule: None,
             phase: None,
+            convention: schedule.convention.clone(),
+            calendar: schedule.calendar.clone(),
+            except_dates: schedule
+                .except_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            also_dates: schedule
+                .also_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
@@ -1529,6 +1577,18 @@ fn lower_schedule(
             )),
             on_rule,
             phase: None,
+            convention: schedule.convention.clone(),
+            calendar: schedule.calendar.clone(),
+            except_dates: schedule
+                .except_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            also_dates: schedule
+                .also_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
         }),
         ScheduleKind::PhaseEnter { phase } => {
             let (start, _end) = phase_map.get(phase).ok_or_else(|| {
@@ -1542,6 +1602,18 @@ fn lower_schedule(
                 to: None,
                 on_rule: None,
                 phase: Some(phase.clone()),
+                convention: schedule.convention.clone(),
+                calendar: schedule.calendar.clone(),
+                except_dates: schedule
+                    .except_dates
+                    .iter()
+                    .map(|d| normalize_date(d))
+                    .collect(),
+                also_dates: schedule
+                    .also_dates
+                    .iter()
+                    .map(|d| normalize_date(d))
+                    .collect(),
             })
         }
         ScheduleKind::EveryPhase { phase } => {
@@ -1556,6 +1628,18 @@ fn lower_schedule(
                 to: Some(end.clone()),
                 on_rule,
                 phase: Some(phase.clone()),
+                convention: schedule.convention.clone(),
+                calendar: schedule.calendar.clone(),
+                except_dates: schedule
+                    .except_dates
+                    .iter()
+                    .map(|d| normalize_date(d))
+                    .collect(),
+                also_dates: schedule
+                    .also_dates
+                    .iter()
+                    .map(|d| normalize_date(d))
+                    .collect(),
             })
         }
     }
