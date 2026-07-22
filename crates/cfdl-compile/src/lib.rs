@@ -418,6 +418,10 @@ struct IrStream {
 #[derive(Debug, Serialize)]
 struct IrRun {
     kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    trials: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    seed: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -694,9 +698,29 @@ fn build_ir(
             .collect(),
         events: ir_events,
         options: ir_options,
-        runs: vec![IrRun {
-            kind: "deterministic".to_string(),
-        }],
+        runs: {
+            let declared: Vec<IrRun> = resolve_output
+                .source_statements
+                .iter()
+                .filter_map(|source_stmt| match &source_stmt.statement {
+                    Stmt::Run(run) => Some(IrRun {
+                        kind: run.kind.clone(),
+                        trials: run.trials,
+                        seed: run.seed,
+                    }),
+                    _ => None,
+                })
+                .collect();
+            if declared.is_empty() {
+                vec![IrRun {
+                    kind: "deterministic".to_string(),
+                    trials: None,
+                    seed: None,
+                }]
+            } else {
+                declared
+            }
+        },
 
         required_observables: vec![],
         required_refs: vec![],

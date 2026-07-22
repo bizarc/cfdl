@@ -105,6 +105,106 @@ struct MetricsFile {
     metrics: Vec<MetricSpec>,
 }
 
+/// Standard packs compiled into the library for hosts without filesystem
+/// access (WASM playground, API server). Enabled by the `embedded-packs`
+/// feature. NOTE: `include_str!` paths assume the repo layout (packs/ at the
+/// workspace root); for crates.io publishing the pack data moves into the
+/// crate — tracked for the 1.0 packaging pass.
+#[cfg(feature = "embedded-packs")]
+mod embedded {
+    pub type EmbeddedFile = (&'static str, &'static str);
+
+    pub const CRE: &[EmbeddedFile] = &[
+        ("pack.toml", include_str!("../../../packs/cre/pack.toml")),
+        (
+            "aliases.toml",
+            include_str!("../../../packs/cre/aliases.toml"),
+        ),
+        (
+            "templates.toml",
+            include_str!("../../../packs/cre/templates.toml"),
+        ),
+        (
+            "lowering/rules.toml",
+            include_str!("../../../packs/cre/lowering/rules.toml"),
+        ),
+        (
+            "metrics.toml",
+            include_str!("../../../packs/cre/metrics.toml"),
+        ),
+    ];
+
+    pub const OPCO: &[EmbeddedFile] = &[
+        ("pack.toml", include_str!("../../../packs/opco/pack.toml")),
+        (
+            "aliases.toml",
+            include_str!("../../../packs/opco/aliases.toml"),
+        ),
+        (
+            "lowering/rules.toml",
+            include_str!("../../../packs/opco/lowering/rules.toml"),
+        ),
+        (
+            "metrics.toml",
+            include_str!("../../../packs/opco/metrics.toml"),
+        ),
+    ];
+
+    pub const ALL: &[&[EmbeddedFile]] = &[CRE, OPCO];
+}
+
+impl PackRegistry {
+    /// Load the standard packs compiled into the library (no filesystem).
+    #[cfg(feature = "embedded-packs")]
+    pub fn load_embedded() -> Result<Self, PackLoadError> {
+        let mut packs = BTreeMap::new();
+        for files in embedded::ALL {
+            let lookup = |relative: Option<&str>| -> Option<&'static str> {
+                let relative = relative?;
+                files
+                    .iter()
+                    .find(|(name, _)| *name == relative)
+                    .map(|(_, content)| *content)
+            };
+            let manifest_raw = lookup(Some("pack.toml")).ok_or_else(|| PackLoadError {
+                message: "Embedded pack is missing pack.toml".to_string(),
+            })?;
+            let manifest: PackManifest =
+                toml::from_str(manifest_raw).map_err(|err| PackLoadError {
+                    message: format!("Failed to parse embedded pack manifest: {err}"),
+                })?;
+            let source = format!("embedded:{}", manifest.name);
+            let aliases = match lookup(manifest.entrypoints.aliases.as_deref()) {
+                Some(raw) => parse_aliases(raw, &source)?,
+                None => BTreeMap::new(),
+            };
+            let templates = match lookup(manifest.entrypoints.templates.as_deref()) {
+                Some(raw) => parse_templates(raw, &source)?,
+                None => Vec::new(),
+            };
+            let lowering_rules = match lookup(manifest.entrypoints.lowering.as_deref()) {
+                Some(raw) => parse_lowering_rules(raw, &source)?,
+                None => Vec::new(),
+            };
+            let metric_specs = match lookup(manifest.entrypoints.metrics.as_deref()) {
+                Some(raw) => parse_metric_specs(raw, &source)?,
+                None => Vec::new(),
+            };
+            packs.insert(
+                manifest.name.clone(),
+                LoadedPack {
+                    manifest,
+                    aliases,
+                    templates,
+                    lowering_rules,
+                    metric_specs,
+                },
+            );
+        }
+        Ok(Self { packs })
+    }
+}
+
 /// Expand `{{contract.<key>}}` placeholders in a lowering-rule template.
 ///
 /// `resolve` maps a bare key (e.g. `base_rent`, `term_start`,
@@ -327,8 +427,12 @@ fn load_aliases(
     };
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
-    let parsed: AliasFile = toml::from_str(&raw).map_err(|err| PackLoadError {
-        message: format!("Failed to parse aliases '{}': {err}", path.display()),
+    parse_aliases(&raw, &path.display().to_string())
+}
+
+fn parse_aliases(raw: &str, source: &str) -> Result<BTreeMap<String, String>, PackLoadError> {
+    let parsed: AliasFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse aliases '{source}': {err}"),
     })?;
     Ok(parsed.aliases)
 }
@@ -342,8 +446,12 @@ fn load_metric_specs(
     };
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
-    let parsed: MetricsFile = toml::from_str(&raw).map_err(|err| PackLoadError {
-        message: format!("Failed to parse metrics '{}': {err}", path.display()),
+    parse_metric_specs(&raw, &path.display().to_string())
+}
+
+fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLoadError> {
+    let parsed: MetricsFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse metrics '{source}': {err}"),
     })?;
     for spec in &parsed.metrics {
         match spec.op.as_str() {
@@ -388,8 +496,12 @@ fn load_lowering_rules(
     };
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
-    let parsed: LoweringFile = toml::from_str(&raw).map_err(|err| PackLoadError {
-        message: format!("Failed to parse lowering rules '{}': {err}", path.display()),
+    parse_lowering_rules(&raw, &path.display().to_string())
+}
+
+fn parse_lowering_rules(raw: &str, source: &str) -> Result<Vec<LoweringRule>, PackLoadError> {
+    let parsed: LoweringFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse lowering rules '{source}': {err}"),
     })?;
     for rule in &parsed.rules {
         if !is_qualified_name(&rule.stream_name) {
@@ -424,8 +536,12 @@ fn load_templates(
     };
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
-    let mut parsed: TemplateFile = toml::from_str(&raw).map_err(|err| PackLoadError {
-        message: format!("Failed to parse templates '{}': {err}", path.display()),
+    parse_templates(&raw, &path.display().to_string())
+}
+
+fn parse_templates(raw: &str, source: &str) -> Result<Vec<PackTemplate>, PackLoadError> {
+    let mut parsed: TemplateFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse templates '{source}': {err}"),
     })?;
     parsed.templates.sort_by(|a, b| a.id.cmp(&b.id));
     Ok(parsed.templates)
@@ -503,6 +619,37 @@ fn is_ident_segment(segment: &str) -> bool {
 struct AliasFile {
     #[serde(default)]
     aliases: BTreeMap<String, String>,
+}
+
+#[cfg(all(test, feature = "embedded-packs"))]
+mod embedded_tests {
+    use super::*;
+
+    #[test]
+    fn embedded_matches_filesystem_packs() {
+        let embedded = PackRegistry::load_embedded().expect("embedded packs load");
+        let fs_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packs")
+            .canonicalize()
+            .expect("packs dir");
+        let from_fs = PackRegistry::load_from_dir(&fs_root).expect("fs packs load");
+        for name in ["cre", "opco"] {
+            assert_eq!(
+                embedded.lowering_rules(name),
+                from_fs.lowering_rules(name),
+                "{name} rules"
+            );
+            assert_eq!(
+                embedded.metric_specs(name),
+                from_fs.metric_specs(name),
+                "{name} metrics"
+            );
+            assert!(
+                !embedded.lowering_rules(name).is_empty(),
+                "{name} non-empty"
+            );
+        }
+    }
 }
 
 #[cfg(test)]

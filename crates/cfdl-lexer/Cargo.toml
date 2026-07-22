@@ -9,4 +9,5 @@ description = "Lexer for CFDL, the cash flow domain language"
 publish = false
 
 [dependencies]
+serde = { workspace = true }
 thiserror = { workspace = true }

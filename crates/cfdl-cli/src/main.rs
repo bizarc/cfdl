@@ -101,7 +101,51 @@ fn main() -> Result<()> {
                 std::process::exit(1);
             }
         },
-        Command::Parse { model_root: _ } => Ok(()),
+        Command::Parse { model_root } => {
+            let model_file = model_root.join("model.cfdl");
+            let source = match std::fs::read_to_string(&model_file) {
+                Ok(source) => source,
+                Err(err) => {
+                    eprintln!("error: cannot read '{}': {err}", model_file.display());
+                    std::process::exit(1);
+                }
+            };
+            let (tokens, lex_diags) = cfdl_lexer::lex(&source);
+            if !lex_diags.is_empty() {
+                let rendered: Vec<serde_json::Value> = lex_diags
+                    .iter()
+                    .map(|d| {
+                        serde_json::json!({
+                            "code": d.code,
+                            "message": d.message,
+                            "span": d.span,
+                        })
+                    })
+                    .collect();
+                println!("{}", serde_json::to_string_pretty(&rendered)?);
+                std::process::exit(1);
+            }
+            let parse_result = cfdl_parser::parse("model.cfdl", &source, &tokens);
+            if !parse_result.diagnostics.is_empty() {
+                let rendered: Vec<serde_json::Value> = parse_result
+                    .diagnostics
+                    .iter()
+                    .map(|d| {
+                        serde_json::json!({
+                            "code": d.code,
+                            "message": d.message,
+                            "file": d.file,
+                            "span": d.span,
+                        })
+                    })
+                    .collect();
+                println!("{}", serde_json::to_string_pretty(&rendered)?);
+                std::process::exit(1);
+            }
+            let ast = parse_result.ast.expect("no diagnostics implies AST");
+            println!("{}", serde_json::to_string_pretty(&ast)?);
+            Ok(())
+        }
         Command::Run {
             ir_json_path,
             out,

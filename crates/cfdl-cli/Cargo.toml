@@ -13,6 +13,8 @@ name = "cfdl"
 path = "src/main.rs"
 
 [dependencies]
+cfdl-parser = { path = "../cfdl-parser" }
+cfdl-lexer = { path = "../cfdl-lexer" }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

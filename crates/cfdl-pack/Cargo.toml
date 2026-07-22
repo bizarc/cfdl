@@ -11,3 +11,6 @@ publish = false
 [dependencies]
 serde = { workspace = true }
 toml = { workspace = true }
+
+[features]
+embedded-packs = []

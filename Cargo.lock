@@ -209,8 +209,10 @@ dependencies = [
  "anyhow",
  "cfdl-compile",
  "cfdl-engine",
+ "cfdl-lexer",
  "cfdl-metrics",
  "cfdl-pack",
+ "cfdl-parser",
  "clap",
  "serde",
  "serde_json",
@@ -255,6 +257,7 @@ dependencies = [
 name = "cfdl-lexer"
 version = "0.3.0"
 dependencies = [
+ "serde",
  "thiserror",
 ]
 
@@ -296,6 +299,7 @@ name = "cfdl-parser"
 version = "0.3.0"
 dependencies = [
  "cfdl-lexer",
+ "serde",
  "thiserror",
 ]
 
@@ -323,6 +327,7 @@ dependencies = [
 name = "cfdl-validate"
 version = "0.3.0"
 dependencies = [
+ "cfdl-lexer",
  "cfdl-parser",
  "cfdl-resolver",
  "thiserror",

@@ -403,6 +403,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
+        Stmt::Run(s) => s.span,
     }
 }
 
@@ -414,4 +415,140 @@ fn sort_diagnostics(diagnostics: &mut [ValidationDiagnostic]) {
             .then(a.span.start_col.cmp(&b.span.start_col))
             .then(a.code.cmp(b.code))
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Full pipeline for a single-file model: lex -> parse -> resolve -> validate.
+    fn diagnostics_for(src: &str) -> Vec<String> {
+        let (tokens, lex_diags) = cfdl_lexer::lex(src);
+        assert!(lex_diags.is_empty(), "lex diags: {lex_diags:?}");
+        let parse_result = cfdl_parser::parse("model.cfdl", src, &tokens);
+        assert!(
+            parse_result.diagnostics.is_empty(),
+            "parse diags: {:?}",
+            parse_result.diagnostics
+        );
+        let root_module = cfdl_resolver::RootModule {
+            relative_path: "model.cfdl".to_string(),
+            full_path: std::path::PathBuf::from("model.cfdl"),
+            ast: parse_result.ast.expect("ast"),
+        };
+        let output = cfdl_resolver::resolve_imports(std::path::Path::new("."), root_module)
+            .expect("resolve imports");
+        let symbols = cfdl_resolver::resolve_symbols(&output).expect("resolve symbols");
+        validate(&output, &symbols)
+            .into_iter()
+            .map(|d| d.code.to_string())
+            .collect()
+    }
+
+    const VALID: &str = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000\n}\n";
+
+    #[test]
+    fn clean_model_has_no_diagnostics() {
+        assert!(diagnostics_for(VALID).is_empty());
+    }
+
+    #[test]
+    fn missing_version_model_time() {
+        let codes = diagnostics_for("entity legal borrower\n");
+        assert!(
+            codes.contains(&"E1101_MISSING_VERSION".to_string()),
+            "{codes:?}"
+        );
+        assert!(codes.contains(&"E1102_MISSING_MODEL".to_string()));
+        assert!(codes.contains(&"E1103_MISSING_TIME".to_string()));
+    }
+
+    #[test]
+    fn multiple_version_and_model() {
+        let codes = diagnostics_for(
+            "version 0.1\nversion 0.1\nmodel \"a\"\nmodel \"b\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\n",
+        );
+        assert!(
+            codes.contains(&"E1104_MULTIPLE_VERSION".to_string()),
+            "{codes:?}"
+        );
+        assert!(codes.contains(&"E1105_MULTIPLE_MODEL".to_string()));
+    }
+
+    #[test]
+    fn missing_entity() {
+        let codes =
+            diagnostics_for("version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\n");
+        assert!(
+            codes.contains(&"E1109_MISSING_ENTITY".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    #[test]
+    fn stream_missing_amount_and_schedule() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\nstream legal.rent on entity legal.borrower\n",
+        );
+        assert!(
+            codes.contains(&"E2101_STREAM_MISSING_SCHEDULE".to_string()),
+            "{codes:?}"
+        );
+        assert!(codes.contains(&"E2102_STREAM_MISSING_AMOUNT".to_string()));
+    }
+
+    #[test]
+    fn schedule_range_out_of_bounds() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2030-12\n  amount = 1\n}\n",
+        );
+        assert!(
+            codes.contains(&"E2103_SCHEDULE_OUT_OF_BOUNDS".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    #[test]
+    fn schedule_inverted_range() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-06 to 2026-01\n  amount = 1\n}\n",
+        );
+        assert!(
+            codes.contains(&"E2104_SCHEDULE_INVALID_RANGE".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    #[test]
+    fn schedule_invalid_day_of_month() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly on day 42 from 2026-01 to 2026-12\n  amount = 1\n}\n",
+        );
+        assert!(
+            codes.contains(&"E2105_SCHEDULE_INVALID_DAY_OF_MONTH".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    #[test]
+    fn schedule_unknown_phase() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule on phase_enter(\"nope\")\n  amount = 1\n}\n",
+        );
+        assert!(
+            codes.contains(&"E2106_SCHEDULE_PHASE_NOT_FOUND".to_string()),
+            "{codes:?}"
+        );
+    }
+
+    #[test]
+    fn contract_missing_term() {
+        let codes = diagnostics_for(
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\ncontract cre.lease on entity legal.borrower {\n}\n",
+        );
+        assert!(
+            codes.contains(&"E2001_CONTRACT_MISSING_TERM".to_string()),
+            "{codes:?}"
+        );
+    }
 }
