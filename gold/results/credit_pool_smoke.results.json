@@ -1,0 +1,674 @@
+{
+  "results_version": "0.2",
+  "model_hash": "6ee7119174b0b2cdfdb57e2fb6b43895339a9cf8942dac7494899678c81cebd0",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.fund.buyer.total": {
+        "amount": 28098.083021,
+        "currency": "USD"
+      },
+      "model.irr": 0.054296,
+      "model.moic": 1.02584,
+      "model.npv": {
+        "amount": -21890.498493,
+        "currency": "USD"
+      },
+      "model.payback_periods": 11.0,
+      "model.payback_years": 0.916667,
+      "model.total": {
+        "amount": 28098.083021,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.484349,
+      "run.annual_discount_rate": 0.1,
+      "stream.credit.pool.interest.smoke.total": {
+        "amount": 37672.522211,
+        "currency": "USD"
+      },
+      "stream.credit.pool.prepay.smoke.total": {
+        "amount": 56030.966379,
+        "currency": "USD"
+      },
+      "stream.credit.pool.recoveries.smoke.total": {
+        "amount": 9574.43919,
+        "currency": "USD"
+      },
+      "stream.credit.pool.sched_principal.smoke.total": {
+        "amount": 1124820.155241,
+        "currency": "USD"
+      },
+      "stream.credit.purchase.price.smoke.total": {
+        "amount": -1200000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -1087366.988466,
+            "currency": "USD"
+          },
+          {
+            "amount": 110522.510689,
+            "currency": "USD"
+          },
+          {
+            "amount": 108441.081651,
+            "currency": "USD"
+          },
+          {
+            "amount": 107909.392832,
+            "currency": "USD"
+          },
+          {
+            "amount": 105745.994315,
+            "currency": "USD"
+          },
+          {
+            "amount": 103612.932259,
+            "currency": "USD"
+          },
+          {
+            "amount": 101509.827452,
+            "currency": "USD"
+          },
+          {
+            "amount": 99436.305185,
+            "currency": "USD"
+          },
+          {
+            "amount": 97391.995207,
+            "currency": "USD"
+          },
+          {
+            "amount": 95376.531666,
+            "currency": "USD"
+          },
+          {
+            "amount": 93389.553063,
+            "currency": "USD"
+          },
+          {
+            "amount": 91430.702199,
+            "currency": "USD"
+          },
+          {
+            "amount": 351.175933,
+            "currency": "USD"
+          },
+          {
+            "amount": 232.059198,
+            "currency": "USD"
+          },
+          {
+            "amount": 115.009838,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.interest.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 5984.789708,
+            "currency": "USD"
+          },
+          {
+            "amount": 5437.728658,
+            "currency": "USD"
+          },
+          {
+            "amount": 4899.851817,
+            "currency": "USD"
+          },
+          {
+            "amount": 4371.036716,
+            "currency": "USD"
+          },
+          {
+            "amount": 3851.162385,
+            "currency": "USD"
+          },
+          {
+            "amount": 3340.109336,
+            "currency": "USD"
+          },
+          {
+            "amount": 2837.759546,
+            "currency": "USD"
+          },
+          {
+            "amount": 2343.996435,
+            "currency": "USD"
+          },
+          {
+            "amount": 1858.704857,
+            "currency": "USD"
+          },
+          {
+            "amount": 1381.771076,
+            "currency": "USD"
+          },
+          {
+            "amount": 913.082752,
+            "currency": "USD"
+          },
+          {
+            "amount": 452.528925,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.prepay.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 9615.114985,
+            "currency": "USD"
+          },
+          {
+            "amount": 8664.028971,
+            "currency": "USD"
+          },
+          {
+            "amount": 7728.96613,
+            "currency": "USD"
+          },
+          {
+            "amount": 6809.712562,
+            "currency": "USD"
+          },
+          {
+            "amount": 5906.056986,
+            "currency": "USD"
+          },
+          {
+            "amount": 5017.790707,
+            "currency": "USD"
+          },
+          {
+            "amount": 4144.707592,
+            "currency": "USD"
+          },
+          {
+            "amount": 3286.604031,
+            "currency": "USD"
+          },
+          {
+            "amount": 2443.278915,
+            "currency": "USD"
+          },
+          {
+            "amount": 1614.533604,
+            "currency": "USD"
+          },
+          {
+            "amount": 800.171896,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.recoveries.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1521.029168,
+            "currency": "USD"
+          },
+          {
+            "amount": 1381.994072,
+            "currency": "USD"
+          },
+          {
+            "amount": 1245.293134,
+            "currency": "USD"
+          },
+          {
+            "amount": 1110.89523,
+            "currency": "USD"
+          },
+          {
+            "amount": 978.769615,
+            "currency": "USD"
+          },
+          {
+            "amount": 848.885921,
+            "currency": "USD"
+          },
+          {
+            "amount": 721.214153,
+            "currency": "USD"
+          },
+          {
+            "amount": 595.724682,
+            "currency": "USD"
+          },
+          {
+            "amount": 472.388244,
+            "currency": "USD"
+          },
+          {
+            "amount": 351.175933,
+            "currency": "USD"
+          },
+          {
+            "amount": 232.059198,
+            "currency": "USD"
+          },
+          {
+            "amount": 115.009838,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.sched_principal.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 97033.10684,
+            "currency": "USD"
+          },
+          {
+            "amount": 96420.75306,
+            "currency": "USD"
+          },
+          {
+            "amount": 95812.263704,
+            "currency": "USD"
+          },
+          {
+            "amount": 95207.614386,
+            "currency": "USD"
+          },
+          {
+            "amount": 94606.780872,
+            "currency": "USD"
+          },
+          {
+            "amount": 94009.739081,
+            "currency": "USD"
+          },
+          {
+            "amount": 93416.465084,
+            "currency": "USD"
+          },
+          {
+            "amount": 92826.935104,
+            "currency": "USD"
+          },
+          {
+            "amount": 92241.125513,
+            "currency": "USD"
+          },
+          {
+            "amount": 91659.012833,
+            "currency": "USD"
+          },
+          {
+            "amount": 91080.573733,
+            "currency": "USD"
+          },
+          {
+            "amount": 90505.78503,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.purchase.price.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 27399.838052,
+              "currency": "USD"
+            },
+            {
+              "amount": 698.244969,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.interest.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 37672.522211,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.prepay.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 56030.966379,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.recoveries.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 8876.194221,
+              "currency": "USD"
+            },
+            {
+              "amount": 698.244969,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.sched_principal.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1124820.155241,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.purchase.price.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -1200000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "domain_metrics": {
+    "pack": "credit",
+    "metrics": {
+      "domain.credit.collections": {
+        "amount": 1228098.083021,
+        "currency": "USD"
+      },
+      "domain.credit.collections_multiple": 1.023415,
+      "domain.credit.interest": {
+        "amount": 37672.522211,
+        "currency": "USD"
+      },
+      "domain.credit.principal": {
+        "amount": 1180851.12162,
+        "currency": "USD"
+      },
+      "domain.credit.purchase": {
+        "amount": 1200000.0,
+        "currency": "USD"
+      },
+      "domain.credit.recoveries": {
+        "amount": 9574.43919,
+        "currency": "USD"
+      }
+    },
+    "lineage": {
+      "domain.credit.collections": {
+        "numerator_streams": [
+          "credit.pool.interest",
+          "credit.pool.interest.*",
+          "credit.pool.sched_principal",
+          "credit.pool.sched_principal.*",
+          "credit.pool.prepay",
+          "credit.pool.prepay.*",
+          "credit.pool.bullet",
+          "credit.pool.bullet.*",
+          "credit.pool.recoveries",
+          "credit.pool.recoveries.*"
+        ],
+        "denominator_streams": [],
+        "formula": "sum(numerator_streams)"
+      },
+      "domain.credit.collections_multiple": {
+        "numerator_streams": [
+          "domain.credit.collections"
+        ],
+        "denominator_streams": [
+          "domain.credit.purchase"
+        ],
+        "formula": "domain.credit.collections / domain.credit.purchase"
+      },
+      "domain.credit.interest": {
+        "numerator_streams": [
+          "credit.pool.interest",
+          "credit.pool.interest.*"
+        ],
+        "denominator_streams": [],
+        "formula": "sum(numerator_streams)"
+      },
+      "domain.credit.principal": {
+        "numerator_streams": [
+          "credit.pool.sched_principal",
+          "credit.pool.sched_principal.*",
+          "credit.pool.prepay",
+          "credit.pool.prepay.*",
+          "credit.pool.bullet",
+          "credit.pool.bullet.*"
+        ],
+        "denominator_streams": [],
+        "formula": "sum(numerator_streams)"
+      },
+      "domain.credit.purchase": {
+        "numerator_streams": [
+          "credit.purchase.price",
+          "credit.purchase.price.*"
+        ],
+        "denominator_streams": [],
+        "formula": "-sum(numerator_streams)"
+      },
+      "domain.credit.recoveries": {
+        "numerator_streams": [
+          "credit.pool.recoveries",
+          "credit.pool.recoveries.*"
+        ],
+        "denominator_streams": [],
+        "formula": "sum(numerator_streams)"
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+[aliases]
+"credit.LevelPayPool" = "credit_pool_level_pay"
+"credit.IoBulletPool" = "credit_pool_io_bullet"
+"credit.Purchase" = "credit_purchase"
