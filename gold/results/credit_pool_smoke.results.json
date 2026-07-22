@@ -796,17 +796,11 @@
     "lineage": {
       "domain.credit.collections": {
         "numerator_streams": [
-          "credit.pool.interest",
           "credit.pool.interest.*",
-          "credit.pool.sched_principal",
           "credit.pool.sched_principal.*",
-          "credit.pool.prepay",
           "credit.pool.prepay.*",
-          "credit.pool.bullet",
           "credit.pool.bullet.*",
-          "credit.pool.recoveries",
           "credit.pool.recoveries.*",
-          "credit.pool.penalty",
           "credit.pool.penalty.*"
         ],
         "denominator_streams": [],
@@ -823,7 +817,6 @@
       },
       "domain.credit.interest": {
         "numerator_streams": [
-          "credit.pool.interest",
           "credit.pool.interest.*"
         ],
         "denominator_streams": [],
@@ -831,7 +824,6 @@
       },
       "domain.credit.penalties": {
         "numerator_streams": [
-          "credit.pool.penalty",
           "credit.pool.penalty.*"
         ],
         "denominator_streams": [],
@@ -839,11 +831,8 @@
       },
       "domain.credit.principal": {
         "numerator_streams": [
-          "credit.pool.sched_principal",
           "credit.pool.sched_principal.*",
-          "credit.pool.prepay",
           "credit.pool.prepay.*",
-          "credit.pool.bullet",
           "credit.pool.bullet.*"
         ],
         "denominator_streams": [],
@@ -851,7 +840,6 @@
       },
       "domain.credit.purchase": {
         "numerator_streams": [
-          "credit.purchase.price",
           "credit.purchase.price.*"
         ],
         "denominator_streams": [],
@@ -859,7 +847,6 @@
       },
       "domain.credit.recoveries": {
         "numerator_streams": [
-          "credit.pool.recoveries",
           "credit.pool.recoveries.*"
         ],
         "denominator_streams": [],
@@ -867,13 +854,9 @@
       },
       "domain.credit.wal_years": {
         "numerator_streams": [
-          "credit.pool.sched_principal",
           "credit.pool.sched_principal.*",
-          "credit.pool.prepay",
           "credit.pool.prepay.*",
-          "credit.pool.bullet",
           "credit.pool.bullet.*",
-          "credit.pool.recoveries",
           "credit.pool.recoveries.*"
         ],
         "denominator_streams": [],

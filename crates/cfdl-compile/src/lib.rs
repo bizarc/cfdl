@@ -1046,20 +1046,12 @@ fn lower_contract_streams(
             }
             let rule = &expanded_rule;
 
-            let mut schedule =
+            let schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
-            let mut amount_src = rule.amount_expr.clone();
-            if pack.name == "opco" {
-                apply_opco_contract_terms(
-                    contract,
-                    ctx.time_calendar,
-                    ctx.time_start,
-                    &mut schedule,
-                    &mut amount_src,
-                );
-            }
-            // CRE terms are applied declaratively via rule templates; the
-            // legacy hardcoded path was removed with the v1 rule migration.
+            let amount_src = rule.amount_expr.clone();
+            // Pack terms are applied declaratively via rule templates; the
+            // legacy hardcoded paths (CRE, then OpCo) were removed with the
+            // v1 rule migrations.
 
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
@@ -1115,7 +1107,7 @@ fn validate_pack_contract(
     contract: &cfdl_parser::ContractStmt,
     _timeline_calendar: &str,
     timeline_start: &str,
-    timeline_periods: u32,
+    _timeline_periods: u32,
     timeline_end: &str,
 ) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
@@ -1234,7 +1226,6 @@ fn validate_pack_contract(
             contract,
             timeline_start,
             timeline_end,
-            timeline_periods,
         )),
         _ => {}
     }
@@ -1300,7 +1291,6 @@ fn validate_opco_contract(
     contract: &cfdl_parser::ContractStmt,
     timeline_start: &str,
     timeline_end: &str,
-    timeline_periods: u32,
 ) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
     match contract.name.as_str() {
@@ -1375,14 +1365,41 @@ fn validate_opco_contract(
                     contract.span,
                 ));
             }
-            let exit_period = parse_contract_term_i32(contract, "exit_period");
-            if exit_period.is_none()
-                || exit_period.unwrap_or(0) <= 0
-                || exit_period.unwrap_or(0) > timeline_periods as i32
-            {
+            // The exit date is the contract's term_start (the legacy
+            // `exit_period` term is tolerated but no longer drives the
+            // schedule).
+            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
                 diagnostics.push(opco_pack_diag(
-                    "E7023_OPCO_EXIT_MISSING_EXIT_PERIOD",
-                    "OpCo exit requires 'exit_period' in model timeline bounds.",
+                    "E7023_OPCO_EXIT_INVALID_SCHEDULE",
+                    "OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start).",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        "opco.exit_ebitda" => {
+            if parse_contract_term_f64(contract, "exit_multiple").unwrap_or(0.0) <= 0.0 {
+                diagnostics.push(opco_pack_diag(
+                    "E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE",
+                    "OpCo EBITDA exit requires 'exit_multiple' greater than 0.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+        }
+        "opco.term_debt" => {
+            if parse_contract_term_f64(contract, "amort_months").unwrap_or(0.0) <= 0.0 {
+                diagnostics.push(opco_pack_diag(
+                    "E7030_OPCO_DEBT_INVALID_AMORT",
+                    "OpCo term debt requires 'amort_months' greater than 0.",
+                    source_stmt,
+                    contract.span,
+                ));
+            }
+            if parse_contract_term_f64(contract, "rate").unwrap_or(-1.0) < 0.0 {
+                diagnostics.push(opco_pack_diag(
+                    "E7031_OPCO_DEBT_INVALID_RATE",
+                    "OpCo term debt requires a non-negative 'rate'.",
                     source_stmt,
                     contract.span,
                 ));
@@ -1391,91 +1408,6 @@ fn validate_opco_contract(
         _ => {}
     }
     diagnostics
-}
-
-fn apply_opco_contract_terms(
-    contract: &cfdl_parser::ContractStmt,
-    timeline_calendar: &str,
-    timeline_start: &str,
-    schedule: &mut IrSchedule,
-    amount_src: &mut String,
-) {
-    match contract.name.as_str() {
-        "opco.revenue_line" | "opco.opex_line" => {
-            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
-                let growth = parse_contract_term_f64(contract, "growth_rate").unwrap_or(0.0);
-                if growth != 0.0 {
-                    *amount_src = format!("{amount} * pow(1.0 + {growth}, time.t / 12.0)");
-                } else {
-                    *amount_src = amount.to_string();
-                }
-            }
-            if let (Some(start), Some(end)) = (&contract.term_start, &contract.term_end) {
-                *schedule = IrSchedule {
-                    kind: "Every".to_string(),
-                    on: None,
-                    every: Some(timeline_calendar.to_string()),
-                    from: Some(normalize_date(start)),
-                    to: Some(normalize_date(end)),
-                    on_rule: None,
-                    phase: None,
-                    convention: None,
-                    calendar: None,
-                    except_dates: Vec::new(),
-                    also_dates: Vec::new(),
-                };
-            }
-        }
-        "opco.working_capital" => {
-            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
-                *amount_src = amount.to_string();
-            }
-            if let (Some(start), Some(end)) = (&contract.term_start, &contract.term_end) {
-                *schedule = IrSchedule {
-                    kind: "Every".to_string(),
-                    on: None,
-                    every: Some(timeline_calendar.to_string()),
-                    from: Some(normalize_date(start)),
-                    to: Some(normalize_date(end)),
-                    on_rule: None,
-                    phase: None,
-                    convention: None,
-                    calendar: None,
-                    except_dates: Vec::new(),
-                    also_dates: Vec::new(),
-                };
-            }
-        }
-        "opco.exit_multiple" => {
-            if let (Some(base_value), Some(exit_multiple)) = (
-                parse_contract_term_f64(contract, "base_value"),
-                parse_contract_term_f64(contract, "exit_multiple"),
-            ) {
-                *amount_src = format!("{base_value} * {exit_multiple}");
-            }
-            if let Some(exit_period) = parse_contract_term_i32(contract, "exit_period") {
-                let on_date = add_periods_for_timeline_end(
-                    timeline_start,
-                    timeline_calendar,
-                    exit_period as u32,
-                );
-                *schedule = IrSchedule {
-                    kind: "OnDate".to_string(),
-                    on: Some(on_date),
-                    every: None,
-                    from: None,
-                    to: None,
-                    on_rule: None,
-                    phase: None,
-                    convention: None,
-                    calendar: None,
-                    except_dates: Vec::new(),
-                    also_dates: Vec::new(),
-                };
-            }
-        }
-        _ => {}
-    }
 }
 
 /// For CRE contracts, substitute data-driven values from contract terms into the
@@ -1490,10 +1422,6 @@ fn apply_opco_contract_terms(
 ///   future dynamic resolution).
 fn parse_contract_term_f64(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<f64> {
     contract.terms.get(key)?.value.parse::<f64>().ok()
-}
-
-fn parse_contract_term_i32(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<i32> {
-    contract.terms.get(key)?.value.parse::<i32>().ok()
 }
 
 fn valid_contract_term_range(
