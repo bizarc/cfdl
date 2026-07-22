@@ -80,6 +80,8 @@ pub enum DistributionSpec {
     Fixed { value: f64 },
     Normal { mean: f64, stddev: f64 },
     Uniform { min: f64, max: f64 },
+    LogNormal { mu: f64, sigma: f64 },
+    Triangular { min: f64, mode: f64, max: f64 },
 }
 
 #[derive(Debug, Deserialize)]
@@ -300,6 +302,27 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 let sampled = sample_distribution(distribution, &mut rng_state);
                 trial_overrides.insert(name.clone(), sampled);
             }
+            // In-language assumptions: independent, per-assumption seed
+            // streams so adding one assumption never reshuffles another's
+            // draws. Run-config overrides above still win on key collision.
+            for (name, random) in &ir.assumptions.random {
+                let key = format!("inputs.{name}");
+                if trial_overrides.contains_key(&key) {
+                    continue;
+                }
+                let spec = ir_distribution_spec(&random.dist)?;
+                let mut assumption_rng = splitmix64(
+                    monte_carlo_config
+                        .seed
+                        .wrapping_add(fnv1a(name))
+                        .wrapping_add((trial as u64).wrapping_mul(0x9e3779b97f4a7c15)),
+                );
+                let sampled = apply_clip(
+                    sample_distribution(&spec, &mut assumption_rng),
+                    random.dist.clip,
+                );
+                trial_overrides.insert(key, sampled);
+            }
             let trial_run = run_deterministic(
                 ir,
                 &RunConfig {
@@ -432,6 +455,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let periods = timeline.len();
 
     let mut warnings = Vec::new();
+    let base_inputs = assumption_inputs(ir, &mut warnings)?;
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
@@ -490,7 +514,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             if !is_scheduled {
                 continue;
             }
-            let env = build_expr_env(ir, stream, config, idx, &timeline[idx]);
+            let env = build_expr_env(ir, stream, config, idx, &timeline[idx], &base_inputs);
             let active_value = eval_bool_expr(
                 &active_expr,
                 &env,
@@ -770,6 +794,7 @@ fn build_expr_env(
     config: &RunConfig,
     t: usize,
     date: &Date,
+    base_inputs: &BTreeMap<String, f64>,
 ) -> ExprEnv {
     let mut env = ExprEnv::empty();
     env.model.insert(
@@ -804,14 +829,58 @@ fn build_expr_env(
     env.entity
         .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
 
+    for (name, value) in base_inputs {
+        env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
+    }
     for (key, value) in &config.parameter_overrides {
         if let Some(stripped) = key.strip_prefix("cfg.") {
             insert_cfg_value(&mut env.cfg, stripped, *value);
         } else if let Some(stripped) = key.strip_prefix("obs.") {
             insert_cfg_value(&mut env.obs, stripped, *value);
+        } else if let Some(stripped) = key.strip_prefix("inputs.") {
+            env.inputs
+                .insert(stripped.to_string(), ExprValue::Decimal(*value));
         }
     }
     env
+}
+
+/// Resolve `assume` values from IR: constants evaluate their expression;
+/// random assumptions contribute their deterministic central value (Monte
+/// Carlo trials override these via `inputs.<name>` parameter overrides).
+fn assumption_inputs(
+    ir: &Ir,
+    warnings: &mut Vec<String>,
+) -> Result<BTreeMap<String, f64>, EngineError> {
+    let mut inputs = BTreeMap::new();
+    let empty_env = ExprEnv::empty();
+    for (name, constant) in &ir.assumptions.constants {
+        match cfdl_expr::compile_expr(&constant.expr.src)
+            .and_then(|compiled| cfdl_expr::eval(&compiled, &empty_env))
+        {
+            Ok(ExprValue::Decimal(v)) => {
+                inputs.insert(name.clone(), v);
+            }
+            Ok(ExprValue::Int(v)) => {
+                inputs.insert(name.clone(), v as f64);
+            }
+            Ok(other) => warnings.push(format!(
+                "Assumption '{name}' evaluated to non-numeric {other:?}; ignoring."
+            )),
+            Err(err) => warnings.push(format!(
+                "Assumption '{name}' failed to evaluate [{}]: {}; ignoring.",
+                err.code, err.message
+            )),
+        }
+    }
+    for (name, random) in &ir.assumptions.random {
+        let spec = ir_distribution_spec(&random.dist)?;
+        inputs.insert(
+            name.clone(),
+            apply_clip(central_value(&spec), random.dist.clip),
+        );
+    }
+    Ok(inputs)
 }
 
 fn stream_amount_override(config: &RunConfig, stream_name: &str) -> Option<f64> {
@@ -1168,6 +1237,35 @@ struct Ir {
     time: IrTime,
     #[serde(default)]
     streams: Vec<IrStream>,
+    #[serde(default)]
+    assumptions: IrAssumptions,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct IrAssumptions {
+    #[serde(default)]
+    constants: BTreeMap<String, IrAssumeConstant>,
+    #[serde(default)]
+    random: BTreeMap<String, IrAssumeRandom>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrAssumeConstant {
+    expr: IrExpr,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrAssumeRandom {
+    dist: IrDistribution,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrDistribution {
+    kind: String,
+    #[serde(default)]
+    params: BTreeMap<String, f64>,
+    #[serde(default)]
+    clip: Option<[f64; 2]>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1451,6 +1549,94 @@ fn sample_distribution(distribution: &DistributionSpec, seed: &mut u64) -> f64 {
                 mean + stddev * z0
             }
         }
+        DistributionSpec::LogNormal { mu, sigma } => {
+            if *sigma == 0.0 {
+                mu.exp()
+            } else {
+                let u1 = next_uniform_open_closed(seed);
+                let u2 = next_uniform_open_closed(seed);
+                let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                (mu + sigma * z0).exp()
+            }
+        }
+        DistributionSpec::Triangular { min, mode, max } => {
+            if (*max - *min).abs() < f64::EPSILON {
+                *min
+            } else {
+                // Inverse-CDF sampling.
+                let u = next_uniform_open_closed(seed);
+                let fc = (mode - min) / (max - min);
+                if u < fc {
+                    min + (u * (max - min) * (mode - min)).sqrt()
+                } else {
+                    max - ((1.0 - u) * (max - min) * (max - mode)).sqrt()
+                }
+            }
+        }
+    }
+}
+
+/// FNV-1a hash for per-assumption seed derivation: adding or removing one
+/// assumption never reshuffles another assumption's draws.
+fn fnv1a(name: &str) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for byte in name.as_bytes() {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
+fn ir_distribution_spec(dist: &IrDistribution) -> Result<DistributionSpec, EngineError> {
+    let get =
+        |names: &[&str]| -> Option<f64> { names.iter().find_map(|n| dist.params.get(*n).copied()) };
+    let missing = |what: &str| {
+        EngineError::InvalidRunConfig(format!(
+            "assumption distribution {} missing parameter '{}'",
+            dist.kind, what
+        ))
+    };
+    match dist.kind.as_str() {
+        "Normal" => Ok(DistributionSpec::Normal {
+            mean: get(&["mean"]).ok_or_else(|| missing("mean"))?,
+            stddev: get(&["stdev", "stddev"]).ok_or_else(|| missing("stdev"))?,
+        }),
+        "LogNormal" => Ok(DistributionSpec::LogNormal {
+            mu: get(&["mu"]).ok_or_else(|| missing("mu"))?,
+            sigma: get(&["sigma"]).ok_or_else(|| missing("sigma"))?,
+        }),
+        "Uniform" => Ok(DistributionSpec::Uniform {
+            min: get(&["min"]).ok_or_else(|| missing("min"))?,
+            max: get(&["max"]).ok_or_else(|| missing("max"))?,
+        }),
+        "Triangular" => Ok(DistributionSpec::Triangular {
+            min: get(&["min"]).ok_or_else(|| missing("min"))?,
+            mode: get(&["mode"]).ok_or_else(|| missing("mode"))?,
+            max: get(&["max"]).ok_or_else(|| missing("max"))?,
+        }),
+        other => Err(EngineError::InvalidRunConfig(format!(
+            "unknown assumption distribution kind: {other}"
+        ))),
+    }
+}
+
+fn apply_clip(value: f64, clip: Option<[f64; 2]>) -> f64 {
+    match clip {
+        Some([lo, hi]) => value.clamp(lo, hi),
+        None => value,
+    }
+}
+
+/// Deterministic central value of a distribution, used outside Monte Carlo:
+/// Normal -> mean; LogNormal -> exp(mu + sigma^2/2) (the distribution mean);
+/// Uniform -> midpoint; Triangular -> (min + mode + max) / 3.
+fn central_value(spec: &DistributionSpec) -> f64 {
+    match spec {
+        DistributionSpec::Fixed { value } => *value,
+        DistributionSpec::Normal { mean, .. } => *mean,
+        DistributionSpec::LogNormal { mu, sigma } => (mu + sigma * sigma / 2.0).exp(),
+        DistributionSpec::Uniform { min, max } => (min + max) / 2.0,
+        DistributionSpec::Triangular { min, mode, max } => (min + mode + max) / 3.0,
     }
 }
 

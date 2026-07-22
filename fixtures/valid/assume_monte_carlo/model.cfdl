@@ -1,0 +1,13 @@
+version 0.1
+model "assume-monte-carlo"
+time calendar monthly from 2026-01 for 6
+
+entity legal borrower
+
+assume rent ~ Uniform(min=900, max=1100)
+assume vacancy ~ Triangular(min=0.0, mode=0.05, max=0.15)
+
+stream legal.rent on entity legal.borrower inflow currency USD {
+  schedule every monthly from 2026-01 to 2026-06
+  amount = inputs.rent * (1 - inputs.vacancy)
+}
