@@ -117,11 +117,11 @@
         "on": "2027-01-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "36000.0 / 0.09"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -156,11 +156,11 @@
         "to": "2026-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "2000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -195,11 +195,11 @@
         "to": "2026-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "5000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {

@@ -16,7 +16,7 @@ contract cre.ops_revenue on entity real_estate.property {
 // Ancillary income: parking + laundry + storage ($7,200/mo)
 stream ancillary.income on entity real_estate.property inflow currency USD {
   schedule every monthly from 2026-01 to 2030-12
-  amount cel "7200"
+  amount = 7200
 }
 
 // Operating expenses: mgmt 6% ($11,100) + maintenance ($18,500) + insurance ($6,500)

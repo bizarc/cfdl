@@ -179,7 +179,18 @@ run_stmt        = "run" ( "deterministic" | mc_run ) ;
 mc_run          = "monte_carlo" "trials" INT "seed" INT ;
 
 (* --- expressions & literals --- *)
-expr            = "cel" string_lit ;
+expr            = or_expr ;
+or_expr         = and_expr { "or" and_expr } ;
+and_expr        = not_expr { "and" not_expr } ;
+not_expr        = { "not" } cmp_expr ;
+cmp_expr        = add_expr [ ( "==" | "!=" | "<" | "<=" | ">" | ">=" ) add_expr ] ;
+add_expr        = mul_expr { ( "+" | "-" ) mul_expr } ;
+mul_expr        = unary_expr { ( "*" | "/" | "%" ) unary_expr } ;
+unary_expr      = [ "-" ] pow_expr ;
+pow_expr        = primary [ "^" unary_expr ] ;  (* right-associative *)
+primary         = number | bool_lit | string_lit | qname
+                | IDENT "(" [ expr { "," expr } ] ")"
+                | "(" expr ")" ;
 
 literal_or_expr = literal | expr ;
 

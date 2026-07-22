@@ -76,11 +76,11 @@
         "to": "2026-06-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "250000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -107,11 +107,11 @@
         "phase": "drilling"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "3500000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -139,11 +139,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "12000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -171,11 +171,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "28000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "time.t >= 6.0"
       },
       "provenance": {
@@ -203,11 +203,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "180000.0 * pow(0.94, time.t - 12.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "time.t >= 12.0"
       },
       "provenance": {
@@ -235,11 +235,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "33750.0 * pow(0.94, time.t - 12.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "time.t >= 12.0"
       },
       "provenance": {

@@ -35,7 +35,7 @@ entity legal borrower
 
 stream legal.rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-12
-  amount cel "1000"
+  amount = 1000
 }
 ```
 
@@ -86,7 +86,7 @@ See `examples/language_tutorial/minimal_model/model.cfdl`.
 CFDL uses CEL string expressions for executable logic:
 
 ```cfdl
-amount cel "inputs.base_rent * 1.02"
+amount = inputs.base_rent * 1.02
 ```
 
 Common literals:

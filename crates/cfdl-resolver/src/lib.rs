@@ -408,7 +408,7 @@ fn load_module(
             .collect());
     }
 
-    let parse_result = parse(relative_path, &tokens);
+    let parse_result = parse(relative_path, &source, &tokens);
     if !parse_result.diagnostics.is_empty() {
         return Err(parse_result
             .diagnostics

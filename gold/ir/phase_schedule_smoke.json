@@ -54,11 +54,11 @@
         "phase": "construction"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "500000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -87,11 +87,11 @@
         "phase": "operations"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "10000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {

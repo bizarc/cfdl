@@ -16,7 +16,7 @@
       "",
       "stream ${3:rent} on entity ${1}.${2} {",
       "  schedule every ${4:monthly} from ${5:2026-01} to ${6:2026-12}",
-      "  amount cel \"${7:0}\"",
+      "  amount = ${7:0}",
       "}",
       ""
     ],

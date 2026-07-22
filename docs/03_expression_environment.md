@@ -1,189 +1,102 @@
-# CEL and Expression Environment (v0.2)
+# CFDL v0.1 — Expression Environment
 
-This document defines the v0.2 standard for expression parsing/evaluation in CFDL.
+Status: Normative for the CFDL expression language (implemented by `cfdl-calc`,
+exposed through `cfdl-expr`).
 
-It supersedes v0.1 ExprEnv guidance and captures what must carry forward:
-- keep `expr = "cel" string_lit` unchanged
-- keep evaluation deterministic and pure
-- make dependency extraction a compiler responsibility
+CFDL expressions are bare, Excel-familiar formulas written directly in model
+source:
 
----
+```
+amount = base_rent * (1 + escalation) ^ (time.t / 12)
+active when time.t >= 6
+```
 
-## 1) Normative scope
+They are deterministic and terminating by construction: no loops, no recursion,
+no I/O, no user-defined functions. Every expression, on the same inputs, always
+produces the same value.
 
-### 1.1 Expression surface syntax
-- CFDL grammar remains unchanged:
-  - `expr = "cel" string_lit`
-- IR expression form remains:
-  - `{ "lang": "cel", "src": "..." }`
+## 1. Numeric semantics
 
-### 1.2 Determinism and safety
-- Evaluation MUST be deterministic: same IR + run config + seed => same result.
-- CEL runtime MUST be side-effect free.
-- Do not expose nondeterministic or external-effect functions:
-  - `now()`, `random()`, I/O, network, filesystem access.
+Two evaluation modes exist; models always run in **decimal mode**.
 
-### 1.3 Evaluation contexts
-- **Compile-time context**: parse/type checks and static validation.
-- **Run-time context**: evaluation per timestep for stream amounts and predicates.
+- **Decimal mode (default).** All arithmetic is exact 128-bit decimal
+  (`rust_decimal`, 28 significant digits). `0.1 + 0.2 == 0.3` is `true`.
+  Float64 is used ONLY as a documented escape for transcendental operations:
+  fractional exponents (`x ^ 0.5`), and iterative solvers (`rate`,
+  `cpr_to_smm`). Integer exponents are decimal-exact.
+- **excel_compat mode.** Available to benchmark harnesses via
+  `cfdl_expr::eval_with_mode`. All arithmetic runs in IEEE-754 float64,
+  reproducing Excel's representation artifacts (`0.1 + 0.2 - 0.3` yields
+  ~5.55e-17, exactly as Excel does). Used to prove parity against Excel
+  reference models and to explain decimal-vs-float differences.
 
----
+Rounding: `round()` follows Excel semantics (half away from zero), not
+banker's rounding. `round_down`/`round_up` truncate toward/away from zero.
 
-## 2) ExprEnv model (v0.2)
+## 2. Syntax
 
-ExprEnv is a typed host-provided data object. Namespaces are required to avoid collisions and to support tooling.
+- Operators, by precedence (loosest to tightest):
+  `or` < `and` < `not` < comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`) <
+  `+ -` < `* / %` < unary `-` < `^` (right-associative).
+- `=` and `<>` are accepted as Excel-style aliases for `==` and `!=` inside
+  expressions.
+- Literals: decimal numbers (`1200`, `0.05`, `1_000_000`), `true`/`false`,
+  double-quoted strings.
+- Variables are dotted paths resolved from the host environment (see §3).
+- Function calls are lowercase snake_case: `pmt(0.005, 360, 100000)`.
 
-### 2.1 Required namespaces
-- `model.*`
-- `time.*`
-- `entity.*`
-- `cfg.*`
-- `obs.*`
+## 3. Namespaces
 
-`contract.*` is optional in v0.2 core, and used when evaluating in contract/lowering contexts.
+The host (compiler or engine) provides values under five roots:
 
-### 2.2 Core values and types
-- Scalar types:
-  - `Bool`, `Int`, `Decimal`, `String`
-- Domain/time types:
-  - `Date`, `Currency`, `Money`, `Optional<T>`
-- Typical bindings:
-  - `model.id: String`
-  - `model.base_currency: Currency`
-  - `time.t: Int`
-  - `time.date: Date`
-  - `time.phase: Optional<String>`
-  - `entity.id`, `entity.name`, `entity.state`
+| Root | Contents |
+|---|---|
+| `model` | `model.id`, `model.base_currency` |
+| `time` | `time.t` (0-based period index), `time.date`, `time.phase` |
+| `entity` | attributes of the stream's owning entity |
+| `cfg` | run-config values (scenario knobs) |
+| `obs` | observations (rates, curves) supplied at run time |
 
-### 2.3 Observables and optionality
-- Observable accessors return optional values:
-  - `obs.rate(name) -> Optional<Decimal>`
-  - `obs.index(name) -> Optional<Decimal>`
-  - `obs.fx(from, to) -> Optional<Decimal>`
-- Missing observable values MUST NOT be silently defaulted.
-- Whether a missing optional becomes an error is policy-driven (compiler/runtime host policy).
+Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
 
----
+## 4. Builtin functions
 
-## 3) CEL capability and exclusions
+Conditionals & aggregates: `if(cond, a, b)` (lazy — only the taken branch is
+evaluated), `min`, `max`, `sum`, `avg`, `abs`.
 
-### 3.1 Supported CEL features (minimum)
-- arithmetic: `+ - * /`
-- comparisons: `== != < <= > >=`
-- boolean logic: `&& || !`
-- ternary conditionals: `cond ? a : b`
+Rounding: `round(x, [digits])`, `round_down(x, [digits])`,
+`round_up(x, [digits])`.
 
-### 3.2 Money helpers (minimum)
-- `money(amount, currency) -> Money`
-- `money_amount(x) -> Decimal`
-- `money_currency(x) -> Currency`
+Math: `pow(base, exp)` (function form of `^`), `clamp(x, lo, hi)`.
 
-### 3.3 Explicitly out of scope in v0.2 CEL
-These are engine/results concerns, not CEL concerns:
-- `npv(...)`
-- `irr(...)`
-- Monte Carlo summary helpers like `prob(...)`
+Time value of money (Excel sign conventions, decimal-exact for whole-period
+terms): `pmt(rate, nper, pv, [fv], [due])`, `pv(rate, nper, pmt, [fv], [due])`,
+`fv(rate, nper, pmt, [pv], [due])`, `nper(rate, pmt, pv, [fv], [due])`,
+`rate(nper, pmt, pv, [fv], [due], [guess])` (Newton solver, f64, tolerance
+1e-12).
 
-### 3.4 Deterministic numeric semantics
-- Keep numeric coercions explicit and deterministic (`Int`/`Decimal` conversions
-  must not depend on host locale or runtime-specific behavior).
-- Prefer stable helper composition when portability is needed:
-  - `min(max(x, lo), hi)` is equivalent to `clamp(x, lo, hi)`.
-- If `clamp` is used in model or pack expressions, hosts should either provide
-  `clamp` directly or rewrite to `min/max` form before evaluation.
+Credit: `cpr_to_smm(cpr)`.
 
----
+Dates: `date(y, m, d)`, `edate(d, months)`, `eomonth(d, months)`,
+`year_frac(d1, d2, basis)` with basis `"30/360"` (US/bond), `"act/360"`,
+`"act/365"` per ISDA/SIFMA definitions. Date arithmetic: `d2 - d1` yields
+days; `d + n` / `d - n` shift by days.
 
-## 4) Dependency extraction
+## 5. Errors and diagnostics
 
-Dependency extraction is a compiler-stage responsibility and is required for planning, validation, and connector hydration.
+Every parse and evaluation error carries a byte-offset span into the
+expression source. The compiler surfaces them as diagnostics with code
+`EXPR_PARSE`; runtime failures surface as `EXPR_EVAL` warnings in Results
+(the engine substitutes 0 / false and records the warning).
 
-### 4.1 What MUST be extracted
-- Observable dependencies:
-  - `obs.rate("SOFR")`
-  - `obs.index("CPI")`
-  - `obs.fx("USD", "EUR")`
-- Ontology/reference dependencies:
-  - `ref("...")` when supported
+## 6. IR representation
 
-### 4.2 Why this is required
-- enables pre-run checks for missing inputs
-- enables host-platform connector planning/pipelines
-- enables authoring UX to show required inputs
+Expressions are stored in IR as their raw source text with
+`"lang": "cfdl"`:
 
-### 4.3 Allowed implementation approaches
-- **Option A (preferred): AST-based extraction**
-  - parse CEL, walk calls, extract structured dependencies
-- **Option B (interim): normalized pattern scan**
-  - normalize source (trim + canonical newlines), scan recognized call patterns
+```json
+{ "lang": "cfdl", "src": "50000 * pow(1.15, time.t / 12.0)" }
+```
 
-### 4.4 IR representation
-Compiler output MUST include extracted dependencies in deterministic IR fields:
-- `required_observables`
-- `required_refs`
-
-Ordering MUST be deterministic.
-
----
-
-## 5) Ontology bindings
-
-### 5.1 Entity and contract bindings
-- Ontology-backed attributes should be projected into namespace bindings:
-  - `entity.*`
-  - `contract.*` (when available in context)
-
-### 5.2 `ref()` policy
-- If `ref()` is retained, treat it as an explicit external dependency and extract it into `required_refs`.
-- If `ref()` is not exposed in a deployment, compiler/runtime should reject usage with expression diagnostics.
-
----
-
-## 6) Diagnostics
-
-Expression diagnostics use standard CFDL diagnostics object format and include source file + span.
-
-v0.2 expression diagnostics:
-- `E3001_EXPR_PARSE_ERROR`
-- `E3002_EXPR_UNKNOWN_IDENT`
-- `E3003_EXPR_TYPE_ERROR`
-- `E3004_EXPR_ILLEGAL_OP`
-
-Missing observable escalation (error vs optional) is policy controlled.
-
----
-
-## 7) Implementation checklist
-
-### Compiler / IR
-- [ ] Add expression dependency extraction stage after expression parsing.
-- [ ] Emit extracted dependencies into IR `required_observables` / `required_refs`.
-- [ ] Add validation diagnostics for missing required dependencies based on policy.
-
-### Engine
-- [x] Supply typed ExprEnv namespaces (`model`, `time`, `entity`, `cfg`, `obs`).
-- [x] Evaluate stream `amount` and `active_when` per timestep deterministically.
-
-### Fixtures / Gold
-- [ ] Add at least one valid fixture using two dependencies:
-  - `obs.rate("SOFR")`
-  - `obs.index("CPI")`
-- [ ] Verify IR includes extracted dependency lists.
-- [x] Verify deterministic repeated-run output.
-
----
-
-## 8) Minimal v0.2 example
-
-Expression:
-
-`cel "money(cfg.base_rent * (1 + obs.index(\"CPI\")).value_or(0.0), \"USD\")"`
-
-Extracted dependencies:
-- observable: `index:CPI`
-
----
-
-## 9) Status
-
-v0.2 implementation is underway. The non-negotiable carry-forward from v0.1 is dependency extraction. Finance/valuation functions stay in engines/results layers by design.
+The `cel` dialect from earlier drafts has been removed; `cfdl` is the only
+expression language.

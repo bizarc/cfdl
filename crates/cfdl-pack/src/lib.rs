@@ -55,7 +55,7 @@ pub struct LoweringRule {
     pub owner_entity: String,
     pub direction: String,
     pub currency: String,
-    pub amount_cel: String,
+    pub amount_expr: String,
     pub schedule_kind: String,
     pub schedule_from: String,
     pub schedule_to: String,
@@ -419,7 +419,7 @@ stream_name = "pack.stream"
 owner_entity = "legal.borrower"
 direction = "inflow"
 currency = "USD"
-amount_cel = "1"
+amount_expr = "1"
 schedule_kind = "every"
 schedule_from = "2026-01"
 schedule_to = "2026-12"
@@ -480,7 +480,7 @@ stream_name = "flatname"
 owner_entity = "legal.borrower"
 direction = "inflow"
 currency = "USD"
-amount_cel = "1"
+amount_expr = "1"
 schedule_kind = "every"
 schedule_from = "2026-01"
 schedule_to = "2026-12"

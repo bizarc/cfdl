@@ -237,7 +237,7 @@
         "lang": {
           "type": "string",
           "enum": [
-            "cel"
+            "cfdl"
           ]
         },
         "src": {

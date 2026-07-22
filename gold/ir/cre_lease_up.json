@@ -67,11 +67,11 @@
         "to": "2031-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "25000.0 * clamp((time.t - 6.0 + 1.0) / 18.0, 0.0, 1.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
