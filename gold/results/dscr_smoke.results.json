@@ -583,7 +583,9 @@
           "cre.ops.revenue",
           "cre.unit.base_rent.*",
           "cre.unit.recoveries.*",
-          "cre.rollover.rent.*"
+          "cre.rollover.rent.*",
+          "cre.pct_rent",
+          "cre.pct_rent.*"
         ],
         "denominator_streams": [
           "cre.ops.expense",

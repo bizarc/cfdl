@@ -1025,9 +1025,9 @@ fn lower_contract_streams(
                     &mut schedule,
                     &mut amount_src,
                 );
-            } else if pack.name == "cre" {
-                apply_cre_contract_terms(contract, &mut schedule, &mut amount_src);
             }
+            // CRE terms are applied declaratively via rule templates; the
+            // legacy hardcoded path was removed with the v1 rule migration.
 
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
@@ -1456,57 +1456,6 @@ fn apply_opco_contract_terms(
 ///   value is `noi_value / exit_cap`.  The rule's `amount_cel` is kept as a fallback
 ///   when `noi_value` is absent (e.g. the contract specifies only `noi_ref` for
 ///   future dynamic resolution).
-fn apply_cre_contract_terms(
-    contract: &cfdl_parser::ContractStmt,
-    schedule: &mut IrSchedule,
-    amount_src: &mut String,
-) {
-    match contract.name.as_str() {
-        // Ops contracts: override the schedule's from/to with the contract term range
-        // so the `term` clause in the fixture controls when the stream is active.
-        "cre.ops_revenue" | "cre.ops_expense" => {
-            if let (Some(from), Some(to)) = (&contract.term_start, &contract.term_end) {
-                schedule.from = Some(normalize_date(from));
-                schedule.to = Some(normalize_date(to));
-            }
-            if let Some(amount) = parse_contract_term_f64(contract, "amount") {
-                *amount_src = format!("{amount}");
-            }
-        }
-        // Exit cap: override date and amount from declared noi_value / exit_cap.
-        "cre.exit_cap" => {
-            // Override the exit date from the contract term (term_start == term_end
-            // for a point-in-time exit).
-            if let Some(exit_date) = &contract.term_start {
-                *schedule = IrSchedule {
-                    kind: "OnDate".to_string(),
-                    on: Some(normalize_date(exit_date)),
-                    every: None,
-                    from: None,
-                    to: None,
-                    on_rule: None,
-                    phase: None,
-                    convention: None,
-                    calendar: None,
-                    except_dates: Vec::new(),
-                    also_dates: Vec::new(),
-                };
-            }
-            // Override the amount with the data-driven formula when noi_value is provided.
-            let noi_value = parse_contract_term_f64(contract, "noi_value");
-            let exit_cap = parse_contract_term_f64(contract, "exit_cap");
-            if let (Some(noi), Some(cap)) = (noi_value, exit_cap) {
-                if cap > 0.0 {
-                    *amount_src = format!("{noi} / {cap}");
-                }
-            }
-            // If noi_value is absent (e.g. only noi_ref is specified), leave amount_src
-            // unchanged so the rule's default expression applies.
-        }
-        _ => {}
-    }
-}
-
 fn parse_contract_term_f64(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<f64> {
     contract.terms.get(key)?.value.parse::<f64>().ok()
 }
