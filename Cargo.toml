@@ -15,6 +15,7 @@ members = [
   "crates/cfdl-py",
   "crates/cfdl-lsp",
   "crates/cfdl-server",
+  "crates/cfdl-wasm",
 ]
 
 [workspace.package]

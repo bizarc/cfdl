@@ -338,16 +338,18 @@ Post-1.0: scenario trees / optimal exercise, full HLBV under uncertainty.
   staged at `static/schemas/` (serve at their `/schemas/...` `$id` paths;
   DNS/domain wiring deferred). Deploy stays GitHub Pages via `docs-pages.yml`
   (Cloudflare/domain move needs human approval).
-- Playground: `crates/cfdl-wasm` (wasm-bindgen) over source-string entry points
-  (add to `cfdl-compile`; engine already has `run_from_json_str`) + embedded packs
-  (from C). Monaco editor reusing the VS Code TextMate grammar. Requires B (cfdl-calc is
-  wasm-clean; cel-interpreter's wasm support is unverified — do not build the playground
-  on CEL).
+- Playground — **F3 COMPLETE**: `crates/cfdl-wasm` (wasm-bindgen) over the F2
+  source-string API + embedded packs; a Docusaurus `/playground` page (Monaco +
+  a Monarch grammar port, diagnostics markers, live metrics). Engine is
+  wasm-clean (FNV-seeded MC, no getrandom); `wasm-pack` bundle is CI-built
+  during the site build (gitignored). Verified running in a browser.
+- API server — **F4 COMPLETE**: `crates/cfdl-server` (axum): `POST
+  /v1/compile|validate|run`, OpenAPI via utoipa, limits (1 MiB body, 10 s
+  timeout, MC trial cap, embedded packs only, no filesystem). Dockerfile →
+  `ghcr.io/bizarc/cfdl-server`; CI builds/saves the image (publish needs
+  approval).
 - VS Code: platform-specific VSIX bundling LSP binaries from the release pipeline
-  (`vsce --target`); OpenVSX too. Publishing needs human approval.
-- API server: `crates/cfdl-server` (axum): `POST /v1/compile|validate|run`, OpenAPI via
-  utoipa, limits (1 MB request, ~10 s timeout, MC trial cap, embedded packs only,
-  no filesystem). Dockerfile → `ghcr.io/bizarc/cfdl-server` (publish needs approval).
+  (`vsce --target`); OpenVSX prep in F5. Publishing needs human approval.
 
 ### Workstream G — Re-point evs-platform (S, after first tagged release)
 **Owns (in evs-platform repo):** `evs-web/src/lib/cli.ts`, `evs-web/src/app/api/**`,

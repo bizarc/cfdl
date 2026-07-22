@@ -96,6 +96,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.16] - 2026-07-22
+
+### Added
+- **WASM playground** (Workstream F, increment F3): new `crates/cfdl-wasm`
+  (wasm-bindgen) exposes `compile`, `run`, and `compile_and_run` over the
+  embedded packs — the compiler and engine run entirely in the browser (the
+  engine's FNV-seeded Monte Carlo needs no `getrandom`, so it is wasm-clean).
+  A Docusaurus `/playground` page (Monaco editor with a Monarch grammar port,
+  diagnostics as editor markers, live metrics output) loads the wasm bundle,
+  which CI builds via `wasm-pack` during the site build (gitignored, not
+  committed). Verified end-to-end in a browser: the starter credit model
+  compiles, runs, and renders core + domain metrics.
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added
