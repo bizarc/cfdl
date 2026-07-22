@@ -1,6 +1,6 @@
 # Contributing
 
-CFDL is maintained by a small internal team at EVS.
+CFDL is maintained by a small internal team.
 
 > **External pull requests are not accepted at this time.** We welcome **bug reports**
 > via GitHub issues (see "Reporting issues" below). Feature requests may be filed as

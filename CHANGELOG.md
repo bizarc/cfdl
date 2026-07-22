@@ -6,6 +6,119 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.3.0] - Unreleased
+
+The current workspace version. Consolidates the unreleased development
+increments logged as 0.2.8–0.2.17 below (none were tagged), plus work that
+predates them and was not previously logged here:
+
+### Changed
+- **Relicensed to the Business Source License 1.1** (SPDX `BUSL-1.1`,
+  Change License Apache-2.0, Change Date 2030-07-21) — Workstream A. CFDL is
+  source available, not open source. Workspace version bumped to 0.3.0 with
+  the relicense.
+- **CEL replaced by the native `cfdl-calc` expression engine** (Workstream B):
+  bare Excel-familiar expressions with real spans (no more `cel "..."`
+  strings), decimal-first numerics (`rust_decimal`) with an `excel_compat`
+  float64 mode, snake_case financial builtins (pmt/pv/fv/ipmt/ppmt/rate/
+  year_frac/eomonth/macrs_rate/cpr_to_smm/...), expression-level diagnostics,
+  and LSP hover/completion. The `cel-interpreter` dependency is fully removed;
+  IR `lang` is `"cfdl"` only.
+
+### Added
+- **Engine completeness** (Workstream C): day-count and business-day
+  calendars (US/TARGET/UK, ISDA rolls), in-language `assume` distributions
+  with per-assumption seeded Monte Carlo, event/option execution,
+  parameterized pack lowering (`{{contract.*}}` templates), declarative pack
+  metrics plus engine universals (MOIC/payback/WAL), embedded pack registry,
+  `run` statements, and `cfdl parse`.
+- See the 0.2.8–0.2.17 entries below for the pack (Workstream D), Python SDK
+  (E), and surfaces (F) increments this version rolls up.
+
+---
+
+## [0.2.17] - 2026-07-22
+
+### Added
+- **Distribution polish** (Workstream F, increment F5): Homebrew formula
+  template (`distribution/homebrew/cfdl.rb`) + generator
+  (`scripts/gen_homebrew.sh`) that fills version/URLs/sha256 from built CLI
+  assets; Open VSX prep (`ovsx` dev dependency on `editors/vscode`, documented
+  publish steps). Decision recorded: **keep the hand-rolled release pipeline**
+  (not cargo-dist). All publishing (Homebrew tap, Marketplace, Open VSX)
+  remains human-approved — nothing is pushed by CI (rule 5.6). Workstream F is
+  complete.
+
+### Changed
+- `editors/vscode` now declares SPDX license `BUSL-1.1` (was `UNLICENSED`).
+
+---
+
+## [0.2.16] - 2026-07-22
+
+### Added
+- **WASM playground** (Workstream F, increment F3): new `crates/cfdl-wasm`
+  (wasm-bindgen) exposes `compile`, `run`, and `compile_and_run` over the
+  embedded packs — the compiler and engine run entirely in the browser (the
+  engine's FNV-seeded Monte Carlo needs no `getrandom`, so it is wasm-clean).
+  A Docusaurus `/playground` page (Monaco editor with a Monarch grammar port,
+  diagnostics as editor markers, live metrics output) loads the wasm bundle,
+  which CI builds via `wasm-pack` during the site build (gitignored, not
+  committed). Verified end-to-end in a browser: the starter credit model
+  compiles, runs, and renders core + domain metrics.
+
+---
+
+## [0.2.15] - 2026-07-22
+
+### Added
+- **API server** (Workstream F, increment F4): new `crates/cfdl-server` — an
+  axum service exposing `POST /v1/compile|validate|run`, `GET /healthz`, an
+  OpenAPI document at `/openapi.json`, and Swagger UI at `/docs`. Filesystem-
+  free (in-memory `files` map, embedded packs only); bounded by a 1 MiB body,
+  a 10 s timeout, and a Monte Carlo trial cap (rejected, not truncated). The
+  engine runs on `spawn_blocking`. Eight `tower::oneshot` integration tests
+  (happy paths, 422 diagnostics, embedded-pack metrics, 413 body limit, MC-cap
+  rejection, OpenAPI doc).
+- Multi-stage `Dockerfile` (distroless runtime) → `ghcr.io/bizarc/cfdl-server`;
+  a build-only CI job in the release workflow builds and saves the image as an
+  artifact (never pushes — rule 5.6).
+
+---
+
+## [0.2.14] - 2026-07-22
+
+### Added
+- **Source-string compile API** (Workstream F, increment F2):
+  `cfdl_compile::compile_sources_to_json(files, root_file, options)` and
+  `validate_sources(...)` compile a model from an in-memory `path -> source`
+  map — no filesystem — the shared foundation for the WASM playground (F3) and
+  the API server (F4). Backed by a new `cfdl_resolver::SourceProvider` seam
+  (`FsProvider`, `MemoryProvider`); import-path resolution is now lexical
+  (relative to the model root), preserving E1202/E1203 semantics exactly (the
+  golden suite is byte-identical).
+- `cfdl-compile` gains an `embedded-packs` feature (forwarding to
+  `cfdl-pack`); with it, source-string compiles resolve `use pack` against the
+  bundled registry when no packs directory is given.
+- Embedded pack registry now bundles **all four** packs (added credit and
+  energy; previously only cre + opco).
+
+---
+
+## [0.2.13] - 2026-07-22
+
+### Added
+- **Docs site refresh** (Workstream F, increment F1): the Docusaurus content
+  sync now covers the full spec set — added Expression Environment (03), IR
+  Schema (05), Results Schema (06), and Implementation Status (10) to the
+  Language Reference; a **Cookbooks** section generated per pack from
+  `packs/*/README.md`; a **Benchmark methodology** page enumerating the eight
+  parity cases; and the JSON schemas staged at `static/schemas/` so they serve
+  at their `$id` paths. Decision recorded: keep Docusaurus (not Starlight) —
+  see `docs-site/README.md`.
+
+---
+
 ## [0.2.12] - 2026-07-22
 
 ### Added
@@ -43,88 +156,6 @@ This project follows Semantic Versioning: https://semver.org/
   (energy), office acquisition (CRE), level-pay loan pool (credit), services
   LBO (opco), each on the matching benchmark model. Executed in CI (Linux) via
   nbconvert; committed output-stripped. Workstream E is complete.
-
----
-
-## [0.2.13] - 2026-07-22
-
-### Added
-- **Docs site refresh** (Workstream F, increment F1): the Docusaurus content
-  sync now covers the full spec set — added Expression Environment (03), IR
-  Schema (05), Results Schema (06), and Implementation Status (10) to the
-  Language Reference; a **Cookbooks** section generated per pack from
-  `packs/*/README.md`; a **Benchmark methodology** page enumerating the eight
-  parity cases; and the JSON schemas staged at `static/schemas/` so they serve
-  at their `$id` paths. Decision recorded: keep Docusaurus (not Starlight) —
-  see `docs-site/README.md`.
-
----
-
-## [0.2.14] - 2026-07-22
-
-### Added
-- **Source-string compile API** (Workstream F, increment F2):
-  `cfdl_compile::compile_sources_to_json(files, root_file, options)` and
-  `validate_sources(...)` compile a model from an in-memory `path -> source`
-  map — no filesystem — the shared foundation for the WASM playground (F3) and
-  the API server (F4). Backed by a new `cfdl_resolver::SourceProvider` seam
-  (`FsProvider`, `MemoryProvider`); import-path resolution is now lexical
-  (relative to the model root), preserving E1202/E1203 semantics exactly (the
-  golden suite is byte-identical).
-- `cfdl-compile` gains an `embedded-packs` feature (forwarding to
-  `cfdl-pack`); with it, source-string compiles resolve `use pack` against the
-  bundled registry when no packs directory is given.
-- Embedded pack registry now bundles **all four** packs (added credit and
-  energy; previously only cre + opco).
-
----
-
-## [0.2.15] - 2026-07-22
-
-### Added
-- **API server** (Workstream F, increment F4): new `crates/cfdl-server` — an
-  axum service exposing `POST /v1/compile|validate|run`, `GET /healthz`, an
-  OpenAPI document at `/openapi.json`, and Swagger UI at `/docs`. Filesystem-
-  free (in-memory `files` map, embedded packs only); bounded by a 1 MiB body,
-  a 10 s timeout, and a Monte Carlo trial cap (rejected, not truncated). The
-  engine runs on `spawn_blocking`. Eight `tower::oneshot` integration tests
-  (happy paths, 422 diagnostics, embedded-pack metrics, 413 body limit, MC-cap
-  rejection, OpenAPI doc).
-- Multi-stage `Dockerfile` (distroless runtime) → `ghcr.io/bizarc/cfdl-server`;
-  a build-only CI job in the release workflow builds and saves the image as an
-  artifact (never pushes — rule 5.6).
-
----
-
-## [0.2.16] - 2026-07-22
-
-### Added
-- **WASM playground** (Workstream F, increment F3): new `crates/cfdl-wasm`
-  (wasm-bindgen) exposes `compile`, `run`, and `compile_and_run` over the
-  embedded packs — the compiler and engine run entirely in the browser (the
-  engine's FNV-seeded Monte Carlo needs no `getrandom`, so it is wasm-clean).
-  A Docusaurus `/playground` page (Monaco editor with a Monarch grammar port,
-  diagnostics as editor markers, live metrics output) loads the wasm bundle,
-  which CI builds via `wasm-pack` during the site build (gitignored, not
-  committed). Verified end-to-end in a browser: the starter credit model
-  compiles, runs, and renders core + domain metrics.
-
----
-
-## [0.2.17] - 2026-07-22
-
-### Added
-- **Distribution polish** (Workstream F, increment F5): Homebrew formula
-  template (`distribution/homebrew/cfdl.rb`) + generator
-  (`scripts/gen_homebrew.sh`) that fills version/URLs/sha256 from built CLI
-  assets; Open VSX prep (`ovsx` dev dependency on `editors/vscode`, documented
-  publish steps). Decision recorded: **keep the hand-rolled release pipeline**
-  (not cargo-dist). All publishing (Homebrew tap, Marketplace, Open VSX)
-  remains human-approved — nothing is pushed by CI (rule 5.6). Workstream F is
-  complete.
-
-### Changed
-- `editors/vscode` now declares SPDX license `BUSL-1.1` (was `UNLICENSED`).
 
 ---
 

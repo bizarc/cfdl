@@ -67,6 +67,8 @@ const config: Config = {
             { label: "Getting Started", to: "/getting-started" },
             { label: "Language Guide", to: "/language-guide" },
             { label: "Examples", to: "/examples" },
+            { label: "Stochastic Modeling", to: "/stochastic-modeling" },
+            { label: "Python SDK", to: "/python-sdk" },
             { label: "Install and Configure", to: "/install-configure" }
           ]
         },
@@ -76,6 +78,7 @@ const config: Config = {
             { label: "Reference Index", to: "/language-reference" },
             { label: "Language Spec", to: "/language-reference/language-spec" },
             { label: "Diagnostics", to: "/language-reference/diagnostics" },
+            { label: "Licensing", to: "/licensing" },
             {
               label: "Repository",
               href: "https://github.com/bizarc/cfdl"

@@ -109,6 +109,6 @@ offering CFDL to third parties as a hosted or embedded commercial product or ser
 requires a commercial license. Each released version converts to Apache-2.0 four years
 after release. See `LICENSE` and `NOTICE`.
 
-CFDL is maintained by a small internal team at EVS. **External pull requests are not
+CFDL is maintained by a small internal team. **External pull requests are not
 accepted at this time.** Bug reports via GitHub issues are welcome — see
 `CONTRIBUTING.md`.
