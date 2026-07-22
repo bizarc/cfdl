@@ -36,8 +36,11 @@ Full original plan: `~/.claude/plans/i-want-to-be-logical-teapot.md` (evs-platfo
 
 ## 3. Current state (as of 2026-07-22)
 
-**Workstreams A, B, C complete; Workstream D is 3 of 4 packs in** (all merged
-to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
+**Workstreams A, B, C complete; Workstream D has ALL FOUR packs shipped**
+(all merged to `main`, three-OS CI green; 59 golden fixtures; 8 benchmark
+cases green). Practitioner review of benchmark references and the
+stochastic roadmap remain open; Workstream H (waterfalls) is designed and
+unstarted.
 
 - **A (repo hygiene)**: BSL 1.1 relicense, standalone README/policy files,
   linux/mac/windows CI, release pipeline builds cfdl CLI + LSP binaries + VSIX.
@@ -69,7 +72,7 @@ to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
   (apply_cre_contract_terms) DELETED — all v1 contracts are templates.
   Benchmarks: two-tenant office (full parity), retail strip (base-year
   gross-up + percentage rent). No documented deviations remain.
-- **D — credit/lending (1 increment)**: `credit.pool_level_pay` and
+- **D — credit/lending (3 increments)**: `credit.pool_level_pay` and
   `credit.pool_io_bullet` — homogeneous fixed-rate pools with CPR
   prepayments, CDR defaults, severity, recovery lag, via the exact
   closed-form pool-factor decomposition (no loops needed); `credit.purchase`
@@ -80,8 +83,11 @@ to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
   `curve` model statement (step/linear interpolation, curve_value() in
   expressions) and `credit.pool_float_io_bullet` — floating-rate pools with
   margin/floor/cap off a named index curve (benchmark float_bridge_pool).
-  Still deferred: zero-rate level-pay pools; STOCHASTIC rate paths (curves
-  are deterministic inputs today — stochastic roadmap item 4).
+  Increment 10 added servicing/penalty streams, discount purchase, and a
+  principal WAL via the new `wal_years` metrics op (per-stream weighted
+  average life with `.*` wildcards). Still deferred: zero-rate level-pay
+  pools; STOCHASTIC rate paths (curves are deterministic inputs today —
+  stochastic roadmap item 4).
 - **Language additions shipped for D**: `series_sum`/`series_avg`
   cross-stream references (two-phase, cycle-free), `time ... project <n>`
   projection tail, `parse_date`/`months_between` lease-anniversary
@@ -89,17 +95,24 @@ to `main`, three-OS CI green; 56 golden fixtures; 6 benchmark cases green).
   (fixture cre_stochastic_rollover: binary renewal outcomes, 71.9% observed
   vs p=0.7, byte-reproducible).
 
+- **D — opco at LBO grade (increment 11)**: legacy
+  apply_opco_contract_terms DELETED (no hardcoded lowering paths remain
+  anywhere); all v1 contracts templated with behavior-preserving defaults;
+  new working_capital_policy (DSO/DPO/DIO), capex_line, term_debt
+  (proceeds + ipmt/ppmt interest/principal split), cash_taxes,
+  exit_ebitda (forward-EBITDA multiple via series_sum), acquisition.
+  Benchmark: lbo_buyout vs independent recursive reference.
+
 **Remaining for Workstream D:**
-1. **opco deepening** — working capital (DSO/DPO/DIO), capex/depreciation,
-   debt schedules with sweeps, LBO returns; retire
-   apply_opco_contract_terms (last legacy hardcoded lowering path) the same
-   way CRE's was retired.
-2. **Practitioner review** of all 6 benchmark references (LAUNCH_PLAN risk 3
-   — every case.toml carries a provenance note; references are independent
+1. **Practitioner review** of all 8 benchmark references (risk register 3 —
+   every case.toml carries a provenance note; references are independent
    implementations, not yet Excel/Argus-verified by a practitioner).
-3. Stochastic roadmap items 1–4 (see the differentiator section below).
+2. Stochastic roadmap items 1–4 (see the differentiator section below).
    Deterministic `curve` inputs shipped (increment 9); item 4 is now
    specifically per-trial stochastic rate paths on those curves.
+3. Note: cash sweeps / revolver mechanics for opco debt are intentionally
+   NOT in the pack — they are stateful/sequential and belong to
+   Workstream H's allocation pass (see §6H), not to expression templates.
 
 Grammar gaps remain tracked in **docs/10_implementation_status.md** (the
 implement-or-remove worklist for the 1.0 gate).
