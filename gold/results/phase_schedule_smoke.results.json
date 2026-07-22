@@ -14,6 +14,7 @@
         "currency": "USD"
       },
       "model.irr": -0.614424,
+      "model.moic": 0.24,
       "model.npv": {
         "amount": -395532.755271,
         "currency": "USD"
@@ -22,6 +23,7 @@
         "amount": -380000.0,
         "currency": "USD"
       },
+      "model.wal_years": 1.458333,
       "run.annual_discount_rate": 0.1,
       "stream.legal.construction_draw.total": {
         "amount": -500000.0,

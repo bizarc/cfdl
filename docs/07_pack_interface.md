@@ -558,3 +558,45 @@ schedule_to = "{{contract.term_end}}"
 "lease_up.start_period" = "6"
 "lease_up.months" = "18"
 ```
+
+---
+
+## Declarative domain metrics (metrics.toml)
+
+Packs declare their metric sets via a `metrics = "metrics.toml"` entrypoint;
+the engine host evaluates them after a run (`cfdl run --pack <name>`). Adding
+a domain means adding a metrics.toml, not Rust. Metrics are evaluated in file
+order, so ratios may reference earlier ids.
+
+```toml
+[[metrics]]
+id = "domain.cre.noi"           # output key
+kind = "money"                  # money | number
+op = "sum"                      # sum | negated_sum | ratio
+numerator_streams = ["cre.lease.base_rent", "cre.ops.revenue"]
+denominator_streams = ["cre.ops.expense"]
+formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
+
+[[metrics]]
+id = "domain.cre.debt_service"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["loan.permanent_debt_service"]
+formula = "-sum(numerator_streams)"
+require_positive = true          # omit unless value > 0
+
+[[metrics]]
+id = "domain.cre.dscr"
+kind = "number"
+op = "ratio"
+numerator_metric = "domain.cre.noi"
+denominator_metric = "domain.cre.debt_service"
+formula = "domain.cre.noi / domain.cre.debt_service"
+# ratios are omitted when either input metric is absent or the denominator ~ 0
+```
+
+Engine-universal metrics are computed for every model regardless of pack:
+`model.npv`, `model.irr`, `model.moic`, `model.payback_periods` /
+`model.payback_years` (first period cumulative net cash turns non-negative,
+when the model starts cash-negative), and `model.wal_years` (inflow-weighted
+average life). All operate on the net cash-flow series.

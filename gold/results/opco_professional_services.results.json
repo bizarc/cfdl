@@ -25,6 +25,7 @@
         "amount": 48789395.718323,
         "currency": "USD"
       },
+      "model.wal_years": 4.420183,
       "run.annual_discount_rate": 0.12,
       "stream.exit.pe_sale.total": {
         "amount": 36300000.0,

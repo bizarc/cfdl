@@ -21,6 +21,7 @@
         "amount": 34703307.692308,
         "currency": "USD"
       },
+      "model.wal_years": 4.409392,
       "run.annual_discount_rate": 0.075,
       "stream.ancillary.income.total": {
         "amount": 432000.0,

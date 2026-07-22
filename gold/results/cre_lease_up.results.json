@@ -21,6 +21,7 @@
         "amount": 237500.0,
         "currency": "USD"
       },
+      "model.wal_years": 1.444444,
       "run.annual_discount_rate": 0.1,
       "stream.cre.lease.base_rent.total": {
         "amount": 237500.0,

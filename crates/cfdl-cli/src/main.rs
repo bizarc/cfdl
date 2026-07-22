@@ -111,22 +111,26 @@ fn main() -> Result<()> {
             packs,
             pack,
         } => {
+            let mut registry: Option<cfdl_pack::PackRegistry> = None;
             if let Some(pack_dir) = packs.or_else(default_packs_dir) {
-                if let Err(err) = cfdl_pack::PackRegistry::load_from_dir(&pack_dir) {
-                    emit_run_failure(
-                        cli.json,
-                        vec![RunDiagnostic {
-                            code: "E4004_MISSING_PACK".to_string(),
-                            severity: "error".to_string(),
-                            message: err.message,
-                            file: None,
-                            span: None,
-                            path: None,
-                            hint: None,
-                            notes: vec![format!("pack root: {}", pack_dir.display())],
-                        }],
-                    )?;
-                    std::process::exit(1);
+                match cfdl_pack::PackRegistry::load_from_dir(&pack_dir) {
+                    Ok(loaded) => registry = Some(loaded),
+                    Err(err) => {
+                        emit_run_failure(
+                            cli.json,
+                            vec![RunDiagnostic {
+                                code: "E4004_MISSING_PACK".to_string(),
+                                severity: "error".to_string(),
+                                message: err.message,
+                                file: None,
+                                span: None,
+                                path: None,
+                                hint: None,
+                                notes: vec![format!("pack root: {}", pack_dir.display())],
+                            }],
+                        )?;
+                        std::process::exit(1);
+                    }
                 }
             }
             let parsed_as_of = if let Some(as_of) = as_of {
@@ -212,7 +216,11 @@ fn main() -> Result<()> {
                 }
             };
             if let Some(pack_name) = &pack {
-                results.domain_metrics = cfdl_metrics::compute(pack_name, &results);
+                let specs = registry
+                    .as_ref()
+                    .map(|reg| reg.metric_specs(pack_name))
+                    .unwrap_or_default();
+                results.domain_metrics = cfdl_metrics::compute(pack_name, &specs, &results);
             }
             let json = match serde_json::to_string_pretty(&results) {
                 Ok(json) => json,

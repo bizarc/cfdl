@@ -21,6 +21,7 @@
         "amount": 1241057.556571,
         "currency": "USD"
       },
+      "model.wal_years": 1.03973,
       "run.annual_discount_rate": 0.1,
       "stream.opco.opex.recurring.total": {
         "amount": -1440000.0,

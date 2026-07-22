@@ -13,14 +13,18 @@
         "amount": 50.0,
         "currency": "USD"
       },
+      "model.moic": 2.0,
       "model.npv": {
         "amount": 49.908666,
         "currency": "USD"
       },
+      "model.payback_periods": 5.0,
+      "model.payback_years": 0.013699,
       "model.total": {
         "amount": 50.0,
         "currency": "USD"
       },
+      "model.wal_years": 0.013699,
       "run.annual_discount_rate": 0.1,
       "stream.legal.daily_fee.total": {
         "amount": -50.0,

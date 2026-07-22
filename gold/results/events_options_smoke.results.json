@@ -14,14 +14,18 @@
         "currency": "USD"
       },
       "model.irr": 35.686618,
+      "model.moic": 3.25,
       "model.npv": {
         "amount": 6354.971023,
         "currency": "USD"
       },
+      "model.payback_periods": 6.0,
+      "model.payback_years": 0.5,
       "model.total": {
         "amount": 6750.0,
         "currency": "USD"
       },
+      "model.wal_years": 0.5,
       "run.annual_discount_rate": 0.1,
       "stream.loan.debt_service.total": {
         "amount": -3000.0,

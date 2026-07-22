@@ -14,14 +14,18 @@
         "currency": "USD"
       },
       "model.irr": 1.257675,
+      "model.moic": 21.857407,
       "model.npv": {
         "amount": 3414605.293085,
         "currency": "USD"
       },
+      "model.payback_periods": 24.0,
+      "model.payback_years": 2.0,
       "model.total": {
         "amount": 5631500.0,
         "currency": "USD"
       },
+      "model.wal_years": 5.051776,
       "run.annual_discount_rate": 0.1,
       "stream.cre.construction.draws.total": {
         "amount": -270000.0,

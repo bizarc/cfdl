@@ -1,0 +1,24 @@
+# Operating-company domain metrics, evaluated in order.
+
+[[metrics]]
+id = "domain.opco.revenue"
+kind = "money"
+op = "sum"
+numerator_streams = ["opco.revenue.recurring"]
+formula = "sum(numerator_streams)"
+
+[[metrics]]
+id = "domain.opco.ebitda"
+kind = "money"
+op = "sum"
+numerator_streams = ["opco.revenue.recurring"]
+denominator_streams = ["opco.opex.recurring"]
+formula = "sum(numerator_streams) + sum(denominator_streams)"
+
+[[metrics]]
+id = "domain.opco.ebitda_margin"
+kind = "number"
+op = "ratio"
+numerator_metric = "domain.opco.ebitda"
+denominator_metric = "domain.opco.revenue"
+formula = "domain.opco.ebitda / domain.opco.revenue"
