@@ -152,6 +152,7 @@ pub enum Keyword {
     MonteCarlo,
     Trials,
     Seed,
+    Curve,
 
     True,
     False,
@@ -660,6 +661,7 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "in" => Keyword::In,
         "payoff" => Keyword::Payoff,
         "run" => Keyword::Run,
+        "curve" => Keyword::Curve,
         "deterministic" => Keyword::Deterministic,
         "monte_carlo" => Keyword::MonteCarlo,
         "trials" => Keyword::Trials,

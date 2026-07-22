@@ -1135,6 +1135,38 @@ fn eval_amount_expr(
     }
 }
 
+/// Curve declarations from IR as expression-env curve defs. Dates were
+/// normalized and validated by the compiler; unparseable points are skipped.
+fn ir_curve_defs(ir: &Ir) -> BTreeMap<String, cfdl_expr::CurveDef> {
+    let mut out = BTreeMap::new();
+    for curve in &ir.curves {
+        let points = curve
+            .points
+            .iter()
+            .filter_map(|p| {
+                Date::parse(&p.date).ok().map(|d| {
+                    (
+                        cfdl_expr::Date {
+                            year: d.year,
+                            month: d.month,
+                            day: d.day,
+                        },
+                        p.value,
+                    )
+                })
+            })
+            .collect();
+        out.insert(
+            curve.name.clone(),
+            cfdl_expr::CurveDef {
+                interpolation: curve.interpolation.clone(),
+                points,
+            },
+        );
+    }
+    out
+}
+
 /// Entity-independent environment (model/time/cfg/obs/inputs) used for event
 /// and option evaluation.
 fn build_base_env(
@@ -1164,6 +1196,7 @@ fn build_base_env(
     );
     env.time
         .insert("phase".to_string(), ExprValue::Optional(None));
+    env.curves = ir_curve_defs(ir);
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
     }
@@ -1237,6 +1270,7 @@ fn build_expr_env(
     );
     env.entity
         .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
+    env.curves = ir_curve_defs(ir);
 
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
@@ -1654,6 +1688,27 @@ struct Ir {
     options: Vec<IrOption>,
     #[serde(default)]
     phases: Vec<IrPhase>,
+    #[serde(default)]
+    curves: Vec<IrCurve>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrCurve {
+    name: String,
+    /// "step" (flat-forward) or "linear".
+    #[serde(default = "default_interpolation")]
+    interpolation: String,
+    points: Vec<IrCurvePoint>,
+}
+
+fn default_interpolation() -> String {
+    "step".to_string()
+}
+
+#[derive(Debug, Deserialize)]
+struct IrCurvePoint {
+    date: String,
+    value: f64,
 }
 
 #[derive(Debug, Deserialize)]

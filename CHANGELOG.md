@@ -6,6 +6,30 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.9] - 2026-07-22
+
+### Added
+- **`curve` language concept** (Workstream D increment 9): in-language named
+  date-indexed value curves — `curve sofr [step|linear] { 2026-01: 0.048, ... }`
+  — lowered to a new additive IR `curves` section and looked up in expressions
+  with the `curve_value(name, date)` builtin (step = flat-forward, linear =
+  calendar-day interpolation, clamped outside the range). New diagnostic
+  `E5008_INVALID_CURVE` (duplicate name / duplicate point date / malformed
+  point). Docs: language spec §11.5, EBNF, expression environment, IR schema.
+- **Floating-rate credit pool** `credit.pool_float_io_bullet`: coupon =
+  `clamp(index + margin, rate_floor, rate_cap)` off a model-declared curve;
+  balance dynamics identical to `pool_io_bullet` so the closed form stays
+  exact. Floating level-pay pools remain unsupported (no closed form).
+- Benchmark `benchmarks/credit/float_bridge_pool` ($15mm SOFR+275 bridge pool
+  with a binding floor) with an independent recursive reference; golden
+  fixtures `credit_float_smoke` (linear curve) and invalid `curve_duplicate`.
+
+### Deferred
+- Stochastic (per-trial mean-reverting) rate paths — LAUNCH_PLAN stochastic
+  roadmap item 4. Run-config curve overrides.
+
+---
+
 ## [0.2.8] - 2026-07-22
 
 ### Added

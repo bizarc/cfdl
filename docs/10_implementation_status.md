@@ -19,6 +19,7 @@ notes) · ❌ declared in the EBNF but not parsed.
 | `entity ... : <type> { attrs }` (typed block) | ❌ | typed entities + kv attrs not parsed |
 | `assume <name> = <expr>` | ✅ | evaluated into `inputs.*` |
 | `assume <name> ~ Normal/LogNormal/Uniform/Triangular(..., clip=[..])` | ✅ | per-assumption seeded Monte Carlo; central values in deterministic runs |
+| `curve <name> [step\|linear] { <date>: <num>, ... }` | ✅ | date-indexed value curves; `curve_value(name, date)` lookup (step = flat-forward, linear = calendar-day interpolation) |
 | `contract` (subject, `term A..B`, `terms { k = v }`) | ✅ | terms feed `{{contract.*}}` lowering templates |
 | `contract` `effects` / `parties` / `tags` blocks | 🟡 | tolerated by the parser (block-skipped); not represented in IR |
 | `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions |

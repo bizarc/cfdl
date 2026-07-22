@@ -29,6 +29,7 @@ pub enum Stmt {
     Phase(PhaseStmt),
     Entity(EntityStmt),
     Assume(AssumeStmt),
+    Curve(CurveStmt),
     Contract(ContractStmt),
     Stream(StreamStmt),
     Event(EventStmt),
@@ -135,6 +136,19 @@ pub struct AssumeStmt {
     pub value: Option<String>,
     /// Stochastic form: `assume x ~ Dist(...)`.
     pub dist: Option<AssumeDist>,
+    pub span: Span,
+}
+
+/// `curve <name> [step|linear] { <date>: <number>, ... }` — a named
+/// date-indexed value curve (e.g. a forward rate curve), looked up in
+/// expressions with `curve_value("<name>", <date>)`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct CurveStmt {
+    pub name: String,
+    /// "step" (flat-forward, default) or "linear".
+    pub interpolation: String,
+    /// (date literal, numeric literal) pairs in source order.
+    pub points: Vec<(String, String)>,
     pub span: Span,
 }
 
@@ -358,6 +372,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
+            TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
             TokenKind::Keyword(Keyword::Run) => self.parse_run_stmt().map(Stmt::Run),
@@ -1550,6 +1565,7 @@ impl<'a> Parser<'a> {
                         | TokenKind::Keyword(Keyword::Phase)
                         | TokenKind::Keyword(Keyword::Entity)
                         | TokenKind::Keyword(Keyword::Assume)
+                        | TokenKind::Keyword(Keyword::Curve)
                         | TokenKind::Keyword(Keyword::Contract)
                         | TokenKind::Keyword(Keyword::Stream)
                         | TokenKind::Keyword(Keyword::Event)
@@ -1762,6 +1778,105 @@ impl<'a> Parser<'a> {
         Some((dates, end.span))
     }
 
+    /// `curve <ident> [step|linear] { <date>: <number>[,] ... }`
+    fn parse_curve_stmt(&mut self) -> Option<CurveStmt> {
+        let start = self.expect_keyword(Keyword::Curve, "'curve'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'curve'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let mut interpolation = "step".to_string();
+        if let TokenKind::Ident(ref s) = self.peek().kind {
+            match s.as_str() {
+                "step" | "linear" => {
+                    interpolation = s.clone();
+                    let _ = self.bump();
+                }
+                other => {
+                    self.push_expected(
+                        self.current_span(),
+                        format!("Unknown curve interpolation '{other}' (use 'step' or 'linear')."),
+                    );
+                    return None;
+                }
+            }
+        }
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut points: Vec<(String, String)> = Vec::new();
+        let end;
+        loop {
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::RBrace)) {
+                end = self.bump();
+                break;
+            }
+            let date_tok = self.bump();
+            let date = match date_tok.kind {
+                TokenKind::Date(ref d) => d.clone(),
+                TokenKind::Eof => {
+                    self.push_expected(
+                        date_tok.span,
+                        "Expected <date> or '}' in curve block.".to_string(),
+                    );
+                    return None;
+                }
+                _ => {
+                    self.push_expected(
+                        date_tok.span,
+                        "Expected <date> point in curve block (e.g. 2026-01: 0.043).".to_string(),
+                    );
+                    return None;
+                }
+            };
+            let _ = self.expect_punct(Punct::Colon, "':'")?;
+            let mut negative = false;
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Minus)) {
+                negative = true;
+                let _ = self.bump();
+            }
+            let value_tok = self.bump();
+            let value = match value_tok.kind {
+                TokenKind::Number(ref n) => {
+                    if negative {
+                        format!("-{n}")
+                    } else {
+                        n.clone()
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        value_tok.span,
+                        "Expected <number> after ':' in curve point.".to_string(),
+                    );
+                    return None;
+                }
+            };
+            points.push((date, value));
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                let _ = self.bump();
+            }
+        }
+        if points.is_empty() {
+            self.push_expected(
+                end.span,
+                format!("Curve '{name}' must declare at least one point."),
+            );
+            return None;
+        }
+        Some(CurveStmt {
+            name,
+            interpolation,
+            points,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn synchronize_to_next_statement(&mut self) {
         while !self.is_eof() {
             match self.peek().kind {
@@ -1773,6 +1888,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Phase)
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
+                | TokenKind::Keyword(Keyword::Curve)
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Event)
                 | TokenKind::Keyword(Keyword::Option)
@@ -1913,6 +2029,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Phase(s) => s.span,
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
+        Stmt::Curve(s) => s.span,
         Stmt::Run(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
@@ -2019,6 +2136,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::MonteCarlo => "monte_carlo",
         Keyword::Trials => "trials",
         Keyword::Seed => "seed",
+        Keyword::Curve => "curve",
 
         Keyword::True => "true",
         Keyword::False => "false",
@@ -2103,6 +2221,64 @@ phase p from 2026-01 to 2026-02
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
         assert!(matches!(ast.statements[2], Stmt::Phase(_)));
+    }
+
+    #[test]
+    fn parses_curve_statement() {
+        let src = r#"version 0.1
+model "demo"
+curve sofr {
+  2026-01: 0.045
+  2026-07: 0.042, 2027-01-15: 0.040
+}
+curve ramp linear { 2026-01: 0.01 }
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", src, &tokens);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let ast = result.ast.expect("AST expected");
+        let Stmt::Curve(curve) = &ast.statements[2] else {
+            panic!("expected curve statement");
+        };
+        assert_eq!(curve.name, "sofr");
+        assert_eq!(curve.interpolation, "step");
+        assert_eq!(
+            curve.points,
+            vec![
+                ("2026-01".to_string(), "0.045".to_string()),
+                ("2026-07".to_string(), "0.042".to_string()),
+                ("2027-01-15".to_string(), "0.040".to_string()),
+            ]
+        );
+        let Stmt::Curve(ramp) = &ast.statements[3] else {
+            panic!("expected curve statement");
+        };
+        assert_eq!(ramp.interpolation, "linear");
+    }
+
+    #[test]
+    fn curve_statement_errors() {
+        for (src, needle) in [
+            ("curve sofr { }", "at least one point"),
+            (
+                "curve sofr cubic { 2026-01: 0.01 }",
+                "Unknown curve interpolation",
+            ),
+            ("curve sofr { 42: 0.01 }", "Expected <date> point"),
+            ("curve sofr { 2026-01: x }", "Expected <number>"),
+        ] {
+            let (tokens, _) = lex(src);
+            let result = parse("model.cfdl", src, &tokens);
+            assert!(
+                result
+                    .diagnostics
+                    .iter()
+                    .any(|d| d.message.contains(needle)),
+                "{src}: {:?}",
+                result.diagnostics
+            );
+        }
     }
 
     #[test]

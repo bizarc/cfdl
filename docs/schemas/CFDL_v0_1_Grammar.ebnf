@@ -11,6 +11,7 @@ statement       = version_stmt
                 | phase_stmt
                 | entity_stmt
                 | assume_stmt
+                | curve_stmt
                 | contract_stmt
                 | stream_stmt
                 | event_stmt
@@ -41,6 +42,11 @@ kv_stmt         = IDENT literal_or_expr ;
 
 (* --- assumptions --- *)
 assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
+
+(* --- curves: named date-indexed values, looked up via curve_value() --- *)
+curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
+curve_interp    = "step" | "linear" ;
+curve_point     = DATE ":" [ "-" ] NUMBER ;
 
 dist_expr       = dist_name "(" [ dist_arg { "," dist_arg } ] ")" ;
 dist_name       = "Normal" | "LogNormal" | "Uniform" | "Triangular" ;

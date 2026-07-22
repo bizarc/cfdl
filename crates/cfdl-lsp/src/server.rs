@@ -1082,6 +1082,7 @@ pub const EXPR_BUILTINS: &[(&str, &str, &str)] = &[
     ("ppmt", "ppmt(rate, per, nper, pv, [fv])", "Principal portion of payment `per` (1-based) on a level-pay annuity (Excel PPMT)."),
     ("macrs_rate", "macrs_rate(year, life)", "MACRS GDS half-year depreciation percentage (IRS Pub 946); 5/7/15/20-year property, 0-based year."),
     ("cpr_to_smm", "cpr_to_smm(cpr)", "Convert an annual prepayment rate (CPR) to the single-monthly mortality rate (SMM)."),
+    ("curve_value", "curve_value(name, date)", "Look up a model-declared `curve` at a date (step = flat-forward, or linear interpolation per the curve's declaration)."),
     ("date", "date(y, m, d)", "Construct a calendar date."),
     ("edate", "edate(d, months)", "Shift a date by whole months, clamping to month end (Excel EDATE)."),
     ("eomonth", "eomonth(d, months)", "End of the month `months` away (Excel EOMONTH)."),

@@ -270,6 +270,8 @@ struct Ir {
     phases: Vec<IrPhase>,
     entities: Vec<IrEntity>,
     assumptions: IrAssumptions,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    curves: Vec<IrCurve>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     events: Vec<serde_json::Value>,
@@ -304,6 +306,21 @@ fn is_zero_u32(v: &u32) -> bool {
 struct IrDateRange {
     start: String,
     end: String,
+}
+
+#[derive(Debug, Serialize)]
+struct IrCurve {
+    name: String,
+    /// "step" (flat-forward) or "linear".
+    interpolation: String,
+    /// Points sorted ascending by date.
+    points: Vec<IrCurvePoint>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrCurvePoint {
+    date: String,
+    value: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -685,6 +702,13 @@ fn build_ir(
         return Err(diagnostics);
     }
 
+    let (ir_curves, curve_diags) = lower_curves(resolve_output);
+    if !curve_diags.is_empty() {
+        let mut diagnostics = curve_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let (ir_events, ir_options, event_diags) = lower_events_options(resolve_output, &id_seed);
     if !event_diags.is_empty() {
         let mut diagnostics = event_diags;
@@ -713,6 +737,7 @@ fn build_ir(
             constants: assume_constants,
             random: assume_random,
         },
+        curves: ir_curves,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -1701,6 +1726,93 @@ type AssumeMaps = (
 
 /// Lower `assume` statements into IR assumptions (constants + random), per
 /// docs/schemas/ir.schema.json $defs AssumeConstant / AssumeRandom.
+/// Lower `curve` statements into IR curves: dedupe names, sort points by
+/// date, reject duplicate point dates.
+fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>, Vec<Diagnostic>) {
+    let mut curves: Vec<IrCurve> = Vec::new();
+    let mut diags = Vec::new();
+
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Curve(curve) = &source_stmt.statement else {
+            continue;
+        };
+        let make_diag = |message: String| Diagnostic {
+            code: "E5008_INVALID_CURVE".to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(source_stmt.file.clone()),
+            span: Some(map_span(curve.span)),
+            path: None,
+            hint: None,
+            notes: vec![format!("curve '{}'", curve.name)],
+        };
+
+        if curves.iter().any(|c| c.name == curve.name) {
+            diags.push(make_diag(format!(
+                "Curve '{}' is declared more than once.",
+                curve.name
+            )));
+            continue;
+        }
+
+        // Sortable key: month-only dates ("2026-01") normalize to day 1.
+        let sort_key = |date: &str| -> Option<(i32, u32, u32)> {
+            let mut parts = date.split('-');
+            let year = parts.next()?.parse().ok()?;
+            let month = parts.next()?.parse().ok()?;
+            let day = match parts.next() {
+                Some(d) => d.parse().ok()?,
+                None => 1,
+            };
+            Some((year, month, day))
+        };
+
+        let mut points: Vec<((i32, u32, u32), IrCurvePoint)> = Vec::new();
+        let mut bad = false;
+        for (date, raw_value) in &curve.points {
+            let Some(key) = sort_key(date) else {
+                diags.push(make_diag(format!("Curve point date '{date}' is invalid.")));
+                bad = true;
+                break;
+            };
+            let Ok(value) = raw_value.parse::<f64>() else {
+                diags.push(make_diag(format!(
+                    "Curve point value '{raw_value}' is not numeric."
+                )));
+                bad = true;
+                break;
+            };
+            if points.iter().any(|(k, _)| *k == key) {
+                diags.push(make_diag(format!(
+                    "Curve '{}' declares more than one point for date '{date}'.",
+                    curve.name
+                )));
+                bad = true;
+                break;
+            }
+            points.push((
+                key,
+                IrCurvePoint {
+                    date: normalize_date(date),
+                    value,
+                },
+            ));
+        }
+        if bad {
+            continue;
+        }
+        points.sort_by_key(|(key, _)| *key);
+        curves.push(IrCurve {
+            name: curve.name.clone(),
+            interpolation: curve.interpolation.clone(),
+            points: points.into_iter().map(|(_, p)| p).collect(),
+        });
+    }
+
+    curves.sort_by(|a, b| a.name.cmp(&b.name));
+    (curves, diags)
+}
+
 fn lower_assumptions(resolve_output: &cfdl_resolver::ResolveOutput) -> AssumeMaps {
     let mut constants = BTreeMap::new();
     let mut random = BTreeMap::new();

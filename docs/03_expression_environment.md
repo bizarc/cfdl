@@ -82,6 +82,13 @@ recovery period).
 
 Credit: `cpr_to_smm(cpr)`.
 
+Curves: `curve_value(name, date)` looks up a model-declared `curve`
+statement at a date. `step` curves (the default) are flat-forward: the last
+point at or before the query date (the first value before the first point).
+`linear` curves interpolate linearly in calendar days between bracketing
+points and clamp flat outside the declared range. Referencing an undeclared
+curve is an evaluation error.
+
 Cross-stream series (phase-2 streams): `series_sum(name, from_t, to_t)` /
 `series_avg(name, from_t, to_t)` aggregate another stream's signed per-period
 amounts over an inclusive period window (`prefix.*` wildcards supported).
