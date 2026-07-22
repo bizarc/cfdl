@@ -76,6 +76,9 @@ pub struct TimeStmt {
     pub cadence: Cadence,
     pub from: String,
     pub periods: u32,
+    /// Valuation projection tail (`project <n>`): extra periods computed for
+    /// series lookups (e.g. forward NOI) but excluded from cash results.
+    pub projection: u32,
     pub span: Span,
 }
 
@@ -456,11 +459,42 @@ impl<'a> Parser<'a> {
                 return None;
             }
         };
+        let mut projection = 0_u32;
+        let mut end_span = periods_tok.span;
+        // Contextual keyword: `project` stays a plain identifier elsewhere
+        // (e.g. `entity project microgrid`).
+        if matches!(self.peek().kind, TokenKind::Ident(ref word) if word == "project") {
+            let _ = self.bump();
+            let proj_tok = self.bump();
+            match proj_tok.kind {
+                TokenKind::Number(ref n) => match n.parse::<u32>() {
+                    Ok(value) => {
+                        projection = value;
+                        end_span = proj_tok.span;
+                    }
+                    Err(_) => {
+                        self.push_expected(
+                            proj_tok.span,
+                            "Expected token <int> after 'project'.".to_string(),
+                        );
+                        return None;
+                    }
+                },
+                _ => {
+                    self.push_expected(
+                        proj_tok.span,
+                        "Expected token <int> after 'project'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
         Some(TimeStmt {
             cadence,
             from,
             periods,
-            span: merge_spans(start.span, periods_tok.span),
+            projection,
+            span: merge_spans(start.span, end_span),
         })
     }
 

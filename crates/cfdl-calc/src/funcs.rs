@@ -629,3 +629,52 @@ fn roll_convention(arg: &Arg) -> Result<RollConvention, CalcError> {
         )),
     }
 }
+
+/// `series_sum(name, from_t, to_t)` / `series_avg(...)`: cross-stream series
+/// aggregation resolved by the host via `Env::series_aggregate`.
+pub(crate) fn series_call(
+    name: &str,
+    args: &[Arg],
+    span: Span,
+    env: &dyn crate::eval::Env,
+) -> Result<Value, CalcError> {
+    let [series, from, to] = exactly::<3>(name, args, span)?;
+    let series_name = match &series.0 {
+        Value::Text(s) => s.clone(),
+        other => {
+            return Err(CalcError::new(
+                format!(
+                    "{name} expects a series name text, got {}",
+                    other.type_name()
+                ),
+                Some(series.1),
+            ))
+        }
+    };
+    let (from, to) = (int(from)?, int(to)?);
+    let mean = name == "series_avg";
+    env.series_aggregate(&series_name, from, to, mean)
+        .map(Value::Number)
+        .ok_or_else(|| {
+            CalcError::new(
+                format!("{name}: series `{series_name}` is not available in this context"),
+                Some(series.1),
+            )
+        })
+}
+
+/// Does the expression call any of the given function names? Used by the
+/// engine to split stream evaluation into phases.
+pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {
+    use crate::ExprKind;
+    match &expr.kind {
+        ExprKind::Call { name, args } => {
+            names.contains(&name.as_str()) || args.iter().any(|a| expr_calls_any(a, names))
+        }
+        ExprKind::Unary { expr, .. } => expr_calls_any(expr, names),
+        ExprKind::Binary { lhs, rhs, .. } => {
+            expr_calls_any(lhs, names) || expr_calls_any(rhs, names)
+        }
+        _ => false,
+    }
+}

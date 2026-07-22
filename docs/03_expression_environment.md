@@ -82,6 +82,15 @@ recovery period).
 
 Credit: `cpr_to_smm(cpr)`.
 
+Cross-stream series (phase-2 streams): `series_sum(name, from_t, to_t)` /
+`series_avg(name, from_t, to_t)` aggregate another stream's signed per-period
+amounts over an inclusive period window (`prefix.*` wildcards supported).
+Streams calling these evaluate in a second phase against finished phase-1
+series — phase-2 streams cannot reference each other, so cycles are
+impossible by construction. Windows may extend into the projection tail
+(`time ... project <n>`), which is computed for valuation lookups but
+excluded from cash results and NPV.
+
 Dates: `date(y, m, d)`, `edate(d, months)`, `eomonth(d, months)`,
 `year_frac(d1, d2, basis)` with basis `"30/360"` (US/bond), `"act/360"`,
 `"act/365"` per ISDA/SIFMA definitions. Date arithmetic: `d2 - d1` yields

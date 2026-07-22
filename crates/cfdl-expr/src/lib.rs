@@ -56,6 +56,10 @@ pub struct ExprEnv {
     pub obs: BTreeMap<String, Value>,
     /// Assumption values (`assume` statements), referenced as `inputs.<name>`.
     pub inputs: BTreeMap<String, Value>,
+    /// Per-period stream series (signed amounts) available to `series_sum` /
+    /// `series_avg`. Populated by the engine for phase-2 stream evaluation;
+    /// empty elsewhere.
+    pub series: BTreeMap<String, Vec<f64>>,
 }
 
 impl ExprEnv {
@@ -67,6 +71,7 @@ impl ExprEnv {
             cfg: BTreeMap::new(),
             obs: BTreeMap::new(),
             inputs: BTreeMap::new(),
+            series: BTreeMap::new(),
         }
     }
 }
@@ -131,6 +136,12 @@ pub fn compile_expr(src: &str) -> Result<CompiledExpr, ExprError> {
         .map_err(parse_error)
 }
 
+/// Does this expression call `series_sum` / `series_avg`? The engine uses
+/// this to schedule the stream into the second evaluation phase.
+pub fn uses_series(compiled: &CompiledExpr) -> bool {
+    cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
+}
+
 pub fn eval(compiled: &CompiledExpr, env: &ExprEnv) -> Result<Value, ExprError> {
     eval_with_mode(compiled, env, Mode::Decimal)
 }
@@ -190,6 +201,52 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         match unwrap_optional(current) {
             Some(v) => domain_to_calc(v),
             None => Some(cfdl_calc::Value::Null),
+        }
+    }
+
+    fn series_aggregate(&self, name: &str, from: i64, to: i64, mean: bool) -> Option<Decimal> {
+        if self.env.series.is_empty() {
+            return None;
+        }
+        let matched = self.matching_series(name);
+        if matched.is_empty() {
+            // Unknown series name: aggregate over nothing = 0 (streams that
+            // never lowered contribute nothing, mirroring metric sums).
+            return Decimal::from_f64(0.0);
+        }
+        // Inclusive window, clamped to available periods (projection tail
+        // included). The divisor for series_avg is the REQUESTED window
+        // length, so a window that extends past the data averages the
+        // available amounts over the full window.
+        let mut total = 0.0_f64;
+        for series in matched {
+            let lo = from.max(0) as usize;
+            let hi = to.min(series.len() as i64 - 1);
+            if hi < lo as i64 {
+                continue;
+            }
+            total += series[lo..=hi as usize].iter().sum::<f64>();
+        }
+        if mean {
+            let window = (to - from + 1).max(1);
+            total /= window as f64;
+        }
+        Decimal::from_f64(total)
+    }
+}
+
+impl EnvAdapter<'_> {
+    fn matching_series(&self, name: &str) -> Vec<&Vec<f64>> {
+        if let Some(prefix) = name.strip_suffix(".*") {
+            let dot_prefix = format!("{prefix}.");
+            self.env
+                .series
+                .iter()
+                .filter(|(key, _)| key.as_str() == prefix || key.starts_with(&dot_prefix))
+                .map(|(_, v)| v)
+                .collect()
+        } else {
+            self.env.series.get(name).into_iter().collect()
         }
     }
 }

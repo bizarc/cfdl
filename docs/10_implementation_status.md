@@ -12,6 +12,8 @@ notes) · ❌ declared in the EBNF but not parsed.
 | `version`, `model` (+`currency`) | ✅ | |
 | `use pack`, `import ... as` | ✅ | |
 | `time calendar <freq> from <date> for <n>` | ✅ | daily/monthly/quarterly/annual |
+| `time ... project <n>` (valuation projection tail) | ✅ | computed for series lookups; excluded from cash/NPV |
+| `series_sum` / `series_avg` (cross-stream references) | ✅ | two-phase evaluation; phase-2 streams cannot reference each other |
 | `phase <name> from .. to ..` | ✅ | named in IR; gates option exercise |
 | `entity <ns> <name>` | ✅ | basic form |
 | `entity ... : <type> { attrs }` (typed block) | ❌ | typed entities + kv attrs not parsed |

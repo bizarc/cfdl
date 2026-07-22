@@ -23,6 +23,7 @@ mod value;
 
 pub use date::{CalcDate, DayCount, HolidayCalendar, RollConvention};
 pub use eval::{eval, Env, MapEnv, Mode};
+pub use funcs::expr_calls_any;
 pub use parser::{parse, BinOp, Expr, ExprKind, UnOp};
 pub use token::Span;
 pub use value::Value;
