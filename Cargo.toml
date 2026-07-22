@@ -6,6 +6,7 @@ members = [
   "crates/cfdl-resolver",
   "crates/cfdl-validate",
   "crates/cfdl-expr",
+  "crates/cfdl-calc",
   "crates/cfdl-pack",
   "crates/cfdl-compile",
   "crates/cfdl-engine",
