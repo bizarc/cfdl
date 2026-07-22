@@ -27,7 +27,7 @@ Excel-grade reference models.
 | Pack | Domain | Guide |
 |---|---|---|
 | `energy` | Renewables & project finance: PPA/merchant revenue, storage, ITC/PTC, MACRS, debt service | [Energy pack guide](/cookbooks/energy) |
-| `cre` | Commercial real estate at Argus-grade fidelity: lease-by-lease, rollover, recoveries, exit on forward NOI | [CRE pack guide](/cookbooks/cre) |
+| `cre` | Commercial real estate at institutional DCF fidelity: lease-by-lease, rollover, recoveries, exit on forward NOI | [CRE pack guide](/cookbooks/cre) |
 | `credit` | Loan pools: CPR/CDR, severity, recovery lag, floaters off rate curves, purchase pricing | [Credit pack guide](/cookbooks/credit) |
 | `opco` | Operating businesses / LBO: working capital, capex, term debt, cash taxes, trailing-EBITDA exit | [OpCo pack guide](/cookbooks/opco) |
 

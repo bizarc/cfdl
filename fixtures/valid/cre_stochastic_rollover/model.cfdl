@@ -4,7 +4,7 @@ time calendar monthly from 2031-01 for 24
 
 entity asset tower
 
-// The Argus expected-value blend replaced by a BINARY renewal outcome per
+// The conventional expected-value blend replaced by a BINARY renewal outcome per
 // Monte Carlo trial: one uniform draw per trial decides renew vs re-lease,
 // so trial results show the true two-cluster distribution (rent level,
 // downtime, and turnover cost all consistent within a scenario) instead of

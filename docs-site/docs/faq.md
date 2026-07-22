@@ -14,7 +14,7 @@ third parties as a hosted or embedded commercial product requires a
 commercial license. Each released version converts to Apache 2.0 four years
 after release. Details: [Licensing](licensing).
 
-## How is this different from Excel or Argus?
+## How is this different from spreadsheets and appraisal-grade DCF tools?
 
 Three ways. **Declarative and deterministic**: a CFDL model is a text file
 that always produces the same IR and results — diffable, hashable,
