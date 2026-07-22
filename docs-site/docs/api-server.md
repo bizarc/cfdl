@@ -33,16 +33,6 @@ embedded pack's domain metrics.
 
 ## Run it
 
-```bash
-cargo run -p cfdl-server        # binds CFDL_SERVER_ADDR (default 0.0.0.0:8080)
-curl localhost:8080/healthz
-```
-
-Or as a container:
-
-```bash
-docker build -f crates/cfdl-server/Dockerfile -t cfdl-server .
-docker run -p 8080:8080 cfdl-server
-```
-
-See `crates/cfdl-server/README.md` in the repository for details.
+See [Run the API Server](install/api-server) for Docker and from-source
+setup, configuration, and verification. Details also live in
+`crates/cfdl-server/README.md` in the repository.
