@@ -6,6 +6,28 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.8] - 2026-07-22
+
+### Added
+- **Credit / lending pack v0.1** (Workstream D increment 8): `packs/credit/` with
+  `credit.pool_level_pay` (level-pay pool with CPR prepayments, CDR defaults,
+  severity + recovery lag), `credit.pool_io_bullet` (IO pool, bullet at maturity),
+  and `credit.purchase`. Streams use the exact closed-form pool-factor
+  decomposition (the expression dialect has no loops); conventions documented in
+  `lowering/rules.toml` and the pack README.
+- Domain metrics: `domain.credit.interest/principal/recoveries/collections/`
+  `purchase/collections_multiple`.
+- Benchmarks `benchmarks/credit/level_pay_pool` and `benchmarks/credit/io_bullet_loan`
+  with independent month-by-month recursive references (pending practitioner
+  Excel review); both match the closed-form engine output within $0.01/period.
+- Golden fixture `credit_pool_smoke` (suite now 56 checks).
+
+### Deferred
+- Floating-rate loans off rate curves: needs the `curve` input concept and
+  per-trial rate paths (LAUNCH_PLAN stochastic roadmap item 4).
+
+---
+
 ## [0.2.7] - 2026-02-19
 
 ### Added

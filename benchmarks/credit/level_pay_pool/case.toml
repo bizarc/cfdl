@@ -1,0 +1,8 @@
+# Benchmark case: $25mm level-pay auto pool, 6.5% / 120mo, 8 CPR, 2 CDR,
+# 35% severity, 6mo recovery lag, purchased at par.
+# The pack lowers to the closed-form pool-factor expressions; the reference
+# is an independent month-by-month recursion of the same convention.
+# Reference: reference_gen.py (independent implementation).
+# Status: pending practitioner Excel review (LAUNCH_PLAN risk 3).
+pack = "credit"
+period_tolerance = 0.01

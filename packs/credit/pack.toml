@@ -1,0 +1,8 @@
+name = "credit"
+version = "0.1.0"
+description = "Credit / lending pack v0.1: fixed-rate loan pools (level-pay, IO/bullet) with CPR prepayments, CDR defaults, severity and recovery lag."
+
+[entrypoints]
+aliases = "aliases.toml"
+lowering = "lowering/rules.toml"
+metrics = "metrics.toml"
