@@ -33,6 +33,12 @@ This project follows Semantic Versioning: https://semver.org/
   (config dict/path/string equivalence, packs_dir inheritance, viz import
   guard). CI now installs `python/[dev,viz]` and runs the full suite on
   three OSes.
+- **Wheel matrix CI** (E3): `.github/workflows/python-wheels.yml` builds abi3
+  wheels via maturin-action (manylinux2014 x86_64 + aarch64, macOS
+  universal2, Windows x64) plus an sdist, and a smoke job installs the built
+  Linux wheel and runs the SDK suite against it. Triggers on `workflow_dispatch`
+  and `v*` tags; **no publish step** (rule 5.6). Local `make py-wheel` builds
+  from `python/` so the `module-name` remap applies.
 
 ---
 

@@ -1,0 +1,100 @@
+name: Python Wheels
+
+# Build-only abi3 wheels for the cfdl-sdk Python package.
+#
+# Per LAUNCH_PLAN rule 5.6, nothing is published here — wheels are uploaded as
+# CI artifacts only. Publishing to PyPI is a human-approved, separate step.
+# Regular per-push compile-checking lives in ci.yml (editable install + pytest);
+# this workflow runs the full manylinux/universal2 matrix on tags and on demand.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          manylinux: "2014"
+          working-directory: python
+          args: --release --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: python/dist/*.whl
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: universal2-apple-darwin
+          working-directory: python
+          args: --release --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-universal2
+          path: python/dist/*.whl
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: x64
+          working-directory: python
+          args: --release --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-x64
+          path: python/dist/*.whl
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          working-directory: python
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: python/dist/*.tar.gz
+
+  smoke:
+    # Install the built Linux wheel (not editable) and run the SDK test suite —
+    # proves the wheel actually ships the abi3 native module.
+    needs: linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-linux-x86_64
+          path: dist
+      - name: Install wheel + test deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas pytest dist/*.whl
+      - name: Run SDK tests against the installed wheel
+        run: python -m pytest -q python/tests
