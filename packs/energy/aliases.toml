@@ -1,0 +1,9 @@
+[aliases]
+PPA = "energy.ppa"
+Merchant = "energy.merchant"
+Storage = "energy.storage_arbitrage"
+Capacity = "energy.capacity"
+OM = "energy.om"
+ITC = "energy.itc"
+Capex = "energy.capex"
+Debt = "energy.debt_service"
