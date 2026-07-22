@@ -813,7 +813,7 @@ fn filter_pack_aware_validation(
             if pack
                 .lowering_rules
                 .iter()
-                .any(|rule| rule.contract_name == contract.name)
+                .any(|rule| rule_matches_contract(&rule.contract_name, &contract.name))
             {
                 Some((source_stmt.file.clone(), contract.span))
             } else {
@@ -874,10 +874,10 @@ fn lower_contract_streams(
             continue;
         }
         for rule in &rules {
-            if rule.contract_name != contract.name {
+            if !rule_matches_contract(&rule.contract_name, &contract.name) {
                 continue;
             }
-            if !is_qualified_name(&rule.stream_name) {
+            if !rule.stream_name.contains("{{") && !is_qualified_name(&rule.stream_name) {
                 diagnostics.push(lowering_rule_diag(
                     "E5004_INVALID_LOWERING_RULE",
                     &format!(
@@ -919,6 +919,17 @@ fn lower_contract_streams(
                 let from_contract = match key {
                     "term_start" => contract.term_start.as_deref().map(normalize_date),
                     "term_end" => contract.term_end.as_deref().map(normalize_date),
+                    // Full contract name / the suffix beyond the rule's
+                    // contract_name (e.g. "tenant_a") for per-instance
+                    // stream naming.
+                    "name" => Some(contract.name.clone()),
+                    "suffix" => Some(
+                        contract
+                            .name
+                            .strip_prefix(&rule.contract_name)
+                            .map(|rest| rest.trim_start_matches('.').to_string())
+                            .unwrap_or_default(),
+                    ),
                     _ => contract.terms.get(key).map(|term| term.value.clone()),
                 };
                 from_contract.or_else(|| rule.defaults.get(key).cloned())
@@ -929,6 +940,7 @@ fn lower_contract_streams(
                 (&rule.amount_expr, &mut expanded_rule.amount_expr),
                 (&rule.schedule_from, &mut expanded_rule.schedule_from),
                 (&rule.schedule_to, &mut expanded_rule.schedule_to),
+                (&rule.stream_name, &mut expanded_rule.stream_name),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -953,6 +965,18 @@ fn lower_contract_streams(
                         contract.span,
                     ));
                 }
+                continue;
+            }
+            if !is_qualified_name(&expanded_rule.stream_name) {
+                diagnostics.push(lowering_rule_diag(
+                    "E5004_INVALID_LOWERING_RULE",
+                    &format!(
+                        "Pack lowering rule '{}' expanded to invalid stream_name '{}' for contract '{}'; expected dotted qualified name (suffix the contract, e.g. {}.unit_a).",
+                        rule.id, expanded_rule.stream_name, contract.name, rule.contract_name
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
                 continue;
             }
             let rule = &expanded_rule;
@@ -1478,6 +1502,16 @@ fn valid_contract_term_range(
         return false;
     }
     start.as_str() >= timeline_start && end.as_str() <= timeline_end
+}
+
+/// A rule matches its exact contract name, or any suffixed instance of it
+/// (`cre.lease_unit` matches `cre.lease_unit.tenant_a`) so one rule can lower
+/// many per-tenant/per-unit contracts.
+fn rule_matches_contract(rule_contract: &str, contract_name: &str) -> bool {
+    contract_name == rule_contract
+        || contract_name
+            .strip_prefix(rule_contract)
+            .is_some_and(|rest| rest.starts_with('.'))
 }
 
 fn lower_pack_rule_schedule(

@@ -1,0 +1,22 @@
+{
+  "model.npv": {
+    "value": 5769934.39,
+    "tolerance": 1.0
+  },
+  "domain.cre.noi": {
+    "value": 4611241.23,
+    "tolerance": 1.0
+  },
+  "domain.cre.leasing_costs": {
+    "value": 525000.0,
+    "tolerance": 1.0
+  },
+  "domain.cre.debt_service": {
+    "value": 4421429.94,
+    "tolerance": 1.0
+  },
+  "domain.cre.dscr": {
+    "value": 1.04293,
+    "tolerance": 0.0001
+  }
+}

@@ -141,6 +141,45 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
                     CalcError::new(format!("invalid date {y:04}-{m:02}-{d:02}"), Some(span))
                 })
         }
+        // parse_date("2027-07-01" | "2027-07"): ISO date text to a date value.
+        "parse_date" => {
+            let arg = one(name, args, span)?;
+            let Value::Text(raw) = &arg.0 else {
+                return Err(CalcError::new(
+                    format!("parse_date expects text, got {}", arg.0.type_name()),
+                    Some(arg.1),
+                ));
+            };
+            let parts: Vec<&str> = raw.split('-').collect();
+            let parsed = match parts.as_slice() {
+                [y, m, d] => (y.parse::<i32>(), m.parse::<u32>(), d.parse::<u32>()),
+                [y, m] => (y.parse::<i32>(), m.parse::<u32>(), Ok(1)),
+                _ => {
+                    return Err(CalcError::new(
+                        format!("parse_date: invalid ISO date `{raw}`"),
+                        Some(arg.1),
+                    ))
+                }
+            };
+            match parsed {
+                (Ok(y), Ok(m), Ok(d)) => CalcDate::new(y, m, d).map(Value::Date).ok_or_else(|| {
+                    CalcError::new(format!("parse_date: invalid date `{raw}`"), Some(arg.1))
+                }),
+                _ => Err(CalcError::new(
+                    format!("parse_date: invalid ISO date `{raw}`"),
+                    Some(arg.1),
+                )),
+            }
+        }
+        // Whole calendar months from d1 to d2 (day-of-month ignored):
+        // months_between(date(2026,1,15), date(2026,3,1)) == 2.
+        "months_between" => {
+            let [d1, d2] = exactly::<2>(name, args, span)?;
+            let (a, b) = (date(d1)?, date(d2)?);
+            let months =
+                (b.year() as i64 - a.year() as i64) * 12 + (b.month() as i64 - a.month() as i64);
+            Ok(Value::Number(Decimal::from(months)))
+        }
         "edate" => {
             let [d, m] = exactly::<2>(name, args, span)?;
             Ok(Value::Date(date(d)?.add_months(int(m)? as i32)))

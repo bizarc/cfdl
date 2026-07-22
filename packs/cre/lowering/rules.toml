@@ -60,3 +60,140 @@ amount_expr = "180000 / 0.06"
 schedule_kind = "on_date"
 schedule_from = "2031-12"
 schedule_to = ""
+
+# ---------------------------------------------------------------------------
+# Argus-parity lease-by-lease contract types (v2, template-driven).
+# Lease-anniversary anchoring: lease_t = months_between(term_start, time.date).
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "cre_lease_unit_base_rent_v2"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.base_rent.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Free rent burns off first; escalation steps on lease anniversaries.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.free_rent_months}}, 0, ({{contract.rent_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+free_rent_months = "0"
+escalation = "0"
+
+[[rules]]
+id = "cre_lease_unit_recoveries_v2"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.recoveries.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Expense reimbursement above the stop, at the tenant's pro-rata share.
+# Opex escalates on the lease's own anniversary of the PROPERTY schedule:
+# anchored to the recovery base year via opex_year/opex_escalation terms.
+amount_expr = "max(0, {{contract.opex_year}} * pow(1 + {{contract.opex_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+expense_stop_year = "0"
+opex_year = "0"
+opex_escalation = "0"
+pro_rata_share = "0"
+
+[[rules]]
+id = "cre_lease_unit_ti_lc_v2"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.ti_lc.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.ti_total}} + {{contract.lc_total}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+ti_total = "0"
+lc_total = "0"
+
+[[rules]]
+id = "cre_rollover_rent_v2"
+contract_name = "cre.rollover"
+stream_name = "cre.rollover.rent.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Market leasing assumption after expiry: renewal-probability-weighted rent,
+# escalating on the rollover window's anniversaries. The analyst sets the
+# window start (term_start) to reflect expected downtime.
+amount_expr = "({{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+market_escalation = "0"
+
+[[rules]]
+id = "cre_rollover_ti_lc_v2"
+contract_name = "cre.rollover"
+stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+# Blended turnover costs at the window start.
+amount_expr = "{{contract.renewal_probability}} * {{contract.renewal_ti_lc}} + (1 - {{contract.renewal_probability}}) * {{contract.new_ti_lc}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+renewal_ti_lc = "0"
+new_ti_lc = "0"
+
+[[rules]]
+id = "cre_vacancy_loss_v2"
+contract_name = "cre.vacancy_loss"
+stream_name = "cre.vacancy.loss"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.rate}} * {{contract.potential_gross_year}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+id = "cre_property_opex_v2"
+contract_name = "cre.property_opex"
+stream_name = "cre.property.opex"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "({{contract.opex_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+
+[[rules]]
+id = "cre_exit_forward_noi_v2"
+contract_name = "cre.exit"
+stream_name = "cre.exit.proceeds"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Sale at term_start: forward-12-month NOI / exit cap, net of selling costs.
+amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"
