@@ -232,6 +232,42 @@ const docSpecs = [
       title: '"Pack Interface (v0.1)"',
       slug: '"/language-reference/pack-interface"'
     }
+  },
+  {
+    source: "docs/03_expression_environment.md",
+    output: "language-reference/expression-environment.md",
+    frontmatter: {
+      id: "expression-environment",
+      title: '"Expression Environment (v0.1)"',
+      slug: '"/language-reference/expression-environment"'
+    }
+  },
+  {
+    source: "docs/05_ir_schema.md",
+    output: "language-reference/ir-schema.md",
+    frontmatter: {
+      id: "ir-schema",
+      title: '"IR Schema (v0.1)"',
+      slug: '"/language-reference/ir-schema"'
+    }
+  },
+  {
+    source: "docs/06_results_schema.md",
+    output: "language-reference/results-schema.md",
+    frontmatter: {
+      id: "results-schema",
+      title: '"Results Schema (v0.1)"',
+      slug: '"/language-reference/results-schema"'
+    }
+  },
+  {
+    source: "docs/10_implementation_status.md",
+    output: "language-reference/implementation-status.md",
+    frontmatter: {
+      id: "implementation-status",
+      title: '"Implementation Status"',
+      slug: '"/language-reference/implementation-status"'
+    }
   }
 ];
 
@@ -404,6 +440,122 @@ const referenceIndex = [
 ].join("\n");
 
 writeGenerated("reference.md", referenceIndex);
+
+// --- Cookbooks: one page per pack, synced from packs/<pack>/README.md -------
+const cookbookPacks = ["energy", "cre", "credit", "opco"];
+const cookbookIndexLines = [
+  "---",
+  "id: cookbooks",
+  'title: "Cookbooks"',
+  'slug: "/cookbooks"',
+  "---",
+  "",
+  "Per-industry recipes: the contract types, terms, and metrics each pack ships,",
+  "with worked example notebooks. Generated from each pack's README.",
+  "",
+  "## Packs",
+  ""
+];
+
+for (const pack of cookbookPacks) {
+  const readmePath = path.resolve(repoRoot, `packs/${pack}/README.md`);
+  if (!fs.existsSync(readmePath)) continue;
+  const body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
+  const page = renderDoc(
+    {
+      id: `cookbook-${pack}`,
+      title: `"${pack} pack"`,
+      slug: `"/cookbooks/${pack}"`
+    },
+    `packs/${pack}/README.md`,
+    body
+  );
+  writeGenerated(`cookbooks/${pack}.md`, page);
+  cookbookIndexLines.push(`- [${pack} pack](/cookbooks/${pack})`);
+}
+
+cookbookIndexLines.push("");
+cookbookIndexLines.push("## Example notebooks");
+cookbookIndexLines.push("");
+cookbookIndexLines.push(
+  "Runnable Jupyter notebooks (one per pack) live in " +
+    `[\`examples/notebooks/\`](${REPO_HTTP_BASE}/examples/notebooks): ` +
+    "solar PPA microgrid, CRE office acquisition, credit loan pool, and an OpCo LBO."
+);
+cookbookIndexLines.push("");
+writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
+
+// --- Benchmark methodology page --------------------------------------------
+const benchRoot = path.resolve(repoRoot, "benchmarks");
+const benchCases = [];
+if (fs.existsSync(benchRoot)) {
+  for (const pack of fs.readdirSync(benchRoot).sort()) {
+    const packDir = path.resolve(benchRoot, pack);
+    if (!fs.statSync(packDir).isDirectory()) continue;
+    for (const name of fs.readdirSync(packDir).sort()) {
+      const caseDir = path.resolve(packDir, name);
+      if (!fs.statSync(caseDir).isDirectory()) continue;
+      if (!fs.existsSync(path.resolve(caseDir, "model.cfdl"))) continue;
+      benchCases.push({ pack, name });
+    }
+  }
+}
+
+const benchLines = [
+  "---",
+  "id: benchmarks",
+  'title: "Benchmark methodology"',
+  'slug: "/benchmarks"',
+  "---",
+  "",
+  "Every pack is gated by a parity suite: each CFDL model is diffed against an",
+  "**independent reference** implementation, period-by-period and on summary",
+  "metrics, inside a tolerance the case declares.",
+  "",
+  "## How a case is built",
+  "",
+  "Each `benchmarks/<pack>/<case>/` directory contains:",
+  "",
+  "- `model.cfdl` — the CFDL model;",
+  "- `run.json` — the run configuration;",
+  "- `case.toml` — the pack name and per-period tolerance;",
+  "- `expected.csv` — period-level net cash flow from the reference;",
+  "- `expected_metrics.json` — summary metrics, each with its own tolerance;",
+  "- `reference_gen.py` — the independent reference that produces the expected",
+  "  files (a month-by-month recursion, distinct from the engine's evaluation).",
+  "",
+  "`tools/benchmark-runner.py` compiles and runs each case with the `cfdl` CLI",
+  "and fails if any period or metric drifts outside tolerance. Schedule math is",
+  "held decimal-exact; IRR-class iteratives use a bps tolerance.",
+  "",
+  "## Cases",
+  "",
+  "| Pack | Case |",
+  "|---|---|",
+  ...benchCases.map((c) => `| ${c.pack} | \`${c.name}\` |`),
+  "",
+  "> Reference models are independent implementations; those still awaiting",
+  "> practitioner Excel/Argus verification say so in their `case.toml`.",
+  ""
+];
+writeGenerated("benchmarks.md", benchLines.join("\n"));
+
+// --- Stage JSON schemas at their $id path (static/schemas/...) --------------
+const schemaStaticDir = path.resolve(docsSiteDir, "static", "schemas");
+for (const schema of ["CFDL_v0_1_IR.schema.json", "CFDL_v0_1_Results.schema.json"]) {
+  const src = path.resolve(repoRoot, "docs", "schemas",
+    schema.replace("CFDL_v0_1_IR", "ir").replace("CFDL_v0_1_Results", "results"));
+  const content = fs.readFileSync(src, "utf8");
+  const target = path.resolve(schemaStaticDir, schema);
+  if (checkMode) {
+    if (!fs.existsSync(target) || fs.readFileSync(target, "utf8") !== content) {
+      throw new Error(`Staged schema is stale or missing: static/schemas/${schema}`);
+    }
+  } else {
+    fs.mkdirSync(schemaStaticDir, { recursive: true });
+    fs.writeFileSync(target, content, "utf8");
+  }
+}
 
 if (checkMode) {
   console.log("content sync check passed");

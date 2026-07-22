@@ -21,17 +21,33 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: "category",
+      label: "Cookbooks",
+      items: [
+        "cookbooks/cookbooks",
+        "cookbooks/cookbook-energy",
+        "cookbooks/cookbook-cre",
+        "cookbooks/cookbook-credit",
+        "cookbooks/cookbook-opco"
+      ]
+    },
+    {
+      type: "category",
       label: "Language Reference",
       items: [
         "reference",
         "language-reference/language-spec",
         "language-reference/grammar",
+        "language-reference/expression-environment",
         "language-reference/compiler-spec",
         "language-reference/diagnostics",
-        "language-reference/pack-interface"
+        "language-reference/pack-interface",
+        "language-reference/ir-schema",
+        "language-reference/results-schema",
+        "language-reference/implementation-status"
       ]
     },
     "packs",
+    "benchmarks",
     "install-configure",
     "troubleshooting"
   ]

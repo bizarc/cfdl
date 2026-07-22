@@ -331,12 +331,13 @@ Post-1.0: scenario trees / optimal exercise, full HLBV under uncertainty.
 ### Workstream F — Surfaces: docs site, playground, VSIX, API server (M–L)
 **Owns:** `docs-site/**`, new `crates/cfdl-wasm`, new `crates/cfdl-server`,
 `editors/vscode/**`, `crates/cfdl-lsp`.
-- Docs site: this repo already has a **Docusaurus** `docs-site/` (predates the plan's
-  Starlight recommendation). Evaluate: keep Docusaurus (content exists: getting-started,
-  language-guide, reference) vs migrate to Starlight — decide once, document why, don't
-  churn. Content refresh from `docs/0X_*.md`; add per-industry cookbook + benchmark
-  methodology page; serve schemas at their `$id` URLs. Deploy target Cloudflare Pages
-  (deploy needs human approval).
+- Docs site — **F1 COMPLETE**: decision recorded to **keep Docusaurus** (not
+  Starlight); rationale in `docs-site/README.md`. Content sync extended to the
+  full `docs/01–10` set, per-pack **Cookbooks** generated from
+  `packs/*/README.md`, a **Benchmark methodology** page, and JSON schemas
+  staged at `static/schemas/` (serve at their `/schemas/...` `$id` paths;
+  DNS/domain wiring deferred). Deploy stays GitHub Pages via `docs-pages.yml`
+  (Cloudflare/domain move needs human approval).
 - Playground: `crates/cfdl-wasm` (wasm-bindgen) over source-string entry points
   (add to `cfdl-compile`; engine already has `run_from_json_str`) + embedded packs
   (from C). Monaco editor reusing the VS Code TextMate grammar. Requires B (cfdl-calc is
