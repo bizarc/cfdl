@@ -1,0 +1,84 @@
+version 0.1
+model "office-two-tenant"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 120
+
+entity asset tower
+
+// Tenant A: 5-year lease, 3 months free, 3% anniversary escalations,
+// recoveries above a full stop at 40% pro-rata, $200k TI/LC.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 3
+    escalation = 0.03
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 300000
+    pro_rata_share = 0.40
+    ti_total = 120000
+    lc_total = 80000
+  }
+}
+
+// Tenant A rollover: 3 months downtime, 70% renewal probability,
+// blended market leasing assumption through the hold.
+contract cre.rollover.tenant_a on entity asset.tower {
+  term 2031-04..2035-12
+  terms {
+    renewal_probability = 0.7
+    renewal_rent_year = 520000
+    market_rent_year = 560000
+    market_escalation = 0.03
+    renewal_ti_lc = 100000
+    new_ti_lc = 350000
+  }
+}
+
+// Tenant B: 7-year lease from mid-2026, 2.5% escalations, $180k stop at 30%.
+contract cre.lease_unit.tenant_b on entity asset.tower {
+  term 2026-07..2033-06
+  terms {
+    rent_year = 360000
+    escalation = 0.025
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 180000
+    pro_rata_share = 0.30
+    ti_total = 100000
+    lc_total = 50000
+  }
+}
+
+contract cre.vacancy_loss on entity asset.tower {
+  term 2026-01..2035-12
+  terms {
+    rate = 0.02
+    potential_gross_year = 900000
+  }
+}
+
+contract cre.property_opex on entity asset.tower {
+  term 2026-01..2035-12
+  terms {
+    opex_year = 300000
+    escalation = 0.025
+  }
+}
+
+// Sale at the end of the hold on forward NOI.
+contract cre.exit on entity asset.tower {
+  term 2035-12..2035-12
+  terms {
+    noi_forward_year = 800000
+    exit_cap = 0.065
+    selling_costs = 0.02
+  }
+}
+
+// Permanent debt (25-year amortization, 10-year hold window).
+stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
+  schedule every monthly from 2026-01 to 2035-12
+  amount = -pmt(0.055 / 12, 300, 6000000)
+}

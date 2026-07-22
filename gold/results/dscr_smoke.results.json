@@ -580,10 +580,15 @@
       "domain.cre.noi": {
         "numerator_streams": [
           "cre.lease.base_rent",
-          "cre.ops.revenue"
+          "cre.ops.revenue",
+          "cre.unit.base_rent.*",
+          "cre.unit.recoveries.*",
+          "cre.rollover.rent.*"
         ],
         "denominator_streams": [
-          "cre.ops.expense"
+          "cre.ops.expense",
+          "cre.vacancy.loss",
+          "cre.property.opex"
         ],
         "formula": "sum(numerator_streams) + sum(denominator_streams)"
       }

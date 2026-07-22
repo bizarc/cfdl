@@ -333,6 +333,24 @@ mod tests {
     }
 
     #[test]
+    fn parse_date_and_months_between() {
+        let env = MapEnv::new();
+        let v = eval_str("parse_date(\"2027-07-01\")", &env, Mode::Decimal).unwrap();
+        assert_eq!(v, Value::Date(CalcDate::new(2027, 7, 1).unwrap()));
+        let v = eval_str("parse_date(\"2027-07\")", &env, Mode::Decimal).unwrap();
+        assert_eq!(v, Value::Date(CalcDate::new(2027, 7, 1).unwrap()));
+        // Lease-anniversary anchoring: months since lease start.
+        assert_eq!(
+            n("months_between(parse_date(\"2027-07\"), date(2029, 7, 1))"),
+            dec("24")
+        );
+        assert_eq!(
+            n("months_between(date(2026, 3, 1), date(2026, 1, 1))"),
+            dec("-2")
+        );
+    }
+
+    #[test]
     fn division_by_zero_is_an_error() {
         let env = MapEnv::new();
         let err = eval_str("1 / 0", &env, Mode::Decimal).unwrap_err();

@@ -135,3 +135,28 @@ Current codes:
 - `E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
+
+
+## Argus-parity lease-by-lease contracts (v2)
+
+Per-tenant contracts use suffixed names (`cre.lease_unit.tenant_a`); one rule
+lowers every instance, emitting per-instance streams
+(`cre.unit.base_rent.tenant_a`). Metrics aggregate them with `.*` wildcards.
+Escalations anchor to **lease anniversaries** (`months_between(term_start,
+time.date)`), not model years.
+
+| Contract | Required terms | Optional (default) |
+|---|---|---|
+| `cre.lease_unit.<id>` | `rent_year` | `free_rent_months` (0), `escalation` (0), `expense_stop_year`/`opex_year`/`opex_escalation`/`pro_rata_share` (0 — recoveries off), `ti_total`/`lc_total` (0) |
+| `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term = post-downtime window (analyst sets start). |
+| `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
+| `cre.property_opex` | `opex_year` | `escalation` (0) |
+| `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
+
+Deviations from Argus (documented, revisit with practitioner review):
+downtime is expressed by the rollover window start rather than a blended
+expected-downtime rent haircut; recoveries use a single annual stop (no
+base-year gross-up mechanics yet); exit NOI is analyst-supplied forward NOI.
+
+Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`) remain for
+existing fixtures; they are retired when those fixtures migrate to v2.

@@ -101,18 +101,29 @@ fn scalar_value(scalar: &Scalar) -> f64 {
 }
 
 /// Sum the signed stream totals (`stream.{name}.total` Money scalars) for the
-/// given stream names; absent streams contribute 0.
+/// given stream names; absent streams contribute 0. An entry ending in `.*`
+/// is a prefix wildcard: `cre.unit.base_rent.*` sums every per-instance
+/// stream lowered from a suffixed contract.
 fn sum_stream_totals(metrics: &BTreeMap<String, Scalar>, streams: &[String]) -> f64 {
-    streams
-        .iter()
-        .filter_map(|name| {
-            let key = format!("stream.{name}.total");
-            match metrics.get(&key)? {
-                Scalar::Money(m) => Some(m.amount),
-                _ => None,
+    let mut total = 0.0;
+    for name in streams {
+        if let Some(prefix) = name.strip_suffix(".*") {
+            let key_prefix = format!("stream.{prefix}.");
+            for (key, scalar) in metrics {
+                if key.starts_with(&key_prefix) && key.ends_with(".total") {
+                    if let Scalar::Money(m) = scalar {
+                        total += m.amount;
+                    }
+                }
             }
-        })
-        .sum()
+        } else {
+            let key = format!("stream.{name}.total");
+            if let Some(Scalar::Money(m)) = metrics.get(&key) {
+                total += m.amount;
+            }
+        }
+    }
+    total
 }
 
 fn currency_from_results(results: &Results) -> String {

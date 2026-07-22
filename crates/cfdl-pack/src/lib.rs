@@ -504,7 +504,9 @@ fn parse_lowering_rules(raw: &str, source: &str) -> Result<Vec<LoweringRule>, Pa
         message: format!("Failed to parse lowering rules '{source}': {err}"),
     })?;
     for rule in &parsed.rules {
-        if !is_qualified_name(&rule.stream_name) {
+        // Templated stream names ({{contract.*}}) are validated post-expansion
+        // by the compiler.
+        if !rule.stream_name.contains("{{") && !is_qualified_name(&rule.stream_name) {
             return Err(PackLoadError {
                 message: format!(
                     "Lowering rule '{}' has invalid stream_name '{}'; expected dotted qualified name.",
