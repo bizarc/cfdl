@@ -80,7 +80,9 @@ def main():
         if t == 6:
             ti_lc += 150_000.0
         if t == 60:
-            ti_lc += 0.7 * 100_000.0 + 0.3 * 350_000.0
+            ti_lc += 0.7 * 100_000.0  # renewal-scenario turnover cost at expiry
+        if t == 63:
+            ti_lc += 0.3 * 350_000.0  # re-lease turnover cost after downtime
         net -= ti_lc
         if t == 119:
             net += forward_noi(119) / 0.065 * 0.98
