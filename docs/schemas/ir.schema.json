@@ -624,11 +624,17 @@
           "$ref": "#/$defs/OnRule"
         },
         "convention": {
-          "$ref": "#/$defs/BusinessDayConvention"
+          "type": "string",
+          "enum": [
+            "none",
+            "following",
+            "modified_following",
+            "preceding",
+            "modified_preceding"
+          ]
         },
         "calendar": {
-          "type": "string",
-          "description": "Named business day calendar (e.g., 'NYSE')"
+          "type": "string"
         },
         "stub": {
           "$ref": "#/$defs/StubPolicy"
@@ -648,6 +654,18 @@
         "phase": {
           "type": "string",
           "description": "Phase name for PhaseEnter/EveryPhase"
+        },
+        "except_dates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "also_dates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "allOf": [

@@ -916,10 +916,11 @@ fn apply_schedule(
     timeline: &[Date],
     out_values: &mut [f64],
 ) -> Result<(), EngineError> {
+    let roll = schedule_roll(schedule)?;
     match schedule.kind.as_str() {
         "OnDate" => {
             if let Some(on) = &schedule.on {
-                let target = Date::parse(on)?;
+                let target = roll_date(&Date::parse(on)?, roll);
                 if let Some(idx) = timeline.iter().position(|d| *d == target) {
                     out_values[idx] += amount;
                 }
@@ -950,7 +951,61 @@ fn apply_schedule(
             )));
         }
     }
+    // `except [dates]` removes matching periods; `also [dates]` adds extra
+    // ones. Point dates are roll-adjusted like `on` dates.
+    for raw in &schedule.except_dates {
+        let target = roll_date(&Date::parse(raw)?, roll);
+        if let Some(idx) = timeline.iter().position(|d| *d == target) {
+            out_values[idx] -= amount;
+        }
+    }
+    for raw in &schedule.also_dates {
+        let target = roll_date(&Date::parse(raw)?, roll);
+        if let Some(idx) = timeline.iter().position(|d| *d == target) {
+            out_values[idx] += amount;
+        }
+    }
     Ok(())
+}
+
+/// Resolve the schedule's business-day roll, if any. A convention without a
+/// calendar defaults to the weekend-only calendar; a calendar without a
+/// convention defaults to `following`.
+fn schedule_roll(
+    schedule: &IrSchedule,
+) -> Result<Option<(cfdl_calc::RollConvention, cfdl_calc::HolidayCalendar)>, EngineError> {
+    if schedule.convention.is_none() && schedule.calendar.is_none() {
+        return Ok(None);
+    }
+    let convention = match schedule.convention.as_deref() {
+        None => cfdl_calc::RollConvention::Following,
+        Some(raw) => cfdl_calc::RollConvention::parse(raw)
+            .ok_or_else(|| EngineError::Schedule(format!("unknown roll convention: {raw}")))?,
+    };
+    let calendar = match schedule.calendar.as_deref() {
+        None => cfdl_calc::HolidayCalendar::Weekend,
+        Some(raw) => cfdl_calc::HolidayCalendar::parse(raw)
+            .ok_or_else(|| EngineError::Schedule(format!("unknown holiday calendar: {raw}")))?,
+    };
+    Ok(Some((convention, calendar)))
+}
+
+fn roll_date(
+    date: &Date,
+    roll: Option<(cfdl_calc::RollConvention, cfdl_calc::HolidayCalendar)>,
+) -> Date {
+    let Some((convention, calendar)) = roll else {
+        return date.clone();
+    };
+    let Some(calc) = cfdl_calc::CalcDate::new(date.year, date.month, date.day) else {
+        return date.clone();
+    };
+    let rolled = calendar.roll(&calc, convention);
+    Date {
+        year: rolled.year(),
+        month: rolled.month(),
+        day: rolled.day(),
+    }
 }
 
 fn timeline_dates(start: &str, calendar: &str, periods: usize) -> Result<Vec<Date>, EngineError> {
@@ -1156,6 +1211,14 @@ struct IrSchedule {
     to: Option<String>,
     #[serde(default)]
     phase: Option<String>,
+    #[serde(default)]
+    convention: Option<String>,
+    #[serde(default)]
+    calendar: Option<String>,
+    #[serde(default)]
+    except_dates: Vec<String>,
+    #[serde(default)]
+    also_dates: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
