@@ -5,10 +5,15 @@ stream_name = "cre.construction.draws"
 owner_entity = "${subject}"
 direction = "outflow"
 currency = "USD"
-amount_expr = "45000"
+amount_expr = "{{contract.amount}}"
 schedule_kind = "every"
-schedule_from = "2026-01"
-schedule_to = "2026-06"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+amount = "45000"
+term_start = "2026-01"
+term_end = "2026-06"
 
 [[rules]]
 id = "cre_lease_base_rent_v1"
@@ -17,13 +22,20 @@ stream_name = "cre.lease.base_rent"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-# Lease-up occupancy ramp (default implementation):
-# occupancy(t) = clamp((t - 6 + 1) / 18, 0, 1)
+# Lease-up occupancy ramp, parameterized from contract terms:
+# occupancy(t) = clamp((t - start_period + 1) / months, 0, 1)
 # rent(t) = base_rent * occupancy(t)
-amount_expr = "25000 * clamp((time.t - 6 + 1) / 18, 0, 1)"
+# NOTE: schedule dates stay fixed (v1 behavior ignored the contract term
+# range); the v2 lease_unit contracts are term-gated.
+amount_expr = "{{contract.base_rent}} * clamp((time.t - {{contract.lease_up.start_period}} + 1) / {{contract.lease_up.months}}, 0, 1)"
 schedule_kind = "every"
 schedule_from = "2026-07"
 schedule_to = "2031-12"
+
+[rules.defaults]
+base_rent = "25000"
+"lease_up.start_period" = "6"
+"lease_up.months" = "18"
 
 [[rules]]
 id = "cre_ops_revenue_v1"
@@ -32,10 +44,15 @@ stream_name = "cre.ops.revenue"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-amount_expr = "30000"
+amount_expr = "{{contract.amount}}"
 schedule_kind = "every"
-schedule_from = "2028-01"
-schedule_to = "2031-12"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+amount = "30000"
+term_start = "2028-01"
+term_end = "2031-12"
 
 [[rules]]
 id = "cre_ops_expense_v1"
@@ -44,10 +61,15 @@ stream_name = "cre.ops.expense"
 owner_entity = "${subject}"
 direction = "outflow"
 currency = "USD"
-amount_expr = "12000"
+amount_expr = "{{contract.amount}}"
 schedule_kind = "every"
-schedule_from = "2028-01"
-schedule_to = "2031-12"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+amount = "12000"
+term_start = "2028-01"
+term_end = "2031-12"
 
 [[rules]]
 id = "cre_exit_cap_sale_v1"
@@ -56,10 +78,15 @@ stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-amount_expr = "180000 / 0.06"
+amount_expr = "{{contract.noi_value}} / {{contract.exit_cap}}"
 schedule_kind = "on_date"
-schedule_from = "2031-12"
+schedule_from = "{{contract.term_start}}"
 schedule_to = ""
+
+[rules.defaults]
+noi_value = "180000"
+exit_cap = "0.06"
+term_start = "2031-12"
 
 # ---------------------------------------------------------------------------
 # Argus-parity lease-by-lease contract types (v2, template-driven).
@@ -93,7 +120,7 @@ currency = "USD"
 # Expense reimbursement above the stop, at the tenant's pro-rata share.
 # Opex escalates on the lease's own anniversary of the PROPERTY schedule:
 # anchored to the recovery base year via opex_year/opex_escalation terms.
-amount_expr = "max(0, {{contract.opex_year}} * pow(1 + {{contract.opex_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
+amount_expr = "max(0, {{contract.opex_year}} * {{contract.gross_up_factor}} * pow(1 + {{contract.opex_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -103,6 +130,7 @@ expense_stop_year = "0"
 opex_year = "0"
 opex_escalation = "0"
 pro_rata_share = "0"
+gross_up_factor = "1"
 
 [[rules]]
 id = "cre_lease_unit_ti_lc_v2"
@@ -197,3 +225,20 @@ schedule_to = ""
 
 [rules.defaults]
 selling_costs = "0"
+
+[[rules]]
+id = "cre_percentage_rent_v2"
+contract_name = "cre.percentage_rent"
+stream_name = "cre.pct_rent{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Overage rent: pct of sales above the breakpoint, sales growing on the
+# lease's own anniversaries.
+amount_expr = "max(0, {{contract.sales_year}} * pow(1 + {{contract.sales_growth}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.breakpoint_year}}) * {{contract.overage_pct}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+sales_growth = "0"

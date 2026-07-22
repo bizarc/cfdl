@@ -152,11 +152,17 @@ time.date)`), not model years.
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
 | `cre.property_opex` | `opex_year` | `escalation` (0) |
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
+| `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
 
-Deviations from Argus (documented, revisit with practitioner review):
-downtime is expressed by the rollover window start rather than a blended
-expected-downtime rent haircut; recoveries use a single annual stop (no
-base-year gross-up mechanics yet); exit NOI is analyst-supplied forward NOI.
+Recoveries support expense stops with a `gross_up_factor` (opex grossed to
+stabilized occupancy before the stop test); a base-year structure is the
+stop set to year-0 grossed-up opex.
 
-Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`) remain for
-existing fixtures; they are retired when those fixtures migrate to v2.
+Remaining deviations from Argus (documented, revisit with practitioner
+review): downtime is expressed by the rollover window start rather than a
+blended expected-downtime rent haircut; exit NOI is analyst-supplied
+forward NOI.
+
+Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`,
+`cre.construction_stub`) are now fully template-driven — the hardcoded
+compiler path is gone; they remain supported for existing models.

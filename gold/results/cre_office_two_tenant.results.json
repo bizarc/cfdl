@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "b5c15cc9f187b3d78d604069050a7c2ecf184bbd9816e2aa392eb8057d4b54db",
+  "model_hash": "d7742a083cbc3bbd165b01ce668008b17b0d8535e41bb9b6d91d0c633c39facc",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.3.0"
@@ -7137,7 +7137,9 @@
           "cre.ops.revenue",
           "cre.unit.base_rent.*",
           "cre.unit.recoveries.*",
-          "cre.rollover.rent.*"
+          "cre.rollover.rent.*",
+          "cre.pct_rent",
+          "cre.pct_rent.*"
         ],
         "denominator_streams": [
           "cre.ops.expense",
