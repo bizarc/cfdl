@@ -42,6 +42,33 @@ prepayment — the whole surviving balance pays as the bullet. Same terms as
 `pool_level_pay` (`rate` may be anything, including 0). Adds stream
 `credit.pool.bullet`.
 
+### `credit.pool_float_io_bullet`
+
+Floating-rate IO/bullet pool. The coupon indexes off a model-declared
+`curve` statement:
+
+```cfdl
+curve sofr {
+  2026-01: 0.048
+  2026-07: 0.045
+}
+```
+
+`coupon = clamp(curve_value(index_curve, date) + margin, rate_floor, rate_cap)`.
+Balance dynamics are identical to `pool_io_bullet` (rate-independent), so
+the closed form stays exact. Extra terms on top of the common credit terms:
+
+| term | meaning | default |
+|---|---|---|
+| `index_curve` | name of a `curve` declared in the model | required |
+| `margin` | spread over the index | `0` |
+| `rate_floor` | coupon floor | `0` |
+| `rate_cap` | coupon cap | `1` |
+
+Floating **level-pay** pools are not supported: the balance path depends on
+the rate path, which has no closed form under the pack's loop-free
+expressions.
+
 ### `credit.purchase`
 
 Acquisition price paid at `term_start` (`price` term), stream

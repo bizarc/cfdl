@@ -64,6 +64,12 @@
       "$ref": "#/$defs/Assumptions"
     },
 
+    "curves": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/Curve" }
+    },
+
     "contracts": {
       "type": "array",
       "minItems": 0,

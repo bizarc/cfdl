@@ -32,6 +32,14 @@ pub trait Env {
     fn series_aggregate(&self, _name: &str, _from: i64, _to: i64, _mean: bool) -> Option<Decimal> {
         None
     }
+
+    /// Host hook for named curve lookup (`curve_value`). Returns the curve's
+    /// value at `date` per the curve's declared interpolation, or None when
+    /// the host has no curve by that name (which surfaces as an evaluation
+    /// error).
+    fn curve_value(&self, _name: &str, _date: crate::CalcDate) -> Option<Decimal> {
+        None
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -107,6 +115,9 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
             }
             if name == "series_sum" || name == "series_avg" {
                 return funcs::series_call(name, &values, expr.span, env);
+            }
+            if name == "curve_value" {
+                return funcs::curve_call(name, &values, expr.span, env);
             }
             funcs::call(name, &values, expr.span, mode)
         }

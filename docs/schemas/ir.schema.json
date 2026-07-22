@@ -85,6 +85,13 @@
     "assumptions": {
       "$ref": "#/$defs/Assumptions"
     },
+    "curves": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Curve"
+      }
+    },
     "contracts": {
       "type": "array",
       "minItems": 0,
@@ -360,6 +367,28 @@
           }
         }
       ]
+    },
+    "Curve": {
+      "type": "object",
+      "required": ["name", "points"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "interpolation": { "type": "string", "enum": ["step", "linear"] },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["date", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "date": { "type": "string" },
+              "value": { "type": "number" }
+            }
+          }
+        }
+      }
     },
     "Assumptions": {
       "type": "object",

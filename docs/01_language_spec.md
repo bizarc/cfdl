@@ -426,6 +426,32 @@ Supported distributions (v0.1 core):
 - Any Monte Carlo run MUST declare an explicit seed.
 - Engines MUST use this seed deterministically for sampling.
 
+### 11.5 Curves (date-indexed inputs)
+
+Named date-indexed value series (forward rate curves, price decks):
+
+```cfdl
+curve sofr {
+  2026-01: 0.048
+  2026-07: 0.045
+  2027-01: 0.042
+}
+
+curve power_price linear {
+  2026-01: 42.0
+  2036-01: 55.0
+}
+```
+
+- Interpolation is `step` (default; flat-forward: the last point at or
+  before the query date, the first value before the first point) or
+  `linear` (linear in calendar days between bracketing points, clamped
+  flat outside the range).
+- Expressions look curves up with `curve_value("<name>", <date>)`, e.g.
+  `curve_value("sofr", time.date) + margin`.
+- Curve names MUST be unique; a curve MUST declare at least one point and
+  at most one value per date.
+
 ---
 
 ## 12. Events (discrete model changes)

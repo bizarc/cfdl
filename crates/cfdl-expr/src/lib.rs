@@ -60,6 +60,21 @@ pub struct ExprEnv {
     /// `series_avg`. Populated by the engine for phase-2 stream evaluation;
     /// empty elsewhere.
     pub series: BTreeMap<String, Vec<f64>>,
+    /// Named date-indexed value curves (`curve` statements) available to
+    /// `curve_value(name, date)`. Populated by the engine from IR; empty
+    /// elsewhere.
+    pub curves: BTreeMap<String, CurveDef>,
+}
+
+/// A named curve: date/value points plus interpolation policy.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveDef {
+    /// "step" (flat-forward: last point at or before the query date; the
+    /// first value before the first point) or "linear" (linear in calendar
+    /// days between bracketing points, clamped flat outside the range).
+    pub interpolation: String,
+    /// Points sorted ascending by date.
+    pub points: Vec<(Date, f64)>,
 }
 
 impl ExprEnv {
@@ -72,6 +87,7 @@ impl ExprEnv {
             obs: BTreeMap::new(),
             inputs: BTreeMap::new(),
             series: BTreeMap::new(),
+            curves: BTreeMap::new(),
         }
     }
 }
@@ -233,9 +249,46 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         }
         Decimal::from_f64(total)
     }
+
+    fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<Decimal> {
+        self.curve_lookup(name, date).and_then(Decimal::from_f64)
+    }
 }
 
 impl EnvAdapter<'_> {
+    fn curve_lookup(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<f64> {
+        let curve = self.env.curves.get(name)?;
+        let epoch =
+            |d: &Date| cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(|c| c.to_epoch_days());
+        let query = date.to_epoch_days();
+        let mut points: Vec<(i64, f64)> = Vec::with_capacity(curve.points.len());
+        for (d, v) in &curve.points {
+            points.push((epoch(d)?, *v));
+        }
+        if points.is_empty() {
+            return None;
+        }
+        let first = points[0];
+        if query <= first.0 {
+            return Some(first.1);
+        }
+        let last = points[points.len() - 1];
+        if query >= last.0 {
+            return Some(last.1);
+        }
+        // points bracketing the query: prev.0 <= query < next.0
+        let idx = points.partition_point(|(d, _)| *d <= query);
+        let prev = points[idx - 1];
+        if curve.interpolation == "linear" {
+            let next = points[idx];
+            let frac = (query - prev.0) as f64 / (next.0 - prev.0) as f64;
+            Some(prev.1 + (next.1 - prev.1) * frac)
+        } else {
+            // step (flat-forward)
+            Some(prev.1)
+        }
+    }
+
     fn matching_series(&self, name: &str) -> Vec<&Vec<f64>> {
         if let Some(prefix) = name.strip_suffix(".*") {
             let dot_prefix = format!("{prefix}.");
@@ -354,6 +407,87 @@ mod tests {
         let err = eval(&compiled, &ExprEnv::empty()).unwrap_err();
         assert_eq!(err.code, "EXPR_EVAL");
         assert!(err.message.contains("nope.missing"));
+    }
+
+    #[test]
+    fn curve_value_step_and_linear() {
+        let mut env = ExprEnv::empty();
+        env.curves.insert(
+            "sofr".to_string(),
+            CurveDef {
+                interpolation: "step".to_string(),
+                points: vec![
+                    (
+                        Date {
+                            year: 2026,
+                            month: 1,
+                            day: 1,
+                        },
+                        0.045,
+                    ),
+                    (
+                        Date {
+                            year: 2026,
+                            month: 7,
+                            day: 1,
+                        },
+                        0.042,
+                    ),
+                ],
+            },
+        );
+        env.curves.insert(
+            "ramp".to_string(),
+            CurveDef {
+                interpolation: "linear".to_string(),
+                // 2026-01-01 -> 2026-01-11: 10 days, 0.0 -> 1.0
+                points: vec![
+                    (
+                        Date {
+                            year: 2026,
+                            month: 1,
+                            day: 1,
+                        },
+                        0.0,
+                    ),
+                    (
+                        Date {
+                            year: 2026,
+                            month: 1,
+                            day: 11,
+                        },
+                        1.0,
+                    ),
+                ],
+            },
+        );
+        let cases: &[(&str, f64)] = &[
+            // step: before first -> first; between -> last at-or-before; after last -> last
+            ("curve_value(\"sofr\", date(2025, 6, 1))", 0.045),
+            ("curve_value(\"sofr\", date(2026, 1, 1))", 0.045),
+            ("curve_value(\"sofr\", date(2026, 6, 30))", 0.045),
+            ("curve_value(\"sofr\", date(2026, 7, 1))", 0.042),
+            ("curve_value(\"sofr\", date(2027, 1, 1))", 0.042),
+            // linear: interpolate by calendar days, clamp outside
+            ("curve_value(\"ramp\", date(2026, 1, 1))", 0.0),
+            ("curve_value(\"ramp\", date(2026, 1, 4))", 0.3),
+            ("curve_value(\"ramp\", date(2026, 1, 11))", 1.0),
+            ("curve_value(\"ramp\", date(2026, 2, 1))", 1.0),
+        ];
+        for (src, expected) in cases {
+            let compiled = compile_expr(src).expect(src);
+            let Value::Decimal(got) = eval(&compiled, &env).expect(src) else {
+                panic!("{src}: non-numeric result");
+            };
+            assert!((got - expected).abs() < 1e-12, "{src}: got {got}");
+        }
+    }
+
+    #[test]
+    fn curve_value_unknown_curve_is_eval_error() {
+        let compiled = compile_expr("curve_value(\"missing\", date(2026, 1, 1))").expect("compile");
+        let err = eval(&compiled, &ExprEnv::empty()).unwrap_err();
+        assert!(err.message.contains("missing"), "{err}");
     }
 
     #[test]

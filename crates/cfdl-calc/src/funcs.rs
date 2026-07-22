@@ -663,6 +663,46 @@ pub(crate) fn series_call(
         })
 }
 
+/// `curve_value(name, date)`: named curve lookup resolved by the host via
+/// `Env::curve_value` (interpolation is the curve's own declaration).
+pub(crate) fn curve_call(
+    name: &str,
+    args: &[Arg],
+    span: Span,
+    env: &dyn crate::eval::Env,
+) -> Result<Value, CalcError> {
+    let [curve, date] = exactly::<2>(name, args, span)?;
+    let curve_name = match &curve.0 {
+        Value::Text(s) => s.clone(),
+        other => {
+            return Err(CalcError::new(
+                format!(
+                    "{name} expects a curve name text, got {}",
+                    other.type_name()
+                ),
+                Some(curve.1),
+            ))
+        }
+    };
+    let date = match &date.0 {
+        Value::Date(d) => *d,
+        other => {
+            return Err(CalcError::new(
+                format!("{name} expects a date, got {}", other.type_name()),
+                Some(date.1),
+            ))
+        }
+    };
+    env.curve_value(&curve_name, date)
+        .map(Value::Number)
+        .ok_or_else(|| {
+            CalcError::new(
+                format!("{name}: curve `{curve_name}` is not available in this context"),
+                Some(curve.1),
+            )
+        })
+}
+
 /// Does the expression call any of the given function names? Used by the
 /// engine to split stream evaluation into phases.
 pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {
