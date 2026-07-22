@@ -148,6 +148,7 @@ C (engine completeness)──────────► D                      
 E (Python SDK) ──────────────► needs B only for final polish │
 F (docs site / playground / server / VSIX) ── needs B for playground; docs can start now
 G (evs-platform re-point) ── needs first tagged release
+H (waterfalls / capital stack)── needs D pack conventions; blocks launch gate (see §6H)
 ```
 
 ### Workstream A — Repo hygiene, CI/CD, policy (S–M, no dependencies, start immediately)
@@ -236,9 +237,24 @@ G (evs-platform re-point) ── needs first tagged release
   assumptions, recoveries (stops, base years, gross-ups), TI/LC, free rent, exit cap on
   forward NOI.
 - `cfdl/credit`: level-pay/IO/bullet, CPR/SMM, CDR, severity/recovery lag, floaters off
-  rate curves (needs `curve` input concept — coordinate with C).
+  rate curves — **shipped (increments 8–9)**. Remaining parity worklist
+  (2026-07-22 assessment vs Intex/Bloomberg-class tools):
+  - *Achievable now*: servicing-fee / prepayment-penalty streams,
+    discount/premium purchase, principal-weighted WAL + credit analytics
+    metrics.
+  - *Needs an engine primitive*: **vectored CPR/CDR** (PSA-style ramps, CDR
+    curves) and **floating level-pay** — the balance path becomes a
+    cumulative product with no closed form. Ship an `amortize()`-family
+    builtin in cfdl-calc that runs the pool recursion natively (curves as
+    the vector carrier); design it alongside H3's state machinery.
+  - *Convention fidelity*: document our default-timing/prepay convention and
+    match a named reference convention in benchmarks (practitioner review).
+  - *With H (waterfalls)*: sequential note classes, OC/IC, reserve accounts.
+  - *Post-1.0*: roll-rate/delinquency transition models, servicer advances,
+    loan-level (vs rep-line) granularity, SOFR lookback/compounding
+    mechanics.
 - `cfdl/opco` deepened: working capital (DSO/DPO/DIO), capex/depreciation, debt schedules
-  with sweeps, LBO returns.
+  with sweeps (sweeps need H3-style state — coordinate), LBO returns.
 - Flag any reference model that lacks expert verification — parity claims against wrong
   references are worse than none.
 
@@ -312,12 +328,101 @@ Post-1.0: scenario trees / optimal exercise, full HLBV under uncertainty.
   release of overlap; then delete `cfdl-core/` from evs-platform and update its
   `CLAUDE.md`/docs.
 
+### Workstream H — Waterfalls & capital stack distributions (XL, core feature)
+
+**Added 2026-07-22 (user decision).** Distributing entity-level cash flow to
+investors through a declared capital stack is a **core product feature for
+every pack** — a cash-flow language that stops at the property/company line
+is not adoptable by the funds, lenders, and sponsors we are targeting.
+Asset-level modeling (Workstreams B–D) answers "what cash does the deal
+produce"; H answers "who gets it" — and that second question is the one an
+LP report, a credit committee memo, and a sponsor promote calc all hinge on.
+**No shortcuts**: expected-value approximations of promote tiers, ignoring
+period-by-period hurdle accrual, or netting waterfall effects into a single
+blended stream are explicitly out of bounds — the industry tools we claim
+parity with (Argus/Excel promote models, LBO debt schedules, Intex-style
+note waterfalls) get this exactly right, and so must we.
+
+**Owns:** new `crates/cfdl-waterfall` (or an engine module — decide at design
+review), waterfall grammar surface in `crates/cfdl-parser`/`cfdl-lexer`,
+engine allocation pass in `crates/cfdl-engine`, Results schema additions,
+`docs/11_waterfalls.md` (new spec), waterfall sections of `packs/**`,
+`benchmarks/**/waterfall_*` cases.
+
+**Why this is engine work, not pack templating:** waterfalls are inherently
+stateful and sequential — tranche balances decline with principal paid,
+reserve accounts fill and release, hurdle IRRs accrue on outstanding
+capital, triggers flip on tested ratios, sweeps depend on that period's
+remaining cash. The expression dialect is deliberately pure/loop-free and
+events are latch-once, so none of this is expressible today. H introduces a
+dedicated per-period **allocation pass** that runs after stream evaluation:
+ordered rules consume from a cash source and carry persistent state forward.
+
+**Deliverables (each lands with docs + goldens; benchmarks at H5):**
+
+1. **H1 — Design & spec (`docs/11_waterfalls.md`)**: capital stack and
+   waterfall declaration model; evaluation semantics (ordering, state,
+   period boundaries, day counts on accruals); Results schema for per-node
+   flows. Reviewed against reference material for each domain BEFORE
+   implementation: CRE/PE promote conventions (European whole-fund vs
+   American deal-by-deal, preferred return compounding, catch-up, clawback
+   noted for post-1.0), LBO debt schedules (revolver draws/paydowns,
+   mandatory amort, cash sweep tiers, PIK toggles), securitization
+   waterfalls (sequential/pro-rata principal, interest/principal separation,
+   OC/IC coverage tests with cure logic, reserve accounts).
+2. **H2 — Language surface**: `stack`/`tranche`/`account`/`waterfall`
+   declarations (final grammar at H1); typed references to entities and
+   streams; validation diagnostics (undefined tiers, circular references,
+   unallocated residual). Grammar/EBNF/docs updated together; `cfdl parse`
+   dumps the typed AST.
+3. **H3 — Engine allocation pass**: post-stream, per-period sequential
+   evaluation with persistent state (tranche balances, account balances,
+   cumulative contributions/distributions, accrued-and-unpaid ledgers,
+   trigger states with latch/cure); deterministic ordering; distributions
+   integrate with Monte Carlo (per-trial waterfall execution, not
+   expected-value blending). Results carry per-tranche/per-account series
+   plus investor-level metrics (contributed, distributed, net IRR, MOIC,
+   DPI/RVPI/TVPI) computed by the engine, not by packs.
+4. **H4 — Pack integration** (the per-domain standard stacks, shipped as
+   pack-level waterfall templates the way lowering rules are today):
+   - **CRE**: senior + mezz debt service, refi/exit paydown, LP/GP equity
+     with pref → return of capital → promote tiers over IRR hurdles.
+   - **OpCo/LBO**: revolver + term loans with mandatory amort and excess-
+     cash-flow sweep tiers, mezz/PIK, sponsor equity returns at exit.
+   - **Credit**: sequential note classes with interest/principal waterfalls,
+     OC/IC tests diverting to senior paydown, reserve account.
+   - **Energy**: DSCR-sculpted senior debt, reserves (DSRA/MMRA), sponsor
+     equity; partnership flip allocations (pre-flip/post-flip percentages)
+     — full HLBV stays post-1.0 as already noted.
+5. **H5 — Benchmarks**: one waterfall benchmark per pack against
+   practitioner-grade Excel references (promote model, LBO debt schedule,
+   sequential-pay note structure, flip allocation), same tolerance and
+   provenance rules as §6D. These are launch-gate blockers.
+6. **H6 — Surfaces**: Results schema additions flow through the Python SDK
+   (`results.distributions()`, investor tables) and playground/docs
+   examples (E and F own the rendering; H owns the data contract).
+
+**Dependencies:** H1 can start immediately. H2–H3 follow H1 review. H4
+needs each pack's asset-level conventions from D (CRE/credit done; opco in
+progress; energy done). H interacts with the IR/Results freeze (launch gate
+3) — schemas must not freeze before H3's additions land.
+
+**Explicitly related backlog folded into H's design (not separate work):**
+the same stateful sequential engine capability is what credit vectored
+amortization (CPR/CDR ramps), floating level-pay, and opco cash sweeps
+need. H3's design must not preclude reusing the state machinery for those,
+but they remain scoped under D (credit/opco increments).
+
 ## 7. Launch gate (1.0)
 
 All must be true:
 1. `benchmarks/` green within declared tolerances for energy, CRE, credit, opco.
 2. Grammar audit clean: no declared-but-unimplemented constructs.
-3. IR/Results schemas frozen as v1 with additive-only policy documented.
-4. `make ci` green on linux/mac/windows; fuzzers run clean for CI budget.
-5. Fresh-machine installs work: brew, cargo, pip, VSIX, docker (rehearsed privately).
-6. BSL legal review done. Human flips repo public and approves all publishing.
+3. IR/Results schemas frozen as v1 with additive-only policy documented —
+   **after** Workstream H3's waterfall additions land (do not freeze early).
+4. **Waterfall benchmarks green** (H5): CRE promote, LBO debt schedule +
+   sweep, credit sequential-pay, energy flip allocation — each against a
+   practitioner-verified reference.
+5. `make ci` green on linux/mac/windows; fuzzers run clean for CI budget.
+6. Fresh-machine installs work: brew, cargo, pip, VSIX, docker (rehearsed privately).
+7. BSL legal review done. Human flips repo public and approves all publishing.
