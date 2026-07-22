@@ -65,7 +65,7 @@ def main():
     dscr = ebitda / debt_total
 
     with open("expected.csv", "w", newline="") as fh:
-        writer = csv.writer(fh)
+        writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["period", "net_cash_flow"])
         for t, net in rows:
             writer.writerow([t, f"{net:.6f}"])
