@@ -46,6 +46,20 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.13] - 2026-07-22
+
+### Added
+- **Docs site refresh** (Workstream F, increment F1): the Docusaurus content
+  sync now covers the full spec set — added Expression Environment (03), IR
+  Schema (05), Results Schema (06), and Implementation Status (10) to the
+  Language Reference; a **Cookbooks** section generated per pack from
+  `packs/*/README.md`; a **Benchmark methodology** page enumerating the eight
+  parity cases; and the JSON schemas staged at `static/schemas/` so they serve
+  at their `$id` paths. Decision recorded: keep Docusaurus (not Starlight) —
+  see `docs-site/README.md`.
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added

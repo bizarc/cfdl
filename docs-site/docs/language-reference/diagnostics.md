@@ -233,6 +233,11 @@ Warnings:
 - `E5002_IR_SCHEMA_VALIDATION_FAILED`
 - `E5003_IR_EMIT_FAILED`
 - `E5004_INVALID_LOWERING_RULE`
+- `E5005_PHASE_NOT_FOUND`
+- `E5006_MISSING_CONTRACT_TERM`
+- `E5007_DUPLICATE_LOWERED_STREAM`
+- `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
+  malformed point in a `curve` statement
 
 ### 7.10 Pack lowering-time domain errors (E6xxx)
 
