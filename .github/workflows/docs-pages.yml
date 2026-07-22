@@ -7,6 +7,10 @@ on:
     paths:
       - "docs-site/**"
       - "docs/**"
+      - "packs/**"
+      - "benchmarks/**"
+      - "crates/**"
+      - "Cargo.lock"
       - "examples/language_tutorial/**"
       - ".github/workflows/docs-pages.yml"
   workflow_dispatch:
@@ -34,6 +38,12 @@ jobs:
           cache: npm
           cache-dependency-path: docs-site/package-lock.json
 
+      - name: Setup Rust (for the WASM playground)
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
       - name: Install dependencies
         run: npm ci
         working-directory: docs-site
@@ -45,7 +55,7 @@ jobs:
       - name: Verify generated content is committed
         run: git diff --exit-code -- docs-site/docs
 
-      - name: Build site
+      - name: Build site (docs + WASM playground)
         run: npm run build
         working-directory: docs-site
         env:

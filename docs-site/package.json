@@ -6,14 +6,16 @@
     "sync:content": "node ./scripts/sync-content.mjs",
     "sync:check": "node ./scripts/sync-content.mjs --check",
     "start": "docusaurus start",
-    "build": "npm run sync:content && docusaurus build",
+    "build": "npm run sync:content && npm run build:wasm && docusaurus build",
     "serve": "docusaurus serve",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "build:wasm": "bash ./scripts/build-wasm.sh"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.2",
     "@docusaurus/preset-classic": "^3.9.2",
     "@easyops-cn/docusaurus-search-local": "^0.48.0",
+    "@monaco-editor/react": "^4.7.0",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
     "react": "^18.3.1",

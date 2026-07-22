@@ -34,7 +34,8 @@ const config: Config = {
           showLastUpdateTime: true
         },
         blog: false,
-        pages: false,
+        // Enabled for the /playground custom page (src/pages/playground.tsx).
+        pages: {},
         theme: {
           customCss: "./src/css/custom.css"
         }
@@ -49,6 +50,7 @@ const config: Config = {
         { to: "/language-guide", label: "Language Guide", position: "left" },
         { to: "/examples", label: "Examples", position: "left" },
         { to: "/language-reference", label: "Reference", position: "left" },
+        { to: "/playground", label: "Playground", position: "left" },
         {
           href: "https://github.com/bizarc/cfdl",
           label: "GitHub",
