@@ -55,10 +55,61 @@ pub struct LoweringRule {
     pub owner_entity: String,
     pub direction: String,
     pub currency: String,
+    /// May contain `{{contract.<key>}}` placeholders (see expand_rule_template).
     pub amount_expr: String,
     pub schedule_kind: String,
+    /// May contain `{{contract.term_start}}` / `{{contract.<key>}}` placeholders.
     pub schedule_from: String,
+    /// May contain `{{contract.term_end}}` / `{{contract.<key>}}` placeholders.
     pub schedule_to: String,
+    /// Default values for template placeholders when the contract does not
+    /// declare the term. Keys are the bare placeholder names (no `contract.`
+    /// prefix), e.g. `"lease_up.months" = "18"`.
+    #[serde(default)]
+    pub defaults: BTreeMap<String, String>,
+}
+
+/// Expand `{{contract.<key>}}` placeholders in a lowering-rule template.
+///
+/// `resolve` maps a bare key (e.g. `base_rent`, `term_start`,
+/// `lease_up.months`) to its value; unresolved keys are collected and
+/// returned as `Err` so the caller can emit one diagnostic per missing term.
+/// Substitution is textual: numeric contract terms yield valid expression
+/// fragments, string terms must be quoted inside the template.
+pub fn expand_rule_template(
+    template: &str,
+    resolve: &dyn Fn(&str) -> Option<String>,
+) -> Result<String, Vec<String>> {
+    let mut out = String::with_capacity(template.len());
+    let mut missing: Vec<String> = Vec::new();
+    let mut rest = template;
+    while let Some(start) = rest.find("{{") {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 2..];
+        let Some(end) = after.find("}}") else {
+            // Unterminated placeholder: treat the remainder as literal text.
+            out.push_str(&rest[start..]);
+            rest = "";
+            break;
+        };
+        let raw_key = after[..end].trim();
+        let key = raw_key.strip_prefix("contract.").unwrap_or(raw_key);
+        match resolve(key) {
+            Some(value) => out.push_str(&value),
+            None => {
+                if !missing.iter().any(|k| k == key) {
+                    missing.push(key.to_string());
+                }
+            }
+        }
+        rest = &after[end + 2..];
+    }
+    out.push_str(rest);
+    if missing.is_empty() {
+        Ok(out)
+    } else {
+        Err(missing)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

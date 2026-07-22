@@ -9,3 +9,18 @@ amount_expr = "1234"
 schedule_kind = "every"
 schedule_from = "2026-01"
 schedule_to = "2026-12"
+
+[[rules]]
+id = "emit_parameterized_fee"
+contract_name = "test.fee_contract"
+stream_name = "testpack.fee"
+owner_entity = "legal.borrower"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.rate}} * {{contract.units}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+units = "10"

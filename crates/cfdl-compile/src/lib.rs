@@ -888,6 +888,51 @@ fn lower_contract_streams(
                 ));
                 continue;
             }
+            // Template expansion: resolve {{contract.<key>}} placeholders from
+            // contract terms (term_start/term_end from the term range), then
+            // rule defaults. Missing keys are compile errors.
+            let resolve = |key: &str| -> Option<String> {
+                let from_contract = match key {
+                    "term_start" => contract.term_start.as_deref().map(normalize_date),
+                    "term_end" => contract.term_end.as_deref().map(normalize_date),
+                    _ => contract.terms.get(key).map(|term| term.value.clone()),
+                };
+                from_contract.or_else(|| rule.defaults.get(key).cloned())
+            };
+            let mut expanded_rule = rule.clone();
+            let mut missing_keys: Vec<String> = Vec::new();
+            for (slot, target) in [
+                (&rule.amount_expr, &mut expanded_rule.amount_expr),
+                (&rule.schedule_from, &mut expanded_rule.schedule_from),
+                (&rule.schedule_to, &mut expanded_rule.schedule_to),
+            ] {
+                match cfdl_pack::expand_rule_template(slot, &resolve) {
+                    Ok(expanded) => *target = expanded,
+                    Err(missing) => {
+                        for key in missing {
+                            if !missing_keys.contains(&key) {
+                                missing_keys.push(key);
+                            }
+                        }
+                    }
+                }
+            }
+            if !missing_keys.is_empty() {
+                for key in &missing_keys {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5006_MISSING_CONTRACT_TERM",
+                        &format!(
+                            "Pack lowering rule '{}' requires contract term '{}' (no default declared); contract '{}' does not provide it.",
+                            rule.id, key, contract.name
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                continue;
+            }
+            let rule = &expanded_rule;
+
             let mut schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
             let mut amount_src = rule.amount_expr.clone();

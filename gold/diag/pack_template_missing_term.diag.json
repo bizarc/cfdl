@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5006_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Pack lowering rule 'emit_parameterized_fee' requires contract term 'rate' (no default declared); contract 'test.fee_contract' does not provide it.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 9,
+      "start_col": 1,
+      "end_line": 11,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]
