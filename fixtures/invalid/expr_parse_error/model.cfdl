@@ -1,0 +1,9 @@
+version 0.1
+model "expr-parse-error"
+time calendar monthly from 2026-01 for 3
+entity legal borrower
+
+stream legal.rent on entity legal.borrower inflow currency USD {
+  schedule every monthly from 2026-01 to 2026-03
+  amount = 1200 * (1 +
+}

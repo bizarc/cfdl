@@ -100,7 +100,11 @@ pub struct StreamStmt {
 pub struct ExprSlot {
     pub lang: String,
     pub src: String,
+    /// Span of the whole slot (statement keyword through expression end).
     pub span: Span,
+    /// Span of the expression text itself — `src` is the source slice this
+    /// covers, so expression-internal byte offsets map into it.
+    pub expr_span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -906,6 +910,7 @@ impl<'a> Parser<'a> {
             lang: "cfdl".to_string(),
             src: self.slice_source(expr_span),
             span: merge_spans(start_span, expr_span),
+            expr_span,
         })
     }
 
