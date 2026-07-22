@@ -60,6 +60,25 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.14] - 2026-07-22
+
+### Added
+- **Source-string compile API** (Workstream F, increment F2):
+  `cfdl_compile::compile_sources_to_json(files, root_file, options)` and
+  `validate_sources(...)` compile a model from an in-memory `path -> source`
+  map — no filesystem — the shared foundation for the WASM playground (F3) and
+  the API server (F4). Backed by a new `cfdl_resolver::SourceProvider` seam
+  (`FsProvider`, `MemoryProvider`); import-path resolution is now lexical
+  (relative to the model root), preserving E1202/E1203 semantics exactly (the
+  golden suite is byte-identical).
+- `cfdl-compile` gains an `embedded-packs` feature (forwarding to
+  `cfdl-pack`); with it, source-string compiles resolve `use pack` against the
+  bundled registry when no packs directory is given.
+- Embedded pack registry now bundles **all four** packs (added credit and
+  energy; previously only cre + opco).
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added

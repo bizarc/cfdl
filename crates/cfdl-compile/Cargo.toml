@@ -8,6 +8,12 @@ homepage.workspace = true
 description = "CFDL compiler - source to canonical IR"
 publish = false
 
+[features]
+# Bundle the standard packs into the binary (no filesystem) so the
+# source-string compile path (WASM/server) can resolve `use pack` without a
+# packs directory. Forwards to cfdl-pack's embedded registry.
+embedded-packs = ["cfdl-pack/embedded-packs"]
+
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }

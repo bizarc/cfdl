@@ -1,10 +1,83 @@
 //! CFDL import resolver and deterministic module graph ordering.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::fs;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 use cfdl_parser::{parse, CompilationUnit, Span, Stmt, StreamStmt};
+
+/// Supplies module sources to the resolver, keyed by root-relative path
+/// (posix-style, e.g. `"sub/a.cfdl"`). This is the seam that lets the same
+/// import graph be resolved from the filesystem or from an in-memory file map
+/// (WASM/server/SDK), with identical diagnostics.
+pub trait SourceProvider {
+    /// Is the model root usable (exists)?
+    fn root_exists(&self) -> bool;
+    /// Read a module by its root-relative path, or `None` if absent.
+    fn read(&self, relative_path: &str) -> Option<String>;
+}
+
+/// Filesystem-backed provider rooted at a directory (the historical behavior).
+pub struct FsProvider {
+    root: PathBuf,
+}
+
+impl FsProvider {
+    pub fn new(root: impl Into<PathBuf>) -> Self {
+        Self { root: root.into() }
+    }
+}
+
+impl SourceProvider for FsProvider {
+    fn root_exists(&self) -> bool {
+        self.root.is_dir()
+    }
+    fn read(&self, relative_path: &str) -> Option<String> {
+        std::fs::read_to_string(self.root.join(relative_path)).ok()
+    }
+}
+
+/// In-memory provider: a map of root-relative path -> source text.
+pub struct MemoryProvider {
+    files: BTreeMap<String, String>,
+}
+
+impl MemoryProvider {
+    pub fn new(files: BTreeMap<String, String>) -> Self {
+        Self { files }
+    }
+}
+
+impl SourceProvider for MemoryProvider {
+    fn root_exists(&self) -> bool {
+        !self.files.is_empty()
+    }
+    fn read(&self, relative_path: &str) -> Option<String> {
+        self.files.get(relative_path).cloned()
+    }
+}
+
+/// Join an importer-relative path with an import target, normalizing `.`/`..`
+/// lexically. Returns `None` when the result escapes the model root (a `..`
+/// pops above it), which surfaces as E1203. Keys are posix-style.
+fn join_relative(importer_rel: &str, import_path: &str) -> Option<String> {
+    let mut stack: Vec<&str> = Vec::new();
+    // Start from the importer's directory (drop its filename segment).
+    if let Some((dir, _file)) = importer_rel.rsplit_once('/') {
+        for seg in dir.split('/').filter(|s| !s.is_empty()) {
+            stack.push(seg);
+        }
+    }
+    for seg in import_path.split('/') {
+        match seg {
+            "" | "." => {}
+            ".." => {
+                stack.pop()?;
+            }
+            other => stack.push(other),
+        }
+    }
+    Some(stack.join("/"))
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolveDiagnostic {
@@ -55,7 +128,6 @@ pub struct RootModule {
 
 #[derive(Debug, Clone)]
 struct ModuleEntry {
-    full_path: PathBuf,
     ast: CompilationUnit,
 }
 
@@ -65,21 +137,31 @@ struct ImportEdge {
     span: Span,
 }
 
+/// Resolve a model's import graph from the filesystem, rooted at `model_root`.
 pub fn resolve_imports(
     model_root: &Path,
     root_module: RootModule,
 ) -> Result<ResolveOutput, Vec<ResolveDiagnostic>> {
-    let root_canon = match fs::canonicalize(model_root) {
-        Ok(path) => path,
-        Err(_) => {
-            return Err(vec![ResolveDiagnostic {
-                code: "E1202_IMPORT_NOT_FOUND".to_string(),
-                message: "Model root does not exist.".to_string(),
-                file: root_module.relative_path.clone(),
-                span: root_module.ast.span,
-            }]);
-        }
-    };
+    resolve_imports_with(&FsProvider::new(model_root.to_path_buf()), root_module)
+}
+
+/// Resolve a model's import graph from an arbitrary [`SourceProvider`].
+///
+/// Import paths are normalized lexically (relative to the model root); a path
+/// that escapes the root is E1203 and a missing module is E1202 — identical to
+/// the filesystem behavior.
+pub fn resolve_imports_with(
+    provider: &dyn SourceProvider,
+    root_module: RootModule,
+) -> Result<ResolveOutput, Vec<ResolveDiagnostic>> {
+    if !provider.root_exists() {
+        return Err(vec![ResolveDiagnostic {
+            code: "E1202_IMPORT_NOT_FOUND".to_string(),
+            message: "Model root does not exist.".to_string(),
+            file: root_module.relative_path.clone(),
+            span: root_module.ast.span,
+        }]);
+    }
 
     let mut modules: BTreeMap<String, ModuleEntry> = BTreeMap::new();
     let mut imports: BTreeMap<String, Vec<ImportEdge>> = BTreeMap::new();
@@ -90,7 +172,6 @@ pub fn resolve_imports(
     modules.insert(
         root_rel.clone(),
         ModuleEntry {
-            full_path: root_module.full_path,
             ast: root_module.ast,
         },
     );
@@ -105,29 +186,39 @@ pub fn resolve_imports(
         let mut resolved_edges = Vec::new();
 
         for import in current_imports {
-            match resolve_import_target(
-                &root_canon,
-                &current.full_path,
-                &import.path,
-                &current_rel,
-                import.span,
-            ) {
-                Ok(target_rel) => {
-                    resolved_edges.push(ImportEdge {
-                        to_rel: target_rel.clone(),
-                        span: import.span,
-                    });
-                    if !modules.contains_key(&target_rel) {
-                        match load_module(&root_canon, &target_rel) {
-                            Ok(module) => {
-                                modules.insert(target_rel.clone(), module);
-                                queue.push_back(target_rel);
-                            }
-                            Err(errs) => diagnostics.extend(errs),
-                        }
-                    }
+            let target_rel = match resolve_import_target(&current_rel, &import.path, import.span) {
+                Ok(target_rel) => target_rel,
+                Err(diag) => {
+                    diagnostics.push(diag);
+                    continue;
                 }
-                Err(diag) => diagnostics.push(diag),
+            };
+            resolved_edges.push(ImportEdge {
+                to_rel: target_rel.clone(),
+                span: import.span,
+            });
+            if modules.contains_key(&target_rel) {
+                continue;
+            }
+            // Read the target through the provider. A missing module is
+            // reported against the importer with the import statement's span
+            // (the historical filesystem behavior), using the written import
+            // path in the message.
+            let Some(source) = provider.read(&target_rel) else {
+                diagnostics.push(ResolveDiagnostic {
+                    code: "E1202_IMPORT_NOT_FOUND".to_string(),
+                    message: format!("Imported module '{}' was not found.", import.path),
+                    file: current_rel.clone(),
+                    span: import.span,
+                });
+                continue;
+            };
+            match parse_module(&target_rel, &source) {
+                Ok(module) => {
+                    modules.insert(target_rel.clone(), module);
+                    queue.push_back(target_rel);
+                }
+                Err(errs) => diagnostics.extend(errs),
             }
         }
 
@@ -331,71 +422,23 @@ fn extract_imports(module: &CompilationUnit) -> Vec<ImportStmtRef> {
 }
 
 fn resolve_import_target(
-    root_canon: &Path,
-    importer_file: &Path,
-    import_path: &str,
     importer_rel: &str,
+    import_path: &str,
     span: Span,
 ) -> Result<String, ResolveDiagnostic> {
-    let importer_dir = importer_file.parent().unwrap_or(root_canon);
-    let joined = importer_dir.join(import_path);
-
-    if import_escapes_root(root_canon, &joined) {
-        return Err(ResolveDiagnostic {
+    match join_relative(importer_rel, import_path) {
+        Some(target_rel) => Ok(target_rel),
+        None => Err(ResolveDiagnostic {
             code: "E1203_IMPORT_OUTSIDE_MODEL_ROOT".to_string(),
             message: format!("Import path '{import_path}' escapes the model root."),
             file: importer_rel.to_string(),
             span,
-        });
+        }),
     }
-
-    let target_canon = match fs::canonicalize(&joined) {
-        Ok(path) => path,
-        Err(_) => {
-            return Err(ResolveDiagnostic {
-                code: "E1202_IMPORT_NOT_FOUND".to_string(),
-                message: format!("Imported module '{import_path}' was not found."),
-                file: importer_rel.to_string(),
-                span,
-            });
-        }
-    };
-
-    if !target_canon.starts_with(root_canon) {
-        return Err(ResolveDiagnostic {
-            code: "E1203_IMPORT_OUTSIDE_MODEL_ROOT".to_string(),
-            message: format!("Import path '{import_path}' resolves outside the model root."),
-            file: importer_rel.to_string(),
-            span,
-        });
-    }
-
-    Ok(path_relative_to(root_canon, &target_canon))
 }
 
-fn load_module(
-    root_canon: &Path,
-    relative_path: &str,
-) -> Result<ModuleEntry, Vec<ResolveDiagnostic>> {
-    let full_path = root_canon.join(relative_path);
-    let source = match fs::read_to_string(&full_path) {
-        Ok(src) => src,
-        Err(_) => {
-            return Err(vec![ResolveDiagnostic {
-                code: "E1202_IMPORT_NOT_FOUND".to_string(),
-                message: format!("Imported module '{relative_path}' was not found."),
-                file: relative_path.to_string(),
-                span: Span {
-                    start_line: 1,
-                    start_col: 1,
-                    end_line: 1,
-                    end_col: 1,
-                },
-            }]);
-        }
-    };
-
-    let (tokens, lex_diags) = cfdl_lexer::lex(&source);
+fn parse_module(relative_path: &str, source: &str) -> Result<ModuleEntry, Vec<ResolveDiagnostic>> {
+    let (tokens, lex_diags) = cfdl_lexer::lex(source);
     if !lex_diags.is_empty() {
         return Err(lex_diags
             .into_iter()
@@ -408,7 +451,7 @@ fn load_module(
             .collect());
     }
 
-    let parse_result = parse(relative_path, &source, &tokens);
+    let parse_result = parse(relative_path, source, &tokens);
     if !parse_result.diagnostics.is_empty() {
         return Err(parse_result
             .diagnostics
@@ -425,43 +468,7 @@ fn load_module(
     let ast = parse_result
         .ast
         .expect("parser returns AST when diagnostics are empty");
-    Ok(ModuleEntry { full_path, ast })
-}
-
-fn import_escapes_root(root_canon: &Path, import_target: &Path) -> bool {
-    if import_target.is_absolute() && !import_target.starts_with(root_canon) {
-        return true;
-    }
-    match normalize_without_fs(import_target) {
-        Some(path) => !path.starts_with(root_canon),
-        None => true,
-    }
-}
-
-fn normalize_without_fs(path: &Path) -> Option<PathBuf> {
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::Prefix(prefix) => normalized.push(prefix.as_os_str()),
-            Component::RootDir => normalized.push(component.as_os_str()),
-            Component::CurDir => {}
-            Component::ParentDir => {
-                if !normalized.pop() {
-                    return None;
-                }
-            }
-            Component::Normal(part) => normalized.push(part),
-        }
-    }
-    Some(normalized)
-}
-
-fn path_relative_to(root_canon: &Path, absolute_path: &Path) -> String {
-    absolute_path
-        .strip_prefix(root_canon)
-        .expect("path is under root")
-        .to_string_lossy()
-        .replace('\\', "/")
+    Ok(ModuleEntry { ast })
 }
 
 fn detect_cycle(
