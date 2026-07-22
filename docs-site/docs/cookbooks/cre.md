@@ -254,3 +254,12 @@ and the stochastic-modeling docs.
 Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-parity
 case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
 rent), and the CRE office notebook in `examples/notebooks/`.
+
+## Worked example models
+
+- [CRE examples overview](/examples/cre-examples)
+- [Lease-up](/examples/cre_lease_up)
+- [Developer lifecycle](/examples/cre_developer)
+- [Phased development](/examples/cre_phased)
+- [Multi-file model](/examples/cre_multi_file)
+- [Development with financing](/examples/cre_development_with_financing)

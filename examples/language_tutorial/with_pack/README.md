@@ -1,6 +1,6 @@
 # With Pack
 
-This example shows a slightly larger pack-enabled model using pack **contracts** for revenue and opex. In real models, individual revenue/opex items are often modeled as **streams**; see the Language Guide "When to use streams vs contracts."
+This example shows a slightly larger pack-enabled model using pack **contracts** for revenue and opex. In real models, individual revenue/opex items are often modeled as **streams**; see "When to use streams vs contracts" in `docs/09_user_guide.md`.
 
 Compile:
 

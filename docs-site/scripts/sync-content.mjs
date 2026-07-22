@@ -28,6 +28,10 @@ function normalizeLinks(markdown) {
       "](schemas/CFDL_v0_1_Grammar.ebnf)",
       `](${REPO_HTTP_BASE}/docs/schemas/CFDL_v0_1_Grammar.ebnf)`
     )
+    .replaceAll(
+      '"When to use streams vs contracts" in `docs/09_user_guide.md`',
+      "[When to use streams vs contracts](/language-guide#when-to-use-streams-vs-contracts)"
+    )
     .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language Guide](/language-guide)")
     .replaceAll("`docs/09_user_guide.md`", "[Language Guide](/language-guide)")
     .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/language-reference/language-spec)")
@@ -310,7 +314,7 @@ for (const name of exampleDirs) {
     continue;
   }
 
-  const readme = stripLeadingH1(fs.readFileSync(readmePath, "utf8"));
+  const readme = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
   const model = fs.readFileSync(modelPath, "utf8").trimEnd();
 
   const examplePage = [
@@ -387,7 +391,7 @@ for (const name of domainExampleOrder) {
 
   const readmePath = path.resolve(dir, "README.md");
   if (fs.existsSync(readmePath)) {
-    const readme = stripLeadingH1(fs.readFileSync(readmePath, "utf8")).trimEnd();
+    const readme = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8"))).trimEnd();
     body.unshift(readme, "", "---", "");
   }
 
@@ -458,10 +462,36 @@ const cookbookIndexLines = [
   ""
 ];
 
+// Domain example pages folded into each pack guide (instead of separate
+// sidebar entries next to the cookbooks).
+const packWorkedExamples = {
+  cre: [
+    ["CRE examples overview", "/examples/cre-examples"],
+    ["Lease-up", "/examples/cre_lease_up"],
+    ["Developer lifecycle", "/examples/cre_developer"],
+    ["Phased development", "/examples/cre_phased"],
+    ["Multi-file model", "/examples/cre_multi_file"],
+    ["Development with financing", "/examples/cre_development_with_financing"]
+  ],
+  opco: [
+    ["Operating Business examples overview", "/examples/operating-business-examples"],
+    ["Basic OpCo", "/examples/opco_basic"],
+    ["Growth via expressions", "/examples/opco_with_growth"],
+    ["Multi-file model", "/examples/opco_multi_file"]
+  ]
+};
+
 for (const pack of cookbookPacks) {
   const readmePath = path.resolve(repoRoot, `packs/${pack}/README.md`);
   if (!fs.existsSync(readmePath)) continue;
-  const body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
+  let body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
+  const worked = packWorkedExamples[pack];
+  if (worked) {
+    body +=
+      "\n## Worked example models\n\n" +
+      worked.map(([label, href]) => `- [${label}](${href})`).join("\n") +
+      "\n";
+  }
   const page = renderDoc(
     {
       id: `cookbook-${pack}`,

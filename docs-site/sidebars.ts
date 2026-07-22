@@ -56,9 +56,7 @@ const sidebars: SidebarsConfig = {
         "cookbooks/cookbook-cre",
         "cookbooks/cookbook-credit",
         "cookbooks/cookbook-opco",
-        "cookbooks/cookbooks",
-        "examples/cre-examples",
-        "examples/operating-business-examples"
+        "cookbooks/cookbooks"
       ]
     },
     {
