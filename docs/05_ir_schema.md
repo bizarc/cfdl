@@ -193,7 +193,7 @@
       "additionalProperties": false,
       "required": ["lang", "src"],
       "properties": {
-        "lang": { "type": "string", "enum": ["cel"] },
+        "lang": { "type": "string", "enum": ["cfdl"] },
         "src": { "type": "string", "minLength": 1 }
       }
     },

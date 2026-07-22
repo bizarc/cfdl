@@ -24,7 +24,7 @@ entity project plant
 
 stream plant.ppa_revenue on entity project.plant inflow currency USD {
   schedule every monthly from 2027-01 to 2051-12
-  amount cel "mwh_p50 * ppa_price * pow(1 - degradation, time.t / 12.0)"
+  amount = inputs.mwh_p50 * inputs.ppa_price * pow(1 - inputs.degradation, time.t / 12.0)
 }
 ```
 
@@ -35,9 +35,11 @@ stream plant.ppa_revenue on entity project.plant inflow currency USD {
 ## Use CFDL from…
 
 - **Files + CLI** — `cfdl compile`, `cfdl run`, `cfdl validate` (this repo, works today)
-- **Python / Jupyter** — `cfdl_sdk` bindings under `python/` (pandas-friendly SDK in progress)
+- **Python / Jupyter** — `cfdl_sdk` bindings under `python/` with pandas result accessors
+  (`results.cashflows()/.metrics()/.scenarios()`) and example notebooks
 - **VS Code** — extension with LSP diagnostics under `editors/vscode`
-- **API / playground** — planned; see `LAUNCH_PLAN.md`
+- **API server** — `crates/cfdl-server` (axum): `POST /v1/compile|validate|run`
+- **Playground** — in-browser compile + run (`crates/cfdl-wasm`, Monaco docs-site page)
 
 ## Quick start
 

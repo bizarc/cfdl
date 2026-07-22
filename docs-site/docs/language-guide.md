@@ -83,7 +83,7 @@ See `examples/language_tutorial/minimal_model/model.cfdl`.
 
 ## 4) Expressions and literals
 
-CFDL uses CEL string expressions for executable logic:
+CFDL uses bare, Excel-familiar expressions for executable logic:
 
 ```cfdl
 amount = inputs.base_rent * 1.02
@@ -222,7 +222,7 @@ cargo build -p cfdl-cli
 
 Parameter key conventions:
 - Stream overrides: `stream.<dotted_stream_name>:amount`
-- Config namespace: `cfg.<path>` (for CEL `cfg.*` access)
+- Config namespace: `cfg.<path>` (for `cfg.*` access in expressions)
 
 ---
 
@@ -290,7 +290,7 @@ Recommended workflow: start with minimal → add streams → contracts with pack
 |-----|---------|
 | `01_language_spec.md` | Core language spec |
 | `02_grammar.md` | Formal EBNF grammar |
-| `03_expression_environment.md` | CEL expression environment |
+| `03_expression_environment.md` | Expression environment |
 | `04_compiler_spec.md` | Compiler pipeline spec |
 | `05_ir_schema.md` | IR schema (human-readable) |
 | `06_results_schema.md` | Results schema (human-readable) |
