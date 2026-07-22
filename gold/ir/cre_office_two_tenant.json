@@ -307,12 +307,14 @@
       "direction": "outflow",
       "currency": "USD",
       "schedule": {
-        "kind": "OnDate",
-        "on": "2031-01-01"
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2031-01-01",
+        "to": "2036-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "0.7 * 100000.0 + (1.0 - 0.7) * 350000.0"
+        "src": "if(months_between(parse_date(\"2031-01-01\"), time.date) == 0.0, 0.7 * 100000.0, 0.0) + if(months_between(parse_date(\"2031-01-01\"), time.date) == 3.0, (1.0 - 0.7) * 350000.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

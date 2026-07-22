@@ -1,0 +1,154 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-stochastic-rollover",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2031-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "fa30da4620ad7b05155dc78968d47fc7",
+      "symbol": "asset.tower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {
+      "renewal_draw": {
+        "dist": {
+          "kind": "Uniform",
+          "params": {
+            "max": 1.0,
+            "min": 0.0
+          }
+        },
+        "name": "renewal_draw",
+        "type": "Decimal"
+      }
+    }
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "987fe60c069f60c5048209b9ba3f21c6",
+      "name": "asset.downtime_loss",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2031-01-01",
+        "to": "2031-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(inputs.renewal_draw < 0.7, 0.0, 560000.0 / 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 20,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "342f303958b4b678b3ab363788ecf440",
+      "name": "asset.rollover_rent",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2031-01-01",
+        "to": "2032-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(inputs.renewal_draw < 0.7, 520000.0 / 12.0, 560000.0 / 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c543ce8e35350283fe939ab9d6a8cd11",
+      "name": "asset.turnover_costs",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2031-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(inputs.renewal_draw < 0.7, 100000.0, 350000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "8ea5e3a572980c4428c583e0a0e795c4bb7b4e758e047135ec0d5429440f05d7",
+  "model_hash": "f802b6a0a8b0116f6b76927e057db58c0f6aa822c49a348fcbcff6b61701e1b7",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.3.0"
@@ -14,9 +14,9 @@
         "currency": "USD"
       },
       "model.irr": -1.0,
-      "model.moic": 3.210228,
+      "model.moic": 3.234175,
       "model.npv": {
-        "amount": 1074092.485482,
+        "amount": 1075627.60205,
         "currency": "USD"
       },
       "model.payback_periods": 53.0,
@@ -25,7 +25,7 @@
         "amount": 3009646.651045,
         "currency": "USD"
       },
-      "model.wal_years": 8.432081,
+      "model.wal_years": 8.442742,
       "run.annual_discount_rate": 0.1,
       "stream.cre.exit.proceeds.total": {
         "amount": 3237142.698205,
@@ -325,7 +325,7 @@
             "currency": "USD"
           },
           {
-            "amount": -174404.138127,
+            "amount": -69404.138127,
             "currency": "USD"
           },
           {
@@ -337,7 +337,7 @@
             "currency": "USD"
           },
           {
-            "amount": 14595.861873,
+            "amount": -90404.138127,
             "currency": "USD"
           },
           {
@@ -2281,7 +2281,7 @@
             "currency": "USD"
           },
           {
-            "amount": -175000.0,
+            "amount": -70000.0,
             "currency": "USD"
           },
           {
@@ -2293,7 +2293,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -105000.0,
             "currency": "USD"
           },
           {

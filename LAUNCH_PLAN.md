@@ -200,6 +200,39 @@ G (evs-platform re-point) ── needs first tagged release
 - Flag any reference model that lacks expert verification — parity claims against wrong
   references are worse than none.
 
+### Stochastic modeling — the differentiator (cuts across D/E/F)
+
+Excel and Argus underwrite on point estimates and expected-value blends; CFDL
+models are **natively stochastic**, deterministic-seeded, and reproducible.
+This is a headline launch claim — the marketing story is "the same model
+file gives you the Argus number AND the distribution around it."
+
+**Shipped today** (do not re-plan; demonstrate):
+- In-language `assume <x> ~ Normal|LogNormal|Uniform|Triangular(..., clip)`;
+  per-assumption FNV-seeded draw streams (adding an assumption never
+  reshuffles another's draws); byte-reproducible runs.
+- Scenario-consistent branching via expressions: `if(inputs.draw < p, ...)`
+  gives BINARY outcomes per trial (see fixture cre_stochastic_rollover:
+  renewal vs re-lease with coherent rent/downtime/TI per trial — the
+  bimodal distribution expected-value blends conceal).
+- Run-config distributions as an override layer; MC aggregates for NPV
+  (mean/median/stddev/p_negative).
+
+**Pre-1.0 roadmap (in priority order):**
+1. **Distribution outputs for every metric**, not just NPV: percentiles
+   (P5/P25/P50/P75/P95) for IRR, DSCR, domain metrics; per-period cash
+   flow fan charts in Results (feeds the SDK/playground visual story).
+2. **Stochastic market-leasing pack rules**: first-class stochastic variants
+   of cre.rollover (draw-based renewal, stochastic downtime months) so the
+   pattern in the fixture is a one-line contract choice.
+3. **Correlated assumptions**: rank correlation (Iman–Conover) or a simple
+   factor model across assume draws — rent growth and exit caps do not move
+   independently.
+4. **Rate paths** for the credit pack's floaters (mean-reverting short-rate
+   path per trial, seeded like assumptions).
+
+Post-1.0: scenario trees / optimal exercise, full HLBV under uncertainty.
+
 ### Workstream E — Python/Jupyter SDK (M, start anytime; final polish after B)
 **Owns:** `crates/cfdl-py`, `python/**`, `examples/notebooks/**` (new).
 - Pandas accessors in the Python layer (`results.cashflows()/.metrics()/.scenarios()`

@@ -176,15 +176,19 @@ stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 currency = "USD"
-# Blended turnover costs at the window start.
-amount_expr = "{{contract.renewal_probability}} * {{contract.renewal_ti_lc}} + (1 - {{contract.renewal_probability}}) * {{contract.new_ti_lc}}"
-schedule_kind = "on_date"
+# Argus timing: the renewal-scenario turnover cost (p * renewal_ti_lc) pays
+# at expiry; the re-lease cost ((1-p) * new_ti_lc) pays after downtime, when
+# the new tenant takes occupancy. With downtime_months = 0 both pay at the
+# window start.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == 0, {{contract.renewal_probability}} * {{contract.renewal_ti_lc}}, 0) + if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == {{contract.downtime_months}}, (1 - {{contract.renewal_probability}}) * {{contract.new_ti_lc}}, 0)"
+schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
-schedule_to = ""
+schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 renewal_ti_lc = "0"
 new_ti_lc = "0"
+downtime_months = "0"
 
 [[rules]]
 id = "cre_vacancy_loss_v2"
