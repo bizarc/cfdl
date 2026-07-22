@@ -25,6 +25,7 @@
         "amount": 120000.0,
         "currency": "USD"
       },
+      "model.wal_years": 0.958333,
       "run.annual_discount_rate": 0.0,
       "stream.cre.ops.expense.total": {
         "amount": -240000.0,

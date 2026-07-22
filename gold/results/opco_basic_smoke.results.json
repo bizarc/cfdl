@@ -21,6 +21,7 @@
         "amount": 8584000.0,
         "currency": "USD"
       },
+      "model.wal_years": 4.750427,
       "run.annual_discount_rate": 0.1,
       "stream.opco.exit.value.total": {
         "amount": 5200000.0,

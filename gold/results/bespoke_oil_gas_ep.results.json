@@ -21,6 +21,7 @@
         "amount": 2312450.604355,
         "currency": "USD"
       },
+      "model.moic": 0.159388,
       "model.npv": {
         "amount": -4820164.380607,
         "currency": "USD"
@@ -29,6 +30,7 @@
         "amount": -4919549.395645,
         "currency": "USD"
       },
+      "model.wal_years": 1.483757,
       "run.annual_discount_rate": 0.1,
       "stream.capital.drilling_costs.total": {
         "amount": -1500000.0,

@@ -22,14 +22,18 @@
         "currency": "USD"
       },
       "model.irr": 0.498208,
+      "model.moic": 11.961186,
       "model.npv": {
         "amount": 15633824.806494,
         "currency": "USD"
       },
+      "model.payback_periods": 86.0,
+      "model.payback_years": 7.166667,
       "model.total": {
         "amount": 32373863.636364,
         "currency": "USD"
       },
+      "model.wal_years": 7.709985,
       "run.annual_discount_rate": 0.09,
       "stream.cre.exit.sale.total": {
         "amount": 31636363.636364,

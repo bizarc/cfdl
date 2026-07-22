@@ -18,14 +18,18 @@
         "currency": "USD"
       },
       "model.irr": 0.191077,
+      "model.moic": 1.358018,
       "model.npv": {
         "amount": 99584.856438,
         "currency": "USD"
       },
+      "model.payback_periods": 29.0,
+      "model.payback_years": 2.416667,
       "model.total": {
         "amount": 243452.523125,
         "currency": "USD"
       },
+      "model.wal_years": 1.848609,
       "run.annual_discount_rate": 0.1,
       "stream.ops.seed_investment.total": {
         "amount": -500000.0,

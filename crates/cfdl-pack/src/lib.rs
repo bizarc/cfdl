@@ -19,6 +19,7 @@ pub struct LoadedPack {
     pub aliases: BTreeMap<String, String>,
     pub templates: Vec<PackTemplate>,
     pub lowering_rules: Vec<LoweringRule>,
+    pub metric_specs: Vec<MetricSpec>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -39,6 +40,8 @@ pub struct PackEntrypoints {
     pub templates: Option<String>,
     #[serde(default)]
     pub lowering: Option<String>,
+    #[serde(default)]
+    pub metrics: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -67,6 +70,39 @@ pub struct LoweringRule {
     /// prefix), e.g. `"lease_up.months" = "18"`.
     #[serde(default)]
     pub defaults: BTreeMap<String, String>,
+}
+
+/// Declarative domain-metric definition (metrics.toml). Metrics are
+/// evaluated in file order, so ratio metrics may reference earlier ones.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct MetricSpec {
+    /// Output key, e.g. "domain.cre.noi".
+    pub id: String,
+    /// "money" | "number"
+    pub kind: String,
+    /// "sum" (numerator + denominator stream totals, signed),
+    /// "negated_sum" (-sum of numerator stream totals),
+    /// "ratio" (numerator_metric / denominator_metric).
+    pub op: String,
+    #[serde(default)]
+    pub numerator_streams: Vec<String>,
+    #[serde(default)]
+    pub denominator_streams: Vec<String>,
+    #[serde(default)]
+    pub numerator_metric: Option<String>,
+    #[serde(default)]
+    pub denominator_metric: Option<String>,
+    /// Human-readable lineage formula, emitted verbatim.
+    pub formula: String,
+    /// Omit the metric unless its value is strictly positive.
+    #[serde(default)]
+    pub require_positive: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+struct MetricsFile {
+    #[serde(default)]
+    metrics: Vec<MetricSpec>,
 }
 
 /// Expand `{{contract.<key>}}` placeholders in a lowering-rule template.
@@ -185,6 +221,8 @@ impl PackRegistry {
             let templates = load_templates(&pack_dir, manifest.entrypoints.templates.as_deref())?;
             let lowering_rules =
                 load_lowering_rules(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
+            let metric_specs =
+                load_metric_specs(&pack_dir, manifest.entrypoints.metrics.as_deref())?;
 
             packs.insert(
                 manifest.name.clone(),
@@ -193,6 +231,7 @@ impl PackRegistry {
                     aliases,
                     templates,
                     lowering_rules,
+                    metric_specs,
                 },
             );
         }
@@ -222,6 +261,13 @@ impl PackRegistry {
             .get(pack_name)
             .and_then(|pack| pack.aliases.get(alias))
             .map(String::as_str)
+    }
+
+    pub fn metric_specs(&self, pack_name: &str) -> Vec<MetricSpec> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.metric_specs.clone())
+            .unwrap_or_default()
     }
 
     pub fn lowering_rules(&self, pack_name: &str) -> Vec<LoweringRule> {
@@ -285,6 +331,52 @@ fn load_aliases(
         message: format!("Failed to parse aliases '{}': {err}", path.display()),
     })?;
     Ok(parsed.aliases)
+}
+
+fn load_metric_specs(
+    pack_dir: &Path,
+    metrics_path: Option<&str>,
+) -> Result<Vec<MetricSpec>, PackLoadError> {
+    let Some(relative) = metrics_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    let parsed: MetricsFile = toml::from_str(&raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse metrics '{}': {err}", path.display()),
+    })?;
+    for spec in &parsed.metrics {
+        match spec.op.as_str() {
+            "sum" | "negated_sum" => {}
+            "ratio" => {
+                if spec.numerator_metric.is_none() || spec.denominator_metric.is_none() {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Metric '{}': op 'ratio' requires numerator_metric and denominator_metric.",
+                            spec.id
+                        ),
+                    });
+                }
+            }
+            other => {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Metric '{}': unknown op '{other}' (expected sum, negated_sum, ratio).",
+                        spec.id
+                    ),
+                });
+            }
+        }
+        if !matches!(spec.kind.as_str(), "money" | "number") {
+            return Err(PackLoadError {
+                message: format!(
+                    "Metric '{}': unknown kind '{}' (expected money or number).",
+                    spec.id, spec.kind
+                ),
+            });
+        }
+    }
+    Ok(parsed.metrics)
 }
 
 fn load_lowering_rules(

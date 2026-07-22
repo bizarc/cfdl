@@ -836,6 +836,52 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Scalar::Number(round_amount(annual_irr)),
         );
     }
+    // Engine-universal return metrics (LAUNCH_PLAN §6C.5): MOIC, payback
+    // period, WAL. Domain metrics live in pack metrics.toml files.
+    let total_inflows: f64 = model_series.iter().filter(|v| **v > 0.0).sum();
+    let total_outflows: f64 = -model_series.iter().filter(|v| **v < 0.0).sum::<f64>();
+    if total_outflows > 0.0 && total_inflows > 0.0 {
+        metrics.insert(
+            "model.moic".to_string(),
+            Scalar::Number(round_amount(total_inflows / total_outflows)),
+        );
+    }
+    // Payback: first period at which cumulative net cash flow becomes
+    // non-negative, given the model starts cash-negative. Omitted otherwise.
+    if model_series.first().copied().unwrap_or(0.0) < 0.0 {
+        let mut cumulative = 0.0_f64;
+        let mut payback: Option<usize> = None;
+        for (idx, value) in model_series.iter().enumerate() {
+            cumulative += *value;
+            if cumulative >= 0.0 {
+                payback = Some(idx);
+                break;
+            }
+        }
+        if let Some(period) = payback {
+            metrics.insert(
+                "model.payback_periods".to_string(),
+                Scalar::Number(period as f64),
+            );
+            metrics.insert(
+                "model.payback_years".to_string(),
+                Scalar::Number(round_amount(period as f64 / ppy)),
+            );
+        }
+    }
+    // WAL: inflow-weighted average life in years.
+    if total_inflows > 0.0 {
+        let weighted: f64 = model_series
+            .iter()
+            .enumerate()
+            .filter(|(_, v)| **v > 0.0)
+            .map(|(idx, v)| (idx as f64 / ppy) * *v)
+            .sum();
+        metrics.insert(
+            "model.wal_years".to_string(),
+            Scalar::Number(round_amount(weighted / total_inflows)),
+        );
+    }
     metrics.insert(
         "run.annual_discount_rate".to_string(),
         Scalar::Number(round_amount(config.discount_rate)),

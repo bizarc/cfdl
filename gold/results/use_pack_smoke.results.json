@@ -21,6 +21,7 @@
         "amount": 14808.0,
         "currency": "USD"
       },
+      "model.wal_years": 0.458333,
       "run.annual_discount_rate": 0.1,
       "stream.testpack.lowered.total": {
         "amount": 14808.0,
