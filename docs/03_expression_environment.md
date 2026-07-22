@@ -73,7 +73,12 @@ Time value of money (Excel sign conventions, decimal-exact for whole-period
 terms): `pmt(rate, nper, pv, [fv], [due])`, `pv(rate, nper, pmt, [fv], [due])`,
 `fv(rate, nper, pmt, [pv], [due])`, `nper(rate, pmt, pv, [fv], [due])`,
 `rate(nper, pmt, pv, [fv], [due], [guess])` (Newton solver, f64, tolerance
-1e-12).
+1e-12), `ipmt(rate, per, nper, pv, [fv])` / `ppmt(rate, per, nper, pv, [fv])`
+(interest/principal split of payment `per`, 1-based; ordinary annuities).
+
+Depreciation: `macrs_rate(year, life)` — IRS Pub 946 GDS half-year convention
+percentages for 5/7/15/20-year property (`year` is 0-based; 0 beyond the
+recovery period).
 
 Credit: `cpr_to_smm(cpr)`.
 

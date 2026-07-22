@@ -297,6 +297,42 @@ mod tests {
     }
 
     #[test]
+    fn macrs_rates_match_irs_pub_946() {
+        // 5-year GDS half-year convention (Table A-1).
+        assert_eq!(n("macrs_rate(0, 5)"), dec("0.20"));
+        assert_eq!(n("macrs_rate(1, 5)"), dec("0.32"));
+        assert_eq!(n("macrs_rate(5, 5)"), dec("0.0576"));
+        assert_eq!(n("macrs_rate(6, 5)"), dec("0")); // beyond the table
+                                                     // 7-year year 3 = 12.49%.
+        assert_eq!(n("macrs_rate(3, 7)"), dec("0.1249"));
+        // Tables sum to 100%.
+        for life in [5_i32, 7, 15, 20] {
+            let mut total = Decimal::ZERO;
+            for year in 0..=21 {
+                total += n(&format!("macrs_rate({year}, {life})"));
+            }
+            assert_eq!(total, dec("1"), "life {life}");
+        }
+    }
+
+    #[test]
+    fn ipmt_ppmt_match_excel() {
+        // Excel: IPMT(0.005, 1, 360, 100000) = -500.00 exactly.
+        assert_eq!(n("round(ipmt(0.005, 1, 360, 100000), 6)"), dec("-500"));
+        // Excel: PPMT(0.005, 1, 360, 100000) = -99.5505251527
+        assert_eq!(n("round(ppmt(0.005, 1, 360, 100000), 4)"), dec("-99.5505"));
+        // Excel: IPMT(0.005, 2, 360, 100000) = -499.5022473742
+        assert_eq!(n("round(ipmt(0.005, 2, 360, 100000), 4)"), dec("-499.5022"));
+        // ipmt + ppmt = pmt for every period.
+        let total = n("round(ipmt(0.005, 120, 360, 100000) + ppmt(0.005, 120, 360, 100000), 6)");
+        let pmt = n("round(pmt(0.005, 360, 100000), 6)");
+        assert_eq!(total, pmt);
+        // Zero-rate degenerate case.
+        assert_eq!(n("ipmt(0, 5, 12, 1200)"), dec("0"));
+        assert_eq!(n("ppmt(0, 5, 12, 1200)"), dec("-100"));
+    }
+
+    #[test]
     fn division_by_zero_is_an_error() {
         let env = MapEnv::new();
         let err = eval_str("1 / 0", &env, Mode::Decimal).unwrap_err();

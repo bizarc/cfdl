@@ -82,6 +82,50 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
         "fv" => annuity(name, args, span, mode, Annuity::Fv),
         "nper" => nper(args, span),
         "rate" => rate(args, span),
+        // MACRS GDS half-year convention percentages (IRS Pub 946).
+        // macrs_rate(year, life): 0-based recovery year; 0 beyond the table.
+        "macrs_rate" => {
+            let [year, life] = exactly::<2>(name, args, span)?;
+            let (year, life) = (int(year)?, int(life)?);
+            let table: &[&str] = match life {
+                5 => &["0.20", "0.32", "0.192", "0.1152", "0.1152", "0.0576"],
+                7 => &[
+                    "0.1429", "0.2449", "0.1749", "0.1249", "0.0893", "0.0892", "0.0893", "0.0446",
+                ],
+                15 => &[
+                    "0.05", "0.095", "0.0855", "0.077", "0.0693", "0.0623", "0.059", "0.059",
+                    "0.0591", "0.059", "0.0591", "0.059", "0.0591", "0.059", "0.0591", "0.0295",
+                ],
+                20 => &[
+                    "0.0375", "0.07219", "0.06677", "0.06177", "0.05713", "0.05285", "0.04888",
+                    "0.04522", "0.04462", "0.04461", "0.04462", "0.04461", "0.04462", "0.04461",
+                    "0.04462", "0.04461", "0.04462", "0.04461", "0.04462", "0.04461", "0.02231",
+                ],
+                other => {
+                    return Err(CalcError::new(
+                        format!(
+                            "macrs_rate: unsupported recovery period {other} (use 5, 7, 15, 20)"
+                        ),
+                        Some(span),
+                    ))
+                }
+            };
+            let rate = if year < 0 {
+                return Err(CalcError::new(
+                    "macrs_rate: year must be >= 0".to_string(),
+                    Some(span),
+                ));
+            } else {
+                table
+                    .get(year as usize)
+                    .map(|s| s.parse::<Decimal>().expect("table literal parses"))
+                    .unwrap_or(Decimal::ZERO)
+            };
+            Ok(Value::Number(rate))
+        }
+        // Excel IPMT/PPMT (ordinary annuity only; due=1 not yet supported).
+        "ipmt" => interest_split(name, args, span, mode, Split::Interest),
+        "ppmt" => interest_split(name, args, span, mode, Split::Principal),
         "cpr_to_smm" => {
             // SMM = 1 - (1 - CPR)^(1/12). Fractional exponent: f64_escape.
             let cpr = num(one(name, args, span)?)?;
@@ -342,6 +386,72 @@ fn rate(args: &[Arg], span: Span) -> Result<Value, CalcError> {
         r = next;
     }
     Err(CalcError::new("rate: solver did not converge", Some(span)))
+}
+
+enum Split {
+    Interest,
+    Principal,
+}
+
+/// Excel IPMT/PPMT: interest / principal portion of payment `per` (1-based)
+/// on a level-pay annuity. Decimal-exact for whole-number periods.
+fn interest_split(
+    name: &str,
+    args: &[Arg],
+    span: Span,
+    mode: Mode,
+    which: Split,
+) -> Result<Value, CalcError> {
+    if args.len() < 4 || args.len() > 5 {
+        return Err(CalcError::new(
+            format!(
+                "{name} expects 4 or 5 arguments (rate, per, nper, pv, [fv]), got {}",
+                args.len()
+            ),
+            Some(span),
+        ));
+    }
+    let rate = num(&args[0])?;
+    let per = int(&args[1])?;
+    let nper = num(&args[2])?;
+    let pv = num(&args[3])?;
+    let fv = args.get(4).map(num).transpose()?.unwrap_or(Decimal::ZERO);
+    if per < 1 {
+        return Err(CalcError::new(
+            format!("{name}: per must be >= 1"),
+            Some(args[1].1),
+        ));
+    }
+    if rate.is_zero() {
+        // No interest; payment is pure principal.
+        let payment = -(pv + fv) / nper;
+        return Ok(Value::Number(match which {
+            Split::Interest => Decimal::ZERO,
+            Split::Principal => payment,
+        }));
+    }
+    let n = nper
+        .to_i64()
+        .ok_or_else(|| CalcError::new(format!("{name}: nper out of range"), Some(args[2].1)))?;
+    let one_plus = Decimal::ONE + rate;
+    let f = if mode == Mode::Decimal {
+        powi_decimal(one_plus, n, span)?
+    } else {
+        from_f64(to_f64(one_plus, span)?.powf(n as f64), span)?
+    };
+    let payment = -(pv * f + fv) * rate / (f - Decimal::ONE);
+    // Outstanding balance after (per - 1) payments.
+    let fk = if mode == Mode::Decimal {
+        powi_decimal(one_plus, per - 1, span)?
+    } else {
+        from_f64(to_f64(one_plus, span)?.powf((per - 1) as f64), span)?
+    };
+    let balance = pv * fk + payment * (fk - Decimal::ONE) / rate;
+    let interest = -(balance * rate);
+    Ok(Value::Number(match which {
+        Split::Interest => interest,
+        Split::Principal => payment - interest,
+    }))
 }
 
 // ---------- argument helpers ----------

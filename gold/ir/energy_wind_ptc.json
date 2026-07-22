@@ -1,19 +1,19 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "solar-ppa-microgrid",
+    "name": "wind-ptc-macrs",
     "currency": "USD"
   },
   "time": {
     "calendar": "monthly",
-    "start": "2026-01-01",
-    "periods": 300
+    "start": "2027-01-01",
+    "periods": 240
   },
   "phases": [],
   "entities": [
     {
-      "id": "25f4a9db639b9a6165b2d380445845cb",
-      "symbol": "project.microgrid",
+      "id": "c77e29686a6c4a43e843cd1c8df4592d",
+      "symbol": "project.windfarm",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
@@ -25,41 +25,15 @@
   },
   "contracts": [
     {
-      "id": "8acc161debe4d4dc43193aec2a5397d9",
-      "name": "energy.capacity",
-      "type": "core.Contract",
-      "subject": {
-        "symbol": "project.microgrid"
-      },
-      "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
-      },
-      "currency": "USD",
-      "terms": {},
-      "effects": {
-        "streams": []
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 37,
-          "start_col": 1,
-          "end_line": 40,
-          "end_col": 1
-        }
-      }
-    },
-    {
       "id": "dd414d4550419dcf33b958d9bac2d1f6",
       "name": "energy.capex",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
+        "start": "2027-01-01",
+        "end": "2046-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -69,9 +43,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 9,
+          "start_line": 10,
           "start_col": 1,
-          "end_line": 12,
+          "end_line": 13,
           "end_col": 1
         }
       }
@@ -81,11 +55,11 @@
       "name": "energy.debt_service",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
+        "start": "2027-01-01",
+        "end": "2046-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -95,23 +69,23 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 50,
+          "start_line": 54,
           "start_col": 1,
-          "end_line": 57,
+          "end_line": 61,
           "end_col": 1
         }
       }
     },
     {
-      "id": "f4d003325863953178e225850efeaf3a",
-      "name": "energy.itc",
+      "id": "f1fb5b8aa129866f6da3006265726271",
+      "name": "energy.macrs_shield",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
+        "start": "2027-01-01",
+        "end": "2046-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -121,9 +95,35 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 14,
+          "start_line": 37,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 44,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "dc39566d81dc509ffa1b066f532b065a",
+      "name": "energy.merchant",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 24,
           "end_col": 1
         }
       }
@@ -133,11 +133,11 @@
       "name": "energy.om",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
+        "start": "2027-01-01",
+        "end": "2046-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -147,23 +147,23 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 42,
+          "start_line": 46,
           "start_col": 1,
-          "end_line": 48,
+          "end_line": 52,
           "end_col": 1
         }
       }
     },
     {
-      "id": "aebbe1e2ae57370b162ab41152382fe3",
-      "name": "energy.ppa",
+      "id": "0e1342927beb3df0ef178d671d2583dc",
+      "name": "energy.ptc",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
+        "start": "2027-01-01",
+        "end": "2046-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -173,33 +173,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
-          "start_col": 1,
-          "end_line": 27,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "id": "3793c0165ba22162708ef7f43f70a3be",
-      "name": "energy.storage_arbitrage",
-      "type": "core.Contract",
-      "subject": {
-        "symbol": "project.microgrid"
-      },
-      "term": {
-        "start": "2026-01-01",
-        "end": "2050-12-01"
-      },
-      "currency": "USD",
-      "terms": {},
-      "effects": {
-        "streams": []
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 29,
+          "start_line": 26,
           "start_col": 1,
           "end_line": 35,
           "end_col": 1
@@ -209,59 +183,20 @@
   ],
   "streams": [
     {
-      "id": "568828c12b3fccfa32d3c06118ca5661",
-      "name": "energy.capacity.revenue",
-      "owner": {
-        "symbol": "project.microgrid"
-      },
-      "direction": "inflow",
-      "currency": "USD",
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2050-12-01"
-      },
-      "amount": {
-        "lang": "cfdl",
-        "src": "60000.0 / 12.0"
-      },
-      "active_when": {
-        "lang": "cfdl",
-        "src": "true"
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 37,
-          "start_col": 1,
-          "end_line": 40,
-          "end_col": 1
-        },
-        "generated_by": {
-          "pack": {
-            "name": "energy",
-            "version": "0.1.0"
-          },
-          "rule_id": "energy_capacity_payment_v1"
-        }
-      }
-    },
-    {
       "id": "f7ab8f71270cf33f4813a17bbbc570a0",
       "name": "energy.capex.outlay",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "direction": "outflow",
       "currency": "USD",
       "schedule": {
         "kind": "OnDate",
-        "on": "2026-01-01"
+        "on": "2027-01-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "2400000.0"
+        "src": "42000000.0"
       },
       "active_when": {
         "lang": "cfdl",
@@ -270,9 +205,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 9,
+          "start_line": 10,
           "start_col": 1,
-          "end_line": 12,
+          "end_line": 13,
           "end_col": 1
         },
         "generated_by": {
@@ -288,19 +223,19 @@
       "id": "d44a5c80f41480fd9eb0e850e352787d",
       "name": "energy.debt.service",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "direction": "outflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2045-12-01"
+        "from": "2027-01-01",
+        "to": "2041-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "-pmt(0.06 / 12.0, 240.0, 1600000.0)"
+        "src": "-pmt(0.055 / 12.0, 180.0, 25000000.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -309,9 +244,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 50,
+          "start_line": 54,
           "start_col": 1,
-          "end_line": 57,
+          "end_line": 61,
           "end_col": 1
         },
         "generated_by": {
@@ -324,20 +259,22 @@
       }
     },
     {
-      "id": "e89e5d04c80fa2cf3467e959440e95d7",
-      "name": "energy.itc.credit",
+      "id": "a07c559aaa14121795d1a779b808c133",
+      "name": "energy.macrs.shield",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
-        "kind": "OnDate",
-        "on": "2026-12-01"
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2046-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "720000.0"
+        "src": "42000000.0 * macrs_rate(round_down(time.t / 12.0, 0.0), 5.0) / 12.0 * 0.21"
       },
       "active_when": {
         "lang": "cfdl",
@@ -346,9 +283,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 14,
+          "start_line": 37,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 44,
           "end_col": 1
         },
         "generated_by": {
@@ -356,27 +293,27 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_itc_credit_v1"
+          "rule_id": "energy_macrs_shield_v1"
         }
       }
     },
     {
-      "id": "aa7951e1ac7dec22214dff4d7f2f6165",
-      "name": "energy.om.expense",
+      "id": "7e672b81253fcfd70c60e62fc910933f",
+      "name": "energy.merchant.revenue",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
-      "direction": "outflow",
+      "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2050-12-01"
+        "from": "2027-01-01",
+        "to": "2046-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(70000.0 / 12.0) * pow(1.0 + 0.025, round_down(time.t / 12.0, 0.0))"
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(time.t / 12.0, 0.0)) * 42.0 * pow(1.0 + 0.015, round_down(time.t / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -385,9 +322,48 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 42,
+          "start_line": 15,
           "start_col": 1,
-          "end_line": 48,
+          "end_line": 24,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_merchant_revenue_v1"
+        }
+      }
+    },
+    {
+      "id": "aa7951e1ac7dec22214dff4d7f2f6165",
+      "name": "energy.om.expense",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2046-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(1300000.0 / 12.0) * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 52,
           "end_col": 1
         },
         "generated_by": {
@@ -400,22 +376,22 @@
       }
     },
     {
-      "id": "e17704c6d45bc926e02a5c7db18b7592",
-      "name": "energy.ppa.revenue",
+      "id": "fb828b7c541b16a3749563a7991f19fa",
+      "name": "energy.ptc.credit",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "project.windfarm"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2050-12-01"
+        "from": "2027-01-01",
+        "to": "2036-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(4200.0 / 12.0) * 1.0 * pow(1.0 - 0.005, round_down(time.t / 12.0, 0.0)) * 85.0 * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(time.t / 12.0, 0.0)) * 27.5 * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -424,46 +400,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
-          "start_col": 1,
-          "end_line": 27,
-          "end_col": 1
-        },
-        "generated_by": {
-          "pack": {
-            "name": "energy",
-            "version": "0.1.0"
-          },
-          "rule_id": "energy_ppa_revenue_v1"
-        }
-      }
-    },
-    {
-      "id": "7f32b3996df0588dfa84b68122a498df",
-      "name": "energy.storage.margin",
-      "owner": {
-        "symbol": "project.microgrid"
-      },
-      "direction": "inflow",
-      "currency": "USD",
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2050-12-01"
-      },
-      "amount": {
-        "lang": "cfdl",
-        "src": "(500.0 / 12.0) * 30.0 * pow(1.0 - 0.0, round_down(time.t / 12.0, 0.0))"
-      },
-      "active_when": {
-        "lang": "cfdl",
-        "src": "true"
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 29,
+          "start_line": 26,
           "start_col": 1,
           "end_line": 35,
           "end_col": 1
@@ -473,7 +410,7 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_storage_arbitrage_v1"
+          "rule_id": "energy_ptc_credit_v1"
         }
       }
     }
