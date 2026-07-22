@@ -646,6 +646,29 @@ fn build_ir(
         sort_compile_diagnostics(&mut diagnostics);
         return Err(diagnostics);
     }
+    {
+        // Two lowered streams with one name would silently merge in results
+        // reporting; make it a hard error instead.
+        let mut seen: BTreeMap<&str, &str> = BTreeMap::new();
+        for ((name, key), _stream) in &lowered.streams {
+            if let Some(previous) = seen.insert(name.as_str(), key.as_str()) {
+                return Err(vec![Diagnostic {
+                    code: "E5007_DUPLICATE_LOWERED_STREAM".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Multiple contracts lower to stream '{name}' ({previous} and {key}); \
+                         use suffixed contract instances with a templated stream_name \
+                         ({{{{contract.dot_suffix}}}}) so each emits a distinct stream."
+                    ),
+                    file: None,
+                    span: None,
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                }]);
+            }
+        }
+    }
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -929,6 +952,16 @@ fn lower_contract_streams(
                             .strip_prefix(&rule.contract_name)
                             .map(|rest| rest.trim_start_matches('.').to_string())
                             .unwrap_or_default(),
+                    ),
+                    // Like `suffix` but with its leading dot kept (empty for
+                    // an exact-name match) so stream names stay valid for
+                    // both suffixed and unsuffixed contracts.
+                    "dot_suffix" => Some(
+                        contract
+                            .name
+                            .strip_prefix(&rule.contract_name)
+                            .unwrap_or_default()
+                            .to_string(),
                     ),
                     _ => contract.terms.get(key).map(|term| term.value.clone()),
                 };
