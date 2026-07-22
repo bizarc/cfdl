@@ -1,5 +1,5 @@
 use crate::date::{CalcDate, DayCount};
-use crate::eval::{from_f64, powi_decimal, to_f64, Mode};
+use crate::eval::{from_f64, pow_mode, powi_decimal, to_f64, Mode};
 use crate::token::Span;
 use crate::value::Value;
 use crate::CalcError;
@@ -60,6 +60,22 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
                 digits,
                 RoundingStrategy::AwayFromZero,
             )))
+        }
+        // Function form of `^`, kept for continuity with the earlier CEL dialect.
+        "pow" => {
+            let [base, exp] = exactly::<2>(name, args, span)?;
+            Ok(Value::Number(pow_mode(num(base)?, num(exp)?, span, mode)?))
+        }
+        "clamp" => {
+            let [x, lo, hi] = exactly::<3>(name, args, span)?;
+            let (x, lo, hi) = (num(x)?, num(lo)?, num(hi)?);
+            if lo > hi {
+                return Err(CalcError::new(
+                    format!("clamp: lower bound {lo} exceeds upper bound {hi}"),
+                    Some(span),
+                ));
+            }
+            Ok(Value::Number(x.max(lo).min(hi)))
         }
         "pmt" => annuity(name, args, span, mode, Annuity::Pmt),
         "pv" => annuity(name, args, span, mode, Annuity::Pv),

@@ -1,9 +1,25 @@
-pub use cel_interpreter::{Context, Program, Value as CelValue};
+//! cfdl-expr — the expression evaluation facade used by the compiler and engine.
+//!
+//! As of Workstream B this is backed by `cfdl-calc` (the CFDL-native expression
+//! engine: decimal-first numerics, spanned diagnostics, snake_case builtins).
+//! The public API — `compile_expr`, `eval`, `ExprEnv`, `Value` — is unchanged
+//! from the CEL era so `cfdl-compile` and `cfdl-engine` did not have to change.
+//!
+//! Boundary semantics during the migration:
+//! - Env values arrive as f64-based `Value`s (the engine is not yet
+//!   decimal-native); they are bridged with `Decimal::from_f64` (nearest
+//!   decimal), evaluated exactly, and numeric results are returned as
+//!   `Value::Decimal(f64)`.
+//! - Evaluation runs in `cfdl_calc::Mode::Decimal`. The `excel_compat` mode is
+//!   plumbed for the benchmark harness via `eval_with_mode`.
+
+pub use cfdl_calc::Mode;
+use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
+use rust_decimal::Decimal;
 use std::collections::BTreeMap;
-use std::collections::HashMap;
 use std::sync::Arc;
 
-// --- Domain Types (Restored for Compatibility) ---
+// --- Domain types (stable API surface) ---
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -52,7 +68,7 @@ impl ExprEnv {
     }
 }
 
-// --- Error Types ---
+// --- Error types ---
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExprSpan {
@@ -75,216 +91,122 @@ impl std::fmt::Display for ExprError {
 
 impl std::error::Error for ExprError {}
 
-// --- Compilation & Evaluation ---
+fn parse_error(e: cfdl_calc::CalcError) -> ExprError {
+    ExprError {
+        code: "EXPR_PARSE".to_string(),
+        message: e.message,
+        span: e.span.map(|s| ExprSpan {
+            start: s.start,
+            end: s.end,
+        }),
+    }
+}
+
+fn eval_error(e: cfdl_calc::CalcError) -> ExprError {
+    ExprError {
+        code: "EXPR_EVAL".to_string(),
+        message: e.message,
+        span: e.span.map(|s| ExprSpan {
+            start: s.start,
+            end: s.end,
+        }),
+    }
+}
+
+// --- Compilation & evaluation ---
 
 #[derive(Debug, Clone)]
 pub struct CompiledExpr {
-    program: Arc<Program>,
+    expr: Arc<cfdl_calc::Expr>,
 }
 
 pub fn compile_expr(src: &str) -> Result<CompiledExpr, ExprError> {
-    Program::compile(src)
-        .map(|program| CompiledExpr {
-            program: Arc::new(program),
+    cfdl_calc::parse(src)
+        .map(|expr| CompiledExpr {
+            expr: Arc::new(expr),
         })
-        .map_err(|e| ExprError {
-            code: "CEL_COMPILE".to_string(),
-            message: e.to_string(),
-            span: None,
-        })
+        .map_err(parse_error)
 }
 
 pub fn eval(compiled: &CompiledExpr, env: &ExprEnv) -> Result<Value, ExprError> {
-    let mut ctx = Context::default();
-
-    // Register root variables
-    ctx.add_variable("model", env_map_to_cel(&env.model))
-        .map_err(|e| ExprError {
-            code: "CTX".into(),
-            message: e.to_string(),
-            span: None,
-        })?;
-    ctx.add_variable("time", env_map_to_cel(&env.time))
-        .map_err(|e| ExprError {
-            code: "CTX".into(),
-            message: e.to_string(),
-            span: None,
-        })?;
-    ctx.add_variable("entity", env_map_to_cel(&env.entity))
-        .map_err(|e| ExprError {
-            code: "CTX".into(),
-            message: e.to_string(),
-            span: None,
-        })?;
-    ctx.add_variable("cfg", env_map_to_cel(&env.cfg))
-        .map_err(|e| ExprError {
-            code: "CTX".into(),
-            message: e.to_string(),
-            span: None,
-        })?;
-    ctx.add_variable("obs", env_map_to_cel(&env.obs))
-        .map_err(|e| ExprError {
-            code: "CTX".into(),
-            message: e.to_string(),
-            span: None,
-        })?;
-
-    // Register standard library functions missing in CEL-Rust or custom to CFDL
-    ctx.add_function("clamp", |val: f64, min: f64, max: f64| -> f64 {
-        val.clamp(min, max)
-    });
-    ctx.add_function("pow", |base: f64, exp: f64| -> f64 { base.powf(exp) });
-
-    // Execute
-    let cel_result = compiled.program.execute(&ctx).map_err(|e| ExprError {
-        code: "CEL_EXEC".to_string(),
-        message: e.to_string(),
-        span: None,
-    })?;
-
-    // Convert back to Domain Value
-    Ok(cel_value_to_domain(cel_result))
+    eval_with_mode(compiled, env, Mode::Decimal)
 }
 
-// --- Converters ---
+pub fn eval_with_mode(
+    compiled: &CompiledExpr,
+    env: &ExprEnv,
+    mode: Mode,
+) -> Result<Value, ExprError> {
+    let adapter = EnvAdapter { env };
+    let result = cfdl_calc::eval(&compiled.expr, &adapter, mode).map_err(eval_error)?;
+    Ok(calc_to_domain(result))
+}
 
-use cel_interpreter::objects::{Key, Map as CelMap};
+// --- Env bridging ---
 
-fn env_map_to_cel(map: &BTreeMap<String, Value>) -> CelValue {
-    let mut hm = HashMap::new();
-    for (k, v) in map {
-        hm.insert(k.clone().into(), domain_value_to_cel(v));
+struct EnvAdapter<'a> {
+    env: &'a ExprEnv,
+}
+
+impl cfdl_calc::Env for EnvAdapter<'_> {
+    fn lookup(&self, path: &str) -> Option<cfdl_calc::Value> {
+        let mut parts = path.split('.');
+        let root = parts.next()?;
+        let map = match root {
+            "model" => &self.env.model,
+            "time" => &self.env.time,
+            "entity" => &self.env.entity,
+            "cfg" => &self.env.cfg,
+            "obs" => &self.env.obs,
+            _ => return None,
+        };
+        let mut current = map.get(parts.next()?)?;
+        for segment in parts {
+            current = match unwrap_optional(current)? {
+                Value::Map(m) => m.get(segment)?,
+                _ => return None,
+            };
+        }
+        domain_to_calc(unwrap_optional(current)?)
     }
-    CelValue::Map(CelMap { map: Arc::new(hm) })
 }
 
-fn domain_value_to_cel(v: &Value) -> CelValue {
+fn unwrap_optional(v: &Value) -> Option<&Value> {
     match v {
-        Value::Bool(b) => CelValue::Bool(*b),
-        // Coerce Int to Float to allow mixed arithmetic (e.g. 1 / 0.5) which CEL-Rust doesn't support
-        Value::Int(i) => CelValue::Float(*i as f64),
-        Value::Decimal(f) => CelValue::Float(*f),
-        Value::String(s) => CelValue::String(Arc::new(s.clone())),
+        Value::Optional(Some(inner)) => unwrap_optional(inner),
+        Value::Optional(None) => None,
+        other => Some(other),
+    }
+}
+
+fn domain_to_calc(v: &Value) -> Option<cfdl_calc::Value> {
+    match v {
+        Value::Bool(b) => Some(cfdl_calc::Value::Bool(*b)),
+        Value::Int(i) => Some(cfdl_calc::Value::Number(Decimal::from(*i))),
+        // Bridge from the f64 world: nearest decimal (documented boundary).
+        Value::Decimal(f) => Decimal::from_f64(*f).map(cfdl_calc::Value::Number),
+        Value::String(s) => Some(cfdl_calc::Value::Text(s.clone())),
+        Value::Currency(c) => Some(cfdl_calc::Value::Text(c.clone())),
         Value::Date(d) => {
-            // Convert Date to Map {year, month, day}
-            let mut m = HashMap::new();
-            m.insert("year".into(), CelValue::Int(d.year as i64));
-            m.insert("month".into(), CelValue::UInt(d.month as u64));
-            m.insert("day".into(), CelValue::UInt(d.day as u64));
-            m.insert(
-                "_type".into(),
-                CelValue::String(Arc::new("Date".to_string())),
-            );
-            CelValue::Map(CelMap { map: Arc::new(m) })
+            cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(cfdl_calc::Value::Date)
         }
-        Value::Currency(c) => CelValue::String(Arc::new(c.clone())), // Treat currency as string
-        Value::Money(m) => {
-            // Convert Money to Map {amount, currency}
-            let mut map = HashMap::new();
-            map.insert("amount".into(), CelValue::Float(m.amount));
-            map.insert(
-                "currency".into(),
-                CelValue::String(Arc::new(m.currency.clone())),
-            );
-            map.insert(
-                "_type".into(),
-                CelValue::String(Arc::new("Money".to_string())),
-            );
-            CelValue::Map(CelMap { map: Arc::new(map) })
-        }
-        Value::Optional(opt) => match opt {
-            Some(inner) => domain_value_to_cel(inner),
-            None => CelValue::Null,
-        },
-        Value::Map(m) => env_map_to_cel(m),
+        Value::Money(m) => Decimal::from_f64(m.amount).map(cfdl_calc::Value::Number),
+        Value::Optional(_) => unwrap_optional(v).and_then(domain_to_calc),
+        // Maps are traversed by dotted path in `lookup`; a map is not itself a value.
+        Value::Map(_) => None,
     }
 }
 
-fn cel_value_to_domain(v: CelValue) -> Value {
+fn calc_to_domain(v: cfdl_calc::Value) -> Value {
     match v {
-        CelValue::Bool(b) => Value::Bool(b),
-        CelValue::Int(i) => Value::Int(i),
-        CelValue::UInt(u) => Value::Int(u as i64),
-        CelValue::Float(f) => Value::Decimal(f),
-        CelValue::String(s) => Value::String(s.to_string()),
-        CelValue::Bytes(_) => Value::String("<bytes>".to_string()), // Unsupported
-        CelValue::List(_l) => {
-            // Unsupported list type in legacy Value
-            Value::String("<list>".to_string())
-        }
-        CelValue::Map(m) => {
-            // Check for Duck Types
-            // Key::from needs specific types usually, but let's try strict matching
-            let amount_key = Key::from("amount");
-            let currency_key = Key::from("currency");
-            let type_key = Key::from("_type");
-
-            if let (Some(a), Some(c), Some(t)) = (
-                m.map.get(&amount_key),
-                m.map.get(&currency_key),
-                m.map.get(&type_key),
-            ) {
-                if let (
-                    CelValue::Float(amount),
-                    CelValue::String(curr),
-                    CelValue::String(type_str),
-                ) = (a, c, t)
-                {
-                    if type_str.as_str() == "Money" {
-                        return Value::Money(Money {
-                            amount: *amount,
-                            currency: curr.to_string(),
-                        });
-                    }
-                }
-            }
-
-            let year_key = Key::from("year");
-            let month_key = Key::from("month");
-            let day_key = Key::from("day");
-
-            if let (Some(y), Some(mo), Some(d), Some(CelValue::String(type_str))) = (
-                m.map.get(&year_key),
-                m.map.get(&month_key),
-                m.map.get(&day_key),
-                m.map.get(&type_key),
-            ) {
-                if type_str.as_str() == "Date" {
-                    let year = match y {
-                        CelValue::Int(i) => *i as i32,
-                        _ => 0,
-                    };
-                    let month = match mo {
-                        CelValue::UInt(u) => *u as u32,
-                        CelValue::Int(i) => *i as u32,
-                        _ => 0,
-                    };
-                    let day = match d {
-                        CelValue::UInt(u) => *u as u32,
-                        CelValue::Int(i) => *i as u32,
-                        _ => 0,
-                    };
-                    return Value::Date(Date { year, month, day });
-                }
-            }
-
-            // Standard Map
-            let mut bm = BTreeMap::new();
-            for (k, v) in m.map.iter() {
-                // Key to string conversion might need helpers if Key isn't effectively string
-                // cel_interpreter Key is usually String/Int/Bool.
-                let k_str = match k {
-                    Key::String(s) => s.to_string(),
-                    Key::Bool(b) => b.to_string(),
-                    Key::Int(i) => i.to_string(),
-                    Key::Uint(u) => u.to_string(),
-                };
-                bm.insert(k_str, cel_value_to_domain(v.clone()));
-            }
-            Value::Map(bm)
-        }
-        CelValue::Null => Value::Optional(None),
-        _ => Value::String(format!("{:?}", v)),
+        cfdl_calc::Value::Number(d) => Value::Decimal(d.to_f64().unwrap_or(f64::NAN)),
+        cfdl_calc::Value::Bool(b) => Value::Bool(b),
+        cfdl_calc::Value::Text(s) => Value::String(s),
+        cfdl_calc::Value::Date(d) => Value::Date(Date {
+            year: d.year(),
+            month: d.month(),
+            day: d.day(),
+        }),
     }
 }
 
@@ -293,34 +215,73 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic_eval() {
-        // Source should use floats as cfdl-compile coerces them.
-        let src = "model.base + 10.0";
-        let compiled = compile_expr(src).expect("compile");
-
+    fn basic_eval_with_env() {
+        let compiled = compile_expr("model.base + 10.0").expect("compile");
         let mut env = ExprEnv::empty();
-        env.model.insert("base".to_string(), Value::Int(5)); // Converted to 5.0
-
+        env.model.insert("base".to_string(), Value::Int(5));
         let result = eval(&compiled, &env).expect("eval");
-        match result {
-            Value::Decimal(f) => assert_eq!(f, 15.0),
-            _ => panic!("Expected Decimal(15.0), got {:?}", result),
+        assert_eq!(result, Value::Decimal(15.0));
+    }
+
+    #[test]
+    fn legacy_cel_corpus_parses_and_evaluates() {
+        // Representative expressions from the pre-migration fixture corpus.
+        let mut env = ExprEnv::empty();
+        env.time.insert("t".to_string(), Value::Int(24));
+        env.cfg.insert("base".to_string(), Value::Decimal(100.0));
+        env.obs.insert("rate".to_string(), Value::Decimal(0.06));
+
+        let cases: &[(&str, Value)] = &[
+            // 120000 * 1.03^23, decimal-exact = 236830.3813351925455536160439
+            (
+                "120000 * pow(1.03, time.t - 1)",
+                Value::Decimal(236830.38133519256),
+            ),
+            (
+                "35000 * clamp((time.t - 36.0 + 1.0) / 6.0, 0.0, 1.0)",
+                Value::Decimal(0.0),
+            ),
+            ("2000 + time.t * 50", Value::Decimal(3200.0)),
+            ("cfg.base + time.t * 10", Value::Decimal(340.0)),
+            ("obs.rate", Value::Decimal(0.06)),
+            ("time.t >= 12", Value::Bool(true)),
+            ("time.t < 3", Value::Bool(false)),
+            ("180000 / 0.06", Value::Decimal(3000000.0)),
+        ];
+        for (src, expected) in cases {
+            let compiled = compile_expr(src).expect(src);
+            let got = eval(&compiled, &env).expect(src);
+            match (&got, expected) {
+                (Value::Decimal(g), Value::Decimal(e)) => {
+                    assert!((g - e).abs() < 1e-6, "{src}: got {g}, expected {e}")
+                }
+                _ => assert_eq!(&got, expected, "{src}"),
+            }
         }
     }
 
     #[test]
-    fn test_duck_typing_money() {
-        // CEL: {'amount': 100.0, 'currency': 'USD', '_type': 'Money'}
-        let src = "{'amount': 100.0, 'currency': 'USD', '_type': 'Money'}";
-        let compiled = compile_expr(src).expect("compile");
-        let env = ExprEnv::empty();
-        let result = eval(&compiled, &env).expect("eval");
-        match result {
-            Value::Money(m) => {
-                assert_eq!(m.amount, 100.0);
-                assert_eq!(m.currency, "USD");
-            }
-            _ => panic!("Expected Money, got {:?}", result),
-        }
+    fn parse_error_has_code_and_span() {
+        let err = compile_expr("1 + ").unwrap_err();
+        assert_eq!(err.code, "EXPR_PARSE");
+        assert!(err.span.is_some());
+    }
+
+    #[test]
+    fn unknown_variable_is_eval_error() {
+        let compiled = compile_expr("nope.missing + 1").expect("compile");
+        let err = eval(&compiled, &ExprEnv::empty()).unwrap_err();
+        assert_eq!(err.code, "EXPR_EVAL");
+        assert!(err.message.contains("nope.missing"));
+    }
+
+    #[test]
+    fn nested_map_paths_resolve() {
+        let mut env = ExprEnv::empty();
+        let mut terms = BTreeMap::new();
+        terms.insert("term_months".to_string(), Value::Int(120));
+        env.entity.insert("contract".to_string(), Value::Map(terms));
+        let compiled = compile_expr("entity.contract.term_months / 12").expect("compile");
+        assert_eq!(eval(&compiled, &env).unwrap(), Value::Decimal(10.0));
     }
 }

@@ -264,6 +264,20 @@ fn from_f64_retain(x: f64, span: Span) -> Result<Decimal, CalcError> {
         .ok_or_else(|| CalcError::new(format!("result out of decimal range: {x}"), Some(span)))
 }
 
+/// Power respecting the evaluation mode; shared by the `^` operator and the
+/// `pow()` builtin.
+pub(crate) fn pow_mode(
+    base: Decimal,
+    exp: Decimal,
+    span: Span,
+    mode: Mode,
+) -> Result<Decimal, CalcError> {
+    match mode {
+        Mode::Decimal => pow_decimal(base, exp, span),
+        Mode::ExcelCompat => arith_f64(BinOp::Pow, base, exp, span),
+    }
+}
+
 /// `^` in decimal mode: exact repeated-squaring for integer exponents; the
 /// documented float64 escape for fractional exponents.
 fn pow_decimal(base: Decimal, exp: Decimal, span: Span) -> Result<Decimal, CalcError> {
