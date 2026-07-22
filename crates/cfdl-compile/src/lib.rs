@@ -292,6 +292,12 @@ struct IrTime {
     calendar: String,
     start: String,
     periods: u32,
+    #[serde(skip_serializing_if = "is_zero_u32")]
+    projection: u32,
+}
+
+fn is_zero_u32(v: &u32) -> bool {
+    *v == 0
 }
 
 #[derive(Debug, Serialize)]
@@ -445,8 +451,8 @@ fn build_ir(
 ) -> Result<Ir, Vec<Diagnostic>> {
     let model_name = find_model_name(resolve_output).unwrap_or_else(|| "model".to_string());
     let model_currency = "USD".to_string();
-    let (time_calendar, time_start, time_periods) = find_time(resolve_output)
-        .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1));
+    let (time_calendar, time_start, time_periods, time_projection) = find_time(resolve_output)
+        .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1, 0));
     let timeline_end = add_periods_for_timeline_end(&time_start, &time_calendar, time_periods);
     let compiler_version = env!("CARGO_PKG_VERSION").to_string();
     let pack_seed = active_pack
@@ -699,6 +705,7 @@ fn build_ir(
             calendar: time_calendar,
             start: time_start,
             periods: time_periods,
+            projection: time_projection,
         },
         phases: phases.into_iter().map(|(_, phase)| phase).collect(),
         entities: entities.into_iter().map(|(_, entity)| entity).collect(),
@@ -2035,7 +2042,7 @@ fn find_model_name(resolve_output: &cfdl_resolver::ResolveOutput) -> Option<Stri
         })
 }
 
-fn find_time(resolve_output: &cfdl_resolver::ResolveOutput) -> Option<(String, String, u32)> {
+fn find_time(resolve_output: &cfdl_resolver::ResolveOutput) -> Option<(String, String, u32, u32)> {
     resolve_output
         .source_statements
         .iter()
@@ -2045,6 +2052,7 @@ fn find_time(resolve_output: &cfdl_resolver::ResolveOutput) -> Option<(String, S
                     cadence_to_frequency(time.cadence).to_string(),
                     normalize_date(&time.from),
                     time.periods,
+                    time.projection,
                 ))
             } else {
                 None

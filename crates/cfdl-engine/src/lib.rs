@@ -649,8 +649,14 @@ fn simulate_events(
 }
 
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
-    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, ir.time.periods as usize)?;
-    let periods = timeline.len();
+    // Cash horizon vs full evaluation window: the projection tail
+    // (`time ... project <n>`) is computed so series_sum/series_avg can read
+    // past the horizon (e.g. forward NOI at exit), but contributes nothing to
+    // cash results, totals, or NPV.
+    let cash_periods = ir.time.periods as usize;
+    let total_periods = cash_periods + ir.time.projection as usize;
+    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
+    let periods = cash_periods;
 
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
@@ -658,113 +664,74 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
-    let mut model_series = vec![0.0_f64; periods];
+    let mut model_series = vec![0.0_f64; cash_periods];
 
+    // Phase 1: streams without series references. Their FULL (projection-
+    // inclusive) values feed the series store for phase 2.
+    let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut phase2: Vec<&IrStream> = Vec::new();
     for stream in &ir.streams {
-        if let Some(lang) = &stream.amount.lang {
-            if lang != "cfdl" {
-                warnings.push(format!(
-                    "Stream '{}' amount language '{}' is unsupported; expression is treated as CEL.",
-                    stream.name, lang
-                ));
-            }
+        let phase2_stream = cfdl_expr::compile_expr(&stream.amount.src)
+            .map(|compiled| cfdl_expr::uses_series(&compiled))
+            .unwrap_or(false);
+        if phase2_stream {
+            phase2.push(stream);
+            continue;
         }
-        let amount_expr = match cfdl_expr::compile_expr(&stream.amount.src) {
-            Ok(compiled) => compiled,
-            Err(err) => {
-                warnings.push(format!(
-                    "Stream '{}' amount expression compile failed [{}]: {}; using 0.",
-                    stream.name, err.code, err.message
-                ));
-                // Deterministic fallback expression.
-                cfdl_expr::compile_expr("0").expect("constant expression compiles")
-            }
-        };
-        let active_src = stream
-            .active_when
-            .as_ref()
-            .map(|expr| expr.src.as_str())
-            .unwrap_or("true");
-        if let Some(expr) = &stream.active_when {
-            if let Some(lang) = &expr.lang {
-                if lang != "cfdl" {
-                    warnings.push(format!(
-                        "Stream '{}' active_when language '{}' is unsupported; expression is treated as CEL.",
-                        stream.name, lang
-                    ));
-                }
-            }
-        }
-        let active_expr = match cfdl_expr::compile_expr(active_src) {
-            Ok(compiled) => compiled,
-            Err(err) => {
-                warnings.push(format!(
-                    "Stream '{}' active_when expression compile failed [{}]: {}; using true.",
-                    stream.name, err.code, err.message
-                ));
-                cfdl_expr::compile_expr("true").expect("constant expression compiles")
-            }
-        };
+        let values = evaluate_stream(
+            ir,
+            config,
+            stream,
+            &timeline,
+            &base_inputs,
+            &event_sim,
+            None,
+            &mut warnings,
+        )?;
+        record_stream(
+            stream,
+            &values,
+            cash_periods,
+            &mut model_series,
+            &mut stream_totals,
+            &mut entity_totals,
+            &mut stream_series,
+        );
+        full_series.insert(stream.name.clone(), values);
+    }
 
-        let schedule_mask = schedule_mask(&stream.schedule, &timeline)?;
-        let event_mask = event_sim.stream_active.get(&stream.name);
-        let mut values = vec![0.0_f64; periods];
-        let direction_sign = stream_direction_sign(stream, &mut warnings);
-        for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
-            if !is_scheduled {
-                continue;
-            }
-            if let Some(mask) = event_mask {
-                if !mask[idx] {
-                    continue;
-                }
-            }
-            let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], &base_inputs);
-            apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
-            let active_value = eval_bool_expr(
-                &active_expr,
-                &env,
-                &stream.name,
-                "active_when",
-                &mut warnings,
-            );
-            if !active_value {
-                continue;
-            }
-            let amount = if let Some(override_value) = stream_amount_override(config, &stream.name)
-            {
-                override_value
-            } else {
-                eval_amount_expr(
-                    &amount_expr,
-                    &env,
-                    &stream.name,
-                    &ir.model.currency,
-                    &mut warnings,
-                )
-            };
-            values[idx] += amount * direction_sign;
-        }
-        for (idx, value) in values.iter().enumerate() {
-            model_series[idx] += *value;
-        }
-
-        let total = values.iter().sum::<f64>();
-        stream_totals.insert(stream.name.clone(), total);
-        entity_totals
-            .entry(stream.owner.symbol.clone())
-            .and_modify(|sum| *sum += total)
-            .or_insert(total);
-        stream_series.insert(stream.name.clone(), values);
+    // Phase 2: streams calling series_sum/series_avg read phase-1 series
+    // (and only those — no phase-2 -> phase-2 references, so no cycles).
+    for stream in phase2 {
+        let values = evaluate_stream(
+            ir,
+            config,
+            stream,
+            &timeline,
+            &base_inputs,
+            &event_sim,
+            Some(&full_series),
+            &mut warnings,
+        )?;
+        record_stream(
+            stream,
+            &values,
+            cash_periods,
+            &mut model_series,
+            &mut stream_totals,
+            &mut entity_totals,
+            &mut stream_series,
+        );
     }
 
     for (name, values) in &event_sim.option_cash {
-        for (idx, value) in values.iter().enumerate() {
+        let cash = &values[..cash_periods.min(values.len())];
+        for (idx, value) in cash.iter().enumerate() {
             model_series[idx] += *value;
         }
-        let total = values.iter().sum::<f64>();
+        let total = cash.iter().sum::<f64>();
         stream_totals.insert(format!("option.{name}"), total);
-        stream_series.insert(format!("option.{name}"), values.clone());
+        stream_series.insert(format!("option.{name}"), cash.to_vec());
     }
 
     let mut series_map = BTreeMap::new();
@@ -894,7 +861,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         None
     } else {
         Some(build_annual_rollup(
-            &timeline,
+            &timeline[..cash_periods],
             &stream_series,
             &model_series,
             &ir.model.currency,
@@ -983,6 +950,125 @@ fn stream_direction_sign(stream: &IrStream, warnings: &mut Vec<String>) -> f64 {
             -1.0
         }
     }
+}
+
+/// Evaluate one stream over the full timeline (projection tail included).
+/// `series` is Some only for phase-2 streams and enables series_sum/avg.
+#[allow(clippy::too_many_arguments)]
+fn evaluate_stream(
+    ir: &Ir,
+    config: &RunConfig,
+    stream: &IrStream,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    event_sim: &EventSim,
+    series: Option<&BTreeMap<String, Vec<f64>>>,
+    warnings: &mut Vec<String>,
+) -> Result<Vec<f64>, EngineError> {
+    if let Some(lang) = &stream.amount.lang {
+        if lang != "cfdl" {
+            warnings.push(format!(
+                "Stream '{}' amount language '{}' is unsupported; expression is treated as CEL.",
+                stream.name, lang
+            ));
+        }
+    }
+    let amount_expr = match cfdl_expr::compile_expr(&stream.amount.src) {
+        Ok(compiled) => compiled,
+        Err(err) => {
+            warnings.push(format!(
+                "Stream '{}' amount expression compile failed [{}]: {}; using 0.",
+                stream.name, err.code, err.message
+            ));
+            cfdl_expr::compile_expr("0").expect("constant expression compiles")
+        }
+    };
+    let active_src = stream
+        .active_when
+        .as_ref()
+        .map(|expr| expr.src.as_str())
+        .unwrap_or("true");
+    if let Some(expr) = &stream.active_when {
+        if let Some(lang) = &expr.lang {
+            if lang != "cfdl" {
+                warnings.push(format!(
+                    "Stream '{}' active_when language '{}' is unsupported; expression is treated as CEL.",
+                    stream.name, lang
+                ));
+            }
+        }
+    }
+    let active_expr = match cfdl_expr::compile_expr(active_src) {
+        Ok(compiled) => compiled,
+        Err(err) => {
+            warnings.push(format!(
+                "Stream '{}' active_when expression compile failed [{}]: {}; using true.",
+                stream.name, err.code, err.message
+            ));
+            cfdl_expr::compile_expr("true").expect("constant expression compiles")
+        }
+    };
+
+    let schedule_mask = schedule_mask(&stream.schedule, timeline)?;
+    let event_mask = event_sim.stream_active.get(&stream.name);
+    let mut values = vec![0.0_f64; timeline.len()];
+    let direction_sign = stream_direction_sign(stream, warnings);
+    for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
+        if !is_scheduled {
+            continue;
+        }
+        if let Some(mask) = event_mask {
+            if !mask[idx] {
+                continue;
+            }
+        }
+        let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], base_inputs);
+        apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
+        if let Some(series) = series {
+            env.series = series.clone();
+        }
+        let active_value =
+            eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
+        if !active_value {
+            continue;
+        }
+        let amount = if let Some(override_value) = stream_amount_override(config, &stream.name) {
+            override_value
+        } else {
+            eval_amount_expr(
+                &amount_expr,
+                &env,
+                &stream.name,
+                &ir.model.currency,
+                warnings,
+            )
+        };
+        values[idx] += amount * direction_sign;
+    }
+    Ok(values)
+}
+
+/// Fold a stream's cash-horizon slice into model totals and reporting maps.
+fn record_stream(
+    stream: &IrStream,
+    values: &[f64],
+    cash_periods: usize,
+    model_series: &mut [f64],
+    stream_totals: &mut BTreeMap<String, f64>,
+    entity_totals: &mut BTreeMap<String, f64>,
+    stream_series: &mut BTreeMap<String, Vec<f64>>,
+) {
+    let cash = &values[..cash_periods.min(values.len())];
+    for (idx, value) in cash.iter().enumerate() {
+        model_series[idx] += *value;
+    }
+    let total = cash.iter().sum::<f64>();
+    stream_totals.insert(stream.name.clone(), total);
+    entity_totals
+        .entry(stream.owner.symbol.clone())
+        .and_modify(|sum| *sum += total)
+        .or_insert(total);
+    stream_series.insert(stream.name.clone(), cash.to_vec());
 }
 
 fn eval_bool_expr(
@@ -1656,6 +1742,8 @@ struct IrTime {
     calendar: String,
     start: String,
     periods: u32,
+    #[serde(default)]
+    projection: u32,
 }
 
 #[derive(Debug, Deserialize)]

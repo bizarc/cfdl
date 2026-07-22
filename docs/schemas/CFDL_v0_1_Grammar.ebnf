@@ -29,7 +29,7 @@ use_pack_stmt   = "use" "pack" string_lit "version" string_lit ;
 import_stmt     = "import" string_lit [ "as" IDENT ] ;
 
 (* --- time --- *)
-time_stmt       = "time" "calendar" frequency "from" date_lit "for" INT ;
+time_stmt       = "time" "calendar" frequency "from" date_lit "for" INT [ "project" INT ] ;
 frequency       = "daily" | "monthly" | "quarterly" | "annual" ;
 
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;

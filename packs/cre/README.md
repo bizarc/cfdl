@@ -148,20 +148,25 @@ time.date)`), not model years.
 | Contract | Required terms | Optional (default) |
 |---|---|---|
 | `cre.lease_unit.<id>` | `rent_year` | `free_rent_months` (0), `escalation` (0), `expense_stop_year`/`opex_year`/`opex_escalation`/`pro_rata_share` (0 — recoveries off), `ti_total`/`lc_total` (0) |
-| `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term = post-downtime window (analyst sets start). |
+| `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `downtime_months` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term starts AT EXPIRY. |
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
 | `cre.property_opex` | `opex_year` | `escalation` (0) |
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
+| `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the
 stop set to year-0 grossed-up opex.
 
-Remaining deviations from Argus (documented, revisit with practitioner
-review): downtime is expressed by the rollover window start rather than a
-blended expected-downtime rent haircut; exit NOI is analyst-supplied
-forward NOI.
+Rollover downtime now follows Argus expected-value semantics: the window
+starts at expiry, the first `downtime_months` pay only the renewal-scenario
+rent (p × renewal), and the full probability-weighted blend applies after.
+`cre.exit_forward` derives the sale-year NOI from the modeled streams over
+the 12 months after the sale date (requires `time ... project 12`);
+`cre.exit` remains for analyst-supplied forward NOI. Remaining simplification
+(documented): blended rollover TI/LC pays entirely at expiry rather than
+splitting the new-lease portion to after downtime.
 
 Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`,
 `cre.construction_stub`) are now fully template-driven — the hardcoded

@@ -155,16 +155,19 @@ stream_name = "cre.rollover.rent.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-# Market leasing assumption after expiry: renewal-probability-weighted rent,
-# escalating on the rollover window's anniversaries. The analyst sets the
-# window start (term_start) to reflect expected downtime.
-amount_expr = "({{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+# Argus-style market leasing assumption. The window starts AT EXPIRY
+# (term_start = expiry). During the first downtime_months, only the renewal
+# scenario pays (p * renewal rent — the re-lease scenario sits vacant);
+# afterwards rent is the full probability-weighted blend. Escalation steps on
+# window anniversaries.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.downtime_months}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 market_escalation = "0"
+downtime_months = "0"
 
 [[rules]]
 id = "cre_rollover_ti_lc_v2"
@@ -242,3 +245,21 @@ schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 sales_growth = "0"
+
+[[rules]]
+id = "cre_exit_forward_noi_derived_v2"
+contract_name = "cre.exit_forward"
+stream_name = "cre.exit.proceeds"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Forward NOI derived from the modeled streams over the 12 months AFTER the
+# sale date (expense streams are signed negative, so adding them nets NOI).
+# Requires a projection tail (`time ... project 12`) so the window has data.
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + 12) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.pct_rent\", time.t + 1, time.t + 12) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + 12) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + 12) + series_sum(\"cre.ops.expense\", time.t + 1, time.t + 12) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + 12) + series_sum(\"cre.property.opex\", time.t + 1, time.t + 12)) / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"

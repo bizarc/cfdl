@@ -20,6 +20,30 @@ def pmt(rate, nper, pv):
     f = (1.0 + rate) ** nper
     return -(pv * f) * rate / (f - 1.0)
 
+def rollover_rent(t):
+    """Rollover window starts at expiry (t=60); 3 downtime months pay only the
+    renewal scenario; escalation steps on window anniversaries."""
+    if t < 60:
+        return 0.0
+    roll_t = t - 60
+    esc = 1.03 ** (roll_t // 12)
+    if roll_t < 3:
+        return 0.7 * 520_000.0 / 12.0 * esc
+    blended = 0.7 * 520_000.0 + 0.3 * 560_000.0
+    return blended / 12.0 * esc
+
+def opex_month(t):
+    return (300_000.0 / 12.0) * (1.025 ** (t // 12))
+
+VACANCY_MONTH = 0.02 * 900_000.0 / 12.0
+
+def forward_noi(sale_t):
+    """NOI over the 12 months after the sale date (projection columns)."""
+    total = 0.0
+    for t in range(sale_t + 1, sale_t + 13):
+        total += rollover_rent(t) - VACANCY_MONTH - opex_month(t)
+    return total
+
 def lease_rent(t, start, end, rent_year, free_months, esc):
     if t < start or t > end:
         return 0.0
@@ -45,12 +69,9 @@ def main():
         a_rec = recoveries(t, 0, 59, 300_000.0, 0.025, 300_000.0, 0.40)
         b_rent = lease_rent(t, 6, 89, 360_000.0, 0, 0.025)
         b_rec = recoveries(t, 6, 89, 300_000.0, 0.025, 180_000.0, 0.30)
-        roll_rent = 0.0
-        if 63 <= t <= 119:
-            blended = 0.7 * 520_000.0 + 0.3 * 560_000.0
-            roll_rent = (blended / 12.0) * (1.03 ** ((t - 63) // 12))
-        vacancy = 0.02 * 900_000.0 / 12.0
-        opex = (300_000.0 / 12.0) * (1.025 ** (t // 12))
+        roll_rent = rollover_rent(t)
+        vacancy = VACANCY_MONTH
+        opex = opex_month(t)
 
         net = a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex - debt_pay
         ti_lc = 0.0
@@ -58,11 +79,11 @@ def main():
             ti_lc += 200_000.0
         if t == 6:
             ti_lc += 150_000.0
-        if t == 63:
+        if t == 60:
             ti_lc += 0.7 * 100_000.0 + 0.3 * 350_000.0
         net -= ti_lc
         if t == 119:
-            net += 800_000.0 / 0.065 * 0.98
+            net += forward_noi(119) / 0.065 * 0.98
         rows.append((t, net))
         noi_total += a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex
         leasing_costs += ti_lc

@@ -7,7 +7,8 @@
   "time": {
     "calendar": "monthly",
     "start": "2026-01-01",
-    "periods": 120
+    "periods": 120,
+    "projection": 12
   },
   "phases": [],
   "entities": [
@@ -25,8 +26,8 @@
   },
   "contracts": [
     {
-      "id": "8985acce868fe848b598729ea0767ea2",
-      "name": "cre.exit",
+      "id": "bb57ae18939acf3748dbe7d966fd29b3",
+      "name": "cre.exit_forward",
       "type": "core.Contract",
       "subject": {
         "symbol": "asset.tower"
@@ -43,9 +44,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 71,
+          "start_line": 74,
           "start_col": 1,
-          "end_line": 78,
+          "end_line": 80,
           "end_col": 1
         }
       }
@@ -95,9 +96,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 40,
+          "start_line": 42,
           "start_col": 1,
-          "end_line": 52,
+          "end_line": 54,
           "end_col": 1
         }
       }
@@ -121,9 +122,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 62,
+          "start_line": 64,
           "start_col": 1,
-          "end_line": 68,
+          "end_line": 70,
           "end_col": 1
         }
       }
@@ -147,9 +148,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 27,
+          "start_line": 28,
           "start_col": 1,
-          "end_line": 37,
+          "end_line": 39,
           "end_col": 1
         }
       }
@@ -173,9 +174,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 54,
+          "start_line": 56,
           "start_col": 1,
-          "end_line": 60,
+          "end_line": 62,
           "end_col": 1
         }
       }
@@ -183,7 +184,7 @@
   ],
   "streams": [
     {
-      "id": "86ce23cee340195abb9c443a72935e17",
+      "id": "4c1563c22e80ed06022768e4880ce174",
       "name": "cre.exit.proceeds",
       "owner": {
         "symbol": "asset.tower"
@@ -196,7 +197,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "800000.0 / 0.065 * (1.0 - 0.02)"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.expense\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.property.opex\", time.t + 1.0, time.t + 12.0)) / 0.065 * (1.0 - 0.02)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -205,9 +206,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 71,
+          "start_line": 74,
           "start_col": 1,
-          "end_line": 78,
+          "end_line": 80,
           "end_col": 1
         },
         "generated_by": {
@@ -215,7 +216,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_forward_noi_v2"
+          "rule_id": "cre_exit_forward_noi_derived_v2"
         }
       }
     },
@@ -231,7 +232,7 @@
         "kind": "Every",
         "every": "monthly",
         "from": "2026-01-01",
-        "to": "2035-12-01"
+        "to": "2036-12-01"
       },
       "amount": {
         "lang": "cfdl",
@@ -244,9 +245,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 62,
+          "start_line": 64,
           "start_col": 1,
-          "end_line": 68,
+          "end_line": 70,
           "end_col": 1
         },
         "generated_by": {
@@ -269,12 +270,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2031-04-01",
-        "to": "2035-12-01"
+        "from": "2031-01-01",
+        "to": "2036-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(0.7 * 520000.0 + (1.0 - 0.7) * 560000.0) / 12.0 * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2031-04-01\"), time.date) / 12.0, 0.0))"
+        "src": "if(months_between(parse_date(\"2031-01-01\"), time.date) < 3.0, 0.7 * 520000.0, 0.7 * 520000.0 + (1.0 - 0.7) * 560000.0) / 12.0 * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2031-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -283,9 +284,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 27,
+          "start_line": 28,
           "start_col": 1,
-          "end_line": 37,
+          "end_line": 39,
           "end_col": 1
         },
         "generated_by": {
@@ -307,7 +308,7 @@
       "currency": "USD",
       "schedule": {
         "kind": "OnDate",
-        "on": "2031-04-01"
+        "on": "2031-01-01"
       },
       "amount": {
         "lang": "cfdl",
@@ -320,9 +321,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 27,
+          "start_line": 28,
           "start_col": 1,
-          "end_line": 37,
+          "end_line": 39,
           "end_col": 1
         },
         "generated_by": {
@@ -398,9 +399,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 40,
+          "start_line": 42,
           "start_col": 1,
-          "end_line": 52,
+          "end_line": 54,
           "end_col": 1
         },
         "generated_by": {
@@ -476,9 +477,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 40,
+          "start_line": 42,
           "start_col": 1,
-          "end_line": 52,
+          "end_line": 54,
           "end_col": 1
         },
         "generated_by": {
@@ -550,9 +551,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 40,
+          "start_line": 42,
           "start_col": 1,
-          "end_line": 52,
+          "end_line": 54,
           "end_col": 1
         },
         "generated_by": {
@@ -576,7 +577,7 @@
         "kind": "Every",
         "every": "monthly",
         "from": "2026-01-01",
-        "to": "2035-12-01"
+        "to": "2036-12-01"
       },
       "amount": {
         "lang": "cfdl",
@@ -589,9 +590,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 54,
+          "start_line": 56,
           "start_col": 1,
-          "end_line": 60,
+          "end_line": 62,
           "end_col": 1
         },
         "generated_by": {
@@ -628,9 +629,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 81,
+          "start_line": 83,
           "start_col": 1,
-          "end_line": 84,
+          "end_line": 86,
           "end_col": 1
         }
       }

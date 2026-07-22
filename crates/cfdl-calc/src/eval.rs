@@ -23,6 +23,15 @@ pub enum Mode {
 /// Variable resolution: dotted paths like `time.t` or `contract.term_months`.
 pub trait Env {
     fn lookup(&self, path: &str) -> Option<Value>;
+
+    /// Host hook for cross-stream series aggregation (`series_sum` /
+    /// `series_avg`). `name` may be an exact stream name or a `prefix.*`
+    /// wildcard; the period window [from, to] is inclusive and clamped by the
+    /// host. Returns None when the host provides no series (e.g. plain
+    /// expression contexts), which surfaces as an evaluation error.
+    fn series_aggregate(&self, _name: &str, _from: i64, _to: i64, _mean: bool) -> Option<Decimal> {
+        None
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -95,6 +104,9 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
             let mut values = Vec::with_capacity(args.len());
             for arg in args {
                 values.push((eval(arg, env, mode)?, arg.span));
+            }
+            if name == "series_sum" || name == "series_avg" {
+                return funcs::series_call(name, &values, expr.span, env);
             }
             funcs::call(name, &values, expr.span, mode)
         }

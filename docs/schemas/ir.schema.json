@@ -61,6 +61,10 @@
         "periods": {
           "type": "integer",
           "minimum": 1
+        },
+        "projection": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
