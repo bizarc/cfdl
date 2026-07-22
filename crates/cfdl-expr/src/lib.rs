@@ -164,14 +164,33 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
             "inputs" => &self.env.inputs,
             _ => return None,
         };
-        let mut current = map.get(parts.next()?)?;
+        // The `entity` root is open-world: entity state fields may not exist
+        // until an event sets them, and expressions like
+        // `entity.status != \"refinanced\"` must evaluate (to null) before
+        // that. Other roots stay strict so typos are hard errors.
+        let open_world = root == "entity";
+        let first = parts.next()?;
+        let Some(mut current) = map.get(first) else {
+            return open_world.then_some(cfdl_calc::Value::Null);
+        };
         for segment in parts {
-            current = match unwrap_optional(current)? {
-                Value::Map(m) => m.get(segment)?,
-                _ => return None,
+            let unwrapped = match unwrap_optional(current) {
+                Some(v) => v,
+                None => return Some(cfdl_calc::Value::Null),
             };
+            match unwrapped {
+                Value::Map(m) => match m.get(segment) {
+                    Some(next) => current = next,
+                    // Missing key inside a map value resolves to null.
+                    None => return Some(cfdl_calc::Value::Null),
+                },
+                _ => return None,
+            }
         }
-        domain_to_calc(unwrap_optional(current)?)
+        match unwrap_optional(current) {
+            Some(v) => domain_to_calc(v),
+            None => Some(cfdl_calc::Value::Null),
+        }
     }
 }
 
@@ -211,6 +230,7 @@ fn calc_to_domain(v: cfdl_calc::Value) -> Value {
             month: d.month(),
             day: d.day(),
         }),
+        cfdl_calc::Value::Null => Value::Optional(None),
     }
 }
 

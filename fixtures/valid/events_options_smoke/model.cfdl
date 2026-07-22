@@ -1,0 +1,25 @@
+version 0.1
+model "events-options-smoke"
+time calendar monthly from 2026-01 for 12
+
+entity loan senior
+
+// Debt service runs until the refinance event fires at t=6, which both
+// deactivates the stream and flips entity state (belt and braces: the
+// active_when clause would stop it too).
+stream loan.debt_service on entity loan.senior outflow currency USD {
+  schedule every monthly from 2026-01 to 2026-12
+  amount = 500
+  active when entity.state.status != "refinanced"
+}
+
+event refi_trigger when time.t >= 6 {
+  set entity loan.senior.status = "refinanced"
+  deactivate stream loan.debt_service
+  exercise option refi_savings
+}
+
+option refi_savings type Option.Refinance {
+  exercise when false
+  payoff 10000 - 250
+}

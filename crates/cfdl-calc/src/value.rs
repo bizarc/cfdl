@@ -8,6 +8,10 @@ pub enum Value {
     Bool(bool),
     Text(String),
     Date(CalcDate),
+    /// Absent value (e.g. entity state not yet set by any event). Equality
+    /// comparisons work (`null == null`, `null != anything-else`); ordering
+    /// and arithmetic are errors.
+    Null,
 }
 
 impl Value {
@@ -17,6 +21,7 @@ impl Value {
             Value::Bool(_) => "bool",
             Value::Text(_) => "text",
             Value::Date(_) => "date",
+            Value::Null => "null",
         }
     }
 }
@@ -28,6 +33,7 @@ impl fmt::Display for Value {
             Value::Bool(b) => write!(f, "{b}"),
             Value::Text(s) => write!(f, "{s}"),
             Value::Date(d) => write!(f, "{d}"),
+            Value::Null => write!(f, "null"),
         }
     }
 }

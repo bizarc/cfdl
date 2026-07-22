@@ -450,12 +450,211 @@ struct DeterministicRunOutput {
     annual_rollup: Option<AnnualRollupSection>,
 }
 
+/// Output of the discrete event/option pre-pass over the master timeline.
+struct EventSim {
+    /// Per period: entity symbol -> field -> value (state as of that period).
+    entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>>,
+    /// Per stream with an event override: per-period active flag.
+    stream_active: BTreeMap<String, Vec<bool>>,
+    /// Option payoff cash flows: option name -> per-period amounts.
+    option_cash: BTreeMap<String, Vec<f64>>,
+}
+
+/// Evaluate events and options discretely at each time step (spec §12/§13).
+/// Events latch: each fires at most once, at the first period its condition
+/// is true, in declaration order. Options exercise at most once, when their
+/// phase gate (if any) and `exercise when` condition hold, or when forced by
+/// an `exercise option` action.
+fn simulate_events(
+    ir: &Ir,
+    config: &RunConfig,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    warnings: &mut Vec<String>,
+) -> EventSim {
+    let periods = timeline.len();
+    let mut entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>> =
+        Vec::with_capacity(periods);
+    let mut current_state: BTreeMap<String, BTreeMap<String, ExprValue>> = BTreeMap::new();
+    let mut current_active: BTreeMap<String, bool> = BTreeMap::new();
+    let mut stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
+    let mut option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut event_fired = vec![false; ir.events.len()];
+    let mut option_exercised = vec![false; ir.options.len()];
+    let mut forced_exercise: Vec<String> = Vec::new();
+
+    let compiled_events: Vec<Option<cfdl_expr::CompiledExpr>> = ir
+        .events
+        .iter()
+        .map(|event| match cfdl_expr::compile_expr(&event.when.src) {
+            Ok(compiled) => Some(compiled),
+            Err(err) => {
+                warnings.push(format!(
+                    "Event '{}' trigger compile failed [{}]: {}; event disabled.",
+                    event.name, err.code, err.message
+                ));
+                None
+            }
+        })
+        .collect();
+    let compiled_options: Vec<Option<(cfdl_expr::CompiledExpr, cfdl_expr::CompiledExpr)>> = ir
+        .options
+        .iter()
+        .map(|option| {
+            let when = cfdl_expr::compile_expr(&option.exercise_when.src);
+            let payoff = cfdl_expr::compile_expr(&option.payoff.src);
+            match (when, payoff) {
+                (Ok(w), Ok(p)) => Some((w, p)),
+                (Err(err), _) | (_, Err(err)) => {
+                    warnings.push(format!(
+                        "Option '{}' expression compile failed [{}]: {}; option disabled.",
+                        option.name, err.code, err.message
+                    ));
+                    None
+                }
+            }
+        })
+        .collect();
+
+    for (t, date) in timeline.iter().enumerate() {
+        let env = build_base_env(ir, config, t, date, base_inputs);
+        for (event_idx, event) in ir.events.iter().enumerate() {
+            if event_fired[event_idx] {
+                continue;
+            }
+            let Some(when) = &compiled_events[event_idx] else {
+                continue;
+            };
+            if !eval_bool_expr(when, &env, &event.name, "event when", warnings) {
+                continue;
+            }
+            event_fired[event_idx] = true;
+            for action in &event.actions {
+                match action.kind.as_str() {
+                    "SetEntityField" => {
+                        let (Some(entity), Some(field), Some(value)) =
+                            (&action.entity, &action.field, &action.value)
+                        else {
+                            warnings.push(format!(
+                                "Event '{}' SetEntityField is missing fields; skipped.",
+                                event.name
+                            ));
+                            continue;
+                        };
+                        match cfdl_expr::compile_expr(&value.src)
+                            .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
+                        {
+                            Ok(v) => {
+                                current_state
+                                    .entry(entity.symbol.clone())
+                                    .or_default()
+                                    .insert(field.clone(), v);
+                            }
+                            Err(err) => warnings.push(format!(
+                                "Event '{}' set {}.{} failed [{}]: {}; skipped.",
+                                event.name, entity.symbol, field, err.code, err.message
+                            )),
+                        }
+                    }
+                    "ActivateStream" => {
+                        if let Some(stream) = &action.stream {
+                            current_active.insert(stream.clone(), true);
+                        }
+                    }
+                    "DeactivateStream" => {
+                        if let Some(stream) = &action.stream {
+                            current_active.insert(stream.clone(), false);
+                        }
+                    }
+                    "ActivateContract" | "DeactivateContract" => {
+                        warnings.push(format!(
+                            "Event '{}': contract activation is not executed by the engine yet; action ignored.",
+                            event.name
+                        ));
+                    }
+                    "ExerciseOption" => {
+                        if let Some(option) = &action.option {
+                            forced_exercise.push(option.clone());
+                        }
+                    }
+                    other => warnings.push(format!(
+                        "Event '{}': unknown action kind '{other}'; ignored.",
+                        event.name
+                    )),
+                }
+            }
+        }
+
+        for (option_idx, option) in ir.options.iter().enumerate() {
+            if option_exercised[option_idx] {
+                continue;
+            }
+            let Some((when, payoff)) = &compiled_options[option_idx] else {
+                continue;
+            };
+            let forced = forced_exercise.iter().any(|name| name == &option.name);
+            let triggered = if forced {
+                true
+            } else {
+                if let Some(phase_name) = &option.exercisable_in_phase {
+                    let in_phase = ir.phases.iter().any(|phase| {
+                        phase.name == *phase_name
+                            && Date::parse(&phase.range.start)
+                                .map(|start| *date >= start)
+                                .unwrap_or(false)
+                            && Date::parse(&phase.range.end)
+                                .map(|end| *date <= end)
+                                .unwrap_or(false)
+                    });
+                    if !in_phase {
+                        continue;
+                    }
+                }
+                eval_bool_expr(when, &env, &option.name, "exercise when", warnings)
+            };
+            if !triggered {
+                continue;
+            }
+            option_exercised[option_idx] = true;
+            let mut payoff_values = vec![0.0_f64; periods];
+            match cfdl_expr::eval(payoff, &env) {
+                Ok(ExprValue::Decimal(v)) => payoff_values[t] = v,
+                Ok(ExprValue::Int(v)) => payoff_values[t] = v as f64,
+                Ok(other) => warnings.push(format!(
+                    "Option '{}' payoff returned non-numeric {other:?}; using 0.",
+                    option.name
+                )),
+                Err(err) => warnings.push(format!(
+                    "Option '{}' payoff failed [{}]: {}; using 0.",
+                    option.name, err.code, err.message
+                )),
+            }
+            option_cash.insert(option.name.clone(), payoff_values);
+        }
+        forced_exercise.clear();
+
+        entity_state.push(current_state.clone());
+        for (stream, active) in &current_active {
+            stream_active
+                .entry(stream.clone())
+                .or_insert_with(|| vec![true; periods])[t] = *active;
+        }
+    }
+
+    EventSim {
+        entity_state,
+        stream_active,
+        option_cash,
+    }
+}
+
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
     let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, ir.time.periods as usize)?;
     let periods = timeline.len();
 
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
+    let event_sim = simulate_events(ir, config, &timeline, &base_inputs, &mut warnings);
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
@@ -508,13 +707,20 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         };
 
         let schedule_mask = schedule_mask(&stream.schedule, &timeline)?;
+        let event_mask = event_sim.stream_active.get(&stream.name);
         let mut values = vec![0.0_f64; periods];
         let direction_sign = stream_direction_sign(stream, &mut warnings);
         for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
             if !is_scheduled {
                 continue;
             }
-            let env = build_expr_env(ir, stream, config, idx, &timeline[idx], &base_inputs);
+            if let Some(mask) = event_mask {
+                if !mask[idx] {
+                    continue;
+                }
+            }
+            let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], &base_inputs);
+            apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
             let active_value = eval_bool_expr(
                 &active_expr,
                 &env,
@@ -550,6 +756,15 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             .and_modify(|sum| *sum += total)
             .or_insert(total);
         stream_series.insert(stream.name.clone(), values);
+    }
+
+    for (name, values) in &event_sim.option_cash {
+        for (idx, value) in values.iter().enumerate() {
+            model_series[idx] += *value;
+        }
+        let total = values.iter().sum::<f64>();
+        stream_totals.insert(format!("option.{name}"), total);
+        stream_series.insert(format!("option.{name}"), values.clone());
     }
 
     let mut series_map = BTreeMap::new();
@@ -786,6 +1001,68 @@ fn eval_amount_expr(
             0.0
         }
     }
+}
+
+/// Entity-independent environment (model/time/cfg/obs/inputs) used for event
+/// and option evaluation.
+fn build_base_env(
+    ir: &Ir,
+    config: &RunConfig,
+    t: usize,
+    date: &Date,
+    base_inputs: &BTreeMap<String, f64>,
+) -> ExprEnv {
+    let mut env = ExprEnv::empty();
+    env.model.insert(
+        "id".to_string(),
+        ExprValue::String(ir.model.name.clone().unwrap_or_else(|| "model".to_string())),
+    );
+    env.model.insert(
+        "base_currency".to_string(),
+        ExprValue::Currency(ir.model.currency.clone()),
+    );
+    env.time.insert("t".to_string(), ExprValue::Int(t as i64));
+    env.time.insert(
+        "date".to_string(),
+        ExprValue::Date(cfdl_expr::Date {
+            year: date.year,
+            month: date.month,
+            day: date.day,
+        }),
+    );
+    env.time
+        .insert("phase".to_string(), ExprValue::Optional(None));
+    for (name, value) in base_inputs {
+        env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
+    }
+    for (key, value) in &config.parameter_overrides {
+        if let Some(stripped) = key.strip_prefix("cfg.") {
+            insert_cfg_value(&mut env.cfg, stripped, *value);
+        } else if let Some(stripped) = key.strip_prefix("obs.") {
+            insert_cfg_value(&mut env.obs, stripped, *value);
+        } else if let Some(stripped) = key.strip_prefix("inputs.") {
+            env.inputs
+                .insert(stripped.to_string(), ExprValue::Decimal(*value));
+        }
+    }
+    env
+}
+
+/// Expose an entity's event-driven state to expressions, both as
+/// `entity.state.<field>` and directly as `entity.<field>` (spec §12.3).
+fn apply_entity_state(
+    env: &mut ExprEnv,
+    state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
+    owner_symbol: &str,
+) {
+    let Some(state) = state_by_entity.get(owner_symbol) else {
+        return;
+    };
+    for (field, value) in state {
+        env.entity.insert(field.clone(), value.clone());
+    }
+    env.entity
+        .insert("state".to_string(), ExprValue::Map(state.clone()));
 }
 
 fn build_expr_env(
@@ -1239,6 +1516,59 @@ struct Ir {
     streams: Vec<IrStream>,
     #[serde(default)]
     assumptions: IrAssumptions,
+    #[serde(default)]
+    events: Vec<IrEvent>,
+    #[serde(default)]
+    options: Vec<IrOption>,
+    #[serde(default)]
+    phases: Vec<IrPhase>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrEvent {
+    name: String,
+    when: IrExpr,
+    #[serde(default)]
+    actions: Vec<IrAction>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrAction {
+    kind: String,
+    #[serde(default)]
+    entity: Option<IrEntityRef>,
+    #[serde(default)]
+    field: Option<String>,
+    #[serde(default)]
+    value: Option<IrExpr>,
+    #[serde(default)]
+    stream: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)] // deserialized for contract actions, which warn-and-skip for now
+    contract: Option<String>,
+    #[serde(default)]
+    option: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrOption {
+    name: String,
+    exercise_when: IrExpr,
+    payoff: IrExpr,
+    #[serde(default)]
+    exercisable_in_phase: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrPhase {
+    name: String,
+    range: IrDateRange,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrDateRange {
+    start: String,
+    end: String,
 }
 
 #[derive(Debug, Default, Deserialize)]

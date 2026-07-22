@@ -12,6 +12,7 @@
   "phases": [
     {
       "id": "01830c2f00432d6927fbf6a252c9593f",
+      "name": "construction",
       "range": {
         "start": "2025-01-01",
         "end": "2025-12-01"
@@ -19,6 +20,7 @@
     },
     {
       "id": "cd79704e58c05649d69c045ac6a33e2e",
+      "name": "operations",
       "range": {
         "start": "2026-01-01",
         "end": "2026-12-01"

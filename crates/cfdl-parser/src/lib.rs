@@ -182,12 +182,36 @@ pub enum ScheduleKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventStmt {
     pub name: String,
+    /// Boolean trigger expression (raw source).
+    pub when: String,
+    pub actions: Vec<EventAction>,
     pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EventAction {
+    /// `set entity <ns.name>.<field> = <expr>`
+    SetEntityField {
+        entity: String,
+        field: String,
+        value: String,
+    },
+    ActivateStream(String),
+    DeactivateStream(String),
+    ActivateContract(String),
+    DeactivateContract(String),
+    ExerciseOption(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OptionStmt {
     pub name: String,
+    pub type_name: String,
+    pub exercisable_in: Option<String>,
+    /// Boolean trigger expression (raw source).
+    pub exercise_when: Option<String>,
+    /// Payoff amount expression (raw source).
+    pub payoff: Option<String>,
     pub span: Span,
 }
 
@@ -197,6 +221,17 @@ pub enum Cadence {
     Monthly,
     Quarterly,
     Annual,
+}
+
+/// Expression stop classes for `consume_expr_until`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TokStopKind {
+    /// Stop at `{` (event trigger before the action block).
+    LBrace,
+    /// Stop at action keywords (set/activate/deactivate/exercise).
+    Action,
+    /// Stop at `payoff`.
+    Payoff,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -310,6 +345,8 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
+            TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
+            TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
             TokenKind::Keyword(Keyword::Contract) => self.parse_contract_stmt().map(Stmt::Contract),
             TokenKind::Keyword(Keyword::Stream) => self.parse_stream_stmt().map(Stmt::Stream),
             TokenKind::Eof => None,
@@ -1135,6 +1172,250 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Consume expression tokens until any of `stops` (or a statement
+    /// boundary), returning the raw source slice.
+    fn consume_expr_until(&mut self, stops: &[TokStopKind]) -> Option<String> {
+        let mut first: Option<Span> = None;
+        let mut last: Option<Span> = None;
+        loop {
+            let stop = match &self.peek().kind {
+                TokenKind::Eof => true,
+                TokenKind::Punct(Punct::LBrace) => stops.contains(&TokStopKind::LBrace),
+                TokenKind::Punct(Punct::RBrace) => true,
+                TokenKind::Keyword(Keyword::Set)
+                | TokenKind::Keyword(Keyword::Activate)
+                | TokenKind::Keyword(Keyword::Deactivate)
+                | TokenKind::Keyword(Keyword::Exercise) => stops.contains(&TokStopKind::Action),
+                TokenKind::Keyword(Keyword::Payoff) => stops.contains(&TokStopKind::Payoff),
+                _ => false,
+            };
+            if stop {
+                break;
+            }
+            let tok = self.bump();
+            if first.is_none() {
+                first = Some(tok.span);
+            }
+            last = Some(tok.span);
+        }
+        let (first, last) = (first?, last?);
+        Some(self.slice_source(merge_spans(first, last)))
+    }
+
+    /// `event <qname> when <expr> { action* }`
+    fn parse_event_stmt(&mut self) -> Option<EventStmt> {
+        let start = self.expect_keyword(Keyword::Event, "'event'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+            _ => {
+                self.push_expected(name_tok.span, "Expected event name.".to_string());
+                return None;
+            }
+        };
+        let _ = self.expect_keyword(Keyword::When, "'when'")?;
+        let Some(when) = self.consume_expr_until(&[TokStopKind::LBrace]) else {
+            self.push_expected(
+                self.current_span(),
+                "Expected trigger expression after 'when'.".to_string(),
+            );
+            return None;
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut actions = Vec::new();
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
+                TokenKind::Keyword(Keyword::Set) => {
+                    let _ = self.bump();
+                    let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
+                    let target_tok = self.bump();
+                    let target = match target_tok.kind {
+                        TokenKind::Qname(ref s) => s.clone(),
+                        _ => {
+                            self.push_expected(
+                                target_tok.span,
+                                "Expected qualified entity field (ns.name.field) after 'set entity'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let segments: Vec<&str> = target.split('.').collect();
+                    if segments.len() < 3 {
+                        self.push_expected(
+                            target_tok.span,
+                            "Expected entity field reference of the form ns.name.field."
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    let field = segments.last().expect("segments non-empty").to_string();
+                    let entity = segments[..segments.len() - 1].join(".");
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    let Some(value) = self.consume_expr_until(&[TokStopKind::Action]) else {
+                        self.push_expected(
+                            self.current_span(),
+                            "Expected value expression after '='.".to_string(),
+                        );
+                        return None;
+                    };
+                    actions.push(EventAction::SetEntityField {
+                        entity,
+                        field,
+                        value,
+                    });
+                }
+                TokenKind::Keyword(Keyword::Activate) | TokenKind::Keyword(Keyword::Deactivate) => {
+                    let activate =
+                        matches!(self.peek().kind, TokenKind::Keyword(Keyword::Activate));
+                    let _ = self.bump();
+                    let kind_tok = self.bump();
+                    let is_stream = match kind_tok.kind {
+                        TokenKind::Keyword(Keyword::Stream) => true,
+                        TokenKind::Keyword(Keyword::Contract) => false,
+                        _ => {
+                            self.push_expected(
+                                kind_tok.span,
+                                "Expected 'stream' or 'contract' after activate/deactivate."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let target_tok = self.bump();
+                    let target = match target_tok.kind {
+                        TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+                        _ => {
+                            self.push_expected(target_tok.span, "Expected name.".to_string());
+                            return None;
+                        }
+                    };
+                    actions.push(match (activate, is_stream) {
+                        (true, true) => EventAction::ActivateStream(target),
+                        (false, true) => EventAction::DeactivateStream(target),
+                        (true, false) => EventAction::ActivateContract(target),
+                        (false, false) => EventAction::DeactivateContract(target),
+                    });
+                }
+                TokenKind::Keyword(Keyword::Exercise) => {
+                    let _ = self.bump();
+                    let _ = self.expect_keyword(Keyword::Option, "'option'")?;
+                    let target_tok = self.bump();
+                    let target = match target_tok.kind {
+                        TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+                        _ => {
+                            self.push_expected(
+                                target_tok.span,
+                                "Expected option name.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    actions.push(EventAction::ExerciseOption(target));
+                }
+                _ => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected action (set, activate, deactivate, exercise) or '}'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        let end = self.expect_punct(Punct::RBrace, "'}'")?;
+        Some(EventStmt {
+            name,
+            when,
+            actions,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
+    /// `option <qname> type <qname> [exercisable in <ident>] { exercise when <expr> payoff <expr> }`
+    fn parse_option_stmt(&mut self) -> Option<OptionStmt> {
+        let start = self.expect_keyword(Keyword::Option, "'option'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+            _ => {
+                self.push_expected(name_tok.span, "Expected option name.".to_string());
+                return None;
+            }
+        };
+        let _ = self.expect_keyword(Keyword::Type, "'type'")?;
+        let type_tok = self.bump();
+        let type_name = match type_tok.kind {
+            TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+            _ => {
+                self.push_expected(type_tok.span, "Expected option type.".to_string());
+                return None;
+            }
+        };
+        let mut exercisable_in = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Exercisable)) {
+            let _ = self.bump();
+            let _ = self.expect_keyword(Keyword::In, "'in'")?;
+            let phase_tok = self.bump();
+            match phase_tok.kind {
+                TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => {
+                    exercisable_in = Some(s.clone());
+                }
+                _ => {
+                    self.push_expected(phase_tok.span, "Expected phase name.".to_string());
+                    return None;
+                }
+            }
+        }
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut exercise_when = None;
+        let mut payoff = None;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
+                TokenKind::Keyword(Keyword::Exercise) => {
+                    let _ = self.bump();
+                    let _ = self.expect_keyword(Keyword::When, "'when'")?;
+                    exercise_when =
+                        self.consume_expr_until(&[TokStopKind::Payoff, TokStopKind::Action]);
+                    if exercise_when.is_none() {
+                        self.push_expected(
+                            self.current_span(),
+                            "Expected expression after 'exercise when'.".to_string(),
+                        );
+                        return None;
+                    }
+                }
+                TokenKind::Keyword(Keyword::Payoff) => {
+                    let _ = self.bump();
+                    payoff = self.consume_expr_until(&[TokStopKind::Action]);
+                    if payoff.is_none() {
+                        self.push_expected(
+                            self.current_span(),
+                            "Expected expression after 'payoff'.".to_string(),
+                        );
+                        return None;
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected 'exercise when', 'payoff', or '}'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        let end = self.expect_punct(Punct::RBrace, "'}'")?;
+        Some(OptionStmt {
+            name,
+            type_name,
+            exercisable_in,
+            exercise_when,
+            payoff,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     /// `assume <ident> = <expr>` or `assume <ident> ~ Dist(name=num, ..., clip=[lo, hi])`
     fn parse_assume_stmt(&mut self) -> Option<AssumeStmt> {
         let start = self.expect_keyword(Keyword::Assume, "'assume'")?;
@@ -1390,6 +1671,8 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Contract)
+                | TokenKind::Keyword(Keyword::Event)
+                | TokenKind::Keyword(Keyword::Option)
                 | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {
                     let _ = self.bump();
