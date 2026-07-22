@@ -13,3 +13,5 @@ thiserror = { workspace = true }
 
 cfdl-parser = { path = "../cfdl-parser" }
 cfdl-resolver = { path = "../cfdl-resolver" }
+[dev-dependencies]
+cfdl-lexer = { path = "../cfdl-lexer" }

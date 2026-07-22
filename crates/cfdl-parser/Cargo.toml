@@ -9,6 +9,7 @@ description = "Parser for CFDL - tokens to AST"
 publish = false
 
 [dependencies]
+serde = { workspace = true }
 thiserror = { workspace = true }
 
 cfdl-lexer = { path = "../cfdl-lexer" }

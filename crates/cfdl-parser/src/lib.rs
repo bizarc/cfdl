@@ -10,7 +10,7 @@ pub use cfdl_lexer::Span;
 use cfdl_lexer::{Keyword, Punct, Token, TokenKind};
 use std::collections::BTreeMap;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CompilationUnit {
     pub statements: Vec<Stmt>,
     pub span: Span,
@@ -18,7 +18,7 @@ pub struct CompilationUnit {
 
 pub type ModelAst = CompilationUnit;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 #[allow(clippy::large_enum_variant)]
 pub enum Stmt {
     Version(VersionStmt),
@@ -33,35 +33,45 @@ pub enum Stmt {
     Stream(StreamStmt),
     Event(EventStmt),
     Option(OptionStmt),
+    Run(RunStmt),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct RunStmt {
+    /// "deterministic" | "monte_carlo"
+    pub kind: String,
+    pub trials: Option<u64>,
+    pub seed: Option<u64>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct VersionStmt {
     pub value: String,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ModelStmt {
     pub name: String,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ImportStmt {
     pub path: String,
     pub alias: Option<String>,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct UsePackStmt {
     pub name: String,
     pub version: String,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct TimeStmt {
     pub cadence: Cadence,
     pub from: String,
@@ -69,7 +79,7 @@ pub struct TimeStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EntityStmt {
     pub namespace: String,
     pub name: String,
@@ -82,7 +92,7 @@ impl EntityStmt {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct StreamStmt {
     pub name: String,
     pub attached_entity: String,
@@ -96,7 +106,7 @@ pub struct StreamStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ExprSlot {
     pub lang: String,
     pub src: String,
@@ -107,7 +117,7 @@ pub struct ExprSlot {
     pub expr_span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct PhaseStmt {
     pub name: String,
     pub from: String,
@@ -115,7 +125,7 @@ pub struct PhaseStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct AssumeStmt {
     pub name: String,
     /// Deterministic form: `assume x = <expr>` (raw expression source).
@@ -125,7 +135,7 @@ pub struct AssumeStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct AssumeDist {
     /// "normal" | "lognormal" | "uniform" | "triangular"
     pub name: String,
@@ -135,7 +145,7 @@ pub struct AssumeDist {
     pub clip: Option<(String, String)>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ContractStmt {
     pub name: String,
     pub subject_entity: Option<String>,
@@ -147,13 +157,13 @@ pub struct ContractStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ContractTerm {
     pub value: String,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ScheduleSpec {
     pub kind: ScheduleKind,
     pub from: Option<String>,
@@ -171,7 +181,7 @@ pub struct ScheduleSpec {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub enum ScheduleKind {
     OnDate,
     Every,
@@ -179,7 +189,7 @@ pub enum ScheduleKind {
     EveryPhase { phase: String },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EventStmt {
     pub name: String,
     /// Boolean trigger expression (raw source).
@@ -188,7 +198,7 @@ pub struct EventStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub enum EventAction {
     /// `set entity <ns.name>.<field> = <expr>`
     SetEntityField {
@@ -203,7 +213,7 @@ pub enum EventAction {
     ExerciseOption(String),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct OptionStmt {
     pub name: String,
     pub type_name: String,
@@ -215,7 +225,7 @@ pub struct OptionStmt {
     pub span: Span,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum Cadence {
     Daily,
     Monthly,
@@ -347,6 +357,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
+            TokenKind::Keyword(Keyword::Run) => self.parse_run_stmt().map(Stmt::Run),
             TokenKind::Keyword(Keyword::Contract) => self.parse_contract_stmt().map(Stmt::Contract),
             TokenKind::Keyword(Keyword::Stream) => self.parse_stream_stmt().map(Stmt::Stream),
             TokenKind::Eof => None,
@@ -1172,6 +1183,64 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// `run deterministic` | `run monte_carlo trials <int> seed <int>`
+    fn parse_run_stmt(&mut self) -> Option<RunStmt> {
+        let start = self.expect_keyword(Keyword::Run, "'run'")?;
+        match self.peek().kind {
+            TokenKind::Keyword(Keyword::Deterministic) => {
+                let tok = self.bump();
+                Some(RunStmt {
+                    kind: "deterministic".to_string(),
+                    trials: None,
+                    seed: None,
+                    span: merge_spans(start.span, tok.span),
+                })
+            }
+            TokenKind::Keyword(Keyword::MonteCarlo) => {
+                let _ = self.bump();
+                let _ = self.expect_keyword(Keyword::Trials, "'trials'")?;
+                let trials_tok = self.bump();
+                let trials = match trials_tok.kind {
+                    TokenKind::Number(ref n) => n.parse::<u64>().ok(),
+                    _ => None,
+                };
+                if trials.is_none() {
+                    self.push_expected(
+                        trials_tok.span,
+                        "Expected positive integer after 'trials'.".to_string(),
+                    );
+                    return None;
+                }
+                let _ = self.expect_keyword(Keyword::Seed, "'seed'")?;
+                let seed_tok = self.bump();
+                let seed = match seed_tok.kind {
+                    TokenKind::Number(ref n) => n.parse::<u64>().ok(),
+                    _ => None,
+                };
+                if seed.is_none() {
+                    self.push_expected(
+                        seed_tok.span,
+                        "Expected non-negative integer after 'seed'.".to_string(),
+                    );
+                    return None;
+                }
+                Some(RunStmt {
+                    kind: "monte_carlo".to_string(),
+                    trials,
+                    seed,
+                    span: merge_spans(start.span, seed_tok.span),
+                })
+            }
+            _ => {
+                self.push_expected(
+                    self.current_span(),
+                    "Expected 'deterministic' or 'monte_carlo' after 'run'.".to_string(),
+                );
+                None
+            }
+        }
+    }
+
     /// Consume expression tokens until any of `stops` (or a statement
     /// boundary), returning the raw source slice.
     fn consume_expr_until(&mut self, stops: &[TokStopKind]) -> Option<String> {
@@ -1673,6 +1742,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Event)
                 | TokenKind::Keyword(Keyword::Option)
+                | TokenKind::Keyword(Keyword::Run)
                 | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {
                     let _ = self.bump();
@@ -1809,6 +1879,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Phase(s) => s.span,
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
+        Stmt::Run(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
@@ -2194,5 +2265,80 @@ stream legal.rent on entity borrower {
             .diagnostics
             .iter()
             .any(|diag| diag.message.contains("entity refs must be qualified")));
+    }
+}
+
+#[cfg(test)]
+mod fuzz_tests {
+    use super::*;
+    use cfdl_lexer::lex;
+
+    /// Deterministic PRNG (splitmix64) — no external deps, reproducible.
+    struct Rng(u64);
+    impl Rng {
+        fn next(&mut self) -> u64 {
+            self.0 = self.0.wrapping_add(0x9e3779b97f4a7c15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94d049bb133111eb);
+            z ^ (z >> 31)
+        }
+    }
+
+    fn lex_parse_no_panic(src: &str) {
+        let (tokens, _diags) = lex(src);
+        let _ = parse("fuzz.cfdl", src, &tokens);
+    }
+
+    #[test]
+    fn random_ascii_soup_never_panics() {
+        let mut rng = Rng(0xC0FFEE);
+        for _ in 0..2_000 {
+            let len = (rng.next() % 200) as usize;
+            let src: String = (0..len)
+                .map(|_| (0x20 + (rng.next() % 0x5f) as u8) as char)
+                .collect();
+            lex_parse_no_panic(&src);
+        }
+    }
+
+    #[test]
+    fn mutated_valid_source_never_panics() {
+        let base = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nphase p from 2026-01 to 2026-06\nentity legal borrower\nassume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])\ncontract cre.lease on entity legal.borrower {\n  term 2026-01..2026-12\n  terms { base_rent = 25000 }\n}\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every monthly from 2026-01 to 2026-12 convention following calendar \"us\" except [2026-03-01]\n  amount = 1000 * pow(1.03, time.t / 12.0)\n  active when entity.status != \"gone\"\n}\nevent stop when time.t >= 6 {\n  deactivate stream legal.rent\n}\noption o1 type Option.X {\n  exercise when time.t == 3\n  payoff 100 - 1\n}\nrun monte_carlo trials 10 seed 42\n";
+        lex_parse_no_panic(base);
+        let bytes: Vec<char> = base.chars().collect();
+        let mut rng = Rng(0xDEADBEEF);
+        for _ in 0..2_000 {
+            let mut mutated = bytes.clone();
+            for _ in 0..(1 + rng.next() % 6) {
+                let idx = (rng.next() as usize) % mutated.len();
+                match rng.next() % 3 {
+                    0 => {
+                        mutated[idx] = (0x20 + (rng.next() % 0x5f) as u8) as char;
+                    }
+                    1 => {
+                        mutated.remove(idx);
+                    }
+                    _ => {
+                        mutated.insert(idx, (0x20 + (rng.next() % 0x5f) as u8) as char);
+                    }
+                }
+                if mutated.is_empty() {
+                    break;
+                }
+            }
+            let src: String = mutated.into_iter().collect();
+            lex_parse_no_panic(&src);
+        }
+    }
+
+    #[test]
+    fn truncations_never_panic() {
+        let base = "stream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000 * (1 + 0.03) ^ (time.t / 12)\n}\n";
+        for cut in 0..base.len() {
+            if base.is_char_boundary(cut) {
+                lex_parse_no_panic(&base[..cut]);
+            }
+        }
     }
 }
