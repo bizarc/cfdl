@@ -22,39 +22,70 @@ fn compile_model(model_dir: String, packs_dir: Option<String>) -> PyResult<Strin
     }
 }
 
+/// Run compiled IR. Mirrors `cfdl run`: `rate`/`as_of` are the fallback
+/// discount rate and valuation date when the config omits them; `pack`
+/// applies that pack's declarative domain metrics to the results.
 #[pyfunction]
-#[pyo3(signature = (ir_json, packs_dir=None, config_json=None))]
+#[pyo3(signature = (ir_json, packs_dir=None, config_json=None, rate=0.0, as_of=None, pack=None))]
 #[allow(clippy::useless_conversion)]
 fn run_ir(
     ir_json: String,
     packs_dir: Option<String>,
     config_json: Option<String>,
+    rate: f64,
+    as_of: Option<String>,
+    pack: Option<String>,
 ) -> PyResult<String> {
+    let mut registry: Option<cfdl_pack::PackRegistry> = None;
     if let Some(pack_dir) = packs_dir {
-        if let Err(err) = cfdl_pack::PackRegistry::load_from_dir(Path::new(&pack_dir)) {
-            return Err(PyRuntimeError::new_err(err.message));
+        match cfdl_pack::PackRegistry::load_from_dir(Path::new(&pack_dir)) {
+            Ok(loaded) => registry = Some(loaded),
+            Err(err) => return Err(PyRuntimeError::new_err(err.message)),
         }
     }
+
+    let parsed_as_of = match as_of {
+        Some(raw) => match cfdl_engine::Date::parse(&raw) {
+            Ok(date) => Some(date),
+            Err(_) => {
+                return Err(PyRuntimeError::new_err(format!(
+                    "Invalid as_of value '{raw}', expected YYYY-MM-DD."
+                )))
+            }
+        },
+        None => None,
+    };
 
     let run_config = if let Some(config) = config_json {
         let config_path = Path::new(&config);
         let parsed = if config_path.is_file() {
-            cfdl_engine::run_config_from_json_file(config_path, 0.0, None)
+            cfdl_engine::run_config_from_json_file(config_path, rate, parsed_as_of)
         } else {
-            cfdl_engine::run_config_from_json_str(&config, 0.0, None)
+            cfdl_engine::run_config_from_json_str(&config, rate, parsed_as_of)
         };
         match parsed {
             Ok(value) => value,
             Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
         }
     } else {
-        cfdl_engine::RunConfig::default()
+        cfdl_engine::RunConfig {
+            discount_rate: rate,
+            as_of: parsed_as_of,
+            ..Default::default()
+        }
     };
 
-    let results = match cfdl_engine::run_from_json_str(&ir_json, run_config) {
+    let mut results = match cfdl_engine::run_from_json_str(&ir_json, run_config) {
         Ok(value) => value,
         Err(err) => return Err(PyRuntimeError::new_err(err.to_string())),
     };
+    if let Some(pack_name) = pack {
+        let specs = registry
+            .as_ref()
+            .map(|reg| reg.metric_specs(&pack_name))
+            .unwrap_or_default();
+        results.domain_metrics = cfdl_metrics::compute(&pack_name, &specs, &results);
+    }
     match serde_json::to_string_pretty(&results) {
         Ok(json) => Ok(json),
         Err(err) => Err(PyRuntimeError::new_err(format!(

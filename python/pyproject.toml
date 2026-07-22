@@ -14,6 +14,12 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Rust",
 ]
+dependencies = ["pandas>=2.0"]
+
+[project.optional-dependencies]
+viz = ["matplotlib>=3.8"]
+dev = ["pytest>=8", "maturin>=1.7,<2.0"]
+notebooks = ["jupyter", "matplotlib>=3.8", "nbconvert", "papermill"]
 
 [project.urls]
 Homepage = "https://cfdl.dev"
