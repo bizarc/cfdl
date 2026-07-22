@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CFDL benchmark harness (LAUNCH_PLAN §6D).
+"""CFDL benchmark harness.
 
 Each case directory (benchmarks/<pack>/<case>/) contains:
   model.cfdl            the CFDL model

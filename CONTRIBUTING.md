@@ -4,7 +4,7 @@ CFDL is maintained by a small internal team.
 
 > **External pull requests are not accepted at this time.** We welcome **bug reports**
 > via GitHub issues (see "Reporting issues" below). Feature requests may be filed as
-> issues; we read them, but the roadmap is set internally (`LAUNCH_PLAN.md`).
+> issues; we read them, but the roadmap is set internally.
 
 Everything below documents the working conventions for the maintaining team.
 
@@ -46,7 +46,7 @@ make gold    # golden suite only
 
 ## Development workflow
 
-1. Pick the next task from your workstream in `LAUNCH_PLAN.md`.
+1. Pick the next task from your workstream in the internal launch plan (kept outside version control — ask the maintainer if you do not have it).
 2. Branch from `main` (`ws/<letter>-<slug>` for workstream branches).
 3. Implement the minimal change required.
 4. Add/update fixtures in `fixtures/` and expected outputs in `gold/`

@@ -1,7 +1,7 @@
 # CFDL v0.1 — Implementation Status (Grammar Audit)
 
-Status: informative; updated with each engine increment. The 1.0 gate
-(LAUNCH_PLAN.md §7) requires every row below to be **Implemented** or removed
+Status: informative; updated with each engine increment.
+The 1.0 launch gate requires every row below to be **Implemented** or removed
 from the grammar — no silent no-ops at 1.0.
 
 Legend: ✅ implemented end-to-end (parse → IR → engine) · 🟡 partial (see

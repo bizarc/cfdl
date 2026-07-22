@@ -30,7 +30,7 @@ stream plant.ppa_revenue on entity project.plant inflow currency USD {
 
 > **Status:** pre-1.0, under active development toward the CFDL.dev launch. The current
 > language/IR spec is v0.1; interfaces may change until 1.0 freezes the IR and Results
-> schemas. See `LAUNCH_PLAN.md` for the roadmap.
+> schemas. The roadmap is maintained internally.
 
 ## Use CFDL from…
 

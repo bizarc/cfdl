@@ -10,7 +10,7 @@ slug: "/cookbooks/opco"
 Operating-company / LBO pack: recurring operating lines, policy-driven
 working capital, capex, scheduled term debt, cash taxes, and entry/exit —
 benchmarked in `benchmarks/opco/` against an independent month-by-month
-reference (LAUNCH_PLAN §6D). All lowering is template-driven; the legacy
+reference. All lowering is template-driven; the legacy
 hardcoded compile path (`apply_opco_contract_terms`) is retired.
 
 ## Activation
@@ -50,7 +50,7 @@ Growth is annual-compound stepped continuously on the model clock:
   balance pays as a balloon at the contract's `term_end`. Streams
   `opco.debt.proceeds`, `opco.debt.interest`, `opco.debt.principal`.
   **Cash sweeps and revolvers need per-period persistent state and ship
-  with Workstream H3 (LAUNCH_PLAN §6H).**
+  with Workstream H3.**
 - `opco.acquisition` — purchase `price` paid at `term_start`
   (the equity check when paired with debt proceeds at the same date).
 
@@ -88,7 +88,7 @@ deduct interest, so this is FCF after the interest tax shield),
 - `E7030_OPCO_DEBT_INVALID_AMORT`, `E7031_OPCO_DEBT_INVALID_RATE`
 - Missing templated terms surface as `E5006_MISSING_CONTRACT_TERM`.
 
-## Not in v0.1 (see LAUNCH_PLAN §6H)
+## Not in v0.1 (planned waterfall & capital-stack work)
 
 - Cash-flow sweeps, revolver draws/paydowns, PIK toggles (need H3 state).
 - NOL carryforwards.

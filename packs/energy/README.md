@@ -36,4 +36,4 @@ Tax attributes (ITC, PTC, MACRS shield) report under
 
 Tax equity / partnership flip structures (HLBV), DSCR-sculpted debt sizing,
 full tax computation (the MACRS stream models the shield value, not taxable
-income). Later Workstream D increments; see LAUNCH_PLAN.md.
+income). Planned for later pack increments.

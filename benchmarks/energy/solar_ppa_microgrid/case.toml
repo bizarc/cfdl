@@ -1,5 +1,5 @@
 # Benchmark case: 2 MW solar + storage microgrid, 25-year PPA, level-pay debt.
 # Reference: reference_gen.py (independent implementation).
-# Status: pending practitioner Excel review (LAUNCH_PLAN risk 3).
+# Status: pending practitioner Excel review.
 pack = "energy"
 period_tolerance = 0.01   # dollars, per-period net cash flow

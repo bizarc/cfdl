@@ -2,7 +2,7 @@ name: Python Wheels
 
 # Build-only abi3 wheels for the cfdl-sdk Python package.
 #
-# Per LAUNCH_PLAN rule 5.6, nothing is published here — wheels are uploaded as
+# Per the publishing policy (human approval required), nothing is published here — wheels are uploaded as
 # CI artifacts only. Publishing to PyPI is a human-approved, separate step.
 # Regular per-push compile-checking lives in ci.yml (editable install + pytest);
 # this workflow runs the full manylinux/universal2 matrix on tags and on demand.

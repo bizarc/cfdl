@@ -5,7 +5,8 @@ at CFDL.dev as a standalone, source-available product.
 
 ## Start here
 
-1. **`LAUNCH_PLAN.md`** — locked decisions, workstreams (A–G), file ownership,
+1. **The internal launch plan** (kept outside version control — ask the maintainer) —
+   locked decisions, workstreams, file ownership,
    coordination rules. Your work belongs to exactly one workstream.
 2. `docs/0*.md` + `docs/schemas/` — authoritative language/IR/results specs.
 3. `CONTRIBUTING.md` — conventions, golden workflow, change checklist.
@@ -15,7 +16,7 @@ at CFDL.dev as a standalone, source-available product.
 - **Determinism**: same inputs + same pack + same compiler version → identical output.
 - **Golden-first**: `make ci` must pass; never hand-edit `gold/`; re-bless only
   intentional changes via `CFDL_GOLD_UPDATE=1 ./tools/golden-runner run`, explained in
-  the commit message. Only one workstream re-blesses per merge (see LAUNCH_PLAN.md §5).
+  the commit message. Only one workstream re-blesses per merge (see the launch plan coordination rules).
 - **Diagnostic codes are stable** — add, never rename/reuse.
 - **Branching**: one workstream = one branch (`ws/<letter>-<slug>`); merge to `main`
   only with `make ci` green.
