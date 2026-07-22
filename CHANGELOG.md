@@ -26,6 +26,13 @@ This project follows Semantic Versioning: https://semver.org/
   platform for all CPython ≥3.10.
 - `pandas>=2.0` hard dep; `viz`/`dev`/`notebooks` extras; `make py-develop`,
   `py-test`, `py-wheel` targets.
+- **SDK test suite** (E2): pytest parity over all 37 valid fixtures
+  (canonical-JSON equal to `gold/results/*`, same guarantee as the Rust
+  golden job), DataFrame shape/structure tests, invalid-fixture error tests
+  (codes matched against `gold/diag/*`), and API-surface tests
+  (config dict/path/string equivalence, packs_dir inheritance, viz import
+  guard). CI now installs `python/[dev,viz]` and runs the full suite on
+  three OSes.
 
 ---
 
