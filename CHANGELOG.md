@@ -6,6 +6,29 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.2.12] - 2026-07-22
+
+### Added
+- **Python SDK object model** (Workstream E, increment E1): `cfdl_sdk` now
+  exposes `compile()`/`run()`/`Model`/`Results` on top of the thin native
+  bindings. `Results` carries pandas accessors — `cashflows()` (wide over a
+  PeriodIndex or long), `metrics()`/`metrics_frame()` (core + domain, with
+  currency + source lineage), `scenarios()`, `monte_carlo()`, `annual()` —
+  plus structured errors (`CompileError.diagnostics`, `RunError`) and an
+  optional matplotlib plotting proxy behind the `[viz]` extra. Legacy
+  `compile_model`/`run_ir` remain exported.
+- Native module: `run_ir` gained `rate`/`as_of`/`pack` parameters mirroring
+  `cfdl run`, so the SDK applies the fallback discount rate and pack domain
+  metrics (previously impossible — it hardcoded rate 0.0 and dropped the
+  registry). Verified byte-identical to `gold/results/*` across pack,
+  scenario, and Monte Carlo fixtures.
+- `crates/cfdl-py` builds abi3 wheels (pyo3 `abi3-py310`): one wheel per
+  platform for all CPython ≥3.10.
+- `pandas>=2.0` hard dep; `viz`/`dev`/`notebooks` extras; `make py-develop`,
+  `py-test`, `py-wheel` targets.
+
+---
+
 ## [0.2.11] - 2026-07-22
 
 ### Added

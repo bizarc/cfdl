@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci
+.PHONY: help fmt lint test build clean gold gold-update ci py-develop py-test py-wheel
 
 help:
 	@echo "Targets:"
@@ -15,6 +15,9 @@ help:
 	@echo "  gold        - run golden suite (tools/golden-runner)"
 	@echo "  gold-update - update gold outputs (DANGEROUS; requires intent)"
 	@echo "  ci          - run fmt+lint+test+gold (CI parity)"
+	@echo "  py-develop  - maturin develop the Python SDK (editable, [dev,viz])"
+	@echo "  py-test     - run the Python SDK pytest suite"
+	@echo "  py-wheel    - build a local release wheel (sanity check)"
 
 fmt:
 	cargo fmt --all
@@ -43,3 +46,12 @@ bench:
 	python3 tools/benchmark-runner.py
 
 ci: fmt lint test gold bench
+
+py-develop:
+	pip install -e "python/[dev,viz]"
+
+py-test:
+	python3 -m pytest -q python/tests
+
+py-wheel:
+	maturin build --release -m crates/cfdl-py/Cargo.toml

@@ -309,6 +309,7 @@ version = "0.3.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-engine",
+ "cfdl-metrics",
  "cfdl-pack",
  "pyo3",
  "serde_json",
