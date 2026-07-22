@@ -520,3 +520,41 @@ v0.2+ may add:
 - custom engine computation plugins
 
 This v0.1 interface is designed to evolve without breaking core models.
+
+---
+
+## Parameterized lowering rules (templates)
+
+Lowering-rule fields `amount_expr`, `schedule_from`, and `schedule_to` may
+contain `{{contract.<key>}}` placeholders, resolved at compile time:
+
+1. `{{contract.term_start}}` / `{{contract.term_end}}` — the contract's
+   `term A..B` range (normalized dates).
+2. `{{contract.<key>}}` — the contract's `terms { <key> = <value> }` entry
+   (dotted keys like `lease_up.months` are supported).
+3. Rule defaults — a per-rule `[rules.defaults]` table supplies fallback
+   values when the contract does not declare the term.
+
+A placeholder with no contract value and no default is a compile error
+(`E5006_MISSING_CONTRACT_TERM`), one diagnostic per missing key.
+
+Substitution is textual: numeric terms yield valid expression fragments;
+string-valued terms must be quoted inside the template. Example:
+
+```toml
+[[rules]]
+id = "lease_base_rent_v2"
+contract_name = "cre.lease"
+stream_name = "cre.lease.base_rent"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.base_rent}} * clamp((time.t - {{contract.lease_up.start_period}} + 1) / {{contract.lease_up.months}}, 0, 1)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+"lease_up.start_period" = "6"
+"lease_up.months" = "18"
+```
