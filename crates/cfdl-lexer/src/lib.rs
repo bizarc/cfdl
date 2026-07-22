@@ -61,6 +61,19 @@ pub enum Punct {
     DotDot,
     Equal,
     Tilde,
+    // Expression operators (bare native expressions, Workstream B)
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Caret,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+    EqEq,
+    NotEq,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -140,7 +153,6 @@ pub enum Keyword {
     Trials,
     Seed,
 
-    Cel,
     True,
     False,
     Normal,
@@ -470,8 +482,45 @@ impl<'a> Lexer<'a> {
             ']' => Some(Punct::RBracket),
             ':' => Some(Punct::Colon),
             ',' => Some(Punct::Comma),
-            '=' => Some(Punct::Equal),
             '~' => Some(Punct::Tilde),
+            '+' => Some(Punct::Plus),
+            '-' => Some(Punct::Minus),
+            '*' => Some(Punct::Star),
+            '/' => Some(Punct::Slash),
+            '%' => Some(Punct::Percent),
+            '^' => Some(Punct::Caret),
+            '=' => {
+                if self.peek() == Some('=') {
+                    let _ = self.bump();
+                    Some(Punct::EqEq)
+                } else {
+                    Some(Punct::Equal)
+                }
+            }
+            '!' => {
+                if self.peek() == Some('=') {
+                    let _ = self.bump();
+                    Some(Punct::NotEq)
+                } else {
+                    None
+                }
+            }
+            '<' => {
+                if self.peek() == Some('=') {
+                    let _ = self.bump();
+                    Some(Punct::Le)
+                } else {
+                    Some(Punct::Lt)
+                }
+            }
+            '>' => {
+                if self.peek() == Some('=') {
+                    let _ = self.bump();
+                    Some(Punct::Ge)
+                } else {
+                    Some(Punct::Gt)
+                }
+            }
             '.' => {
                 if self.peek() == Some('.') {
                     let _ = self.bump();
@@ -484,7 +533,10 @@ impl<'a> Lexer<'a> {
         };
 
         if let Some(punct) = kind {
-            let end = if punct == Punct::DotDot {
+            let end = if matches!(
+                punct,
+                Punct::DotDot | Punct::EqEq | Punct::NotEq | Punct::Le | Punct::Ge
+            ) {
                 Position {
                     line: self.line,
                     col: self.col.saturating_sub(1),
@@ -613,7 +665,6 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "trials" => Keyword::Trials,
         "seed" => Keyword::Seed,
 
-        "cel" => Keyword::Cel,
         "true" => Keyword::True,
         "false" => Keyword::False,
         "Normal" => Keyword::Normal,

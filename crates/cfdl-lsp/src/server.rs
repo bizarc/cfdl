@@ -1054,7 +1054,7 @@ fn analyze_model_root(model_root: &Path) -> std::result::Result<(ResolveOutput, 
         return Err(());
     }
 
-    let parse_result = cfdl_parser::parse("model.cfdl", &tokens);
+    let parse_result = cfdl_parser::parse("model.cfdl", &source, &tokens);
     if !parse_result.diagnostics.is_empty() {
         return Err(());
     }
@@ -1075,7 +1075,7 @@ fn source_parseable(file: &str, source: &str) -> bool {
     if !lex_diags.is_empty() {
         return false;
     }
-    let parse_result = cfdl_parser::parse(file, &tokens);
+    let parse_result = cfdl_parser::parse(file, source, &tokens);
     parse_result.diagnostics.is_empty()
 }
 

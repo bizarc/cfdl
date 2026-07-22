@@ -12,7 +12,7 @@ entity ops  team
 // Seed: one-time outflow at phase entry (t=0)
 stream ops.seed_investment on entity ops.team outflow currency USD {
   schedule on phase_enter("ramp")
-  amount cel "500000"
+  amount = 500000
 }
 
 // MRR: monthly revenue with 15% annual compound growth via pow (registered in A.6)
@@ -21,13 +21,13 @@ stream ops.seed_investment on entity ops.team outflow currency USD {
 // t=24 => 50000 * pow(1.15, 24/12.0) = 66125
 stream saas.mrr on entity saas.product inflow currency USD {
   schedule every monthly from 2026-07 to 2028-12
-  amount cel "50000 * pow(1.15, time.t / 12.0)"
+  amount = 50000 * pow(1.15, time.t / 12.0)
 }
 
 // Team cost: fixed $30k/month for all 36 months
 stream ops.team_cost on entity ops.team outflow currency USD {
   schedule every monthly from 2026-01 to 2028-12
-  amount cel "30000"
+  amount = 30000
 }
 
 // Infra cost: linearly growing, suppressed during ramp (t < 6)
@@ -35,6 +35,6 @@ stream ops.team_cost on entity ops.team outflow currency USD {
 // t=24 => 2000 + 24*50 = 3200
 stream saas.infra_cost on entity saas.product outflow currency USD {
   schedule every monthly from 2026-01 to 2028-12
-  amount cel "2000 + time.t * 50"
-  active when cel "time.t >= 6"
+  amount = 2000 + time.t * 50
+  active when time.t >= 6
 }

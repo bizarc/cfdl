@@ -6,6 +6,6 @@ entity legal borrower
 
 stream legal.rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-04
-  amount cel "cfg.base + time.t * 10"
-  active when cel "time.t < 3"
+  amount = cfg.base + time.t * 10
+  active when time.t < 3
 }

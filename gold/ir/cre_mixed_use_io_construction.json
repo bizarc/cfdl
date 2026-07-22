@@ -105,11 +105,11 @@
         "on": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "1740000.0 / 0.055"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -144,11 +144,11 @@
         "to": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "55000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -183,11 +183,11 @@
         "to": "2028-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "75000.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -215,11 +215,11 @@
         "to": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "68500.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -247,11 +247,11 @@
         "to": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "120000.0 * clamp((time.t - 36.0 + 1.0) / 18.0, 0.0, 1.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -279,11 +279,11 @@
         "to": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "45000.0 * clamp((time.t - 36.0 + 1.0) / 3.0, 0.0, 1.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -311,11 +311,11 @@
         "to": "2033-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "35000.0 * clamp((time.t - 36.0 + 1.0) / 6.0, 0.0, 1.0)"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {

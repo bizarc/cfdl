@@ -119,11 +119,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "7200.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -149,11 +149,11 @@
         "on": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "1432200.0 / 0.052"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -188,11 +188,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "63600.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
@@ -227,11 +227,11 @@
         "to": "2030-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "175750.0"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {

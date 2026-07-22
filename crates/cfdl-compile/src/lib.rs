@@ -136,7 +136,7 @@ fn pipeline(
         return Err(lex_diags.into_iter().map(map_lex_diag).collect());
     }
 
-    let parse_result = cfdl_parser::parse("model.cfdl", &tokens);
+    let parse_result = cfdl_parser::parse("model.cfdl", &source, &tokens);
     if !parse_result.diagnostics.is_empty() {
         return Err(parse_result
             .diagnostics
@@ -583,7 +583,7 @@ fn build_ir(
                     .amount
                     .as_ref()
                     .map(|expr| expr.lang.clone())
-                    .unwrap_or_else(|| "cel".to_string()),
+                    .unwrap_or_else(|| "cfdl".to_string()),
                 src: stream
                     .amount
                     .as_ref()
@@ -595,7 +595,7 @@ fn build_ir(
                     .active_when
                     .as_ref()
                     .map(|expr| expr.lang.clone())
-                    .unwrap_or_else(|| "cel".to_string()),
+                    .unwrap_or_else(|| "cfdl".to_string()),
                 src: stream
                     .active_when
                     .as_ref()
@@ -866,7 +866,7 @@ fn lower_contract_streams(
             }
             let mut schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
-            let mut amount_src = rule.amount_cel.clone();
+            let mut amount_src = rule.amount_expr.clone();
             if pack.name == "opco" {
                 apply_opco_contract_terms(
                     contract,
@@ -899,11 +899,11 @@ fn lower_contract_streams(
                     },
                     schedule,
                     amount: IrExpr {
-                        lang: "cel".to_string(),
+                        lang: "cfdl".to_string(),
                         src: amount_src,
                     },
                     active_when: IrExpr {
-                        lang: "cel".to_string(),
+                        lang: "cfdl".to_string(),
                         src: "true".to_string(),
                     },
                     provenance: IrNodeProvenance {

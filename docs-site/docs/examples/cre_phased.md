@@ -52,12 +52,12 @@ contract cre.lease {
 // Ops as standalone streams (individual revenue/expense items per guidance)
 stream real_estate.ops_revenue on entity real_estate.property inflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
-  amount cel "30000"
+  amount = 30000
 }
 
 stream real_estate.ops_expense on entity real_estate.property outflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
-  amount cel "12000"
+  amount = 12000
 }
 
 contract cre.exit_cap {

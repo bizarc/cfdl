@@ -87,7 +87,7 @@ Rules:
   - define alias mappings
   - define validators for contract terms/types
   - define contract lowering rules
-  - define additional CEL functions
+  - define additional expression functions
 
 Core language semantics MUST NOT change based on pack selection.
 
@@ -232,7 +232,7 @@ contract Contract.Lease L1
 
   terms {
     base_rent 42000 USD
-    escalator cel "1 + inputs.rent_growth"
+    escalator 1 + inputs.rent_growth
   }
 
   effects {
@@ -242,7 +242,7 @@ contract Contract.Lease L1
         convention modified_following
         calendar "NYSE"
 
-      amount cel "terms.base_rent * pow(terms.escalator, t.year_index)"
+      amount = terms.base_rent * pow(terms.escalator, t.year_index)
     }
   }
 }
@@ -288,7 +288,7 @@ Syntax:
 ```cfdl
 stream taxes on entity asset.Sunset outflow currency USD {
   schedule every year on 2026-12-31 from 2026-01-01 to 2031-12-31
-  amount cel "ref.tax_rates_county.rate * entity.assessed_value"
+  amount = ref.tax_rates_county.rate * entity.assessed_value
 }
 ```
 
@@ -311,7 +311,7 @@ effects {
 Streams MAY include an activation predicate:
 
 ```cfdl
-active when cel "entity.status != 'refinanced'"
+active when entity.status != 'refinanced'
 ```
 
 If omitted, streams are active for all scheduled occurrences.
@@ -411,7 +411,7 @@ Recommended v0.1 rule (normative):
 
 ### 11.1 Deterministic assumption
 ```cfdl
-assume discount_rate = cel "0.10"
+assume discount_rate = 0.10
 ```
 
 ### 11.2 Stochastic assumption (distribution)
@@ -441,7 +441,7 @@ Supported distributions (v0.1 core):
 Syntax:
 
 ```cfdl
-event refi_if_rates_drop when cel "obs.rate('SOFR_1M') < 0.035" {
+event refi_if_rates_drop when obs.rate('SOFR_1M') < 0.035 {
   set entity loan.Senior.status = "refinanced"
   deactivate stream debt_service
 }
@@ -464,7 +464,7 @@ Supported actions:
 Contracts and streams SHOULD use entity state as the primary activation mechanism:
 
 ```cfdl
-active when cel "entity.status != 'refinanced'"
+active when entity.status != 'refinanced'
 ```
 
 ---
@@ -476,8 +476,8 @@ Syntax:
 
 ```cfdl
 option refi_1 type Option.Refinance exercisable in construction {
-  exercise when cel "obs.rate('SOFR_1M') < 0.035"
-  payoff cel "cfg.refi_savings_estimate - 250000"
+  exercise when obs.rate('SOFR_1M') < 0.035
+  payoff cfg.refi_savings_estimate - 250000
 }
 ```
 
@@ -506,13 +506,13 @@ See the Pack Interface specification for details on how packs define output cate
 
 ---
 
-## 15. Expressions (CEL-compatible)
+## 15. Expressions (CFDL expression language)
 
 ### 15.1 Expression syntax
 Expressions are written as:
 
 ```cfdl
-cel "<expression>"
+<expression>
 ```
 
 Expressions MUST be:
@@ -587,7 +587,6 @@ These MUST compile to typed values in IR.
 `inflow`, `outflow`, `schedule`, `on`, `every`, `day`, `eom`, `week`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`,
 `convention`, `calendar`, `stub`, `except`, `also`,
 `assume`, `run`, `deterministic`, `monte_carlo`, `trials`, `seed`,
-`cel`,
 `event`, `when`, `set`, `activate`, `deactivate`,
 `option`, `type`, `exercisable`, `exercise`, `payoff`.
 
@@ -623,7 +622,7 @@ entity loan Senior : Debt.Loan { principal 8_500_000 USD index "SOFR_1M" }
 
 **assumptions.cfdl**
 ```cfdl
-assume discount_rate = cel "0.10"
+assume discount_rate = 0.10
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
 ```
 
@@ -638,7 +637,7 @@ contract Contract.Lease L1
   effects {
     stream rent owner entity asset.Sunset direction inflow currency USD {
       schedule every month on eom from 2026-02-01 to 2028-01-31 convention modified_following calendar "NYSE"
-      amount cel "terms.base_rent"
+      amount = terms.base_rent
     }
   }
 }
@@ -650,14 +649,14 @@ contract Contract.Loan D1
   currency USD
   effects {
     stream debt_service owner entity loan.Senior direction outflow currency USD {
-      active when cel "entity.status != 'refinanced'"
+      active when entity.status != 'refinanced'
       schedule every month on eom from 2026-01-01 to 2031-12-31 convention modified_following calendar "NYSE"
-      amount cel "/* engine-provided pmt(...) */ 0"
+      amount = /* engine-provided pmt(...) */ 0
     }
   }
 }
 
-event refi_if_rates_drop when cel "obs.rate('SOFR_1M') < 0.035" {
+event refi_if_rates_drop when obs.rate('SOFR_1M') < 0.035 {
   set entity loan.Senior.status = "refinanced"
 }
 ```
@@ -677,4 +676,4 @@ An implementation conforms to CFDL v0.1 Core if it:
 3. Validates strong types and required fields.
 4. Emits deterministic canonical IR that preserves contracts/streams/provenance.
 5. Supports the schedule primitives and discrete event semantics.
-6. Supports CEL-compatible expressions and the required namespaces/functions.
+6. Supports CFDL-native expressions and the required namespaces/functions.

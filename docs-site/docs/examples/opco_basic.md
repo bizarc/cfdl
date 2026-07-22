@@ -35,12 +35,12 @@ entity operating business
 // Revenue and opex as standalone streams (individual items per guidance)
 stream operating.revenue on entity operating.business inflow currency USD {
   schedule every monthly from 2026-01 to 2031-12
-  amount cel "120000"
+  amount = 120000
 }
 
 stream operating.opex on entity operating.business outflow currency USD {
   schedule every monthly from 2026-01 to 2031-12
-  amount cel "70000"
+  amount = 70000
 }
 
 contract opco.working_capital {

@@ -9,10 +9,10 @@ phase operations from 2026-01 to 2026-12
 
 stream legal.construction_draw on entity legal.property outflow {
   schedule on phase_enter("construction")
-  amount cel "500000"
+  amount = 500000
 }
 
 stream legal.operating_revenue on entity legal.property inflow {
   schedule every monthly from phase_start("operations") to phase_end("operations")
-  amount cel "10000"
+  amount = 10000
 }

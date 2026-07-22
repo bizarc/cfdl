@@ -439,7 +439,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     for stream in &ir.streams {
         if let Some(lang) = &stream.amount.lang {
-            if lang != "cel" {
+            if lang != "cfdl" {
                 warnings.push(format!(
                     "Stream '{}' amount language '{}' is unsupported; expression is treated as CEL.",
                     stream.name, lang
@@ -464,7 +464,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             .unwrap_or("true");
         if let Some(expr) = &stream.active_when {
             if let Some(lang) = &expr.lang {
-                if lang != "cel" {
+                if lang != "cfdl" {
                     warnings.push(format!(
                         "Stream '{}' active_when language '{}' is unsupported; expression is treated as CEL.",
                         stream.name, lang
@@ -1443,8 +1443,8 @@ mod tests {
                     "owner": { "symbol": "legal.borrower" },
                     "direction": "outflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
-                    "amount": { "lang": "cel", "src": "cfg.base + time.t" },
-                    "active_when": { "lang": "cel", "src": "time.t < 2" }
+                    "amount": { "lang": "cfdl", "src": "cfg.base + time.t" },
+                    "active_when": { "lang": "cfdl", "src": "time.t < 2" }
                 }
             ]
         }"#;
@@ -1489,8 +1489,8 @@ mod tests {
                     "owner": { "symbol": "legal.borrower" },
                     "direction": "inflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
-                    "amount": { "lang": "cel", "src": "obs.rate" },
-                    "active_when": { "lang": "cel", "src": "true" }
+                    "amount": { "lang": "cfdl", "src": "obs.rate" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
                 }
             ]
         }"#;
@@ -1557,24 +1557,24 @@ mod tests {
                     "owner": { "symbol": "entity.a" },
                     "direction": "inflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
-                    "amount": { "lang": "cel", "src": "3000.0" },
-                    "active_when": { "lang": "cel", "src": "true" }
+                    "amount": { "lang": "cfdl", "src": "3000.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
                 },
                 {
                     "name": "ops.expense",
                     "owner": { "symbol": "entity.a" },
                     "direction": "outflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
-                    "amount": { "lang": "cel", "src": "1000.0" },
-                    "active_when": { "lang": "cel", "src": "true" }
+                    "amount": { "lang": "cfdl", "src": "1000.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
                 },
                 {
                     "name": "exit.proceeds",
                     "owner": { "symbol": "entity.a" },
                     "direction": "inflow",
                     "schedule": { "kind": "OnDate", "on": "2026-03-01" },
-                    "amount": { "lang": "cel", "src": "50000.0" },
-                    "active_when": { "lang": "cel", "src": "true" }
+                    "amount": { "lang": "cfdl", "src": "50000.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
                 }
             ]
         }"#;
@@ -1642,8 +1642,8 @@ mod tests {
                     "owner": { "symbol": "legal.borrower" },
                     "direction": "inflow",
                     "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
-                    "amount": { "lang": "cel", "src": "10" },
-                    "active_when": { "lang": "cel", "src": "true" }
+                    "amount": { "lang": "cfdl", "src": "10" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
                 }
             ]
         }"#;

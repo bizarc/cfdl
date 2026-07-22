@@ -186,8 +186,8 @@ pub struct ParseResult {
     pub diagnostics: Vec<ParseDiagnostic>,
 }
 
-pub fn parse(file: &str, tokens: &[Token]) -> ParseResult {
-    let mut parser = Parser::new(file, tokens);
+pub fn parse(file: &str, source: &str, tokens: &[Token]) -> ParseResult {
+    let mut parser = Parser::new(file, source, tokens);
     let ast = parser.parse_compilation_unit();
     let has_errors = !parser.diagnostics.is_empty();
     ParseResult {
@@ -201,16 +201,50 @@ struct Parser<'a> {
     tokens: &'a [Token],
     idx: usize,
     diagnostics: Vec<ParseDiagnostic>,
+    /// Source lines, used to slice raw expression text by token spans.
+    lines: Vec<Vec<char>>,
 }
 
 impl<'a> Parser<'a> {
-    fn new(file: &str, tokens: &'a [Token]) -> Self {
+    fn new(file: &str, source: &str, tokens: &'a [Token]) -> Self {
         Self {
             file: file.to_string(),
             tokens,
             idx: 0,
             diagnostics: Vec::new(),
+            lines: source
+                .lines()
+                .map(|l| l.trim_end_matches('\r').chars().collect())
+                .collect(),
         }
+    }
+
+    /// Slice the raw source text covered by `span` (lines/cols are 1-based,
+    /// end_col inclusive — the lexer's span convention).
+    fn slice_source(&self, span: Span) -> String {
+        let mut out = String::new();
+        for line_no in span.start_line..=span.end_line {
+            let Some(line) = self.lines.get(line_no as usize - 1) else {
+                continue;
+            };
+            let from = if line_no == span.start_line {
+                span.start_col as usize - 1
+            } else {
+                0
+            };
+            let to = if line_no == span.end_line {
+                (span.end_col as usize).min(line.len())
+            } else {
+                line.len()
+            };
+            if line_no != span.start_line {
+                out.push(' ');
+            }
+            if from < to {
+                out.extend(&line[from..to]);
+            }
+        }
+        out.trim().to_string()
     }
 
     fn parse_compilation_unit(&mut self) -> CompilationUnit {
@@ -805,6 +839,15 @@ impl<'a> Parser<'a> {
         let amount_tok = self.bump();
         match amount_tok.kind {
             TokenKind::Ident(ref ident) if ident == "amount" => {
+                // Canonical form: `amount = <expression>`
+                if !matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected '=' after 'amount'.".to_string(),
+                    );
+                    return None;
+                }
+                let _ = self.bump();
                 self.parse_expr_slot(amount_tok.span)
             }
             _ => None,
@@ -831,34 +874,39 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parse a bare native expression: consume tokens until a statement
+    /// delimiter (`schedule`, `active`, `amount`, `}`, EOF) and slice the raw
+    /// source text they cover. The expression itself is validated by the
+    /// cfdl-calc parser at compile time (EXPR_PARSE diagnostics with spans).
     fn parse_expr_slot(&mut self, start_span: Span) -> Option<ExprSlot> {
-        let lang_tok = self.bump();
-        match lang_tok.kind {
-            TokenKind::Keyword(Keyword::Cel) => {}
-            _ => {
-                self.push_expected(
-                    lang_tok.span,
-                    "Expected token 'cel' for expression language.".to_string(),
-                );
-                return None;
+        let mut first: Option<Span> = None;
+        let mut last: Option<Span> = None;
+        loop {
+            match self.peek().kind {
+                TokenKind::Eof
+                | TokenKind::Punct(Punct::RBrace)
+                | TokenKind::Keyword(Keyword::Schedule)
+                | TokenKind::Keyword(Keyword::Active) => break,
+                TokenKind::Ident(ref ident) if ident == "amount" => break,
+                _ => {
+                    let tok = self.bump();
+                    if first.is_none() {
+                        first = Some(tok.span);
+                    }
+                    last = Some(tok.span);
+                }
             }
         }
-
-        let src_tok = self.bump();
-        match src_tok.kind {
-            TokenKind::String(ref src) => Some(ExprSlot {
-                lang: "cel".to_string(),
-                src: src.clone(),
-                span: merge_spans(start_span, src_tok.span),
-            }),
-            _ => {
-                self.push_expected(
-                    src_tok.span,
-                    "Expected token <string> after 'cel'.".to_string(),
-                );
-                None
-            }
-        }
+        let (Some(first), Some(last)) = (first, last) else {
+            self.push_expected(self.current_span(), "Expected expression.".to_string());
+            return None;
+        };
+        let expr_span = merge_spans(first, last);
+        Some(ExprSlot {
+            lang: "cfdl".to_string(),
+            src: self.slice_source(expr_span),
+            span: merge_spans(start_span, expr_span),
+        })
     }
 
     fn consume_stream_item(&mut self) -> Span {
@@ -1287,7 +1335,6 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Trials => "trials",
         Keyword::Seed => "seed",
 
-        Keyword::Cel => "cel",
         Keyword::True => "true",
         Keyword::False => "false",
         Keyword::Normal => "Normal",
@@ -1347,7 +1394,7 @@ stream legal.principal on entity legal.borrower
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 5);
@@ -1366,7 +1413,7 @@ phase p from 2026-01 to 2026-02
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
@@ -1381,7 +1428,7 @@ time monthly from 2026-01 for 12
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert_eq!(result.diagnostics.len(), 1);
         assert_eq!(result.diagnostics[0].code, "E0004_EXPECTED_TOKEN");
         assert_eq!(result.diagnostics[0].file, "model.cfdl");
@@ -1392,7 +1439,7 @@ time monthly from 2026-01 for 12
         let src = r#"import "sub/module.cfdl" as sub"#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 1);
@@ -1410,7 +1457,7 @@ time monthly from 2026-01 for 12
         let src = r#"use pack "testpack" version "0.1.0""#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 1);
@@ -1431,12 +1478,12 @@ time calendar monthly from 2026-01 for 2
 entity legal borrower
 stream legal.rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-02
-  amount cel "1000"
+  amount = 1000
 }
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         let stream = ast
@@ -1469,7 +1516,7 @@ contract cre.lease_one on entity legal.borrower {
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         let contract = ast
@@ -1495,7 +1542,7 @@ contract cre.lease_one {
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         let contract = ast
@@ -1520,12 +1567,12 @@ contract lease.core.primary on entity legal.borrower {
 }
 stream cre.lease.base_rent on entity legal.borrower {
   schedule every monthly from 2026-01 to 2026-02
-  amount cel "1000"
+  amount = 1000
 }
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(result.diagnostics.is_empty());
         let ast = result.ast.expect("AST expected");
         let contract = ast
@@ -1556,12 +1603,12 @@ time calendar monthly from 2026-01 for 2
 entity legal borrower
 stream legal.rent on entity borrower {
   schedule every monthly from 2026-01 to 2026-02
-  amount cel "1000"
+  amount = 1000
 }
 "#;
         let (tokens, lex_diags) = lex(src);
         assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", &tokens);
+        let result = parse("model.cfdl", src, &tokens);
         assert!(!result.diagnostics.is_empty());
         assert!(result
             .diagnostics

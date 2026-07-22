@@ -22,12 +22,12 @@ contract cre.lease {
 // Ops as standalone streams (individual revenue/expense items per guidance)
 stream real_estate.ops_revenue on entity real_estate.property inflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
-  amount cel "30000"
+  amount = 30000
 }
 
 stream real_estate.ops_expense on entity real_estate.property outflow currency USD {
   schedule every monthly from 2028-01 to 2031-12
-  amount cel "12000"
+  amount = 12000
 }
 
 contract cre.exit_cap {
@@ -41,11 +41,11 @@ contract cre.exit_cap {
 // Construction-phase financing: interest-only stream (fixed dates, no events)
 stream loan.construction_interest on entity loan.construction {
   schedule every monthly from 2026-01 to 2027-06
-  amount cel "40000"
+  amount = 40000
 }
 
 // Permanent financing: debt service stream starts when construction period ends (hardcoded transition)
 stream loan.permanent_debt_service on entity loan.permanent {
   schedule every monthly from 2027-07 to 2031-12
-  amount cel "55000"
+  amount = 55000
 }

@@ -65,11 +65,11 @@
         "on": "2026-12-01"
       },
       "amount": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "100000.0 / 0.05"
       },
       "active_when": {
-        "lang": "cel",
+        "lang": "cfdl",
         "src": "true"
       },
       "provenance": {
