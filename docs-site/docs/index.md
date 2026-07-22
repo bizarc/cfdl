@@ -6,20 +6,42 @@ slug: /
 
 # CFDL Documentation
 
-CFDL is a deterministic language and SDK for cash-flow modeling.
+CFDL (Cash Flow Domain Language) is a deterministic, source-available
+language for modeling cash flows across asset classes — energy and
+infrastructure, commercial real estate, credit, and operating businesses.
+The same model file gives you the point-estimate answer **and** the
+distribution around it: models are natively stochastic, deterministically
+seeded, and byte-reproducible.
 
-Use this site as the onboarding entrypoint, then use the source specs for exact semantics.
+## Use CFDL from…
+
+- **Files + CLI** — `cfdl compile`, `cfdl run`, `cfdl validate`
+- **Python / Jupyter** — the [`cfdl_sdk` package](python-sdk) with pandas
+  result accessors
+- **Playground** — [compile and run in the browser](/playground), nothing to
+  install
+- **API server** — a [self-hostable HTTP API](api-server) over the compiler
+  and engine
+- **VS Code** — extension with LSP diagnostics, hover, and completion
 
 ## Recommended path
 
 1. Read [Getting Started](getting-started)
-2. Walk through [Language Guide](language-guide)
-3. Learn [Packs](packs)
-4. Configure authoring with [Install and Configure](install-configure)
-5. Use [Language Reference](language-reference) for authoritative spec links
+2. Walk through the [Language Guide](language-guide)
+3. Learn [Packs](packs) and the per-domain [Cookbooks](/cookbooks)
+4. See how parity is proven in [Benchmarks](benchmarks)
+5. Model uncertainty with [Stochastic Modeling](stochastic-modeling)
+6. Use the [Language Reference](language-reference) for authoritative spec
+   links
 
 ## Source links
 
 - Repository: [https://github.com/bizarc/cfdl](https://github.com/bizarc/cfdl)
-- Onboarding guide source: `docs/LANGUAGE_GUIDE.md`
+- Onboarding guide source: `docs/09_user_guide.md`
 - Tutorial models: `examples/language_tutorial/`
+
+## Licensing
+
+CFDL is **source available** under the Business Source License 1.1 — free to
+read, run, and use in production, with commercial hosting/embedding rights
+reserved. See [Licensing](licensing) for details.

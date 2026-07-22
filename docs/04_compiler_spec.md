@@ -128,7 +128,10 @@ Every AST node MUST carry a `Span`:
 - `DateRangeLit { start: DateLit, end: DateLit }`
 
 #### 3.2.4 Expressions
-- `Expr::Cel { src: String }`
+- `ExprSlot { lang: String, src: String, span: Span, expr_span: Span }` —
+  `lang` is always `"cfdl"`; `src` is the raw expression source, and
+  `expr_span` covers exactly that slice so expression-internal byte offsets
+  map back to the file for diagnostics.
 
 #### 3.2.5 Contract body
 - `ContractBody { currency: Option<Currency>, parties: Option<Map>, tags: Option<Map>, terms: Option<Map>, effects: Option<EffectsBlock> }`
@@ -173,7 +176,7 @@ Schedule options:
 - money literals
 - date literals
 - inline lists/maps
-- or `Expr::Cel`
+- or an `ExprSlot` (a bare `cfdl` expression)
 
 The compiler MUST preserve raw literal text and normalized typed representation in lowering.
 

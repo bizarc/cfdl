@@ -48,8 +48,15 @@ const sidebars: SidebarsConfig = {
     },
     "packs",
     "benchmarks",
+    "stochastic-modeling",
+    {
+      type: "category",
+      label: "Surfaces",
+      items: ["python-sdk", "api-server"]
+    },
     "install-configure",
-    "troubleshooting"
+    "troubleshooting",
+    "licensing"
   ]
 };
 
