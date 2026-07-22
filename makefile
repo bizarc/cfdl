@@ -38,4 +38,8 @@ gold:
 gold-update:
 	@CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
 
-ci: fmt lint test gold
+bench:
+	cargo build -p cfdl-cli
+	python3 tools/benchmark-runner.py
+
+ci: fmt lint test gold bench

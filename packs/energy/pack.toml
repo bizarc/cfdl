@@ -1,0 +1,8 @@
+name = "energy"
+version = "0.1.0"
+description = "Energy & microgrids pack: PPA/merchant revenue, storage, O&M, tax credits, project debt."
+
+[entrypoints]
+aliases = "aliases.toml"
+lowering = "lowering/rules.toml"
+metrics = "metrics.toml"

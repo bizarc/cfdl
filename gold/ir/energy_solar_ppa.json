@@ -1,0 +1,503 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "solar-ppa-microgrid",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 300
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "25f4a9db639b9a6165b2d380445845cb",
+      "symbol": "project.microgrid",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "8acc161debe4d4dc43193aec2a5397d9",
+      "name": "energy.capacity",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "dd414d4550419dcf33b958d9bac2d1f6",
+      "name": "energy.capex",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "f5ed4847ec255caaffd93996aee2f60c",
+      "name": "energy.debt_service",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 57,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "f4d003325863953178e225850efeaf3a",
+      "name": "energy.itc",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c11368d56bf193fc573365dea4e17536",
+      "name": "energy.om",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "aebbe1e2ae57370b162ab41152382fe3",
+      "name": "energy.ppa",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "3793c0165ba22162708ef7f43f70a3be",
+      "name": "energy.storage_arbitrage",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.microgrid"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2050-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 35,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "568828c12b3fccfa32d3c06118ca5661",
+      "name": "energy.capacity.revenue",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2050-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "60000.0 / 12.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_capacity_payment_v1"
+        }
+      }
+    },
+    {
+      "id": "f7ab8f71270cf33f4813a17bbbc570a0",
+      "name": "energy.capex.outlay",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "2400000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_capex_v1"
+        }
+      }
+    },
+    {
+      "id": "d44a5c80f41480fd9eb0e850e352787d",
+      "name": "energy.debt.service",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2045-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "-pmt(0.06 / 12.0, 240.0, 1600000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 57,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_debt_service_v1"
+        }
+      }
+    },
+    {
+      "id": "e89e5d04c80fa2cf3467e959440e95d7",
+      "name": "energy.itc.credit",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "720000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_itc_credit_v1"
+        }
+      }
+    },
+    {
+      "id": "aa7951e1ac7dec22214dff4d7f2f6165",
+      "name": "energy.om.expense",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2050-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(70000.0 / 12.0) * pow(1.0 + 0.025, round_down(time.t / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_om_expense_v1"
+        }
+      }
+    },
+    {
+      "id": "e17704c6d45bc926e02a5c7db18b7592",
+      "name": "energy.ppa.revenue",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2050-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(4200.0 / 12.0) * pow(1.0 - 0.005, round_down(time.t / 12.0, 0.0)) * 85.0 * pow(1.0 + 0.02, round_down(time.t / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ppa_revenue_v1"
+        }
+      }
+    },
+    {
+      "id": "7f32b3996df0588dfa84b68122a498df",
+      "name": "energy.storage.margin",
+      "owner": {
+        "symbol": "project.microgrid"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2050-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(500.0 / 12.0) * 30.0 * pow(1.0 - 0.0, round_down(time.t / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 35,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_storage_arbitrage_v1"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "37b8a1ab7c040582872891f41df4c1ca",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}
