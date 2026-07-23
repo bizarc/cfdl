@@ -125,6 +125,3 @@ Expressions are stored in IR as their raw source text with
 ```json
 { "lang": "cfdl", "src": "50000 * pow(1.15, time.t / 12.0)" }
 ```
-
-The `cel` dialect from earlier drafts has been removed; `cfdl` is the only
-expression language.
