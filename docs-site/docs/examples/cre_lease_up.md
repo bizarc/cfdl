@@ -1,6 +1,6 @@
 ---
 id: example-cre-lease-up
-title: "cre lease up"
+title: "CRE: Lease-Up"
 slug: "/examples/cre_lease_up"
 ---
 

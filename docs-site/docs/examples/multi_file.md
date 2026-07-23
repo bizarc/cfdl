@@ -1,6 +1,6 @@
 ---
 id: example-multi_file
-title: "multi file"
+title: "Multi-File Model"
 slug: "/examples/multi_file"
 ---
 

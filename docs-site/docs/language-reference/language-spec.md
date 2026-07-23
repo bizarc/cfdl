@@ -76,7 +76,7 @@ Rules:
 Syntax:
 
 ```cfdl
-use pack "cfdl/cre" version "0.1"
+use pack "cre" version "0.1.0"
 ```
 
 Rules:
@@ -189,26 +189,25 @@ The language provides schedule helpers (see §9) and event helpers (see §11):
 ## 7. Entities (Structure)
 
 ### 7.1 Entity declaration
-Syntax:
+Syntax (v0.1 core):
 
 ```cfdl
-entity asset Sunset : CRE.Asset {
-  city "Austin"
-  units 24
-}
+entity asset sunset
 ```
 
 Rules:
-- `entity <namespace> <name> : <TypeId> { ... }`
-- The full entity symbol is a qualified name with at least two segments (e.g., `asset.Sunset`, `org.asset.Sunset`).
-- `<TypeId>` MUST resolve in the active type registry (core + pack).
-- Attributes MUST type-check against the ontology when a pack provides schemas; otherwise attributes are permitted but only minimally typed.
+- Declaration form: `entity <namespace> <name>` — two bare identifiers.
+- References use the qualified dotted form: `asset.sunset`
+  (e.g. `on entity asset.sunset`).
+- Typed entity blocks (`entity asset sunset : CRE.Asset { city = "Austin" }`)
+  are **reserved**: declared in the grammar but not parsed in v0.1
+  (see `10_implementation_status.md`).
 
 ### 7.2 Entity state
 - Entities MAY have mutable state values through events:
 
 ```cfdl
-set entity loan.Senior.status = "refinanced"
+set entity loan.senior.status = "refinanced"
 ```
 
 Rules:
@@ -224,37 +223,28 @@ For when to use contracts vs standalone streams, see the **Language Guide** ("Wh
 Syntax (normative):
 
 ```cfdl
-contract Contract.Lease L1
-  on entity asset.Sunset
-  term 2026-02-01 .. 2028-01-31
-{
-  currency USD
-
+contract cre.lease on entity asset.sunset {
+  term 2026-02..2028-01
   terms {
-    base_rent 42000 USD
-    escalator 1 + inputs.rent_growth
-  }
-
-  effects {
-    stream rent owner entity asset.Sunset direction inflow currency USD {
-      schedule every month on eom
-        from 2026-02-01 to 2028-01-31
-        convention modified_following
-        calendar "NYSE"
-
-      amount = terms.base_rent * pow(terms.escalator, t.year_index)
-    }
+    base_rent = 42000
+    escalation = 0.03
   }
 }
 ```
 
 Rules:
-- `contract <TypeId> <Name> on entity <EntityRef> term <Date> .. <Date> { ... }`
-- `<Name>` MUST be a qualified name with at least two segments (e.g., `cre.lease.primary`).
+- `contract <TypeId>[.<instance>] on entity <EntityRef> { term <Date>..<Date>  terms { ... } }`
+- `<TypeId>` is the pack contract type (e.g. `cre.lease`); an optional dotted
+  instance suffix creates independent instances
+  (`cre.lease_unit.tenant_a`, `cre.lease_unit.tenant_b`).
 - `term` is REQUIRED.
-- `currency` is REQUIRED if any monetary effects are emitted by this contract.
-- `terms` is OPTIONAL.
-- `effects` is REQUIRED unless the active pack guarantees a lowering rule that produces effects.
+- `terms` is OPTIONAL; entries use `<name> = <literal-or-expression>`.
+- Monetary amounts default to the model currency; streams declare currency
+  explicitly.
+- Effects come from the active pack's lowering rules, which expand the
+  contract into streams in the IR. Explicit `effects`/`parties`/`tags`
+  blocks are **tolerated by the parser but not represented in IR** in v0.1
+  (reserved; see `10_implementation_status.md`).
 
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.
@@ -274,7 +264,7 @@ Pack interaction:
 ### 8.4 Contract names and references
 - Contract instance names MUST be unique across the model.
 - Contract instance names MUST be qualified names with at least two segments; uniqueness applies to the full name.
-- Contracts may be referenced by name via `contract("L1")` in expressions (see §12).
+- Expression-level contract references (`contract("...")`) are reserved and not in the v0.1 dialect.
 
 ---
 
@@ -286,9 +276,9 @@ For when to use standalone streams vs contracts, see the **Language Guide** ("Wh
 Syntax:
 
 ```cfdl
-stream taxes on entity asset.Sunset outflow currency USD {
-  schedule every year on 2026-12-31 from 2026-01-01 to 2031-12-31
-  amount = ref.tax_rates_county.rate * entity.assessed_value
+stream asset.taxes on entity asset.sunset outflow currency USD {
+  schedule every monthly from 2026-01 to 2031-12
+  amount = 150000 / 12
 }
 ```
 
@@ -298,20 +288,18 @@ Rules:
 - Streams MUST declare a currency.
 - Stream names MUST be qualified names with at least two segments (e.g., `cre.lease.base_rent`, `real_estate.ops_expense`).
 
-### 9.2 Stream declaration inside contract effects
-Syntax:
+### 9.2 Stream declaration inside contract effects (reserved)
 
-```cfdl
-effects {
-  stream rent owner entity asset.Sunset direction inflow currency USD { ... }
-}
-```
+Explicit `effects { stream ... }` blocks inside contracts are declared in
+the grammar but **not represented in IR** in v0.1 — pack lowering rules are
+the mechanism that turns contracts into streams. See
+`10_implementation_status.md`.
 
 ### 9.3 Activation guards
 Streams MAY include an activation predicate:
 
 ```cfdl
-active when entity.status != 'refinanced'
+active when entity.status != "refinanced"
 ```
 
 If omitted, streams are active for all scheduled occurrences.
@@ -467,9 +455,9 @@ curve power_price linear {
 Syntax:
 
 ```cfdl
-event refi_if_rates_drop when obs.rate('SOFR_1M') < 0.035 {
-  set entity loan.Senior.status = "refinanced"
-  deactivate stream debt_service
+event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
+  set entity loan.senior.status = "refinanced"
+  deactivate stream loan.debt_service
 }
 ```
 
@@ -490,7 +478,7 @@ Supported actions:
 Contracts and streams SHOULD use entity state as the primary activation mechanism:
 
 ```cfdl
-active when entity.status != 'refinanced'
+active when entity.status != "refinanced"
 ```
 
 ---
@@ -502,7 +490,7 @@ Syntax:
 
 ```cfdl
 option refi_1 type Option.Refinance exercisable in construction {
-  exercise when obs.rate('SOFR_1M') < 0.035
+  exercise when curve_value("sofr", time.date) < 0.045
   payoff cfg.refi_savings_estimate - 250000
 }
 ```
@@ -550,30 +538,32 @@ Expressions MUST be:
 The expression environment MUST support:
 
 **Model/time**
-- `t.index`, `t.date`, `t.year_index` (minimum)
+- `time.t` (0-based period index), `time.date`, `time.phase`
 
 **Inputs**
-- `inputs.<name>` for stochastic assumptions
-- `cfg.<name>` for run config values (deterministic/stochastic)
+- `inputs.<name>` for assumptions (fixed or stochastic)
+- `cfg.<name>` for run-config values
 
 **Entities**
-- `entity.<attr>` accesses entity attributes in context
-- `entity.state` accesses mutable entity state
+- `entity.<attr>` / `entity.state.*` — entity attributes and mutable state
+  (set via events; null before first set)
 
-**Observables and references**
-- `obs.rate(<name>)` returns an observable rate at `t.date`
-- `obs.index(<name>)` returns an observable index value
-- `obs.fx(<from>, <to>)` returns an FX rate
-- `ref.<name>` returns a reference object (table/static)
+**Observables and curves**
+- `obs.<name>` — externally supplied observable values (provided via
+  run-config parameters with the `obs.` key prefix)
+- `curve_value(<name>, <date>)` — lookup into a declared `curve`
+- `ref.<name>` is reserved for ontology references (not in the v0.1 dialect)
 
-**Streams**
-- `stream.<name>.amount` accesses a stream's current-period amount
+**Cross-stream series**
+- `series_sum(<pattern>, <window>)` / `series_avg(...)` — cross-stream
+  references (two-phase evaluation, cycle-free)
 
-**Math**
-- Standard arithmetic: `+`, `-`, `*`, `/`
-- `min()`, `max()`, `abs()`, `round()`
-- `convert(money, '<currency>')`
-- `obs.fx('<from>','<to>')` for FX conversion
+**Math and finance**
+- Standard arithmetic `+ - * / ^`, comparisons, `and/or/not`, `if(cond, a, b)`
+- `min/max/abs/round/clamp/pow`, `pmt/ipmt/ppmt/rate/nper/pv/fv/npv/irr`,
+  `year_frac/eomonth/edate/parse_date/months_between`, `macrs_rate`,
+  `cpr_to_smm`
+- The authoritative function catalog is `03_expression_environment.md`
 
 ### 15.3 Currency literals
 The language MAY support syntactic sugar:
@@ -620,11 +610,13 @@ These MUST compile to typed values in IR.
 
 ## 18. Minimal multi-file example (Core)
 
+This example compiles and runs against the `cre` pack as written.
+
 **model.cfdl**
 ```cfdl
 version 0.1
-model "Sunset" currency USD
-use pack "cfdl/cre" version "0.1"
+model "sunset-apartments"
+use pack "cre" version "0.1.0"
 
 import "time.cfdl"
 import "structure.cfdl"
@@ -635,55 +627,46 @@ import "runs.cfdl"
 
 **time.cfdl**
 ```cfdl
-time calendar monthly from 2026-01-01 for 120
-phase construction from 2026-01-01 to 2026-12-31
-phase perm from 2027-01-01 to 2031-12-31
+time calendar monthly from 2026-01 for 72
+phase construction from 2026-01 to 2026-12
+phase operations from 2027-01 to 2031-12
 ```
 
 **structure.cfdl**
 ```cfdl
-entity asset Sunset : CRE.Asset { city "Austin" units 24 }
-entity loan Senior : Debt.Loan { principal 8_500_000 USD index "SOFR_1M" }
+entity asset sunset
+entity loan senior
 ```
 
 **assumptions.cfdl**
 ```cfdl
 assume discount_rate = 0.10
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
+
+curve sofr linear {
+  2026-01: 0.050
+  2028-01: 0.038
+}
 ```
 
 **behavior.cfdl**
 ```cfdl
-contract Contract.Lease L1
-  on entity asset.Sunset
-  term 2026-02-01 .. 2028-01-31
-{
-  currency USD
-  terms { base_rent 42000 USD }
-  effects {
-    stream rent owner entity asset.Sunset direction inflow currency USD {
-      schedule every month on eom from 2026-02-01 to 2028-01-31 convention modified_following calendar "NYSE"
-      amount = terms.base_rent
-    }
+contract cre.lease on entity asset.sunset {
+  term 2027-01..2031-12
+  terms {
+    base_rent = 42000
   }
 }
 
-contract Contract.Loan D1
-  on entity loan.Senior
-  term 2026-01-01 .. 2031-12-31
-{
-  currency USD
-  effects {
-    stream debt_service owner entity loan.Senior direction outflow currency USD {
-      active when entity.status != 'refinanced'
-      schedule every month on eom from 2026-01-01 to 2031-12-31 convention modified_following calendar "NYSE"
-      amount = /* engine-provided pmt(...) */ 0
-    }
-  }
+stream loan.debt_service on entity loan.senior outflow currency USD {
+  active when entity.status != "refinanced"
+  schedule every monthly from 2026-01 to 2031-12
+  amount = pmt(0.06 / 12, 72, 8500000)
 }
 
-event refi_if_rates_drop when obs.rate('SOFR_1M') < 0.035 {
-  set entity loan.Senior.status = "refinanced"
+event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
+  set entity loan.senior.status = "refinanced"
+  deactivate stream loan.debt_service
 }
 ```
 

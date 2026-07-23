@@ -8,11 +8,11 @@ Use these examples to learn the language and run real models.
 
 ## Tutorial (language_tutorial)
 
-- [minimal_model](/examples/minimal_model)
-- [first_stream](/examples/first_stream)
-- [simple_contract](/examples/simple_contract)
-- [with_pack](/examples/with_pack)
-- [multi_file](/examples/multi_file)
+- [Minimal Model](/examples/minimal_model)
+- [Your First Stream](/examples/first_stream)
+- [A Simple Contract](/examples/simple_contract)
+- [Using an Industry Pack](/examples/with_pack)
+- [Multi-File Model](/examples/multi_file)
 
 ## Domain examples
 

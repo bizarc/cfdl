@@ -1,6 +1,6 @@
 ---
 id: example-minimal_model
-title: "minimal model"
+title: "Minimal Model"
 slug: "/examples/minimal_model"
 ---
 

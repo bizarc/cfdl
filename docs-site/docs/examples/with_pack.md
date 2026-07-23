@@ -1,6 +1,6 @@
 ---
 id: example-with_pack
-title: "with pack"
+title: "Using an Industry Pack"
 slug: "/examples/with_pack"
 ---
 

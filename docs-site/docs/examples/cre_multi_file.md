@@ -1,6 +1,6 @@
 ---
 id: example-cre-multi-file
-title: "cre multi file"
+title: "CRE: Multi-File Model"
 slug: "/examples/cre_multi_file"
 ---
 

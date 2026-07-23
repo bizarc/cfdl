@@ -1,6 +1,6 @@
 ---
 id: example-opco-basic
-title: "opco basic"
+title: "OpCo: Basic Operating Model"
 slug: "/examples/opco_basic"
 ---
 
