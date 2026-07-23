@@ -16,7 +16,8 @@ notes) · ❌ declared in the EBNF but not parsed.
 
 | Construct | Status | Notes |
 |---|---|---|
-| `version`, `model` (+`currency`) | ✅ | |
+| `version`, `model "<name>"` | ✅ | |
+| `model ... currency <code>` (model-level currency clause) | ❌ | declared in the grammar; not parsed — IR model currency defaults to USD |
 | `use pack`, `import ... as` | ✅ | |
 | `time calendar <freq> from <date> for <n>` | ✅ | daily/monthly/quarterly/annual |
 | `time ... project <n>` (valuation projection tail) | ✅ | computed for series lookups; excluded from cash/NPV |

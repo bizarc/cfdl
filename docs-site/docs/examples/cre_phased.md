@@ -1,6 +1,6 @@
 ---
 id: example-cre-phased
-title: "cre phased"
+title: "CRE: Phased Development"
 slug: "/examples/cre_phased"
 ---
 

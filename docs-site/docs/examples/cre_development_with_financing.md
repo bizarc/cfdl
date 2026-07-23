@@ -1,6 +1,6 @@
 ---
 id: example-cre-development-with-financing
-title: "cre development with financing"
+title: "CRE: Development with Financing"
 slug: "/examples/cre_development_with_financing"
 ---
 

@@ -163,6 +163,26 @@ function writeGenerated(relativePath, content) {
   fs.writeFileSync(targetPath, content, "utf8");
 }
 
+const exampleTitles = {
+  minimal_model: "Minimal Model",
+  first_stream: "Your First Stream",
+  simple_contract: "A Simple Contract",
+  with_pack: "Using an Industry Pack",
+  multi_file: "Multi-File Model",
+  cre_lease_up: "CRE: Lease-Up",
+  cre_developer: "CRE: Developer Lifecycle",
+  cre_phased: "CRE: Phased Development",
+  cre_multi_file: "CRE: Multi-File Model",
+  cre_development_with_financing: "CRE: Development with Financing",
+  opco_basic: "OpCo: Basic Operating Model",
+  opco_with_growth: "OpCo: Growth via Expressions",
+  opco_multi_file: "OpCo: Multi-File Model"
+};
+
+function exampleTitle(name) {
+  return exampleTitles[name] ?? name.replaceAll("_", " ");
+}
+
 const docSpecs = [
   {
     source: "docs/09_user_guide.md",
@@ -320,7 +340,7 @@ for (const name of exampleDirs) {
   const examplePage = [
     "---",
     `id: example-${name}`,
-    `title: "${name.replaceAll("_", " ")}"`,
+    `title: "${exampleTitle(name)}"`,
     `slug: "/examples/${name}"`,
     "---",
     "",
@@ -337,7 +357,7 @@ for (const name of exampleDirs) {
   ].join("\n");
 
   writeGenerated(`examples/${name}.md`, examplePage);
-  exampleIndexLines.push(`- [${name}](/examples/${name})`);
+  exampleIndexLines.push(`- [${exampleTitle(name)}](/examples/${name})`);
 }
 
 exampleIndexLines.push("");
@@ -398,7 +418,7 @@ for (const name of domainExampleOrder) {
   const examplePage = [
     "---",
     `id: example-${name.replaceAll("_", "-")}`,
-    `title: "${name.replaceAll("_", " ")}"`,
+    `title: "${exampleTitle(name)}"`,
     `slug: "/examples/${name}"`,
     "---",
     "",

@@ -1,6 +1,6 @@
 ---
 id: example-opco-with-growth
-title: "opco with growth"
+title: "OpCo: Growth via Expressions"
 slug: "/examples/opco_with_growth"
 ---
 

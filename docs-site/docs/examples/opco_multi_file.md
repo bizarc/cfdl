@@ -1,6 +1,6 @@
 ---
 id: example-opco-multi-file
-title: "opco multi file"
+title: "OpCo: Multi-File Model"
 slug: "/examples/opco_multi_file"
 ---
 

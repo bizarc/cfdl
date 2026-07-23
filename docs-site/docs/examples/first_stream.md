@@ -1,6 +1,6 @@
 ---
 id: example-first_stream
-title: "first stream"
+title: "Your First Stream"
 slug: "/examples/first_stream"
 ---
 

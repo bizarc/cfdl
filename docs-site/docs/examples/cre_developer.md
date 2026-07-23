@@ -1,6 +1,6 @@
 ---
 id: example-cre-developer
-title: "cre developer"
+title: "CRE: Developer Lifecycle"
 slug: "/examples/cre_developer"
 ---
 

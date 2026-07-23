@@ -1,6 +1,6 @@
 ---
 id: example-simple_contract
-title: "simple contract"
+title: "A Simple Contract"
 slug: "/examples/simple_contract"
 ---
 
