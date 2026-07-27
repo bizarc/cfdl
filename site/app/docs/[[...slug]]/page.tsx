@@ -6,6 +6,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
+import type { ShikiTransformer } from "shiki";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { EnginePrefetch } from "@/components/playground/EnginePrefetch";
@@ -19,6 +20,18 @@ import { extractToc } from "@/lib/toc";
 import { FLAT_NAV } from "@/content/nav";
 
 type Params = { slug?: string[] };
+
+/**
+ * Carries the original source and language onto the rendered element so a
+ * code block can offer copy and open-in-playground without reconstructing
+ * text from highlighted spans.
+ */
+const codeMetadataTransformer: ShikiTransformer = {
+  pre(node) {
+    node.properties["data-lang"] = this.options.lang;
+    node.properties["data-code"] = this.source;
+  },
+};
 
 export function generateStaticParams(): Params[] {
   return getAllDocs().map((doc) => {
@@ -67,6 +80,7 @@ export default async function DocPage({ params }: { params: Promise<Params> }) {
               defaultColor: false,
               cssVariablePrefix: "--shiki-",
               fallbackLanguage: "text",
+              transformers: [codeMetadataTransformer],
             },
           ],
         ],

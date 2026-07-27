@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ComponentPropsWithoutRef } from "react";
+import { CodeActions } from "@/components/docs/CodeActions";
 import { cn } from "@/lib/cn";
 
 /**
@@ -104,13 +105,26 @@ export const mdxComponents = {
       )}
     />
   ),
-  pre: (p: ComponentPropsWithoutRef<"pre">) => (
-    <pre
-      {...p}
-      className={cn(
-        "my-6 overflow-x-auto rounded-lg border border-default p-4 font-mono text-[13px] leading-relaxed",
-        p.className,
-      )}
-    />
+  // The Shiki transformer stashes the original source and language on the
+  // element, so the actions work on the real text rather than reconstructing
+  // it from highlighted spans.
+  pre: ({
+    "data-code": code,
+    "data-lang": lang,
+    ...p
+  }: ComponentPropsWithoutRef<"pre"> & {
+    "data-code"?: string;
+    "data-lang"?: string;
+  }) => (
+    <div className="group relative">
+      <pre
+        {...p}
+        className={cn(
+          "my-6 overflow-x-auto rounded-lg border border-default p-4 pr-24 font-mono text-[13px] leading-relaxed",
+          p.className,
+        )}
+      />
+      {code ? <CodeActions code={code} lang={lang} className="top-8" /> : null}
+    </div>
   ),
 };
