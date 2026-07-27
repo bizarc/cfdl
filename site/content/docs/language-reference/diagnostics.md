@@ -2,10 +2,8 @@
 id: diagnostics
 title: "Diagnostics Reference"
 slug: "/docs/language-reference/diagnostics"
+source: docs/08_diagnostics.md
 ---
-
-> This page is generated from `docs/08_diagnostics.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/08_diagnostics.md
 
 **CFDL Diagnostics Specification v0.1**
 

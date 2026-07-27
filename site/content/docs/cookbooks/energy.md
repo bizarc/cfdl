@@ -2,10 +2,8 @@
 id: cookbook-energy
 title: "Energy pack guide"
 slug: "/docs/cookbooks/energy"
+source: packs/energy/README.md
 ---
-
-> This page is generated from `packs/energy/README.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/packs/energy/README.md
 
 Energy & microgrids: solar/wind PPA and merchant revenue, battery storage
 arbitrage, capacity payments, O&M, investment tax credits, capex, and level-pay

@@ -2,10 +2,8 @@
 id: ir-schema
 title: "IR Schema (v0.1)"
 slug: "/docs/language-reference/ir-schema"
+source: docs/05_ir_schema.md
 ---
-
-> This page is generated from `docs/05_ir_schema.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/05_ir_schema.md
 
 ```json
 {

@@ -2,10 +2,8 @@
 id: implementation-status
 title: "Implementation Status"
 slug: "/docs/language-reference/implementation-status"
+source: docs/10_implementation_status.md
 ---
-
-> This page is generated from `docs/10_implementation_status.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/10_implementation_status.md
 
 Status: informative; updated with each engine increment.
 The 1.0 launch gate requires every row below to be **Implemented** or removed

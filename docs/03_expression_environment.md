@@ -70,7 +70,10 @@ Rounding: `round(x, [digits])`, `round_down(x, [digits])`,
 Math: `pow(base, exp)` (function form of `^`), `clamp(x, lo, hi)`.
 
 Time value of money (Excel sign conventions, decimal-exact for whole-period
-terms): `pmt(rate, nper, pv, [fv], [due])`, `pv(rate, nper, pmt, [fv], [due])`,
+terms). **Excel sign conventions mean `pmt` returns a negative number for a
+positive `pv`** — a loan payment is money leaving. On a stream already declared
+`outflow`, negate it (`amount = -pmt(...)`), or the two negatives cancel and the
+payment registers as income: `pmt(rate, nper, pv, [fv], [due])`, `pv(rate, nper, pmt, [fv], [due])`,
 `fv(rate, nper, pmt, [pv], [due])`, `nper(rate, pmt, pv, [fv], [due])`,
 `rate(nper, pmt, pv, [fv], [due], [guess])` (Newton solver, f64, tolerance
 1e-12), `ipmt(rate, per, nper, pv, [fv])` / `ppmt(rate, per, nper, pv, [fv])`
@@ -98,10 +101,28 @@ impossible by construction. Windows may extend into the projection tail
 (`time ... project <n>`), which is computed for valuation lookups but
 excluded from cash results and NPV.
 
-Dates: `date(y, m, d)`, `edate(d, months)`, `eomonth(d, months)`,
-`year_frac(d1, d2, basis)` with basis `"30/360"` (US/bond), `"act/360"`,
-`"act/365"` per ISDA/SIFMA definitions. Date arithmetic: `d2 - d1` yields
-days; `d + n` / `d - n` shift by days.
+Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
+`edate(d, months)`, `eomonth(d, months)`, `months_between(d1, d2)`,
+`year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;
+`d + n` / `d - n` shift by days.
+
+Day-count bases for `year_frac`: `"30/360"` (aliases `"30/360 us"`, `"bond"`),
+`"30e/360"` (alias `"eurobond"`), `"act/360"`, `"act/365"`, per ISDA/SIFMA
+definitions.
+
+Business days: `is_business_day(d, calendar)`, `roll(d, convention, calendar)`,
+`add_business_days(d, n, calendar)`.
+
+- Calendars: `"weekend"` / `"none"` (weekends only), `"us"` / `"us_federal"` /
+  `"sifma"`, `"target"` / `"target2"` / `"eur"`, `"uk"` / `"uk_bank"` /
+  `"london"`.
+- Roll conventions: `"none"`, `"following"`, `"modified_following"`,
+  `"preceding"`, `"modified_preceding"`.
+
+```
+roll(parse_date("2027-01-01"), "following", "us")   -- next US business day
+add_business_days(time.date, 2, "london")           -- T+2 on the UK calendar
+```
 
 ## 5. Errors and diagnostics
 

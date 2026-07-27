@@ -102,14 +102,21 @@ function sourceHttpUrl(relativePath) {
   return `${REPO_HTTP_BASE}/${toPosix(relativePath)}`;
 }
 
+/**
+ * Provenance lives in frontmatter, not on the page.
+ *
+ * A "generated from <path> / Source: <github url>" banner above the title told
+ * readers nothing they could act on — the repo does not accept external edits,
+ * so it was repo plumbing published to end users. Keeping `source` here means
+ * the team can still trace any page back to its canonical file (and regenerate
+ * checks still work) without rendering anything.
+ */
 function renderDoc(frontmatter, sourcePath, body) {
   const fm = [
     "---",
     ...Object.entries(frontmatter).map(([k, v]) => `${k}: ${v}`),
+    `source: ${toPosix(sourcePath)}`,
     "---",
-    "",
-    `> This page is generated from \`${sourcePath}\`.`,
-    `> Source: ${sourceHttpUrl(sourcePath)}`,
     "",
     body.trimEnd(),
     ""

@@ -2,10 +2,8 @@
 id: cookbook-opco
 title: "OpCo pack guide"
 slug: "/docs/cookbooks/opco"
+source: packs/opco/README.md
 ---
-
-> This page is generated from `packs/opco/README.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/packs/opco/README.md
 
 Operating-company / LBO pack: recurring operating lines, policy-driven
 working capital, capex, scheduled term debt, cash taxes, and entry/exit —

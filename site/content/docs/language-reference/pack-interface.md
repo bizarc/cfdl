@@ -2,10 +2,8 @@
 id: pack-interface
 title: "Pack Interface (v0.1)"
 slug: "/docs/language-reference/pack-interface"
+source: docs/07_pack_interface.md
 ---
-
-> This page is generated from `docs/07_pack_interface.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/07_pack_interface.md
 
 **CFDL Domain Pack Interface v0.1**
 

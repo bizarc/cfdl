@@ -2,10 +2,8 @@
 id: language-guide
 title: "Language Guide"
 slug: "/docs/language-guide"
+source: docs/09_user_guide.md
 ---
-
-> This page is generated from `docs/09_user_guide.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/09_user_guide.md
 
 This guide covers CFDL language basics, CLI usage, and common workflows. For exact grammar and semantics, see the spec docs (`01_language_spec.md` – `08_diagnostics.md`).
 
