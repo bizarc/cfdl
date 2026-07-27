@@ -39,7 +39,7 @@ stream plant.ppa_revenue on entity project.plant inflow currency USD {
   (`results.cashflows()/.metrics()/.scenarios()`) and example notebooks
 - **VS Code** — extension with LSP diagnostics under `editors/vscode`
 - **API server** — `crates/cfdl-server` (axum): `POST /v1/compile|validate|run`
-- **Playground** — in-browser compile + run (`crates/cfdl-wasm`, Monaco docs-site page)
+- **Playground** — in-browser compile + run (`crates/cfdl-wasm`, playground on cfdl.dev)
 
 ## Quick start
 
@@ -84,7 +84,7 @@ codes, all enforced by the golden suite (`fixtures/` + `gold/`, run via
 | `crates/` | Rust workspace: `cfdl-cli`, `cfdl-compile`, `cfdl-engine`, `cfdl-lsp`, compiler stages (`cfdl-lexer`, `cfdl-parser`, `cfdl-resolver`, `cfdl-validate`), `cfdl-expr`, `cfdl-pack`, `cfdl-metrics`, `cfdl-py` |
 | `packs/` | Domain packs (`cre`, `opco`) — contract types, defaults, lowering rules (TOML) |
 | `docs/` | Numbered spec set + JSON schemas + grammar |
-| `docs-site/` | Docusaurus documentation site |
+| `site/` | cfdl.dev — Next.js product site, docs, and playground |
 | `python/` | Python SDK (`cfdl_sdk`, maturin/pyo3) |
 | `editors/vscode/` | VS Code extension (syntax, snippets, LSP client) |
 | `fixtures/`, `gold/` | Golden test fixtures and expected outputs |

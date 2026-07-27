@@ -28,6 +28,26 @@ at CFDL.dev as a standalone, source-available product.
 ## Build & test
 
 ```bash
-make ci      # fmt + clippy + tests + golden suite (42 fixtures must pass)
+make ci      # fmt + clippy + tests + golden suite (59 fixtures) + benchmarks
 make gold    # golden suite only
 ```
+
+## The website (`site/`)
+
+cfdl.dev is a Next.js app in `site/`, deployed on Vercel. Rules:
+
+- **Docs content under `site/content/docs/` is generated** from the canonical
+  sources (`docs/0*.md`, `packs/*/README.md`, `examples/`, `benchmarks/`,
+  `distribution/install-configure.md`) by `site/scripts/sync-content.mjs`.
+  Never hand-edit a generated page — fix the canonical source and re-run
+  `npm run sync:content`. CI diff-checks it.
+  Hand-written pages (getting-started, concepts, install/*, guides/*, faq,
+  troubleshooting, packs/index, reference/*) live in the same tree and are
+  edited directly.
+- **Design system**: `site/app/tokens.css` is the only place a raw color may
+  appear. Components use semantic tokens (`bg-surface-raised`,
+  `text-secondary`, …); `npm run check:tokens` enforces it.
+- **Syntax highlighting** uses the VS Code extension's TextMate grammar
+  directly — one grammar for editor and site.
+- Before merging site changes: `npm run sync:check && npm run check:tokens
+  && npm run check:links && npm run lint && npm run build`.

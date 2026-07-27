@@ -5,17 +5,27 @@ on:
     branches: [main]
     paths:
       - "site/**"
+      - "docs/**"
+      - "packs/**"
+      - "examples/**"
+      - "benchmarks/**"
+      - "distribution/install-configure.md"
       - "editors/vscode/syntaxes/**"
       - ".github/workflows/site.yml"
   pull_request:
     paths:
       - "site/**"
+      - "docs/**"
+      - "packs/**"
+      - "examples/**"
+      - "benchmarks/**"
+      - "distribution/install-configure.md"
       - "editors/vscode/syntaxes/**"
       - ".github/workflows/site.yml"
   workflow_dispatch:
 
-# Build-only. Deployment happens on Vercel (preview per PR; production and
-# the cfdl.dev domain are human-approved launch steps).
+# Build-only. Deployment happens on Vercel; cfdl.dev DNS is a human-approved
+# launch step.
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,7 +34,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Match the Vercel build image so CI can't pass where deploys fail.
+          node-version: "24"
           cache: npm
           cache-dependency-path: site/package-lock.json
 
@@ -32,9 +43,17 @@ jobs:
         working-directory: site
         run: npm ci
 
+      - name: Generated content is in sync with canonical sources
+        working-directory: site
+        run: npm run sync:check
+
       - name: Design-system token guard
         working-directory: site
-        run: ./scripts/check-tokens.sh
+        run: npm run check:tokens
+
+      - name: Internal link check
+        working-directory: site
+        run: npm run check:links
 
       - name: Lint
         working-directory: site

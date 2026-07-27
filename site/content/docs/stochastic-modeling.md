@@ -1,0 +1,60 @@
+---
+id: stochastic-modeling
+title: Stochastic Modeling
+slug: /docs/stochastic-modeling
+---
+
+# Stochastic Modeling
+
+Spreadsheet and appraisal tools underwrite on point estimates and
+expected-value blends. CFDL models are **natively stochastic**: the same
+model file gives you the deterministic number *and* the distribution around
+it — deterministically seeded and byte-reproducible.
+
+## Declaring uncertainty
+
+Any assumption can be a distribution instead of a constant:
+
+```cfdl
+assume discount_rate = 0.10
+assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
+```
+
+Supported distributions: `Normal(mean, stdev, clip?)`,
+`LogNormal(mu, sigma, clip?)`, `Uniform(min, max)`,
+`Triangular(min, mode, max)`. Expressions reference stochastic values the
+same way as constants, via `inputs.<name>`.
+
+## Running Monte Carlo
+
+```cfdl
+run monte_carlo trials 20000 seed 42
+```
+
+Every Monte Carlo run declares an explicit seed. Each assumption gets its own
+deterministic draw stream, so **adding a new assumption never reshuffles
+another assumption's draws** — results are reproducible byte-for-byte across
+machines and runs. Run-config JSON can override or add distributions without
+touching the model.
+
+## Scenario-consistent branching
+
+Because draws are ordinary values, expressions can branch on them —
+producing coherent, binary outcomes per trial rather than expected-value
+blends:
+
+```cfdl
+// Per trial: either the tenant renews (renewal rent, no downtime)
+// or the space rolls (market rent after downtime and re-lease costs).
+amount = if(inputs.renewal_draw < 0.70, renewal_rent, market_rent)
+```
+
+An expected-value blend hides the bimodal shape of outcomes like lease
+rollover; per-trial branching preserves it.
+
+## What results carry
+
+Monte Carlo results summarize each metric with `mean`, `stdev`, `min`/`max`,
+and percentiles (`p01` through `p99`, including `p05`/`p25`/`p50`/`p75`/`p95`)
+— see the [Results schema](/docs/language-reference/results-schema). The
+[Python SDK](/docs/python-sdk) exposes them via `results.monte_carlo()`.

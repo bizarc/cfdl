@@ -1,51 +1,144 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { compileMDX } from "next-mdx-remote/rsc";
+import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
+import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
+
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { Badge } from "@/components/ds/Badge";
-import { Button } from "@/components/ds/Button";
+import { DocsSidebar } from "@/components/docs/DocsSidebar";
+import { TableOfContents } from "@/components/docs/TableOfContents";
+import { mdxComponents } from "@/components/docs/mdx-components";
+import { getAllDocs, getDocBySlug } from "@/lib/docs";
+import { getHighlighter } from "@/lib/shiki";
+import { extractToc } from "@/lib/toc";
+import { FLAT_NAV } from "@/content/nav";
 
-export const metadata: Metadata = {
-  title: "Documentation",
-  description: "CFDL guides, references, and domain pack cookbooks.",
-};
+type Params = { slug?: string[] };
 
-/**
- * Placeholder route. WS-2 migrates the canonical docs into MDX collections
- * rendered here; this catch-all keeps every /docs/* link in the header,
- * footer, and landing page resolvable in the meantime.
- */
-export default function DocsPlaceholder() {
+export function generateStaticParams(): Params[] {
+  return getAllDocs().map((doc) => {
+    const rest = doc.slug.replace(/^\/docs\/?/, "");
+    return { slug: rest ? rest.split("/") : [] };
+  });
+}
+
+function slugFromParams(params: Params): string {
+  return "/docs" + (params.slug?.length ? "/" + params.slug.join("/") : "");
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const doc = getDocBySlug(slugFromParams(await params));
+  if (!doc) return {};
+  return { title: doc.title };
+}
+
+export default async function DocPage({ params }: { params: Promise<Params> }) {
+  const slug = slugFromParams(await params);
+  const doc = getDocBySlug(slug);
+  if (!doc) notFound();
+
+  const highlighter = await getHighlighter();
+
+  const { content } = await compileMDX({
+    source: doc.body,
+    components: mdxComponents,
+    options: {
+      mdxOptions: {
+        // The corpus is plain Markdown; treating it as such avoids MDX
+        // choking on stray braces and JSX-looking text in code samples.
+        format: "md",
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [
+          rehypeSlug,
+          [
+            rehypeShikiFromHighlighter,
+            highlighter,
+            {
+              themes: { light: "github-light", dark: "github-dark-default" },
+              defaultColor: false,
+              cssVariablePrefix: "--shiki-",
+              fallbackLanguage: "text",
+            },
+          ],
+        ],
+      },
+    },
+  });
+
+  const toc = extractToc(doc.body);
+  const navIndex = FLAT_NAV.findIndex((item) => item.slug === doc.slug);
+  const prev = navIndex > 0 ? FLAT_NAV[navIndex - 1] : undefined;
+  const next =
+    navIndex >= 0 && navIndex < FLAT_NAV.length - 1 ? FLAT_NAV[navIndex + 1] : undefined;
+
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-24 text-center sm:px-6">
-        <Badge tone="accent" className="mx-auto">
-          Migration in progress
-        </Badge>
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight text-primary">
-          Documentation is moving here
-        </h1>
-        <p className="mt-4 text-base leading-relaxed text-secondary">
-          Guides, the language reference, and pack cookbooks are being migrated
-          onto this site from the canonical specs in the repository. Until the
-          migration lands, they are readable in the repo under{" "}
-          <code className="rounded bg-surface-code px-1.5 py-0.5 font-mono text-sm">
-            docs/
-          </code>
-          .
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <Button asChild>
-            <Link href="/">Back to home</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <a href="https://github.com/bizarc/cfdl" target="_blank" rel="noreferrer">
-              Browse the repository
-            </a>
-          </Button>
-        </div>
-      </main>
+
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4 sm:px-6">
+        <aside className="hidden w-60 shrink-0 lg:block">
+          <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto py-8 pr-2">
+            <DocsSidebar />
+          </div>
+        </aside>
+
+        <main className="min-w-0 flex-1 py-8">
+          <article>{content}</article>
+
+          {(prev || next) && (
+            <nav
+              aria-label="Pagination"
+              className="mt-16 grid gap-4 border-t border-subtle pt-6 sm:grid-cols-2"
+            >
+              {prev ? (
+                <Link
+                  href={prev.slug}
+                  className="group rounded-lg border border-default p-4 transition-colors hover:border-strong"
+                >
+                  <span className="flex items-center gap-1.5 text-xs text-muted">
+                    <ArrowLeft className="h-3 w-3" />
+                    Previous
+                  </span>
+                  <span className="mt-1 block font-medium text-primary group-hover:text-accent-text">
+                    {prev.title}
+                  </span>
+                </Link>
+              ) : (
+                <span />
+              )}
+              {next ? (
+                <Link
+                  href={next.slug}
+                  className="group rounded-lg border border-default p-4 text-right transition-colors hover:border-strong"
+                >
+                  <span className="flex items-center justify-end gap-1.5 text-xs text-muted">
+                    Next
+                    <ArrowRight className="h-3 w-3" />
+                  </span>
+                  <span className="mt-1 block font-medium text-primary group-hover:text-accent-text">
+                    {next.title}
+                  </span>
+                </Link>
+              ) : null}
+            </nav>
+          )}
+        </main>
+
+        <aside className="hidden w-56 shrink-0 xl:block">
+          <div className="sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto py-8">
+            <TableOfContents entries={toc} />
+          </div>
+        </aside>
+      </div>
+
       <SiteFooter />
     </>
   );
