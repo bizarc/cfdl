@@ -12,6 +12,7 @@
   --color-surface-sunken: var(--cfdl-surface-sunken);
   --color-surface-code: var(--cfdl-surface-code);
   --color-surface-inverse: var(--cfdl-surface-inverse);
+  --color-figure: var(--cfdl-surface-figure);
 
   --color-primary: var(--cfdl-text-primary);
   --color-secondary: var(--cfdl-text-secondary);

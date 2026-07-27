@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci py-develop py-test py-wheel
+.PHONY: help fmt lint test build clean gold gold-update ci py-develop py-test py-wheel notebooks-render notebooks-check
 
 help:
 	@echo "Targets:"
@@ -17,6 +17,7 @@ help:
 	@echo "  ci          - run fmt+lint+test+gold (CI parity)"
 	@echo "  py-develop  - maturin develop the Python SDK (editable, [dev,viz])"
 	@echo "  py-test     - run the Python SDK pytest suite"
+	@echo "  notebooks-render - execute example notebooks into site docs pages"
 	@echo "  py-wheel    - build a local release wheel (sanity check)"
 
 fmt:
@@ -55,3 +56,12 @@ py-test:
 
 py-wheel:
 	cd python && maturin build --release
+
+# Execute the example notebooks and publish them as docs pages. Needed because
+# neither the site CI runner nor Vercel has Python or Rust, so the rendered
+# output is committed; check-notebooks-fresh.mjs guards it against going stale.
+notebooks-render:
+	python3 tools/render-notebooks.py
+
+notebooks-check:
+	python3 tools/render-notebooks.py --check

@@ -76,6 +76,10 @@ export const NAV: NavSection[] = [
     items: [
       { title: "Python SDK", slug: "/docs/python-sdk" },
       { title: "API server", slug: "/docs/api-server" },
+      { title: "Notebook: energy", slug: "/docs/notebooks/energy-solar-microgrid" },
+      { title: "Notebook: CRE", slug: "/docs/notebooks/cre-office-acquisition" },
+      { title: "Notebook: credit", slug: "/docs/notebooks/credit-loan-pool" },
+      { title: "Notebook: OpCo", slug: "/docs/notebooks/opco-lbo" },
     ],
   },
   {

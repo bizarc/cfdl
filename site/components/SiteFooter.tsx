@@ -27,6 +27,7 @@ const COLUMNS = [
       { href: "/docs/reference/cli", label: "CLI reference" },
       { href: "/docs/benchmarks", label: "Benchmarks" },
       { href: "/docs/licensing", label: "Licensing" },
+      { href: "https://github.com/bizarc/cfdl", label: "Source on GitHub" },
     ],
   },
 ];
@@ -51,12 +52,23 @@ export function SiteFooter() {
             <ul className="mt-3 space-y-2">
               {col.links.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-secondary transition-colors hover:text-primary"
-                  >
-                    {link.label}
-                  </Link>
+                  {link.href.startsWith("http") ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-secondary transition-colors hover:text-primary"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="text-sm text-secondary transition-colors hover:text-primary"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

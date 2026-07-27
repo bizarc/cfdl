@@ -46,7 +46,9 @@ make gold    # golden suite only
 
 ## Development workflow
 
-1. Pick the next task from your workstream in the internal launch plan (kept outside version control — ask the maintainer if you do not have it).
+1. Start from a GitHub issue. Roadmap sequencing is planned internally, so if you
+   are not on the maintaining team, open an issue and agree the change there
+   before writing code — external pull requests are not accepted (see below).
 2. Branch from `main` (`ws/<letter>-<slug>` for workstream branches).
 3. Implement the minimal change required.
 4. Add/update fixtures in `fixtures/` and expected outputs in `gold/`

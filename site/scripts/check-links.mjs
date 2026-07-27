@@ -10,9 +10,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 const CONTENT = path.resolve(import.meta.dirname, "..", "content", "docs");
+const PUBLIC = path.resolve(import.meta.dirname, "..", "public");
 /** Routes owned by the app rather than the docs corpus. */
 const APP_ROUTES = new Set(["/", "/playground", "/docs"]);
 const IGNORED_PREFIXES = ["/schemas"];
+
+/**
+ * A link may also point at a static file — the notebook charts, for instance.
+ * Those are checked against `public/` rather than the slug set, so a page that
+ * references a missing image still fails rather than being waved through.
+ */
+function isStaticAsset(target) {
+  if (!path.extname(target)) return false;
+  return fs.existsSync(path.join(PUBLIC, target));
+}
 
 function walk(dir, acc = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -41,6 +52,7 @@ for (const file of files) {
   for (const [, href] of body.matchAll(/\]\((\/[^)#\s]*)/g)) {
     const target = href.replace(/\/$/, "") || "/";
     if (IGNORED_PREFIXES.some((p) => target.startsWith(p))) continue;
+    if (isStaticAsset(target)) continue;
     if (!slugs.has(target)) {
       console.error(`broken link  ${path.relative(CONTENT, file)}  ->  ${href}`);
       broken += 1;

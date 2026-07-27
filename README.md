@@ -1,5 +1,11 @@
 # CFDL — the Cash Flow Domain Language
 
+[![CI](https://github.com/bizarc/cfdl/actions/workflows/ci.yml/badge.svg)](https://github.com/bizarc/cfdl/actions/workflows/ci.yml)
+[![site](https://github.com/bizarc/cfdl/actions/workflows/site.yml/badge.svg)](https://github.com/bizarc/cfdl/actions/workflows/site.yml)
+[![License: BUSL-1.1](https://img.shields.io/badge/license-BUSL--1.1-blue)](LICENSE)
+
+**Documentation, tutorials, and an in-browser playground: [cfdl.dev](https://cfdl.dev)**
+
 CFDL is a **source-available domain language for modeling cash-flowing assets**: real
 estate, energy projects and microgrids, loans and credit portfolios, operating
 businesses — anything that produces or consumes cash over time.
@@ -28,20 +34,30 @@ stream plant.ppa_revenue on entity project.plant inflow currency USD {
 }
 ```
 
-> **Status:** pre-1.0, under active development toward the CFDL.dev launch. The current
+> **Status:** pre-1.0, under active development toward the cfdl.dev launch. The current
 > language/IR spec is v0.1; interfaces may change until 1.0 freezes the IR and Results
 > schemas. The roadmap is maintained internally.
 
-## Use CFDL from…
+## Learning CFDL
 
-- **Files + CLI** — `cfdl compile`, `cfdl run`, `cfdl validate` (this repo, works today)
-- **Python / Jupyter** — `cfdl_sdk` bindings under `python/` with pandas result accessors
-  (`results.cashflows()/.metrics()/.scenarios()`) and example notebooks
-- **VS Code** — extension with LSP diagnostics under `editors/vscode`
-- **API server** — `crates/cfdl-server` (axum): `POST /v1/compile|validate|run`
-- **Playground** — in-browser compile + run (`crates/cfdl-wasm`, playground on cfdl.dev)
+This README is the engineering front for people working *on* CFDL. If you want to
+*use* it, everything below is covered better, with runnable examples, at
+[cfdl.dev](https://cfdl.dev):
 
-## Quick start
+| | |
+|---|---|
+| Try it without installing | [cfdl.dev/playground](https://cfdl.dev/playground) |
+| Write your first model | [Getting started](https://cfdl.dev/docs/getting-started) |
+| Language tour | [Language guide](https://cfdl.dev/docs/language-guide) |
+| Install a surface | [CLI, Python, VS Code, API server](https://cfdl.dev/docs/install) |
+| Domain packs | [Energy, CRE, credit, OpCo](https://cfdl.dev/docs/packs) |
+
+Surfaces, in this repo: the CLI (`crates/cfdl-cli`), the Python SDK
+(`python/`, pandas result accessors), a VS Code extension with LSP diagnostics
+(`editors/vscode`), an axum API server (`crates/cfdl-server`), and the
+WebAssembly build behind the playground (`crates/cfdl-wasm`).
+
+## Build & run from source
 
 ```bash
 cargo build -p cfdl-cli
@@ -57,11 +73,12 @@ cargo build -p cfdl-cli
   --config fixtures/valid/monte_carlo_smoke/run.json
 ```
 
-Learn the language:
+```bash
+make ci      # fmt + clippy (-D warnings) + tests + golden suite + benchmarks
+make gold    # golden suite only
+```
 
-- Language tour and user guide: `docs/09_user_guide.md`
-- Tutorial examples: `examples/language_tutorial/`
-- Worked examples: `examples/` (CRE development, lease-up, operating businesses)
+Gold updates are intentional-only: `CFDL_GOLD_UPDATE=1 ./tools/golden-runner run`.
 
 ## Public contracts (stable interfaces)
 
@@ -73,6 +90,9 @@ Learn the language:
 - Results schema: `docs/schemas/results.schema.json` (`docs/06_results_schema.md`)
 - Domain pack interface: `docs/07_pack_interface.md`
 
+These are also published, rendered, at
+[cfdl.dev/docs/language-reference](https://cfdl.dev/docs/language-reference).
+
 Determinism is a contract: deterministic IDs, canonical ordering, stable diagnostic
 codes, all enforced by the golden suite (`fixtures/` + `gold/`, run via
 `./tools/golden-runner run`).
@@ -81,25 +101,17 @@ codes, all enforced by the golden suite (`fixtures/` + `gold/`, run via
 
 | Path | Contents |
 |---|---|
-| `crates/` | Rust workspace: `cfdl-cli`, `cfdl-compile`, `cfdl-engine`, `cfdl-lsp`, compiler stages (`cfdl-lexer`, `cfdl-parser`, `cfdl-resolver`, `cfdl-validate`), `cfdl-expr`, `cfdl-pack`, `cfdl-metrics`, `cfdl-py` |
-| `packs/` | Domain packs (`cre`, `opco`) — contract types, defaults, lowering rules (TOML) |
+| `crates/` | Rust workspace: `cfdl-cli`, `cfdl-compile`, `cfdl-engine`, `cfdl-server`, `cfdl-wasm`, `cfdl-lsp`, compiler stages (`cfdl-lexer`, `cfdl-parser`, `cfdl-resolver`, `cfdl-validate`), `cfdl-calc`, `cfdl-expr`, `cfdl-pack`, `cfdl-metrics`, `cfdl-py` |
+| `packs/` | Domain packs (`energy`, `cre`, `credit`, `opco`) — contract types, lowering rules, metrics, validations (TOML) |
 | `docs/` | Numbered spec set + JSON schemas + grammar |
 | `site/` | cfdl.dev — Next.js product site, docs, and playground |
 | `python/` | Python SDK (`cfdl_sdk`, maturin/pyo3) |
 | `editors/vscode/` | VS Code extension (syntax, snippets, LSP client) |
 | `fixtures/`, `gold/` | Golden test fixtures and expected outputs |
-| `examples/` | Worked example models |
+| `benchmarks/` | Models validated against independent references |
+| `examples/` | Worked example models and Jupyter notebooks |
 
 Rust embedders: the intended surface is `cfdl-compile` and `cfdl-engine`.
-
-## Build & test
-
-```bash
-make ci      # fmt + clippy (-D warnings) + tests + golden suite
-make gold    # golden suite only
-```
-
-Gold updates are intentional-only: `CFDL_GOLD_UPDATE=1 ./tools/golden-runner run`.
 
 ## License & contributions
 

@@ -111,6 +111,9 @@
   --cfdl-surface-sunken: var(--p-slate-50);
   --cfdl-surface-code: var(--p-slate-50);
   --cfdl-surface-inverse: var(--p-slate-900);
+  /* Plate behind rasterised figures, which carry their own light background
+     and so must not sit directly on a dark page. Light in both themes. */
+  --cfdl-surface-figure: var(--p-slate-0);
 
   --cfdl-text-primary: var(--p-slate-900);
   --cfdl-text-secondary: var(--p-slate-600);
@@ -159,6 +162,8 @@
   --cfdl-surface-sunken: #0a0e14;
   --cfdl-surface-code: var(--p-slate-900);
   --cfdl-surface-inverse: var(--p-slate-50);
+  /* Intentionally light in dark mode too — see the light-theme note. */
+  --cfdl-surface-figure: var(--p-slate-0);
 
   --cfdl-text-primary: #e8edf4;
   --cfdl-text-secondary: var(--p-slate-400);

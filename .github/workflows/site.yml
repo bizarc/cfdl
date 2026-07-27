@@ -76,6 +76,17 @@ jobs:
             node scripts/check-wasm-fresh.mjs "${{ github.event.before }}"
           fi
 
+      # Notebook pages are committed for the same reason: rendering them means
+      # executing them, which needs Python and the compiled Rust extension.
+      - name: Committed notebook pages are fresh
+        working-directory: site
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-notebooks-fresh.mjs "origin/${{ github.base_ref }}"
+          else
+            node scripts/check-notebooks-fresh.mjs "${{ github.event.before }}"
+          fi
+
       - name: Lint
         working-directory: site
         run: npm run lint
