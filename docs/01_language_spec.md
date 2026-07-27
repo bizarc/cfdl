@@ -1,6 +1,6 @@
 # CFDL v0.1 Core Language Specification
 
-**Status:** Draft (Greenfield v0.1)
+**Status:** Draft
 
 **Purpose:** CFDL (Cash Flow Domain Language) is a proprietary, human-readable DSL for defining cash-flow models across asset classes. A CFDL model compiles deterministically to a canonical JSON IR used by valuation engines (deterministic DCF, Monte Carlo, scenarios, risk/metrics).
 
