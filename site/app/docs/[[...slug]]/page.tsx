@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm";
 import rehypeShikiFromHighlighter from "@shikijs/rehype/core";
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { EnginePrefetch } from "@/components/playground/EnginePrefetch";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { TableOfContents } from "@/components/docs/TableOfContents";
@@ -81,6 +82,7 @@ export default async function DocPage({ params }: { params: Promise<Params> }) {
 
   return (
     <>
+      <EnginePrefetch />
       <SiteHeader />
 
       <div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4 sm:px-6">
