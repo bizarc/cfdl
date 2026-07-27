@@ -5,10 +5,10 @@
     "message": "CRE exit 'exit_cap' must be greater than 0.",
     "file": "model.cfdl",
     "span": {
-      "start_line": 8,
-      "start_col": 1,
-      "end_line": 14,
-      "end_col": 1
+      "start_line": 11,
+      "start_col": 5,
+      "end_line": 11,
+      "end_col": 16
     },
     "path": null,
     "hint": null,

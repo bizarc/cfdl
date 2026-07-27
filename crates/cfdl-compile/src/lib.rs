@@ -1208,8 +1208,8 @@ fn validate_pack_contract(
         &pack.validations,
         contract,
         valid_contract_term_range(contract, timeline_start, timeline_end),
-        |code, message, severity| {
-            let mut diag = pack_diag(code, message, source_stmt, contract.span);
+        |code, message, severity, span| {
+            let mut diag = pack_diag(code, message, source_stmt, span);
             diag.severity = severity.as_str().to_string();
             diag
         },
@@ -2211,8 +2211,8 @@ mod pack_validation_parity_tests {
             &pack_ctx.validations,
             &c,
             valid_contract_term_range(&c, "2026-01", "2026-12"),
-            |code, message, severity| {
-                let mut diag = pack_diag(code, message, &stmt, c.span);
+            |code, message, severity, span| {
+                let mut diag = pack_diag(code, message, &stmt, span);
                 diag.severity = severity.as_str().to_string();
                 diag
             },

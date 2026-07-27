@@ -111,7 +111,7 @@ pub(crate) fn evaluate(
     validations: &[PackValidation],
     contract: &cfdl_parser::ContractStmt,
     term_range_ok: bool,
-    mut emit: impl FnMut(&str, &str, ValidationSeverity) -> Diagnostic,
+    mut emit: impl FnMut(&str, &str, ValidationSeverity, cfdl_parser::Span) -> Diagnostic,
 ) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
 
@@ -136,10 +136,22 @@ pub(crate) fn evaluate(
         };
 
         if fires {
+            // Point at the offending term when there is one and it is present;
+            // a missing term has no span of its own, so those fall back to the
+            // contract.
+            let span = validation
+                .term
+                .as_deref()
+                .or(validation.left.as_deref())
+                .and_then(|term| contract.terms.get(term))
+                .map(|entry| entry.span)
+                .unwrap_or(contract.span);
+
             diagnostics.push(emit(
                 &validation.code,
                 &validation.message,
                 validation.severity,
+                span,
             ));
         }
     }

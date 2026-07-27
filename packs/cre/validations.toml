@@ -82,3 +82,68 @@ contracts = ["cre.ops_revenue", "cre.ops_expense"]
 code = "E6021_CRE_OPS_INVALID_SCHEDULE"
 message = "CRE ops term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
+
+# --- lease-by-lease contracts ----------------------------------------------
+#
+# These are declared with a per-tenant suffix (`cre.lease_unit.tenant_a`), so
+# they match on instance. Bounds only: the required terms themselves are
+# enforced generically by E5006 from the lowering templates.
+
+[[validations]]
+contract = "cre.lease_unit"
+match = "instance"
+code = "E6030_CRE_UNIT_INVALID_ESCALATION"
+message = "CRE lease unit 'escalation' must be greater than or equal to -1."
+check = "term_number"
+term = "escalation"
+when = "present"
+on_invalid = "report"
+min = -1.0
+
+[[validations]]
+contract = "cre.lease_unit"
+match = "instance"
+code = "E6031_CRE_UNIT_INVALID_FREE_RENT"
+message = "CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more."
+check = "term_number"
+term = "free_rent_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+min = 0.0
+
+[[validations]]
+contract = "cre.lease_unit"
+match = "instance"
+code = "E6032_CRE_UNIT_INVALID_PRO_RATA"
+message = "CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1."
+check = "term_number"
+term = "pro_rata_share"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contract = "cre.rollover"
+match = "instance"
+code = "E6040_CRE_ROLLOVER_INVALID_PROBABILITY"
+message = "CRE rollover 'renewal_probability' must be a probability between 0 and 1."
+check = "term_number"
+term = "renewal_probability"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contract = "cre.rollover"
+match = "instance"
+code = "E6041_CRE_ROLLOVER_INVALID_DOWNTIME"
+message = "CRE rollover 'downtime_months' must be a whole number of months, 0 or more."
+check = "term_number"
+term = "downtime_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+min = 0.0
