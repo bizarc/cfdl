@@ -6,3 +6,4 @@ description = "Operating Business pack v0.1 (deterministic lowering + E7xxx chec
 aliases = "aliases.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
+validations = "validations.toml"

@@ -1,0 +1,119 @@
+# Energy pack domain validations.
+#
+# Codes are stable and are never renamed or reused (docs/08_diagnostics.md).
+#
+# Presence of required terms is enforced generically by
+# E5006_MISSING_CONTRACT_TERM, derived from the lowering templates. These are
+# the domain constraints on top: physical quantities that have meaningful
+# ranges, where an out-of-range value would otherwise produce a plausible-
+# looking but wrong cash flow.
+schema_version = 1
+code_prefix = "E8"
+
+# --- generation physics -----------------------------------------------------
+
+# Annual degradation is a fraction of output lost per year.
+[[validations]]
+contracts = [
+  "energy.ppa",
+  "energy.merchant",
+  "energy.storage_arbitrage",
+  "energy.ptc",
+]
+code = "E8001_ENERGY_INVALID_DEGRADATION"
+message = "Energy 'degradation' must be a fraction between 0 and 1."
+check = "term_number"
+term = "degradation"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+# Availability is the fraction of the period the asset can produce.
+[[validations]]
+contracts = ["energy.ppa", "energy.merchant", "energy.ptc"]
+code = "E8002_ENERGY_INVALID_AVAILABILITY"
+message = "Energy 'availability' must be a fraction between 0 and 1."
+check = "term_number"
+term = "availability"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+# Escalation may be negative (de-escalating contracts) but not below -100%.
+[[validations]]
+contracts = ["energy.ppa", "energy.om", "energy.ptc"]
+code = "E8003_ENERGY_INVALID_ESCALATION"
+message = "Energy 'escalation' must be greater than or equal to -1."
+check = "term_number"
+term = "escalation"
+when = "present"
+on_invalid = "report"
+min = -1.0
+
+[[validations]]
+contract = "energy.merchant"
+code = "E8004_ENERGY_INVALID_PRICE_ESCALATION"
+message = "Energy 'price_escalation' must be greater than or equal to -1."
+check = "term_number"
+term = "price_escalation"
+when = "present"
+on_invalid = "report"
+min = -1.0
+
+# --- tax attributes ---------------------------------------------------------
+
+# MACRS class life selects an entire depreciation table (IRS Pub 946 GDS).
+[[validations]]
+contract = "energy.macrs_shield"
+code = "E8010_ENERGY_INVALID_MACRS_LIFE"
+message = "Energy MACRS 'life' must be one of 5, 7, 15, or 20."
+check = "term_enum"
+term = "life"
+values = [5, 7, 15, 20]
+when = "present"
+
+[[validations]]
+contract = "energy.macrs_shield"
+code = "E8011_ENERGY_INVALID_TAX_RATE"
+message = "Energy 'tax_rate' must be a fraction between 0 and 1."
+check = "term_number"
+term = "tax_rate"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+# --- project debt -----------------------------------------------------------
+
+[[validations]]
+contract = "energy.debt_service"
+code = "E8020_ENERGY_DEBT_INVALID_RATE"
+message = "Energy debt 'rate' must be non-negative."
+check = "term_number"
+term = "rate"
+when = "present"
+on_invalid = "report"
+min = 0.0
+
+[[validations]]
+contract = "energy.debt_service"
+code = "E8021_ENERGY_DEBT_INVALID_TERM_MONTHS"
+message = "Energy debt 'term_months' must be a whole number greater than 0."
+check = "term_number"
+term = "term_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0
+
+[[validations]]
+contract = "energy.debt_service"
+code = "E8022_ENERGY_DEBT_INVALID_PRINCIPAL"
+message = "Energy debt 'principal' must be greater than 0."
+check = "term_number"
+term = "principal"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0

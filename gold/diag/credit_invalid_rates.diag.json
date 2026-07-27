@@ -1,0 +1,62 @@
+[
+  {
+    "code": "E9010_CREDIT_INVALID_CPR",
+    "severity": "error",
+    "message": "Credit 'cpr' must be an annual rate between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 5,
+      "end_line": 16,
+      "end_col": 13
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E9011_CREDIT_INVALID_CDR",
+    "severity": "error",
+    "message": "Credit 'cdr' must be an annual rate between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 5,
+      "end_line": 17,
+      "end_col": 14
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E9012_CREDIT_INVALID_SEVERITY",
+    "severity": "error",
+    "message": "Credit 'severity' must be a fraction between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 18,
+      "start_col": 5,
+      "end_line": 18,
+      "end_col": 18
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E9013_CREDIT_INVALID_RECOVERY_LAG",
+    "severity": "error",
+    "message": "Credit 'recovery_lag_months' must be a whole number of months, 0 or more.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 5,
+      "end_line": 19,
+      "end_col": 28
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

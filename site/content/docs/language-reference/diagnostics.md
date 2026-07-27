@@ -239,25 +239,40 @@ Warnings:
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
   malformed point in a `curve` statement
 
-### 7.10 Pack lowering-time domain errors (E6xxx)
+### 7.10 Pack domain validations (E6xxx–E9xxx)
 
-These diagnostics are emitted by pack lowering logic during compile. They are
-pack-origin diagnostics and must include file/span (contract span when
-term-level span is unavailable).
+These diagnostics come from a pack's own `validations.toml`, evaluated by the
+compiler against each contract. They are pack-origin diagnostics and must
+include file/span (contract span when a term-level span is unavailable).
 
-CRE pack (`packs/cre`) codes:
+Each first-party pack owns a reserved code range; the pack loader rejects a
+validations file whose codes fall outside its declared `code_prefix`.
+
+| Pack | Range | File |
+|---|---|---|
+| CRE | `E6xxx` | `packs/cre/validations.toml` |
+| OpCo | `E7xxx` | `packs/opco/validations.toml` |
+| Energy | `E8xxx` | `packs/energy/validations.toml` |
+| Credit | `E9xxx` | `packs/credit/validations.toml` |
+
+Presence of terms required by a lowering template is *not* listed here: that
+is handled generically for every pack by `E5006_MISSING_CONTRACT_TERM`.
+
+CRE pack codes:
 
 - `E6001_CRE_LEASE_MISSING_BASE_RENT`
 - `E6002_CRE_LEASE_INVALID_TERM_RANGE`
 - `E6003_CRE_LEASE_UP_MISSING_MONTHS`
-- `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY`
 - `E6010_CRE_EXIT_MISSING_EXIT_CAP`
 - `E6011_CRE_EXIT_INVALID_EXIT_CAP`
-- `E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE`
+- `E6012_CRE_EXIT_MISSING_NOI_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
 
-OpCo pack (`packs/opco`) codes:
+`E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
+occupancy terms that no longer exist. Per §8 the code is never reused.
+
+OpCo pack codes:
 
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
 - `E7002_OPCO_LINE_INVALID_SCHEDULE`
@@ -267,7 +282,35 @@ OpCo pack (`packs/opco`) codes:
 - `E7020_OPCO_EXIT_MISSING_MULTIPLE`
 - `E7021_OPCO_EXIT_INVALID_MULTIPLE`
 - `E7022_OPCO_EXIT_MISSING_BASE_VALUE`
-- `E7023_OPCO_EXIT_MISSING_EXIT_PERIOD`
+- `E7023_OPCO_EXIT_INVALID_SCHEDULE`
+- `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE`
+- `E7030_OPCO_DEBT_INVALID_AMORT`
+- `E7031_OPCO_DEBT_INVALID_RATE`
+
+Energy pack codes:
+
+- `E8001_ENERGY_INVALID_DEGRADATION`
+- `E8002_ENERGY_INVALID_AVAILABILITY`
+- `E8003_ENERGY_INVALID_ESCALATION`
+- `E8004_ENERGY_INVALID_PRICE_ESCALATION`
+- `E8010_ENERGY_INVALID_MACRS_LIFE`
+- `E8011_ENERGY_INVALID_TAX_RATE`
+- `E8020_ENERGY_DEBT_INVALID_RATE`
+- `E8021_ENERGY_DEBT_INVALID_TERM_MONTHS`
+- `E8022_ENERGY_DEBT_INVALID_PRINCIPAL`
+
+Credit pack codes:
+
+- `E9001_CREDIT_INVALID_BALANCE`
+- `E9002_CREDIT_INVALID_RATE`
+- `E9003_CREDIT_INVALID_TERM_MONTHS`
+- `E9010_CREDIT_INVALID_CPR`
+- `E9011_CREDIT_INVALID_CDR`
+- `E9012_CREDIT_INVALID_SEVERITY`
+- `E9013_CREDIT_INVALID_RECOVERY_LAG`
+- `E9014_CREDIT_INVALID_SERVICING_FEE`
+- `E9015_CREDIT_INVALID_PREPAY_PENALTY`
+- `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
 
 ---
 
