@@ -1,0 +1,62 @@
+[
+  {
+    "code": "E8001_ENERGY_INVALID_DEGRADATION",
+    "severity": "error",
+    "message": "Energy 'degradation' must be a fraction between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 18,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E8002_ENERGY_INVALID_AVAILABILITY",
+    "severity": "error",
+    "message": "Energy 'availability' must be a fraction between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 18,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E8010_ENERGY_INVALID_MACRS_LIFE",
+    "severity": "error",
+    "message": "Energy MACRS 'life' must be one of 5, 7, 15, or 20.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 1,
+      "end_line": 28,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E8011_ENERGY_INVALID_TAX_RATE",
+    "severity": "error",
+    "message": "Energy 'tax_rate' must be a fraction between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 1,
+      "end_line": 28,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

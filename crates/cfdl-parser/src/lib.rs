@@ -800,10 +800,25 @@ impl<'a> Parser<'a> {
                         continue;
                     }
                     let _ = self.bump();
+                    // A signed number lexes as a sign punct followed by the
+                    // number. Without this, `escalation = -0.02` silently
+                    // dropped the whole term and the pack default applied —
+                    // the model said one thing and the engine did another.
+                    let sign = match self.peek().kind {
+                        TokenKind::Punct(Punct::Minus) => {
+                            let _ = self.bump();
+                            "-"
+                        }
+                        TokenKind::Punct(Punct::Plus) => {
+                            let _ = self.bump();
+                            ""
+                        }
+                        _ => "",
+                    };
                     let value_tok = self.bump();
                     let value = match value_tok.kind {
                         TokenKind::String(ref s) => s.clone(),
-                        TokenKind::Number(ref n) => n.clone(),
+                        TokenKind::Number(ref n) => format!("{sign}{n}"),
                         TokenKind::Date(ref d) => d.clone(),
                         TokenKind::Ident(ref ident) => ident.clone(),
                         TokenKind::Qname(ref qname) => qname.clone(),

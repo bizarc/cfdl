@@ -1,0 +1,173 @@
+# Credit pack domain validations.
+#
+# Codes are stable and are never renamed or reused (docs/08_diagnostics.md).
+#
+# Presence of required terms is enforced generically by
+# E5006_MISSING_CONTRACT_TERM, derived from the lowering templates. These are
+# the domain constraints on top. Pool math uses a closed-form factor
+# decomposition, so an out-of-range rate does not fail loudly — it silently
+# produces a plausible but wrong balance path. These bounds are what make that
+# impossible.
+schema_version = 1
+code_prefix = "E9"
+
+# Every pool type shares the loss vocabulary.
+# (contracts are named `credit.<type>.<instance>`, so these match on instance.)
+
+# --- pool economics ---------------------------------------------------------
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9001_CREDIT_INVALID_BALANCE"
+message = "Credit pool 'balance' must be greater than 0."
+check = "term_number"
+term = "balance"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0
+
+[[validations]]
+contracts = ["credit.pool_level_pay", "credit.pool_io_bullet"]
+match = "instance"
+code = "E9002_CREDIT_INVALID_RATE"
+message = "Credit pool 'rate' must be a non-negative annual rate."
+check = "term_number"
+term = "rate"
+when = "present"
+on_invalid = "report"
+min = 0.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9003_CREDIT_INVALID_TERM_MONTHS"
+message = "Credit pool 'term_months' must be a whole number greater than 0."
+check = "term_number"
+term = "term_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0
+
+# --- prepayment, default, and loss ------------------------------------------
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9010_CREDIT_INVALID_CPR"
+message = "Credit 'cpr' must be an annual rate between 0 and 1."
+check = "term_number"
+term = "cpr"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9011_CREDIT_INVALID_CDR"
+message = "Credit 'cdr' must be an annual rate between 0 and 1."
+check = "term_number"
+term = "cdr"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9012_CREDIT_INVALID_SEVERITY"
+message = "Credit 'severity' must be a fraction between 0 and 1."
+check = "term_number"
+term = "severity"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9013_CREDIT_INVALID_RECOVERY_LAG"
+message = "Credit 'recovery_lag_months' must be a whole number of months, 0 or more."
+check = "term_number"
+term = "recovery_lag_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+min = 0.0
+
+# --- servicing and penalties ------------------------------------------------
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9014_CREDIT_INVALID_SERVICING_FEE"
+message = "Credit 'servicing_fee' must be an annual rate between 0 and 1."
+check = "term_number"
+term = "servicing_fee"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9015_CREDIT_INVALID_PREPAY_PENALTY"
+message = "Credit 'prepay_penalty_rate' must be a rate between 0 and 1."
+check = "term_number"
+term = "prepay_penalty_rate"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+# --- floating-rate pools ----------------------------------------------------
+
+# A floor above the cap would clamp every coupon to the floor, silently
+# producing a fixed-rate pool.
+[[validations]]
+contract = "credit.pool_float_io_bullet"
+match = "instance"
+code = "E9020_CREDIT_RATE_FLOOR_ABOVE_CAP"
+message = "Credit 'rate_floor' must be less than or equal to 'rate_cap'."
+check = "term_compare"
+left = "rate_floor"
+op = "le"
+right = "rate_cap"

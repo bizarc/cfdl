@@ -6,3 +6,4 @@ description = "Energy & microgrids pack: PPA/merchant revenue, storage, O&M, tax
 aliases = "aliases.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
+validations = "validations.toml"

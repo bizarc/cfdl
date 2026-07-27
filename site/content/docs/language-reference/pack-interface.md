@@ -305,9 +305,26 @@ Validation must:
 - Include file/span when possible
 - Never crash
 
-Diagnostics codes for pack validations should be reserved per-pack:
+Validations are declared as data in `packs/<pack>/validations.toml` and
+evaluated by the compiler; they are not implemented in the engine. Each rule
+names the contract it applies to, the check, a stable diagnostic code, and a
+message. Available checks: `term_present`, `any_term_present`, `term_number`
+(integer or decimal, with `min`/`max`/`exclusive_min`/`exclusive_max`, and
+`when`/`on_invalid` to control absent and unparseable values),
+`term_range_within_timeline`, `term_enum`, and `term_compare`. The set is
+closed — no expressions, recursion, or message interpolation — so evaluating
+a pack's validations is bounded work that cannot crash or hang the compiler.
+
+The file declares its pack's reserved code prefix, which the loader enforces:
+
 - `E6xxx_*` for CRE
 - `E7xxx_*` for OpCo
+- `E8xxx_*` for Energy
+- `E9xxx_*` for Credit
+
+Terms that a lowering template requires are checked generically by
+`E5006_MISSING_CONTRACT_TERM`; validations express the domain constraints on
+top of that (bounds, enumerations, and relationships between terms).
 
 ### 6.9 Documentation metadata
 Packs SHOULD provide docs for:

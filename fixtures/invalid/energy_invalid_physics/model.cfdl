@@ -1,0 +1,28 @@
+version 0.1
+model "energy-invalid-physics"
+use pack "energy" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity project solar
+
+// availability above 1.0 and negative degradation are physically impossible;
+// an unchecked pack would silently produce an inflated revenue curve.
+contract energy.ppa on entity project.solar {
+  term 2026-01..2027-12
+  terms {
+    mwh_year = 4200
+    ppa_price = 85
+    availability = 1.4
+    degradation = -0.05
+  }
+}
+
+// MACRS class life must select a real IRS table.
+contract energy.macrs_shield on entity project.solar {
+  term 2026-01..2027-12
+  terms {
+    basis = 2400000
+    tax_rate = 1.8
+    life = 9
+  }
+}

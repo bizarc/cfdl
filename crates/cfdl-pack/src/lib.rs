@@ -375,6 +375,10 @@ mod embedded {
             "metrics.toml",
             include_str!("../../../packs/credit/metrics.toml"),
         ),
+        (
+            "validations.toml",
+            include_str!("../../../packs/credit/validations.toml"),
+        ),
     ];
 
     pub const ENERGY: &[EmbeddedFile] = &[
@@ -390,6 +394,10 @@ mod embedded {
         (
             "metrics.toml",
             include_str!("../../../packs/energy/metrics.toml"),
+        ),
+        (
+            "validations.toml",
+            include_str!("../../../packs/energy/validations.toml"),
         ),
     ];
 
