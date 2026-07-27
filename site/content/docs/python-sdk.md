@@ -45,7 +45,20 @@ Compile problems raise `CompileError` with structured `.diagnostics`
 
 ## Notebooks
 
-`examples/notebooks/` contains executed industry notebooks built on the
-benchmark models: a solar microgrid, a CRE office property, a loan pool, and
-an LBO. They are the fastest way to see the SDK's DataFrame surface on
-realistic models.
+Four industry notebooks are built on the benchmark models — the same models
+CFDL validates against an independent reference. Each is published here with
+the outputs and chart it actually produced, so you can read the SDK's DataFrame
+surface on a realistic model before installing anything:
+
+- [Solar PPA microgrid](/docs/notebooks/energy-solar-microgrid)
+- [CRE office acquisition](/docs/notebooks/cre-office-acquisition)
+- [Credit loan pool](/docs/notebooks/credit-loan-pool)
+- [Operating company LBO](/docs/notebooks/opco-lbo)
+
+To run them yourself, install the `notebooks` extra and open the folder from a
+checkout — they read their models from `benchmarks/`:
+
+```bash
+pip install -e "python/[notebooks]"
+jupyter lab examples/notebooks
+```

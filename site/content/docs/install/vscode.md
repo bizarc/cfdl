@@ -9,7 +9,7 @@ slug: "/docs/install/vscode"
 
 This guide is for domain experts and model authors who want to use CFDL in VSCode.
 
-Online onboarding docs: `https://bizarc.github.io/cfdl/`
+Documentation: https://cfdl.dev
 
 At launch, the extension will be published to the VS Code Marketplace and
 Open VSX (install by searching "CFDL"); until then, install from Release

@@ -16,4 +16,11 @@ with worked example notebooks. Generated from each pack's README.
 
 ## Example notebooks
 
-Runnable Jupyter notebooks (one per pack) live in [`examples/notebooks/`](https://github.com/bizarc/cfdl/blob/main/examples/notebooks): solar PPA microgrid, CRE office acquisition, credit loan pool, and an OpCo LBO.
+One Jupyter notebook per pack walks a benchmark model through the Python SDK. Each is published with the outputs and chart it actually produced:
+
+- [Solar PPA microgrid](/docs/notebooks/energy-solar-microgrid)
+- [CRE office acquisition](/docs/notebooks/cre-office-acquisition)
+- [Credit loan pool](/docs/notebooks/credit-loan-pool)
+- [Operating company LBO](/docs/notebooks/opco-lbo)
+
+The sources live in [`examples/notebooks/`](https://github.com/bizarc/cfdl/blob/main/examples/notebooks).

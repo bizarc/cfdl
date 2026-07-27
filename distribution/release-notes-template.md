@@ -20,7 +20,7 @@ This release includes:
 ## Install
 
 Follow `distribution/install-configure.md` for end-user setup instructions.
-Hosted docs: `https://bizarc.github.io/cfdl/`
+Documentation: https://cfdl.dev
 
 ## Artifacts
 

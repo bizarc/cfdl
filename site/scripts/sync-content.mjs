@@ -544,9 +544,21 @@ cookbookIndexLines.push("");
 cookbookIndexLines.push("## Example notebooks");
 cookbookIndexLines.push("");
 cookbookIndexLines.push(
-  "Runnable Jupyter notebooks (one per pack) live in " +
-    `[\`examples/notebooks/\`](${REPO_HTTP_BASE}/examples/notebooks): ` +
-    "solar PPA microgrid, CRE office acquisition, credit loan pool, and an OpCo LBO."
+  "One Jupyter notebook per pack walks a benchmark model through the Python " +
+    "SDK. Each is published with the outputs and chart it actually produced:"
+);
+cookbookIndexLines.push("");
+for (const [title, slug] of [
+  ["Solar PPA microgrid", "energy-solar-microgrid"],
+  ["CRE office acquisition", "cre-office-acquisition"],
+  ["Credit loan pool", "credit-loan-pool"],
+  ["Operating company LBO", "opco-lbo"]
+]) {
+  cookbookIndexLines.push(`- [${title}](/docs/notebooks/${slug})`);
+}
+cookbookIndexLines.push("");
+cookbookIndexLines.push(
+  `The sources live in [\`examples/notebooks/\`](${REPO_HTTP_BASE}/examples/notebooks).`
 );
 cookbookIndexLines.push("");
 writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
