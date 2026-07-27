@@ -63,17 +63,55 @@ export function currencyOf(value: MoneyOrNumber | undefined): string | undefined
   return typeof value === "object" && value ? value.currency : undefined;
 }
 
-export function formatValue(value: MoneyOrNumber | undefined): string {
+/**
+ * How a metric should read, inferred from its id.
+ *
+ * The engine returns bare ratios: an IRR of 0.19 means 19%, and printing it
+ * raw (or printing 911.14 for a model with no upfront investment) is
+ * unreadable. Money carries its own currency and needs no inference.
+ */
+function metricKind(id?: string): "percent" | "multiple" | "years" | "periods" | "plain" {
+  if (!id) return "plain";
+  if (/\.irr$|_rate$|^run\.annual_discount_rate$/.test(id)) return "percent";
+  if (/\.moic$/.test(id)) return "multiple";
+  if (/_years$/.test(id)) return "years";
+  if (/_periods$/.test(id)) return "periods";
+  return "plain";
+}
+
+export function formatValue(value: MoneyOrNumber | undefined, id?: string): string {
   const n = toNumber(value);
   if (n === undefined) return "—";
+
   const currency = currencyOf(value);
-  const abs = Math.abs(n);
-  const digits = currency ? 2 : abs < 1 ? 4 : 2;
-  const formatted = n.toLocaleString("en-US", {
-    minimumFractionDigits: Number.isInteger(n) && !currency ? 0 : digits,
-    maximumFractionDigits: digits,
-  });
-  return currency ? `${formatted} ${currency}` : formatted;
+  if (currency) {
+    return `${n.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} ${currency}`;
+  }
+
+  switch (metricKind(id)) {
+    case "percent":
+      return `${(n * 100).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}%`;
+    case "multiple":
+      return `${n.toFixed(2)}×`;
+    case "years":
+      return `${n.toFixed(2)} yr`;
+    case "periods":
+      return `${n.toLocaleString("en-US")} periods`;
+    default: {
+      const abs = Math.abs(n);
+      const digits = abs < 1 ? 4 : 2;
+      return n.toLocaleString("en-US", {
+        minimumFractionDigits: Number.isInteger(n) ? 0 : digits,
+        maximumFractionDigits: digits,
+      });
+    }
+  }
 }
 
 /** Compact axis labels: 1.2M, -450k, 0.08. */

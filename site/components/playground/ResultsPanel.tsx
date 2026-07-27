@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { LineChart, type LineSeries } from "./charts/LineChart";
+import { Tabs } from "@/components/ds/Tabs";
 import { Distribution } from "./charts/Distribution";
 import { cn } from "@/lib/cn";
 import {
@@ -30,11 +31,15 @@ export function ResultsPanel({
   diagnostics,
   engineError,
   onJumpTo,
+  selectedPack,
+  modelDeclaredPack,
 }: {
   results: Results | null;
   diagnostics: Diagnostic[];
   engineError: string | null;
   onJumpTo?: (file: string | undefined, line: number) => void;
+  selectedPack?: string;
+  modelDeclaredPack?: string;
 }) {
   const [tab, setTab] = useState<Tab>("Metrics");
 
@@ -46,47 +51,32 @@ export function ResultsPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-subtle bg-surface-sunken px-2">
-        {TABS.map((t) => {
-          const badge =
-            t === "Diagnostics" && counts.diagnostics > 0
+      <Tabs
+        className="shrink-0"
+        value={tab}
+        onValueChange={(id) => setTab(id as Tab)}
+        items={TABS.map((t) => ({
+          id: t,
+          label: t,
+          badge:
+            t === "Diagnostics"
               ? counts.diagnostics
-              : t === "Scenarios" && counts.scenarios > 0
+              : t === "Scenarios"
                 ? counts.scenarios
-                : undefined;
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "relative whitespace-nowrap px-3 py-2 text-xs font-medium transition-colors",
-                tab === t
-                  ? "text-primary after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent"
-                  : "text-muted hover:text-secondary",
-              )}
-            >
-              {t}
-              {badge !== undefined ? (
-                <span
-                  className={cn(
-                    "ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums",
-                    t === "Diagnostics" ? "bg-err-soft text-err" : "bg-surface-raised text-muted",
-                  )}
-                >
-                  {badge}
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
+                : undefined,
+          badgeTone: t === "Diagnostics" ? ("err" as const) : ("neutral" as const),
+        }))}
+      />
 
       <div className="min-h-0 flex-1 overflow-auto p-4">
         {engineError ? (
           <Empty tone="err">{engineError}</Empty>
         ) : tab === "Metrics" ? (
-          <MetricsTab results={results} />
+          <MetricsTab
+            results={results}
+            selectedPack={selectedPack}
+            modelDeclaredPack={modelDeclaredPack}
+          />
         ) : tab === "Cash flows" ? (
           <CashFlowsTab results={results} />
         ) : tab === "Scenarios" ? (
@@ -109,7 +99,15 @@ function Empty({ children, tone }: { children: React.ReactNode; tone?: "err" }) 
   );
 }
 
-function MetricsTab({ results }: { results: Results | null }) {
+function MetricsTab({
+  results,
+  selectedPack,
+  modelDeclaredPack,
+}: {
+  results: Results | null;
+  selectedPack?: string;
+  modelDeclaredPack?: string;
+}) {
   const metrics = results?.deterministic?.metrics;
   const domain = results?.domain_metrics?.metrics;
   if (!metrics) return <Empty>Run a model to see metrics.</Empty>;
@@ -119,15 +117,22 @@ function MetricsTab({ results }: { results: Results | null }) {
   );
   const rest = Object.entries(metrics).filter(([k]) => !headline.includes(k));
 
+  // A pack the model doesn't declare produces metrics that match no streams —
+  // a column of 0.00 that reads as a broken calculation. Say what happened.
+  const packMismatch =
+    Boolean(selectedPack) && selectedPack !== modelDeclaredPack;
+
   return (
     <div className="space-y-6">
       {headline.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-4">
           {headline.map((k) => (
-            <div key={k} className="rounded-lg border border-default bg-surface-raised p-3">
-              <p className="font-mono text-[11px] text-muted">{k}</p>
+            <div key={k} className="min-w-0 rounded-lg border border-default bg-surface-raised p-3">
+              <p className="truncate font-mono text-[11px] text-muted" title={k}>
+                {k}
+              </p>
               <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-primary">
-                {formatValue(metrics[k])}
+                {formatValue(metrics[k], k)}
               </p>
             </div>
           ))}
@@ -135,7 +140,31 @@ function MetricsTab({ results }: { results: Results | null }) {
       )}
 
       <MetricTable title="All metrics" rows={rest} />
-      {domain ? <MetricTable title="Domain metrics" rows={Object.entries(domain)} /> : null}
+
+      {packMismatch ? (
+        <div className="rounded-lg border border-default bg-surface-sunken p-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+            Domain metrics
+          </h3>
+          <p className="mt-1.5 text-xs leading-relaxed text-secondary">
+            This model doesn&apos;t use the{" "}
+            <code className="font-mono">{selectedPack}</code> pack
+            {modelDeclaredPack ? (
+              <>
+                {" "}
+                (it declares <code className="font-mono">{modelDeclaredPack}</code>)
+              </>
+            ) : (
+              " (it declares none)"
+            )}
+            , so its metrics match no streams. Add{" "}
+            <code className="font-mono">use pack &quot;{selectedPack}&quot;</code> to the
+            model, or set the pack selector to match.
+          </p>
+        </div>
+      ) : domain && Object.keys(domain).length > 0 ? (
+        <MetricTable title="Domain metrics" rows={Object.entries(domain)} />
+      ) : null}
     </div>
   );
 }
@@ -154,8 +183,12 @@ function MetricTable({
       <dl className="divide-y divide-subtle rounded-lg border border-default">
         {rows.map(([k, v]) => (
           <div key={k} className="flex items-baseline justify-between gap-4 px-3 py-1.5">
-            <dt className="font-mono text-xs text-secondary">{k}</dt>
-            <dd className="font-mono text-xs tabular-nums text-primary">{formatValue(v)}</dd>
+            <dt className="min-w-0 truncate font-mono text-xs text-secondary" title={k}>
+              {k}
+            </dt>
+            <dd className="font-mono text-xs tabular-nums text-primary">
+              {formatValue(v, k)}
+            </dd>
           </div>
         ))}
       </dl>
@@ -287,7 +320,7 @@ function ScenariosTab({ results }: { results: Results | null }) {
               <td className="px-3 py-1.5 font-mono text-secondary">{m}</td>
               {summaries.map((s) => (
                 <td key={s.name} className="px-3 py-1.5 text-right font-mono tabular-nums text-primary">
-                  {formatValue(s.metrics[m])}
+                  {formatValue(s.metrics[m], m)}
                 </td>
               ))}
             </tr>

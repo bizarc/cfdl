@@ -2,8 +2,11 @@
   {
     "id": "minimal",
     "title": "Minimal model",
-    "description": "The smallest valid model: a timeline, an entity, one stream.",
     "category": "Tutorial",
+    "order": 1,
+    "summary": "The smallest model that compiles: a timeline, an entity, one stream.",
+    "tryThis": "Change the amount to 2500 and re-run — watch NPV move.",
+    "docsHref": "/docs/examples/minimal_model",
     "source": "examples/language_tutorial/minimal_model",
     "root": "model.cfdl",
     "config": {
@@ -12,14 +15,17 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"tutorial-minimal-model\"\ntime calendar monthly from 2026-01 for 12\n\nentity legal borrower\n\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"tutorial-minimal-model\"\ntime calendar monthly from 2026-01 for 12\n\nentity legal borrower\n\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000\n}\n"
     }
   },
   {
     "id": "first-stream",
     "title": "Your first stream",
-    "description": "Schedules and amount expressions on a single cash-flow stream.",
     "category": "Tutorial",
+    "order": 2,
+    "summary": "Money in and money out, on their own schedules.",
+    "tryThis": "Add `on day 1` to the expense schedule and compare the cash-flow chart.",
+    "docsHref": "/docs/examples/first_stream",
     "source": "examples/language_tutorial/first_stream",
     "root": "model.cfdl",
     "config": {
@@ -28,14 +34,17 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"tutorial-first-stream\"\ntime calendar monthly from 2026-01 for 24\n\nentity legal tenant\n\nstream legal.subscription_revenue on entity legal.tenant {\n  schedule every monthly on day 15 from 2026-01 to 2027-12\n  amount = 1200\n}\n\nstream legal.support_expense on entity legal.tenant {\n  schedule every monthly from 2026-01 to 2027-12\n  amount = 250\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"tutorial-first-stream\"\ntime calendar monthly from 2026-01 for 24\n\nentity legal tenant\n\nstream legal.subscription_revenue on entity legal.tenant inflow currency USD {\n  schedule every monthly on day 15 from 2026-01 to 2027-12\n  amount = 1200\n}\n\nstream legal.support_expense on entity legal.tenant outflow currency USD {\n  schedule every monthly from 2026-01 to 2027-12\n  amount = 250\n}\n"
     }
   },
   {
     "id": "simple-contract",
     "title": "A simple contract",
-    "description": "Declare business terms and let a pack template expand them.",
     "category": "Tutorial",
+    "order": 3,
+    "summary": "Declare lease terms; the CRE pack expands them into streams for you.",
+    "tryThis": "Raise base_rent to 30000 — no schedule maths required.",
+    "docsHref": "/docs/examples/simple_contract",
     "source": "examples/language_tutorial/simple_contract",
     "root": "model.cfdl",
     "pack": "cre",
@@ -54,8 +63,11 @@
   {
     "id": "with-pack",
     "title": "Using an industry pack",
-    "description": "A larger pack-enabled model with contracts for revenue and opex.",
     "category": "Tutorial",
+    "order": 4,
+    "summary": "A fuller pack-driven model with revenue, opex, and domain metrics.",
+    "tryThis": "Switch the pack selector off and on to see domain metrics appear.",
+    "docsHref": "/docs/examples/with_pack",
     "source": "examples/language_tutorial/with_pack",
     "root": "model.cfdl",
     "pack": "opco",
@@ -71,8 +83,11 @@
   {
     "id": "multi-file",
     "title": "Multi-file model",
-    "description": "Split by concern: time, structure, and contracts in separate files.",
     "category": "Tutorial",
+    "order": 5,
+    "summary": "Split a growing model into time, structure, and contract files.",
+    "tryThis": "Open the structure.cfdl tab and add a second entity.",
+    "docsHref": "/docs/examples/multi_file",
     "source": "examples/language_tutorial/multi_file",
     "root": "model.cfdl",
     "config": {
@@ -89,8 +104,11 @@
   {
     "id": "cre-developer",
     "title": "CRE: developer lifecycle",
-    "description": "Construction, lease-up, ops, and an exit cap valuation.",
-    "category": "Domain",
+    "category": "Real deals",
+    "order": 6,
+    "summary": "Construction, lease-up, operations, and an exit cap valuation.",
+    "tryThis": "Adjust the discount rate and watch NPV and IRR respond.",
+    "docsHref": "/docs/examples/cre_developer",
     "source": "examples/cre_developer",
     "root": "model.cfdl",
     "pack": "cre",
@@ -111,8 +129,11 @@
   {
     "id": "opco-basic",
     "title": "OpCo: operating model",
-    "description": "Revenue and opex streams with working capital and an exit multiple.",
-    "category": "Domain",
+    "category": "Real deals",
+    "order": 7,
+    "summary": "Revenue and opex with working capital and an exit multiple.",
+    "tryThis": "Change the exit multiple in the contract terms.",
+    "docsHref": "/docs/examples/opco_basic",
     "source": "examples/opco_basic",
     "root": "model.cfdl",
     "pack": "opco",
@@ -128,8 +149,11 @@
   {
     "id": "cre-multi-file",
     "title": "CRE: multi-file deal",
-    "description": "A realistic deal split across four files.",
-    "category": "Domain",
+    "category": "Real deals",
+    "order": 8,
+    "summary": "A realistic deal organised across four files.",
+    "tryThis": "Follow a lease from contracts.cfdl through to the cash-flow table.",
+    "docsHref": "/docs/examples/cre_multi_file",
     "source": "examples/cre_multi_file",
     "root": "model.cfdl",
     "pack": "cre",
@@ -153,11 +177,13 @@
   {
     "id": "stochastic-rollover",
     "title": "Stochastic lease rollover",
-    "description": "Per-trial renew-or-roll outcomes — the bimodal shape an expected-value blend hides.",
     "category": "Stochastic",
+    "order": 9,
+    "summary": "Each trial either renews or re-lets — the two-humped outcome an average hides.",
+    "tryThis": "Open the Monte Carlo tab: two clusters, not one blended number.",
+    "docsHref": "/docs/stochastic-modeling",
     "source": "fixtures/valid/cre_stochastic_rollover",
     "root": "model.cfdl",
-    "pack": "cre",
     "config": {
       "deterministic": {
         "annual_discount_rate": 0.07
