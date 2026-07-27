@@ -98,8 +98,9 @@ export const mdxComponents = {
   // them on an explicit light plate makes that read as a deliberate figure in
   // both themes instead of a stray white rectangle.
   img: ({ alt = "", ...p }: ComponentPropsWithoutRef<"img">) => (
-    // eslint-disable-next-line @next/next/no-img-element -- generated content;
-    // dimensions are not known at author time.
+    // Generated content: dimensions are unknown at author time, so next/image
+    // cannot be used here.
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       {...p}
       alt={alt}

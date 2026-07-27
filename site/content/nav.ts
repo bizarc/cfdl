@@ -124,3 +124,30 @@ export const NAV: NavSection[] = [
 export const FLAT_NAV: NavItem[] = NAV.flatMap((s) =>
   s.items.flatMap((item) => [item, ...(item.items ?? [])]),
 );
+
+/**
+ * Neighbours for page-foot navigation, scoped to the current section.
+ *
+ * Chaining all 51 pages into one sequence implied a reading order that does
+ * not exist: the last Guide ran on into Domain Packs, and reference pages
+ * offered a "next" nobody wants to follow. Within a section the sequence is
+ * real — the tutorial and the guides are meant to be read in order — so
+ * pagination stops at the section boundary instead of inventing a path.
+ */
+export function sectionNeighbours(slug: string): {
+  section?: string;
+  prev?: NavItem;
+  next?: NavItem;
+} {
+  for (const section of NAV) {
+    const flat = section.items.flatMap((item) => [item, ...(item.items ?? [])]);
+    const index = flat.findIndex((item) => item.slug === slug);
+    if (index === -1) continue;
+    return {
+      section: section.title,
+      prev: index > 0 ? flat[index - 1] : undefined,
+      next: index < flat.length - 1 ? flat[index + 1] : undefined,
+    };
+  }
+  return {};
+}

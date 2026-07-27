@@ -17,7 +17,7 @@ import { mdxComponents } from "@/components/docs/mdx-components";
 import { getAllDocs, getDocBySlug } from "@/lib/docs";
 import { getHighlighter } from "@/lib/shiki";
 import { extractToc } from "@/lib/toc";
-import { FLAT_NAV } from "@/content/nav";
+import { sectionNeighbours } from "@/content/nav";
 
 type Params = { slug?: string[] };
 
@@ -89,10 +89,7 @@ export default async function DocPage({ params }: { params: Promise<Params> }) {
   });
 
   const toc = extractToc(doc.body);
-  const navIndex = FLAT_NAV.findIndex((item) => item.slug === doc.slug);
-  const prev = navIndex > 0 ? FLAT_NAV[navIndex - 1] : undefined;
-  const next =
-    navIndex >= 0 && navIndex < FLAT_NAV.length - 1 ? FLAT_NAV[navIndex + 1] : undefined;
+  const { prev, next } = sectionNeighbours(doc.slug);
 
   return (
     <>
