@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "59319321c2a987d75e48f62d79cd89a8",
+      "id": "eb946e558bdb39a0237da2da65fbff8c",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.first_entity"
@@ -94,7 +94,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_expense_v1"
+          "rule_id": "cre_ops_expense"
         }
       }
     }

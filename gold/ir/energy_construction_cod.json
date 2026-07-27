@@ -148,7 +148,7 @@
   ],
   "streams": [
     {
-      "id": "f7ab8f71270cf33f4813a17bbbc570a0",
+      "id": "f778fb125f041f2043149563485fa128",
       "name": "energy.capex.outlay",
       "owner": {
         "symbol": "project.microgrid"
@@ -180,12 +180,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capex_v1"
+          "rule_id": "energy_capex"
         }
       }
     },
     {
-      "id": "ab732ea99bb2bf3e1efc1098eba1dc2f",
+      "id": "73784aab12bddf74b026c4ff6958b549",
       "name": "energy.capex.outlay.final_draw",
       "owner": {
         "symbol": "project.microgrid"
@@ -217,12 +217,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capex_v1"
+          "rule_id": "energy_capex"
         }
       }
     },
     {
-      "id": "aa7951e1ac7dec22214dff4d7f2f6165",
+      "id": "08b7d4add08cc7970c5541b508795d37",
       "name": "energy.om.expense",
       "owner": {
         "symbol": "project.microgrid"
@@ -256,12 +256,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_om_expense_v1"
+          "rule_id": "energy_om_expense"
         }
       }
     },
     {
-      "id": "e17704c6d45bc926e02a5c7db18b7592",
+      "id": "072bac6ba4e2f35d51a76943c5e7b324",
       "name": "energy.ppa.revenue",
       "owner": {
         "symbol": "project.microgrid"
@@ -295,7 +295,7 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ppa_revenue_v1"
+          "rule_id": "energy_ppa_revenue"
         }
       }
     }

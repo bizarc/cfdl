@@ -10,6 +10,9 @@ entity loan permanent
 // CRE pack: property-level lifecycle (construction stub, lease, ops, exit)
 contract cre.construction_stub {
   term 2026-01..2026-06
+  terms {
+    amount = 45000
+  }
 }
 
 contract cre.lease {
@@ -34,18 +37,18 @@ contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
     exit_cap = 0.06
-    noi_ref = ops.noi
+    noi_value = 180000
   }
 }
 
 // Construction-phase financing: interest-only stream (fixed dates, no events)
-stream loan.construction_interest on entity loan.construction {
+stream loan.construction_interest on entity loan.construction outflow currency USD {
   schedule every monthly from 2026-01 to 2027-06
   amount = 40000
 }
 
 // Permanent financing: debt service stream starts when construction period ends (hardcoded transition)
-stream loan.permanent_debt_service on entity loan.permanent {
+stream loan.permanent_debt_service on entity loan.permanent outflow currency USD {
   schedule every monthly from 2027-07 to 2031-12
   amount = 55000
 }

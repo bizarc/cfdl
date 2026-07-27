@@ -183,7 +183,7 @@
   ],
   "streams": [
     {
-      "id": "f7ab8f71270cf33f4813a17bbbc570a0",
+      "id": "f778fb125f041f2043149563485fa128",
       "name": "energy.capex.outlay",
       "owner": {
         "symbol": "project.windfarm"
@@ -215,12 +215,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capex_v1"
+          "rule_id": "energy_capex"
         }
       }
     },
     {
-      "id": "d44a5c80f41480fd9eb0e850e352787d",
+      "id": "78cf1cb1ac9bfc8ed5e5582a66b72551",
       "name": "energy.debt.service",
       "owner": {
         "symbol": "project.windfarm"
@@ -254,12 +254,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_service_v1"
+          "rule_id": "energy_debt_service"
         }
       }
     },
     {
-      "id": "a07c559aaa14121795d1a779b808c133",
+      "id": "5f8d15d459c2e54f22a6df033299d706",
       "name": "energy.macrs.shield",
       "owner": {
         "symbol": "project.windfarm"
@@ -293,12 +293,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_macrs_shield_v1"
+          "rule_id": "energy_macrs_shield"
         }
       }
     },
     {
-      "id": "7e672b81253fcfd70c60e62fc910933f",
+      "id": "6ce2e349f89279c285cb501858b55f38",
       "name": "energy.merchant.revenue",
       "owner": {
         "symbol": "project.windfarm"
@@ -332,12 +332,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_merchant_revenue_v1"
+          "rule_id": "energy_merchant_revenue"
         }
       }
     },
     {
-      "id": "aa7951e1ac7dec22214dff4d7f2f6165",
+      "id": "08b7d4add08cc7970c5541b508795d37",
       "name": "energy.om.expense",
       "owner": {
         "symbol": "project.windfarm"
@@ -371,12 +371,12 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_om_expense_v1"
+          "rule_id": "energy_om_expense"
         }
       }
     },
     {
-      "id": "fb828b7c541b16a3749563a7991f19fa",
+      "id": "b7f1dd4969dbc8ff6d02594dfcb10e02",
       "name": "energy.ptc.credit",
       "owner": {
         "symbol": "project.windfarm"
@@ -410,7 +410,7 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ptc_credit_v1"
+          "rule_id": "energy_ptc_credit"
         }
       }
     }

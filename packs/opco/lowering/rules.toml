@@ -1,9 +1,9 @@
 # Operating-company pack (Workstream D opco deepening).
 #
-# All rules are template-driven ({{contract.*}}); the legacy hardcoded
+# All rules are template-driven ({{contract.*}}); no hardcoded
 # apply_opco_contract_terms compile path is retired. Conventions:
 #   - Growth is annual-compound, stepped continuously on the MODEL clock:
-#     value(t) = amount * (1 + growth)^(time.t / 12)  (v1 behavior preserved).
+#     value(t) = amount * (1 + growth)^(time.t / 12).
 #   - Cross-stream contracts (working-capital policy, %-of-revenue capex,
 #     cash taxes, EBITDA exit) reference phase-1 streams via series_sum and
 #     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
@@ -15,11 +15,11 @@
 #     period); carryforwards need H3-style state.
 
 # ---------------------------------------------------------------------------
-# Operating lines (v1 contracts, templated).
+# Operating lines.
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_revenue_line_v1"
+id = "opco_revenue_line"
 contract_name = "opco.revenue_line"
 stream_name = "opco.revenue.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -34,7 +34,7 @@ schedule_to = "{{contract.term_end}}"
 growth_rate = "0"
 
 [[rules]]
-id = "opco_opex_line_v1"
+id = "opco_opex_line"
 contract_name = "opco.opex_line"
 stream_name = "opco.opex.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -48,10 +48,10 @@ schedule_to = "{{contract.term_end}}"
 [rules.defaults]
 growth_rate = "0"
 
-# Fixed working-capital adjustment (v1): a constant monthly outflow. For
+# Fixed working-capital adjustment: a constant monthly outflow. For
 # policy-driven working capital see opco.working_capital_policy below.
 [[rules]]
-id = "opco_working_capital_v1"
+id = "opco_working_capital"
 contract_name = "opco.working_capital"
 stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -62,10 +62,10 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-# Exit at a multiple of a declared base value (v1). The exit occurs at the
-# contract's term_start (the legacy `exit_period` term is inert).
+# Exit at a multiple of a declared base value. The exit occurs at the
+# contract's term_start.
 [[rules]]
-id = "opco_exit_multiple_v1"
+id = "opco_exit_multiple"
 contract_name = "opco.exit_multiple"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
@@ -89,7 +89,7 @@ schedule_to = ""
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_working_capital_policy_v1"
+id = "opco_working_capital_policy"
 contract_name = "opco.working_capital_policy"
 stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -111,7 +111,7 @@ release_at_end = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_capex_line_v1"
+id = "opco_capex_line"
 contract_name = "opco.capex_line"
 stream_name = "opco.capex{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -137,7 +137,7 @@ pct_of_revenue = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_term_debt_proceeds_v1"
+id = "opco_term_debt_proceeds"
 contract_name = "opco.term_debt"
 stream_name = "opco.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -152,7 +152,7 @@ schedule_to = ""
 funded_at_close = "1"
 
 [[rules]]
-id = "opco_term_debt_interest_v1"
+id = "opco_term_debt_interest"
 contract_name = "opco.term_debt"
 stream_name = "opco.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -167,7 +167,7 @@ schedule_to = "{{contract.term_end}}"
 io_months = "0"
 
 [[rules]]
-id = "opco_term_debt_principal_v1"
+id = "opco_term_debt_principal"
 contract_name = "opco.term_debt"
 stream_name = "opco.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -190,7 +190,7 @@ io_months = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_cash_taxes_v1"
+id = "opco_cash_taxes"
 contract_name = "opco.cash_taxes"
 stream_name = "opco.taxes{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -212,7 +212,7 @@ da_growth = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_exit_ebitda_v1"
+id = "opco_exit_ebitda"
 contract_name = "opco.exit_ebitda"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
@@ -232,7 +232,7 @@ selling_costs = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "opco_acquisition_price_v1"
+id = "opco_acquisition_price"
 contract_name = "opco.acquisition"
 stream_name = "opco.acquisition.price{{contract.dot_suffix}}"
 owner_entity = "${subject}"

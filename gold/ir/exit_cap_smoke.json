@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "20e9d5b2f3a171910859ba623d49c4cc",
+      "id": "01f65aca73ef593a51d1162cc8fdd6d4",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -85,7 +85,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_cap_sale_v1"
+          "rule_id": "cre_exit_cap_sale"
         }
       }
     }

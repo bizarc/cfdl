@@ -45,7 +45,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 10,
+          "end_line": 13,
           "end_col": 1
         }
       }
@@ -69,9 +69,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 36,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 42,
           "end_col": 1
         }
       }
@@ -95,9 +95,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 12,
+          "start_line": 15,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 20,
           "end_col": 1
         }
       }
@@ -121,9 +121,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 26,
+          "start_line": 29,
           "start_col": 1,
-          "end_line": 31,
+          "end_line": 34,
           "end_col": 1
         }
       }
@@ -147,9 +147,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
-          "end_line": 24,
+          "end_line": 27,
           "end_col": 1
         }
       }
@@ -157,7 +157,7 @@
   ],
   "streams": [
     {
-      "id": "837558599521996bec93d6dfef59f5c2",
+      "id": "1133980de1701a5287e1da19c6047ab4",
       "name": "cre.construction.draws",
       "owner": {
         "symbol": "real_estate.property"
@@ -183,7 +183,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 10,
+          "end_line": 13,
           "end_col": 1
         },
         "generated_by": {
@@ -191,12 +191,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_construction_stub_draws_v1"
+          "rule_id": "cre_construction_stub_draws"
         }
       }
     },
     {
-      "id": "20e9d5b2f3a171910859ba623d49c4cc",
+      "id": "01f65aca73ef593a51d1162cc8fdd6d4",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -218,9 +218,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 36,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 42,
           "end_col": 1
         },
         "generated_by": {
@@ -228,12 +228,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_cap_sale_v1"
+          "rule_id": "cre_exit_cap_sale"
         }
       }
     },
     {
-      "id": "b6c53821e522fbc8058f1cf9ca6cfc59",
+      "id": "a5992c58af801fc4d50829e0d829be75",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -248,7 +248,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "25000.0 * clamp((time.t - 6.0 + 1.0) / 18.0, 0.0, 1.0)"
+        "src": "25000.0 * clamp((months_between(parse_date(\"2026-07-01\"), time.date) + 1.0) / 1.0, 0.0, 1.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -257,9 +257,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 12,
+          "start_line": 15,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 20,
           "end_col": 1
         },
         "generated_by": {
@@ -267,12 +267,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_base_rent_v1"
+          "rule_id": "cre_lease_base_rent"
         }
       }
     },
     {
-      "id": "59319321c2a987d75e48f62d79cd89a8",
+      "id": "eb946e558bdb39a0237da2da65fbff8c",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.property"
@@ -296,9 +296,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 26,
+          "start_line": 29,
           "start_col": 1,
-          "end_line": 31,
+          "end_line": 34,
           "end_col": 1
         },
         "generated_by": {
@@ -306,12 +306,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_expense_v1"
+          "rule_id": "cre_ops_expense"
         }
       }
     },
     {
-      "id": "602551dfec6eee617b49d6754a332481",
+      "id": "c685417214cb2e47a5fbfce749859bda",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.property"
@@ -335,9 +335,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
-          "end_line": 24,
+          "end_line": 27,
           "end_col": 1
         },
         "generated_by": {
@@ -345,7 +345,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_revenue_v1"
+          "rule_id": "cre_ops_revenue"
         }
       }
     }

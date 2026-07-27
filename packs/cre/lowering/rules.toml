@@ -1,5 +1,5 @@
 [[rules]]
-id = "cre_construction_stub_draws_v1"
+id = "cre_construction_stub_draws"
 contract_name = "cre.construction_stub"
 stream_name = "cre.construction.draws"
 owner_entity = "${subject}"
@@ -10,35 +10,33 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-[rules.defaults]
-amount = "45000"
-term_start = "2026-01"
-term_end = "2026-06"
+# `amount` is required: a construction draw is a material number and must be
+# stated by the model, never supplied by the pack.
 
 [[rules]]
-id = "cre_lease_base_rent_v1"
+id = "cre_lease_base_rent"
 contract_name = "cre.lease"
 stream_name = "cre.lease.base_rent"
 owner_entity = "${subject}"
 direction = "inflow"
 currency = "USD"
-# Lease-up occupancy ramp, parameterized from contract terms:
-# occupancy(t) = clamp((t - start_period + 1) / months, 0, 1)
-# rent(t) = base_rent * occupancy(t)
-# NOTE: schedule dates stay fixed (v1 behavior ignored the contract term
-# range); the v2 lease_unit contracts are term-gated.
-amount_expr = "{{contract.base_rent}} * clamp((time.t - {{contract.lease_up.start_period}} + 1) / {{contract.lease_up.months}}, 0, 1)"
+# Rent accrues over the contract's own term, measured from its start:
+#   occupancy(m) = clamp((m + 1) / lease_up_months, 0, 1)
+#   rent(m)      = base_rent * occupancy(m)
+# where m is months since term_start. `lease_up_months = 1` (the default)
+# means fully occupied from the first month — a neutral default that invents
+# no lease-up assumption.
+amount_expr = "{{contract.base_rent}} * clamp((months_between(parse_date(\"{{contract.term_start}}\"), time.date) + 1) / {{contract.lease_up_months}}, 0, 1)"
 schedule_kind = "every"
-schedule_from = "2026-07"
-schedule_to = "2031-12"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
 
+# `base_rent` is required.
 [rules.defaults]
-base_rent = "25000"
-"lease_up.start_period" = "6"
-"lease_up.months" = "18"
+lease_up_months = "1"
 
 [[rules]]
-id = "cre_ops_revenue_v1"
+id = "cre_ops_revenue"
 contract_name = "cre.ops_revenue"
 stream_name = "cre.ops.revenue"
 owner_entity = "${subject}"
@@ -49,13 +47,10 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-[rules.defaults]
-amount = "30000"
-term_start = "2028-01"
-term_end = "2031-12"
+# `amount` is required; the term supplies the schedule.
 
 [[rules]]
-id = "cre_ops_expense_v1"
+id = "cre_ops_expense"
 contract_name = "cre.ops_expense"
 stream_name = "cre.ops.expense"
 owner_entity = "${subject}"
@@ -66,13 +61,10 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-[rules.defaults]
-amount = "12000"
-term_start = "2028-01"
-term_end = "2031-12"
+# `amount` is required; the term supplies the schedule.
 
 [[rules]]
-id = "cre_exit_cap_sale_v1"
+id = "cre_exit_cap_sale"
 contract_name = "cre.exit_cap"
 stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
@@ -83,18 +75,17 @@ schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
-[rules.defaults]
-noi_value = "180000"
-exit_cap = "0.06"
-term_start = "2031-12"
+# `noi_value` and `exit_cap` are required: an exit valuation is the single
+# largest number in most CRE models and must be stated, not assumed. The
+# contract's term supplies the sale date.
 
 # ---------------------------------------------------------------------------
-# Lease-by-lease contract types at institutional DCF parity (v2, template-driven).
+# Lease-by-lease contract types at institutional DCF parity (template-driven).
 # Lease-anniversary anchoring: lease_t = months_between(term_start, time.date).
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "cre_lease_unit_base_rent_v2"
+id = "cre_lease_unit_base_rent"
 contract_name = "cre.lease_unit"
 stream_name = "cre.unit.base_rent.{{contract.suffix}}"
 owner_entity = "${subject}"
@@ -111,7 +102,7 @@ free_rent_months = "0"
 escalation = "0"
 
 [[rules]]
-id = "cre_lease_unit_recoveries_v2"
+id = "cre_lease_unit_recoveries"
 contract_name = "cre.lease_unit"
 stream_name = "cre.unit.recoveries.{{contract.suffix}}"
 owner_entity = "${subject}"
@@ -133,7 +124,7 @@ pro_rata_share = "0"
 gross_up_factor = "1"
 
 [[rules]]
-id = "cre_lease_unit_ti_lc_v2"
+id = "cre_lease_unit_ti_lc"
 contract_name = "cre.lease_unit"
 stream_name = "cre.unit.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
@@ -149,7 +140,7 @@ ti_total = "0"
 lc_total = "0"
 
 [[rules]]
-id = "cre_rollover_rent_v2"
+id = "cre_rollover_rent"
 contract_name = "cre.rollover"
 stream_name = "cre.rollover.rent.{{contract.suffix}}"
 owner_entity = "${subject}"
@@ -170,7 +161,7 @@ market_escalation = "0"
 downtime_months = "0"
 
 [[rules]]
-id = "cre_rollover_ti_lc_v2"
+id = "cre_rollover_ti_lc"
 contract_name = "cre.rollover"
 stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
@@ -191,7 +182,7 @@ new_ti_lc = "0"
 downtime_months = "0"
 
 [[rules]]
-id = "cre_vacancy_loss_v2"
+id = "cre_vacancy_loss"
 contract_name = "cre.vacancy_loss"
 stream_name = "cre.vacancy.loss"
 owner_entity = "${subject}"
@@ -203,7 +194,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [[rules]]
-id = "cre_property_opex_v2"
+id = "cre_property_opex"
 contract_name = "cre.property_opex"
 stream_name = "cre.property.opex"
 owner_entity = "${subject}"
@@ -218,7 +209,7 @@ schedule_to = "{{contract.term_end}}"
 escalation = "0"
 
 [[rules]]
-id = "cre_exit_forward_noi_v2"
+id = "cre_exit_forward_noi"
 contract_name = "cre.exit"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"
@@ -234,7 +225,7 @@ schedule_to = ""
 selling_costs = "0"
 
 [[rules]]
-id = "cre_percentage_rent_v2"
+id = "cre_percentage_rent"
 contract_name = "cre.percentage_rent"
 stream_name = "cre.pct_rent{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -251,7 +242,7 @@ schedule_to = "{{contract.term_end}}"
 sales_growth = "0"
 
 [[rules]]
-id = "cre_exit_forward_noi_derived_v2"
+id = "cre_exit_forward_noi_derived"
 contract_name = "cre.exit_forward"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"

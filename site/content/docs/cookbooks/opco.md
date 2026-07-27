@@ -10,8 +10,7 @@ slug: "/docs/cookbooks/opco"
 Operating-company / LBO pack: recurring operating lines, policy-driven
 working capital, capex, scheduled term debt, cash taxes, and entry/exit —
 benchmarked in `benchmarks/opco/` against an independent month-by-month
-reference. All lowering is template-driven; the legacy
-hardcoded compile path (`apply_opco_contract_terms`) is retired.
+reference. All lowering is template-driven.
 
 ## Activation
 
@@ -65,7 +64,7 @@ Growth is annual-compound stepped continuously on the model clock:
 ### Exit
 
 - `opco.exit_multiple` — `base_value * exit_multiple` at the contract's
-  `term_start` (the legacy `exit_period` term is inert).
+  `term_start`.
 - `opco.exit_ebitda` — `exit_multiple` × trailing-12-month EBITDA derived
   from the modeled streams, net of `selling_costs`, at `term_start`.
 

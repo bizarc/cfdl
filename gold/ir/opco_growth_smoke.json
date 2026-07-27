@@ -79,7 +79,7 @@
   ],
   "streams": [
     {
-      "id": "684c6fb7994970f29d40074e05861d70",
+      "id": "e19992f37f789f02c42c5c15a8216ff0",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -113,12 +113,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_opex_line_v1"
+          "rule_id": "opco_opex_line"
         }
       }
     },
     {
-      "id": "7052ce6852707a74d72b13f488a2bfc6",
+      "id": "eac46ce6e38330ffacf8caa01d33a1b3",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -152,7 +152,7 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_revenue_line_v1"
+          "rule_id": "opco_revenue_line"
         }
       }
     }

@@ -45,7 +45,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 14,
           "end_col": 1
         }
       }
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "b6c53821e522fbc8058f1cf9ca6cfc59",
+      "id": "a5992c58af801fc4d50829e0d829be75",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -64,11 +64,11 @@
         "kind": "Every",
         "every": "monthly",
         "from": "2026-07-01",
-        "to": "2031-12-01"
+        "to": "2027-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "25000.0 * clamp((time.t - 6.0 + 1.0) / 18.0, 0.0, 1.0)"
+        "src": "25000.0 * clamp((months_between(parse_date(\"2026-07-01\"), time.date) + 1.0) / 18.0, 0.0, 1.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -79,7 +79,7 @@
         "source_span": {
           "start_line": 8,
           "start_col": 1,
-          "end_line": 17,
+          "end_line": 14,
           "end_col": 1
         },
         "generated_by": {
@@ -87,7 +87,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_base_rent_v1"
+          "rule_id": "cre_lease_base_rent"
         }
       }
     }

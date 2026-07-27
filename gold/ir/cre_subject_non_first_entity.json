@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "602551dfec6eee617b49d6754a332481",
+      "id": "c685417214cb2e47a5fbfce749859bda",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.annex"
@@ -94,7 +94,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_revenue_v1"
+          "rule_id": "cre_ops_revenue"
         }
       }
     }

@@ -44,6 +44,9 @@ entity real_estate property
 
 contract cre.construction_stub {
   term 2026-01..2026-06
+  terms {
+    amount = 45000
+  }
 }
 
 contract cre.lease {
@@ -68,7 +71,7 @@ contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
     exit_cap = 0.06
-    noi_ref = ops.noi
+    noi_value = 180000
   }
 }
 ```
