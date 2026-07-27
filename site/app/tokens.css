@@ -1,0 +1,202 @@
+/*
+ * CFDL design system tokens.
+ *
+ * Two layers:
+ *   1. Primitives — raw scales. Only this file may define raw color values.
+ *   2. Semantic   — what components consume (`--cfdl-surface-*`, `--cfdl-text-*`, ...).
+ *
+ * Components must reference semantic tokens only; `scripts/check-tokens.sh`
+ * fails the build on raw hex outside this file.
+ */
+
+:root {
+  /* ---- Primitives: color ramps ---------------------------------------- */
+  --p-slate-0: #ffffff;
+  --p-slate-25: #fbfcfd;
+  --p-slate-50: #f6f8fa;
+  --p-slate-100: #eceff3;
+  --p-slate-200: #dde2e9;
+  --p-slate-300: #c3ccd7;
+  --p-slate-400: #94a1b2;
+  --p-slate-500: #6b7888;
+  --p-slate-600: #4d5866;
+  --p-slate-700: #363f4b;
+  --p-slate-800: #222a34;
+  --p-slate-900: #161c24;
+  --p-slate-950: #0d1218;
+
+  /* Brand: cash-flow blue */
+  --p-brand-50: #eef4ff;
+  --p-brand-100: #dbe6ff;
+  --p-brand-200: #bdd1ff;
+  --p-brand-300: #93b4ff;
+  --p-brand-400: #618bff;
+  --p-brand-500: #3d66f5;
+  --p-brand-600: #2a4ddb;
+  --p-brand-700: #223db1;
+  --p-brand-800: #1e3488;
+  --p-brand-900: #1b2d6b;
+
+  /* Accent: distribution teal (the stochastic half of the story) */
+  --p-teal-300: #6ee7d4;
+  --p-teal-400: #2dd4bf;
+  --p-teal-500: #14b8a6;
+  --p-teal-600: #0d9488;
+
+  --p-green-400: #4ade80;
+  --p-green-500: #22c55e;
+  --p-green-600: #16a34a;
+  --p-amber-400: #fbbf24;
+  --p-amber-500: #f59e0b;
+  --p-amber-600: #d97706;
+  --p-red-400: #f87171;
+  --p-red-500: #ef4444;
+  --p-red-600: #dc2626;
+  --p-violet-400: #a78bfa;
+  --p-violet-500: #8b5cf6;
+
+  /* ---- Primitives: type scale ----------------------------------------- */
+  --p-text-xs: 0.75rem;
+  --p-text-sm: 0.875rem;
+  --p-text-base: 1rem;
+  --p-text-lg: 1.125rem;
+  --p-text-xl: 1.25rem;
+  --p-text-2xl: 1.5rem;
+  --p-text-3xl: 1.875rem;
+  --p-text-4xl: 2.25rem;
+  --p-text-5xl: 3rem;
+  --p-text-6xl: 3.75rem;
+
+  --p-leading-tight: 1.15;
+  --p-leading-snug: 1.35;
+  --p-leading-normal: 1.6;
+  --p-leading-relaxed: 1.75;
+
+  --p-tracking-tight: -0.02em;
+  --p-tracking-normal: 0;
+
+  /* ---- Primitives: space / radius / shadow / motion -------------------- */
+  --p-space-1: 0.25rem;
+  --p-space-2: 0.5rem;
+  --p-space-3: 0.75rem;
+  --p-space-4: 1rem;
+  --p-space-6: 1.5rem;
+  --p-space-8: 2rem;
+  --p-space-12: 3rem;
+  --p-space-16: 4rem;
+  --p-space-24: 6rem;
+
+  --p-radius-sm: 4px;
+  --p-radius-md: 8px;
+  --p-radius-lg: 12px;
+  --p-radius-xl: 16px;
+  --p-radius-full: 9999px;
+
+  --p-shadow-sm: 0 1px 2px rgb(13 18 24 / 0.06);
+  --p-shadow-md: 0 4px 12px rgb(13 18 24 / 0.08);
+  --p-shadow-lg: 0 12px 32px rgb(13 18 24 / 0.12);
+
+  --p-duration-fast: 120ms;
+  --p-duration-base: 200ms;
+  --p-duration-slow: 400ms;
+  --p-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --p-z-sticky: 100;
+  --p-z-overlay: 200;
+  --p-z-modal: 300;
+
+  /* ---- Semantic: light theme ------------------------------------------ */
+  --cfdl-surface-page: var(--p-slate-0);
+  --cfdl-surface-raised: var(--p-slate-25);
+  --cfdl-surface-sunken: var(--p-slate-50);
+  --cfdl-surface-code: var(--p-slate-50);
+  --cfdl-surface-inverse: var(--p-slate-900);
+
+  --cfdl-text-primary: var(--p-slate-900);
+  --cfdl-text-secondary: var(--p-slate-600);
+  --cfdl-text-muted: var(--p-slate-500);
+  --cfdl-text-inverse: var(--p-slate-0);
+  --cfdl-text-accent: var(--p-brand-600);
+
+  --cfdl-border-subtle: var(--p-slate-100);
+  --cfdl-border-default: var(--p-slate-200);
+  --cfdl-border-strong: var(--p-slate-300);
+
+  --cfdl-accent-solid: var(--p-brand-600);
+  --cfdl-accent-solid-hover: var(--p-brand-700);
+  --cfdl-accent-soft: var(--p-brand-50);
+  --cfdl-accent-text-on-solid: var(--p-slate-0);
+  --cfdl-accent-ring: var(--p-brand-400);
+
+  --cfdl-status-ok: var(--p-green-600);
+  --cfdl-status-warn: var(--p-amber-600);
+  --cfdl-status-err: var(--p-red-600);
+  --cfdl-status-ok-soft: #ecfdf3;
+  --cfdl-status-warn-soft: #fffaeb;
+  --cfdl-status-err-soft: #fef3f2;
+
+  --cfdl-chart-series-1: var(--p-brand-500);
+  --cfdl-chart-series-2: var(--p-teal-500);
+  --cfdl-chart-series-3: var(--p-violet-500);
+  --cfdl-chart-series-4: var(--p-amber-500);
+  --cfdl-chart-series-5: var(--p-green-500);
+  --cfdl-chart-series-6: var(--p-red-400);
+  --cfdl-chart-grid: var(--p-slate-200);
+  --cfdl-chart-axis: var(--p-slate-500);
+
+  --cfdl-hero-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    rgb(61 102 245 / 0.14) 0%,
+    rgb(61 102 245 / 0) 100%
+  );
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --cfdl-surface-page: var(--p-slate-950);
+  --cfdl-surface-raised: var(--p-slate-900);
+  --cfdl-surface-sunken: #0a0e14;
+  --cfdl-surface-code: var(--p-slate-900);
+  --cfdl-surface-inverse: var(--p-slate-50);
+
+  --cfdl-text-primary: #e8edf4;
+  --cfdl-text-secondary: var(--p-slate-400);
+  --cfdl-text-muted: var(--p-slate-500);
+  --cfdl-text-inverse: var(--p-slate-950);
+  --cfdl-text-accent: var(--p-brand-300);
+
+  --cfdl-border-subtle: #1b222b;
+  --cfdl-border-default: #253040;
+  --cfdl-border-strong: #33415a;
+
+  --cfdl-accent-solid: var(--p-brand-500);
+  --cfdl-accent-solid-hover: var(--p-brand-400);
+  --cfdl-accent-soft: #16204a;
+  --cfdl-accent-text-on-solid: var(--p-slate-0);
+  --cfdl-accent-ring: var(--p-brand-400);
+
+  --cfdl-status-ok: var(--p-green-400);
+  --cfdl-status-warn: var(--p-amber-400);
+  --cfdl-status-err: var(--p-red-400);
+  --cfdl-status-ok-soft: #0d2a1b;
+  --cfdl-status-warn-soft: #2b2008;
+  --cfdl-status-err-soft: #2c1315;
+
+  --cfdl-chart-series-1: var(--p-brand-400);
+  --cfdl-chart-series-2: var(--p-teal-400);
+  --cfdl-chart-series-3: var(--p-violet-400);
+  --cfdl-chart-series-4: var(--p-amber-400);
+  --cfdl-chart-series-5: var(--p-green-400);
+  --cfdl-chart-series-6: var(--p-red-400);
+  --cfdl-chart-grid: #253040;
+  --cfdl-chart-axis: var(--p-slate-500);
+
+  --cfdl-hero-glow: radial-gradient(
+    60% 60% at 50% 0%,
+    rgb(97 139 255 / 0.16) 0%,
+    rgb(97 139 255 / 0) 100%
+  );
+
+  color-scheme: dark;
+}
