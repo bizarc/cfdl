@@ -55,6 +55,13 @@ jobs:
         working-directory: site
         run: npm run check:links
 
+      # The wasm bundle is committed because Vercel's build image has no Rust
+      # toolchain; make sure an engine change can't ship without a rebuild.
+      - name: Committed wasm bundle is fresh
+        if: github.event_name == 'pull_request'
+        working-directory: site
+        run: node scripts/check-wasm-fresh.mjs origin/${{ github.base_ref }}
+
       - name: Lint
         working-directory: site
         run: npm run lint

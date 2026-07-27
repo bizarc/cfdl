@@ -14,6 +14,7 @@ import { Button } from "@/components/ds/Button";
 import { Badge } from "@/components/ds/Badge";
 import { Card, CardBody, CardTitle } from "@/components/ds/Card";
 import { HeroDemo } from "@/components/landing/HeroDemo";
+import { EnginePrefetch } from "@/components/playground/EnginePrefetch";
 import { heroModel } from "@/components/landing/hero-demo-data";
 import { highlight } from "@/lib/shiki";
 
@@ -78,6 +79,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <EnginePrefetch />
       <SiteHeader />
 
       <main className="flex-1">
