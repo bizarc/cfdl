@@ -68,3 +68,10 @@ docs-site/build/
 
 # Internal coordination doc — never publish
 LAUNCH_PLAN.md
+
+# Next.js site
+site/node_modules/
+site/.next/
+site/out/
+site/.vercel/
+.claude/launch.json
