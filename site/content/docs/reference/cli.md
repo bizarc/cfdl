@@ -29,12 +29,15 @@ automatically when present.
 ## `cfdl validate`
 
 ```bash
-cfdl validate <model_dir>
+cfdl validate <model_dir> [--packs <packs_dir>]
 ```
 
-Compile-checks without writing IR. Exit code is nonzero on any error
-diagnostic; combine with `--json` for machine-readable diagnostics
-(code, message, file, span).
+Compile-checks without writing IR — it runs the same pipeline as `compile`
+and discards the result, so the two can never disagree. Pass `--packs` for a
+model that uses one: pack-lowered contracts have no `effects` block of their
+own, and a pack's domain validations only resolve with the registry
+available. Exit code is nonzero on any error diagnostic; combine with
+`--json` for machine-readable diagnostics (code, message, file, span).
 
 ## `cfdl parse`
 

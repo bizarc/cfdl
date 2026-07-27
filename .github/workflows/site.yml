@@ -66,9 +66,15 @@ jobs:
       # The wasm bundle is committed because Vercel's build image has no Rust
       # toolchain; make sure an engine change can't ship without a rebuild.
       - name: Committed wasm bundle is fresh
-        if: github.event_name == 'pull_request'
         working-directory: site
-        run: node scripts/check-wasm-fresh.mjs origin/${{ github.base_ref }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-wasm-fresh.mjs "origin/${{ github.base_ref }}"
+          else
+            # On a push, compare against the commit before this push so a
+            # direct-to-main change cannot ship a stale engine.
+            node scripts/check-wasm-fresh.mjs "${{ github.event.before }}"
+          fi
 
       - name: Lint
         working-directory: site
