@@ -6,6 +6,11 @@
  * (and run config) that ships in examples/ or fixtures/, so an example can
  * never drift from a model the test suite exercises. Regenerate with
  * `npm run sync:examples`; CI diff-checks the output.
+ *
+ * The pack is DERIVED from the model's `use pack "…"` declaration, never
+ * hand-specified — hardcoding it once meant the playground asked for CRE
+ * domain metrics on a model that doesn't use the CRE pack, which rendered a
+ * misleading `domain.cre.noi = 0.00`.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -15,79 +20,96 @@ const siteDir = path.resolve(import.meta.dirname, "..");
 const repoRoot = path.resolve(siteDir, "..");
 const OUTPUT = path.resolve(siteDir, "content", "playground-examples.json");
 
-/** Curated, ordered. `dir` is relative to the repo root. */
+/**
+ * Curated and ordered. `dir` is relative to the repo root.
+ *
+ * `summary` says what the model demonstrates; `tryThis` gives the reader a
+ * concrete first edit. Tutorial entries are a numbered progression.
+ */
 const EXAMPLES = [
   {
     id: "minimal",
     title: "Minimal model",
-    description: "The smallest valid model: a timeline, an entity, one stream.",
     category: "Tutorial",
     dir: "examples/language_tutorial/minimal_model",
+    summary: "The smallest model that compiles: a timeline, an entity, one stream.",
+    tryThis: "Change the amount to 2500 and re-run — watch NPV move.",
+    docsHref: "/docs/examples/minimal_model",
   },
   {
     id: "first-stream",
     title: "Your first stream",
-    description: "Schedules and amount expressions on a single cash-flow stream.",
     category: "Tutorial",
     dir: "examples/language_tutorial/first_stream",
+    summary: "Money in and money out, on their own schedules.",
+    tryThis: "Add `on day 1` to the expense schedule and compare the cash-flow chart.",
+    docsHref: "/docs/examples/first_stream",
   },
   {
     id: "simple-contract",
     title: "A simple contract",
-    description: "Declare business terms and let a pack template expand them.",
     category: "Tutorial",
     dir: "examples/language_tutorial/simple_contract",
-    pack: "cre",
+    summary: "Declare lease terms; the CRE pack expands them into streams for you.",
+    tryThis: "Raise base_rent to 30000 — no schedule maths required.",
+    docsHref: "/docs/examples/simple_contract",
   },
   {
     id: "with-pack",
     title: "Using an industry pack",
-    description: "A larger pack-enabled model with contracts for revenue and opex.",
     category: "Tutorial",
     dir: "examples/language_tutorial/with_pack",
-    pack: "opco",
+    summary: "A fuller pack-driven model with revenue, opex, and domain metrics.",
+    tryThis: "Switch the pack selector off and on to see domain metrics appear.",
+    docsHref: "/docs/examples/with_pack",
   },
   {
     id: "multi-file",
     title: "Multi-file model",
-    description: "Split by concern: time, structure, and contracts in separate files.",
     category: "Tutorial",
     dir: "examples/language_tutorial/multi_file",
+    summary: "Split a growing model into time, structure, and contract files.",
+    tryThis: "Open the structure.cfdl tab and add a second entity.",
+    docsHref: "/docs/examples/multi_file",
   },
   {
     id: "cre-developer",
     title: "CRE: developer lifecycle",
-    description: "Construction, lease-up, ops, and an exit cap valuation.",
-    category: "Domain",
+    category: "Real deals",
     dir: "examples/cre_developer",
     config: "run.base.json",
-    pack: "cre",
+    summary: "Construction, lease-up, operations, and an exit cap valuation.",
+    tryThis: "Adjust the discount rate and watch NPV and IRR respond.",
+    docsHref: "/docs/examples/cre_developer",
   },
   {
     id: "opco-basic",
     title: "OpCo: operating model",
-    description: "Revenue and opex streams with working capital and an exit multiple.",
-    category: "Domain",
+    category: "Real deals",
     dir: "examples/opco_basic",
     config: "run.base.json",
-    pack: "opco",
+    summary: "Revenue and opex with working capital and an exit multiple.",
+    tryThis: "Change the exit multiple in the contract terms.",
+    docsHref: "/docs/examples/opco_basic",
   },
   {
     id: "cre-multi-file",
     title: "CRE: multi-file deal",
-    description: "A realistic deal split across four files.",
-    category: "Domain",
+    category: "Real deals",
     dir: "examples/cre_multi_file",
-    pack: "cre",
+    summary: "A realistic deal organised across four files.",
+    tryThis: "Follow a lease from contracts.cfdl through to the cash-flow table.",
+    docsHref: "/docs/examples/cre_multi_file",
   },
   {
     id: "stochastic-rollover",
     title: "Stochastic lease rollover",
-    description:
-      "Per-trial renew-or-roll outcomes — the bimodal shape an expected-value blend hides.",
     category: "Stochastic",
     dir: "fixtures/valid/cre_stochastic_rollover",
-    pack: "cre",
+    summary:
+      "Each trial either renews or re-lets — the two-humped outcome an average hides.",
+    tryThis: "Open the Monte Carlo tab: two clusters, not one blended number.",
+    docsHref: "/docs/stochastic-modeling",
   },
 ];
 
@@ -104,25 +126,40 @@ function readModelFiles(dir) {
 }
 
 function readConfig(dir, configName) {
-  const candidates = configName ? [configName] : ["run.json"];
-  for (const name of candidates) {
+  for (const name of configName ? [configName] : ["run.json"]) {
     const abs = path.resolve(repoRoot, dir, name);
     if (fs.existsSync(abs)) return JSON.parse(fs.readFileSync(abs, "utf8"));
   }
   return undefined;
 }
 
-const generated = EXAMPLES.map((example) => ({
-  id: example.id,
-  title: example.title,
-  description: example.description,
-  category: example.category,
-  source: example.dir,
-  root: "model.cfdl",
-  pack: example.pack,
-  config: readConfig(example.dir, example.config),
-  files: readModelFiles(example.dir),
-}));
+/** The pack the model itself declares — the only source of truth for this. */
+export function derivePack(files) {
+  for (const source of Object.values(files)) {
+    const match = /^\s*use\s+pack\s+"([^"]+)"/m.exec(source);
+    if (match) return match[1];
+  }
+  return undefined;
+}
+
+let order = 0;
+const generated = EXAMPLES.map((example) => {
+  const files = readModelFiles(example.dir);
+  return {
+    id: example.id,
+    title: example.title,
+    category: example.category,
+    order: (order += 1),
+    summary: example.summary,
+    tryThis: example.tryThis,
+    docsHref: example.docsHref,
+    source: example.dir,
+    root: "model.cfdl",
+    pack: derivePack(files),
+    config: readConfig(example.dir, example.config),
+    files,
+  };
+});
 
 const payload = JSON.stringify(generated, null, 2) + "\n";
 
@@ -138,5 +175,6 @@ if (checkMode) {
 } else {
   fs.mkdirSync(path.dirname(OUTPUT), { recursive: true });
   fs.writeFileSync(OUTPUT, payload, "utf8");
-  console.log(`sync:examples: wrote ${generated.length} examples`);
+  const withPack = generated.filter((e) => e.pack).length;
+  console.log(`sync:examples: wrote ${generated.length} examples (${withPack} declare a pack)`);
 }

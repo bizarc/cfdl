@@ -29,7 +29,7 @@ time calendar monthly from 2026-01 for 12
 
 entity legal borrower
 
-stream legal.rent on entity legal.borrower {
+stream legal.rent on entity legal.borrower inflow currency USD {
   schedule every monthly from 2026-01 to 2026-12
   amount = 1000
 }

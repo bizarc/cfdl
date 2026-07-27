@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { editor } from "monaco-editor";
 import {
   AlertCircle,
@@ -14,6 +14,8 @@ import {
   Square,
 } from "lucide-react";
 import { Button } from "@/components/ds/Button";
+import { Dialog } from "@/components/ds/Dialog";
+import { Field, Input } from "@/components/ds/Field";
 import { Badge } from "@/components/ds/Badge";
 import { EditorPane } from "./EditorPane";
 import { ResultsPanel } from "./ResultsPanel";
@@ -24,8 +26,9 @@ import type { Results } from "@/lib/playground/results";
 import { clearDraft, readDraft, readShareFromHash, saveDraft, shareUrl } from "@/lib/playground/share";
 import { cn } from "@/lib/cn";
 
-const DEFAULT_EXAMPLE =
-  EXAMPLES.find((e) => e.id === "stochastic-rollover") ?? EXAMPLES[0];
+// Open on the simplest model that still produces a meaningful NPV and a
+// two-series chart — not the most advanced example in the set.
+const DEFAULT_EXAMPLE = EXAMPLES.find((e) => e.id === "first-stream") ?? EXAMPLES[0];
 
 const DEFAULT_CONFIG: RunConfig = {
   deterministic: { annual_discount_rate: 0.08 },
@@ -68,6 +71,8 @@ export function Playground() {
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [newFileOpen, setNewFileOpen] = useState(false);
+  const [newFileName, setNewFileName] = useState("contracts.cfdl");
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const autoRan = useRef(false);
@@ -86,6 +91,8 @@ export function Playground() {
         // is being edited.
         root: override?.root ?? "model.cfdl",
         config: override?.config ?? config,
+        // Asking for domain metrics from a pack the model doesn't use yields
+        // a column of zeros that reads as a broken calculation.
         pack: (override?.pack ?? pack) || undefined,
       });
       setElapsed(Math.round(performance.now() - started));
@@ -176,6 +183,16 @@ export function Playground() {
     ed.focus();
   }, [files]);
 
+  // The pack the model itself declares — recomputed as the source is edited,
+  // so the selector and the domain-metric explanation stay truthful.
+  const declaredPack = useMemo(() => {
+    for (const source of Object.values(files)) {
+      const match = /^\s*use\s+pack\s+"([^"]+)"/m.exec(source);
+      if (match) return match[1];
+    }
+    return undefined;
+  }, [files]);
+
   const busy = status === "running";
 
   return (
@@ -237,6 +254,7 @@ export function Playground() {
             onConfigChange={setConfig}
             pack={pack}
             onPackChange={setPack}
+            modelDeclaredPack={declaredPack}
           />
         </aside>
 
@@ -253,11 +271,8 @@ export function Playground() {
               }}
               onSelectFile={setActiveFile}
               onAddFile={() => {
-                const name = window.prompt("New file name", "contracts.cfdl");
-                if (!name || !name.endsWith(".cfdl") || name in files) return;
-                setFiles((prev) => ({ ...prev, [name]: "" }));
-                setActiveFile(name);
-                setExampleId(null);
+                setNewFileName("contracts.cfdl");
+                setNewFileOpen(true);
               }}
               onDeleteFile={(name) => {
                 setFiles((prev) => {
@@ -278,11 +293,87 @@ export function Playground() {
               diagnostics={diagnostics}
               engineError={engineError}
               onJumpTo={jumpTo}
+              selectedPack={pack}
+              modelDeclaredPack={declaredPack}
             />
           </section>
         </main>
       </div>
+
+      <NewFileDialog
+        open={newFileOpen}
+        onOpenChange={setNewFileOpen}
+        name={newFileName}
+        onNameChange={setNewFileName}
+        existing={Object.keys(files)}
+        onCreate={(name) => {
+          setFiles((prev) => ({ ...prev, [name]: "" }));
+          setActiveFile(name);
+          setExampleId(null);
+          setNewFileOpen(false);
+        }}
+      />
     </div>
+  );
+}
+
+/**
+ * Replaces a former `window.prompt`: validation is visible and specific
+ * instead of the prompt path's silent rejection of bad names.
+ */
+function NewFileDialog({
+  open,
+  onOpenChange,
+  name,
+  onNameChange,
+  existing,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  name: string;
+  onNameChange: (name: string) => void;
+  existing: string[];
+  onCreate: (name: string) => void;
+}) {
+  const trimmed = name.trim();
+  const error = !trimmed
+    ? "Enter a file name."
+    : !trimmed.endsWith(".cfdl")
+      ? "File names must end with .cfdl"
+      : existing.includes(trimmed)
+        ? `${trimmed} already exists.`
+        : undefined;
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="New file"
+      description="Imported from model.cfdl with an import statement."
+      footer={
+        <>
+          <Button variant="secondary" size="sm" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button size="sm" disabled={Boolean(error)} onClick={() => onCreate(trimmed)}>
+            Create file
+          </Button>
+        </>
+      }
+    >
+      <Field label="File name" error={name ? error : undefined}>
+        <Input
+          autoFocus
+          value={name}
+          invalid={Boolean(name && error)}
+          onChange={(e) => onNameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !error) onCreate(trimmed);
+          }}
+        />
+      </Field>
+    </Dialog>
   );
 }
 
