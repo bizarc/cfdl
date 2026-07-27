@@ -7,6 +7,25 @@ import { Card, CardBody, CardTitle } from "@/components/ds/Card";
 import { Dialog } from "@/components/ds/Dialog";
 import { Checkbox, Field, Input, Select, Slider } from "@/components/ds/Field";
 import { Disclosure, Tabs } from "@/components/ds/Tabs";
+import { CodeActions } from "@/components/docs/CodeActions";
+
+const SAMPLE_MODEL = `version 0.1
+model "first-model"
+
+time calendar monthly from 2026-01 for 24
+
+entity legal company
+
+assume growth = 0.02
+
+stream revenue {
+  entity  = company
+  inflow
+  currency = "USD"
+  schedule monthly from 2026-01 to 2027-12
+  amount   = 10000 * (1 + inputs.growth) ^ time.t
+}
+`;
 
 interface TokenGroup {
   group: string;
@@ -208,6 +227,36 @@ export function DesignSystemShowcase({
               Collapsed by default, with a summary of its state so nothing is hidden.
             </p>
           </Disclosure>
+        </div>
+      </Section>
+
+      <Section
+        title="Code block actions"
+        description="Hover the block, or Tab into it, to reveal Copy and Open in playground. Actions rest at zero opacity so they never compete with the code, and appear on focus-within so they stay reachable without a mouse."
+      >
+        <div className="space-y-4">
+          <div className="group relative overflow-hidden rounded-lg border border-default bg-surface-code p-4 pr-24">
+            <pre className="overflow-x-auto font-mono text-xs leading-relaxed text-secondary">
+              {SAMPLE_MODEL}
+            </pre>
+            <CodeActions code={SAMPLE_MODEL} lang="cfdl" />
+          </div>
+
+          <div className="group relative overflow-hidden rounded-lg border border-default bg-surface-code p-4 pr-24">
+            <pre className="overflow-x-auto font-mono text-xs leading-relaxed text-secondary">
+              cfdl compile first-model --out first-model/ir.json
+            </pre>
+            <CodeActions
+              code="cfdl compile first-model --out first-model/ir.json"
+              lang="bash"
+            />
+          </div>
+
+          <p className="text-sm text-secondary">
+            Only a whole model offers Open in playground. A fragment would land in the
+            editor and fail to compile, which reads as a broken button rather than a
+            helpful one — so the second block above shows Copy alone.
+          </p>
         </div>
       </Section>
     </div>
