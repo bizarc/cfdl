@@ -29,9 +29,24 @@ export function decodeShare(encoded: string): SharedState | null {
   }
 }
 
+/**
+ * A root-relative link to the playground carrying `state`.
+ *
+ * Deterministic on the server and the client, so it is the form to use for
+ * anything React renders into markup — `shareUrl` reads `window.location` and
+ * would hydrate to a different `href` than the server emitted.
+ */
+export function sharePath(state: Omit<SharedState, "v">): string {
+  return `/playground#${HASH_KEY}=${encodeShare(state)}`;
+}
+
+/**
+ * An absolute URL, for copying to the clipboard where a bare path is useless.
+ * Prefer `sharePath` inside rendered markup.
+ */
 export function shareUrl(state: Omit<SharedState, "v">, origin = ""): string {
   const base = origin || (typeof window !== "undefined" ? window.location.origin : "");
-  return `${base}/playground#${HASH_KEY}=${encodeShare(state)}`;
+  return `${base}${sharePath(state)}`;
 }
 
 export function readShareFromHash(): SharedState | null {

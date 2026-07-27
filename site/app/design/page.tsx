@@ -79,6 +79,10 @@ const PATTERNS = [
     body: "Show the specific problem next to the field that has it, and disable the confirming action until it is resolved. Don't reject input silently and don't wait until submit to explain.",
   },
   {
+    title: "Secondary actions reveal on hover and on focus",
+    body: "Actions that would clutter a reading surface rest at opacity-0 and appear on group-hover. Always pair that with focus-within, or the control exists only for people using a mouse. Never hide an action that is the only way to complete a task.",
+  },
+  {
     title: "Every control has a label",
     body: "Use <Field> to pair a label, hint, and error with a control. Icon-only buttons carry aria-label. Focus is always visible via the global :focus-visible ring.",
   },

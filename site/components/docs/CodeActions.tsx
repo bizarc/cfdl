@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, PlayCircle } from "lucide-react";
-import { shareUrl } from "@/lib/playground/share";
+import { sharePath } from "@/lib/playground/share";
 import { cn } from "@/lib/cn";
 
 /**
@@ -39,8 +39,10 @@ export function CodeActions({
   // Only whole models can be opened: a fragment would land in the editor and
   // fail to compile, which is a worse experience than no button.
   const isRunnableModel = lang === "cfdl" && /^\s*version\s/m.test(code);
+  // Root-relative on purpose: this renders on the server too, and an
+  // origin-dependent href would hydrate to a different value.
   const playgroundHref = isRunnableModel
-    ? shareUrl({ files: { "model.cfdl": code }, root: "model.cfdl" })
+    ? sharePath({ files: { "model.cfdl": code }, root: "model.cfdl" })
     : null;
 
   return (
