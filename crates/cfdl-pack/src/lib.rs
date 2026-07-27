@@ -8,18 +8,19 @@ pub struct PackLoadError {
     pub message: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PackRegistry {
     packs: BTreeMap<String, LoadedPack>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LoadedPack {
     pub manifest: PackManifest,
     pub aliases: BTreeMap<String, String>,
     pub templates: Vec<PackTemplate>,
     pub lowering_rules: Vec<LoweringRule>,
     pub metric_specs: Vec<MetricSpec>,
+    pub validations: Vec<PackValidation>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -42,6 +43,208 @@ pub struct PackEntrypoints {
     pub lowering: Option<String>,
     #[serde(default)]
     pub metrics: Option<String>,
+    #[serde(default)]
+    pub validations: Option<String>,
+}
+
+/// A single declarative domain check supplied by a pack.
+///
+/// Packs own *what* to check (which term, which bound, which stable code);
+/// the compiler owns spans, timeline access, and diagnostic emission. The
+/// check kinds are a closed set with no expressions, recursion, or
+/// interpolation, so a pack can never crash, hang, or allocate unboundedly
+/// in the compiler.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PackValidation {
+    /// Exactly one of `contract` / `contracts` must be set.
+    #[serde(default)]
+    pub contract: Option<String>,
+    #[serde(default)]
+    pub contracts: Vec<String>,
+    /// How a contract name is matched: exact, or `base.instance` suffixes.
+    #[serde(default, rename = "match")]
+    pub match_kind: ContractMatch,
+    pub code: String,
+    pub message: String,
+    #[serde(default)]
+    pub severity: ValidationSeverity,
+    pub check: ValidationCheck,
+    /// Term under test (`term_present`, `term_number`, `term_enum`).
+    #[serde(default)]
+    pub term: Option<String>,
+    /// Terms for `any_term_present`.
+    #[serde(default)]
+    pub terms: Vec<String>,
+    #[serde(default)]
+    pub number: NumberKind,
+    #[serde(default)]
+    pub when: WhenPresence,
+    #[serde(default)]
+    pub on_invalid: OnInvalid,
+    #[serde(default)]
+    pub min: Option<f64>,
+    #[serde(default)]
+    pub max: Option<f64>,
+    #[serde(default)]
+    pub exclusive_min: Option<f64>,
+    #[serde(default)]
+    pub exclusive_max: Option<f64>,
+    /// Allowed values for `term_enum`.
+    #[serde(default)]
+    pub values: Vec<ValidationValue>,
+    /// `term_compare` operands.
+    #[serde(default)]
+    pub left: Option<String>,
+    #[serde(default)]
+    pub right: Option<String>,
+    #[serde(default)]
+    pub op: Option<CompareOp>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ContractMatch {
+    #[default]
+    Exact,
+    /// Matches `<contract>` and `<contract>.<instance>` suffixed forms.
+    Instance,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ValidationSeverity {
+    #[default]
+    Error,
+    Warning,
+    Info,
+}
+
+impl ValidationSeverity {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ValidationSeverity::Error => "error",
+            ValidationSeverity::Warning => "warning",
+            ValidationSeverity::Info => "info",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ValidationCheck {
+    /// The term must be present.
+    TermPresent,
+    /// At least one of `terms` must be present.
+    AnyTermPresent,
+    /// The term must parse as a number and satisfy any declared bounds.
+    TermNumber,
+    /// The contract term range must be valid and inside the model timeline.
+    TermRangeWithinTimeline,
+    /// The term must equal one of `values`.
+    TermEnum,
+    /// Two numeric terms must satisfy `left <op> right`.
+    TermCompare,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NumberKind {
+    #[default]
+    Decimal,
+    Integer,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WhenPresence {
+    /// Run even when the term is absent (absence is itself a failure).
+    #[default]
+    Always,
+    /// Only run when the term is present.
+    Present,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OnInvalid {
+    /// An unparseable value fails this check.
+    #[default]
+    Report,
+    /// An unparseable value is another check's responsibility.
+    Skip,
+}
+
+/// A literal an enum check compares against. Accepts TOML strings, integers,
+/// and floats without exposing the TOML value type to consumers.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(untagged)]
+pub enum ValidationValue {
+    Integer(i64),
+    Float(f64),
+    Text(String),
+}
+
+impl ValidationValue {
+    /// Whether a raw term value equals this literal.
+    pub fn matches(&self, raw: &str) -> bool {
+        match self {
+            ValidationValue::Text(text) => text == raw,
+            ValidationValue::Integer(number) => raw
+                .parse::<i64>()
+                .map(|parsed| parsed == *number)
+                .unwrap_or(false),
+            ValidationValue::Float(number) => raw
+                .parse::<f64>()
+                .map(|parsed| (parsed - *number).abs() < f64::EPSILON)
+                .unwrap_or(false),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CompareOp {
+    Le,
+    Lt,
+    Ge,
+    Gt,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ValidationsFile {
+    #[serde(default)]
+    schema_version: Option<u32>,
+    #[serde(default)]
+    code_prefix: Option<String>,
+    #[serde(default)]
+    validations: Vec<PackValidation>,
+}
+
+impl PackValidation {
+    /// Contract names this validation applies to.
+    pub fn contract_names(&self) -> Vec<&str> {
+        match &self.contract {
+            Some(name) => vec![name.as_str()],
+            None => self.contracts.iter().map(String::as_str).collect(),
+        }
+    }
+
+    /// Whether this validation applies to a contract declared in a model.
+    pub fn applies_to(&self, contract_name: &str) -> bool {
+        self.contract_names()
+            .into_iter()
+            .any(|declared| match self.match_kind {
+                ContractMatch::Exact => declared == contract_name,
+                ContractMatch::Instance => {
+                    contract_name == declared
+                        || contract_name
+                            .strip_prefix(declared)
+                            .is_some_and(|rest| rest.starts_with('.'))
+                }
+            })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -132,6 +335,10 @@ mod embedded {
             "metrics.toml",
             include_str!("../../../packs/cre/metrics.toml"),
         ),
+        (
+            "validations.toml",
+            include_str!("../../../packs/cre/validations.toml"),
+        ),
     ];
 
     pub const OPCO: &[EmbeddedFile] = &[
@@ -147,6 +354,10 @@ mod embedded {
         (
             "metrics.toml",
             include_str!("../../../packs/opco/metrics.toml"),
+        ),
+        (
+            "validations.toml",
+            include_str!("../../../packs/opco/validations.toml"),
         ),
     ];
 
@@ -222,6 +433,10 @@ impl PackRegistry {
                 Some(raw) => parse_metric_specs(raw, &source)?,
                 None => Vec::new(),
             };
+            let validations = match lookup(manifest.entrypoints.validations.as_deref()) {
+                Some(raw) => parse_validations(raw, &source)?,
+                None => Vec::new(),
+            };
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -230,6 +445,7 @@ impl PackRegistry {
                     templates,
                     lowering_rules,
                     metric_specs,
+                    validations,
                 },
             );
         }
@@ -355,6 +571,8 @@ impl PackRegistry {
                 load_lowering_rules(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
             let metric_specs =
                 load_metric_specs(&pack_dir, manifest.entrypoints.metrics.as_deref())?;
+            let validations =
+                load_validations(&pack_dir, manifest.entrypoints.validations.as_deref())?;
 
             packs.insert(
                 manifest.name.clone(),
@@ -364,6 +582,7 @@ impl PackRegistry {
                     templates,
                     lowering_rules,
                     metric_specs,
+                    validations,
                 },
             );
         }
@@ -399,6 +618,13 @@ impl PackRegistry {
         self.packs
             .get(pack_name)
             .map(|pack| pack.metric_specs.clone())
+            .unwrap_or_default()
+    }
+
+    pub fn validations(&self, pack_name: &str) -> Vec<PackValidation> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.validations.clone())
             .unwrap_or_default()
     }
 
@@ -467,6 +693,146 @@ fn parse_aliases(raw: &str, source: &str) -> Result<BTreeMap<String, String>, Pa
         message: format!("Failed to parse aliases '{source}': {err}"),
     })?;
     Ok(parsed.aliases)
+}
+
+fn load_validations(
+    pack_dir: &Path,
+    validations_path: Option<&str>,
+) -> Result<Vec<PackValidation>, PackLoadError> {
+    let Some(relative) = validations_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    if !path.exists() {
+        return Ok(vec![]);
+    }
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    parse_validations(&raw, &path.display().to_string())
+}
+
+/// Parses and semantically checks a pack's validations file.
+///
+/// Every problem here is a load error, surfaced by the compiler as
+/// `E4004_MISSING_PACK` — a malformed pack produces a clean diagnostic rather
+/// than silently skipping checks or panicking.
+fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, PackLoadError> {
+    let parsed: ValidationsFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse validations '{source}': {err}"),
+    })?;
+
+    if let Some(version) = parsed.schema_version {
+        if version != 1 {
+            return Err(PackLoadError {
+                message: format!(
+                    "Validations '{source}': unsupported schema_version {version} (expected 1)."
+                ),
+            });
+        }
+    }
+
+    let mut seen: Vec<(String, String)> = Vec::new();
+    for validation in &parsed.validations {
+        let fail = |message: String| PackLoadError {
+            message: format!("Validations '{source}': {message}"),
+        };
+
+        if validation.contract.is_some() != validation.contracts.is_empty() {
+            return Err(fail(format!(
+                "validation '{}' must set exactly one of `contract` or `contracts`.",
+                validation.code
+            )));
+        }
+        if validation.code.is_empty() {
+            return Err(fail("a validation is missing `code`.".to_string()));
+        }
+        if let Some(prefix) = &parsed.code_prefix {
+            if !validation.code.starts_with(prefix.as_str()) {
+                return Err(fail(format!(
+                    "code '{}' does not start with the pack's reserved prefix '{prefix}'.",
+                    validation.code
+                )));
+            }
+        }
+
+        match validation.check {
+            ValidationCheck::TermPresent | ValidationCheck::TermNumber => {
+                if validation.term.is_none() {
+                    return Err(fail(format!(
+                        "validation '{}' requires `term`.",
+                        validation.code
+                    )));
+                }
+            }
+            ValidationCheck::TermEnum => {
+                if validation.term.is_none() || validation.values.is_empty() {
+                    return Err(fail(format!(
+                        "validation '{}' requires `term` and a non-empty `values`.",
+                        validation.code
+                    )));
+                }
+            }
+            ValidationCheck::AnyTermPresent => {
+                if validation.terms.is_empty() {
+                    return Err(fail(format!(
+                        "validation '{}' requires a non-empty `terms`.",
+                        validation.code
+                    )));
+                }
+            }
+            ValidationCheck::TermCompare => {
+                if validation.left.is_none()
+                    || validation.right.is_none()
+                    || validation.op.is_none()
+                {
+                    return Err(fail(format!(
+                        "validation '{}' requires `left`, `op`, and `right`.",
+                        validation.code
+                    )));
+                }
+            }
+            ValidationCheck::TermRangeWithinTimeline => {}
+        }
+
+        let has_bounds = validation.min.is_some()
+            || validation.max.is_some()
+            || validation.exclusive_min.is_some()
+            || validation.exclusive_max.is_some();
+        if has_bounds && validation.check != ValidationCheck::TermNumber {
+            return Err(fail(format!(
+                "validation '{}' declares bounds, which only apply to check 'term_number'.",
+                validation.code
+            )));
+        }
+        if let (Some(min), Some(max)) = (validation.min, validation.max) {
+            if min > max {
+                return Err(fail(format!(
+                    "validation '{}' has min {min} greater than max {max}.",
+                    validation.code
+                )));
+            }
+        }
+
+        for contract in validation.contract_names() {
+            let key = (contract.to_string(), validation.code.clone());
+            if seen.contains(&key) {
+                return Err(fail(format!(
+                    "duplicate code '{}' for contract '{contract}'.",
+                    validation.code
+                )));
+            }
+            seen.push(key);
+        }
+    }
+
+    let mut validations = parsed.validations;
+    // Deterministic order: diagnostics are sorted downstream, but a stable
+    // load order keeps behaviour reproducible.
+    validations.sort_by(|a, b| {
+        a.contract_names()
+            .cmp(&b.contract_names())
+            .then_with(|| a.code.cmp(&b.code))
+    });
+    Ok(validations)
 }
 
 fn load_metric_specs(
@@ -833,5 +1199,157 @@ schedule_to = "2026-12"
         let err = PackRegistry::load_from_dir(&root).expect_err("invalid lowering");
         assert!(err.message.contains("invalid stream_name"));
         let _ = fs::remove_dir_all(&root);
+    }
+}
+
+#[cfg(test)]
+mod validation_tests {
+    use super::*;
+
+    const VALID: &str = r#"
+schema_version = 1
+code_prefix = "E6"
+
+[[validations]]
+contract = "cre.lease"
+code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
+message = "missing base_rent"
+check = "term_present"
+term = "base_rent"
+
+[[validations]]
+contracts = ["cre.ops_revenue", "cre.ops_expense"]
+code = "E6020_CRE_OPS_MISSING_AMOUNT"
+message = "missing amount"
+check = "term_number"
+term = "amount"
+when = "present"
+exclusive_min = 0.0
+"#;
+
+    #[test]
+    fn parses_a_valid_file() {
+        let parsed = parse_validations(VALID, "test").expect("parses");
+        assert_eq!(parsed.len(), 2);
+        assert!(parsed
+            .iter()
+            .any(|v| v.contract_names() == vec!["cre.lease"]));
+    }
+
+    #[test]
+    fn rejects_unknown_fields() {
+        let raw = VALID.replace("exclusive_min", "exclusiv_min");
+        let err = parse_validations(&raw, "test").expect_err("typo must not be silently ignored");
+        assert!(err.message.contains("Failed to parse validations"));
+    }
+
+    #[test]
+    fn rejects_code_outside_the_reserved_prefix() {
+        let raw = VALID.replace("E6001_CRE_LEASE_MISSING_BASE_RENT", "E7001_WRONG_PACK");
+        let err = parse_validations(&raw, "test").expect_err("prefix is enforced");
+        assert!(err.message.contains("reserved prefix"));
+    }
+
+    #[test]
+    fn rejects_inverted_bounds() {
+        let raw = r#"
+code_prefix = "E6"
+[[validations]]
+contract = "c.x"
+code = "E6099_X"
+message = "m"
+check = "term_number"
+term = "t"
+min = 10.0
+max = 1.0
+"#;
+        let err = parse_validations(raw, "test").expect_err("min > max is rejected");
+        assert!(err.message.contains("greater than max"));
+    }
+
+    #[test]
+    fn rejects_bounds_on_non_numeric_checks() {
+        let raw = r#"
+[[validations]]
+contract = "c.x"
+code = "X1"
+message = "m"
+check = "term_present"
+term = "t"
+min = 1.0
+"#;
+        let err = parse_validations(raw, "test").expect_err("bounds need term_number");
+        assert!(err.message.contains("only apply to check 'term_number'"));
+    }
+
+    #[test]
+    fn rejects_both_or_neither_contract_forms() {
+        for body in [
+            r#"contract = "a.b"
+contracts = ["c.d"]"#,
+            "",
+        ] {
+            let raw = format!(
+                r#"
+[[validations]]
+{body}
+code = "X1"
+message = "m"
+check = "term_present"
+term = "t"
+"#
+            );
+            let err = parse_validations(&raw, "test").expect_err("exactly one form required");
+            assert!(err.message.contains("exactly one"));
+        }
+    }
+
+    #[test]
+    fn rejects_duplicate_code_for_a_contract() {
+        let raw = format!(
+            "{VALID}\n{}",
+            VALID
+                .replace("schema_version = 1", "")
+                .replace("code_prefix = \"E6\"", "")
+        );
+        let err = parse_validations(&raw, "test").expect_err("duplicates are rejected");
+        assert!(err.message.contains("duplicate code"));
+    }
+
+    #[test]
+    fn rejects_unsupported_schema_version() {
+        let raw = VALID.replace("schema_version = 1", "schema_version = 2");
+        let err = parse_validations(&raw, "test").expect_err("version is checked");
+        assert!(err.message.contains("unsupported schema_version"));
+    }
+
+    #[test]
+    fn instance_matching_covers_suffixed_contracts() {
+        let raw = r#"
+[[validations]]
+contract = "cre.lease_unit"
+match = "instance"
+code = "X1"
+message = "m"
+check = "term_present"
+term = "rent_year"
+"#;
+        let parsed = parse_validations(raw, "test").expect("parses");
+        let v = &parsed[0];
+        assert!(v.applies_to("cre.lease_unit"));
+        assert!(v.applies_to("cre.lease_unit.tenant_a"));
+        assert!(!v.applies_to("cre.lease_unit_other"));
+        assert!(!v.applies_to("cre.lease"));
+    }
+
+    #[test]
+    fn exact_matching_is_the_default() {
+        let parsed = parse_validations(VALID, "test").expect("parses");
+        let lease = parsed
+            .iter()
+            .find(|v| v.code.starts_with("E6001"))
+            .expect("lease rule");
+        assert!(lease.applies_to("cre.lease"));
+        assert!(!lease.applies_to("cre.lease.primary"));
     }
 }

@@ -1,1 +1,84 @@
-# Milestone 11: add CRE validation rules.
+# CRE pack domain validations.
+#
+# Codes are stable and are never renamed or reused (docs/08_diagnostics.md).
+# E6004 is permanently retired: it validated lease-up occupancy terms that no
+# longer exist.
+#
+# Required-term checking derived from lowering templates is handled generically
+# by E5006_MISSING_CONTRACT_TERM; these are the domain constraints on top.
+schema_version = 1
+code_prefix = "E6"
+
+# --- cre.lease --------------------------------------------------------------
+
+[[validations]]
+contract = "cre.lease"
+code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
+message = "CRE lease is missing required term 'base_rent'."
+check = "term_present"
+term = "base_rent"
+
+[[validations]]
+contract = "cre.lease"
+code = "E6002_CRE_LEASE_INVALID_TERM_RANGE"
+message = "CRE lease term range is missing, invalid, or outside model timeline."
+check = "term_range_within_timeline"
+
+# Parsed as an integer, so `lease_up_months = 18.5` is rejected rather than
+# silently truncated. Only checked when the term is present.
+[[validations]]
+contract = "cre.lease"
+code = "E6003_CRE_LEASE_UP_MISSING_MONTHS"
+message = "CRE lease_up requires term 'lease_up_months' > 0."
+check = "term_number"
+term = "lease_up_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0
+
+# --- cre.exit_cap -----------------------------------------------------------
+
+# E6010 and E6011 are a pair: E6010 owns "absent or unparseable", E6011 owns
+# "parsed but not greater than zero". `on_invalid = "skip"` keeps E6011 quiet
+# when the value could not be parsed at all, so only one fires.
+[[validations]]
+contract = "cre.exit_cap"
+code = "E6010_CRE_EXIT_MISSING_EXIT_CAP"
+message = "CRE exit contract is missing required term 'exit_cap'."
+check = "term_number"
+term = "exit_cap"
+when = "always"
+on_invalid = "report"
+
+[[validations]]
+contract = "cre.exit_cap"
+code = "E6011_CRE_EXIT_INVALID_EXIT_CAP"
+message = "CRE exit 'exit_cap' must be greater than 0."
+check = "term_number"
+term = "exit_cap"
+when = "present"
+on_invalid = "skip"
+exclusive_min = 0.0
+
+[[validations]]
+contract = "cre.exit_cap"
+code = "E6012_CRE_EXIT_MISSING_NOI_VALUE"
+message = "CRE exit requires either 'noi_ref' or 'noi_value'."
+check = "any_term_present"
+terms = ["noi_ref", "noi_value", "noi"]
+
+# --- cre.ops_revenue / cre.ops_expense --------------------------------------
+
+[[validations]]
+contracts = ["cre.ops_revenue", "cre.ops_expense"]
+code = "E6020_CRE_OPS_MISSING_AMOUNT"
+message = "CRE ops contract is missing required term 'amount'."
+check = "term_present"
+term = "amount"
+
+[[validations]]
+contracts = ["cre.ops_revenue", "cre.ops_expense"]
+code = "E6021_CRE_OPS_INVALID_SCHEDULE"
+message = "CRE ops term range is missing, invalid, or outside model timeline."
+check = "term_range_within_timeline"

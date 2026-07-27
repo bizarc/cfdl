@@ -1,3 +1,5 @@
+mod pack_validation;
+
 use cfdl_parser::{Cadence, ScheduleKind, Stmt};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -9,7 +11,7 @@ pub struct CompileOptions {
     pub packs_dir: Option<PathBuf>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct Diagnostic {
     pub code: String,
     pub severity: String, // "error" | "warning" | "info"
@@ -21,7 +23,7 @@ pub struct Diagnostic {
     pub notes: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct Span {
     pub start_line: u32,
     pub start_col: u32,
@@ -295,6 +297,7 @@ struct ActivePackContext {
     name: String,
     version: String,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
+    validations: Vec<cfdl_pack::PackValidation>,
 }
 
 struct PackLoweringOutput {
@@ -910,6 +913,7 @@ fn resolve_active_pack_inner(
         name: active.name.clone(),
         version: active.version.clone(),
         lowering_rules: registry.lowering_rules(&active.name),
+        validations: registry.validations(&active.name),
     }))
 }
 
@@ -1197,126 +1201,22 @@ fn validate_pack_contract(
     _timeline_periods: u32,
     timeline_end: &str,
 ) -> Vec<Diagnostic> {
-    let mut diagnostics = Vec::new();
-    match pack.name.as_str() {
-        "cre" => match contract.name.as_str() {
-            "cre.lease" => {
-                if !contract.terms.contains_key("base_rent") {
-                    diagnostics.push(cre_pack_diag(
-                        "E6001_CRE_LEASE_MISSING_BASE_RENT",
-                        "CRE lease is missing required term 'base_rent'.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-                if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                    diagnostics.push(cre_pack_diag(
-                        "E6002_CRE_LEASE_INVALID_TERM_RANGE",
-                        "CRE lease term range is missing, invalid, or outside model timeline.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-                // The lease-up ramp is expressed by a single term measured
-                // from the contract's own start; validate it where present.
-                if let Some(term) = contract.terms.get("lease_up_months") {
-                    let months_ok = term
-                        .value
-                        .parse::<i32>()
-                        .map(|months| months > 0)
-                        .unwrap_or(false);
-                    if !months_ok {
-                        diagnostics.push(cre_pack_diag(
-                            "E6003_CRE_LEASE_UP_MISSING_MONTHS",
-                            "CRE lease_up requires term 'lease_up_months' > 0.",
-                            source_stmt,
-                            contract.span,
-                        ));
-                    }
-                }
-            }
-            "cre.exit_cap" => {
-                let exit_cap = contract
-                    .terms
-                    .get("exit_cap")
-                    .and_then(|term| term.value.parse::<f64>().ok());
-                if exit_cap.is_none() {
-                    diagnostics.push(cre_pack_diag(
-                        "E6010_CRE_EXIT_MISSING_EXIT_CAP",
-                        "CRE exit contract is missing required term 'exit_cap'.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                } else if exit_cap.unwrap_or(0.0) <= 0.0 {
-                    diagnostics.push(cre_pack_diag(
-                        "E6011_CRE_EXIT_INVALID_EXIT_CAP",
-                        "CRE exit 'exit_cap' must be greater than 0.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-                let has_noi = contract.terms.contains_key("noi_ref")
-                    || contract.terms.contains_key("noi_value")
-                    || contract.terms.contains_key("noi");
-                if !has_noi {
-                    diagnostics.push(cre_pack_diag(
-                        "E6012_CRE_EXIT_MISSING_NOI_VALUE",
-                        "CRE exit requires either 'noi_ref' or 'noi_value'.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-            }
-            "cre.ops_revenue" | "cre.ops_expense" => {
-                if !contract.terms.contains_key("amount") {
-                    diagnostics.push(cre_pack_diag(
-                        "E6020_CRE_OPS_MISSING_AMOUNT",
-                        "CRE ops contract is missing required term 'amount'.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-                if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                    diagnostics.push(cre_pack_diag(
-                        "E6021_CRE_OPS_INVALID_SCHEDULE",
-                        "CRE ops term range is missing, invalid, or outside model timeline.",
-                        source_stmt,
-                        contract.span,
-                    ));
-                }
-            }
-            _ => {}
+    // Domain constraints are declared by the pack in validations.toml; the
+    // compiler supplies only what a pack cannot see — the source span and
+    // whether the contract's term sits inside the model timeline.
+    pack_validation::evaluate(
+        &pack.validations,
+        contract,
+        valid_contract_term_range(contract, timeline_start, timeline_end),
+        |code, message, severity| {
+            let mut diag = pack_diag(code, message, source_stmt, contract.span);
+            diag.severity = severity.as_str().to_string();
+            diag
         },
-        "opco" => diagnostics.extend(validate_opco_contract(
-            source_stmt,
-            contract,
-            timeline_start,
-            timeline_end,
-        )),
-        _ => {}
-    }
-    diagnostics
+    )
 }
 
-fn cre_pack_diag(
-    code: &str,
-    message: &str,
-    source_stmt: &cfdl_resolver::SourceStatement,
-    span: cfdl_parser::Span,
-) -> Diagnostic {
-    Diagnostic {
-        code: code.to_string(),
-        severity: "error".to_string(),
-        message: message.to_string(),
-        file: Some(source_stmt.file.clone()),
-        span: Some(map_span(span)),
-        path: None,
-        hint: None,
-        notes: vec![],
-    }
-}
-
-fn opco_pack_diag(
+fn pack_diag(
     code: &str,
     message: &str,
     source_stmt: &cfdl_resolver::SourceStatement,
@@ -1350,144 +1250,6 @@ fn lowering_rule_diag(
         hint: None,
         notes: vec![],
     }
-}
-
-fn validate_opco_contract(
-    source_stmt: &cfdl_resolver::SourceStatement,
-    contract: &cfdl_parser::ContractStmt,
-    timeline_start: &str,
-    timeline_end: &str,
-) -> Vec<Diagnostic> {
-    let mut diagnostics = Vec::new();
-    match contract.name.as_str() {
-        "opco.revenue_line" | "opco.opex_line" => {
-            if parse_contract_term_f64(contract, "amount").is_none() {
-                diagnostics.push(opco_pack_diag(
-                    "E7001_OPCO_LINE_MISSING_AMOUNT",
-                    "OpCo line is missing required numeric term 'amount'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                diagnostics.push(opco_pack_diag(
-                    "E7002_OPCO_LINE_INVALID_SCHEDULE",
-                    "OpCo line term range is missing, invalid, or outside model timeline.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if contract.terms.contains_key("growth_rate")
-                && parse_contract_term_f64(contract, "growth_rate").is_none()
-            {
-                diagnostics.push(opco_pack_diag(
-                    "E7003_OPCO_LINE_INVALID_GROWTH",
-                    "OpCo line has invalid 'growth_rate' term.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        "opco.working_capital" => {
-            if parse_contract_term_f64(contract, "amount").is_none() {
-                diagnostics.push(opco_pack_diag(
-                    "E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE",
-                    "OpCo working capital requires term 'amount' or a supported rule expression.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                diagnostics.push(opco_pack_diag(
-                    "E7011_OPCO_WC_INVALID_SCHEDULE",
-                    "OpCo working capital term range is missing, invalid, or outside model timeline.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        "opco.exit_multiple" => {
-            let multiple = parse_contract_term_f64(contract, "exit_multiple");
-            if multiple.is_none() {
-                diagnostics.push(opco_pack_diag(
-                    "E7020_OPCO_EXIT_MISSING_MULTIPLE",
-                    "OpCo exit is missing required term 'exit_multiple'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            } else if multiple.unwrap_or(0.0) <= 0.0 {
-                diagnostics.push(opco_pack_diag(
-                    "E7021_OPCO_EXIT_INVALID_MULTIPLE",
-                    "OpCo exit 'exit_multiple' must be greater than 0.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if parse_contract_term_f64(contract, "base_value").is_none() {
-                diagnostics.push(opco_pack_diag(
-                    "E7022_OPCO_EXIT_MISSING_BASE_VALUE",
-                    "OpCo exit requires numeric term 'base_value'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            // The exit date is the contract's term_start (the legacy
-            // `exit_period` term is tolerated but no longer drives the
-            // schedule).
-            if !valid_contract_term_range(contract, timeline_start, timeline_end) {
-                diagnostics.push(opco_pack_diag(
-                    "E7023_OPCO_EXIT_INVALID_SCHEDULE",
-                    "OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start).",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        "opco.exit_ebitda" => {
-            if parse_contract_term_f64(contract, "exit_multiple").unwrap_or(0.0) <= 0.0 {
-                diagnostics.push(opco_pack_diag(
-                    "E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE",
-                    "OpCo EBITDA exit requires 'exit_multiple' greater than 0.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        "opco.term_debt" => {
-            if parse_contract_term_f64(contract, "amort_months").unwrap_or(0.0) <= 0.0 {
-                diagnostics.push(opco_pack_diag(
-                    "E7030_OPCO_DEBT_INVALID_AMORT",
-                    "OpCo term debt requires 'amort_months' greater than 0.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-            if parse_contract_term_f64(contract, "rate").unwrap_or(-1.0) < 0.0 {
-                diagnostics.push(opco_pack_diag(
-                    "E7031_OPCO_DEBT_INVALID_RATE",
-                    "OpCo term debt requires a non-negative 'rate'.",
-                    source_stmt,
-                    contract.span,
-                ));
-            }
-        }
-        _ => {}
-    }
-    diagnostics
-}
-
-/// For CRE contracts, substitute data-driven values from contract terms into the
-/// lowering rule's schedule and amount expression.
-///
-/// `cre.exit_cap`:
-/// - Schedule: the exit date is taken from the contract's `term_start` so models
-///   can place the exit at any date rather than the rule's hard-coded default.
-/// - Amount: when `noi_value` and `exit_cap` are both present, the terminal sale
-///   value is `noi_value / exit_cap`.  The rule's `amount_cel` is kept as a fallback
-///   when `noi_value` is absent (e.g. the contract specifies only `noi_ref` for
-///   future dynamic resolution).
-fn parse_contract_term_f64(contract: &cfdl_parser::ContractStmt, key: &str) -> Option<f64> {
-    contract.terms.get(key)?.value.parse::<f64>().ok()
 }
 
 fn valid_contract_term_range(
@@ -2374,4 +2136,218 @@ fn coerce_numeric_literals(expr: &str) -> String {
     }
 
     out
+}
+
+#[cfg(test)]
+mod pack_validation_parity_tests {
+    use super::*;
+    use std::collections::BTreeMap;
+
+    fn span() -> cfdl_parser::Span {
+        cfdl_parser::Span {
+            start_line: 1,
+            start_col: 1,
+            end_line: 1,
+            end_col: 2,
+        }
+    }
+
+    fn contract(name: &str, terms: &[(&str, &str)], term_range: bool) -> cfdl_parser::ContractStmt {
+        let mut map = BTreeMap::new();
+        for (key, value) in terms {
+            map.insert(
+                (*key).to_string(),
+                cfdl_parser::ContractTerm {
+                    value: (*value).to_string(),
+                    span: span(),
+                },
+            );
+        }
+        cfdl_parser::ContractStmt {
+            name: name.to_string(),
+            subject_entity: None,
+            has_term: term_range,
+            has_effects: false,
+            term_start: term_range.then(|| "2026-01".to_string()),
+            term_end: term_range.then(|| "2026-06".to_string()),
+            terms: map,
+            span: span(),
+        }
+    }
+
+    fn source_stmt(contract: &cfdl_parser::ContractStmt) -> cfdl_resolver::SourceStatement {
+        cfdl_resolver::SourceStatement {
+            file: "model.cfdl".to_string(),
+            statement: Stmt::Contract(contract.clone()),
+        }
+    }
+
+    fn ctx(pack: &str) -> ActivePackContext {
+        let registry = cfdl_pack::PackRegistry::load_from_dir(std::path::Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../packs"
+        )))
+        .expect("packs load");
+        ActivePackContext {
+            name: pack.to_string(),
+            version: "0.1.0".to_string(),
+            lowering_rules: registry.lowering_rules(pack),
+            validations: registry.validations(pack),
+        }
+    }
+
+    /// Runs a case through the compiler entry point and the evaluator
+    /// directly, asserting they agree. Originally the gate that proved the
+    /// migration off the hardcoded branches; retained as coverage of every
+    /// check kind, including the pairs that must never double-report.
+    fn assert_parity(pack: &str, name: &str, terms: &[(&str, &str)], term_range: bool) {
+        let pack_ctx = ctx(pack);
+        let c = contract(name, terms, term_range);
+        let stmt = source_stmt(&c);
+
+        let via_compiler =
+            validate_pack_contract(&pack_ctx, &stmt, &c, "monthly", "2026-01", 12, "2026-12");
+        let declarative = pack_validation::evaluate(
+            &pack_ctx.validations,
+            &c,
+            valid_contract_term_range(&c, "2026-01", "2026-12"),
+            |code, message, severity| {
+                let mut diag = pack_diag(code, message, &stmt, c.span);
+                diag.severity = severity.as_str().to_string();
+                diag
+            },
+        );
+
+        let codes = |diags: &[Diagnostic]| {
+            let mut v: Vec<String> = diags.iter().map(|d| d.code.clone()).collect();
+            v.sort();
+            v
+        };
+        assert_eq!(
+            codes(&via_compiler),
+            codes(&declarative),
+            "divergence for {pack}/{name} with terms {terms:?}"
+        );
+    }
+
+    #[test]
+    fn cre_lease_cases() {
+        assert_parity("cre", "cre.lease", &[], true);
+        assert_parity("cre", "cre.lease", &[("base_rent", "25000")], true);
+        assert_parity("cre", "cre.lease", &[("base_rent", "25000")], false);
+        // lease_up_months parses as an integer: a decimal must be rejected.
+        for value in ["18", "0", "-1", "18.5", "abc"] {
+            assert_parity(
+                "cre",
+                "cre.lease",
+                &[("base_rent", "25000"), ("lease_up_months", value)],
+                true,
+            );
+        }
+    }
+
+    #[test]
+    fn cre_exit_cap_pair_never_double_reports() {
+        // absent / unparseable / zero / negative / valid
+        for value in [None, Some("abc"), Some("0"), Some("-0.5"), Some("0.06")] {
+            let mut terms = vec![("noi_value", "180000")];
+            if let Some(v) = value {
+                terms.push(("exit_cap", v));
+            }
+            assert_parity("cre", "cre.exit_cap", &terms, true);
+        }
+        // noi alternatives
+        for noi in ["noi_ref", "noi_value", "noi"] {
+            assert_parity(
+                "cre",
+                "cre.exit_cap",
+                &[("exit_cap", "0.06"), (noi, "1")],
+                true,
+            );
+        }
+        assert_parity("cre", "cre.exit_cap", &[("exit_cap", "0.06")], true);
+    }
+
+    #[test]
+    fn cre_ops_cases() {
+        for name in ["cre.ops_revenue", "cre.ops_expense"] {
+            assert_parity("cre", name, &[], true);
+            assert_parity("cre", name, &[("amount", "30000")], true);
+            assert_parity("cre", name, &[("amount", "30000")], false);
+        }
+    }
+
+    #[test]
+    fn opco_line_cases() {
+        for name in ["opco.revenue_line", "opco.opex_line"] {
+            assert_parity("opco", name, &[], true);
+            assert_parity("opco", name, &[("amount", "abc")], true);
+            assert_parity("opco", name, &[("amount", "1000")], true);
+            assert_parity("opco", name, &[("amount", "1000")], false);
+            assert_parity(
+                "opco",
+                name,
+                &[("amount", "1000"), ("growth_rate", "x")],
+                true,
+            );
+            assert_parity(
+                "opco",
+                name,
+                &[("amount", "1000"), ("growth_rate", "0.05")],
+                true,
+            );
+        }
+    }
+
+    #[test]
+    fn opco_exit_and_debt_cases() {
+        for value in [None, Some("abc"), Some("0"), Some("-2"), Some("8.5")] {
+            let mut terms = vec![("base_value", "1000")];
+            if let Some(v) = value {
+                terms.push(("exit_multiple", v));
+            }
+            assert_parity("opco", "opco.exit_multiple", &terms, true);
+        }
+        assert_parity(
+            "opco",
+            "opco.exit_multiple",
+            &[("exit_multiple", "8.5")],
+            true,
+        );
+
+        // unwrap_or defaults: absent exit_multiple must still fire E7024
+        for value in [None, Some("0"), Some("abc"), Some("8.5")] {
+            let terms: Vec<(&str, &str)> = value
+                .map(|v| vec![("exit_multiple", v)])
+                .unwrap_or_default();
+            assert_parity("opco", "opco.exit_ebitda", &terms, true);
+        }
+
+        for amort in [None, Some("0"), Some("abc"), Some("84")] {
+            for rate in [None, Some("-0.1"), Some("abc"), Some("0"), Some("0.085")] {
+                let mut terms: Vec<(&str, &str)> = vec![];
+                if let Some(a) = amort {
+                    terms.push(("amort_months", a));
+                }
+                if let Some(r) = rate {
+                    terms.push(("rate", r));
+                }
+                assert_parity("opco", "opco.term_debt", &terms, true);
+            }
+        }
+    }
+
+    #[test]
+    fn opco_working_capital_cases() {
+        assert_parity("opco", "opco.working_capital", &[], true);
+        assert_parity("opco", "opco.working_capital", &[("amount", "abc")], true);
+        assert_parity("opco", "opco.working_capital", &[("amount", "500")], true);
+        assert_parity("opco", "opco.working_capital", &[("amount", "500")], false);
+    }
+
+    #[test]
+    fn unknown_contracts_produce_nothing() {
+        assert_parity("cre", "cre.not_a_contract", &[], true);
+        assert_parity("opco", "opco.not_a_contract", &[], true);
+    }
 }
