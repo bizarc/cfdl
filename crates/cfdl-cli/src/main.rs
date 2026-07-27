@@ -25,6 +25,8 @@ enum Command {
     },
     Validate {
         model_root: PathBuf,
+        #[arg(long)]
+        packs: Option<PathBuf>,
     },
     Parse {
         model_root: PathBuf,
@@ -87,7 +89,10 @@ fn main() -> Result<()> {
                 }
             }
         }
-        Command::Validate { model_root } => match cfdl_compile::validate_only(&model_root) {
+        Command::Validate { model_root, packs } => match cfdl_compile::validate_only_with(
+            &model_root,
+            &cfdl_compile::CompileOptions { packs_dir: packs },
+        ) {
             Ok(()) => Ok(()),
             Err(diags) => {
                 if cli.json {

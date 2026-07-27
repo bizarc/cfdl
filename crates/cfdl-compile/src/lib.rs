@@ -141,14 +141,25 @@ pub fn compile_to_file_with_options(
 /// Validate a model directory without emitting IR.
 ///
 pub fn validate_only(model_root: &Path) -> Result<(), Vec<Diagnostic>> {
-    let provider = cfdl_resolver::FsProvider::new(model_root.to_path_buf());
-    let (resolve_output, symbols) = pipeline_with(&provider, "model.cfdl")?;
-    let diagnostics = cfdl_validate::validate(&resolve_output, &symbols);
-    if diagnostics.is_empty() {
-        Ok(())
-    } else {
-        Err(diagnostics.into_iter().map(map_validation_diag).collect())
-    }
+    validate_only_with(model_root, &CompileOptions::default())
+}
+
+/// Validate a model without emitting IR.
+///
+/// Takes the same options as `compile` so a pack-based model validates the
+/// way it compiles: contracts lowered by pack rules legitimately have no
+/// `effects` block, and without the pack registry every one of them would be
+/// reported as `E2002_CONTRACT_MISSING_EFFECTS`.
+pub fn validate_only_with(
+    model_root: &Path,
+    options: &CompileOptions,
+) -> Result<(), Vec<Diagnostic>> {
+    // Validation is a compile that discards the IR. Running the same pipeline
+    // is what guarantees `validate` and `compile` can never disagree: a
+    // pack-lowered contract legitimately has no `effects` block (so a
+    // pack-blind check reports E2002 on every valid pack model), and pack
+    // domain validations only run during lowering.
+    compile_to_json_with_options(model_root, options).map(|_| ())
 }
 
 /// Validate a model from an in-memory file map without emitting IR.
