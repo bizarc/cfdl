@@ -184,7 +184,7 @@
   ],
   "streams": [
     {
-      "id": "4c1563c22e80ed06022768e4880ce174",
+      "id": "9aaf75c857ef2f29e58545eb11a51c97",
       "name": "cre.exit.proceeds",
       "owner": {
         "symbol": "asset.tower"
@@ -216,12 +216,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_forward_noi_derived_v2"
+          "rule_id": "cre_exit_forward_noi_derived"
         }
       }
     },
     {
-      "id": "8dd951f11e268bab77e2251a266f7da9",
+      "id": "283fd65a72a905d7907623cffacfa05a",
       "name": "cre.property.opex",
       "owner": {
         "symbol": "asset.tower"
@@ -255,12 +255,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_property_opex_v2"
+          "rule_id": "cre_property_opex"
         }
       }
     },
     {
-      "id": "743b458a762af6e9e0272daeeb7e3d12",
+      "id": "78006920061997a07e26e5457d7b0ed6",
       "name": "cre.rollover.rent.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -294,12 +294,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_rollover_rent_v2"
+          "rule_id": "cre_rollover_rent"
         }
       }
     },
     {
-      "id": "195502341a6e24695b0517921e610c5d",
+      "id": "cf043a0317bc9f1e78de8e5af6b33e46",
       "name": "cre.rollover.ti_lc.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -333,12 +333,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_rollover_ti_lc_v2"
+          "rule_id": "cre_rollover_ti_lc"
         }
       }
     },
     {
-      "id": "04cb752dfec359d719f49ecdcfa87379",
+      "id": "6791916bb6540c3e7a41eb7cfa89aeaf",
       "name": "cre.unit.base_rent.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -372,12 +372,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent_v2"
+          "rule_id": "cre_lease_unit_base_rent"
         }
       }
     },
     {
-      "id": "d7083836ff9fd53640bbdf68d5dcfdc3",
+      "id": "8d10c2e3f7832a9e5d18c9825916c315",
       "name": "cre.unit.base_rent.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -411,12 +411,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent_v2"
+          "rule_id": "cre_lease_unit_base_rent"
         }
       }
     },
     {
-      "id": "b17c77c2cda10962c7c2a69e65d47ff3",
+      "id": "711b5052453fb7c7696ac27bdbb4793d",
       "name": "cre.unit.recoveries.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -450,12 +450,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries_v2"
+          "rule_id": "cre_lease_unit_recoveries"
         }
       }
     },
     {
-      "id": "331df15e8410d8ac1074a14dc867ab1b",
+      "id": "0ac1afd16ece378fd7048e13bbdfb9d3",
       "name": "cre.unit.recoveries.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -489,12 +489,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries_v2"
+          "rule_id": "cre_lease_unit_recoveries"
         }
       }
     },
     {
-      "id": "c8f1d99a712a5ef65c32983211fdf9e2",
+      "id": "8551cd9c42f222330d67d527064c0861",
       "name": "cre.unit.ti_lc.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -526,12 +526,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc_v2"
+          "rule_id": "cre_lease_unit_ti_lc"
         }
       }
     },
     {
-      "id": "1c8f9d9890bb37a7848e823e331d1011",
+      "id": "0b732c1592efa6e64a5ae210d13300b0",
       "name": "cre.unit.ti_lc.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -563,12 +563,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc_v2"
+          "rule_id": "cre_lease_unit_ti_lc"
         }
       }
     },
     {
-      "id": "b8c9488fc3b4741c177944eca7379271",
+      "id": "1ba13314aa09a2dd6ad9d1b7e3bce1ab",
       "name": "cre.vacancy.loss",
       "owner": {
         "symbol": "asset.tower"
@@ -602,7 +602,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_vacancy_loss_v2"
+          "rule_id": "cre_vacancy_loss"
         }
       }
     },

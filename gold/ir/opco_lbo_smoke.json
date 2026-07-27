@@ -235,7 +235,7 @@
   ],
   "streams": [
     {
-      "id": "b686b25eeb6f167266b3b1bd721b0afd",
+      "id": "58d1e88a462e866ee57870d869ed5222",
       "name": "opco.acquisition.price",
       "owner": {
         "symbol": "operating.target"
@@ -267,12 +267,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_acquisition_price_v1"
+          "rule_id": "opco_acquisition_price"
         }
       }
     },
     {
-      "id": "e1345cf979fb719e3f934f99e0b919f5",
+      "id": "4a4d93fb1616ea575325a4d6e442da84",
       "name": "opco.capex",
       "owner": {
         "symbol": "operating.target"
@@ -306,12 +306,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_capex_line_v1"
+          "rule_id": "opco_capex_line"
         }
       }
     },
     {
-      "id": "c30f9f382e14375cd283ec6352a0cb34",
+      "id": "4d80fce99461849f80b9a748a7c42c5a",
       "name": "opco.debt.interest",
       "owner": {
         "symbol": "operating.target"
@@ -345,12 +345,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_interest_v1"
+          "rule_id": "opco_term_debt_interest"
         }
       }
     },
     {
-      "id": "e578ad8341bc0ec57a4d424b47b0ac93",
+      "id": "8270732773ba5ea5ab21f54e682e1d58",
       "name": "opco.debt.principal",
       "owner": {
         "symbol": "operating.target"
@@ -384,12 +384,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_principal_v1"
+          "rule_id": "opco_term_debt_principal"
         }
       }
     },
     {
-      "id": "027695b373879c520e29fbe26d965425",
+      "id": "21e13f9f139086b7f0bd9e533538f09b",
       "name": "opco.debt.proceeds",
       "owner": {
         "symbol": "operating.target"
@@ -421,12 +421,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_proceeds_v1"
+          "rule_id": "opco_term_debt_proceeds"
         }
       }
     },
     {
-      "id": "76b9b33f6c960f2517db4c4abd6490b2",
+      "id": "581803210c17e1a6b590bc03bc518a7e",
       "name": "opco.exit.value",
       "owner": {
         "symbol": "operating.target"
@@ -458,12 +458,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_ebitda_v1"
+          "rule_id": "opco_exit_ebitda"
         }
       }
     },
     {
-      "id": "684c6fb7994970f29d40074e05861d70",
+      "id": "e19992f37f789f02c42c5c15a8216ff0",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.target"
@@ -497,12 +497,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_opex_line_v1"
+          "rule_id": "opco_opex_line"
         }
       }
     },
     {
-      "id": "7052ce6852707a74d72b13f488a2bfc6",
+      "id": "eac46ce6e38330ffacf8caa01d33a1b3",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.target"
@@ -536,12 +536,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_revenue_line_v1"
+          "rule_id": "opco_revenue_line"
         }
       }
     },
     {
-      "id": "cc156d60e1e2fb24a98be399966386fc",
+      "id": "11204d24ae9191bae3ddbea33913b670",
       "name": "opco.taxes",
       "owner": {
         "symbol": "operating.target"
@@ -575,12 +575,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_cash_taxes_v1"
+          "rule_id": "opco_cash_taxes"
         }
       }
     },
     {
-      "id": "86b6c0f0085312695695240e8a3cd6a8",
+      "id": "3efe257d0ed44bf80374ea5dfa73e531",
       "name": "opco.working_capital.adjustment",
       "owner": {
         "symbol": "operating.target"
@@ -614,7 +614,7 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_working_capital_policy_v1"
+          "rule_id": "opco_working_capital_policy"
         }
       }
     }

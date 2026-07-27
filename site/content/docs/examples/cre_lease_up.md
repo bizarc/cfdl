@@ -38,10 +38,7 @@ contract cre.lease {
   term 2026-07..2027-12
   terms {
     base_rent = 25000
-    lease_up.start_period = 6
-    lease_up.months = 18
-    lease_up.start_occupancy = 0.0
-    lease_up.end_occupancy = 1.0
+    lease_up_months = 18
   }
 }
 ```

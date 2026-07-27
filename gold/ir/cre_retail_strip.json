@@ -183,7 +183,7 @@
   ],
   "streams": [
     {
-      "id": "86ce23cee340195abb9c443a72935e17",
+      "id": "a99e124aab5bff1f0dc368b79cadc8f2",
       "name": "cre.exit.proceeds",
       "owner": {
         "symbol": "asset.strip_center"
@@ -215,12 +215,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_forward_noi_v2"
+          "rule_id": "cre_exit_forward_noi"
         }
       }
     },
     {
-      "id": "fc4c01134818480f39b32fd449c2c74c",
+      "id": "e4ceba886b43d578659181ffaff953b4",
       "name": "cre.pct_rent.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -254,12 +254,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_percentage_rent_v2"
+          "rule_id": "cre_percentage_rent"
         }
       }
     },
     {
-      "id": "8dd951f11e268bab77e2251a266f7da9",
+      "id": "283fd65a72a905d7907623cffacfa05a",
       "name": "cre.property.opex",
       "owner": {
         "symbol": "asset.strip_center"
@@ -293,12 +293,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_property_opex_v2"
+          "rule_id": "cre_property_opex"
         }
       }
     },
     {
-      "id": "02c447de931fc56e410ecbf2166ea72f",
+      "id": "68a1f4698f34ba9223938e56e6ee0429",
       "name": "cre.unit.base_rent.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -332,12 +332,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent_v2"
+          "rule_id": "cre_lease_unit_base_rent"
         }
       }
     },
     {
-      "id": "3dccbd08309dfa19ab473a6c2f99c6ae",
+      "id": "5367980d72f8e4de44cc880f2bbace7c",
       "name": "cre.unit.base_rent.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -371,12 +371,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent_v2"
+          "rule_id": "cre_lease_unit_base_rent"
         }
       }
     },
     {
-      "id": "7c8422b6f44cc68add9fe5e131f46fc1",
+      "id": "9b2826a17f9e86d3ffc8c18e19d6fee1",
       "name": "cre.unit.recoveries.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -410,12 +410,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries_v2"
+          "rule_id": "cre_lease_unit_recoveries"
         }
       }
     },
     {
-      "id": "357ae612512231c48cce60af92de4d10",
+      "id": "24acbb57ee10399ef400fa132c95e51f",
       "name": "cre.unit.recoveries.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -449,12 +449,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries_v2"
+          "rule_id": "cre_lease_unit_recoveries"
         }
       }
     },
     {
-      "id": "60f889a6e896d1890cafa3866ddbc549",
+      "id": "c1a925b46e649589119769f3503090f9",
       "name": "cre.unit.ti_lc.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -486,12 +486,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc_v2"
+          "rule_id": "cre_lease_unit_ti_lc"
         }
       }
     },
     {
-      "id": "acb3a555f4d97ef64aaece8be89144a9",
+      "id": "ef535601dff35a2feeeb2865048d5669",
       "name": "cre.unit.ti_lc.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -523,12 +523,12 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc_v2"
+          "rule_id": "cre_lease_unit_ti_lc"
         }
       }
     },
     {
-      "id": "b8c9488fc3b4741c177944eca7379271",
+      "id": "1ba13314aa09a2dd6ad9d1b7e3bce1ab",
       "name": "cre.vacancy.loss",
       "owner": {
         "symbol": "asset.strip_center"
@@ -562,7 +562,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_vacancy_loss_v2"
+          "rule_id": "cre_vacancy_loss"
         }
       }
     }

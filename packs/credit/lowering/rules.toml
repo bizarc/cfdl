@@ -33,7 +33,7 @@
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "credit_pool_level_pay_interest_v1"
+id = "credit_pool_level_pay_interest"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -52,7 +52,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_level_pay_sched_principal_v1"
+id = "credit_pool_level_pay_sched_principal"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.sched_principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -71,7 +71,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_level_pay_prepay_v1"
+id = "credit_pool_level_pay_prepay"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -91,7 +91,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_level_pay_recoveries_v1"
+id = "credit_pool_level_pay_recoveries"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -113,7 +113,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_level_pay_servicing_v1"
+id = "credit_pool_level_pay_servicing"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -133,7 +133,7 @@ recovery_lag_months = "0"
 servicing_fee = "0"
 
 [[rules]]
-id = "credit_pool_level_pay_penalty_v1"
+id = "credit_pool_level_pay_penalty"
 contract_name = "credit.pool_level_pay"
 stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -161,7 +161,7 @@ prepay_penalty_rate = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "credit_pool_io_bullet_interest_v1"
+id = "credit_pool_io_bullet_interest"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -179,7 +179,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_io_bullet_prepay_v1"
+id = "credit_pool_io_bullet_prepay"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -197,7 +197,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_io_bullet_bullet_v1"
+id = "credit_pool_io_bullet_bullet"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -215,7 +215,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_io_bullet_recoveries_v1"
+id = "credit_pool_io_bullet_recoveries"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -233,7 +233,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_io_bullet_servicing_v1"
+id = "credit_pool_io_bullet_servicing"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -252,7 +252,7 @@ recovery_lag_months = "0"
 servicing_fee = "0"
 
 [[rules]]
-id = "credit_pool_io_bullet_penalty_v1"
+id = "credit_pool_io_bullet_penalty"
 contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -280,7 +280,7 @@ prepay_penalty_rate = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "credit_pool_float_io_bullet_interest_v1"
+id = "credit_pool_float_io_bullet_interest"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -301,7 +301,7 @@ rate_floor = "0"
 rate_cap = "1"
 
 [[rules]]
-id = "credit_pool_float_io_bullet_prepay_v1"
+id = "credit_pool_float_io_bullet_prepay"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -319,7 +319,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_float_io_bullet_bullet_v1"
+id = "credit_pool_float_io_bullet_bullet"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -337,7 +337,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_float_io_bullet_recoveries_v1"
+id = "credit_pool_float_io_bullet_recoveries"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -355,7 +355,7 @@ severity = "0"
 recovery_lag_months = "0"
 
 [[rules]]
-id = "credit_pool_float_io_bullet_servicing_v1"
+id = "credit_pool_float_io_bullet_servicing"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -374,7 +374,7 @@ recovery_lag_months = "0"
 servicing_fee = "0"
 
 [[rules]]
-id = "credit_pool_float_io_bullet_penalty_v1"
+id = "credit_pool_float_io_bullet_penalty"
 contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -397,7 +397,7 @@ prepay_penalty_rate = "0"
 # ---------------------------------------------------------------------------
 
 [[rules]]
-id = "credit_purchase_price_v1"
+id = "credit_purchase_price"
 contract_name = "credit.purchase"
 stream_name = "credit.purchase.price{{contract.dot_suffix}}"
 owner_entity = "${subject}"

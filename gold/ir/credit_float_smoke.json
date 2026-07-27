@@ -95,7 +95,7 @@
   ],
   "streams": [
     {
-      "id": "92633168f96bc64b7b5ed066bbac56ee",
+      "id": "200b839c6d9e1f3d1101b9ade45207b5",
       "name": "credit.pool.bullet.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -129,12 +129,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_bullet_v1"
+          "rule_id": "credit_pool_float_io_bullet_bullet"
         }
       }
     },
     {
-      "id": "ebe62b10eb064891d8cf3ca4dc1ccc1c",
+      "id": "24b3c1fb77c0b6ddff98569bb2d1f07d",
       "name": "credit.pool.interest.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -168,12 +168,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_interest_v1"
+          "rule_id": "credit_pool_float_io_bullet_interest"
         }
       }
     },
     {
-      "id": "1de3db4e8337582e67d5706b0c52957e",
+      "id": "d57dc53b90f84335aa8ff98ec3bf6692",
       "name": "credit.pool.penalty.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -207,12 +207,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_penalty_v1"
+          "rule_id": "credit_pool_float_io_bullet_penalty"
         }
       }
     },
     {
-      "id": "7573e3f22d26dc28d41121df2425fab5",
+      "id": "3b20ae10bc0404ae1190a5069e185399",
       "name": "credit.pool.prepay.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -246,12 +246,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_prepay_v1"
+          "rule_id": "credit_pool_float_io_bullet_prepay"
         }
       }
     },
     {
-      "id": "0ac137bb3925a2175040769d776548bd",
+      "id": "18e43cffe9dfe0c11d24375281959232",
       "name": "credit.pool.recoveries.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -285,12 +285,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_recoveries_v1"
+          "rule_id": "credit_pool_float_io_bullet_recoveries"
         }
       }
     },
     {
-      "id": "33608c0449a343a3eaf119fc12da3471",
+      "id": "d296ea6a48b79dd04d4393d67ca63158",
       "name": "credit.pool.servicing.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -324,12 +324,12 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_float_io_bullet_servicing_v1"
+          "rule_id": "credit_pool_float_io_bullet_servicing"
         }
       }
     },
     {
-      "id": "de2bb34cfbb1a82b5c49d85e1d96e254",
+      "id": "72ba271cf0cbe151143ec2693b9d024a",
       "name": "credit.purchase.price.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -361,7 +361,7 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_purchase_price_v1"
+          "rule_id": "credit_purchase_price"
         }
       }
     }

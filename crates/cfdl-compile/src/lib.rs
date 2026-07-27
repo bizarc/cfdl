@@ -1217,39 +1217,18 @@ fn validate_pack_contract(
                         contract.span,
                     ));
                 }
-                let lease_up_enabled = contract
-                    .terms
-                    .keys()
-                    .any(|key| key == "lease_up" || key.starts_with("lease_up."));
-                if lease_up_enabled {
-                    let months_ok = contract
-                        .terms
-                        .get("lease_up.months")
-                        .and_then(|term| term.value.parse::<i32>().ok())
+                // The lease-up ramp is expressed by a single term measured
+                // from the contract's own start; validate it where present.
+                if let Some(term) = contract.terms.get("lease_up_months") {
+                    let months_ok = term
+                        .value
+                        .parse::<i32>()
                         .map(|months| months > 0)
                         .unwrap_or(false);
                     if !months_ok {
                         diagnostics.push(cre_pack_diag(
                             "E6003_CRE_LEASE_UP_MISSING_MONTHS",
-                            "CRE lease_up requires term 'lease_up.months' > 0 when lease_up is enabled.",
-                            source_stmt,
-                            contract.span,
-                        ));
-                    }
-                    let start_occ = contract
-                        .terms
-                        .get("lease_up.start_occupancy")
-                        .and_then(|term| term.value.parse::<f64>().ok())
-                        .unwrap_or(0.0);
-                    let end_occ = contract
-                        .terms
-                        .get("lease_up.end_occupancy")
-                        .and_then(|term| term.value.parse::<f64>().ok())
-                        .unwrap_or(1.0);
-                    if !(0.0..=1.0).contains(&start_occ) || !(0.0..=1.0).contains(&end_occ) {
-                        diagnostics.push(cre_pack_diag(
-                            "E6004_CRE_LEASE_UP_INVALID_OCCUPANCY",
-                            "CRE lease_up occupancy must be in [0, 1] for start/end occupancy.",
+                            "CRE lease_up requires term 'lease_up_months' > 0.",
                             source_stmt,
                             contract.span,
                         ));
@@ -1281,7 +1260,7 @@ fn validate_pack_contract(
                     || contract.terms.contains_key("noi");
                 if !has_noi {
                     diagnostics.push(cre_pack_diag(
-                        "E6012_CRE_EXIT_MISSING_NOI_REF_OR_VALUE",
+                        "E6012_CRE_EXIT_MISSING_NOI_VALUE",
                         "CRE exit requires either 'noi_ref' or 'noi_value'.",
                         source_stmt,
                         contract.span,

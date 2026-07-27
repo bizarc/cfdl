@@ -9,6 +9,6 @@ contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
     exit_cap = 0
-    noi_ref = ops.noi
+    noi_value = 180000
   }
 }

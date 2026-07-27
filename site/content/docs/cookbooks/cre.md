@@ -10,10 +10,10 @@ slug: "/docs/cookbooks/cre"
 This pack provides deterministic lowering for a minimal Commercial Real Estate
 developer lifecycle:
 
-- construction (`cre_construction_stub`)
-- lease-up (`cre_lease`)
-- stabilized operations (`cre_ops_revenue`, `cre_ops_expense`)
-- exit (`cre_exit_cap`)
+- construction (`cre.construction_stub`)
+- lease-up (`cre.lease`)
+- stabilized operations (`cre.ops_revenue`, `cre.ops_expense`)
+- exit (`cre.exit_cap`)
 
 ## Pack identity
 
@@ -31,59 +31,51 @@ use pack "cre" version "0.1.0"
 The current pack host lowers by contract name. The following names are stable
 in `lowering/rules.toml`:
 
-- `cre_construction_stub`
-- `cre_lease`
-- `cre_ops_revenue`
-- `cre_ops_expense`
-- `cre_exit_cap`
+- `cre.construction_stub`
+- `cre.lease`
+- `cre.ops_revenue`
+- `cre.ops_expense`
+- `cre.exit_cap`
+- `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.property_opex`,
+  `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
 
 ## Expected terms (authoring contract)
 
 Contract `terms { ... }` payloads are captured as a lightweight key/value map
 and validated by CRE lowering-time checks (`E6xxx_*`) during compile.
 
-### `cre_lease`
+### Simple whole-property contract reference
 
-Required:
-- `start` / `end` period dates
-- `base_rent` (Money-equivalent numeric amount in model currency)
-- `frequency` (`monthly`)
+Every contract below is term-gated: its streams run from `term_start` to
+`term_end`, and time inside an expression is measured from `term_start`. No
+amount, rate, or date is supplied by the pack — required terms have no
+defaults, so a missing one fails compilation with `E5006` naming the term.
 
-Optional:
-- `growth` (Decimal)
-- `free_rent_months` (Int)
-- `lease_up.start_period` (Int; default `0`)
-- `lease_up.months` (Int; required when lease-up terms are supplied)
-- `lease_up.start_occupancy` (Decimal; default `0.0`)
-- `lease_up.end_occupancy` (Decimal; default `1.0`)
+| Contract | Required terms | Optional (default) | Lowers to |
+|---|---|---|---|
+| `cre.construction_stub` | `amount` (per period) | — | `cre.construction.draws` (outflow) |
+| `cre.lease` | `base_rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
+| `cre.ops_revenue` | `amount` (per period) | — | `cre.ops.revenue` (inflow) |
+| `cre.ops_expense` | `amount` (per period) | — | `cre.ops.expense` (outflow) |
+| `cre.exit_cap` | `noi_value` (annual), `exit_cap` | — | `cre.exit.sale` (inflow, once at `term_start`) |
 
-Lowering output:
-- stream `cre.lease.base_rent` inflow to the contract subject entity (`on entity ...`)
+`cre.lease` applies an optional straight-line lease-up ramp:
 
-Current deterministic implementation uses a built-in linear occupancy ramp for
-`cre_lease`:
+```
+occupancy(m) = clamp((m + 1) / lease_up_months, 0, 1)
+rent(m)      = base_rent * occupancy(m)
+```
 
-- occupancy(t) = `clamp((t - 6 + 1) / 18, 0, 1)`
-- rent(t) = `base_rent * occupancy(t)` (with `base_rent = 25000` in v0.1 rules)
+where `m` is months since `term_start`. With the default of 1 the ramp is
+inert and rent is full from the first month.
 
-Important implementation note:
+`cre.exit_cap` values the sale as `noi_value / exit_cap` — state the
+stabilized annual NOI you are capitalizing. To value off NOI the engine
+derives from the modeled streams instead, use `cre.exit_forward`.
 
-- `lease_up.*` names are validated when present.
-- Current rent-ramp math still uses deterministic v0.1 rule defaults.
-- The active v0.1 behavior is the deterministic default ramp above.
-- Scenario testing can still vary effective lease-up economics using run-config
-  overrides (for example, `stream.cre.lease.base_rent.amount`).
-
-### `cre_exit_cap`
-
-Required:
-- `exit_period` (Int) or `exit_date`
-- `exit_cap` (Decimal)
-- `noi_ref` (identifier/expression)
-
-Lowering output:
-- one terminal sale inflow stream `cre.exit.sale` at the configured exit date
-- simple cap-rate shape (`NOI / exit_cap`) in rule form
+CRE contracts are additionally checked at compile time by pack validations
+(`E6xxx_*`) covering missing required terms, term ranges outside the model
+timeline, and out-of-range cap rates.
 
 ## Scenario testing (run config overrides)
 
@@ -96,9 +88,9 @@ CRE fixtures and examples include:
 
 Scenario knobs currently demonstrated:
 
-- `stream.cre.lease.base_rent.amount`
-- `stream.cre.ops.expense.amount`
-- `stream.cre.exit.sale.amount`
+- `stream.cre.lease.base_rent:amount`
+- `stream.cre.ops.expense:amount`
+- `stream.cre.exit.sale:amount`
 
 Example:
 
@@ -144,7 +136,7 @@ Current codes:
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
 
 
-## Lease-by-lease contracts (v2, institutional DCF parity)
+## Lease-by-lease contracts (institutional DCF parity)
 
 Per-tenant contracts use suffixed names (`cre.lease_unit.tenant_a`); one rule
 lowers every instance, emitting per-instance streams
@@ -175,9 +167,14 @@ the 12 months after the sale date (requires `time ... project 12`);
 (documented): blended rollover TI/LC pays entirely at expiry rather than
 splitting the new-lease portion to after downtime.
 
-Legacy v1 contracts (`cre.lease`, `cre.ops_*`, `cre.exit_cap`,
-`cre.construction_stub`) are now fully template-driven — the hardcoded
-compiler path is gone; they remain supported for existing models.
+### Simple whole-property contracts
+
+`cre.lease`, `cre.ops_revenue`, `cre.ops_expense`, `cre.exit_cap`, and
+`cre.construction_stub` model a property at the whole-asset level, for when
+lease-by-lease detail isn't warranted. They follow the same conventions as
+the lease-by-lease set: schedules run over the contract's own term, time is
+measured from `term_start`, and every material value is a required term —
+the pack supplies no amounts, rates, or dates of its own.
 
 ## Quick start
 

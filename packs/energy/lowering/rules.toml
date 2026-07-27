@@ -7,7 +7,7 @@
 # - time.t is the 0-based period index; contract term ranges gate schedules.
 
 [[rules]]
-id = "energy_ppa_revenue_v1"
+id = "energy_ppa_revenue"
 contract_name = "energy.ppa"
 stream_name = "energy.ppa.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -24,7 +24,7 @@ degradation = "0"
 availability = "1"
 
 [[rules]]
-id = "energy_merchant_revenue_v1"
+id = "energy_merchant_revenue"
 contract_name = "energy.merchant"
 stream_name = "energy.merchant.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -41,7 +41,7 @@ degradation = "0"
 availability = "1"
 
 [[rules]]
-id = "energy_storage_arbitrage_v1"
+id = "energy_storage_arbitrage"
 contract_name = "energy.storage_arbitrage"
 stream_name = "energy.storage.margin{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -56,7 +56,7 @@ schedule_to = "{{contract.term_end}}"
 degradation = "0"
 
 [[rules]]
-id = "energy_capacity_payment_v1"
+id = "energy_capacity_payment"
 contract_name = "energy.capacity"
 stream_name = "energy.capacity.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -68,7 +68,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [[rules]]
-id = "energy_om_expense_v1"
+id = "energy_om_expense"
 contract_name = "energy.om"
 stream_name = "energy.om.expense{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -83,7 +83,7 @@ schedule_to = "{{contract.term_end}}"
 escalation = "0"
 
 [[rules]]
-id = "energy_itc_credit_v1"
+id = "energy_itc_credit"
 contract_name = "energy.itc"
 stream_name = "energy.itc.credit{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -95,7 +95,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
 [[rules]]
-id = "energy_capex_v1"
+id = "energy_capex"
 contract_name = "energy.capex"
 stream_name = "energy.capex.outlay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -107,7 +107,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
 [[rules]]
-id = "energy_debt_service_v1"
+id = "energy_debt_service"
 contract_name = "energy.debt_service"
 stream_name = "energy.debt.service{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -121,7 +121,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [[rules]]
-id = "energy_ptc_credit_v1"
+id = "energy_ptc_credit"
 contract_name = "energy.ptc"
 stream_name = "energy.ptc.credit{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -141,7 +141,7 @@ degradation = "0"
 availability = "1"
 
 [[rules]]
-id = "energy_macrs_shield_v1"
+id = "energy_macrs_shield"
 contract_name = "energy.macrs_shield"
 stream_name = "energy.macrs.shield{{contract.dot_suffix}}"
 owner_entity = "${subject}"
@@ -155,5 +155,5 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-[rules.defaults]
-life = "5"
+# `life` is required: the MACRS class life sets the whole depreciation
+# schedule (5 / 7 / 15 / 20), so the model states it.

@@ -131,7 +131,7 @@
   ],
   "streams": [
     {
-      "id": "4099ffbb318aa8ea951fccfafcc70f91",
+      "id": "dfcfdbc85971079cd62a57d1aabe3945",
       "name": "opco.exit.value",
       "owner": {
         "symbol": "operating.business"
@@ -163,12 +163,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_multiple_v1"
+          "rule_id": "opco_exit_multiple"
         }
       }
     },
     {
-      "id": "684c6fb7994970f29d40074e05861d70",
+      "id": "e19992f37f789f02c42c5c15a8216ff0",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -202,12 +202,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_opex_line_v1"
+          "rule_id": "opco_opex_line"
         }
       }
     },
     {
-      "id": "7052ce6852707a74d72b13f488a2bfc6",
+      "id": "eac46ce6e38330ffacf8caa01d33a1b3",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -241,12 +241,12 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_revenue_line_v1"
+          "rule_id": "opco_revenue_line"
         }
       }
     },
     {
-      "id": "cdfa60231fe00a23f49117a0fa6bd888",
+      "id": "51cbe6712fe63e0a1c25b7e5bf2d1921",
       "name": "opco.working_capital.adjustment",
       "owner": {
         "symbol": "operating.business"
@@ -280,7 +280,7 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_working_capital_v1"
+          "rule_id": "opco_working_capital"
         }
       }
     }
