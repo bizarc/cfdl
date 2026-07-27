@@ -55,6 +55,10 @@ jobs:
         working-directory: site
         run: npm run check:links
 
+      - name: Playground examples match the repo's models
+        working-directory: site
+        run: npm run check:examples
+
       # The wasm bundle is committed because Vercel's build image has no Rust
       # toolchain; make sure an engine change can't ship without a rebuild.
       - name: Committed wasm bundle is fresh

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Playground } from "@/components/playground/Playground";
+import { PlaygroundLoader } from "@/components/playground/PlaygroundLoader";
 
 export const metadata: Metadata = {
   title: "Playground",
@@ -12,7 +12,7 @@ export default function PlaygroundPage() {
   return (
     <>
       <SiteHeader />
-      <Playground />
+      <PlaygroundLoader />
     </>
   );
 }

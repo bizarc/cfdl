@@ -11,6 +11,7 @@ violations=$(
     app components lib 2>/dev/null \
     | grep -v 'app/tokens.css' \
     | grep -v '^\s*\*' \
+    | grep -v 'tokens-allow' \
     || true
 )
 
@@ -19,6 +20,7 @@ if [[ -n "$violations" ]]; then
   echo "$violations" >&2
   echo >&2
   echo "Add a semantic token in app/tokens.css and use it instead." >&2
+  echo "If a third-party API demands a literal, append a  // tokens-allow: <reason>  comment." >&2
   exit 1
 fi
 
