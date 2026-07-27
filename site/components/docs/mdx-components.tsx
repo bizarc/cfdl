@@ -93,6 +93,22 @@ export const mdxComponents = {
       className={cn("border-b border-subtle px-4 py-2.5 align-top text-secondary", p.className)}
     />
   ),
+  // Charts rendered from the example notebooks are rasterised by matplotlib
+  // with an opaque light background, which would clash on a dark page. Sitting
+  // them on an explicit light plate makes that read as a deliberate figure in
+  // both themes instead of a stray white rectangle.
+  img: ({ alt = "", ...p }: ComponentPropsWithoutRef<"img">) => (
+    // eslint-disable-next-line @next/next/no-img-element -- generated content;
+    // dimensions are not known at author time.
+    <img
+      {...p}
+      alt={alt}
+      className={cn(
+        "my-6 block h-auto max-w-full rounded-lg border border-default bg-figure p-3",
+        p.className,
+      )}
+    />
+  ),
   // Inline code only — fenced blocks arrive pre-highlighted from Shiki and
   // render through `pre`.
   code: (p: ComponentPropsWithoutRef<"code">) => (
