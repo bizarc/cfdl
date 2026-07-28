@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import re
 import subprocess
@@ -38,7 +39,8 @@ import sys
 import tempfile
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-CLI = REPO_ROOT / "target" / "debug" / "cfdl"
+# Windows names the binary cfdl.exe; everywhere else it is bare `cfdl`.
+CLI = REPO_ROOT / "target" / "debug" / ("cfdl.exe" if os.name == "nt" else "cfdl")
 PACKS = REPO_ROOT / "packs"
 
 # Documentation whose fenced cfdl blocks are meant to be complete models.
