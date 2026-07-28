@@ -598,6 +598,104 @@ for (const pack of ["energy", "cre", "credit", "opco"]) {
 }
 writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
 
+
+/**
+ * Domain metrics and validations, rendered from the pack's own TOML.
+ *
+ * Both were largely absent from the guides — a reader could see which
+ * contracts a pack offered but not what it computed from them, nor what it
+ * refuses to accept. Generating the tables from the source of truth means the
+ * guide states exactly what the pack implements, and cannot drift from it.
+ */
+function parsePackMetrics(pack) {
+  const file = path.resolve(repoRoot, `packs/${pack}/metrics.toml`);
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, "utf8")
+    .split("[[metrics]]")
+    .slice(1)
+    .map((block) => {
+      // `formula` is almost always the literal "sum(numerator_streams)", which
+      // tells a reader nothing; the streams themselves are the useful part.
+      const streams = [...block.matchAll(/"([a-z_]+\.[a-z_.]+)"/g)]
+        .map((m) => m[1])
+        .filter((s) => !s.startsWith("domain."));
+      // A true ratio declares op = "ratio" over two other metrics;
+      // denominator_streams just means those streams are netted off.
+      const op = (block.match(/^op = "([^"]+)"/m) ?? [])[1] ?? "";
+      const overMetrics = [
+        (block.match(/^numerator_metric = "([^"]+)"/m) ?? [])[1],
+        (block.match(/^denominator_metric = "([^"]+)"/m) ?? [])[1]
+      ].filter(Boolean);
+      return {
+        id: (block.match(/^id = "([^"]+)"/m) ?? [])[1],
+        kind: (block.match(/^kind = "([^"]+)"/m) ?? [])[1] ?? "",
+        streams: [...new Set(streams)],
+        op,
+        overMetrics
+      };
+    })
+    .filter((m) => m.id);
+}
+
+function parsePackValidations(pack) {
+  const file = path.resolve(repoRoot, `packs/${pack}/validations.toml`);
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, "utf8")
+    .split("[[validations]]")
+    .slice(1)
+    .map((block) => ({
+      code: (block.match(/^code = "([^"]+)"/m) ?? [])[1],
+      message: (block.match(/^message = "([^"]+)"/m) ?? [])[1] ?? ""
+    }))
+    .filter((v) => v.code);
+}
+
+function packReferenceSections(pack) {
+  const metrics = parsePackMetrics(pack);
+  const validations = parsePackValidations(pack);
+  const out = [];
+
+  if (metrics.length) {
+    out.push(
+      "",
+      "## Metrics reference",
+      "",
+      `Computed automatically whenever a model runs with the \`${pack}\` pack, ` +
+        "alongside the core metrics (NPV, IRR, MOIC, payback, WAL). " +
+        "Enumerated from the pack definition, so this list is always complete.",
+      "",
+      "| Metric | Type | Built from |",
+      "|---|---|---|",
+      ...metrics.map((m) => {
+        const from = m.overMetrics.length
+          ? m.overMetrics.map((x) => `\`${x}\``).join(" ÷ ")
+          : m.streams.length
+            ? m.streams.map((s) => `\`${s}\``).join(", ")
+            : "derived";
+        return `| \`${m.id}\` | ${m.kind} | ${from} |`;
+      })
+    );
+  }
+
+  if (validations.length) {
+    out.push(
+      "",
+      "## Validations reference",
+      "",
+      "Checked at compile time. Each is a stable diagnostic code that is never " +
+        "renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).",
+      "",
+      "| Code | Rejects |",
+      "|---|---|",
+      ...validations.map((v) => `| \`${v.code}\` | ${v.message} |`)
+    );
+  }
+
+  return out.length ? out.join("\n") + "\n" : "";
+}
+
 const cookbookPacks = ["energy", "cre", "credit", "opco"];
 const packTitles = { energy: "Energy", cre: "CRE", credit: "Credit", opco: "OpCo" };
 const cookbookIndexLines = [
@@ -641,6 +739,8 @@ for (const pack of cookbookPacks) {
     ...(benchmarkExampleLinks[pack] ?? []),
     ...(packWorkedExamples[pack] ?? [])
   ];
+  body += packReferenceSections(pack);
+
   if (worked.length) {
     body +=
       "\n## Worked example models\n\n" +

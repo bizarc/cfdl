@@ -117,6 +117,35 @@ credit window) with `energy.macrs_shield` (IRS Pub 946 GDS tables via
 Full worked models: `benchmarks/energy/solar_ppa_microgrid/` and the solar
 microgrid notebook in `examples/notebooks/`.
 
+## Metrics reference
+
+Computed automatically whenever a model runs with the `energy` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.energy.revenue` | money | `energy.ppa.revenue`, `energy.merchant.revenue`, `energy.storage.margin`, `energy.capacity.revenue` |
+| `domain.energy.opex` | money | `energy.om.expense` |
+| `domain.energy.ebitda` | money | `energy.ppa.revenue`, `energy.merchant.revenue`, `energy.storage.margin`, `energy.capacity.revenue`, `energy.om.expense` |
+| `domain.energy.debt_service` | money | `energy.debt.service` |
+| `domain.energy.dscr` | number | `domain.energy.ebitda` ÷ `domain.energy.debt_service` |
+| `domain.energy.tax_benefits` | money | `energy.itc.credit`, `energy.ptc.credit`, `energy.macrs.shield` |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E8001_ENERGY_INVALID_DEGRADATION` | Energy 'degradation' must be a fraction between 0 and 1. |
+| `E8002_ENERGY_INVALID_AVAILABILITY` | Energy 'availability' must be a fraction between 0 and 1. |
+| `E8003_ENERGY_INVALID_ESCALATION` | Energy 'escalation' must be greater than or equal to -1. |
+| `E8004_ENERGY_INVALID_PRICE_ESCALATION` | Energy 'price_escalation' must be greater than or equal to -1. |
+| `E8010_ENERGY_INVALID_MACRS_LIFE` | Energy MACRS 'life' must be one of 5, 7, 15, or 20. |
+| `E8011_ENERGY_INVALID_TAX_RATE` | Energy 'tax_rate' must be a fraction between 0 and 1. |
+| `E8020_ENERGY_DEBT_INVALID_RATE` | Energy debt 'rate' must be non-negative. |
+| `E8021_ENERGY_DEBT_INVALID_TERM_MONTHS` | Energy debt 'term_months' must be a whole number greater than 0. |
+| `E8022_ENERGY_DEBT_INVALID_PRINCIPAL` | Energy debt 'principal' must be greater than 0. |
+
 ## Worked example models
 
 Benchmark cases are validated period-by-period against an independent

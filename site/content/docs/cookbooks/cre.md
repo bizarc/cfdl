@@ -250,6 +250,37 @@ Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-pari
 case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
 rent), and the CRE office notebook in `examples/notebooks/`.
 
+## Metrics reference
+
+Computed automatically whenever a model runs with the `cre` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.cre.noi` | money | `cre.lease.base_rent`, `cre.ops.revenue`, `cre.ops.expense`, `cre.vacancy.loss`, `cre.property.opex` |
+| `domain.cre.debt_service` | money | `loan.construction_interest`, `loan.permanent_debt_service` |
+| `domain.cre.dscr` | number | `domain.cre.noi` ÷ `domain.cre.debt_service` |
+| `domain.cre.leasing_costs` | money | derived |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E6001_CRE_LEASE_MISSING_BASE_RENT` | CRE lease is missing required term 'base_rent'. |
+| `E6002_CRE_LEASE_INVALID_TERM_RANGE` | CRE lease term range is missing, invalid, or outside model timeline. |
+| `E6003_CRE_LEASE_UP_MISSING_MONTHS` | CRE lease_up requires term 'lease_up_months' > 0. |
+| `E6010_CRE_EXIT_MISSING_EXIT_CAP` | CRE exit contract is missing required term 'exit_cap'. |
+| `E6011_CRE_EXIT_INVALID_EXIT_CAP` | CRE exit 'exit_cap' must be greater than 0. |
+| `E6012_CRE_EXIT_MISSING_NOI_VALUE` | CRE exit requires either 'noi_ref' or 'noi_value'. |
+| `E6020_CRE_OPS_MISSING_AMOUNT` | CRE ops contract is missing required term 'amount'. |
+| `E6021_CRE_OPS_INVALID_SCHEDULE` | CRE ops term range is missing, invalid, or outside model timeline. |
+| `E6030_CRE_UNIT_INVALID_ESCALATION` | CRE lease unit 'escalation' must be greater than or equal to -1. |
+| `E6031_CRE_UNIT_INVALID_FREE_RENT` | CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more. |
+| `E6032_CRE_UNIT_INVALID_PRO_RATA` | CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1. |
+| `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | CRE rollover 'renewal_probability' must be a probability between 0 and 1. |
+| `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | CRE rollover 'downtime_months' must be a whole number of months, 0 or more. |
+
 ## Worked example models
 
 Benchmark cases are validated period-by-period against an independent

@@ -164,6 +164,41 @@ Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
 independent recursive reference) and the LBO notebook in
 `examples/notebooks/`.
 
+## Metrics reference
+
+Computed automatically whenever a model runs with the `opco` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.opco.revenue` | money | derived |
+| `domain.opco.ebitda` | money | derived |
+| `domain.opco.ebitda_margin` | number | `domain.opco.ebitda` ÷ `domain.opco.revenue` |
+| `domain.opco.capex` | money | derived |
+| `domain.opco.working_capital` | money | derived |
+| `domain.opco.taxes` | money | derived |
+| `domain.opco.debt_service` | money | derived |
+| `domain.opco.fcf` | money | derived |
+| `domain.opco.fcf_to_debt_service` | number | `domain.opco.fcf` ÷ `domain.opco.debt_service` |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line is missing required numeric term 'amount'. |
+| `E7002_OPCO_LINE_INVALID_SCHEDULE` | OpCo line term range is missing, invalid, or outside model timeline. |
+| `E7003_OPCO_LINE_INVALID_GROWTH` | OpCo line has invalid 'growth_rate' term. |
+| `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
+| `E7011_OPCO_WC_INVALID_SCHEDULE` | OpCo working capital term range is missing, invalid, or outside model timeline. |
+| `E7020_OPCO_EXIT_MISSING_MULTIPLE` | OpCo exit is missing required term 'exit_multiple'. |
+| `E7021_OPCO_EXIT_INVALID_MULTIPLE` | OpCo exit 'exit_multiple' must be greater than 0. |
+| `E7022_OPCO_EXIT_MISSING_BASE_VALUE` | OpCo exit requires numeric term 'base_value'. |
+| `E7023_OPCO_EXIT_INVALID_SCHEDULE` | OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start). |
+| `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE` | OpCo EBITDA exit requires 'exit_multiple' greater than 0. |
+| `E7030_OPCO_DEBT_INVALID_AMORT` | OpCo term debt requires 'amort_months' greater than 0. |
+| `E7031_OPCO_DEBT_INVALID_RATE` | OpCo term debt requires a non-negative 'rate'. |
+
 ## Worked example models
 
 Benchmark cases are validated period-by-period against an independent
