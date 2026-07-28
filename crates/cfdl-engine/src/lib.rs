@@ -1437,12 +1437,7 @@ fn irr(values: &[f64]) -> Option<f64> {
 }
 
 /// Occurrence dates from `from`, stepping by `interval`, up to and including `to`.
-fn occurrences(
-    from: &Date,
-    to: &Date,
-    interval: &str,
-    due: bool,
-) -> Result<Vec<Date>, EngineError> {
+fn occurrences(from: &Date, to: &Date, interval: &str) -> Result<Vec<Date>, EngineError> {
     // Guard against a zero step producing an unbounded loop.
     let step_months = match interval {
         "monthly" => Some(1),
@@ -1467,8 +1462,8 @@ fn occurrences(
         (_, Some(days)) => d.add_days(days),
         _ => d.clone(),
     };
-    let mut cursor = if due { from.clone() } else { advance(from) };
-    let last = if due { to.clone() } else { advance(to) };
+    let mut cursor = from.clone();
+    let last = to.clone();
     // A monthly stream over a century is ~1200 occurrences; this ceiling only
     // exists so a malformed range cannot spin.
     let limit = 100_000;
@@ -1550,8 +1545,8 @@ fn apply_schedule_indices(
 
             // Accruals run over [from, to]; each settles at its own end for an
             // ordinary annuity, or at its start for an annuity due.
-            let accruals = occurrences(&from_date, &to_date, interval, true)?;
-            let payments = occurrences(&from_date, &to_date, interval, schedule.due)?;
+            let accruals = occurrences(&from_date, &to_date, interval)?;
+            let payments = accruals.clone();
             for (accrual, payment) in accruals.iter().zip(payments.iter()) {
                 let placed = place_in_interval(payment, schedule.on_rule.as_ref());
                 let rolled = roll_date(&placed, roll);
@@ -1626,7 +1621,7 @@ fn apply_schedule(
             // An ordinary annuity pays at the END of each interval: the first
             // occurrence of `every year from 2026-01` is 2027-01, not 2026-01.
             // An annuity due pays at the start, which is right for rent.
-            for occurrence in occurrences(&from_date, &to_date, interval, schedule.due)? {
+            for occurrence in occurrences(&from_date, &to_date, interval)? {
                 let placed = place_in_interval(&occurrence, schedule.on_rule.as_ref());
                 let rolled = roll_date(&placed, roll);
                 if let Some(idx) = period_index(timeline, &rolled) {
