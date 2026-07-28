@@ -140,6 +140,27 @@ Core language semantics MUST NOT change based on pack selection.
 
 ---
 
+## 5.6 Model currency
+
+A model declares the currency it reports in:
+
+```cfdl
+model "solar-portfolio" currency INR
+```
+
+Rules:
+- The code is an ISO 4217 identifier. When omitted, the model reports in `USD`.
+- Every metric — `model.npv`, `model.total`, entity and domain metrics — is
+  denominated in this currency.
+- A stream MUST declare the same currency. Cash flows are summed period by
+  period, so a stream in another currency would be added as though it were the
+  same unit; the compiler rejects the mismatch
+  (`E2107_STREAM_CURRENCY_MISMATCH`) rather than produce a meaningless total.
+- Cross-currency models require an explicit conversion in the amount
+  expression. The language does not apply FX rates implicitly.
+
+---
+
 ## 6. Time model
 
 ### 6.1 Master timeline

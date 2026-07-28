@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "8aa792d29679cf47776935ea1d3a3fe2",
+      "id": "1b95d4a95513673c7bcb1d86e7930442",
       "symbol": "project.windfarm",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "27fa6b8cf223f115a09d7c7ed33d3188",
+      "id": "ba91bf2ee589d751fcf34aed7b635f6a",
       "name": "energy.capex",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "cf1ab8f8756ff0ee9fb49414293e76da",
+      "id": "776f4565f4570b7db4b2656adbf31815",
       "name": "energy.debt_service",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "acba0c255d306119bf2418c8bc46570c",
+      "id": "bf93f6c29cb2263e915db3285ec2577c",
       "name": "energy.macrs_shield",
       "type": "core.Contract",
       "subject": {
@@ -103,7 +103,7 @@
       }
     },
     {
-      "id": "b72732d01a950d124feb96e8dbf993a5",
+      "id": "1bd12313aa173386d806f9707aa08c02",
       "name": "energy.merchant",
       "type": "core.Contract",
       "subject": {
@@ -129,7 +129,7 @@
       }
     },
     {
-      "id": "317b29c8b6bafc2041e40e6fd14f4a19",
+      "id": "68541bede97adfeaf433d3f21db479c6",
       "name": "energy.om",
       "type": "core.Contract",
       "subject": {
@@ -155,7 +155,7 @@
       }
     },
     {
-      "id": "1b07f3e4793d9958f1ae42c54982c36f",
+      "id": "fde3ab723ab7ae7a96b7719ee9329ffa",
       "name": "energy.ptc",
       "type": "core.Contract",
       "subject": {
@@ -183,7 +183,7 @@
   ],
   "streams": [
     {
-      "id": "281ac071caf9156828878f3edbce1076",
+      "id": "a7795075c1069e0bd699b7487b23dfed",
       "name": "energy.capex.outlay",
       "owner": {
         "symbol": "project.windfarm"
@@ -220,7 +220,7 @@
       }
     },
     {
-      "id": "fb3cc39cdfcde53eac60fd71788fe430",
+      "id": "75b1de3429879caefcc4c56ddedb3281",
       "name": "energy.debt.service",
       "owner": {
         "symbol": "project.windfarm"
@@ -259,7 +259,7 @@
       }
     },
     {
-      "id": "f240860511be11908d222a7c8bd9be00",
+      "id": "8c28aa4caeaead0c46f27e59889e1198",
       "name": "energy.macrs.shield",
       "owner": {
         "symbol": "project.windfarm"
@@ -298,7 +298,7 @@
       }
     },
     {
-      "id": "0a9f550dd0a9c5180a6acacbb98570a9",
+      "id": "015056ec40f3356c81e1a1d2d9032284",
       "name": "energy.merchant.revenue",
       "owner": {
         "symbol": "project.windfarm"
@@ -337,7 +337,7 @@
       }
     },
     {
-      "id": "29a9f10fdfc5e52bedaa66d2c930b3b9",
+      "id": "dc6510c9a324cb8900bd31a46be2fb67",
       "name": "energy.om.expense",
       "owner": {
         "symbol": "project.windfarm"
@@ -376,7 +376,7 @@
       }
     },
     {
-      "id": "961b32e02c5f165593ecd33767c15872",
+      "id": "9edaaf1bfd423baac5140f2fdf250f36",
       "name": "energy.ptc.credit",
       "owner": {
         "symbol": "project.windfarm"
@@ -430,8 +430,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.4.0",
-      "hash": "16aaac330ace1ef20b04819e70a58171",
+      "version": "0.5.0",
+      "hash": "5c0ae62d54de08b2cb6ebed8b989fbfb",
       "notes": [
         "active_pack=energy@0.1.0"
       ]

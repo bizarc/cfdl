@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "78d9a51b49ea63563b0f8d3a7c39579f56cfce045e4b3ffdf5a910937110edee",
+  "model_hash": "b0d1a7d81a748d359cb2f8730e0bb3a238b4e8d7dc40320c33ba9d9f87c684e6",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.4.0"
+    "version": "0.5.0"
   },
   "warnings": [],
   "deterministic": {

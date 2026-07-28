@@ -1,0 +1,16 @@
+version 0.1
+model "currency-mismatch" currency INR
+time calendar monthly from 2026-01 for 6
+
+entity project plant
+
+stream plant.revenue on entity project.plant inflow currency INR {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100000
+}
+
+// A USD stream in an INR model would be subtracted as if it were INR.
+stream plant.fee on entity project.plant outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 500
+}

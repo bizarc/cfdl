@@ -55,6 +55,9 @@ pub struct VersionStmt {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ModelStmt {
     pub name: String,
+    /// Reporting currency for the model, e.g. `model "x" currency INR`.
+    /// Defaults to USD when omitted. Every metric is reported in it.
+    pub currency: Option<String>,
     pub span: Span,
 }
 
@@ -441,19 +444,44 @@ impl<'a> Parser<'a> {
     fn parse_model_stmt(&mut self) -> Option<ModelStmt> {
         let start = self.expect_keyword(Keyword::Model, "'model'")?;
         let name_tok = self.bump();
-        match name_tok.kind {
-            TokenKind::String(ref s) => Some(ModelStmt {
-                name: s.clone(),
-                span: merge_spans(start.span, name_tok.span),
-            }),
+        let name = match name_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
             _ => {
                 self.push_expected(
                     name_tok.span,
                     "Expected token <string> after 'model'.".to_string(),
                 );
-                None
+                return None;
+            }
+        };
+
+        // Optional reporting currency. Without it a model reported USD no
+        // matter what its streams declared.
+        let mut currency = None;
+        let mut end_span = name_tok.span;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Currency)) {
+            let _ = self.bump();
+            let code_tok = self.bump();
+            match code_tok.kind {
+                TokenKind::Ident(ref code) => {
+                    currency = Some(code.clone());
+                    end_span = code_tok.span;
+                }
+                _ => {
+                    self.push_expected(
+                        code_tok.span,
+                        "Expected a currency code after 'currency', e.g. USD.".to_string(),
+                    );
+                    return None;
+                }
             }
         }
+
+        Some(ModelStmt {
+            name,
+            currency,
+            span: merge_spans(start.span, end_span),
+        })
     }
 
     fn parse_time_stmt(&mut self) -> Option<TimeStmt> {

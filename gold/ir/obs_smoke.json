@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "07d78898301c10bd9ca9ae5f9cf094b3",
+      "id": "238efdd22f7ba0168829c6033499f451",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "6b6543e551dc7037ee21c895b986a45f",
+      "id": "6a05dc2873e37ab56baed17016b7d686",
       "name": "legal.rate_payment",
       "owner": {
         "symbol": "legal.borrower"
@@ -73,8 +73,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.4.0",
-      "hash": "2bad9a0790881b14d087260e0fb580b7"
+      "version": "0.5.0",
+      "hash": "136f5c60e64c1a04b8571c1d501782c9"
     }
   }
 }

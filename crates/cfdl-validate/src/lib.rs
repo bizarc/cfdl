@@ -15,6 +15,17 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     let (default_file, default_span) = default_anchor(output);
     let mut diagnostics = Vec::new();
 
+    // The model's reporting currency; every stream must agree with it.
+    let model_currency: String = output
+        .source_statements
+        .iter()
+        .find_map(|stmt| match &stmt.statement {
+            Stmt::Model(model) => model.currency.clone(),
+            _ => None,
+        })
+        .unwrap_or_else(|| "USD".to_string());
+    let model_currency = model_currency.as_str();
+
     let mut versions = Vec::new();
     let mut models = Vec::new();
     let mut times = Vec::new();
@@ -127,6 +138,24 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 }
             }
             Stmt::Stream(stream) => {
+                // Cash flows are summed period by period, so a stream in a
+                // different currency to the model would be added as if it were
+                // the same unit — 500 USD subtracted as 500 INR. The spec
+                // requires conversions to be explicit, so reject the mismatch
+                // rather than produce a meaningless total.
+                if let Some(declared) = stream.currency.as_deref() {
+                    if !declared.eq_ignore_ascii_case(model_currency) {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: "E2107_STREAM_CURRENCY_MISMATCH",
+                            message: format!(
+                                "Stream '{}' is in {} but the model reports in {}. Convert explicitly in the amount expression, or declare `model \"...\" currency {}`.",
+                                stream.name, declared, model_currency, declared
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: stream.span,
+                        });
+                    }
+                }
                 if stream.amount.is_none() {
                     diagnostics.push(ValidationDiagnostic {
                         code: "E2102_STREAM_MISSING_AMOUNT",

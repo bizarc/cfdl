@@ -145,6 +145,27 @@ Core language semantics MUST NOT change based on pack selection.
 
 ---
 
+## 5.6 Model currency
+
+A model declares the currency it reports in:
+
+```cfdl
+model "solar-portfolio" currency INR
+```
+
+Rules:
+- The code is an ISO 4217 identifier. When omitted, the model reports in `USD`.
+- Every metric — `model.npv`, `model.total`, entity and domain metrics — is
+  denominated in this currency.
+- A stream MUST declare the same currency. Cash flows are summed period by
+  period, so a stream in another currency would be added as though it were the
+  same unit; the compiler rejects the mismatch
+  (`E2107_STREAM_CURRENCY_MISMATCH`) rather than produce a meaningless total.
+- Cross-currency models require an explicit conversion in the amount
+  expression. The language does not apply FX rates implicitly.
+
+---
+
 ## 6. Time model
 
 ### 6.1 Master timeline
@@ -246,8 +267,46 @@ Rules:
 
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.
-- Term names are scoped to the contract instance and accessible in expressions as `terms.<name>`.
 - Term keys MAY be qualified names (e.g., `lease_up.months`).
+
+#### 8.2.1 A term holds one value (normative)
+
+A term's value MUST be either:
+
+- a **literal** — a number, string, date, or `true`/`false`; or
+- a **reference to one declared input**, written `inputs.<name>`.
+
+Nothing else. A term MUST NOT contain an expression: `mwh_year = 1000 + 500`
+is an error, not a value of 1500. Derived quantities belong in an `assume`,
+which the term then references.
+
+A contract records what was agreed, so most terms are literals. A quantity that
+varies — a yield under study, an escalator being stressed — is named as an
+input instead:
+
+```cfdl
+assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
+
+contract energy.ppa.plant_a on entity project.plant {
+  term 2026-01..2050-12
+  terms {
+    ppa_price = 3000              // contractual fact
+    mwh_year  = inputs.annual_yield  // driver, supplied per run
+  }
+}
+```
+
+The value then arrives from whichever layer is driving the run — `assume x = …`
+for a fixed case, a scenario's `parameters` in `run.json`, or a Monte Carlo
+draw. All three write to the same `inputs.<name>` channel, so one declaration
+serves every mode and variation stays layered on top of the contract rather
+than embedded inside it.
+
+A term referencing an input that was never declared is a compile error
+(`E5010_TERM_UNKNOWN_INPUT`), so a misspelling cannot silently resolve to
+nothing. A term whose value is an input reference is not range-checked at
+compile time, since its value is not yet known; pack bounds still apply to
+literal terms.
 
 Pack interaction:
 - A pack MAY provide a schema for `<TypeId>` and validate `terms`.

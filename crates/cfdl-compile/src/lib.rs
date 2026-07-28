@@ -535,7 +535,16 @@ fn build_ir(
     active_pack: Option<&ActivePackContext>,
 ) -> Result<Ir, Vec<Diagnostic>> {
     let model_name = find_model_name(resolve_output).unwrap_or_else(|| "model".to_string());
-    let model_currency = "USD".to_string();
+    // The model's reporting currency: what `model "x" currency INR` declares,
+    // or USD when omitted. Every metric is denominated in it.
+    let model_currency = resolve_output
+        .source_statements
+        .iter()
+        .find_map(|stmt| match &stmt.statement {
+            Stmt::Model(model) => model.currency.clone(),
+            _ => None,
+        })
+        .unwrap_or_else(|| "USD".to_string());
     let (time_calendar, time_start, time_periods, time_projection) = find_time(resolve_output)
         .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1, 0));
     let timeline_end = add_periods_for_timeline_end(&time_start, &time_calendar, time_periods);
@@ -1024,6 +1033,38 @@ fn lower_contract_streams(
         })
         .collect();
 
+    // A deferred term's value is unknown until the run, so its bounds cannot
+    // be checked — but a distribution's `clip` states the range it can produce.
+    // Where both exist, the clip is checkable now.
+    let input_clips: BTreeMap<String, (f64, f64)> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|stmt| match &stmt.statement {
+            Stmt::Assume(assume) => {
+                let dist = assume.dist.as_ref()?;
+                let (lo, hi) = dist.clip.as_ref()?;
+                Some((assume.name.clone(), (lo.parse().ok()?, hi.parse().ok()?)))
+            }
+            _ => None,
+        })
+        .collect();
+
+    // Declared bounds per term, from the pack's own validations.
+    let mut term_bounds: BTreeMap<String, (Option<f64>, Option<f64>)> = BTreeMap::new();
+    for validation in &pack.validations {
+        if let Some(term) = validation.term.as_deref() {
+            let entry = term_bounds.entry(term.to_string()).or_insert((None, None));
+            let lo = validation.min.or(validation.exclusive_min);
+            let hi = validation.max.or(validation.exclusive_max);
+            if let Some(v) = lo {
+                entry.0 = Some(entry.0.map_or(v, |cur: f64| cur.max(v)));
+            }
+            if let Some(v) = hi {
+                entry.1 = Some(entry.1.map_or(v, |cur: f64| cur.min(v)));
+            }
+        }
+    }
+
     let mut lowered = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
@@ -1032,7 +1073,37 @@ fn lower_contract_streams(
         };
         for (key, term) in &contract.terms {
             if let Some(name) = term.input_name() {
-                if !declared_inputs.contains(name) {
+                if declared_inputs.contains(name) {
+                    // The input exists; if it declares a clip and the pack
+                    // declares bounds, the clip must sit inside them.
+                    if let (Some((clip_lo, clip_hi)), Some((bound_lo, bound_hi))) =
+                        (input_clips.get(name), term_bounds.get(key))
+                    {
+                        let below = bound_lo.is_some_and(|lo| *clip_lo < lo);
+                        let above = bound_hi.is_some_and(|hi| *clip_hi > hi);
+                        if below || above {
+                            diagnostics.push(lowering_rule_diag(
+                                "E5011_TERM_CLIP_OUT_OF_BOUNDS",
+                                &format!(
+                                    "Contract '{}' term '{}' defers to input '{}', whose clip [{}, {}] can produce values outside the range this term allows ({}). Tighten the clip.",
+                                    contract.name,
+                                    key,
+                                    name,
+                                    clip_lo,
+                                    clip_hi,
+                                    match (bound_lo, bound_hi) {
+                                        (Some(lo), Some(hi)) => format!("{lo} to {hi}"),
+                                        (Some(lo), None) => format!("at least {lo}"),
+                                        (None, Some(hi)) => format!("at most {hi}"),
+                                        (None, None) => "unbounded".to_string(),
+                                    }
+                                ),
+                                source_stmt,
+                                term.span,
+                            ));
+                        }
+                    }
+                } else {
                     diagnostics.push(lowering_rule_diag(
                         "E5010_TERM_UNKNOWN_INPUT",
                         &format!(
