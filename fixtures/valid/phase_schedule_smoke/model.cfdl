@@ -13,6 +13,6 @@ stream legal.construction_draw on entity legal.property outflow {
 }
 
 stream legal.operating_revenue on entity legal.property inflow {
-  schedule every monthly from phase_start("operations") to phase_end("operations")
+  schedule every month from phase_start("operations") to phase_end("operations")
   amount = 10000
 }

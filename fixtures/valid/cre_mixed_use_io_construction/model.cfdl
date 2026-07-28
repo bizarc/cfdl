@@ -28,34 +28,34 @@ contract cre.exit_cap on entity real_estate.property {
 
 // Construction IO interest: $12M loan @ 7.5% annual = $75,000/mo (months 0-35)
 stream loan.io_interest on entity loan.construction outflow currency USD {
-  schedule every monthly from 2026-01 to 2028-12
+  schedule every month from 2026-01 to 2028-12
   amount = 75000
 }
 
 // Office lease revenue: $120,000/mo stabilized with 18-month lease-up ramp
 // t=36: $120k * (1/18) = $6,667; t=53: $120k * (18/18) = $120,000
 stream office.base_rent on entity real_estate.property inflow currency USD {
-  schedule every monthly from 2029-01 to 2033-12
+  schedule every month from 2029-01 to 2033-12
   amount = 120000 * clamp((time.t - 36.0 + 1.0) / 18.0, 0.0, 1.0)
 }
 
 // Retail lease revenue: $35,000/mo stabilized with 6-month lease-up ramp
 // t=36: $35k * (1/6) = $5,833; t=41: $35k * (6/6) = $35,000
 stream retail.base_rent on entity real_estate.property inflow currency USD {
-  schedule every monthly from 2029-01 to 2033-12
+  schedule every month from 2029-01 to 2033-12
   amount = 35000 * clamp((time.t - 36.0 + 1.0) / 6.0, 0.0, 1.0)
 }
 
 // Residential lease revenue: $45,000/mo stabilized with 3-month lease-up ramp
 // t=36: $45k * (1/3) = $15,000; t=38: $45k * (3/3) = $45,000
 stream resi.base_rent on entity real_estate.property inflow currency USD {
-  schedule every monthly from 2029-01 to 2033-12
+  schedule every month from 2029-01 to 2033-12
   amount = 45000 * clamp((time.t - 36.0 + 1.0) / 3.0, 0.0, 1.0)
 }
 
 // Permanent debt service replaces IO after construction close (months 36-95)
 // $12M perm loan @ 6.5% / 25-yr amortization → ~$68,500/mo P&I
 stream loan.perm_debt_service on entity loan.permanent outflow currency USD {
-  schedule every monthly from 2029-01 to 2033-12
+  schedule every month from 2029-01 to 2033-12
   amount = 68500
 }

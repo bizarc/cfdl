@@ -183,9 +183,15 @@ pub struct ContractTerm {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ScheduleSpec {
     pub kind: ScheduleKind,
+    /// Recurrence interval as written (`day`/`week`/`month`/`quarter`/`year`).
+    /// Distinct from the model's calendar cadence: a stream may pay quarterly
+    /// on a monthly grid. `None` for non-recurring kinds.
+    pub every: Option<String>,
     pub from: Option<String>,
     pub to: Option<String>,
     pub day_of_month: Option<i32>,
+    /// `on eom` — place the occurrence on the last day of its period.
+    pub end_of_month: bool,
     /// Business-day roll convention: none/following/modified_following/
     /// preceding/modified_preceding.
     pub convention: Option<String>,
@@ -1065,6 +1071,33 @@ impl<'a> Parser<'a> {
         end_span
     }
 
+    /// The interval after `every`, e.g. the `month` in `every month`.
+    ///
+    /// Required by the grammar. It used to be optional in practice — the token
+    /// was bumped and discarded, so `every from … to …` parsed and the
+    /// compiler substituted the model calendar. Requiring it here is what
+    /// makes the declared interval trustworthy downstream.
+    fn parse_schedule_interval(&mut self) -> Option<String> {
+        let tok = self.peek().clone();
+        let interval = match tok.kind {
+            TokenKind::Keyword(Keyword::Day) => "day",
+            TokenKind::Keyword(Keyword::Week) => "week",
+            TokenKind::Keyword(Keyword::Month) => "month",
+            TokenKind::Keyword(Keyword::Quarter) => "quarter",
+            TokenKind::Keyword(Keyword::Year) => "year",
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    "Expected an interval after 'every': day, week, month, quarter or year."
+                        .to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.bump();
+        Some(interval.to_string())
+    }
+
     fn parse_schedule_expr(&mut self) -> Option<ScheduleSpec> {
         let start = self.current_span();
         match self.peek().kind {
@@ -1087,6 +1120,8 @@ impl<'a> Parser<'a> {
                     let end_tok = self.expect_punct(Punct::RParen, "')'")?;
                     let mut spec = ScheduleSpec {
                         kind: ScheduleKind::PhaseEnter { phase },
+                        every: None,
+                        end_of_month: false,
                         from: None,
                         to: None,
                         day_of_month: None,
@@ -1113,6 +1148,8 @@ impl<'a> Parser<'a> {
                 };
                 let mut spec = ScheduleSpec {
                     kind: ScheduleKind::OnDate,
+                    every: None,
+                    end_of_month: false,
                     from: Some(date.clone()),
                     to: Some(date),
                     day_of_month: None,
@@ -1127,28 +1164,34 @@ impl<'a> Parser<'a> {
             }
             TokenKind::Keyword(Keyword::Every) => {
                 let _ = self.bump();
-                if matches!(
-                    self.peek().kind,
-                    TokenKind::Keyword(Keyword::Daily)
-                        | TokenKind::Keyword(Keyword::Monthly)
-                        | TokenKind::Keyword(Keyword::Quarterly)
-                        | TokenKind::Keyword(Keyword::Annual)
-                ) {
-                    let _ = self.bump();
-                }
+                let every = self.parse_schedule_interval()?;
 
                 let mut day_of_month = None;
+                let mut end_of_month = false;
                 if matches!(self.peek().kind, TokenKind::Keyword(Keyword::On)) {
                     let _ = self.bump();
-                    if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Day)) {
+                    if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Eom)) {
+                        let _ = self.bump();
+                        end_of_month = true;
+                    } else if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Day)) {
                         let _ = self.bump();
                         let day_tok = self.bump();
                         match day_tok.kind {
-                            TokenKind::Number(ref n) => {
-                                if let Ok(value) = n.parse::<i32>() {
-                                    day_of_month = Some(value);
+                            // Range is judged by the validator, which owns
+                            // E2105_SCHEDULE_INVALID_DAY_OF_MONTH and reports it
+                            // against the whole schedule. Parsing only insists
+                            // the token is a representable integer — previously
+                            // an unrepresentable one was silently dropped.
+                            TokenKind::Number(ref n) => match n.parse::<i32>() {
+                                Ok(value) => day_of_month = Some(value),
+                                Err(_) => {
+                                    self.push_expected(
+                                        day_tok.span,
+                                        "Day of month must be a whole number.".to_string(),
+                                    );
+                                    return None;
                                 }
-                            }
+                            },
                             _ => {
                                 self.push_expected(
                                     day_tok.span,
@@ -1157,6 +1200,13 @@ impl<'a> Parser<'a> {
                                 return None;
                             }
                         }
+                    } else {
+                        let tok = self.peek().clone();
+                        self.push_expected(
+                            tok.span,
+                            "Expected 'day <n>' or 'eom' after 'on'.".to_string(),
+                        );
+                        return None;
                     }
                 }
 
@@ -1193,6 +1243,8 @@ impl<'a> Parser<'a> {
                     let end_tok = self.expect_punct(Punct::RParen, "')'")?;
                     let mut spec = ScheduleSpec {
                         kind: ScheduleKind::EveryPhase { phase },
+                        every: Some(every.clone()),
+                        end_of_month,
                         from: None,
                         to: None,
                         day_of_month,
@@ -1231,6 +1283,8 @@ impl<'a> Parser<'a> {
                 };
                 let mut spec = ScheduleSpec {
                     kind: ScheduleKind::Every,
+                    every: Some(every),
+                    end_of_month,
                     from: Some(from),
                     to: Some(to),
                     day_of_month,
@@ -2092,6 +2146,10 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Monthly => "monthly",
         Keyword::Quarterly => "quarterly",
         Keyword::Annual => "annual",
+        Keyword::Week => "week",
+        Keyword::Month => "month",
+        Keyword::Quarter => "quarter",
+        Keyword::Year => "year",
         Keyword::Phase => "phase",
         Keyword::To => "to",
         Keyword::Entity => "entity",
@@ -2353,7 +2411,7 @@ model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
 stream legal.rent on entity legal.borrower {
-  schedule every monthly from 2026-01 to 2026-02
+  schedule every month from 2026-01 to 2026-02
   amount = 1000
 }
 "#;
@@ -2442,7 +2500,7 @@ contract lease.core.primary on entity legal.borrower {
   term 2026-01..2026-02
 }
 stream cre.lease.base_rent on entity legal.borrower {
-  schedule every monthly from 2026-01 to 2026-02
+  schedule every month from 2026-01 to 2026-02
   amount = 1000
 }
 "#;
@@ -2478,7 +2536,7 @@ model "demo"
 time calendar monthly from 2026-01 for 2
 entity legal borrower
 stream legal.rent on entity borrower {
-  schedule every monthly from 2026-01 to 2026-02
+  schedule every month from 2026-01 to 2026-02
   amount = 1000
 }
 "#;
@@ -2529,7 +2587,7 @@ mod fuzz_tests {
 
     #[test]
     fn mutated_valid_source_never_panics() {
-        let base = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nphase p from 2026-01 to 2026-06\nentity legal borrower\nassume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])\ncontract cre.lease on entity legal.borrower {\n  term 2026-01..2026-12\n  terms { base_rent = 25000 }\n}\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every monthly from 2026-01 to 2026-12 convention following calendar \"us\" except [2026-03-01]\n  amount = 1000 * pow(1.03, time.t / 12.0)\n  active when entity.status != \"gone\"\n}\nevent stop when time.t >= 6 {\n  deactivate stream legal.rent\n}\noption o1 type Option.X {\n  exercise when time.t == 3\n  payoff 100 - 1\n}\nrun monte_carlo trials 10 seed 42\n";
+        let base = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nphase p from 2026-01 to 2026-06\nentity legal borrower\nassume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])\ncontract cre.lease on entity legal.borrower {\n  term 2026-01..2026-12\n  terms { base_rent = 25000 }\n}\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every month from 2026-01 to 2026-12 convention following calendar \"us\" except [2026-03-01]\n  amount = 1000 * pow(1.03, time.t / 12.0)\n  active when entity.status != \"gone\"\n}\nevent stop when time.t >= 6 {\n  deactivate stream legal.rent\n}\noption o1 type Option.X {\n  exercise when time.t == 3\n  payoff 100 - 1\n}\nrun monte_carlo trials 10 seed 42\n";
         lex_parse_no_panic(base);
         let bytes: Vec<char> = base.chars().collect();
         let mut rng = Rng(0xDEADBEEF);
@@ -2559,7 +2617,7 @@ mod fuzz_tests {
 
     #[test]
     fn truncations_never_panic() {
-        let base = "stream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000 * (1 + 0.03) ^ (time.t / 12)\n}\n";
+        let base = "stream legal.rent on entity legal.borrower {\n  schedule every month from 2026-01 to 2026-12\n  amount = 1000 * (1 + 0.03) ^ (time.t / 12)\n}\n";
         for cut in 0..base.len() {
             if base.is_char_boundary(cut) {
                 lex_parse_no_panic(&base[..cut]);

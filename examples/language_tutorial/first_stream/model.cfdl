@@ -5,11 +5,11 @@ time calendar monthly from 2026-01 for 24
 entity legal tenant
 
 stream legal.subscription_revenue on entity legal.tenant inflow currency USD {
-  schedule every monthly on day 15 from 2026-01 to 2027-12
+  schedule every month on day 15 from 2026-01 to 2027-12
   amount = 1200
 }
 
 stream legal.support_expense on entity legal.tenant outflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+  schedule every month from 2026-01 to 2027-12
   amount = 250
 }

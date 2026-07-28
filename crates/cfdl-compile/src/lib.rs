@@ -1800,10 +1800,19 @@ fn lower_schedule(
         });
     };
 
-    let on_rule = schedule.day_of_month.map(|day| IrOnRule {
-        kind: "DayOfMonth".to_string(),
-        day,
-    });
+    // The IR's OnRule already declares EndOfMonth; `on eom` now reaches it
+    // instead of failing to parse.
+    let on_rule = if schedule.end_of_month {
+        Some(IrOnRule {
+            kind: "EndOfMonth".to_string(),
+            day: 0,
+        })
+    } else {
+        schedule.day_of_month.map(|day| IrOnRule {
+            kind: "DayOfMonth".to_string(),
+            day,
+        })
+    };
     match &schedule.kind {
         ScheduleKind::OnDate => Ok(IrSchedule {
             kind: "OnDate".to_string(),
@@ -1831,7 +1840,13 @@ fn lower_schedule(
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
             on: None,
-            every: Some(time_calendar.to_string()),
+            every: Some(
+                schedule
+                    .every
+                    .as_deref()
+                    .map(|i| interval_to_frequency(i).to_string())
+                    .unwrap_or_else(|| time_calendar.to_string()),
+            ),
             from: Some(normalize_date(
                 schedule.from.as_deref().unwrap_or(time_start),
             )),
@@ -1886,7 +1901,13 @@ fn lower_schedule(
             Ok(IrSchedule {
                 kind: "Every".to_string(),
                 on: None,
-                every: Some(time_calendar.to_string()),
+                every: Some(
+                    schedule
+                        .every
+                        .as_deref()
+                        .map(|i| interval_to_frequency(i).to_string())
+                        .unwrap_or_else(|| time_calendar.to_string()),
+                ),
                 from: Some(start.clone()),
                 to: Some(end.clone()),
                 on_rule,
@@ -1937,6 +1958,23 @@ fn find_time(resolve_output: &cfdl_resolver::ResolveOutput) -> Option<(String, S
                 None
             }
         })
+}
+
+/// Source interval (`month`) to the IR's frequency vocabulary (`monthly`).
+///
+/// The two are deliberately different words: `every month` is an interval, and
+/// `time calendar monthly` is a cadence. The IR has always spoken the cadence
+/// vocabulary, so normalising here keeps the published schema and every golden
+/// unchanged while the source gains the distinction.
+fn interval_to_frequency(interval: &str) -> &str {
+    match interval {
+        "day" => "daily",
+        "week" => "weekly",
+        "month" => "monthly",
+        "quarter" => "quarterly",
+        "year" => "annual",
+        other => other,
+    }
 }
 
 fn cadence_to_frequency(cadence: Cadence) -> &'static str {

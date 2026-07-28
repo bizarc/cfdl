@@ -7,13 +7,13 @@ entity loan permanent
 
 // Revenue: 30,000/month inflow  (24 periods → total +720,000)
 stream cre.ops.revenue on entity real_estate.prop inflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+  schedule every month from 2026-01 to 2027-12
   amount = 30000
 }
 
 // Operating expense: 10,000/month outflow  (24 periods → total -240,000)
 stream cre.ops.expense on entity real_estate.prop outflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+  schedule every month from 2026-01 to 2027-12
   amount = 10000
 }
 
@@ -21,6 +21,6 @@ stream cre.ops.expense on entity real_estate.prop outflow currency USD {
 // NOI = 720,000 + (-240,000) = 480,000
 // DSCR = 480,000 / 360,000 = 1.333333
 stream loan.permanent_debt_service on entity loan.permanent outflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+  schedule every month from 2026-01 to 2027-12
   amount = 15000
 }

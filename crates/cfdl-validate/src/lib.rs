@@ -446,7 +446,7 @@ mod tests {
             .collect()
     }
 
-    const VALID: &str = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-12\n  amount = 1000\n}\n";
+    const VALID: &str = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every month from 2026-01 to 2026-12\n  amount = 1000\n}\n";
 
     #[test]
     fn clean_model_has_no_diagnostics() {
@@ -501,7 +501,7 @@ mod tests {
     #[test]
     fn schedule_range_out_of_bounds() {
         let codes = diagnostics_for(
-            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2030-12\n  amount = 1\n}\n",
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every month from 2026-01 to 2030-12\n  amount = 1\n}\n",
         );
         assert!(
             codes.contains(&"E2103_SCHEDULE_OUT_OF_BOUNDS".to_string()),
@@ -512,7 +512,7 @@ mod tests {
     #[test]
     fn schedule_inverted_range() {
         let codes = diagnostics_for(
-            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-06 to 2026-01\n  amount = 1\n}\n",
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every month from 2026-06 to 2026-01\n  amount = 1\n}\n",
         );
         assert!(
             codes.contains(&"E2104_SCHEDULE_INVALID_RANGE".to_string()),
@@ -523,7 +523,7 @@ mod tests {
     #[test]
     fn schedule_invalid_day_of_month() {
         let codes = diagnostics_for(
-            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly on day 42 from 2026-01 to 2026-12\n  amount = 1\n}\n",
+            "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every month on day 42 from 2026-01 to 2026-12\n  amount = 1\n}\n",
         );
         assert!(
             codes.contains(&"E2105_SCHEDULE_INVALID_DAY_OF_MONTH".to_string()),

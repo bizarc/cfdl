@@ -81,6 +81,6 @@ contract cre.exit_forward on entity asset.tower {
 
 // Permanent debt (25-year amortization, 10-year hold window).
 stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
-  schedule every monthly from 2026-01 to 2035-12
+  schedule every month from 2026-01 to 2035-12
   amount = -pmt(0.055 / 12, 300, 6000000)
 }

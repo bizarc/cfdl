@@ -8,7 +8,7 @@ entity loan senior
 // deactivates the stream and flips entity state (belt and braces: the
 // active_when clause would stop it too).
 stream loan.debt_service on entity loan.senior outflow currency USD {
-  schedule every monthly from 2026-01 to 2026-12
+  schedule every month from 2026-01 to 2026-12
   amount = 500
   active when entity.state.status != "refinanced"
 }

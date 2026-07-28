@@ -44,11 +44,11 @@ contract cre.exit_cap on entity real_estate.property {
 }
 
 stream loan.construction_interest on entity loan.construction {
-  schedule every monthly from 2026-01 to 2027-06
+  schedule every month from 2026-01 to 2027-06
   amount = 40000
 }
 
 stream loan.permanent_debt_service on entity loan.permanent {
-  schedule every monthly from 2027-07 to 2031-12
+  schedule every month from 2027-07 to 2031-12
   amount = 55000
 }
