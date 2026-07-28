@@ -1425,6 +1425,71 @@ fn irr(values: &[f64]) -> Option<f64> {
     Some((lo + hi) / 2.0)
 }
 
+/// Occurrence dates from `from`, stepping by `interval`, up to and including `to`.
+fn occurrences(from: &Date, to: &Date, interval: &str) -> Result<Vec<Date>, EngineError> {
+    // Guard against a zero step producing an unbounded loop.
+    let step_months = match interval {
+        "monthly" => Some(1),
+        "quarterly" => Some(3),
+        "annual" => Some(12),
+        "daily" | "weekly" => None,
+        other => {
+            return Err(EngineError::Schedule(format!(
+                "unsupported schedule interval: {other}"
+            )))
+        }
+    };
+    let step_days = match interval {
+        "daily" => Some(1),
+        "weekly" => Some(7),
+        _ => None,
+    };
+
+    let mut out = Vec::new();
+    let mut cursor = from.clone();
+    // A monthly stream over a century is ~1200 occurrences; this ceiling only
+    // exists so a malformed range cannot spin.
+    let limit = 100_000;
+    while cursor <= *to && out.len() < limit {
+        out.push(cursor.clone());
+        cursor = match (step_months, step_days) {
+            (Some(m), _) => cursor.add_months(m),
+            (_, Some(d)) => cursor.add_days(d),
+            _ => break,
+        };
+    }
+    Ok(out)
+}
+
+/// Move an occurrence within its own interval per `on day <n>` / `on eom`.
+fn place_in_interval(occurrence: &Date, on_rule: Option<&IrOnRule>) -> Date {
+    match on_rule {
+        Some(rule) if rule.kind == "EndOfMonth" => Date {
+            year: occurrence.year,
+            month: occurrence.month,
+            day: days_in_month(occurrence.year, occurrence.month),
+        },
+        Some(rule) if rule.kind == "DayOfMonth" => Date {
+            year: occurrence.year,
+            month: occurrence.month,
+            // Clamp so day 31 in a 30-day month lands on the 30th rather than
+            // rolling into the next period.
+            day: (rule.day.max(1) as u32).min(days_in_month(occurrence.year, occurrence.month)),
+        },
+        _ => occurrence.clone(),
+    }
+}
+
+/// The timeline bucket containing `date`: the last period starting at or
+/// before it. An occurrence mid-period belongs to that period, so an exact
+/// match is not required.
+fn period_index(timeline: &[Date], date: &Date) -> Option<usize> {
+    if timeline.first().is_some_and(|first| date < first) {
+        return None;
+    }
+    timeline.iter().rposition(|d| d <= date)
+}
+
 fn apply_schedule(
     schedule: &IrSchedule,
     amount: f64,
@@ -1454,8 +1519,19 @@ fn apply_schedule(
             let to = schedule.to.as_deref().unwrap_or(default_to.as_str());
             let from_date = Date::parse(from)?;
             let to_date = Date::parse(to)?;
-            for (idx, date) in timeline.iter().enumerate() {
-                if *date >= from_date && *date <= to_date {
+
+            // Step by the declared interval and pay once per occurrence.
+            //
+            // This used to select every timeline period in [from, to], which
+            // made the interval decorative: a quarterly stream on a monthly
+            // grid paid twelve times a year. The interval now decides how far
+            // apart occurrences are; the timeline only decides which bucket
+            // each one lands in.
+            let interval = schedule.every.as_deref().unwrap_or("monthly");
+            for occurrence in occurrences(&from_date, &to_date, interval)? {
+                let placed = place_in_interval(&occurrence, schedule.on_rule.as_ref());
+                let rolled = roll_date(&placed, roll);
+                if let Some(idx) = period_index(timeline, &rolled) {
                     out_values[idx] += amount;
                 }
             }
@@ -1821,6 +1897,13 @@ struct IrEntityRef {
 }
 
 #[derive(Debug, Deserialize)]
+struct IrOnRule {
+    kind: String,
+    #[serde(default)]
+    day: i32,
+}
+
+#[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 struct IrSchedule {
     kind: String,
@@ -1829,6 +1912,11 @@ struct IrSchedule {
     every: Option<String>,
     from: Option<String>,
     to: Option<String>,
+    /// Places an occurrence within its interval (`on day <n>` / `on eom`).
+    /// Previously not even deserialized, so the compiler emitted it and the
+    /// engine dropped it — `on day 15` had no effect on any cash flow.
+    #[serde(default)]
+    on_rule: Option<IrOnRule>,
     #[serde(default)]
     phase: Option<String>,
     #[serde(default)]
