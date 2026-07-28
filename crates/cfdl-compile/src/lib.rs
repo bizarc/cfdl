@@ -1847,7 +1847,7 @@ fn lower_schedule(
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
-            due: false,
+            due: schedule.due,
             on: None,
             every: Some(
                 schedule
@@ -1910,7 +1910,7 @@ fn lower_schedule(
             })?;
             Ok(IrSchedule {
                 kind: "Every".to_string(),
-                due: false,
+                due: schedule.due,
                 on: None,
                 every: Some(
                     schedule

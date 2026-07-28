@@ -1457,10 +1457,11 @@ fn occurrences(
         _ => d.clone(),
     };
     let mut cursor = if due { from.clone() } else { advance(from) };
+    let last = if due { to.clone() } else { advance(to) };
     // A monthly stream over a century is ~1200 occurrences; this ceiling only
     // exists so a malformed range cannot spin.
     let limit = 100_000;
-    while cursor <= *to && out.len() < limit {
+    while cursor <= last && out.len() < limit {
         out.push(cursor.clone());
         let next = advance(&cursor);
         if next == cursor {
