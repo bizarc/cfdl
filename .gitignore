@@ -73,6 +73,3 @@ site/.next/
 site/out/
 site/.vercel/
 .claude/launch.json
-
-# Local working files, never committed
-LAUNCH_PLAN.md
