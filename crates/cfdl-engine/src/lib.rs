@@ -665,6 +665,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut model_series = vec![0.0_f64; cash_periods];
+    // Each stream's series paired with where in its period the cash falls;
+    // valuation needs both, while reported cash uses model_series alone.
+    let mut valued_streams: Vec<(Vec<f64>, f64)> = Vec::new();
 
     // Phase 1: streams without series references. Their FULL (projection-
     // inclusive) values feed the series store for phase 2.
@@ -688,6 +691,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             None,
             &mut warnings,
         )?;
+        valued_streams.push((
+            values[..cash_periods.min(values.len())].to_vec(),
+            discount_offset(&stream.schedule),
+        ));
         record_stream(
             stream,
             &values,
@@ -713,6 +720,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Some(&full_series),
             &mut warnings,
         )?;
+        valued_streams.push((
+            values[..cash_periods.min(values.len())].to_vec(),
+            discount_offset(&stream.schedule),
+        ));
         record_stream(
             stream,
             &values,
@@ -729,6 +740,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         for (idx, value) in cash.iter().enumerate() {
             model_series[idx] += *value;
         }
+        valued_streams.push((cash.to_vec(), 0.0));
         let total = cash.iter().sum::<f64>();
         stream_totals.insert(format!("option.{name}"), total);
         stream_series.insert(format!("option.{name}"), cash.to_vec());
@@ -781,7 +793,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let model_total = model_series.iter().sum::<f64>();
     let ppy = periods_per_year(&ir.time.calendar);
     let per_period_rate = (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0;
-    let npv = npv(&model_series, per_period_rate);
+    let npv = npv_with_offsets(&valued_streams, per_period_rate);
     metrics.insert(
         "model.total".to_string(),
         Scalar::Money(Money {
@@ -796,7 +808,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             currency: ir.model.currency.clone(),
         }),
     );
-    if let Some(pp_irr) = irr(&model_series) {
+    if let Some(pp_irr) = irr_with_offsets(&valued_streams) {
         let annual_irr = (1.0 + pp_irr).powf(ppy) - 1.0;
         metrics.insert(
             "model.irr".to_string(),
@@ -1012,14 +1024,14 @@ fn evaluate_stream(
         }
     };
 
-    let schedule_mask = schedule_mask(&stream.schedule, timeline)?;
+    let schedule_accruals = schedule_accruals(&stream.schedule, timeline)?;
     let event_mask = event_sim.stream_active.get(&stream.name);
     let mut values = vec![0.0_f64; timeline.len()];
     let direction_sign = stream_direction_sign(stream, warnings);
-    for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
-        if !is_scheduled {
+    for (pay_idx, accrual) in schedule_accruals.iter().copied().enumerate() {
+        let Some(idx) = accrual else {
             continue;
-        }
+        };
         if let Some(mask) = event_mask {
             if !mask[idx] {
                 continue;
@@ -1046,7 +1058,8 @@ fn evaluate_stream(
                 warnings,
             )
         };
-        values[idx] += amount * direction_sign;
+        // Evaluated against the accrual period, settled in the payment period.
+        values[pay_idx] += amount * direction_sign;
     }
     Ok(values)
 }
@@ -1373,10 +1386,20 @@ fn insert_cfg_into_value(slot: &mut ExprValue, path: &[&str], value: f64) {
     insert_cfg_into_value(entry, tail, value);
 }
 
-fn schedule_mask(schedule: &IrSchedule, timeline: &[Date]) -> Result<Vec<bool>, EngineError> {
-    let mut values = vec![0.0_f64; timeline.len()];
-    apply_schedule(schedule, 1.0, timeline, &mut values)?;
-    Ok(values.into_iter().map(|value| value.abs() > 0.0).collect())
+/// For each timeline period, the period whose amount is paid there.
+///
+/// `None` means no payment. For an annuity due the two indices coincide. For
+/// an ordinary annuity the payment lands one interval after the period that
+/// earned it, so the amount must still be evaluated against the earning
+/// period — `time.t` inside the amount expression refers to accrual, not to
+/// settlement.
+fn schedule_accruals(
+    schedule: &IrSchedule,
+    timeline: &[Date],
+) -> Result<Vec<Option<usize>>, EngineError> {
+    let mut out = vec![None; timeline.len()];
+    apply_schedule_indices(schedule, timeline, &mut out)?;
+    Ok(out)
 }
 
 fn periods_per_year(calendar: &str) -> f64 {
@@ -1389,47 +1412,159 @@ fn periods_per_year(calendar: &str) -> f64 {
     }
 }
 
-fn npv(values: &[f64], rate: f64) -> f64 {
+/// How far through its period a payment falls, per docs/12_payment_timing.md.
+///
+/// A payment belongs to the period that earned it; this says where inside that
+/// period the cash sits, and so how far it is discounted. One mechanism covers
+/// every case — an annuity due sits at the start, an ordinary annuity at the
+/// end, and a day rule at its own point in between.
+fn discount_offset(schedule: &IrSchedule) -> f64 {
+    // A one-shot flow happens on its stated date, not at the end of the
+    // period containing it: a purchase on 2026-01 is settled then, so it is
+    // not discounted for a period it never waited through.
+    if schedule.kind == "OnDate" || schedule.due {
+        return 0.0;
+    }
+    match schedule.on_rule.as_ref() {
+        // `on day <n>`: n days into a nominal 30-day period.
+        Some(rule) if rule.kind == "DayOfMonth" => (rule.day.clamp(1, 31) as f64 / 30.0).min(1.0),
+        // End of month is the period end, same as the default.
+        _ => 1.0,
+    }
+}
+
+/// Present value of streams that each carry their own position in period.
+///
+/// `v / (1+r)^(t + offset)` factorises to `[v / (1+r)^offset] / (1+r)^t`, so a
+/// stream's offset is a constant scale on its whole series.
+fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
     let mut total = 0.0_f64;
-    for (i, value) in values.iter().enumerate() {
-        let discount = (1.0 + rate).powi(i as i32);
-        total += *value / discount;
+    for (values, offset) in streams {
+        let scale = (1.0 + rate).powf(-offset);
+        for (i, value) in values.iter().enumerate() {
+            total += value * scale / (1.0 + rate).powi(i as i32);
+        }
     }
     total
 }
 
-/// IRR via bisection. Returns None if no sign change in cashflows (undefined) or no convergence.
-fn irr(values: &[f64]) -> Option<f64> {
-    let has_pos = values.iter().any(|&v| v > 0.0);
-    let has_neg = values.iter().any(|&v| v < 0.0);
-    if !has_pos || !has_neg {
-        return None;
-    }
-    let f = |r: f64| npv(values, r);
+/// IRR over offset-carrying streams: the rate at which their present value is
+/// zero. Bisection, because the basis is rebuilt for each candidate rate.
+fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
+    let f = |r: f64| npv_with_offsets(streams, r);
     let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
-    if f(lo).signum() == f(hi).signum() {
+    let (mut f_lo, f_hi) = (f(lo), f(hi));
+    if f_lo.is_nan() || f_hi.is_nan() || f_lo * f_hi > 0.0 {
         return None;
     }
-    for _ in 0..300 {
+    for _ in 0..200 {
         let mid = (lo + hi) / 2.0;
-        let v = f(mid);
-        if v.abs() < 1e-4 || (hi - lo) < 1e-12 {
+        let f_mid = f(mid);
+        if f_mid.abs() < 1e-10 {
             return Some(mid);
         }
-        if f(lo).signum() == v.signum() {
-            lo = mid;
-        } else {
+        if f_lo * f_mid < 0.0 {
             hi = mid;
+        } else {
+            lo = mid;
+            f_lo = f_mid;
         }
     }
     Some((lo + hi) / 2.0)
 }
 
-fn apply_schedule(
+/// Advance a date by one interval.
+fn step_once(d: &Date, interval: &str) -> Date {
+    match interval {
+        "daily" => d.add_days(1),
+        "weekly" => d.add_days(7),
+        "quarterly" => d.add_months(3),
+        "annual" => d.add_months(12),
+        _ => d.add_months(1),
+    }
+}
+
+/// Occurrence dates from `from`, stepping by `interval`, up to and including `to`.
+fn occurrences(from: &Date, to: &Date, interval: &str) -> Result<Vec<Date>, EngineError> {
+    // Guard against a zero step producing an unbounded loop.
+    let step_months = match interval {
+        "monthly" => Some(1),
+        "quarterly" => Some(3),
+        "annual" => Some(12),
+        "daily" | "weekly" => None,
+        other => {
+            return Err(EngineError::Schedule(format!(
+                "unsupported schedule interval: {other}"
+            )))
+        }
+    };
+    let step_days = match interval {
+        "daily" => Some(1),
+        "weekly" => Some(7),
+        _ => None,
+    };
+
+    let mut out = Vec::new();
+    let advance = |d: &Date| match (step_months, step_days) {
+        (Some(m), _) => d.add_months(m),
+        (_, Some(days)) => d.add_days(days),
+        _ => d.clone(),
+    };
+    let mut cursor = from.clone();
+    let last = to.clone();
+    // A monthly stream over a century is ~1200 occurrences; this ceiling only
+    // exists so a malformed range cannot spin.
+    let limit = 100_000;
+    while cursor <= last && out.len() < limit {
+        out.push(cursor.clone());
+        let next = advance(&cursor);
+        if next == cursor {
+            break;
+        }
+        cursor = next;
+    }
+    Ok(out)
+}
+
+/// Move an occurrence within its own interval per `on day <n>` / `on eom`.
+fn place_in_interval(occurrence: &Date, on_rule: Option<&IrOnRule>) -> Date {
+    match on_rule {
+        Some(rule) if rule.kind == "EndOfMonth" => Date {
+            year: occurrence.year,
+            month: occurrence.month,
+            day: days_in_month(occurrence.year, occurrence.month),
+        },
+        Some(rule) if rule.kind == "DayOfMonth" => Date {
+            year: occurrence.year,
+            month: occurrence.month,
+            // Clamp so day 31 in a 30-day month lands on the 30th rather than
+            // rolling into the next period.
+            day: (rule.day.max(1) as u32).min(days_in_month(occurrence.year, occurrence.month)),
+        },
+        _ => occurrence.clone(),
+    }
+}
+
+/// The timeline bucket containing `date`: the last period starting at or
+/// before it. An occurrence mid-period belongs to that period, so an exact
+/// match is not required.
+fn period_index(timeline: &[Date], date: &Date) -> Option<usize> {
+    if timeline.first().is_some_and(|first| date < first) {
+        return None;
+    }
+    timeline.iter().rposition(|d| d <= date)
+}
+
+/// Populate `out[payment] = Some(accrual)` for every occurrence.
+///
+/// Mirrors `apply_schedule`, but records which period earned each payment
+/// rather than accumulating an amount. `OnDate` and the explicit `also`/
+/// `except` dates are point events, so their accrual and payment periods are
+/// the same.
+fn apply_schedule_indices(
     schedule: &IrSchedule,
-    amount: f64,
     timeline: &[Date],
-    out_values: &mut [f64],
+    out: &mut [Option<usize>],
 ) -> Result<(), EngineError> {
     let roll = schedule_roll(schedule)?;
     match schedule.kind.as_str() {
@@ -1437,7 +1572,7 @@ fn apply_schedule(
             if let Some(on) = &schedule.on {
                 let target = roll_date(&Date::parse(on)?, roll);
                 if let Some(idx) = timeline.iter().position(|d| *d == target) {
-                    out_values[idx] += amount;
+                    out[idx] = Some(idx);
                 }
             }
         }
@@ -1454,10 +1589,41 @@ fn apply_schedule(
             let to = schedule.to.as_deref().unwrap_or(default_to.as_str());
             let from_date = Date::parse(from)?;
             let to_date = Date::parse(to)?;
-            for (idx, date) in timeline.iter().enumerate() {
-                if *date >= from_date && *date <= to_date {
-                    out_values[idx] += amount;
-                }
+            let interval = schedule.every.as_deref().unwrap_or("monthly");
+
+            // Accruals run over [from, to]; each settles at its own end for an
+            // ordinary annuity, or at its start for an annuity due.
+            let starts = occurrences(&from_date, &to_date, interval)?;
+            for (k, start) in starts.iter().enumerate() {
+                let accrual_idx = match period_index(timeline, start) {
+                    Some(i) => i,
+                    None => continue,
+                };
+                // An annuity due pays as its interval opens. An ordinary
+                // annuity pays as it closes — the last calendar period the
+                // interval covers, which for an annual interval on a monthly
+                // grid is its twelfth month, not its first.
+                let pay_idx = if schedule.due {
+                    accrual_idx
+                } else {
+                    let next = starts
+                        .get(k + 1)
+                        .cloned()
+                        .unwrap_or_else(|| step_once(start, interval));
+                    // The interval closes in the last period before the
+                    // next one opens. Taking that directly, rather than
+                    // stepping back from the next interval's index, keeps the
+                    // final interval correct when it closes at or past the
+                    // end of the timeline.
+                    timeline
+                        .iter()
+                        .rposition(|d| *d < next)
+                        .unwrap_or(accrual_idx)
+                };
+                let placed = place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref());
+                let rolled = roll_date(&placed, roll);
+                let settled = period_index(timeline, &rolled).unwrap_or(pay_idx);
+                out[settled] = Some(accrual_idx);
             }
         }
         other => {
@@ -1466,18 +1632,16 @@ fn apply_schedule(
             )));
         }
     }
-    // `except [dates]` removes matching periods; `also [dates]` adds extra
-    // ones. Point dates are roll-adjusted like `on` dates.
     for raw in &schedule.except_dates {
         let target = roll_date(&Date::parse(raw)?, roll);
         if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out_values[idx] -= amount;
+            out[idx] = None;
         }
     }
     for raw in &schedule.also_dates {
         let target = roll_date(&Date::parse(raw)?, roll);
         if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out_values[idx] += amount;
+            out[idx] = Some(idx);
         }
     }
     Ok(())
@@ -1821,14 +1985,30 @@ struct IrEntityRef {
 }
 
 #[derive(Debug, Deserialize)]
+struct IrOnRule {
+    kind: String,
+    #[serde(default)]
+    day: i32,
+}
+
+#[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 struct IrSchedule {
     kind: String,
     on: Option<String>,
     #[serde(default)]
     every: Option<String>,
+    /// Annuity due: payment at the start of each interval. Absent means an
+    /// ordinary annuity — the interval elapses, then payment falls.
+    #[serde(default)]
+    due: bool,
     from: Option<String>,
     to: Option<String>,
+    /// Places an occurrence within its interval (`on day <n>` / `on eom`).
+    /// Previously not even deserialized, so the compiler emitted it and the
+    /// engine dropped it — `on day 15` had no effect on any cash flow.
+    #[serde(default)]
+    on_rule: Option<IrOnRule>,
     #[serde(default)]
     phase: Option<String>,
     #[serde(default)]
@@ -2505,7 +2685,8 @@ mod tests {
     #[test]
     fn irr_simple_two_period() {
         // Invest $1000, receive $1100 one period later → IRR = 10%
-        let result = super::irr(&[-1000.0, 1100.0]).expect("IRR should be defined");
+        let result = super::irr_with_offsets(&[(vec![-1000.0, 1100.0], 0.0)])
+            .expect("IRR should be defined");
         assert!(
             (result - 0.10).abs() < 1e-6,
             "expected IRR ≈ 0.10, got {result}"
@@ -2515,6 +2696,6 @@ mod tests {
     #[test]
     fn irr_undefined_all_positive() {
         // No sign change → IRR undefined
-        assert!(super::irr(&[100.0, 200.0]).is_none());
+        assert!(super::irr_with_offsets(&[(vec![100.0, 200.0], 0.0)]).is_none());
     }
 }

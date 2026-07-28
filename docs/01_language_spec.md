@@ -270,7 +270,7 @@ Syntax:
 
 ```cfdl
 stream asset.taxes on entity asset.sunset outflow currency USD {
-  schedule every monthly from 2026-01 to 2031-12
+  schedule every month from 2026-01 to 2031-12
   amount = 150000 / 12
 }
 ```
@@ -657,7 +657,7 @@ contract cre.lease on entity asset.sunset {
 
 stream loan.debt_service on entity loan.senior outflow currency USD {
   active when entity.status != "refinanced"
-  schedule every monthly from 2026-01 to 2031-12
+  schedule every month from 2026-01 to 2031-12
   amount = -pmt(0.06 / 12, 72, 8500000)
 }
 

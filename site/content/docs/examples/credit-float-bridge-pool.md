@@ -75,7 +75,7 @@ contract credit.purchase.bridge_f on entity fund.buyer {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | -345,806.44 | ±1 |
+| `model.npv` | -433,857.59 | ±1 |
 | `model.moic` | 1.151995 | ±0.0001 |
 | `model.wal_years` | 2.31456 | ±0.0001 |
 | `domain.credit.interest` | 2,671,722.78 | ±1 |

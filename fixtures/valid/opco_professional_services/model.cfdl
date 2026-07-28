@@ -7,49 +7,49 @@ entity capital equity
 
 // Recurring client retainers: $280k/mo base, 8% annual compound growth
 stream rev.retainers on entity operating.firm inflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 280000 * pow(1.08, time.t / 12.0)
 }
 
 // Project & transaction fees: $95k/mo base, 12% annual compound growth
 stream rev.project_fees on entity operating.firm inflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 95000 * pow(1.12, time.t / 12.0)
 }
 
 // Software licensing / IP royalties: $45k/mo base, 18% annual compound growth
 stream rev.licensing on entity operating.firm inflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 45000 * pow(1.18, time.t / 12.0)
 }
 
 // Compensation & benefits (billable staff + management team)
 stream opex.compensation on entity operating.firm outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 230000
 }
 
 // G&A: finance, legal, HR, executive overhead
 stream opex.ga on entity operating.firm outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 45000
 }
 
 // Facilities, IT infrastructure, software licenses
 stream opex.facilities on entity operating.firm outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 22000
 }
 
 // Sales & marketing, business development
 stream opex.sales_marketing on entity operating.firm outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 18000
 }
 
 // Working capital requirement
 stream opex.working_capital on entity operating.firm outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 14000
 }
 

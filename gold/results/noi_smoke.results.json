@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "6d9baa24699cef69f749522662ab7e24fce9ec33a19896127f527e4462fd2e3b",
+  "model_hash": "d855bda379ca8c7a232d6c297398061aceb57ae9f0b737a9d4a8eab6acc5bd6b",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -14,7 +14,7 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 398110.554397,
+        "amount": 397837.827124,
         "currency": "USD"
       },
       "model.total": {

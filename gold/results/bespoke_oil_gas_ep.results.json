@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "c007ffa4f7ac16c79c3b0a1a8567e252bfe8428f5ea22bb5af804e714f8a3a45",
+  "model_hash": "0495724698122b29d61bc8957118cbdc6afea5b50687a606abf287e1e844b880",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -23,7 +23,7 @@
       },
       "model.moic": 0.159388,
       "model.npv": {
-        "amount": -4820164.380607,
+        "amount": -4809720.485533,
         "currency": "USD"
       },
       "model.total": {
@@ -2018,7 +2018,7 @@
         "name": "base",
         "metrics": {
           "model.npv": {
-            "amount": -4820164.380607,
+            "amount": -4809720.485533,
             "currency": "USD"
           }
         }
@@ -2027,7 +2027,7 @@
         "name": "low_production",
         "metrics": {
           "model.npv": {
-            "amount": -3526238.099732,
+            "amount": -3526030.528641,
             "currency": "USD"
           }
         }

@@ -13,6 +13,6 @@ stream legal.rolled_payment on entity legal.borrower inflow currency USD {
 
 // Daily accrual with one explicit skip and one explicit extra date.
 stream legal.daily_fee on entity legal.borrower outflow currency USD {
-  schedule every daily from 2026-07-01 to 2026-07-05 except [2026-07-03] also [2026-07-08]
+  schedule every day from 2026-07-01 to 2026-07-05 except [2026-07-03] also [2026-07-08]
   amount = 10
 }

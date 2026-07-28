@@ -32,26 +32,33 @@ def main():
         ptc = production * PTC_RATE * ((1.0 + PTC_ESC) ** y) if y < PTC_YEARS else 0.0
         macrs = BASIS * (MACRS_5[y] if y < len(MACRS_5) else 0.0) / 12.0 * TAX_RATE
         om = (OM_YEAR / 12.0) * ((1.0 + OM_ESC) ** y)
+        shot = 0.0
         net = merchant + ptc + macrs - om
         if t < TERM_MONTHS:
             net -= monthly_debt
         if t == 0:
-            net -= CAPEX
-        rows.append((t, net))
+            shot -= CAPEX
+        rows.append((t, net, shot))
         revenue_total += merchant
         opex_total += om
         tax_benefits_total += ptc + macrs
 
-    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0
-    npv = sum(net / ((1.0 + monthly_rate) ** t) for t, net in rows)
+    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
+    # period that earned them, so they are discounted one full period — the
+    # same convention as Excel's NPV. One-shot flows (purchase, advance,
+    # exit proceeds) settle on their own date and are not.
+    npv = sum(
+        net / ((1.0 + monthly_rate) ** (t + 1)) + shot / ((1.0 + monthly_rate) ** t)
+        for t, net, shot in rows
+    )
     ebitda = revenue_total - opex_total
     debt_total = monthly_debt * TERM_MONTHS
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["period", "net_cash_flow"])
-        for t, net in rows:
-            writer.writerow([t, f"{net:.6f}"])
+        for t, net, shot in rows:
+            writer.writerow([t, f"{net + shot:.6f}"])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(

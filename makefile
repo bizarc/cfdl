@@ -47,7 +47,14 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench doc-examples
+ci: fmt lint test gold bench analytic doc-examples
+
+# Closed-form finance the engine must satisfy regardless of implementation.
+# The benchmark suite compares against reference implementations, which cannot
+# catch a convention both sides share; these identities can.
+analytic:
+	cargo build -p cfdl-cli
+	python3 tools/analytic-checks.py
 
 # Documentation examples must compile, run, and exercise what they claim.
 doc-examples:

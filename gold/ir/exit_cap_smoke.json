@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "decd44881d55d1c95cbf6c652aa4aa16",
+      "id": "864867633f8c2f0de4f4a88d09270660",
       "symbol": "real_estate.property",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "db20544d56f4f6b2f59e26727579e49c",
+      "id": "d964bc2a2baf6ed9f71eccfc70c02cb6",
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "01f65aca73ef593a51d1162cc8fdd6d4",
+      "id": "d69b78d7de8785d8f9fc88e36a0d5a16",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -105,8 +105,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.3.0",
-      "hash": "d646b49bb0a0581aca01fe4366077210",
+      "version": "0.4.0",
+      "hash": "93932cb4bb82f9e5cf37deb6b6369047",
       "notes": [
         "active_pack=cre@0.1.0"
       ]

@@ -18,14 +18,14 @@ stream capital.well_capex on entity capital.drillco outflow currency USD {
 
 // Monthly drilling & completion costs during drilling phase (t=0..5)
 stream capital.drilling_costs on entity capital.drillco outflow currency USD {
-  schedule every monthly from 2026-01 to 2026-06
+  schedule every month from 2026-01 to 2026-06
   amount = 250000
 }
 
 // Gross production revenue: $180k/mo at peak, 6%/mo exponential decline
 // t=12: $180,000; t=24: $84,843; t=36: $37,592; t=48: $18,827
 stream rev.gross_production on entity wellbore.asset inflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 180000 * pow(0.94, time.t - 12.0)
   active when time.t >= 12
 }
@@ -33,20 +33,20 @@ stream rev.gross_production on entity wellbore.asset inflow currency USD {
 // Royalty burden: 18.75% of gross revenue (landowner + overriding royalties)
 // NRI = 81.25%; royalty declines with production at same 6%/mo rate
 stream rev.royalty_burden on entity wellbore.asset outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 33750 * pow(0.94, time.t - 12.0)
   active when time.t >= 12
 }
 
 // LOE: pumping unit, chemicals, water disposal, field labor — begins at ramp phase
 stream opex.loe on entity operations.opco outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 28000
   active when time.t >= 6
 }
 
 // G&A overhead: corporate allocation, land, accounting (all 60 months)
 stream opex.ga on entity operations.opco outflow currency USD {
-  schedule every monthly from 2026-01 to 2030-12
+  schedule every month from 2026-01 to 2030-12
   amount = 12000
 }

@@ -114,7 +114,7 @@ contract opco.exit_ebitda on entity operating.target {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | 14,134,430.76 | ±1 |
+| `model.npv` | 14,165,827.31 | ±1 |
 | `model.moic` | 3.467004 | ±0.0001 |
 | `domain.opco.revenue` | 69,485,786.14 | ±1 |
 | `domain.opco.ebitda` | 26,469,420.78 | ±1 |

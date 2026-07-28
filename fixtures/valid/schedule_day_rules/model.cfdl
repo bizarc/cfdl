@@ -1,0 +1,16 @@
+version 0.1
+model "schedule-day-rules"
+time calendar daily from 2026-01-01 for 90
+entity legal co
+
+// Day-of-month places the occurrence inside its interval.
+stream co.rent on entity legal.co inflow currency USD {
+  schedule every month on day 15 from 2026-01-01 to 2026-03-31
+  amount = 100
+}
+
+// End-of-month clamps to each month's real length (February = 28).
+stream co.sweep on entity legal.co outflow currency USD {
+  schedule every month on eom from 2026-01-01 to 2026-03-31
+  amount = 50
+}

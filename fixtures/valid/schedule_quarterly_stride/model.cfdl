@@ -1,0 +1,10 @@
+version 0.1
+model "schedule-quarterly-stride"
+time calendar monthly from 2026-01 for 24
+entity legal co
+
+// A quarterly stream on a monthly grid pays 8 times over two years, not 24.
+stream co.coupon on entity legal.co inflow currency USD {
+  schedule every quarter from 2026-01 to 2027-12
+  amount = 1000
+}

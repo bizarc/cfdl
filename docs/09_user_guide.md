@@ -27,7 +27,7 @@ time calendar monthly from 2026-01 for 12
 entity legal borrower
 
 stream legal.rent on entity legal.borrower {
-  schedule every monthly from 2026-01 to 2026-12
+  schedule every month from 2026-01 to 2026-12
   amount = 1000
 }
 ```
@@ -157,7 +157,7 @@ curve sofr linear {
 }
 
 stream loan.interest on entity fund.buyer inflow currency USD {
-  schedule every monthly from 2026-01 to 2026-12
+  schedule every month from 2026-01 to 2026-12
   amount = 1000000 * (curve_value("sofr", time.date) + 0.0275) / 12
 }
 ```
@@ -182,12 +182,12 @@ schedule on 2026-06
 
 ### Monthly recurring
 ```cfdl
-schedule every monthly from 2026-01 to 2026-12
+schedule every month from 2026-01 to 2026-12
 ```
 
 ### Day rule example
 ```cfdl
-schedule every monthly on day 15 from 2026-01 to 2026-12
+schedule every month on day 15 from 2026-01 to 2026-12
 ```
 
 ---

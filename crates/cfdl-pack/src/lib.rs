@@ -264,6 +264,14 @@ pub struct LoweringRule {
     /// May contain `{{contract.<key>}}` placeholders (see expand_rule_template).
     pub amount_expr: String,
     pub schedule_kind: String,
+    /// Annuity due: the stream pays at the start of each interval.
+    ///
+    /// Streams that behave like an expense — opex, rent paid, fees, capex —
+    /// fall due in the period they belong to. Streams that behave like an
+    /// annuity — coupons, debt service, pool collections — pay at the end of
+    /// the interval that earned them, which is the default.
+    #[serde(default)]
+    pub schedule_due: bool,
     /// May contain `{{contract.term_start}}` / `{{contract.<key>}}` placeholders.
     pub schedule_from: String,
     /// May contain `{{contract.term_end}}` / `{{contract.<key>}}` placeholders.

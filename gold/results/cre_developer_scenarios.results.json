@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "105cf13a41f1d5baa7aa01395199ff35b34e70b1c4e03f4ec3b4123fad6bc2f9",
+  "model_hash": "ab300f79ff6492d18fb15bf356c4514a2e754d5f409569e7537158a1c3f83584",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -13,10 +13,10 @@
         "amount": 5244000.0,
         "currency": "USD"
       },
-      "model.irr": 1.759989,
+      "model.irr": 1.765141,
       "model.moic": 20.422222,
       "model.npv": {
-        "amount": 3267530.48719,
+        "amount": 3255184.451877,
         "currency": "USD"
       },
       "model.payback_periods": 16.0,
@@ -2043,7 +2043,7 @@
         "name": "base",
         "metrics": {
           "model.npv": {
-            "amount": 3267530.48719,
+            "amount": 3255184.451877,
             "currency": "USD"
           }
         }
@@ -2052,7 +2052,7 @@
         "name": "stress",
         "metrics": {
           "model.npv": {
-            "amount": 2861020.717459,
+            "amount": 2849961.520616,
             "currency": "USD"
           }
         }

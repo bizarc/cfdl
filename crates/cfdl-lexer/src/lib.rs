@@ -89,10 +89,22 @@ pub enum Keyword {
     Calendar,
     From,
     For,
+    // Calendar cadence: describes the grid a model is evaluated on.
     Daily,
     Monthly,
     Quarterly,
     Annual,
+    // Schedule interval: how far apart a recurring stream's payments are.
+    // Deliberately distinct from the cadence above — `time calendar monthly`
+    // reads adjectivally, `every month` reads as an interval, and only the
+    // interval set has a weekly member (a weekly grid is not representable).
+    // `day` reuses the existing Keyword::Day, which `on day <n>` also uses;
+    // position disambiguates them.
+    Due,
+    Week,
+    Month,
+    Quarter,
+    Year,
     Phase,
     To,
     Entity,
@@ -606,6 +618,11 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "monthly" => Keyword::Monthly,
         "quarterly" => Keyword::Quarterly,
         "annual" => Keyword::Annual,
+        "due" => Keyword::Due,
+        "week" => Keyword::Week,
+        "month" => Keyword::Month,
+        "quarter" => Keyword::Quarter,
+        "year" => Keyword::Year,
         "phase" => Keyword::Phase,
         "to" => Keyword::To,
         "entity" => Keyword::Entity,

@@ -55,6 +55,7 @@ def main():
         "taxes": 0.0, "debt_service": 0.0, "fcf": 0.0,
     }
     net = [0.0] * PERIODS
+    shots = [0.0] * PERIODS
     for t in range(PERIODS):
         revenue, ox = rev(t), opex(t)
         ebitda = revenue - ox
@@ -76,10 +77,10 @@ def main():
         taxes = max(0.0, TAX_RATE * (ebitda - interest - DA_MONTHLY))
         net[t] += ebitda - capex - wc_flow - interest - principal - taxes
         if t == 0:
-            net[t] += PRINCIPAL - PRICE
+            shots[t] += PRINCIPAL - PRICE
         if t == PERIODS - 1:
             trailing = sum(rev(s) - opex(s) for s in range(PERIODS - 12, PERIODS))
-            net[t] += EXIT_MULTIPLE * trailing * (1.0 - SELLING_COSTS)
+            shots[t] += EXIT_MULTIPLE * trailing * (1.0 - SELLING_COSTS)
         totals["revenue"] += revenue
         totals["ebitda"] += ebitda
         totals["capex"] += capex
@@ -88,8 +89,15 @@ def main():
         totals["debt_service"] += interest + principal
         totals["fcf"] += ebitda - capex - wc_flow - taxes
 
-    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0
-    npv = sum(v / ((1.0 + monthly_rate) ** t) for t, v in enumerate(net))
+    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
+    # period that earned them, so they are discounted one full period — the
+    # same convention as Excel's NPV. One-shot flows (purchase, advance,
+    # exit proceeds) settle on their own date and are not.
+    npv = sum(
+        v / ((1.0 + monthly_rate) ** (t + 1)) for t, v in enumerate(net)
+    ) + sum(v / ((1.0 + monthly_rate) ** t) for t, v in enumerate(shots))
+    for t in range(PERIODS):
+        net[t] += shots[t]
     inflows = sum(v for v in net if v > 0.0)
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows

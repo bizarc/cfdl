@@ -8,7 +8,7 @@ use tower::ServiceExt;
 
 use cfdl_server::app;
 
-const MODEL: &str = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 3\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every monthly from 2026-01 to 2026-03\n  amount = 1000\n}\n";
+const MODEL: &str = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 3\nentity legal borrower\nstream legal.rent on entity legal.borrower {\n  schedule every month from 2026-01 to 2026-03\n  amount = 1000\n}\n";
 
 async fn post(path: &str, body: serde_json::Value) -> (StatusCode, serde_json::Value) {
     let response = app()

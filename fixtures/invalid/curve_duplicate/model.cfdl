@@ -13,6 +13,6 @@ curve sofr {
 entity fund buyer
 
 stream test.interest on entity fund.buyer inflow currency USD {
-  schedule every monthly from 2026-01 to 2026-12
+  schedule every month from 2026-01 to 2026-12
   amount = curve_value("sofr", time.date)
 }
