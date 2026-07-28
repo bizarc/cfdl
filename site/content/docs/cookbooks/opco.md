@@ -166,6 +166,10 @@ independent recursive reference) and the LBO notebook in
 
 ## Worked example models
 
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)
 - [Operating Business examples overview](/docs/examples/operating-business-examples)
 - [Basic OpCo](/docs/examples/opco_basic)
 - [Growth via expressions](/docs/examples/opco_with_growth)

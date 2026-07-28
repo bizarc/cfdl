@@ -373,7 +373,6 @@ exampleIndexLines.push("");
 exampleIndexLines.push("- [CRE examples](/docs/examples/cre-examples) — Commercial Real Estate: lease-up, full lifecycle, phased, multi-file, development with financing.");
 exampleIndexLines.push("- [Operating Business examples](/docs/examples/operating-business-examples) — OpCo: revenue, opex, working capital, exit multiple, growth, multi-file.");
 exampleIndexLines.push("");
-writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
 
 // Domain examples (CRE and OpCo): generate pages that embed code so the site shows structure without repo access
 const domainExampleOrder = [
@@ -473,6 +472,132 @@ const referenceIndex = [
 writeGenerated("reference.md", referenceIndex);
 
 // --- Cookbooks: one page per pack, synced from packs/<pack>/README.md -------
+// --- Benchmark cases, discovered once and used for both the worked-example
+// --- pages below and the methodology page further down. --------------------
+const benchRoot = path.resolve(repoRoot, "benchmarks");
+const benchCases = [];
+if (fs.existsSync(benchRoot)) {
+  for (const pack of fs.readdirSync(benchRoot).sort()) {
+    const packDir = path.resolve(benchRoot, pack);
+    if (!fs.statSync(packDir).isDirectory()) continue;
+    for (const name of fs.readdirSync(packDir).sort()) {
+      const caseDir = path.resolve(packDir, name);
+      if (!fs.statSync(caseDir).isDirectory()) continue;
+      if (!fs.existsSync(path.resolve(caseDir, "model.cfdl"))) continue;
+      benchCases.push({ pack, name });
+    }
+  }
+}
+
+// The benchmark models are the strongest examples in the repository: each is
+// diffed period-by-period against an independent reference implementation, so
+// their numbers are verified rather than asserted. Publishing them gives every
+// pack the same depth of worked example — energy and credit previously had
+// none — without inventing models that nothing validates.
+
+const benchmarkTitles = {
+  "cre/office_two_tenant": "CRE: two-tenant office",
+  "cre/retail_strip": "CRE: retail strip with expense stops",
+  "credit/level_pay_pool": "Credit: level-pay auto pool",
+  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
+  "energy/solar_ppa_microgrid": "Energy: solar PPA microgrid",
+  "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
+  "opco/lbo_buyout": "OpCo: leveraged buyout"
+};
+
+/** The description a case states in the leading comments of case.toml. */
+function benchmarkSummary(caseDir) {
+  const lines = fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8").split("\n");
+  const prose = [];
+  for (const line of lines) {
+    if (!line.startsWith("#")) break;
+    prose.push(line.replace(/^#\s?/, "").replace(/^Benchmark case:\s*/, ""));
+  }
+  return prose.filter((l) => l && !/^(Reference|Status):/.test(l)).join(" ").trim();
+}
+
+function formatMetricValue(value) {
+  return Math.abs(value) >= 1000
+    ? value.toLocaleString("en-US", { maximumFractionDigits: 2 })
+    : String(value);
+}
+
+const benchmarkExampleLinks = {};
+
+for (const { pack, name } of benchCases) {
+  const caseDir = path.resolve(benchRoot, pack, name);
+  const key = `${pack}/${name}`;
+  const slug = `${pack}-${name.replaceAll("_", "-")}`;
+  const title = benchmarkTitles[key] ?? `${pack}: ${name.replaceAll("_", " ")}`;
+
+  const model = fs.readFileSync(path.resolve(caseDir, "model.cfdl"), "utf8").trimEnd();
+  const runConfig = fs.readFileSync(path.resolve(caseDir, "run.json"), "utf8").trimEnd();
+  const metrics = JSON.parse(
+    fs.readFileSync(path.resolve(caseDir, "expected_metrics.json"), "utf8")
+  );
+
+  writeGenerated(
+    `examples/${slug}.md`,
+    [
+      "---",
+      `id: benchmark-${slug}`,
+      `title: "${title}"`,
+      `slug: "/docs/examples/${slug}"`,
+      `source: benchmarks/${key}`,
+      "---",
+      "",
+      `# ${title}`,
+      "",
+      benchmarkSummary(caseDir),
+      "",
+      "Every number below is checked against an independent reference",
+      "implementation on every commit — period by period, and on each metric,",
+      "inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).",
+      "",
+      "## The model",
+      "",
+      "```cfdl",
+      model,
+      "```",
+      "",
+      "## Run configuration",
+      "",
+      "```json",
+      runConfig,
+      "```",
+      "",
+      "## Verified results",
+      "",
+      "| Metric | Value | Tolerance |",
+      "|---|---:|---:|",
+      ...Object.entries(metrics).map(
+        ([metric, spec]) =>
+          `| \`${metric}\` | ${formatMetricValue(spec.value)} | ±${spec.tolerance} |`
+      ),
+      ""
+    ].join("\n")
+  );
+
+  (benchmarkExampleLinks[pack] ??= []).push([title, `/docs/examples/${slug}`]);
+}
+
+exampleIndexLines.push("");
+exampleIndexLines.push("## Benchmark models");
+exampleIndexLines.push("");
+exampleIndexLines.push(
+  "Complete models for every pack, each checked period-by-period against an " +
+    "independent reference implementation. These are the most detailed examples " +
+    "on the site, and their numbers are verified rather than asserted."
+);
+exampleIndexLines.push("");
+for (const pack of ["energy", "cre", "credit", "opco"]) {
+  for (const [label, href] of benchmarkExampleLinks[pack] ?? []) {
+    exampleIndexLines.push(`- [${label}](${href})`);
+  }
+}
+writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
+
 const cookbookPacks = ["energy", "cre", "credit", "opco"];
 const packTitles = { energy: "Energy", cre: "CRE", credit: "Credit", opco: "OpCo" };
 const cookbookIndexLines = [
@@ -512,10 +637,15 @@ for (const pack of cookbookPacks) {
   const readmePath = path.resolve(repoRoot, `packs/${pack}/README.md`);
   if (!fs.existsSync(readmePath)) continue;
   let body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
-  const worked = packWorkedExamples[pack];
-  if (worked) {
+  const worked = [
+    ...(benchmarkExampleLinks[pack] ?? []),
+    ...(packWorkedExamples[pack] ?? [])
+  ];
+  if (worked.length) {
     body +=
       "\n## Worked example models\n\n" +
+      "Benchmark cases are validated period-by-period against an independent\n" +
+      "reference implementation.\n\n" +
       worked.map(([label, href]) => `- [${label}](${href})`).join("\n") +
       "\n";
   }
@@ -553,20 +683,6 @@ cookbookIndexLines.push("");
 writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
 
 // --- Benchmark methodology page --------------------------------------------
-const benchRoot = path.resolve(repoRoot, "benchmarks");
-const benchCases = [];
-if (fs.existsSync(benchRoot)) {
-  for (const pack of fs.readdirSync(benchRoot).sort()) {
-    const packDir = path.resolve(benchRoot, pack);
-    if (!fs.statSync(packDir).isDirectory()) continue;
-    for (const name of fs.readdirSync(packDir).sort()) {
-      const caseDir = path.resolve(packDir, name);
-      if (!fs.statSync(caseDir).isDirectory()) continue;
-      if (!fs.existsSync(path.resolve(caseDir, "model.cfdl"))) continue;
-      benchCases.push({ pack, name });
-    }
-  }
-}
 
 const benchLines = [
   "---",

@@ -199,3 +199,12 @@ vocabulary, interest-only until the balloon.
 Full worked models: `benchmarks/credit/level_pay_pool/`,
 `io_bullet_loan/`, `float_bridge_pool/`, and the loan-pool notebook in
 `examples/notebooks/`.
+
+## Worked example models
+
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
+- [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
+- [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)

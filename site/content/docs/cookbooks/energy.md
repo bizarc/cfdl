@@ -116,3 +116,11 @@ credit window) with `energy.macrs_shield` (IRS Pub 946 GDS tables via
 
 Full worked models: `benchmarks/energy/solar_ppa_microgrid/` and the solar
 microgrid notebook in `examples/notebooks/`.
+
+## Worked example models
+
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
+- [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)

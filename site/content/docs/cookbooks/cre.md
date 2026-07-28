@@ -252,6 +252,11 @@ rent), and the CRE office notebook in `examples/notebooks/`.
 
 ## Worked example models
 
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
+- [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
 - [CRE examples overview](/docs/examples/cre-examples)
 - [Lease-up](/docs/examples/cre_lease_up)
 - [Developer lifecycle](/docs/examples/cre_developer)
