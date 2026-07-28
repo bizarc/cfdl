@@ -9,7 +9,6 @@ const scriptDir = path.dirname(new URL(import.meta.url).pathname);
 const siteDir = path.resolve(scriptDir, "..");
 const repoRoot = path.resolve(siteDir, "..");
 const docsOutputRoot = path.resolve(siteDir, "content", "docs");
-const REPO_HTTP_BASE = "https://github.com/bizarc/cfdl/blob/main";
 
 /**
  * Remove only the top-level H1 so Docusaurus frontmatter title is authoritative.
@@ -39,10 +38,7 @@ function namespaceLegacyDocLinks(markdown) {
 
 function normalizeLinks(markdown) {
   return namespaceLegacyDocLinks(markdown
-    .replaceAll(
-      "](schemas/CFDL_v0_1_Grammar.ebnf)",
-      `](${REPO_HTTP_BASE}/docs/schemas/CFDL_v0_1_Grammar.ebnf)`
-    )
+    .replaceAll("](schemas/CFDL_v0_1_Grammar.ebnf)", "](/schemas/CFDL_v0_1_Grammar.ebnf)")
     .replaceAll(
       '"When to use streams vs contracts" in `docs/09_user_guide.md`',
       "[When to use streams vs contracts](/docs/language-guide#when-to-use-streams-vs-contracts)"
@@ -98,10 +94,6 @@ function readSource(relativePath) {
   return fs.readFileSync(absolutePath, "utf8");
 }
 
-function sourceHttpUrl(relativePath) {
-  return `${REPO_HTTP_BASE}/${toPosix(relativePath)}`;
-}
-
 /**
  * Provenance lives in frontmatter, not on the page.
  *
@@ -124,8 +116,7 @@ function renderDoc(frontmatter, sourcePath, body) {
   return fm.join("\n");
 }
 
-function buildCompilerSpecDigest(sourcePath) {
-  const sourceUrl = sourceHttpUrl(sourcePath);
+function buildCompilerSpecDigest() {
   return [
     "This page is a usability-focused digest of the compiler spec for model authors and SDK integrators.",
     "",
@@ -150,19 +141,13 @@ function buildCompilerSpecDigest(sourcePath) {
     "- Arrays in IR are canonically ordered (entities/contracts/streams/etc).",
     "- Deterministic IDs are derived from stable keys.",
     "",
-    "## Sections to read in the full spec",
+    "## Related reference",
     "",
-    "- AST model and spans",
-    "- Validation rules and required statements",
-    "- Lowering and normalization rules",
-    "- IR assembly and canonical ordering",
-    "- Diagnostics contract and error code guide",
+    "- [Diagnostics](/docs/language-reference/diagnostics) — the error code guide",
+    "- [IR schema](/docs/language-reference/ir-schema) — canonical ordering and shape",
+    "- [Pack interface](/docs/language-reference/pack-interface) — lowering rules",
+    "- [Language spec](/docs/language-reference/language-spec) — validation rules",
     "",
-    "## Full compiler spec",
-    "",
-    `- [Open full compiler spec source](${sourceUrl})`,
-    "",
-    "If you need strict implementation-level details, use the full source spec above as authoritative.",
     ""
   ].join("\n");
 }
@@ -310,7 +295,7 @@ const docSpecs = [
 
 for (const spec of docSpecs) {
   let body = spec.digestOnly
-    ? buildCompilerSpecDigest(spec.source)
+    ? buildCompilerSpecDigest()
     : normalizeLinks(stripLeadingH1(readSource(spec.source)));
   const rendered = renderDoc(spec.frontmatter, spec.source, body);
   writeGenerated(spec.output, rendered);
@@ -388,7 +373,6 @@ exampleIndexLines.push("");
 exampleIndexLines.push("- [CRE examples](/docs/examples/cre-examples) — Commercial Real Estate: lease-up, full lifecycle, phased, multi-file, development with financing.");
 exampleIndexLines.push("- [Operating Business examples](/docs/examples/operating-business-examples) — OpCo: revenue, opex, working capital, exit multiple, growth, multi-file.");
 exampleIndexLines.push("");
-writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
 
 // Domain examples (CRE and OpCo): generate pages that embed code so the site shows structure without repo access
 const domainExampleOrder = [
@@ -488,6 +472,230 @@ const referenceIndex = [
 writeGenerated("reference.md", referenceIndex);
 
 // --- Cookbooks: one page per pack, synced from packs/<pack>/README.md -------
+// --- Benchmark cases, discovered once and used for both the worked-example
+// --- pages below and the methodology page further down. --------------------
+const benchRoot = path.resolve(repoRoot, "benchmarks");
+const benchCases = [];
+if (fs.existsSync(benchRoot)) {
+  for (const pack of fs.readdirSync(benchRoot).sort()) {
+    const packDir = path.resolve(benchRoot, pack);
+    if (!fs.statSync(packDir).isDirectory()) continue;
+    for (const name of fs.readdirSync(packDir).sort()) {
+      const caseDir = path.resolve(packDir, name);
+      if (!fs.statSync(caseDir).isDirectory()) continue;
+      if (!fs.existsSync(path.resolve(caseDir, "model.cfdl"))) continue;
+      benchCases.push({ pack, name });
+    }
+  }
+}
+
+// The benchmark models are the strongest examples in the repository: each is
+// diffed period-by-period against an independent reference implementation, so
+// their numbers are verified rather than asserted. Publishing them gives every
+// pack the same depth of worked example — energy and credit previously had
+// none — without inventing models that nothing validates.
+
+const benchmarkTitles = {
+  "cre/office_two_tenant": "CRE: two-tenant office",
+  "cre/retail_strip": "CRE: retail strip with expense stops",
+  "credit/level_pay_pool": "Credit: level-pay auto pool",
+  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
+  "energy/solar_ppa_microgrid": "Energy: solar PPA microgrid",
+  "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
+  "opco/lbo_buyout": "OpCo: leveraged buyout"
+};
+
+/** The description a case states in the leading comments of case.toml. */
+function benchmarkSummary(caseDir) {
+  const lines = fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8").split("\n");
+  const prose = [];
+  for (const line of lines) {
+    if (!line.startsWith("#")) break;
+    prose.push(line.replace(/^#\s?/, "").replace(/^Benchmark case:\s*/, ""));
+  }
+  return prose.filter((l) => l && !/^(Reference|Status):/.test(l)).join(" ").trim();
+}
+
+function formatMetricValue(value) {
+  return Math.abs(value) >= 1000
+    ? value.toLocaleString("en-US", { maximumFractionDigits: 2 })
+    : String(value);
+}
+
+const benchmarkExampleLinks = {};
+
+for (const { pack, name } of benchCases) {
+  const caseDir = path.resolve(benchRoot, pack, name);
+  const key = `${pack}/${name}`;
+  const slug = `${pack}-${name.replaceAll("_", "-")}`;
+  const title = benchmarkTitles[key] ?? `${pack}: ${name.replaceAll("_", " ")}`;
+
+  const model = fs.readFileSync(path.resolve(caseDir, "model.cfdl"), "utf8").trimEnd();
+  const runConfig = fs.readFileSync(path.resolve(caseDir, "run.json"), "utf8").trimEnd();
+  const metrics = JSON.parse(
+    fs.readFileSync(path.resolve(caseDir, "expected_metrics.json"), "utf8")
+  );
+
+  writeGenerated(
+    `examples/${slug}.md`,
+    [
+      "---",
+      `id: benchmark-${slug}`,
+      `title: "${title}"`,
+      `slug: "/docs/examples/${slug}"`,
+      `source: benchmarks/${key}`,
+      "---",
+      "",
+      `# ${title}`,
+      "",
+      benchmarkSummary(caseDir),
+      "",
+      "Every number below is checked against an independent reference",
+      "implementation on every commit — period by period, and on each metric,",
+      "inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).",
+      "",
+      "## The model",
+      "",
+      "```cfdl",
+      model,
+      "```",
+      "",
+      "## Run configuration",
+      "",
+      "```json",
+      runConfig,
+      "```",
+      "",
+      "## Verified results",
+      "",
+      "| Metric | Value | Tolerance |",
+      "|---|---:|---:|",
+      ...Object.entries(metrics).map(
+        ([metric, spec]) =>
+          `| \`${metric}\` | ${formatMetricValue(spec.value)} | ±${spec.tolerance} |`
+      ),
+      ""
+    ].join("\n")
+  );
+
+  (benchmarkExampleLinks[pack] ??= []).push([title, `/docs/examples/${slug}`]);
+}
+
+exampleIndexLines.push("");
+exampleIndexLines.push("## Benchmark models");
+exampleIndexLines.push("");
+exampleIndexLines.push(
+  "Complete models for every pack, each checked period-by-period against an " +
+    "independent reference implementation. These are the most detailed examples " +
+    "on the site, and their numbers are verified rather than asserted."
+);
+exampleIndexLines.push("");
+for (const pack of ["energy", "cre", "credit", "opco"]) {
+  for (const [label, href] of benchmarkExampleLinks[pack] ?? []) {
+    exampleIndexLines.push(`- [${label}](${href})`);
+  }
+}
+writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
+
+
+/**
+ * Domain metrics and validations, rendered from the pack's own TOML.
+ *
+ * Both were largely absent from the guides — a reader could see which
+ * contracts a pack offered but not what it computed from them, nor what it
+ * refuses to accept. Generating the tables from the source of truth means the
+ * guide states exactly what the pack implements, and cannot drift from it.
+ */
+function parsePackMetrics(pack) {
+  const file = path.resolve(repoRoot, `packs/${pack}/metrics.toml`);
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, "utf8")
+    .split("[[metrics]]")
+    .slice(1)
+    .map((block) => {
+      // `formula` is almost always the literal "sum(numerator_streams)", which
+      // tells a reader nothing; the streams themselves are the useful part.
+      const streams = [...block.matchAll(/"([a-z_]+\.[a-z_.]+)"/g)]
+        .map((m) => m[1])
+        .filter((s) => !s.startsWith("domain."));
+      // A true ratio declares op = "ratio" over two other metrics;
+      // denominator_streams just means those streams are netted off.
+      const op = (block.match(/^op = "([^"]+)"/m) ?? [])[1] ?? "";
+      const overMetrics = [
+        (block.match(/^numerator_metric = "([^"]+)"/m) ?? [])[1],
+        (block.match(/^denominator_metric = "([^"]+)"/m) ?? [])[1]
+      ].filter(Boolean);
+      return {
+        id: (block.match(/^id = "([^"]+)"/m) ?? [])[1],
+        kind: (block.match(/^kind = "([^"]+)"/m) ?? [])[1] ?? "",
+        streams: [...new Set(streams)],
+        op,
+        overMetrics
+      };
+    })
+    .filter((m) => m.id);
+}
+
+function parsePackValidations(pack) {
+  const file = path.resolve(repoRoot, `packs/${pack}/validations.toml`);
+  if (!fs.existsSync(file)) return [];
+  return fs
+    .readFileSync(file, "utf8")
+    .split("[[validations]]")
+    .slice(1)
+    .map((block) => ({
+      code: (block.match(/^code = "([^"]+)"/m) ?? [])[1],
+      message: (block.match(/^message = "([^"]+)"/m) ?? [])[1] ?? ""
+    }))
+    .filter((v) => v.code);
+}
+
+function packReferenceSections(pack) {
+  const metrics = parsePackMetrics(pack);
+  const validations = parsePackValidations(pack);
+  const out = [];
+
+  if (metrics.length) {
+    out.push(
+      "",
+      "## Metrics reference",
+      "",
+      `Computed automatically whenever a model runs with the \`${pack}\` pack, ` +
+        "alongside the core metrics (NPV, IRR, MOIC, payback, WAL). " +
+        "Enumerated from the pack definition, so this list is always complete.",
+      "",
+      "| Metric | Type | Built from |",
+      "|---|---|---|",
+      ...metrics.map((m) => {
+        const from = m.overMetrics.length
+          ? m.overMetrics.map((x) => `\`${x}\``).join(" ÷ ")
+          : m.streams.length
+            ? m.streams.map((s) => `\`${s}\``).join(", ")
+            : "derived";
+        return `| \`${m.id}\` | ${m.kind} | ${from} |`;
+      })
+    );
+  }
+
+  if (validations.length) {
+    out.push(
+      "",
+      "## Validations reference",
+      "",
+      "Checked at compile time. Each is a stable diagnostic code that is never " +
+        "renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).",
+      "",
+      "| Code | Rejects |",
+      "|---|---|",
+      ...validations.map((v) => `| \`${v.code}\` | ${v.message} |`)
+    );
+  }
+
+  return out.length ? out.join("\n") + "\n" : "";
+}
+
 const cookbookPacks = ["energy", "cre", "credit", "opco"];
 const packTitles = { energy: "Energy", cre: "CRE", credit: "Credit", opco: "OpCo" };
 const cookbookIndexLines = [
@@ -527,10 +735,17 @@ for (const pack of cookbookPacks) {
   const readmePath = path.resolve(repoRoot, `packs/${pack}/README.md`);
   if (!fs.existsSync(readmePath)) continue;
   let body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
-  const worked = packWorkedExamples[pack];
-  if (worked) {
+  const worked = [
+    ...(benchmarkExampleLinks[pack] ?? []),
+    ...(packWorkedExamples[pack] ?? [])
+  ];
+  body += packReferenceSections(pack);
+
+  if (worked.length) {
     body +=
       "\n## Worked example models\n\n" +
+      "Benchmark cases are validated period-by-period against an independent\n" +
+      "reference implementation.\n\n" +
       worked.map(([label, href]) => `- [${label}](${href})`).join("\n") +
       "\n";
   }
@@ -564,27 +779,10 @@ for (const [title, slug] of [
   cookbookIndexLines.push(`- [${title}](/docs/notebooks/${slug})`);
 }
 cookbookIndexLines.push("");
-cookbookIndexLines.push(
-  `The sources live in [\`examples/notebooks/\`](${REPO_HTTP_BASE}/examples/notebooks).`
-);
-cookbookIndexLines.push("");
+
 writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
 
 // --- Benchmark methodology page --------------------------------------------
-const benchRoot = path.resolve(repoRoot, "benchmarks");
-const benchCases = [];
-if (fs.existsSync(benchRoot)) {
-  for (const pack of fs.readdirSync(benchRoot).sort()) {
-    const packDir = path.resolve(benchRoot, pack);
-    if (!fs.statSync(packDir).isDirectory()) continue;
-    for (const name of fs.readdirSync(packDir).sort()) {
-      const caseDir = path.resolve(packDir, name);
-      if (!fs.statSync(caseDir).isDirectory()) continue;
-      if (!fs.existsSync(path.resolve(caseDir, "model.cfdl"))) continue;
-      benchCases.push({ pack, name });
-    }
-  }
-}
 
 const benchLines = [
   "---",
@@ -627,9 +825,15 @@ writeGenerated("benchmarks.md", benchLines.join("\n"));
 
 // --- Stage JSON schemas at their $id path (static/schemas/...) --------------
 const schemaStaticDir = path.resolve(siteDir, "public", "schemas");
-for (const schema of ["CFDL_v0_1_IR.schema.json", "CFDL_v0_1_Results.schema.json"]) {
-  const src = path.resolve(repoRoot, "docs", "schemas",
-    schema.replace("CFDL_v0_1_IR", "ir").replace("CFDL_v0_1_Results", "results"));
+// The grammar is staged alongside the JSON schemas so the reference page can
+// offer a download instead of sending readers into the repository.
+const stagedSchemas = {
+  "CFDL_v0_1_IR.schema.json": "ir.schema.json",
+  "CFDL_v0_1_Results.schema.json": "results.schema.json",
+  "CFDL_v0_1_Grammar.ebnf": "CFDL_v0_1_Grammar.ebnf"
+};
+for (const [schema, sourceName] of Object.entries(stagedSchemas)) {
+  const src = path.resolve(repoRoot, "docs", "schemas", sourceName);
   const content = fs.readFileSync(src, "utf8");
   const target = path.resolve(schemaStaticDir, schema);
   if (checkMode) {

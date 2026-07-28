@@ -120,9 +120,23 @@ contract opco.opex_line on entity operating.target {
   terms { amount = 650000 growth_rate = 0.04 }
 }
 
+// Net working capital nets to zero over the full term because
+// release_at_end returns the investment at exit — that is the point of the
+// term, not an inert stream.
+// examples-allow: working_capital.adjustment — released in full at exit
 contract opco.working_capital_policy on entity operating.target {
   term 2026-01..2030-12
   terms { ar_days = 45 ap_days = 30 inv_days = 10 release_at_end = 1 }
+}
+
+contract opco.capex_line on entity operating.target {
+  term 2026-01..2030-12
+  terms { amount = 40000 pct_of_revenue = 0.01 }
+}
+
+contract opco.term_debt on entity operating.target {
+  term 2026-01..2030-12
+  terms { principal = 20000000 rate = 0.09 amort_months = 84 }
 }
 ```
 
@@ -164,8 +178,47 @@ Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
 independent recursive reference) and the LBO notebook in
 `examples/notebooks/`.
 
+## Metrics reference
+
+Computed automatically whenever a model runs with the `opco` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.opco.revenue` | money | derived |
+| `domain.opco.ebitda` | money | derived |
+| `domain.opco.ebitda_margin` | number | `domain.opco.ebitda` ÷ `domain.opco.revenue` |
+| `domain.opco.capex` | money | derived |
+| `domain.opco.working_capital` | money | derived |
+| `domain.opco.taxes` | money | derived |
+| `domain.opco.debt_service` | money | derived |
+| `domain.opco.fcf` | money | derived |
+| `domain.opco.fcf_to_debt_service` | number | `domain.opco.fcf` ÷ `domain.opco.debt_service` |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line is missing required numeric term 'amount'. |
+| `E7002_OPCO_LINE_INVALID_SCHEDULE` | OpCo line term range is missing, invalid, or outside model timeline. |
+| `E7003_OPCO_LINE_INVALID_GROWTH` | OpCo line has invalid 'growth_rate' term. |
+| `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
+| `E7011_OPCO_WC_INVALID_SCHEDULE` | OpCo working capital term range is missing, invalid, or outside model timeline. |
+| `E7020_OPCO_EXIT_MISSING_MULTIPLE` | OpCo exit is missing required term 'exit_multiple'. |
+| `E7021_OPCO_EXIT_INVALID_MULTIPLE` | OpCo exit 'exit_multiple' must be greater than 0. |
+| `E7022_OPCO_EXIT_MISSING_BASE_VALUE` | OpCo exit requires numeric term 'base_value'. |
+| `E7023_OPCO_EXIT_INVALID_SCHEDULE` | OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start). |
+| `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE` | OpCo EBITDA exit requires 'exit_multiple' greater than 0. |
+| `E7030_OPCO_DEBT_INVALID_AMORT` | OpCo term debt requires 'amort_months' greater than 0. |
+| `E7031_OPCO_DEBT_INVALID_RATE` | OpCo term debt requires a non-negative 'rate'. |
+
 ## Worked example models
 
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)
 - [Operating Business examples overview](/docs/examples/operating-business-examples)
 - [Basic OpCo](/docs/examples/opco_basic)
 - [Growth via expressions](/docs/examples/opco_with_growth)

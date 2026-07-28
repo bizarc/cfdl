@@ -57,7 +57,7 @@ time to compute the pack's domain metrics.
 
 - Per-pack guides: [Energy](/docs/cookbooks/energy) · [CRE](/docs/cookbooks/cre) ·
   [Credit](/docs/cookbooks/credit) · [OpCo](/docs/cookbooks/opco)
-- Runnable Jupyter notebooks, one per pack, in
-  [`examples/notebooks/`](https://github.com/bizarc/cfdl/tree/main/examples/notebooks)
+- Worked notebooks, one per pack, with their real outputs and charts:
+  [Notebooks](/docs/notebooks)
 - The authoritative pack format spec:
   [Pack Interface](/docs/language-reference/pack-interface)

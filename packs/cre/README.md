@@ -171,7 +171,8 @@ the pack supplies no amounts, rates, or dates of its own.
 
 ## Quick start
 
-A two-tenant office tower, lease-by-lease with recoveries and rollover:
+A two-tenant office tower: lease-by-lease rent, recoveries above an expense
+stop, property operating expenses, and probability-weighted rollover.
 
 ```cfdl
 version 0.1
@@ -181,6 +182,8 @@ time calendar monthly from 2026-01 for 120 project 12
 
 entity asset tower
 
+// Full expense stop at the year-1 level: the tenant reimburses its share of
+// opex growth above that stop, not the base.
 contract cre.lease_unit.tenant_a on entity asset.tower {
   term 2026-01..2030-12
   terms {
@@ -188,6 +191,7 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
     free_rent_months = 3
     escalation = 0.03
     opex_year = 300000
+    opex_escalation = 0.025
     expense_stop_year = 300000
     pro_rata_share = 0.40
     ti_total = 120000
@@ -195,13 +199,41 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
   }
 }
 
+// A lower stop: this tenant reimburses its share above $180k from day one.
+contract cre.lease_unit.tenant_b on entity asset.tower {
+  term 2026-07..2033-06
+  terms {
+    rent_year = 360000
+    escalation = 0.025
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 180000
+    pro_rata_share = 0.30
+    ti_total = 100000
+    lc_total = 50000
+  }
+}
+
+// The expense the recoveries above are measured against.
+contract cre.property_opex on entity asset.tower {
+  term 2026-01..2036-12
+  terms {
+    opex_year = 300000
+    escalation = 0.025
+  }
+}
+
+// Rollover starts AT EXPIRY. During downtime only the renewal scenario pays.
 contract cre.rollover.tenant_a on entity asset.tower {
   term 2031-01..2036-12
   terms {
     renewal_probability = 0.7
     renewal_rent_year = 520000
     market_rent_year = 560000
+    market_escalation = 0.03
     downtime_months = 3
+    renewal_ti_lc = 100000
+    new_ti_lc = 350000
   }
 }
 ```

@@ -176,7 +176,8 @@ the pack supplies no amounts, rates, or dates of its own.
 
 ## Quick start
 
-A two-tenant office tower, lease-by-lease with recoveries and rollover:
+A two-tenant office tower: lease-by-lease rent, recoveries above an expense
+stop, property operating expenses, and probability-weighted rollover.
 
 ```cfdl
 version 0.1
@@ -186,6 +187,8 @@ time calendar monthly from 2026-01 for 120 project 12
 
 entity asset tower
 
+// Full expense stop at the year-1 level: the tenant reimburses its share of
+// opex growth above that stop, not the base.
 contract cre.lease_unit.tenant_a on entity asset.tower {
   term 2026-01..2030-12
   terms {
@@ -193,6 +196,7 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
     free_rent_months = 3
     escalation = 0.03
     opex_year = 300000
+    opex_escalation = 0.025
     expense_stop_year = 300000
     pro_rata_share = 0.40
     ti_total = 120000
@@ -200,13 +204,41 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
   }
 }
 
+// A lower stop: this tenant reimburses its share above $180k from day one.
+contract cre.lease_unit.tenant_b on entity asset.tower {
+  term 2026-07..2033-06
+  terms {
+    rent_year = 360000
+    escalation = 0.025
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 180000
+    pro_rata_share = 0.30
+    ti_total = 100000
+    lc_total = 50000
+  }
+}
+
+// The expense the recoveries above are measured against.
+contract cre.property_opex on entity asset.tower {
+  term 2026-01..2036-12
+  terms {
+    opex_year = 300000
+    escalation = 0.025
+  }
+}
+
+// Rollover starts AT EXPIRY. During downtime only the renewal scenario pays.
 contract cre.rollover.tenant_a on entity asset.tower {
   term 2031-01..2036-12
   terms {
     renewal_probability = 0.7
     renewal_rent_year = 520000
     market_rent_year = 560000
+    market_escalation = 0.03
     downtime_months = 3
+    renewal_ti_lc = 100000
+    new_ti_lc = 350000
   }
 }
 ```
@@ -250,8 +282,44 @@ Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-pari
 case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
 rent), and the CRE office notebook in `examples/notebooks/`.
 
+## Metrics reference
+
+Computed automatically whenever a model runs with the `cre` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.cre.noi` | money | `cre.lease.base_rent`, `cre.ops.revenue`, `cre.ops.expense`, `cre.vacancy.loss`, `cre.property.opex` |
+| `domain.cre.debt_service` | money | `loan.construction_interest`, `loan.permanent_debt_service` |
+| `domain.cre.dscr` | number | `domain.cre.noi` ÷ `domain.cre.debt_service` |
+| `domain.cre.leasing_costs` | money | derived |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E6001_CRE_LEASE_MISSING_BASE_RENT` | CRE lease is missing required term 'base_rent'. |
+| `E6002_CRE_LEASE_INVALID_TERM_RANGE` | CRE lease term range is missing, invalid, or outside model timeline. |
+| `E6003_CRE_LEASE_UP_MISSING_MONTHS` | CRE lease_up requires term 'lease_up_months' > 0. |
+| `E6010_CRE_EXIT_MISSING_EXIT_CAP` | CRE exit contract is missing required term 'exit_cap'. |
+| `E6011_CRE_EXIT_INVALID_EXIT_CAP` | CRE exit 'exit_cap' must be greater than 0. |
+| `E6012_CRE_EXIT_MISSING_NOI_VALUE` | CRE exit requires either 'noi_ref' or 'noi_value'. |
+| `E6020_CRE_OPS_MISSING_AMOUNT` | CRE ops contract is missing required term 'amount'. |
+| `E6021_CRE_OPS_INVALID_SCHEDULE` | CRE ops term range is missing, invalid, or outside model timeline. |
+| `E6030_CRE_UNIT_INVALID_ESCALATION` | CRE lease unit 'escalation' must be greater than or equal to -1. |
+| `E6031_CRE_UNIT_INVALID_FREE_RENT` | CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more. |
+| `E6032_CRE_UNIT_INVALID_PRO_RATA` | CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1. |
+| `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | CRE rollover 'renewal_probability' must be a probability between 0 and 1. |
+| `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | CRE rollover 'downtime_months' must be a whole number of months, 0 or more. |
+
 ## Worked example models
 
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
+- [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
 - [CRE examples overview](/docs/examples/cre-examples)
 - [Lease-up](/docs/examples/cre_lease_up)
 - [Developer lifecycle](/docs/examples/cre_developer)

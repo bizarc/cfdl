@@ -118,7 +118,7 @@ benchmark purchases at a 1-point discount.
 
 ## Quick start
 
-A $25mm level-pay pool with prepayments, defaults, and a servicing strip:
+A $25mm level-pay pool with prepayments, defaults, a servicing strip, and a prepayment penalty:
 
 ```cfdl
 version 0.1
@@ -139,6 +139,7 @@ contract credit.pool_level_pay.auto_a on entity fund.buyer {
     severity = 0.35
     recovery_lag_months = 6
     servicing_fee = 0.005
+    prepay_penalty_rate = 0.01
   }
 }
 
@@ -199,3 +200,45 @@ vocabulary, interest-only until the balloon.
 Full worked models: `benchmarks/credit/level_pay_pool/`,
 `io_bullet_loan/`, `float_bridge_pool/`, and the loan-pool notebook in
 `examples/notebooks/`.
+
+## Metrics reference
+
+Computed automatically whenever a model runs with the `credit` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
+
+| Metric | Type | Built from |
+|---|---|---|
+| `domain.credit.interest` | money | derived |
+| `domain.credit.principal` | money | derived |
+| `domain.credit.recoveries` | money | derived |
+| `domain.credit.penalties` | money | derived |
+| `domain.credit.servicing` | money | derived |
+| `domain.credit.wal_years` | number | derived |
+| `domain.credit.collections` | money | derived |
+| `domain.credit.purchase` | money | derived |
+| `domain.credit.collections_multiple` | number | `domain.credit.collections` ÷ `domain.credit.purchase` |
+
+## Validations reference
+
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+
+| Code | Rejects |
+|---|---|
+| `E9001_CREDIT_INVALID_BALANCE` | Credit pool 'balance' must be greater than 0. |
+| `E9002_CREDIT_INVALID_RATE` | Credit pool 'rate' must be a non-negative annual rate. |
+| `E9003_CREDIT_INVALID_TERM_MONTHS` | Credit pool 'term_months' must be a whole number greater than 0. |
+| `E9010_CREDIT_INVALID_CPR` | Credit 'cpr' must be an annual rate between 0 and 1. |
+| `E9011_CREDIT_INVALID_CDR` | Credit 'cdr' must be an annual rate between 0 and 1. |
+| `E9012_CREDIT_INVALID_SEVERITY` | Credit 'severity' must be a fraction between 0 and 1. |
+| `E9013_CREDIT_INVALID_RECOVERY_LAG` | Credit 'recovery_lag_months' must be a whole number of months, 0 or more. |
+| `E9014_CREDIT_INVALID_SERVICING_FEE` | Credit 'servicing_fee' must be an annual rate between 0 and 1. |
+| `E9015_CREDIT_INVALID_PREPAY_PENALTY` | Credit 'prepay_penalty_rate' must be a rate between 0 and 1. |
+| `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Credit 'rate_floor' must be less than or equal to 'rate_cap'. |
+
+## Worked example models
+
+Benchmark cases are validated period-by-period against an independent
+reference implementation.
+
+- [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
+- [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
+- [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)

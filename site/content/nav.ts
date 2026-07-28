@@ -48,6 +48,20 @@ export const NAV: NavSection[] = [
       { title: "A simple contract", slug: "/docs/examples/simple_contract" },
       { title: "Using an industry pack", slug: "/docs/examples/with_pack" },
       { title: "Multi-file model", slug: "/docs/examples/multi_file" },
+      {
+        title: "Benchmark models",
+        slug: "/docs/examples",
+        items: [
+          { title: "Energy: solar PPA microgrid", slug: "/docs/examples/energy-solar-ppa-microgrid" },
+          { title: "Energy: wind PTC + MACRS", slug: "/docs/examples/energy-wind-ptc-macrs" },
+          { title: "CRE: two-tenant office", slug: "/docs/examples/cre-office-two-tenant" },
+          { title: "CRE: retail strip", slug: "/docs/examples/cre-retail-strip" },
+          { title: "Credit: level-pay pool", slug: "/docs/examples/credit-level-pay-pool" },
+          { title: "Credit: IO/bullet loan", slug: "/docs/examples/credit-io-bullet-loan" },
+          { title: "Credit: floating bridge", slug: "/docs/examples/credit-float-bridge-pool" },
+          { title: "OpCo: leveraged buyout", slug: "/docs/examples/opco-lbo-buyout" },
+        ],
+      },
     ],
   },
   // Surfaces sits directly after the language material: the notebooks inside
