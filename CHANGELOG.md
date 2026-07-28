@@ -6,6 +6,26 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.5.1] - 2026-07-28
+
+Release-pipeline fixes. No behaviour change: the compiler, engine and packs
+are identical to 0.5.0.
+
+- The VS Code extension's `package-lock.json` still declared `0.0.1` while
+  `package.json` tracks the project version, so `npm ci` refused to install
+  and the Extension lint step failed on every tagged release from v0.3.0
+  onward. The lockfile now carries the real version and is bumped with it.
+- Playground examples were stale against the repo's models: the schedule
+  syntax migration in 0.4.0 changed the `.cfdl` sources without regenerating
+  them, and the site workflow had been failing on `main` as a result.
+- Monte Carlo dispersion is asserted as a property in
+  `tools/analytic-checks.py` rather than as a golden. A long run over a
+  pack-lowered expression containing `pow()` is not bit-identical across
+  platforms, so it passed locally and failed on Windows CI. The golden keeps
+  its deterministic scenario sweep.
+
+---
+
 ## [0.5.0] - 2026-07-28
 
 Contract terms, stochastic layering, and currencies. Breaking: see below.

@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "255f578e3e4b6b9bcfc8ff7edf6f4ace",
+      "id": "108fafe97bdbfcd241f99df7f9699633",
       "symbol": "operating.target",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "8539a9bc162114afac4968df63367dd6",
+      "id": "b6645fa8f6d9a2bc019a79053da59227",
       "name": "opco.acquisition",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "b0923b195b362096eee650cd7cad87b5",
+      "id": "fcf28bcfde8555dbde3d1b27098d657c",
       "name": "opco.capex_line",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "d649670cc767cd92c9b94399f8220cbb",
+      "id": "414674490a4110c1dc4d53896303e998",
       "name": "opco.cash_taxes",
       "type": "core.Contract",
       "subject": {
@@ -103,7 +103,7 @@
       }
     },
     {
-      "id": "d6d43eff6664cada13208e82e7830796",
+      "id": "a79169512e613b2a3875d27a54f53d20",
       "name": "opco.exit_ebitda",
       "type": "core.Contract",
       "subject": {
@@ -129,7 +129,7 @@
       }
     },
     {
-      "id": "936c49e2daa1f505ec1eacc71fa5420e",
+      "id": "2f843806a510a88dbd301e67d08e2d03",
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
@@ -155,7 +155,7 @@
       }
     },
     {
-      "id": "e4a4f63af4854a87a3b9d761543a5ee1",
+      "id": "09f2ac9c46eaeec234725f6aae017c2a",
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
@@ -181,7 +181,7 @@
       }
     },
     {
-      "id": "7f5373911d69d05fadf59eeddd60b7f4",
+      "id": "af753418d12ca3a3aa4807647b1cbdc9",
       "name": "opco.term_debt",
       "type": "core.Contract",
       "subject": {
@@ -207,7 +207,7 @@
       }
     },
     {
-      "id": "e753361b457efd88f75fa5fc07cc3567",
+      "id": "c4fd4e0f72441b9c3e38752d5448271a",
       "name": "opco.working_capital_policy",
       "type": "core.Contract",
       "subject": {
@@ -235,7 +235,7 @@
   ],
   "streams": [
     {
-      "id": "2a440245f7aaea9475193545ea1ee74c",
+      "id": "32e78bb10d90cedbf4ff87fb1bcc4b30",
       "name": "opco.acquisition.price",
       "owner": {
         "symbol": "operating.target"
@@ -272,7 +272,7 @@
       }
     },
     {
-      "id": "95c02cfa51f666f03dc4c8faa0c59557",
+      "id": "549439e851971ed33f39bf7c9b66b645",
       "name": "opco.capex",
       "owner": {
         "symbol": "operating.target"
@@ -311,7 +311,7 @@
       }
     },
     {
-      "id": "189855837d787f082926614327c67f2e",
+      "id": "bde7caf4e90a4ecbec324f17b583e248",
       "name": "opco.debt.interest",
       "owner": {
         "symbol": "operating.target"
@@ -350,7 +350,7 @@
       }
     },
     {
-      "id": "6fd15b450f937597187d7790b432c1a6",
+      "id": "9ba8301a8bd82ef7537c2e784e67cc9f",
       "name": "opco.debt.principal",
       "owner": {
         "symbol": "operating.target"
@@ -389,7 +389,7 @@
       }
     },
     {
-      "id": "fde4a64533a543bd1f85e9222c5af960",
+      "id": "b1a21893f066b2368727cc46e7411847",
       "name": "opco.debt.proceeds",
       "owner": {
         "symbol": "operating.target"
@@ -426,7 +426,7 @@
       }
     },
     {
-      "id": "92288b5983ecb7e47e4c778743805a72",
+      "id": "886da13cbe70bbb6da50ff8002c66768",
       "name": "opco.exit.value",
       "owner": {
         "symbol": "operating.target"
@@ -463,7 +463,7 @@
       }
     },
     {
-      "id": "f3bd61ea6a8abcd4e73ca6185daae4c3",
+      "id": "18f1aa14c136d6ccaac126b31c254345",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.target"
@@ -502,7 +502,7 @@
       }
     },
     {
-      "id": "091eac01f820bdf25627f8c9ea46f911",
+      "id": "ef99b25674cd056febc8a5759a25f18c",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.target"
@@ -541,7 +541,7 @@
       }
     },
     {
-      "id": "5b829e59d12fdb0dc3ee1557af4bfeab",
+      "id": "053070562c5b48d6905bb0ef4b07b200",
       "name": "opco.taxes",
       "owner": {
         "symbol": "operating.target"
@@ -580,7 +580,7 @@
       }
     },
     {
-      "id": "9c5a53e0c07559de5a8b50b7ec1d9ac0",
+      "id": "602ca628240212511253cea0ee436b32",
       "name": "opco.working_capital.adjustment",
       "owner": {
         "symbol": "operating.target"
@@ -634,8 +634,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.0",
-      "hash": "3060a08deb9428d517dd39b1e5a13bdc",
+      "version": "0.5.1",
+      "hash": "bd7cd339ab92fd69a905287c9aa4cbc8",
       "notes": [
         "active_pack=opco@0.1.0"
       ]

@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "238efdd22f7ba0168829c6033499f451",
+      "id": "8b8b3017d92d2295f71f2a4e55aee0b2",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "a34ba974fd2e484d391d5bc2a95c2bfa",
+      "id": "c4436a7743a2170a727e2908c9bf86ed",
       "name": "legal.daily_fee",
       "owner": {
         "symbol": "legal.borrower"
@@ -64,7 +64,7 @@
       }
     },
     {
-      "id": "91225da6ce054cd8c5992e449b870ad1",
+      "id": "64c760570a6e2ba54f72edee9e10b4fa",
       "name": "legal.rolled_payment",
       "owner": {
         "symbol": "legal.borrower"
@@ -111,8 +111,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.0",
-      "hash": "136f5c60e64c1a04b8571c1d501782c9"
+      "version": "0.5.1",
+      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
     }
   }
 }

@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "ac4949333494aa6747ef1000673dca13",
+      "id": "55cd518cf8fb8444dfb442f36a8821ff",
       "name": "growth",
       "range": {
         "start": "2026-07-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "0cc71f051aefd24c9d098383bda4bcb7",
+      "id": "73c260d06e1d4b5d2131e53365c224dd",
       "name": "ramp",
       "range": {
         "start": "2026-01-01",
@@ -27,7 +27,7 @@
       }
     },
     {
-      "id": "e5efd40b6c175536a8455456e39046da",
+      "id": "a7b207c731d74bbc54bffcb4fce31532",
       "name": "scale",
       "range": {
         "start": "2028-01-01",
@@ -37,14 +37,14 @@
   ],
   "entities": [
     {
-      "id": "cea91b9b9bbcc5f882852d5c3522c933",
+      "id": "6edcc304e4268d241f270e5916c97574",
       "symbol": "ops.team",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "328d9eef701629a7ef39ab751b2ab9c9",
+      "id": "44bf955c95680bea874dd3083eb525bf",
       "symbol": "saas.product",
       "type": "core.Entity",
       "attrs": {},
@@ -58,7 +58,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "40efae8168c6b7b96adece4cba4eafd7",
+      "id": "99f63e967985d5eb5c5adc522f419c89",
       "name": "ops.seed_investment",
       "owner": {
         "symbol": "ops.team"
@@ -89,7 +89,7 @@
       }
     },
     {
-      "id": "d099b68fe784227b5b14e9a86486b4f5",
+      "id": "e0ee97173424de3d0f5e39a6a0d29a29",
       "name": "ops.team_cost",
       "owner": {
         "symbol": "ops.team"
@@ -121,7 +121,7 @@
       }
     },
     {
-      "id": "d34d2b737fa686c596026e584614d2b3",
+      "id": "77dcda163ca1087da99f59c08d9ebf04",
       "name": "saas.infra_cost",
       "owner": {
         "symbol": "saas.product"
@@ -153,7 +153,7 @@
       }
     },
     {
-      "id": "d69a593a316b75986235638f65aa9d74",
+      "id": "032409b0e056d4ebf71b62d0efc792d6",
       "name": "saas.mrr",
       "owner": {
         "symbol": "saas.product"
@@ -200,8 +200,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.0",
-      "hash": "136f5c60e64c1a04b8571c1d501782c9"
+      "version": "0.5.1",
+      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
     }
   }
 }

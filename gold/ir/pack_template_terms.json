@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "29980875c02b7c5b7cfa71210e53b734",
+      "id": "4e5b22054e79e41589a6820461373239",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "35f8a9b5009da647430911066e9f9b05",
+      "id": "712080ee2707b7364b667e4af5e7a400",
       "name": "test.fee_contract",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "f42550ffe8beb208bc01373160e39417",
+      "id": "2f17e1aa17f79947a5cf48a5e9426f1f",
       "name": "testpack.fee",
       "owner": {
         "symbol": "legal.borrower"
@@ -107,8 +107,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.0",
-      "hash": "4b5c54bdd57ebed80f72f50e5cc2e6f5",
+      "version": "0.5.1",
+      "hash": "7e707dc44f6f48160b798e721f1147d4",
       "notes": [
         "active_pack=testpack@0.1.0"
       ]

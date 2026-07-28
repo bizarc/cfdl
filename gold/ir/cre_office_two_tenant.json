@@ -13,7 +13,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "6885bc16af83fbef2f2bc76ce91381fb",
+      "id": "8062557ddcb6d07ebcf0fa87ad6e011f",
       "symbol": "asset.tower",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   },
   "contracts": [
     {
-      "id": "e79e09854b63310f5ca6e21c68006e9e",
+      "id": "c6ff2e78e6f6282fb8f8315a348f73a9",
       "name": "cre.exit_forward",
       "type": "core.Contract",
       "subject": {
@@ -52,7 +52,7 @@
       }
     },
     {
-      "id": "2f67ab66a562963d1b0c28f551cc1d01",
+      "id": "c4bb917269c0f79e01f314ccc9a7d4c8",
       "name": "cre.lease_unit.tenant_a",
       "type": "core.Contract",
       "subject": {
@@ -78,7 +78,7 @@
       }
     },
     {
-      "id": "ca3fb3b8ee4d76abf59a26ba489f8aec",
+      "id": "27c07fe4f179604f8e7b0a5d1ddc3137",
       "name": "cre.lease_unit.tenant_b",
       "type": "core.Contract",
       "subject": {
@@ -104,7 +104,7 @@
       }
     },
     {
-      "id": "6a7e48555cf34039e230488a010f70d9",
+      "id": "248a2cf6de35fb2d179d18290f7d70fe",
       "name": "cre.property_opex",
       "type": "core.Contract",
       "subject": {
@@ -130,7 +130,7 @@
       }
     },
     {
-      "id": "56e099e38c6421a30109d8a39366eab4",
+      "id": "1d21768fed096a5868bcfda34e681e6b",
       "name": "cre.rollover.tenant_a",
       "type": "core.Contract",
       "subject": {
@@ -156,7 +156,7 @@
       }
     },
     {
-      "id": "8eb8682779dd2f62a133981fe0eb78e0",
+      "id": "74dcc422f6d9ded353f130e3717ba887",
       "name": "cre.vacancy_loss",
       "type": "core.Contract",
       "subject": {
@@ -184,7 +184,7 @@
   ],
   "streams": [
     {
-      "id": "0b77bcb94a44f5d71fc100a0bc62019f",
+      "id": "d9635b69127af79ab36a7318d0dabd15",
       "name": "cre.exit.proceeds",
       "owner": {
         "symbol": "asset.tower"
@@ -221,7 +221,7 @@
       }
     },
     {
-      "id": "f0123226c45f85f698108a9a22688523",
+      "id": "eb4ff5cf54c076b69555f3df0e93f05e",
       "name": "cre.property.opex",
       "owner": {
         "symbol": "asset.tower"
@@ -260,7 +260,7 @@
       }
     },
     {
-      "id": "686bf6a1edd2f20193cc50fc65450a7f",
+      "id": "502e937c61955edaa2f105d50deb87af",
       "name": "cre.rollover.rent.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -299,7 +299,7 @@
       }
     },
     {
-      "id": "6016295e049087b445ad7f053871c13e",
+      "id": "42a6d787b0bdf4a9d364a2c2b37654d2",
       "name": "cre.rollover.ti_lc.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -338,7 +338,7 @@
       }
     },
     {
-      "id": "4dae3362f6a2ae00c58e96a606adf7bd",
+      "id": "1a86ade9c1f6cb2404eead322f49ef5c",
       "name": "cre.unit.base_rent.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -377,7 +377,7 @@
       }
     },
     {
-      "id": "2a1b2a5fefdd006825aa57657c429be2",
+      "id": "9e6e3a7551edbef1fe5632beca598c56",
       "name": "cre.unit.base_rent.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -416,7 +416,7 @@
       }
     },
     {
-      "id": "9e564d2b8201f2d3d991d48a88ec5334",
+      "id": "fcf371db692fcae6e5ba0770b5ff82dc",
       "name": "cre.unit.recoveries.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -455,7 +455,7 @@
       }
     },
     {
-      "id": "2dc110e1b98ee9ee906f8b1ee02ade6f",
+      "id": "43a07f884d00798c831b4fdeaba1d87d",
       "name": "cre.unit.recoveries.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -494,7 +494,7 @@
       }
     },
     {
-      "id": "35f144c1306e0a8aad9136e514dcec2f",
+      "id": "fab7f877df248ce44338f7c17e5e60a3",
       "name": "cre.unit.ti_lc.tenant_a",
       "owner": {
         "symbol": "asset.tower"
@@ -531,7 +531,7 @@
       }
     },
     {
-      "id": "2b2e0c094c7d85fe481dff36f80c1117",
+      "id": "ed488a11c139bbeb1b4a8ceedc78731b",
       "name": "cre.unit.ti_lc.tenant_b",
       "owner": {
         "symbol": "asset.tower"
@@ -568,7 +568,7 @@
       }
     },
     {
-      "id": "0be32366beb0eb30c65ddaf941a2001a",
+      "id": "1a34a9961d3ecf94c7febdd516fdff41",
       "name": "cre.vacancy.loss",
       "owner": {
         "symbol": "asset.tower"
@@ -607,7 +607,7 @@
       }
     },
     {
-      "id": "876470d9fff8d9a5cede89919fd882a4",
+      "id": "2cb9af8b39be9ae2c85108cd568d5e27",
       "name": "loan.permanent_debt_service",
       "owner": {
         "symbol": "asset.tower"
@@ -654,8 +654,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.0",
-      "hash": "38b346f546d298af43f847f5b148d5af",
+      "version": "0.5.1",
+      "hash": "e695d7d3b05032af088ca281c0aab353",
       "notes": [
         "active_pack=cre@0.1.0"
       ]
