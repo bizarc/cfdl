@@ -1,0 +1,135 @@
+# Payment timing (normative)
+
+How a schedule places cash in time, and how that placement discounts. This
+section exists because the rule was previously unwritten and was implemented
+incorrectly more than once — each time by inferring semantics from code that
+already had them wrong.
+
+## 1. Periods are counted from 1
+
+A CFDL model is written in English and read by people.
+
+```cfdl
+time calendar monthly from 2026-01 for 60
+```
+
+That is **60 months, period 1 through period 60**. Period 1 begins on the start
+date. Every discussion, diagnostic, document and error message uses this
+form.
+
+The IR and engine index from `0` to `n-1`, as implementations do. That is an
+implementation detail and MUST NOT surface in the language, in documentation,
+or in anything a user reads. A model that spans a 120-month loan plus a
+six-month recovery lag is `for 126` — not 127.
+
+## 2. A payment belongs to the period that earned it
+
+Period 1's payment is in period 1.
+
+An instrument's schedule does not move cash into a later bucket. A 120-month
+loan makes its payments in periods 1 through 120. A default in period 120
+recovering six months later recovers in period 126.
+
+This holds regardless of annuity convention. The convention does not decide
+*which* period holds the cash.
+
+## 3. The convention decides where in the period the cash falls
+
+What separates an ordinary annuity from an annuity due is the position of the
+payment inside its own period, and therefore how far it is discounted.
+
+| Written | Position in period | Discounted from |
+|---|---|---|
+| `every month from … to …` | end (default) | end of the period |
+| `every month due from … to …` | start | start of the period |
+| `every month on eom from … to …` | end | end of the period |
+| `every month on day 15 from … to …` | day 15 | that point in the period |
+
+This is Excel's convention: `NPV` discounts the first value by one full
+period, and an annuity due is the same series with the first payment left
+undiscounted (`PMT`'s `type` argument, and `pmt(rate, nper, pv, [fv], [due])`
+in the CFDL expression library).
+
+### The unified rule
+
+A payment's discount exponent is its period number less one, plus how far
+through the period it falls:
+
+```
+exponent = (period - 1) + offset
+```
+
+where `offset` is:
+
+| Schedule detail | offset |
+|---|---|
+| `due` | `0.0` |
+| default, or `on eom` | `1.0` |
+| `on day <n>` | `n / days_in_period` |
+
+There is one mechanism, not three special cases. A schedule specified more
+precisely simply produces a more precise offset — `on day 15` of a 30-day
+month discounts from halfway through, which is the mid-period convention
+project finance uses routinely.
+
+### Worked example
+
+Five-year annual bond, 5% coupon on 1,000,000, bought at par at the start of
+period 1, monthly calendar:
+
+| Flow | Period | Offset | Discounted from |
+|---|---|---|---|
+| purchase (1,000,000 out) | 1 | 0.0 (`due`) | period 0 — undiscounted |
+| coupon 1 (50,000) | 12 | 1.0 | end of period 12 |
+| coupon 5 (50,000) | 60 | 1.0 | end of period 60 |
+| principal (1,000,000) | 60 | 1.0 | end of period 60 |
+
+Discounted at 5%, present value equals the price paid, so **NPV is exactly
+zero**. A par bond discounted at its own coupon rate is worth par; that
+identity is the acceptance test for this section and is enforced by
+`tools/analytic-checks.py`.
+
+## 4. `time.t` refers to accrual, not settlement
+
+Inside an amount expression, `time.t` is the period the amount is being earned
+in. Because a payment settles in the period that earned it (§2), accrual and
+settlement periods coincide, and no distinction arises.
+
+If a future convention ever separates them, the amount MUST still be evaluated
+against the accrual period. Evaluating against settlement silently skips the
+first accrual and shifts every subsequent amount by one period.
+
+## 5. Lags compose on top of placement
+
+A lag — recovery lag, collection delay — is counted in periods from the period
+that earned the flow, per §2.
+
+A default in period 120 with a six-month recovery lag recovers in period 126.
+The model must span period 126 for that cash to land; a flow scheduled past
+the end of the timeline is rejected by `E2103_SCHEDULE_OUT_OF_BOUNDS` rather
+than silently dropped.
+
+## 6. What packs declare
+
+A lowering rule sets `schedule_due = true` when the stream behaves like an
+expense — it falls due in the period it belongs to. Revenue, opex, rent,
+recoveries, capex, working capital and tax attributes are all of this kind.
+
+Streams that behave like an annuity — debt service, coupons, loan-pool
+collections — take the default and are discounted from period end.
+
+## 7. Verification
+
+`tools/analytic-checks.py` asserts identities that follow from the definition
+of present value, so they hold for any correct implementation and cannot be
+satisfied by matching whatever the engine currently does:
+
+- a par bond discounted at its coupon rate is worth par;
+- a level annuity matches `(1 - (1+i)^-n) / i`;
+- an annuity due is worth exactly `(1+i)` times the ordinary annuity;
+- a fully-amortising loan discounted at its own rate is worth its principal.
+
+The third is the direct test of this section. The benchmark suite compares
+each model against a reference implementation, which cannot catch a convention
+both sides share — that is how the original defect survived eight passing
+benchmarks.
