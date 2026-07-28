@@ -41,8 +41,8 @@ Growth is annual-compound stepped continuously on the model clock:
   period the loan amortizes level-pay over `amort_months`; the remaining
   balance pays as a balloon at the contract's `term_end`. Streams
   `opco.debt.proceeds`, `opco.debt.interest`, `opco.debt.principal`.
-  **Cash sweeps and revolvers need per-period persistent state and ship
-  with Workstream H3.**
+  **Cash sweeps and revolvers need per-period persistent state and are not
+  in v0.1.**
 - `opco.acquisition` — purchase `price` paid at `term_start`
   (the equity check when paired with debt proceeds at the same date).
 
@@ -82,9 +82,10 @@ deduct interest, so this is FCF after the interest tax shield),
 
 ## Not in v0.1 (planned waterfall & capital-stack work)
 
-- Cash-flow sweeps, revolver draws/paydowns, PIK toggles (need H3 state).
+- Cash-flow sweeps, revolver draws/paydowns, PIK toggles (need per-period
+  persistent state).
 - NOL carryforwards.
-- Waterfall distributions to the capital stack (Workstream H).
+- Waterfall distributions to the capital stack.
 
 ## Provenance and determinism
 

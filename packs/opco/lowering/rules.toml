@@ -1,4 +1,4 @@
-# Operating-company pack (Workstream D opco deepening).
+# Operating-company pack.
 #
 # All rules are template-driven ({{contract.*}}); no hardcoded
 # apply_opco_contract_terms compile path is retired. Conventions:
@@ -9,7 +9,7 @@
 #     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
 #     so sums over mixed streams net correctly.
 #   - Cash sweeps and revolver draws need per-period persistent state and
-#     ship with Workstream H3 (a planned engine allocation pass); term debt here is
+#     require a planned engine allocation pass; term debt here is
 #     scheduled (IO period + level-pay amortization + balloon at maturity).
 #   - No NOL carryforwards in cash taxes (losses floor at zero tax per
 #     period); carryforwards need H3-style state.

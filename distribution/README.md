@@ -14,7 +14,7 @@ Release artifacts are published to GitHub Releases and are not committed to sour
 
 ## Packaging-tool decision (2026-07-22): keep the hand-rolled pipeline
 
-The launch plan floated adopting **cargo-dist**. **Decision: keep the existing
+**cargo-dist** was considered. **Decision: keep the existing
 hand-rolled scripts + release workflow.** It already ships four CLI targets,
 three LSP targets, the VSIX, and docs/packs tarballs with a checksum manifest;
 cargo-dist would replace working, understood scripts with a tool whose main
