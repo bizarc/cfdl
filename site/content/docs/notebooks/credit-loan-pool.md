@@ -9,33 +9,51 @@ source: examples/notebooks/03_credit_loan_pool.ipynb
 
 > Outputs below are real: the notebook runs against the `credit` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bizarc/cfdl/blob/main/examples/notebooks/03_credit_loan_pool.ipynb)
+
 A homogeneous level-pay loan pool with CPR prepayments, CDR defaults, loss severity, a recovery lag, a servicing strip and prepayment penalties — priced at a discount to par.
 
 This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
 
 ```python
+# On Colab, install the SDK and fetch the models this notebook reads.
+# Inside a checkout both are already present and this cell does nothing.
+import subprocess, sys
 from pathlib import Path
-import cfdl_sdk
 
-# This notebook reads a benchmark model and the pack definitions, both of which
-# live in the repository, so locate its root. Searching a bounded set of
-# ancestors means running from outside a checkout fails with an explanation
-# rather than looping forever at the filesystem root.
+REPO = "https://github.com/bizarc/cfdl"
+
+
 def repo_root() -> Path:
+    """The checkout holding benchmarks/ and packs/, cloning it if need be.
+
+    Searching a bounded set of ancestors means a plain `python` run outside a
+    checkout fails with an explanation rather than walking to the filesystem
+    root. On a hosted runtime there is no checkout to find, so fetch one.
+    """
     here = Path.cwd().resolve()
     for candidate in (here, *here.parents):
         if (candidate / "Cargo.toml").exists() and (candidate / "packs").is_dir():
             return candidate
-    raise RuntimeError(
-        "No CFDL checkout found above "
-        f"{here}. This notebook loads a model from benchmarks/ and pack "
-        "definitions from packs/, so it needs to run inside a clone of "
-        "https://github.com/bizarc/cfdl."
-    )
+
+    if "google.colab" not in sys.modules:
+        raise RuntimeError(
+            f"No CFDL checkout found above {here}. This notebook reads a model "
+            f"from benchmarks/ and pack definitions from packs/, so run it "
+            f"inside a clone of {REPO}."
+        )
+
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "cfdl-sdk[viz]"], check=True)
+    target = Path("/content/cfdl")
+    if not target.exists():
+        subprocess.run(["git", "clone", "--depth", "1", "-q", REPO, str(target)], check=True)
+    return target
 
 
 ROOT = repo_root()
 PACKS = ROOT / "packs"
+
+import cfdl_sdk
 ```
 
 ## Compile

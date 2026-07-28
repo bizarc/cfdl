@@ -55,10 +55,17 @@ surface on a realistic model before installing anything:
 - [Credit loan pool](/docs/notebooks/credit-loan-pool)
 - [Operating company LBO](/docs/notebooks/opco-lbo)
 
-To run them yourself, install the `notebooks` extra and open the folder from a
-checkout — they read their models from `benchmarks/`:
+Each opens in Google Colab from the badge at the top of the page — Colab
+installs the SDK and fetches the models on the first cell, so nothing is
+needed locally.
+
+To run them on your own machine:
 
 ```bash
-pip install -e "python/[notebooks]"
-jupyter lab examples/notebooks
+pip install "cfdl-sdk[notebooks]"
+git clone --depth 1 https://github.com/bizarc/cfdl
+jupyter lab cfdl/examples/notebooks
 ```
+
+The clone supplies the benchmark models and pack definitions the notebooks
+read; the SDK itself comes from PyPI.

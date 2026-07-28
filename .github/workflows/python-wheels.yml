@@ -2,8 +2,14 @@ name: Python Wheels
 
 # Build-only abi3 wheels for the cfdl-sdk Python package.
 #
-# Per the publishing policy (human approval required), nothing is published here — wheels are uploaded as
-# CI artifacts only. Publishing to PyPI is a human-approved, separate step.
+# Wheels are always built as CI artifacts. Publishing to PyPI happens only for
+# a pushed v* tag, and only through the `pypi` environment — so a release still
+# requires a human to create the tag and, if the environment has a protection
+# rule, to approve the run.
+#
+# Authentication is PyPI Trusted Publishing (OIDC): GitHub proves the workflow's
+# identity directly to PyPI. There is no API token stored in this repository,
+# so there is none to leak or rotate.
 # Regular per-push compile-checking lives in ci.yml (editable install + pytest);
 # this workflow runs the full manylinux/universal2 matrix on tags and on demand.
 
@@ -98,3 +104,23 @@ jobs:
           python -m pip install pandas pytest dist/*.whl
       - name: Run SDK tests against the installed wheel
         run: python -m pytest -q python/tests
+
+  publish:
+    # Only a tag publishes. Every other trigger stops at build + smoke test.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, macos, windows, sdist, smoke]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write        # required for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Collect distributions
+        run: |
+          mkdir -p dist
+          find artifacts -name '*.whl' -exec cp {} dist/ \;
+          find artifacts -name '*.tar.gz' -exec cp {} dist/ \;
+          ls -l dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
