@@ -2,10 +2,8 @@
 id: cookbook-credit
 title: "Credit pack guide"
 slug: "/docs/cookbooks/credit"
+source: packs/credit/README.md
 ---
-
-> This page is generated from `packs/credit/README.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/packs/credit/README.md
 
 Credit / lending pack: fixed-rate loan pools with CPR prepayments, CDR
 defaults, loss severity and a recovery lag. Benchmarked in

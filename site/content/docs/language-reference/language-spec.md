@@ -2,12 +2,10 @@
 id: language-spec
 title: "Language Spec (v0.1)"
 slug: "/docs/language-reference/language-spec"
+source: docs/01_language_spec.md
 ---
 
-> This page is generated from `docs/01_language_spec.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/01_language_spec.md
-
-**Status:** Draft (Greenfield v0.1)
+**Status:** Draft
 
 **Purpose:** CFDL (Cash Flow Domain Language) is a proprietary, human-readable DSL for defining cash-flow models across asset classes. A CFDL model compiles deterministically to a canonical JSON IR used by valuation engines (deterministic DCF, Monte Carlo, scenarios, risk/metrics).
 
@@ -560,9 +558,13 @@ The expression environment MUST support:
 
 **Math and finance**
 - Standard arithmetic `+ - * / ^`, comparisons, `and/or/not`, `if(cond, a, b)`
-- `min/max/abs/round/clamp/pow`, `pmt/ipmt/ppmt/rate/nper/pv/fv/npv/irr`,
-  `year_frac/eomonth/edate/parse_date/months_between`, `macrs_rate`,
-  `cpr_to_smm`
+- `min/max/sum/avg/abs/round/round_down/round_up/clamp/pow`
+- `pmt/ipmt/ppmt/rate/nper/pv/fv` (Excel sign conventions; `npv` and `irr` are
+  *metrics* computed over results, not expression functions)
+- `year_frac/eomonth/edate/date/parse_date/months_between`
+- `is_business_day/roll/add_business_days` with named holiday calendars
+- `macrs_rate`, `cpr_to_smm`
+- `curve_value`, `series_sum`, `series_avg`
 - The authoritative function catalog is `03_expression_environment.md`
 
 ### 15.3 Currency literals
@@ -661,7 +663,7 @@ contract cre.lease on entity asset.sunset {
 stream loan.debt_service on entity loan.senior outflow currency USD {
   active when entity.status != "refinanced"
   schedule every monthly from 2026-01 to 2031-12
-  amount = pmt(0.06 / 12, 72, 8500000)
+  amount = -pmt(0.06 / 12, 72, 8500000)
 }
 
 event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {

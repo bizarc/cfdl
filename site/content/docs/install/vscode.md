@@ -2,10 +2,8 @@
 id: install-vscode
 title: "VS Code and LSP"
 slug: "/docs/install/vscode"
+source: distribution/install-configure.md
 ---
-
-> This page is generated from `distribution/install-configure.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/distribution/install-configure.md
 
 This guide is for domain experts and model authors who want to use CFDL in VSCode.
 

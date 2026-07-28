@@ -2,14 +2,12 @@
 id: pack-interface
 title: "Pack Interface (v0.1)"
 slug: "/docs/language-reference/pack-interface"
+source: docs/07_pack_interface.md
 ---
-
-> This page is generated from `docs/07_pack_interface.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/07_pack_interface.md
 
 **CFDL Domain Pack Interface v0.1**
 
-Domain Packs provide *additions and overrides* similar to "industry clouds" (e.g., Financial Services Cloud) while preserving a single core language.
+Domain Packs provide *additions and overrides* on top of a single core language: each pack adds contract types, lowering rules, metrics, and validations without forking the language itself.
 
 Core principle: **Packs may extend validation and provide defaults/templates, but MUST NOT change core language semantics.**
 

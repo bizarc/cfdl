@@ -9,6 +9,8 @@
 export interface NavItem {
   title: string;
   slug: string;
+  /** One level of nesting: rendered indented beneath the parent entry. */
+  items?: NavItem[];
 }
 
 export interface NavSection {
@@ -48,6 +50,26 @@ export const NAV: NavSection[] = [
       { title: "Multi-file model", slug: "/docs/examples/multi_file" },
     ],
   },
+  // Surfaces sits directly after the language material: the notebooks inside
+  // it are worked examples, and burying them below Guides and Domain Packs
+  // left them ~1000px down a sidebar that does not scroll independently.
+  {
+    title: "Surfaces",
+    items: [
+      { title: "Python SDK", slug: "/docs/python-sdk" },
+      { title: "API server", slug: "/docs/api-server" },
+      {
+        title: "Notebooks",
+        slug: "/docs/notebooks",
+        items: [
+          { title: "Energy", slug: "/docs/notebooks/energy-solar-microgrid" },
+          { title: "CRE", slug: "/docs/notebooks/cre-office-acquisition" },
+          { title: "Credit", slug: "/docs/notebooks/credit-loan-pool" },
+          { title: "OpCo", slug: "/docs/notebooks/opco-lbo" },
+        ],
+      },
+    ],
+  },
   {
     title: "Guides",
     items: [
@@ -69,17 +91,6 @@ export const NAV: NavSection[] = [
       { title: "CRE", slug: "/docs/cookbooks/cre" },
       { title: "Credit", slug: "/docs/cookbooks/credit" },
       { title: "OpCo", slug: "/docs/cookbooks/opco" },
-    ],
-  },
-  {
-    title: "Surfaces",
-    items: [
-      { title: "Python SDK", slug: "/docs/python-sdk" },
-      { title: "API server", slug: "/docs/api-server" },
-      { title: "Notebook: energy", slug: "/docs/notebooks/energy-solar-microgrid" },
-      { title: "Notebook: CRE", slug: "/docs/notebooks/cre-office-acquisition" },
-      { title: "Notebook: credit", slug: "/docs/notebooks/credit-loan-pool" },
-      { title: "Notebook: OpCo", slug: "/docs/notebooks/opco-lbo" },
     ],
   },
   {
@@ -110,4 +121,33 @@ export const NAV: NavSection[] = [
   },
 ];
 
-export const FLAT_NAV: NavItem[] = NAV.flatMap((s) => s.items);
+export const FLAT_NAV: NavItem[] = NAV.flatMap((s) =>
+  s.items.flatMap((item) => [item, ...(item.items ?? [])]),
+);
+
+/**
+ * Neighbours for page-foot navigation, scoped to the current section.
+ *
+ * Chaining all 51 pages into one sequence implied a reading order that does
+ * not exist: the last Guide ran on into Domain Packs, and reference pages
+ * offered a "next" nobody wants to follow. Within a section the sequence is
+ * real — the tutorial and the guides are meant to be read in order — so
+ * pagination stops at the section boundary instead of inventing a path.
+ */
+export function sectionNeighbours(slug: string): {
+  section?: string;
+  prev?: NavItem;
+  next?: NavItem;
+} {
+  for (const section of NAV) {
+    const flat = section.items.flatMap((item) => [item, ...(item.items ?? [])]);
+    const index = flat.findIndex((item) => item.slug === slug);
+    if (index === -1) continue;
+    return {
+      section: section.title,
+      prev: index > 0 ? flat[index - 1] : undefined,
+      next: index < flat.length - 1 ? flat[index + 1] : undefined,
+    };
+  }
+  return {};
+}

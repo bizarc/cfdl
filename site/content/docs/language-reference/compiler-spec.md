@@ -2,10 +2,8 @@
 id: compiler-spec
 title: "Compiler Spec (v0.1)"
 slug: "/docs/language-reference/compiler-spec"
+source: docs/04_compiler_spec.md
 ---
-
-> This page is generated from `docs/04_compiler_spec.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/04_compiler_spec.md
 
 This page is a usability-focused digest of the compiler spec for model authors and SDK integrators.
 

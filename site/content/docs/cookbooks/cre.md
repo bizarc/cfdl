@@ -2,10 +2,8 @@
 id: cookbook-cre
 title: "CRE pack guide"
 slug: "/docs/cookbooks/cre"
+source: packs/cre/README.md
 ---
-
-> This page is generated from `packs/cre/README.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/packs/cre/README.md
 
 This pack provides deterministic lowering for a minimal Commercial Real Estate
 developer lifecycle:

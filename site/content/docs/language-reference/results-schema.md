@@ -2,10 +2,8 @@
 id: results-schema
 title: "Results Schema (v0.1)"
 slug: "/docs/language-reference/results-schema"
+source: docs/06_results_schema.md
 ---
-
-> This page is generated from `docs/06_results_schema.md`.
-> Source: https://github.com/bizarc/cfdl/blob/main/docs/06_results_schema.md
 
 ```json
 {
