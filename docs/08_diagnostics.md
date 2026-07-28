@@ -199,6 +199,10 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E2104_SCHEDULE_INVALID_RANGE`
 - `E2105_SCHEDULE_INVALID_DAY_OF_MONTH`
 - `E2106_SCHEDULE_PHASE_NOT_FOUND`
+- `E2107_STREAM_CURRENCY_MISMATCH` — a stream's currency differs from the
+  model's reporting currency. Cash flows are summed period by period, so the
+  two would be added as if they were the same unit. Convert explicitly in the
+  amount expression, or declare the model in that currency.
 
 ### 7.6 Events and actions (E22xx)
 - `E2201_EVENT_WHEN_NOT_BOOL`
@@ -231,6 +235,16 @@ Warnings:
 - `E5007_DUPLICATE_LOWERED_STREAM`
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
   malformed point in a `curve` statement
+- `E5009_LOWERED_EXPR_INVALID` — a pack lowering rule expanded to an amount
+  expression the parser rejects. Without this the engine evaluates the failed
+  expression as zero and continues with only a warning.
+- `E5010_TERM_UNKNOWN_INPUT` — a contract term references `inputs.<name>` for
+  an input that is not declared. Declare it with `assume <name> = …` or
+  `assume <name> ~ <Dist>(…)`.
+- `E5011_TERM_CLIP_OUT_OF_BOUNDS` — a term defers to an input whose `clip`
+  can produce values outside the range the pack allows for that term. The
+  value itself cannot be checked until the run, but the clip states the range
+  the driver can reach, so it can be.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
 

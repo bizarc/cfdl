@@ -1,0 +1,112 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "currency-inr",
+    "currency": "INR"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "c124316740f20bb2c0da4492ebe5b83b",
+      "symbol": "project.plant",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "1bfff7b054b68931927f8ac9c8ed4a90",
+      "name": "plant.opex",
+      "owner": {
+        "symbol": "project.plant"
+      },
+      "direction": "outflow",
+      "currency": "INR",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "200000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "2d7a4cd64f9860a7825b4d0a2ee396cc",
+      "name": "plant.revenue",
+      "owner": {
+        "symbol": "project.plant"
+      },
+      "direction": "inflow",
+      "currency": "INR",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1500000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.5.0",
+      "hash": "136f5c60e64c1a04b8571c1d501782c9"
+    }
+  }
+}

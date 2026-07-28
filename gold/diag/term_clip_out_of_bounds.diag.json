@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5011_TERM_CLIP_OUT_OF_BOUNDS",
+    "severity": "error",
+    "message": "Contract 'energy.ppa.plant_a' term 'degradation' defers to input 'degr', whose clip [0, 1.4] can produce values outside the range this term allows (0 to 1). Tighten the clip.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 5,
+      "end_line": 17,
+      "end_col": 29
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

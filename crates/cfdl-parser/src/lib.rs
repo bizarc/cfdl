@@ -55,6 +55,9 @@ pub struct VersionStmt {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ModelStmt {
     pub name: String,
+    /// Reporting currency for the model, e.g. `model "x" currency INR`.
+    /// Defaults to USD when omitted. Every metric is reported in it.
+    pub currency: Option<String>,
     pub span: Span,
 }
 
@@ -178,6 +181,27 @@ pub struct ContractStmt {
 pub struct ContractTerm {
     pub value: String,
     pub span: Span,
+}
+
+impl ContractTerm {
+    /// Whether this term defers to a declared input rather than stating a
+    /// literal.
+    ///
+    /// A contract records what was signed, so most terms are literals. A term
+    /// that varies — a yield, an escalator under study — names an input
+    /// instead, and the value is supplied by `assume`, by a scenario, or by a
+    /// Monte Carlo draw. That keeps variation layered on top of the contract
+    /// rather than embedded in it.
+    pub fn is_input_ref(&self) -> bool {
+        self.value
+            .strip_prefix("inputs.")
+            .is_some_and(|name| !name.is_empty() && !name.contains('.'))
+    }
+
+    /// The input name behind an input-referencing term.
+    pub fn input_name(&self) -> Option<&str> {
+        self.is_input_ref().then(|| &self.value["inputs.".len()..])
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -420,19 +444,44 @@ impl<'a> Parser<'a> {
     fn parse_model_stmt(&mut self) -> Option<ModelStmt> {
         let start = self.expect_keyword(Keyword::Model, "'model'")?;
         let name_tok = self.bump();
-        match name_tok.kind {
-            TokenKind::String(ref s) => Some(ModelStmt {
-                name: s.clone(),
-                span: merge_spans(start.span, name_tok.span),
-            }),
+        let name = match name_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
             _ => {
                 self.push_expected(
                     name_tok.span,
                     "Expected token <string> after 'model'.".to_string(),
                 );
-                None
+                return None;
+            }
+        };
+
+        // Optional reporting currency. Without it a model reported USD no
+        // matter what its streams declared.
+        let mut currency = None;
+        let mut end_span = name_tok.span;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Currency)) {
+            let _ = self.bump();
+            let code_tok = self.bump();
+            match code_tok.kind {
+                TokenKind::Ident(ref code) => {
+                    currency = Some(code.clone());
+                    end_span = code_tok.span;
+                }
+                _ => {
+                    self.push_expected(
+                        code_tok.span,
+                        "Expected a currency code after 'currency', e.g. USD.".to_string(),
+                    );
+                    return None;
+                }
             }
         }
+
+        Some(ModelStmt {
+            name,
+            currency,
+            span: merge_spans(start.span, end_span),
+        })
     }
 
     fn parse_time_stmt(&mut self) -> Option<TimeStmt> {
@@ -838,6 +887,31 @@ impl<'a> Parser<'a> {
                         _ => continue,
                     };
                     end_span = value_tok.span;
+
+                    // A term holds exactly one value. Anything else before the
+                    // next term or the closing brace used to be discarded in
+                    // silence, so `mwh_year = 1000 + 500` compiled as 1000 and
+                    // the model said one thing while the engine did another.
+                    let next_starts_term =
+                        matches!(self.peek().kind, TokenKind::Ident(_) | TokenKind::Qname(_))
+                            && matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal));
+                    let next_ends_block = matches!(
+                        self.peek().kind,
+                        TokenKind::Punct(Punct::RBrace) | TokenKind::Eof
+                    );
+                    if !next_starts_term && !next_ends_block {
+                        let stray = self.peek().clone();
+                        self.push_expected(
+                            stray.span,
+                            format!(
+                                "Term '{key}' takes a single value. Expected the next term or '}}'. \
+                                 A term is a literal or one declared input (e.g. `inputs.yield`); \
+                                 compute derived values in an `assume` instead."
+                            ),
+                        );
+                        return None;
+                    }
+
                     terms.insert(
                         key.clone(),
                         ContractTerm {
@@ -2086,6 +2160,12 @@ impl<'a> Parser<'a> {
     fn peek(&self) -> &Token {
         self.tokens
             .get(self.idx)
+            .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
+    }
+
+    fn peek_ahead(&self, n: usize) -> &Token {
+        self.tokens
+            .get(self.idx + n)
             .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
     }
 

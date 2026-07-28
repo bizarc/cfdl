@@ -72,7 +72,17 @@ pub struct ScenarioRunConfig {
 pub struct MonteCarloRunConfig {
     pub trial_count: u32,
     pub seed: u64,
-    pub distributions: BTreeMap<String, DistributionSpec>,
+    pub distributions: BTreeMap<String, ConfiguredDistribution>,
+}
+
+/// A run-config distribution and its optional clip bounds.
+///
+/// Mirrors what `assume x ~ Dist(..., clip=[lo, hi])` expresses in the
+/// language, so a driver declared in either place behaves identically.
+#[derive(Debug, Clone)]
+pub struct ConfiguredDistribution {
+    pub spec: DistributionSpec,
+    pub clip: Option<[f64; 2]>,
 }
 
 #[derive(Debug, Clone)]
@@ -85,6 +95,7 @@ pub enum DistributionSpec {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct RunConfigFile {
     #[serde(default)]
     deterministic: DeterministicConfigFile,
@@ -94,6 +105,7 @@ struct RunConfigFile {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct DeterministicConfigFile {
     #[serde(rename = "annual_discount_rate")]
     discount_rate: Option<f64>,
@@ -103,6 +115,7 @@ struct DeterministicConfigFile {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ScenarioConfigFile {
     #[serde(rename = "annual_discount_rate")]
     discount_rate: Option<f64>,
@@ -112,6 +125,7 @@ struct ScenarioConfigFile {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct MonteCarloConfigFile {
     trial_count: u32,
     seed: u64,
@@ -120,11 +134,41 @@ struct MonteCarloConfigFile {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum DistributionConfigFile {
-    Fixed { value: f64 },
-    Normal { mean: f64, stddev: f64 },
-    Uniform { min: f64, max: f64 },
+    Fixed {
+        value: f64,
+        #[serde(default)]
+        clip: Option<[f64; 2]>,
+    },
+    Normal {
+        mean: f64,
+        // The language spells this `stdev`; `stddev` predates it and is kept
+        // so existing run configs keep working.
+        #[serde(alias = "stddev")]
+        stdev: f64,
+        #[serde(default)]
+        clip: Option<[f64; 2]>,
+    },
+    Uniform {
+        min: f64,
+        max: f64,
+        #[serde(default)]
+        clip: Option<[f64; 2]>,
+    },
+    LogNormal {
+        mu: f64,
+        sigma: f64,
+        #[serde(default)]
+        clip: Option<[f64; 2]>,
+    },
+    Triangular {
+        min: f64,
+        mode: f64,
+        max: f64,
+        #[serde(default)]
+        clip: Option<[f64; 2]>,
+    },
 }
 
 pub fn run_from_file(ir_path: &Path, config: RunConfig) -> Result<Results, EngineError> {
@@ -193,26 +237,62 @@ fn run_config_from_value(
         }
         let mut distributions = BTreeMap::new();
         for (name, dist) in monte_carlo.distributions {
-            let parsed = match dist {
-                DistributionConfigFile::Fixed { value } => DistributionSpec::Fixed { value },
-                DistributionConfigFile::Normal { mean, stddev } => {
-                    if stddev < 0.0 {
+            let (spec, clip) = match dist {
+                DistributionConfigFile::Fixed { value, clip } => {
+                    (DistributionSpec::Fixed { value }, clip)
+                }
+                DistributionConfigFile::Normal { mean, stdev, clip } => {
+                    if stdev < 0.0 {
                         return Err(EngineError::InvalidRunConfig(format!(
-                            "distribution '{name}' has negative stddev"
+                            "distribution '{name}' has negative stdev"
                         )));
                     }
-                    DistributionSpec::Normal { mean, stddev }
+                    (
+                        DistributionSpec::Normal {
+                            mean,
+                            stddev: stdev,
+                        },
+                        clip,
+                    )
                 }
-                DistributionConfigFile::Uniform { min, max } => {
+                DistributionConfigFile::Uniform { min, max, clip } => {
                     if min > max {
                         return Err(EngineError::InvalidRunConfig(format!(
                             "distribution '{name}' has min > max"
                         )));
                     }
-                    DistributionSpec::Uniform { min, max }
+                    (DistributionSpec::Uniform { min, max }, clip)
+                }
+                DistributionConfigFile::LogNormal { mu, sigma, clip } => {
+                    if sigma < 0.0 {
+                        return Err(EngineError::InvalidRunConfig(format!(
+                            "distribution '{name}' has negative sigma"
+                        )));
+                    }
+                    (DistributionSpec::LogNormal { mu, sigma }, clip)
+                }
+                DistributionConfigFile::Triangular {
+                    min,
+                    mode,
+                    max,
+                    clip,
+                } => {
+                    if !(min <= mode && mode <= max) {
+                        return Err(EngineError::InvalidRunConfig(format!(
+                            "distribution '{name}' requires min <= mode <= max"
+                        )));
+                    }
+                    (DistributionSpec::Triangular { min, mode, max }, clip)
                 }
             };
-            distributions.insert(name, parsed);
+            if let Some([lo, hi]) = clip {
+                if lo > hi {
+                    return Err(EngineError::InvalidRunConfig(format!(
+                        "distribution '{name}' has clip lower bound above upper bound"
+                    )));
+                }
+            }
+            distributions.insert(name, ConfiguredDistribution { spec, clip });
         }
         config.monte_carlo = Some(MonteCarloRunConfig {
             trial_count: monte_carlo.trial_count,
@@ -232,6 +312,26 @@ pub fn run_from_json_str(raw_ir: &str, config: RunConfig) -> Result<Results, Eng
 }
 
 fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Results, EngineError> {
+    // A model may declare its own run modes. Honour a declared Monte Carlo run
+    // when the run config does not ask for one, so `run monte_carlo trials N
+    // seed S` in source does what it says without a separate config file.
+    // An explicit run config still wins.
+    let mut config = config;
+    if config.monte_carlo.is_none() {
+        if let Some(declared) = ir
+            .runs
+            .iter()
+            .find(|run| run.kind == "monte_carlo" && run.trials.is_some_and(|n| n > 0))
+        {
+            config.monte_carlo = Some(MonteCarloRunConfig {
+                trial_count: declared.trials.unwrap_or(1),
+                seed: declared.seed.unwrap_or(0),
+                distributions: BTreeMap::new(),
+            });
+        }
+    }
+    let config = config;
+
     let base_run = run_deterministic(ir, &config)?;
     let mut warnings = base_run.warnings.clone();
 
@@ -299,7 +399,10 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                     .wrapping_add((trial as u64).wrapping_mul(0x9e3779b97f4a7c15)),
             );
             for (name, distribution) in &monte_carlo_config.distributions {
-                let sampled = sample_distribution(distribution, &mut rng_state);
+                let sampled = apply_clip(
+                    sample_distribution(&distribution.spec, &mut rng_state),
+                    distribution.clip,
+                );
                 trial_overrides.insert(name.clone(), sampled);
             }
             // In-language assumptions: independent, per-assumption seed
@@ -1857,6 +1960,11 @@ struct Ir {
     phases: Vec<IrPhase>,
     #[serde(default)]
     curves: Vec<IrCurve>,
+    /// Run modes the model declares for itself. A `run monte_carlo trials N
+    /// seed S` in source used to be parsed, lowered, and then dropped here, so
+    /// the model asked for trials and got a single deterministic pass.
+    #[serde(default)]
+    runs: Vec<IrRun>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1923,6 +2031,15 @@ struct IrPhase {
 struct IrDateRange {
     start: String,
     end: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrRun {
+    kind: String,
+    #[serde(default)]
+    trials: Option<u32>,
+    #[serde(default)]
+    seed: Option<u64>,
 }
 
 #[derive(Debug, Default, Deserialize)]

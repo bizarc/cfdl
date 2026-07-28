@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "3558ad8657382174eac6aaaa0b25c7f8",
+      "id": "84206a2c8d5245fa0fa0efdaf9f27d9e",
       "symbol": "fund.buyer",
       "type": "core.Entity",
       "attrs": {},
@@ -41,7 +41,7 @@
   ],
   "contracts": [
     {
-      "id": "5874ebff2ec7f0b4441b8e42c79f8c0b",
+      "id": "b0414a7bde4f2afad6f784ce9e9e92ec",
       "name": "credit.pool_float_io_bullet.smoke",
       "type": "core.Contract",
       "subject": {
@@ -67,7 +67,7 @@
       }
     },
     {
-      "id": "32960a57f60c707a97e2662cd02515f6",
+      "id": "70a6e7ff44ce6131d4e22173f1029e64",
       "name": "credit.purchase.smoke",
       "type": "core.Contract",
       "subject": {
@@ -95,7 +95,7 @@
   ],
   "streams": [
     {
-      "id": "b10e718d6d07f41373fe89a11ec84d88",
+      "id": "3ca8128188083fe5af54c0471a463323",
       "name": "credit.pool.bullet.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -134,7 +134,7 @@
       }
     },
     {
-      "id": "6d5ffb0adad4cae2d5b7528290950294",
+      "id": "a43578b5d658a07298be4cb39afe62a9",
       "name": "credit.pool.interest.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -173,7 +173,7 @@
       }
     },
     {
-      "id": "ab2e3432d56480ad2afc3e35a39e1131",
+      "id": "2c2f8f7da93da9498f7ceff65bd95aa6",
       "name": "credit.pool.penalty.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -212,7 +212,7 @@
       }
     },
     {
-      "id": "66b9f502f465dd893dca14b8f49efd84",
+      "id": "8e6e3a2d6cef1231760fd48a577c2e57",
       "name": "credit.pool.prepay.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -251,7 +251,7 @@
       }
     },
     {
-      "id": "6b25df20e7ec6b9e50899d0f18f05955",
+      "id": "208a82b765ad2390e6cb9da1c94f5faa",
       "name": "credit.pool.recoveries.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -290,7 +290,7 @@
       }
     },
     {
-      "id": "bcf1685ba467b9118c7d4c7453443f25",
+      "id": "a9ce55e2c3eb2edee28d7d5cd95579e0",
       "name": "credit.pool.servicing.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -329,7 +329,7 @@
       }
     },
     {
-      "id": "e6e2b2f238572ccbe081f9a409ec7bae",
+      "id": "2fd33ddb67478b46e7ef8556044d2e99",
       "name": "credit.purchase.price.smoke",
       "owner": {
         "symbol": "fund.buyer"
@@ -381,8 +381,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.4.0",
-      "hash": "d345d8fae5f26c817e912b435b8d51b6",
+      "version": "0.5.0",
+      "hash": "ae9d533573b7910a87dc6824f90df89f",
       "notes": [
         "active_pack=credit@0.1.0"
       ]

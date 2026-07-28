@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "864867633f8c2f0de4f4a88d09270660",
+      "id": "4d4960f06ff540b4aff3586cd6b44082",
       "symbol": "real_estate.property",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "2109994bc0f3b3f1b87deb5a2aac1e40",
+      "id": "cec0e34e5ad0f9b57a8f36b33a669c41",
       "name": "cre.construction_stub",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "d964bc2a2baf6ed9f71eccfc70c02cb6",
+      "id": "624197f608c6226f90c9fe8041846432",
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "cdb413390a1e8518ffbfb81f51c10ac3",
+      "id": "2029949baa92ecf6a2c5a260aaafadee",
       "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
@@ -103,7 +103,7 @@
       }
     },
     {
-      "id": "eec7a434be3c3cb3c21b6c3a756b8cff",
+      "id": "780d6d2f027fa3d41dbcc505b2751924",
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
@@ -129,7 +129,7 @@
       }
     },
     {
-      "id": "cd7c2e3e26f2957f65b8ae3d55c9b406",
+      "id": "f4e2a930a651967835289bb5c9f121fa",
       "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
@@ -157,7 +157,7 @@
   ],
   "streams": [
     {
-      "id": "e3a857e091fc58863ab0f9707c6787a9",
+      "id": "447813cfc1a2201f699ce26a28462ac5",
       "name": "cre.construction.draws",
       "owner": {
         "symbol": "real_estate.property"
@@ -196,7 +196,7 @@
       }
     },
     {
-      "id": "d69b78d7de8785d8f9fc88e36a0d5a16",
+      "id": "32e85bf73300a47f22555eaff43dab05",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -233,7 +233,7 @@
       }
     },
     {
-      "id": "e5b1bb41d0f0224654a6522261de47a9",
+      "id": "2938d2cab6e2dfc34c760650fc21ea78",
       "name": "cre.lease.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -272,7 +272,7 @@
       }
     },
     {
-      "id": "4010d23225dfded7659e7b00ea9b797f",
+      "id": "ebddd8181734d37b1d3c836de952a09e",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.property"
@@ -311,7 +311,7 @@
       }
     },
     {
-      "id": "c44db1f3cf560edc0df9a0133fb98f2f",
+      "id": "4a72fad20358e47df15445959202415a",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.property"
@@ -365,8 +365,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.4.0",
-      "hash": "93932cb4bb82f9e5cf37deb6b6369047",
+      "version": "0.5.0",
+      "hash": "38b346f546d298af43f847f5b148d5af",
       "notes": [
         "active_pack=cre@0.1.0"
       ]

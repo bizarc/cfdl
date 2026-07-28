@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E2107_STREAM_CURRENCY_MISMATCH",
+    "severity": "error",
+    "message": "Stream 'plant.fee' is in USD but the model reports in INR. Convert explicitly in the amount expression, or declare `model \"...\" currency USD`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1,6 +1,6 @@
 {
   "deterministic": {
-    "discount_rate": 0.12,
+    "annual_discount_rate": 0.12,
     "parameters": {
       "stream.operating.revenue:amount": 100000.0,
       "stream.operating.opex:amount": 76000.0

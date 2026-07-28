@@ -20,6 +20,10 @@ use crate::Diagnostic;
 enum TermValue {
     Absent,
     Unparseable,
+    /// The term defers to a declared input, so its value is not known until
+    /// the run supplies one. Bounds cannot be checked here — the value may
+    /// differ per scenario and per Monte Carlo trial.
+    Deferred,
     Number(f64),
 }
 
@@ -27,6 +31,9 @@ fn read_number(contract: &cfdl_parser::ContractStmt, term: &str, kind: NumberKin
     let Some(entry) = contract.terms.get(term) else {
         return TermValue::Absent;
     };
+    if entry.is_input_ref() {
+        return TermValue::Deferred;
+    }
     match kind {
         // Integer terms parse as i32 so `18.5` is rejected rather than
         // silently truncated.
@@ -62,6 +69,9 @@ fn term_number_fires(validation: &PackValidation, contract: &cfdl_parser::Contra
         TermValue::Unparseable => {
             validation.when != WhenPresence::Present || validation.on_invalid == OnInvalid::Report
         }
+        // An input-referenced term is present and well-formed; its value is
+        // simply not knowable yet.
+        TermValue::Deferred => false,
         TermValue::Number(value) => bounds_violated(validation, value),
     }
 }
