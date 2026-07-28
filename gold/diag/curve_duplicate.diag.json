@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E5008_INVALID_CURVE",
+    "severity": "error",
+    "message": "Curve 'sofr' is declared more than once.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 9,
+      "start_col": 1,
+      "end_line": 11,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "curve 'sofr'"
+    ]
+  }
+]

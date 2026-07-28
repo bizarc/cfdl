@@ -1,0 +1,13 @@
+version 0.1
+model "unresolved-contract-subject-ref"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity real_estate property
+
+contract cre.ops_revenue on entity real_estate.missing {
+  term 2026-01..2027-12
+  terms {
+    amount = 30000
+  }
+}

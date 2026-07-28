@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/cfdl-lexer",
+  "crates/cfdl-parser",
+  "crates/cfdl-resolver",
+  "crates/cfdl-validate",
+  "crates/cfdl-expr",
+  "crates/cfdl-calc",
+  "crates/cfdl-pack",
+  "crates/cfdl-compile",
+  "crates/cfdl-engine",
+  "crates/cfdl-metrics",
+  "crates/cfdl-cli",
+  "crates/cfdl-py",
+  "crates/cfdl-lsp",
+  "crates/cfdl-server",
+  "crates/cfdl-wasm",
+]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "BUSL-1.1"
+repository = "https://github.com/bizarc/cfdl"
+homepage = "https://cfdl.dev"
+
+[workspace.dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+regex = "1"
+sha2 = "0.10"
+toml = "0.8"
+clap = { version = "4", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tokio = { version = "1", features = ["io-std", "macros", "rt-multi-thread", "sync"] }
+tower-lsp = "0.20"
+lsp-types = "0.94"
+
+[profile.release]
+lto = true
+codegen-units = 1

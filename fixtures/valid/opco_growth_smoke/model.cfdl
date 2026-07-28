@@ -1,0 +1,21 @@
+version 0.1
+model "opco-growth-smoke"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity operating business
+
+contract opco.revenue_line {
+  term 2026-01..2027-12
+  terms {
+    amount = 100000
+    growth_rate = 0.12
+  }
+}
+
+contract opco.opex_line {
+  term 2026-01..2027-12
+  terms {
+    amount = 60000
+  }
+}

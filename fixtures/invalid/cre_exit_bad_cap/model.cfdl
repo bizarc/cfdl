@@ -1,0 +1,14 @@
+version 0.1
+model "cre-exit-bad-cap"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+entity real_estate property
+
+contract cre.exit_cap {
+  term 2031-12..2031-12
+  terms {
+    exit_cap = 0
+    noi_value = 180000
+  }
+}

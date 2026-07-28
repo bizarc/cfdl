@@ -1,0 +1,37 @@
+version 0.1
+model "credit-float-smoke"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+// Linear-interpolated index path: rides down from 5.0% to 3.8% over a year.
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+entity fund buyer
+
+// Small floating IO pool: SOFR + 300, floor 7.25% (binds late), 12-month
+// bullet, prepay/default/severity with a 3-month recovery lag.
+contract credit.pool_float_io_bullet.smoke on entity fund.buyer {
+  term 2026-01..2027-03
+  terms {
+    balance = 1200000
+    index_curve = "sofr"
+    margin = 0.03
+    rate_floor = 0.0725
+    rate_cap = 0.10
+    term_months = 12
+    cpr = 0.10
+    cdr = 0.03
+    severity = 0.50
+    recovery_lag_months = 3
+  }
+}
+
+contract credit.purchase.smoke on entity fund.buyer {
+  term 2026-01..2026-01
+  terms {
+    price = 1200000
+  }
+}

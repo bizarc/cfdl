@@ -1,0 +1,128 @@
+{
+  "name": "cfdl-vscode",
+  "displayName": "CFDL",
+  "description": "VSCode extension for the CFDL language server",
+  "version": "0.3.0",
+  "publisher": "cfdl",
+  "license": "BUSL-1.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:cfdl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "cfdl",
+        "aliases": [
+          "CFDL",
+          "cfdl"
+        ],
+        "extensions": [
+          ".cfdl"
+        ],
+        "semanticTokenScopes": {
+          "keyword": [
+            "keyword.control.cfdl"
+          ],
+          "string": [
+            "string.quoted.double.cfdl"
+          ],
+          "number": [
+            "constant.numeric.cfdl"
+          ],
+          "type": [
+            "entity.name.type.cfdl"
+          ],
+          "property": [
+            "variable.other.property.cfdl"
+          ],
+          "variable": [
+            "variable.other.readwrite.cfdl"
+          ],
+          "function": [
+            "entity.name.function.cfdl"
+          ],
+          "enumMember": [
+            "variable.other.enummember.cfdl"
+          ]
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "cfdl",
+        "scopeName": "source.cfdl",
+        "path": "./syntaxes/cfdl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "cfdl",
+        "path": "./snippets/cfdl.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "cfdl.applyPackTemplate",
+        "title": "CFDL: Apply Pack Template"
+      }
+    ],
+    "configuration": {
+      "title": "CFDL",
+      "properties": {
+        "cfdl.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the cfdl-lsp binary. If empty, extension uses a local development fallback."
+        },
+        "cfdl.packsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to CFDL packs root. Absolute paths are used as-is; relative paths resolve from the model root."
+        },
+        "cfdl.entryFile": {
+          "type": "string",
+          "default": "model.cfdl",
+          "description": "Entrypoint filename used to detect the CFDL model root."
+        },
+        "cfdl.enableLoweringValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable lowering-time validation checks when supported by the language server."
+        },
+        "cfdl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace level for CFDL language server communication."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -p . -w",
+    "lint": "tsc -p . --noEmit",
+    "prepackage:vsix": "npm run compile",
+    "package:vsix": "npx @vscode/vsce package --out cfdl-vscode-$npm_package_version.vsix"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3",
+    "ovsx": "^0.9.0"
+  }
+}

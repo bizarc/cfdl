@@ -1,0 +1,34 @@
+---
+id: examples
+title: "Examples"
+slug: "/docs/examples"
+---
+
+Use these examples to learn the language and run real models.
+
+## Tutorial (language_tutorial)
+
+- [Minimal Model](/docs/examples/minimal_model)
+- [Your First Stream](/docs/examples/first_stream)
+- [A Simple Contract](/docs/examples/simple_contract)
+- [Using an Industry Pack](/docs/examples/with_pack)
+- [Multi-File Model](/docs/examples/multi_file)
+
+## Domain examples
+
+- [CRE examples](/docs/examples/cre-examples) — Commercial Real Estate: lease-up, full lifecycle, phased, multi-file, development with financing.
+- [Operating Business examples](/docs/examples/operating-business-examples) — OpCo: revenue, opex, working capital, exit multiple, growth, multi-file.
+
+
+## Benchmark models
+
+Complete models for every pack, each checked period-by-period against an independent reference implementation. These are the most detailed examples on the site, and their numbers are verified rather than asserted.
+
+- [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
+- [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)
+- [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
+- [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
+- [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
+- [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
+- [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
+- [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)

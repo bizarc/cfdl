@@ -1,0 +1,22 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.12
+  },
+  "scenarios": {
+    "base": {
+      "parameters": {
+        "stream.exit.pe_sale:amount": 36300000.0
+      }
+    },
+    "downside": {
+      "parameters": {
+        "stream.exit.pe_sale:amount": 25500000.0
+      }
+    },
+    "upside": {
+      "parameters": {
+        "stream.exit.pe_sale:amount": 47000000.0
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+version 0.1
+model "tutorial-multi-file"
+time calendar monthly from 2026-01 for 24
+
+import "structure.cfdl"
+import "contracts.cfdl"

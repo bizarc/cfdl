@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0002_UNTERMINATED_STRING",
+    "severity": "error",
+    "message": "Unterminated string literal.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 2,
+      "start_col": 7,
+      "end_line": 3,
+      "end_col": 41
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

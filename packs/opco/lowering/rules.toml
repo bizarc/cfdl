@@ -1,0 +1,244 @@
+# Operating-company pack.
+#
+# All rules are template-driven ({{contract.*}}); no hardcoded
+# apply_opco_contract_terms compile path is retired. Conventions:
+#   - Growth is annual-compound, stepped continuously on the MODEL clock:
+#     value(t) = amount * (1 + growth)^(time.t / 12).
+#   - Cross-stream contracts (working-capital policy, %-of-revenue capex,
+#     cash taxes, EBITDA exit) reference phase-1 streams via series_sum and
+#     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
+#     so sums over mixed streams net correctly.
+#   - Cash sweeps and revolver draws need per-period persistent state and
+#     require a planned engine allocation pass; term debt here is
+#     scheduled (IO period + level-pay amortization + balloon at maturity).
+#   - No NOL carryforwards in cash taxes (losses floor at zero tax per
+#     period); carryforwards need H3-style state.
+
+# ---------------------------------------------------------------------------
+# Operating lines.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_revenue_line"
+contract_name = "opco.revenue_line"
+stream_name = "opco.revenue.recurring{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+growth_rate = "0"
+
+[[rules]]
+id = "opco_opex_line"
+contract_name = "opco.opex_line"
+stream_name = "opco.opex.recurring{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+growth_rate = "0"
+
+# Fixed working-capital adjustment: a constant monthly outflow. For
+# policy-driven working capital see opco.working_capital_policy below.
+[[rules]]
+id = "opco_working_capital"
+contract_name = "opco.working_capital"
+stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# Exit at a multiple of a declared base value. The exit occurs at the
+# contract's term_start.
+[[rules]]
+id = "opco_exit_multiple"
+contract_name = "opco.exit_multiple"
+stream_name = "opco.exit.value"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.base_value}} * {{contract.exit_multiple}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+# ---------------------------------------------------------------------------
+# opco.working_capital_policy — DSO/DPO/DIO-driven working capital.
+# WC(t) = annualized revenue * ar_days/365
+#       + annualized opex * inv_days/365   (inventory carried on cost base)
+#       - annualized opex * ap_days/365    (payables funded by suppliers)
+# Annualized run rates are 12x the current month's phase-1 streams (opex is
+# signed negative in series, hence the sign flip below). The stream books
+# the FULL initial WC in the first period, the period-over-period change
+# afterwards, and (optionally) releases the ending balance in the final
+# period (release_at_end = 1 makes the last amount negative, i.e. cash in).
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_working_capital_policy"
+contract_name = "opco.working_capital_policy"
+stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "(12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})) - if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == 0, 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t - 1, time.t - 1)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t - 1, time.t - 1)) * ({{contract.inv_days}} - {{contract.ap_days}}))) - if({{contract.release_at_end}} == 1 and months_between(time.date, parse_date(\"{{contract.term_end}}\")) == 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+ar_days = "0"
+ap_days = "0"
+inv_days = "0"
+release_at_end = "0"
+
+# ---------------------------------------------------------------------------
+# opco.capex_line — fixed capex (with growth) plus %-of-revenue capex.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_capex_line"
+contract_name = "opco.capex_line"
+stream_name = "opco.capex{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0) + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+amount = "0"
+growth_rate = "0"
+pct_of_revenue = "0"
+
+# ---------------------------------------------------------------------------
+# opco.term_debt — scheduled term loan: optional IO period, then level-pay
+# amortization over amort_months, balloon of the remaining balance at the
+# contract's term_end. Payment index k = p - io_months + 1 (1-based, p =
+# months since term_start). Remaining balance after k payments is
+# -fv(r/12, k, pmt(r/12, amort_months, principal), principal).
+# Cash sweeps need H3 state and are not modeled here.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_term_debt_proceeds"
+contract_name = "opco.term_debt"
+stream_name = "opco.debt.proceeds{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.principal}} * {{contract.funded_at_close}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+funded_at_close = "1"
+
+[[rules]]
+id = "opco_term_debt_interest"
+contract_name = "opco.term_debt"
+stream_name = "opco.debt.interest{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.io_months}}, {{contract.principal}} * ({{contract.rate}} / 12), -ipmt({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, {{contract.amort_months}}, {{contract.principal}}))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+io_months = "0"
+
+[[rules]]
+id = "opco_term_debt_principal"
+contract_name = "opco.term_debt"
+stream_name = "opco.debt.principal{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+# Scheduled amortization plus the balloon (remaining balance) at term_end.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.io_months}}, 0, -ppmt({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, {{contract.amort_months}}, {{contract.principal}})) + if(months_between(time.date, parse_date(\"{{contract.term_end}}\")) == 0, -fv({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, pmt({{contract.rate}} / 12, {{contract.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+io_months = "0"
+
+# ---------------------------------------------------------------------------
+# opco.cash_taxes — cash taxes on (EBITDA - D&A - interest), floored at 0
+# per period (no NOL carryforwards; needs H3 state). Revenue/opex/interest
+# come from phase-1 streams (opex and interest are signed negative); D&A is
+# a declared deduction schedule, not a cash stream.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_cash_taxes"
+contract_name = "opco.cash_taxes"
+stream_name = "opco.taxes{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "max(0, {{contract.tax_rate}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - {{contract.da_monthly}} * pow(1 + {{contract.da_growth}}, time.t / 12.0)))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+da_monthly = "0"
+da_growth = "0"
+
+# ---------------------------------------------------------------------------
+# opco.exit_ebitda — sale at a multiple of trailing-12-month EBITDA derived
+# from the modeled streams (opex signed negative nets out), net of selling
+# costs. Exit occurs at term_start.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_exit_ebitda"
+contract_name = "opco.exit_ebitda"
+stream_name = "opco.exit.value"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - 11, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 11, time.t)) * (1 - {{contract.selling_costs}})"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"
+
+# ---------------------------------------------------------------------------
+# opco.acquisition — purchase price paid at term_start (the equity check
+# when paired with opco.term_debt proceeds at the same date).
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_acquisition_price"
+contract_name = "opco.acquisition"
+stream_name = "opco.acquisition.price{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.price}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""

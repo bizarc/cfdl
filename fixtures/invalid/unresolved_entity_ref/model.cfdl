@@ -1,0 +1,5 @@
+version 0.1
+model "unresolved-entity"
+time calendar monthly from 2026-01 for 12
+entity legal borrower
+stream legal.principal on entity legal.missing

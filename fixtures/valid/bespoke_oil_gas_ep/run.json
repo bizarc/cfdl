@@ -1,0 +1,19 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.10
+  },
+  "scenarios": {
+    "base": {
+      "parameters": {
+        "stream.capital.well_capex:amount": 3500000.0
+      }
+    },
+    "low_production": {
+      "parameters": {
+        "stream.capital.well_capex:amount": 3500000.0,
+        "stream.rev.gross_production:amount": 108000.0,
+        "stream.rev.royalty_burden:amount": 20250.0
+      }
+    }
+  }
+}

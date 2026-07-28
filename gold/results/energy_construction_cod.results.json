@@ -1,0 +1,1194 @@
+{
+  "results_version": "0.2",
+  "model_hash": "4e44ca8c8658225d5139d485069e1cddd8457feadd49f054f581bc05472bb23c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.project.microgrid.total": {
+        "amount": -655803.25536,
+        "currency": "USD"
+      },
+      "model.irr": -0.322118,
+      "model.moic": 0.453497,
+      "model.npv": {
+        "amount": -709657.106279,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -655803.25536,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.463478,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.energy.capex.outlay.final_draw.total": {
+        "amount": -700000.0,
+        "currency": "USD"
+      },
+      "stream.energy.capex.outlay.total": {
+        "amount": -500000.0,
+        "currency": "USD"
+      },
+      "stream.energy.om.expense.total": {
+        "amount": -110174.4,
+        "currency": "USD"
+      },
+      "stream.energy.ppa.revenue.total": {
+        "amount": 654371.14464,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 48
+        },
+        "values": [
+          {
+            "amount": -500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -700000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15116.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          },
+          {
+            "amount": 15233.32872,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.capex.outlay": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 48
+        },
+        "values": [
+          {
+            "amount": -500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.capex.outlay.final_draw": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 48
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -700000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.om.expense": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 48
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3060.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          },
+          {
+            "amount": -3121.2,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.ppa.revenue": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 48
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18176.4,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          },
+          {
+            "amount": 18354.52872,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": -1200000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 180000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 181396.8,
+              "currency": "USD"
+            },
+            {
+              "amount": 182799.94464,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.capex.outlay": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": -500000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.capex.outlay.final_draw": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": -700000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.om.expense": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -36000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -36720.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -37454.4,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.ppa.revenue": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 216000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 218116.8,
+              "currency": "USD"
+            },
+            {
+              "amount": 220254.34464,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

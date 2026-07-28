@@ -1,0 +1,268 @@
+{
+  "results_version": "0.2",
+  "model_hash": "4b95392ffc41b6065149d9caf54846ac040d0da57edf52298b5024ae357e61fa",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.loan.senior.total": {
+        "amount": -3000.0,
+        "currency": "USD"
+      },
+      "model.irr": 35.686618,
+      "model.moic": 3.25,
+      "model.npv": {
+        "amount": 6354.971023,
+        "currency": "USD"
+      },
+      "model.payback_periods": 6.0,
+      "model.payback_years": 0.5,
+      "model.total": {
+        "amount": 6750.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.5,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.loan.debt_service.total": {
+        "amount": -3000.0,
+        "currency": "USD"
+      },
+      "stream.option.refi_savings.total": {
+        "amount": 9750.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan.debt_service": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.refi_savings": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 6750.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.loan.debt_service": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -3000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.option.refi_savings": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 9750.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

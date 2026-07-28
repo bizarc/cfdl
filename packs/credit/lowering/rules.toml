@@ -1,0 +1,409 @@
+# Credit / lending pack v0.1.
+#
+# Fixed-rate loan pools with CPR prepayments, CDR defaults, loss severity and
+# a recovery lag. The engine's expression dialect has no loops, so the pack
+# uses the exact closed form for a homogeneous pool under constant SMM/MDR
+# (the standard MBS pool-factor decomposition); the benchmark references
+# implement the same convention with a month-by-month recursion and must
+# agree to the penny.
+#
+# Convention (documented; matches benchmarks/credit/*/reference_gen.py):
+#   p        = months since term_start (0-based); payment #t = p + 1
+#   r        = note_rate / 12 (monthly), n = term_months
+#   smm      = cpr_to_smm(cpr), mdr = cpr_to_smm(cdr)   [1 - (1-x)^(1/12)]
+#   k        = (1 - mdr) * (1 - smm)                     [survival per period]
+#   S(p)     = ((1+r)^n - (1+r)^p) / ((1+r)^n - 1)       [sched balance factor]
+#   B_beg(p) = balance * S(p) * k^p                      [level-pay pools]
+#   B_beg(p) = balance * k^p                             [IO/bullet pools]
+#   Each period: defaults leave at the start of the period (no interest on
+#   defaulted balance); interest and scheduled principal accrue on the
+#   performing balance; prepayment applies SMM to performing balance net of
+#   scheduled principal; defaulted balance returns (1 - severity) of face,
+#   recovery_lag_months later.
+#
+# Not supported in v0.1 (see packs/credit/README.md):
+#   - zero note rate on level-pay pools (S(p) is undefined at r = 0)
+#   - floating-rate LEVEL-PAY pools (the balance path depends on the rate
+#     path; no closed form). Floating IO/bullet pools are supported via
+#     `credit.pool_float_io_bullet` + a model `curve` declaration.
+#   - stochastic rate paths (stochastic roadmap item 4)
+
+# ---------------------------------------------------------------------------
+# credit.pool_level_pay — amortizing (level-pay) pool.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_pool_level_pay_interest"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.interest{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# interest = performing balance * monthly rate
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date))) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date))) * (1 - cpr_to_smm({{contract.cdr}})) * ({{contract.rate}} / 12), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_level_pay_sched_principal"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.sched_principal{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# scheduled principal = performing balance * c(t), c(t) = r / ((1+r)^(n-p) - 1)
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date))) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date))) * (1 - cpr_to_smm({{contract.cdr}})) * (({{contract.rate}} / 12) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}} - months_between(parse_date(\"{{contract.term_start}}\"), time.date)) - 1)), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_level_pay_prepay"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# prepayment = (performing - scheduled principal) * smm
+#            = performing * (1 - c(t)) * smm
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date))) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date))) * (1 - cpr_to_smm({{contract.cdr}})) * (1 - ({{contract.rate}} / 12) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}} - months_between(parse_date(\"{{contract.term_start}}\"), time.date)) - 1)) * cpr_to_smm({{contract.cpr}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_level_pay_recoveries"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# recovery(p) = default(p - lag) * (1 - severity)
+#             = B_beg(p - lag) * mdr * (1 - severity)
+# Set the contract term to cover term_months + recovery_lag_months so the
+# recovery tail has schedule periods.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) >= {{contract.recovery_lag_months}} and months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} + {{contract.recovery_lag_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.recovery_lag_months}})) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.recovery_lag_months}})) * cpr_to_smm({{contract.cdr}}) * (1 - {{contract.severity}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_level_pay_servicing"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+# Servicing fee accrues on the performing balance (annual rate / 12).
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date))) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date))) * (1 - cpr_to_smm({{contract.cdr}})) * ({{contract.servicing_fee}} / 12), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+servicing_fee = "0"
+
+[[rules]]
+id = "credit_pool_level_pay_penalty"
+contract_name = "credit.pool_level_pay"
+stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Prepayment penalty: flat rate on voluntary prepayments (simplified yield
+# maintenance; full make-whole needs a discounting engine primitive).
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - pow(1 + {{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date))) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}}) - 1)) * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date))) * (1 - cpr_to_smm({{contract.cdr}})) * (1 - ({{contract.rate}} / 12) / (pow(1 + {{contract.rate}} / 12, {{contract.term_months}} - months_between(parse_date(\"{{contract.term_start}}\"), time.date)) - 1)) * cpr_to_smm({{contract.cpr}}) * {{contract.prepay_penalty_rate}}, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+prepay_penalty_rate = "0"
+
+# ---------------------------------------------------------------------------
+# credit.pool_io_bullet — interest-only pool, principal bullet at maturity.
+# Balance declines only through prepayment and default: B_beg(p) = balance * k^p.
+# Final period (p = n-1): no SMM prepayment; the whole performing balance
+# pays as the bullet.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_pool_io_bullet_interest"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.interest{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * ({{contract.rate}} / 12), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_io_bullet_prepay"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * cpr_to_smm({{contract.cpr}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_io_bullet_bullet"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_io_bullet_recoveries"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) >= {{contract.recovery_lag_months}} and months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} + {{contract.recovery_lag_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.recovery_lag_months}}) * cpr_to_smm({{contract.cdr}}) * (1 - {{contract.severity}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_io_bullet_servicing"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * ({{contract.servicing_fee}} / 12), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+servicing_fee = "0"
+
+[[rules]]
+id = "credit_pool_io_bullet_penalty"
+contract_name = "credit.pool_io_bullet"
+stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * cpr_to_smm({{contract.cpr}}) * {{contract.prepay_penalty_rate}}, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+prepay_penalty_rate = "0"
+
+# ---------------------------------------------------------------------------
+# credit.pool_float_io_bullet — floating-rate interest-only pool, bullet at
+# maturity. The coupon indexes off a model-declared `curve` statement:
+#   coupon(p) = clamp(curve_value(index_curve, date) + margin, rate_floor, rate_cap)
+# Balance dynamics (prepay/default/bullet/recoveries) are rate-independent
+# and identical to pool_io_bullet. Floating LEVEL-PAY pools have no closed
+# form (the balance path depends on the rate path) and are not in v0.1.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_pool_float_io_bullet_interest"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.interest{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * clamp(curve_value(\"{{contract.index_curve}}\", time.date) + {{contract.margin}}, {{contract.rate_floor}}, {{contract.rate_cap}}) / 12, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+margin = "0"
+rate_floor = "0"
+rate_cap = "1"
+
+[[rules]]
+id = "credit_pool_float_io_bullet_prepay"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * cpr_to_smm({{contract.cpr}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_float_io_bullet_bullet"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_float_io_bullet_recoveries"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) >= {{contract.recovery_lag_months}} and months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} + {{contract.recovery_lag_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.recovery_lag_months}}) * cpr_to_smm({{contract.cdr}}) * (1 - {{contract.severity}}), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+
+[[rules]]
+id = "credit_pool_float_io_bullet_servicing"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}}, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * ({{contract.servicing_fee}} / 12), 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+servicing_fee = "0"
+
+[[rules]]
+id = "credit_pool_float_io_bullet_penalty"
+contract_name = "credit.pool_float_io_bullet"
+stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_smm({{contract.cdr}})) * (1 - cpr_to_smm({{contract.cpr}})), months_between(parse_date(\"{{contract.term_start}}\"), time.date)) * (1 - cpr_to_smm({{contract.cdr}})) * cpr_to_smm({{contract.cpr}}) * {{contract.prepay_penalty_rate}}, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+cpr = "0"
+cdr = "0"
+severity = "0"
+recovery_lag_months = "0"
+prepay_penalty_rate = "0"
+
+# ---------------------------------------------------------------------------
+# credit.purchase — acquisition price paid at term_start.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_purchase_price"
+contract_name = "credit.purchase"
+stream_name = "credit.purchase.price{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.price}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""

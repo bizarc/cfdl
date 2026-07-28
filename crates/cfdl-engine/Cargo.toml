@@ -1,0 +1,16 @@
+[package]
+name = "cfdl-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "CFDL execution engine - IR to cash flow results (NPV, IRR, scenarios, Monte Carlo)"
+publish = false
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+cfdl-expr = { path = "../cfdl-expr" }
+cfdl-calc = { path = "../cfdl-calc" }

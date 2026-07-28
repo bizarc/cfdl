@@ -1,0 +1,19 @@
+[
+  {
+    "code": "EXPR_PARSE",
+    "severity": "error",
+    "message": "unexpected end of expression",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 22,
+      "end_line": 8,
+      "end_col": 22
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "stream 'legal.rent', amount expression"
+    ]
+  }
+]

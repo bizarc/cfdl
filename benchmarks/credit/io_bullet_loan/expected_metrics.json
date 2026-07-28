@@ -1,0 +1,42 @@
+{
+  "model.npv": {
+    "value": -5184.69,
+    "tolerance": 1.0
+  },
+  "model.moic": {
+    "value": 1.286095,
+    "tolerance": 0.0001
+  },
+  "model.wal_years": {
+    "value": 3.812657,
+    "tolerance": 0.0001
+  },
+  "domain.credit.interest": {
+    "value": 3089263.09,
+    "tolerance": 1.0
+  },
+  "domain.credit.principal": {
+    "value": 9355594.23,
+    "tolerance": 1.0
+  },
+  "domain.credit.recoveries": {
+    "value": 386643.46,
+    "tolerance": 1.0
+  },
+  "domain.credit.wal_years": {
+    "value": 4.245605,
+    "tolerance": 0.0001
+  },
+  "domain.credit.collections": {
+    "value": 12831500.78,
+    "tolerance": 1.0
+  },
+  "domain.credit.purchase": {
+    "value": 10000000.0,
+    "tolerance": 1.0
+  },
+  "domain.credit.collections_multiple": {
+    "value": 1.28315,
+    "tolerance": 0.0001
+  }
+}

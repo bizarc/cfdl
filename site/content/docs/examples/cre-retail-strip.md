@@ -1,0 +1,111 @@
+---
+id: benchmark-cre-retail-strip
+title: "CRE: retail strip with expense stops"
+slug: "/docs/examples/cre-retail-strip"
+source: benchmarks/cre/retail_strip
+---
+
+# CRE: retail strip with expense stops
+
+retail strip — base-year stop with 95% gross-up, percentage rent above breakpoint, net-lease inline shops, forward-NOI exit.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+version 0.1
+model "retail-strip"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 84
+
+entity asset strip_center
+
+// Anchor grocer: base-year stop (stop = year-0 grossed-up opex), 95% gross-up,
+// 60% pro-rata, plus percentage rent above a $12M breakpoint.
+contract cre.lease_unit.anchor on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    rent_year = 540000
+    escalation = 0.02
+    opex_year = 240000
+    opex_escalation = 0.03
+    expense_stop_year = 228000
+    gross_up_factor = 0.95
+    pro_rata_share = 0.60
+    ti_total = 150000
+    lc_total = 60000
+  }
+}
+
+contract cre.percentage_rent.anchor on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    sales_year = 11500000
+    sales_growth = 0.03
+    breakpoint_year = 12000000
+    overage_pct = 0.02
+  }
+}
+
+// Inline shops: single lease with net recoveries (no stop), 30% share.
+contract cre.lease_unit.shops on entity asset.strip_center {
+  term 2026-07..2031-06
+  terms {
+    rent_year = 288000
+    free_rent_months = 2
+    escalation = 0.025
+    opex_year = 240000
+    opex_escalation = 0.03
+    gross_up_factor = 0.95
+    pro_rata_share = 0.30
+    ti_total = 90000
+    lc_total = 40000
+  }
+}
+
+contract cre.vacancy_loss on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    rate = 0.03
+    potential_gross_year = 850000
+  }
+}
+
+contract cre.property_opex on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    opex_year = 240000
+    escalation = 0.03
+  }
+}
+
+contract cre.exit on entity asset.strip_center {
+  term 2032-12..2032-12
+  terms {
+    noi_forward_year = 640000
+    exit_cap = 0.0675
+    selling_costs = 0.015
+  }
+}
+```
+
+## Run configuration
+
+```json
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0775
+  }
+}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|
+| `model.npv` | 8,382,550.14 | ±1 |
+| `domain.cre.noi` | 4,012,080.73 | ±1 |
+| `domain.cre.leasing_costs` | 340,000 | ±1 |

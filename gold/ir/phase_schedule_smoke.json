@@ -1,0 +1,129 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "phase-schedule-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2025-01-01",
+    "periods": 24
+  },
+  "phases": [
+    {
+      "id": "01830c2f00432d6927fbf6a252c9593f",
+      "name": "construction",
+      "range": {
+        "start": "2025-01-01",
+        "end": "2025-12-01"
+      }
+    },
+    {
+      "id": "cd79704e58c05649d69c045ac6a33e2e",
+      "name": "operations",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "bfac47172516af037732148ffc39112a",
+      "symbol": "legal.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "b17f9cc96a67a00dd18267324c2b1998",
+      "name": "legal.construction_draw",
+      "owner": {
+        "symbol": "legal.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2025-01-01",
+        "phase": "construction"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "500000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "aba9064466bf55cc9285bd5782b4397a",
+      "name": "legal.operating_revenue",
+      "owner": {
+        "symbol": "legal.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01",
+        "phase": "operations"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

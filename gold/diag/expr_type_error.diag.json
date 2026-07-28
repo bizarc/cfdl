@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E3003_EXPR_TYPE_ERROR",
+    "severity": "error",
+    "message": "Arithmetic operands are incompatible",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 9,
+      "start_col": 3,
+      "end_line": 9,
+      "end_col": 27
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "stream 'legal.rent', amount expression"
+    ]
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0,
+    "parameters": {
+      "obs.rate": 1000.0
+    }
+  }
+}

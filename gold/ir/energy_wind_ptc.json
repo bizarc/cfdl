@@ -1,0 +1,440 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "wind-ptc-macrs",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2027-01-01",
+    "periods": 240
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "c77e29686a6c4a43e843cd1c8df4592d",
+      "symbol": "project.windfarm",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "dd414d4550419dcf33b958d9bac2d1f6",
+      "name": "energy.capex",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "f5ed4847ec255caaffd93996aee2f60c",
+      "name": "energy.debt_service",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 54,
+          "start_col": 1,
+          "end_line": 61,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "f1fb5b8aa129866f6da3006265726271",
+      "name": "energy.macrs_shield",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "dc39566d81dc509ffa1b066f532b065a",
+      "name": "energy.merchant",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c11368d56bf193fc573365dea4e17536",
+      "name": "energy.om",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 52,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "0e1342927beb3df0ef178d671d2583dc",
+      "name": "energy.ptc",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.windfarm"
+      },
+      "term": {
+        "start": "2027-01-01",
+        "end": "2046-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 35,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "f778fb125f041f2043149563485fa128",
+      "name": "energy.capex.outlay",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "42000000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_capex"
+        }
+      }
+    },
+    {
+      "id": "78cf1cb1ac9bfc8ed5e5582a66b72551",
+      "name": "energy.debt.service",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2041-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "-pmt(0.055 / 12.0, 180.0, 25000000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 54,
+          "start_col": 1,
+          "end_line": 61,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_debt_service"
+        }
+      }
+    },
+    {
+      "id": "5f8d15d459c2e54f22a6df033299d706",
+      "name": "energy.macrs.shield",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2046-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "42000000.0 * macrs_rate(round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0), 5.0) / 12.0 * 0.21"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_macrs_shield"
+        }
+      }
+    },
+    {
+      "id": "6ce2e349f89279c285cb501858b55f38",
+      "name": "energy.merchant.revenue",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2046-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0)) * 42.0 * pow(1.0 + 0.015, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_merchant_revenue"
+        }
+      }
+    },
+    {
+      "id": "08b7d4add08cc7970c5541b508795d37",
+      "name": "energy.om.expense",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2046-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(1300000.0 / 12.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 52,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_om_expense"
+        }
+      }
+    },
+    {
+      "id": "b7f1dd4969dbc8ff6d02594dfcb10e02",
+      "name": "energy.ptc.credit",
+      "owner": {
+        "symbol": "project.windfarm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2027-01-01",
+        "to": "2036-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(105000.0 / 12.0) * 0.95 * pow(1.0 - 0.007, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0)) * 27.5 * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2027-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 35,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ptc_credit"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "37b8a1ab7c040582872891f41df4c1ca",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}

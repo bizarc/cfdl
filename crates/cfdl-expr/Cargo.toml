@@ -1,0 +1,13 @@
+[package]
+name = "cfdl-expr"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Expression evaluation environment for CFDL"
+publish = false
+
+[dependencies]
+cfdl-calc = { path = "../cfdl-calc" }
+rust_decimal = "1"

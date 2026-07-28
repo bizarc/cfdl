@@ -1,0 +1,115 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "exit-cap-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "decd44881d55d1c95cbf6c652aa4aa16",
+      "symbol": "real_estate.property",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "db20544d56f4f6b2f59e26727579e49c",
+      "name": "cre.exit_cap",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "real_estate.property"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "01f65aca73ef593a51d1162cc8fdd6d4",
+      "name": "cre.exit.sale",
+      "owner": {
+        "symbol": "real_estate.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100000.0 / 0.05"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_cap_sale"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "d646b49bb0a0581aca01fe4366077210",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

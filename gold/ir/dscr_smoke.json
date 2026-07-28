@@ -1,0 +1,151 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "dscr-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "3504e4bb017e3c5b9f566f0d89998aed",
+      "symbol": "loan.permanent",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "8afd1483dd1d4d9643f796cb23e460f7",
+      "symbol": "real_estate.prop",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "a818081d3656ce8af9c008a374e95877",
+      "name": "cre.ops.expense",
+      "owner": {
+        "symbol": "real_estate.prop"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 18,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "8d7d1e896cde7842984b1630177a1e59",
+      "name": "cre.ops.revenue",
+      "owner": {
+        "symbol": "real_estate.prop"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "30000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 12,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a99944f8eb9c444d5951cc25ba743f98",
+      "name": "loan.permanent_debt_service",
+      "owner": {
+        "symbol": "loan.permanent"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "15000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

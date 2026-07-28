@@ -1,0 +1,9 @@
+name = "opco"
+version = "0.1.0"
+description = "Operating Business pack v0.1 (deterministic lowering + E7xxx checks)."
+
+[entrypoints]
+aliases = "aliases.toml"
+lowering = "lowering/rules.toml"
+metrics = "metrics.toml"
+validations = "validations.toml"

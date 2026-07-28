@@ -1,0 +1,121 @@
+[
+  {
+    "model_root": "examples/cre_developer",
+    "run_label": "base",
+    "config_path": "examples/cre_developer/run.base.json",
+    "packs_dir": "packs",
+    "slug": "cre_developer"
+  },
+  {
+    "model_root": "examples/cre_developer",
+    "run_label": "stress",
+    "config_path": "examples/cre_developer/run.stress.json",
+    "packs_dir": "packs",
+    "slug": "cre_developer"
+  },
+  {
+    "model_root": "examples/cre_developer",
+    "run_label": "default",
+    "config_path": "examples/cre_developer/run.json",
+    "packs_dir": "packs",
+    "slug": "cre_developer"
+  },
+  {
+    "model_root": "examples/cre_development_with_financing",
+    "run_label": "default",
+    "config_path": "examples/cre_development_with_financing/run.json",
+    "packs_dir": "packs",
+    "slug": "cre_development_with_financing"
+  },
+  {
+    "model_root": "examples/cre_lease_up",
+    "run_label": "default",
+    "config_path": "examples/cre_lease_up/run.json",
+    "packs_dir": "packs",
+    "slug": "cre_lease_up"
+  },
+  {
+    "model_root": "examples/cre_multi_file",
+    "run_label": "default",
+    "config_path": "examples/cre_multi_file/run.json",
+    "packs_dir": "packs",
+    "slug": "cre_multi_file"
+  },
+  {
+    "model_root": "examples/cre_phased",
+    "run_label": "default",
+    "config_path": "examples/cre_phased/run.json",
+    "packs_dir": "packs",
+    "slug": "cre_phased"
+  },
+  {
+    "model_root": "examples/language_tutorial/first_stream",
+    "run_label": "default",
+    "config_path": "examples/language_tutorial/first_stream/run.json",
+    "packs_dir": null,
+    "slug": "language_tutorial_first_stream"
+  },
+  {
+    "model_root": "examples/language_tutorial/minimal_model",
+    "run_label": "default",
+    "config_path": "examples/language_tutorial/minimal_model/run.json",
+    "packs_dir": null,
+    "slug": "language_tutorial_minimal_model"
+  },
+  {
+    "model_root": "examples/language_tutorial/multi_file",
+    "run_label": "default",
+    "config_path": "examples/language_tutorial/multi_file/run.json",
+    "packs_dir": null,
+    "slug": "language_tutorial_multi_file"
+  },
+  {
+    "model_root": "examples/language_tutorial/simple_contract",
+    "run_label": "default",
+    "config_path": "examples/language_tutorial/simple_contract/run.json",
+    "packs_dir": "packs",
+    "slug": "language_tutorial_simple_contract"
+  },
+  {
+    "model_root": "examples/language_tutorial/with_pack",
+    "run_label": "default",
+    "config_path": "examples/language_tutorial/with_pack/run.json",
+    "packs_dir": "packs",
+    "slug": "language_tutorial_with_pack"
+  },
+  {
+    "model_root": "examples/opco_basic",
+    "run_label": "base",
+    "config_path": "examples/opco_basic/run.base.json",
+    "packs_dir": "packs",
+    "slug": "opco_basic"
+  },
+  {
+    "model_root": "examples/opco_basic",
+    "run_label": "stress",
+    "config_path": "examples/opco_basic/run.stress.json",
+    "packs_dir": "packs",
+    "slug": "opco_basic"
+  },
+  {
+    "model_root": "examples/opco_basic",
+    "run_label": "default",
+    "config_path": "examples/opco_basic/run.json",
+    "packs_dir": "packs",
+    "slug": "opco_basic"
+  },
+  {
+    "model_root": "examples/opco_multi_file",
+    "run_label": "default",
+    "config_path": "examples/opco_multi_file/run.json",
+    "packs_dir": "packs",
+    "slug": "opco_multi_file"
+  },
+  {
+    "model_root": "examples/opco_with_growth",
+    "run_label": "default",
+    "config_path": "examples/opco_with_growth/run.json",
+    "packs_dir": "packs",
+    "slug": "opco_with_growth"
+  }
+]

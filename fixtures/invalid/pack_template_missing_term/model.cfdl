@@ -1,0 +1,11 @@
+version 0.1
+model "pack-template-missing-term"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 6
+
+entity legal borrower
+
+// Missing required term `rate` (no default declared for it in the rule).
+contract test.fee_contract {
+  term 2026-01..2026-06
+}

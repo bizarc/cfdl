@@ -1,0 +1,159 @@
+# Energy pack lowering rules — fully template-driven ({{contract.*}} + defaults).
+#
+# Conventions (documented in README.md):
+# - Annual quantities are spread evenly across months (X / 12 per period).
+# - Escalation and degradation step ANNUALLY: factor^floor(t/12), matching
+#   common project-finance Excel practice.
+# - time.t is the 0-based period index; contract term ranges gate schedules.
+
+[[rules]]
+id = "energy_ppa_revenue"
+contract_name = "energy.ppa"
+stream_name = "energy.ppa.revenue{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.ppa_price}} * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+degradation = "0"
+availability = "1"
+
+[[rules]]
+id = "energy_merchant_revenue"
+contract_name = "energy.merchant"
+stream_name = "energy.merchant.revenue{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.price}} * pow(1 + {{contract.price_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+price_escalation = "0"
+degradation = "0"
+availability = "1"
+
+[[rules]]
+id = "energy_storage_arbitrage"
+contract_name = "energy.storage_arbitrage"
+stream_name = "energy.storage.margin{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "({{contract.mwh_cycled_year}} / 12) * {{contract.spread}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+degradation = "0"
+
+[[rules]]
+id = "energy_capacity_payment"
+contract_name = "energy.capacity"
+stream_name = "energy.capacity.revenue{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.payment_year}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+id = "energy_om_expense"
+contract_name = "energy.om"
+stream_name = "energy.om.expense{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "({{contract.om_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+
+[[rules]]
+id = "energy_itc_credit"
+contract_name = "energy.itc"
+stream_name = "energy.itc.credit{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.credit}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[[rules]]
+id = "energy_capex"
+contract_name = "energy.capex"
+stream_name = "energy.capex.outlay{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[[rules]]
+id = "energy_debt_service"
+contract_name = "energy.debt_service"
+stream_name = "energy.debt.service{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+# pmt() returns the Excel-convention negative payment for a positive pv;
+# negate for a positive outflow amount. Decimal-exact for whole-month terms.
+amount_expr = "-pmt({{contract.rate}} / 12, {{contract.term_months}}, {{contract.principal}})"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+id = "energy_ptc_credit"
+contract_name = "energy.ptc"
+stream_name = "energy.ptc.credit{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Production tax credit on generated MWh; credit rate is typically
+# inflation-adjusted (escalation), production degrades annually. The contract
+# term bounds the credit window (statutorily 10 years).
+amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+degradation = "0"
+availability = "1"
+
+[[rules]]
+id = "energy_macrs_shield"
+contract_name = "energy.macrs_shield"
+stream_name = "energy.macrs.shield{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Cash value of MACRS depreciation deductions: basis * rate(year) * tax_rate,
+# spread monthly. macrs_rate() follows IRS Pub 946 GDS half-year tables and
+# returns 0 beyond the recovery period, so the term can simply span the model.
+amount_expr = "{{contract.basis}} * macrs_rate(round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0), {{contract.life}}) / 12 * {{contract.tax_rate}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# `life` is required: the MACRS class life sets the whole depreciation
+# schedule (5 / 7 / 15 / 20), so the model states it.

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1109_MISSING_ENTITY",
+    "severity": "error",
+    "message": "Model must declare at least one entity.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 1,
+      "start_col": 1,
+      "end_line": 1,
+      "end_col": 11
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E2001_CONTRACT_MISSING_TERM",
+    "severity": "error",
+    "message": "Contract 'test.loan_a' is missing required 'term'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 5,
+      "start_col": 1,
+      "end_line": 7,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

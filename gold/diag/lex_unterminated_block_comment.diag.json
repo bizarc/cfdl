@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0003_UNTERMINATED_BLOCK_COMMENT",
+    "severity": "error",
+    "message": "Unterminated block comment.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 2,
+      "start_col": 1,
+      "end_line": 3,
+      "end_col": 18
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

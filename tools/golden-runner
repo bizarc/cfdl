@@ -1,0 +1,309 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# CFDL Golden Runner v0.1
+#
+# Location: /tools/golden-runner
+# Make executable: chmod +x tools/golden-runner
+#
+# Conventions assumed:
+# - Valid fixtures compile successfully:
+#     cfdl compile <fixture_dir> --out <tmp_ir.json>
+# - Invalid fixtures fail compilation and emit diagnostics JSON to stdout when --json is set:
+#     cfdl compile <fixture_dir> --out <tmp_ir.json> --json   (exit != 0, stdout is diagnostics JSON)
+#
+# Gold locations:
+# - gold/ir/<fixture_name>.json
+# - gold/diag/<fixture_name>.diag.json
+#
+# To update gold outputs intentionally:
+#   CFDL_GOLD_UPDATE=1 ./tools/golden-runner run
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+FIXT_VALID="$ROOT/fixtures/valid"
+FIXT_INVALID="$ROOT/fixtures/invalid"
+GOLD_IR="$ROOT/gold/ir"
+GOLD_DIAG="$ROOT/gold/diag"
+GOLD_RESULTS="$ROOT/gold/results"
+
+CMD="${1:-}"
+if [[ "$CMD" != "run" ]]; then
+  echo "Usage: ./tools/golden-runner run"
+  exit 2
+fi
+
+mkdir -p "$GOLD_IR" "$GOLD_DIAG" "$GOLD_RESULTS"
+
+# Choose CFDL binary:
+# - If CFDL_BIN is set, use it
+# - Else assume target/debug/cfdl after building cfdl-cli crate
+CFDL_BIN="${CFDL_BIN:-$ROOT/target/debug/cfdl}"
+
+# Always build cfdl-cli to ensure the binary matches source edits.
+echo "[golden] Building CLI (crate: cfdl-cli)..."
+(cd "$ROOT" && cargo build -p cfdl-cli)
+
+if [[ ! -x "$CFDL_BIN" ]]; then
+  echo "[golden] ERROR: CFDL binary not found or not executable: $CFDL_BIN"
+  echo "         Either set CFDL_BIN=/path/to/cfdl or ensure cfdl-cli builds a 'cfdl' binary."
+  exit 1
+fi
+
+# Canonicalize JSON (stable key order + compact form) using Python (no external deps).
+canon_json() {
+  python3 - "$1" <<'PY'
+import json, sys
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+# Canonical: sorted keys, no whitespace noise, stable floats handled by Python's repr
+s = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+sys.stdout.write(s)
+PY
+}
+
+# Write canonicalized JSON to file
+canon_to_file() {
+  local in="$1"
+  local out="$2"
+  canon_json "$in" > "$out"
+}
+
+# Compare canonical JSON
+compare_json_files() {
+  local a="$1"
+  local b="$2"
+  local tmpa tmpb
+  tmpa="$(mktemp)"
+  tmpb="$(mktemp)"
+  canon_to_file "$a" "$tmpa"
+  canon_to_file "$b" "$tmpb"
+  if ! diff -u "$tmpa" "$tmpb" >/dev/null; then
+    diff -u "$tmpa" "$tmpb" || true
+    rm -f "$tmpa" "$tmpb"
+    return 1
+  fi
+  rm -f "$tmpa" "$tmpb"
+  return 0
+}
+
+check_ir_subject_owner_only_changes() {
+  local old_json="$1"
+  local new_json="$2"
+  python3 - "$old_json" "$new_json" <<'PY'
+import json
+import sys
+
+old_path, new_path = sys.argv[1], sys.argv[2]
+with open(old_path, "r", encoding="utf-8") as f:
+    old = json.load(f)
+with open(new_path, "r", encoding="utf-8") as f:
+    new = json.load(f)
+
+changed = []
+
+def walk(a, b, path):
+    if isinstance(a, dict) and isinstance(b, dict):
+        keys = sorted(set(a.keys()) | set(b.keys()))
+        for key in keys:
+            if key not in a or key not in b:
+                changed.append(path + [str(key)])
+            else:
+                walk(a[key], b[key], path + [str(key)])
+        return
+    if isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b):
+            changed.append(path + ["__len__"])
+            return
+        for idx, (av, bv) in enumerate(zip(a, b)):
+            walk(av, bv, path + [str(idx)])
+        return
+    if a != b:
+        changed.append(path)
+
+walk(old, new, [])
+
+allowed = {
+    "contracts.*.subject.symbol",
+    "streams.*.owner.symbol",
+    "streams.*.name",
+    "streams.*.id",
+}
+
+def is_allowed(path):
+    dot = ".".join(path)
+    parts = dot.split(".")
+    if len(parts) == 4 and parts[0] == "contracts" and parts[2] == "subject" and parts[3] == "symbol":
+        return parts[1].isdigit()
+    if len(parts) == 4 and parts[0] == "streams" and parts[2] == "owner" and parts[3] == "symbol":
+        return parts[1].isdigit()
+    if len(parts) == 3 and parts[0] == "streams" and parts[2] in ("name", "id") and parts[1].isdigit():
+        return True
+    return False
+
+disallowed = [p for p in changed if not is_allowed(p)]
+if disallowed:
+    print("Disallowed IR changes detected (expected only subject/owner symbol updates):")
+    for path in disallowed[:100]:
+        print(" - " + ".".join(path))
+    sys.exit(1)
+PY
+}
+
+UPDATE="${CFDL_GOLD_UPDATE:-0}"
+
+fail_count=0
+pass_count=0
+
+echo "[golden] Using CFDL binary: $CFDL_BIN"
+echo "[golden] Update mode: $UPDATE"
+
+run_valid_fixture() {
+  local dir="$1"
+  local name="$2"
+  local out_ir out_results gold_ir gold_results run_config
+  out_ir="$(mktemp)"
+  out_results="$(mktemp)"
+  gold_ir="$GOLD_IR/${name}.json"
+  gold_results="$GOLD_RESULTS/${name}.results.json"
+  run_config="$dir/run.json"
+
+  # Compile
+  if ! "$CFDL_BIN" compile "$dir" --out "$out_ir" >/dev/null 2>&1; then
+    echo "[golden][FAIL] valid/${name}: compile failed unexpectedly"
+    return 1
+  fi
+  # Optionally pass --pack if the fixture declares a pack name
+  local pack_arg=""
+  if [[ -f "$dir/pack" ]]; then
+    pack_arg="--pack $(tr -d '[:space:]' < "$dir/pack")"
+  fi
+
+  if [[ -f "$run_config" ]]; then
+    # shellcheck disable=SC2086
+    if ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --config "$run_config" $pack_arg >/dev/null 2>&1; then
+      echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
+      return 1
+    fi
+  # shellcheck disable=SC2086
+  elif ! "$CFDL_BIN" run "$out_ir" --out "$out_results" --rate 0.10 $pack_arg >/dev/null 2>&1; then
+    echo "[golden][FAIL] valid/${name}: run failed unexpectedly"
+    return 1
+  fi
+
+  if [[ "$UPDATE" == "1" ]]; then
+    # When intentionally updating gold (e.g. platform naming migration), allow any IR changes.
+    if [[ -f "$gold_ir" ]] && [[ "${CFDL_GOLD_UPDATE_ALLOW_IR_CHANGES:-0}" != "1" ]]; then
+      if ! check_ir_subject_owner_only_changes "$gold_ir" "$out_ir"; then
+        echo "[golden][FAIL] valid/${name}: non-subject/owner IR changes detected during update"
+        return 1
+      fi
+    fi
+    cp "$out_ir" "$gold_ir"
+    cp "$out_results" "$gold_results"
+    echo "[golden][UPDATE] wrote $gold_ir"
+    echo "[golden][UPDATE] wrote $gold_results"
+    return 0
+  fi
+
+  if [[ ! -f "$gold_ir" ]]; then
+    echo "[golden][FAIL] valid/${name}: missing gold IR $gold_ir"
+    echo "               run with CFDL_GOLD_UPDATE=1 to generate."
+    return 1
+  fi
+  if [[ ! -f "$gold_results" ]]; then
+    echo "[golden][FAIL] valid/${name}: missing gold results $gold_results"
+    echo "               run with CFDL_GOLD_UPDATE=1 to generate."
+    return 1
+  fi
+
+  if ! compare_json_files "$out_ir" "$gold_ir"; then
+    echo "[golden][FAIL] valid/${name}: IR mismatch"
+    return 1
+  fi
+  if ! compare_json_files "$out_results" "$gold_results"; then
+    echo "[golden][FAIL] valid/${name}: Results mismatch"
+    return 1
+  fi
+
+  echo "[golden][PASS] valid/${name}"
+  return 0
+}
+
+run_invalid_fixture() {
+  local dir="$1"
+  local name="$2"
+  local tmp_diag gold_diag tmp_ir
+  tmp_diag="$(mktemp)"
+  tmp_ir="$(mktemp)"
+  gold_diag="$GOLD_DIAG/${name}.diag.json"
+
+  # Compile expected to fail; capture stdout diagnostics in JSON mode
+  set +e
+  "$CFDL_BIN" --json compile "$dir" --out "$tmp_ir" >"$tmp_diag" 2>/dev/null
+  code=$?
+  set -e
+
+  if [[ $code -eq 0 ]]; then
+    echo "[golden][FAIL] invalid/${name}: compile succeeded but expected failure"
+    return 1
+  fi
+
+  # Ensure diagnostics is valid JSON
+  if ! python3 -c 'import json,sys; json.load(open(sys.argv[1],"r",encoding="utf-8"))' "$tmp_diag" >/dev/null 2>&1; then
+    echo "[golden][FAIL] invalid/${name}: diagnostics output is not valid JSON (expected --json stdout)"
+    echo "               file: $tmp_diag"
+    return 1
+  fi
+
+  if [[ "$UPDATE" == "1" ]]; then
+    cp "$tmp_diag" "$gold_diag"
+    echo "[golden][UPDATE] wrote $gold_diag"
+    return 0
+  fi
+
+  if [[ ! -f "$gold_diag" ]]; then
+    echo "[golden][FAIL] invalid/${name}: missing gold diagnostics $gold_diag"
+    echo "               run with CFDL_GOLD_UPDATE=1 to generate."
+    return 1
+  fi
+
+  if ! compare_json_files "$tmp_diag" "$gold_diag"; then
+    echo "[golden][FAIL] invalid/${name}: diagnostics mismatch"
+    return 1
+  fi
+
+  echo "[golden][PASS] invalid/${name}"
+  return 0
+}
+
+# Run valid fixtures
+if [[ -d "$FIXT_VALID" ]]; then
+  for dir in "$FIXT_VALID"/*; do
+    [[ -d "$dir" ]] || continue
+    name="$(basename "$dir")"
+    if run_valid_fixture "$dir" "$name"; then
+      pass_count=$((pass_count+1))
+    else
+      fail_count=$((fail_count+1))
+    fi
+  done
+fi
+
+# Run invalid fixtures
+if [[ -d "$FIXT_INVALID" ]]; then
+  for dir in "$FIXT_INVALID"/*; do
+    [[ -d "$dir" ]] || continue
+    name="$(basename "$dir")"
+    if run_invalid_fixture "$dir" "$name"; then
+      pass_count=$((pass_count+1))
+    else
+      fail_count=$((fail_count+1))
+    fi
+  done
+fi
+
+echo "[golden] Done. PASS=$pass_count FAIL=$fail_count"
+if [[ $fail_count -ne 0 ]]; then
+  exit 1
+fi

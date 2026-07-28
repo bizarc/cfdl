@@ -1,0 +1,225 @@
+---
+id: notebook-credit
+title: "Credit loan pool (level-pay)"
+slug: "/docs/notebooks/credit-loan-pool"
+source: examples/notebooks/03_credit_loan_pool.ipynb
+---
+
+# Credit loan pool (level-pay)
+
+> Outputs below are real: the notebook runs against the `credit` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
+
+A homogeneous level-pay loan pool with CPR prepayments, CDR defaults, loss severity, a recovery lag, a servicing strip and prepayment penalties — priced at a discount to par.
+
+This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+
+```python
+from pathlib import Path
+import cfdl_sdk
+
+# This notebook reads a benchmark model and the pack definitions, both of which
+# live in the repository, so locate its root. Searching a bounded set of
+# ancestors means running from outside a checkout fails with an explanation
+# rather than looping forever at the filesystem root.
+def repo_root() -> Path:
+    here = Path.cwd().resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / "Cargo.toml").exists() and (candidate / "packs").is_dir():
+            return candidate
+    raise RuntimeError(
+        "No CFDL checkout found above "
+        f"{here}. This notebook loads a model from benchmarks/ and pack "
+        "definitions from packs/, so it needs to run inside a clone of "
+        "https://github.com/bizarc/cfdl."
+    )
+
+
+ROOT = repo_root()
+PACKS = ROOT / "packs"
+```
+
+## Compile
+
+Compile the model directory to IR.
+
+```python
+model_dir = ROOT / "benchmarks/credit/level_pay_pool"
+model = cfdl_sdk.compile(model_dir, packs_dir=PACKS)
+print("streams:", len(model.ir["streams"]))
+```
+
+```
+streams: 7
+```
+
+## Run
+
+Run with the benchmark's configuration and apply the `credit` pack's domain metrics.
+
+```python
+results = model.run(
+    config=str(model_dir / "run.json"),
+    pack="credit",
+)
+print("status:", results.status, "| warnings:", len(results.warnings))
+```
+
+```
+status: ok | warnings: 0
+```
+
+## Cash flows
+
+The engine returns per-period signed cash flows; `cashflows()` gives a wide DataFrame indexed by period.
+
+```python
+cf = results.cashflows()
+print('shape:', cf.shape)
+cf.head()
+```
+
+```
+shape: (126, 8)
+```
+
+```
+         model.net_cash_flow  stream.credit.pool.interest.auto_a  \
+period                                                             
+2026-01        -2.430350e+07                       135188.876529   
+2026-02         4.416938e+05                       133231.075149   
+2026-03         4.369287e+05                       131292.667326   
+2026-04         4.322077e+05                       129373.478097   
+2026-05         4.275304e+05                       127473.334031   
+
+         stream.credit.pool.penalty.auto_a  stream.credit.pool.prepay.auto_a  \
+period                                                                         
+2026-01                        1717.921526                     171792.152606   
+2026-02                        1692.927113                     169292.711299   
+2026-03                        1668.180510                     166818.051025   
+2026-04                        1643.679482                     164367.948157   
+2026-05                        1619.421810                     161942.181025   
+
+         stream.credit.pool.recoveries.auto_a  \
+period                                          
+2026-01                                   0.0   
+2026-02                                   0.0   
+2026-03                                   0.0   
+2026-04                                   0.0   
+2026-05                                   0.0   
+
+         stream.credit.pool.sched_principal.auto_a  \
+period                                               
+2026-01                              148203.556810   
+2026-02                              147725.634974   
+2026-03                              147249.254325   
+2026-04                              146774.409892   
+2026-05                              146301.096721   
+
+         stream.credit.pool.servicing.auto_a  \
+period                                         
+2026-01                        -10399.144348   
+2026-02                        -10248.544242   
+2026-03                        -10099.435948   
+2026-04                         -9951.806007   
+2026-05                         -9805.641079   
+
+         stream.credit.purchase.price.auto_a  
+period                                        
+2026-01                          -24750000.0  
+2026-02                                  0.0  
+2026-03                                  0.0  
+2026-04                                  0.0  
+2026-05                                  0.0  
+```
+
+```python
+# Requires the [viz] extra (pip install cfdl-sdk[viz]).
+results.plot.cumulative()
+```
+
+```
+<Axes: xlabel='period', ylabel='cumulative amount'>
+```
+
+![Chart produced by the preceding cell](/notebooks/credit-loan-pool/cell-08-1.png)
+
+## Metrics
+
+Core metrics (NPV/IRR/MOIC/...) plus the pack's domain metrics, with their source labelled.
+
+```python
+results.metrics_frame()
+```
+
+```
+                                             metric         value currency  \
+0                         domain.credit.collections  3.087670e+07      USD   
+1                domain.credit.collections_multiple  1.247543e+00     None   
+2                            domain.credit.interest  6.502567e+06      USD   
+3                           domain.credit.penalties  8.210289e+04      USD   
+4                           domain.credit.principal  2.297723e+07      USD   
+5                            domain.credit.purchase  2.475000e+07      USD   
+6                          domain.credit.recoveries  1.314801e+06      USD   
+7                           domain.credit.servicing  5.001975e+05      USD   
+8                           domain.credit.wal_years  3.981460e+00     None   
+9                           entity.fund.buyer.total  5.626503e+06      USD   
+10                                        model.irr  5.916000e-02     None   
+11                                       model.moic  1.231510e+00     None   
+12                                        model.npv -6.589882e+04      USD   
+13                            model.payback_periods  7.900000e+01     None   
+14                              model.payback_years  6.583333e+00     None   
+15                                      model.total  5.626503e+06      USD   
+16                                  model.wal_years  3.824182e+00     None   
+17                         run.annual_discount_rate  6.000000e-02     None   
+18                             run.periods_per_year  1.200000e+01     None   
+19         stream.credit.pool.interest.auto_a.total  6.502567e+06      USD   
+20          stream.credit.pool.penalty.auto_a.total  8.210289e+04      USD   
+21           stream.credit.pool.prepay.auto_a.total  8.210289e+06      USD   
+22       stream.credit.pool.recoveries.auto_a.total  1.314801e+06      USD   
+23  stream.credit.pool.sched_principal.auto_a.total  1.476694e+07      USD   
+24        stream.credit.pool.servicing.auto_a.total -5.001975e+05      USD   
+25        stream.credit.purchase.price.auto_a.total -2.475000e+07      USD   
+
+           source  
+0   domain:credit  
+1   domain:credit  
+2   domain:credit  
+3   domain:credit  
+4   domain:credit  
+5   domain:credit  
+6   domain:credit  
+7   domain:credit  
+8   domain:credit  
+9            core  
+10           core  
+11           core  
+12           core  
+13           core  
+14           core  
+15           core  
+16           core  
+17           core  
+18           core  
+19           core  
+20           core  
+21           core  
+22           core  
+23           core  
+24           core  
+25           core  
+```
+
+## What-if
+
+Show the collections multiple and the principal-weighted WAL.
+
+```python
+m = results.metrics()
+print("collections multiple:", round(m["domain.credit.collections_multiple"], 4))
+print("WAL (years):", round(m["domain.credit.wal_years"], 3))
+```
+
+```
+collections multiple: 1.2475
+WAL (years): 3.981
+```

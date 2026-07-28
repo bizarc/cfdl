@@ -1,0 +1,7 @@
+version 0.1
+model "opco-multi-file-example"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+import "structure.cfdl"
+import "contracts.cfdl"

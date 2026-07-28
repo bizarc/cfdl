@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      # Before any cargo build: pyo3 (cfdl-py) resolves the interpreter from
+      # PATH, and runner-default Python can be newer than pyo3 supports.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Format
+        if: runner.os == 'Linux'
+        run: cargo fmt --all -- --check
+
+      - name: Lint (clippy)
+        if: runner.os == 'Linux'
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Tests
+        run: cargo test --all --all-features
+
+      - name: Golden suite
+        shell: bash
+        run: |
+          chmod +x ./tools/golden-runner
+          ./tools/golden-runner run
+
+      # Guards the examples a reader meets first: they must compile, run, and
+      # actually exercise the features their prose advertises.
+      - name: Documentation examples
+        run: |
+          cargo build -p cfdl-cli
+          python3 tools/check-doc-examples.py
+
+      - name: Install Python test tooling
+        run: python -m pip install --upgrade pip
+
+      - name: Install Python package (with dev + viz extras)
+        run: python -m pip install -e "python/[dev,viz]"
+
+      - name: Python SDK tests
+        run: python -m pytest -q python/tests
+
+      - name: Execute example notebooks
+        if: runner.os == 'Linux'
+        run: |
+          python -m pip install -e "python/[notebooks]"
+          for nb in examples/notebooks/*.ipynb; do
+            echo "executing $nb"
+            MPLBACKEND=Agg jupyter nbconvert --to notebook --execute --stdout "$nb" > /dev/null
+          done

@@ -1,0 +1,190 @@
+{
+  "results_version": "0.2",
+  "model_hash": "f128e7196ce904f1218e1d1a79e7771ab65150d29884ce0d0db44d8bc97e3905",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.borrower.total": {
+        "amount": 14808.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 14180.3838,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 14808.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.458333,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.testpack.lowered.total": {
+        "amount": 14808.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.testpack.lowered": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1234.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 14808.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.testpack.lowered": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 14808.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

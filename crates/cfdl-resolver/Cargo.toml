@@ -1,0 +1,15 @@
+[package]
+name = "cfdl-resolver"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Import and symbol resolution for CFDL"
+publish = false
+
+[dependencies]
+thiserror = { workspace = true }
+
+cfdl-lexer = { path = "../cfdl-lexer" }
+cfdl-parser = { path = "../cfdl-parser" }

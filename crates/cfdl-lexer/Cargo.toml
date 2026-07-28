@@ -1,0 +1,13 @@
+[package]
+name = "cfdl-lexer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Lexer for CFDL, the cash flow domain language"
+publish = false
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }

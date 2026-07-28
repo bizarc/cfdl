@@ -1,0 +1,312 @@
+name: Release Distribution
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Tests
+        run: cargo test --all --all-features
+
+      - name: Golden suite
+        run: |
+          chmod +x ./tools/golden-runner
+          ./tools/golden-runner run
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Extension lint
+        run: |
+          cd editors/vscode
+          npm ci
+          npm run lint
+
+  build-lsp:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs_on: macos-14
+            target: aarch64-apple-darwin
+            artifact_name: cfdl-lsp-darwin-arm64
+          - runs_on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: cfdl-lsp-linux-x64
+          - runs_on: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: cfdl-lsp-windows-x64.exe
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build cfdl-lsp
+        shell: bash
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/build_lsp_binary.sh \
+            "${{ matrix.target }}" \
+            "${GITHUB_WORKSPACE}/release-assets/${{ matrix.artifact_name }}"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: release-assets/${{ matrix.artifact_name }}
+
+  build-cli:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runs_on: macos-14
+            target: aarch64-apple-darwin
+            artifact_name: cfdl-darwin-arm64
+          - runs_on: macos-14
+            target: x86_64-apple-darwin
+            artifact_name: cfdl-darwin-x64
+          - runs_on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: cfdl-linux-x64
+          - runs_on: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: cfdl-windows-x64.exe
+    runs-on: ${{ matrix.runs_on }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build cfdl CLI
+        shell: bash
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/build_bin.sh \
+            cfdl-cli \
+            "${{ matrix.target }}" \
+            "${GITHUB_WORKSPACE}/release-assets/${{ matrix.artifact_name }}"
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: release-assets/${{ matrix.artifact_name }}
+
+  package-vsix:
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      vsix_name: ${{ steps.vsix-name.outputs.name }}
+      extension_version: ${{ steps.vsix-name.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve extension version
+        id: vsix-name
+        run: |
+          VERSION="$(node -p "require('./editors/vscode/package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "name=cfdl-vscode-${VERSION}.vsix" >> "$GITHUB_OUTPUT"
+
+      - name: Build VSIX
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/package_vsix.sh \
+            "${GITHUB_WORKSPACE}/release-assets/${{ steps.vsix-name.outputs.name }}"
+
+      - name: Verify VSIX bundled docs and packs
+        run: |
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/docs/LANGUAGE_GUIDE.md"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/docs/install-configure.md"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/packs/cre/pack.toml"
+          unzip -l "release-assets/${{ steps.vsix-name.outputs.name }}" | grep "extension/bundled/packs/opco/pack.toml"
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vsix-name.outputs.name }}
+          path: release-assets/${{ steps.vsix-name.outputs.name }}
+
+  package-docs:
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      docs_name: ${{ steps.docs-name.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve docs artifact name
+        id: docs-name
+        run: |
+          VERSION="$(node -p "require('./editors/vscode/package.json').version")"
+          echo "name=cfdl-docs-${VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build docs archive
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/package_docs.sh \
+            "${GITHUB_WORKSPACE}/release-assets/${{ steps.docs-name.outputs.name }}"
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.docs-name.outputs.name }}
+          path: release-assets/${{ steps.docs-name.outputs.name }}
+
+  package-packs:
+    needs: verify
+    runs-on: ubuntu-latest
+    outputs:
+      packs_name: ${{ steps.packs-name.outputs.name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Resolve packs artifact name
+        id: packs-name
+        run: |
+          VERSION="$(node -p "require('./editors/vscode/package.json').version")"
+          echo "name=cfdl-packs-${VERSION}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build packs archive
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/release-assets"
+          bash distribution/scripts/package_packs.sh \
+            "${GITHUB_WORKSPACE}/release-assets/${{ steps.packs-name.outputs.name }}"
+
+      - name: Upload packs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.packs-name.outputs.name }}
+          path: release-assets/${{ steps.packs-name.outputs.name }}
+
+  build-server-image:
+    # Build the API server container image and save it as an artifact.
+    # Publishing to ghcr.io is a human-approved step:
+    # this job never pushes.
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image (no push)
+        run: |
+          docker build -f crates/cfdl-server/Dockerfile \
+            -t ghcr.io/bizarc/cfdl-server:ci .
+
+      - name: Save image tarball
+        run: docker save ghcr.io/bizarc/cfdl-server:ci -o cfdl-server-image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfdl-server-image
+          path: cfdl-server-image.tar
+
+  publish-release:
+    needs:
+      - build-lsp
+      - build-cli
+      - package-vsix
+      - package-docs
+      - package-packs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd release-assets
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Generate release manifest
+        run: |
+          VERSION="${{ needs.package-vsix.outputs.extension_version }}"
+          TAG="${GITHUB_REF_NAME}"
+          mapfile -t ARTIFACTS < <(cd release-assets && ls -1)
+          python3 distribution/scripts/write_release_manifest.py \
+            "${VERSION}" \
+            "${TAG}" \
+            "release-assets/release-manifest-${VERSION}.json" \
+            "${ARTIFACTS[@]}"
+
+      - name: Verify release assets
+        run: |
+          VERSION="${{ needs.package-vsix.outputs.extension_version }}"
+          python3 distribution/scripts/verify_release_assets.py "${VERSION}" "release-assets"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: distribution/release-notes-template.md
+          files: release-assets/*

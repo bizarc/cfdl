@@ -1,0 +1,9 @@
+# Benchmark case: 5-year services LBO. Entry 8.0x run-rate EBITDA ($33.6mm)
+# funded with a $21mm / 8.5% term loan (12mo IO, 7yr am, balloon at exit);
+# DSO/DPO/DIO working capital with release at exit; 3%-of-revenue capex;
+# 26% cash taxes on EBITDA - D&A - interest (no NOLs); exit 8.5x
+# trailing-12 EBITDA net of 1.5% selling costs.
+# Reference: reference_gen.py (independent implementation).
+# Status: pending practitioner Excel review.
+pack = "opco"
+period_tolerance = 0.01

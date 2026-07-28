@@ -1,0 +1,14 @@
+CFDL — Cash Flow Domain Language
+Copyright (c) 2026 Matthew McCrea
+
+Licensed under the Business Source License 1.1 (see LICENSE).
+Each released version converts to the Apache License, Version 2.0
+on its Change Date (four years after that version's release).
+
+CFDL is source-available: you may read, copy, modify, and make
+non-production and permitted production use of the code. Offering CFDL
+to third parties as a hosted or embedded commercial product or service
+requires a commercial license from Matthew McCrea.
+
+This repository is maintained by Matthew McCrea. External pull requests are not
+accepted at this time; bug reports are welcome via GitHub issues.

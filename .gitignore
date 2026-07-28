@@ -1,0 +1,75 @@
+# Rust
+/target/
+**/target/
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Rust analyzer / tooling
+**/.rust-analyzer/
+**/.cargo/
+/.cargo/
+
+# Coverage / profiling
+*.profraw
+*.profdata
+coverage/
+lcov.info
+
+# Build artifacts
+/dist/
+/build/
+.out/
+tmp/
+.temp/
+.cache/
+
+# Python (bindings)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node (bindings/tools)
+node_modules/
+*.vsix
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.DS_Store
+
+# Distribution outputs
+release-assets/
+distribution/out/
+
+# Generated golden outputs (keep gold/ committed, but ignore transient run outputs)
+gold/.generated/
+tools/**/.generated/
+# Compiled native artifacts
+*.so
+*.dylib
+cfdl-lsp-darwin-*
+
+# Docusaurus build artifacts
+docs-site/.docusaurus/
+docs-site/build/
+
+
+# Next.js site
+site/node_modules/
+site/.next/
+site/out/
+site/.vercel/
+.claude/launch.json

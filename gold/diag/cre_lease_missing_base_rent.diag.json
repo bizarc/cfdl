@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E6001_CRE_LEASE_MISSING_BASE_RENT",
+    "severity": "error",
+    "message": "CRE lease is missing required term 'base_rent'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

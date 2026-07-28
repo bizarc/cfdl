@@ -1,0 +1,40 @@
+# CRE domain metrics, evaluated in order (ratios may reference earlier ids).
+
+[[metrics]]
+id = "domain.cre.noi"
+kind = "money"
+op = "sum"
+numerator_streams = [
+  "cre.lease.base_rent",
+  "cre.ops.revenue",
+  "cre.unit.base_rent.*",
+  "cre.unit.recoveries.*",
+  "cre.rollover.rent.*",
+  "cre.pct_rent.*",
+]
+denominator_streams = ["cre.ops.expense", "cre.vacancy.loss", "cre.property.opex"]
+formula = "sum(numerator_streams) + sum(denominator_streams)"
+
+[[metrics]]
+id = "domain.cre.debt_service"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["loan.construction_interest", "loan.permanent_debt_service"]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+[[metrics]]
+id = "domain.cre.dscr"
+kind = "number"
+op = "ratio"
+numerator_metric = "domain.cre.noi"
+denominator_metric = "domain.cre.debt_service"
+formula = "domain.cre.noi / domain.cre.debt_service"
+
+[[metrics]]
+id = "domain.cre.leasing_costs"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["cre.unit.ti_lc.*", "cre.rollover.ti_lc.*"]
+formula = "-sum(numerator_streams)"
+require_positive = true

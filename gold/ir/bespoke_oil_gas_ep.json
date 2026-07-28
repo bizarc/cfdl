@@ -1,0 +1,278 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "bespoke-oil-gas-ep",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 60
+  },
+  "phases": [
+    {
+      "id": "0bc8706fb35e94da41195f7167818d4c",
+      "name": "drilling",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-06-01"
+      }
+    },
+    {
+      "id": "b3ac172b8235a7f4bfe64c9b8b97e037",
+      "name": "production",
+      "range": {
+        "start": "2027-01-01",
+        "end": "2030-12-01"
+      }
+    },
+    {
+      "id": "0c0bd23784918a23ef5ae45d30832759",
+      "name": "ramp",
+      "range": {
+        "start": "2026-07-01",
+        "end": "2026-12-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "ca8fd6244e0d455fede0ae13b1e51aec",
+      "symbol": "capital.drillco",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "08136d785ac0997043a4c4aa567fef9c",
+      "symbol": "operations.opco",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "ac89327cb34aeb4c9517db6b48434e94",
+      "symbol": "wellbore.asset",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "bb3086df6440dc1e59e9d3143113e231",
+      "name": "capital.drilling_costs",
+      "owner": {
+        "symbol": "capital.drillco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "250000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 20,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "055ecd10e1997f8cc92be3a640b11b44",
+      "name": "capital.well_capex",
+      "owner": {
+        "symbol": "capital.drillco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01",
+        "phase": "drilling"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "3500000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 17,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "ca1a6e95f0b4d1bf6fb6c170c39165e5",
+      "name": "opex.ga",
+      "owner": {
+        "symbol": "operations.opco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "12000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 49,
+          "start_col": 1,
+          "end_line": 52,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "7b0bb02c8f7e194d1811afd642bab937",
+      "name": "opex.loe",
+      "owner": {
+        "symbol": "operations.opco"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "28000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "time.t >= 6.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "3ae9c11846f440d14197e98c8bab8be0",
+      "name": "rev.gross_production",
+      "owner": {
+        "symbol": "wellbore.asset"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "180000.0 * pow(0.94, time.t - 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "time.t >= 12.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "1e8cb42c4f1e1bb403f671384281585d",
+      "name": "rev.royalty_burden",
+      "owner": {
+        "symbol": "wellbore.asset"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "33750.0 * pow(0.94, time.t - 12.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "time.t >= 12.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 35,
+          "start_col": 1,
+          "end_line": 39,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

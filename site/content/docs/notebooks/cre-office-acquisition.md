@@ -1,0 +1,250 @@
+---
+id: notebook-cre
+title: "CRE office acquisition (institutional lease-by-lease DCF)"
+slug: "/docs/notebooks/cre-office-acquisition"
+source: examples/notebooks/02_cre_office_acquisition.ipynb
+---
+
+# CRE office acquisition (institutional lease-by-lease DCF)
+
+> Outputs below are real: the notebook runs against the `cre` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
+
+A two-tenant office acquisition modeled lease-by-lease: free rent, anniversary escalations, expense recoveries over stops, TI/LC, probability-weighted rollover, and an exit on forward NOI.
+
+This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+
+```python
+from pathlib import Path
+import cfdl_sdk
+
+# This notebook reads a benchmark model and the pack definitions, both of which
+# live in the repository, so locate its root. Searching a bounded set of
+# ancestors means running from outside a checkout fails with an explanation
+# rather than looping forever at the filesystem root.
+def repo_root() -> Path:
+    here = Path.cwd().resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / "Cargo.toml").exists() and (candidate / "packs").is_dir():
+            return candidate
+    raise RuntimeError(
+        "No CFDL checkout found above "
+        f"{here}. This notebook loads a model from benchmarks/ and pack "
+        "definitions from packs/, so it needs to run inside a clone of "
+        "https://github.com/bizarc/cfdl."
+    )
+
+
+ROOT = repo_root()
+PACKS = ROOT / "packs"
+```
+
+## Compile
+
+Compile the model directory to IR.
+
+```python
+model_dir = ROOT / "benchmarks/cre/office_two_tenant"
+model = cfdl_sdk.compile(model_dir, packs_dir=PACKS)
+print("streams:", len(model.ir["streams"]))
+```
+
+```
+streams: 12
+```
+
+## Run
+
+Run with the benchmark's configuration and apply the `cre` pack's domain metrics.
+
+```python
+results = model.run(
+    config=str(model_dir / "run.json"),
+    pack="cre",
+)
+print("status:", results.status, "| warnings:", len(results.warnings))
+```
+
+```
+status: ok | warnings: 0
+```
+
+## Cash flows
+
+The engine returns per-period signed cash flows; `cashflows()` gives a wide DataFrame indexed by period.
+
+```python
+cf = results.cashflows()
+print('shape:', cf.shape)
+cf.head()
+```
+
+```
+shape: (120, 13)
+```
+
+```
+         model.net_cash_flow  stream.cre.exit.proceeds  \
+period                                                   
+2026-01       -263345.249537                       0.0   
+2026-02        -63345.249537                       0.0   
+2026-03        -63345.249537                       0.0   
+2026-04        -23345.249537                       0.0   
+2026-05        -23345.249537                       0.0   
+
+         stream.cre.property.opex  stream.cre.rollover.rent.tenant_a  \
+period                                                                 
+2026-01                  -25000.0                                0.0   
+2026-02                  -25000.0                                0.0   
+2026-03                  -25000.0                                0.0   
+2026-04                  -25000.0                                0.0   
+2026-05                  -25000.0                                0.0   
+
+         stream.cre.rollover.ti_lc.tenant_a  \
+period                                        
+2026-01                                 0.0   
+2026-02                                 0.0   
+2026-03                                 0.0   
+2026-04                                 0.0   
+2026-05                                 0.0   
+
+         stream.cre.unit.base_rent.tenant_a  \
+period                                        
+2026-01                                 0.0   
+2026-02                                 0.0   
+2026-03                                 0.0   
+2026-04                             40000.0   
+2026-05                             40000.0   
+
+         stream.cre.unit.base_rent.tenant_b  \
+period                                        
+2026-01                                 0.0   
+2026-02                                 0.0   
+2026-03                                 0.0   
+2026-04                                 0.0   
+2026-05                                 0.0   
+
+         stream.cre.unit.recoveries.tenant_a  \
+period                                         
+2026-01                                  0.0   
+2026-02                                  0.0   
+2026-03                                  0.0   
+2026-04                                  0.0   
+2026-05                                  0.0   
+
+         stream.cre.unit.recoveries.tenant_b  stream.cre.unit.ti_lc.tenant_a  \
+period                                                                         
+2026-01                                  0.0                       -200000.0   
+2026-02                                  0.0                             0.0   
+2026-03                                  0.0                             0.0   
+2026-04                                  0.0                             0.0   
+2026-05                                  0.0                             0.0   
+
+         stream.cre.unit.ti_lc.tenant_b  stream.cre.vacancy.loss  \
+period                                                             
+2026-01                             0.0                  -1500.0   
+2026-02                             0.0                  -1500.0   
+2026-03                             0.0                  -1500.0   
+2026-04                             0.0                  -1500.0   
+2026-05                             0.0                  -1500.0   
+
+         stream.loan.permanent_debt_service  
+period                                       
+2026-01                       -36845.249537  
+2026-02                       -36845.249537  
+2026-03                       -36845.249537  
+2026-04                       -36845.249537  
+2026-05                       -36845.249537  
+```
+
+```python
+# Requires the [viz] extra (pip install cfdl-sdk[viz]).
+results.plot.cumulative()
+```
+
+```
+<Axes: xlabel='period', ylabel='cumulative amount'>
+```
+
+![Chart produced by the preceding cell](/notebooks/cre-office-acquisition/cell-08-1.png)
+
+## Metrics
+
+Core metrics (NPV/IRR/MOIC/...) plus the pack's domain metrics, with their source labelled.
+
+```python
+results.metrics_frame()
+```
+
+```
+                                       metric         value currency  \
+0                     domain.cre.debt_service  4.421430e+06      USD   
+1                             domain.cre.dscr  1.067287e+00     None   
+2                    domain.cre.leasing_costs  5.250000e+05      USD   
+3                              domain.cre.noi  4.718934e+06      USD   
+4                    entity.asset.tower.total  3.009647e+06      USD   
+5                                   model.irr -1.000000e+00     None   
+6                                  model.moic  3.234175e+00     None   
+7                                   model.npv  1.434623e+06      USD   
+8                       model.payback_periods  5.300000e+01     None   
+9                         model.payback_years  4.416667e+00     None   
+10                                model.total  3.009647e+06      USD   
+11                            model.wal_years  8.442742e+00     None   
+12                   run.annual_discount_rate  7.250000e-02     None   
+13                       run.periods_per_year  1.200000e+01     None   
+14             stream.cre.exit.proceeds.total  3.237143e+06      USD   
+15             stream.cre.property.opex.total -3.361015e+06      USD   
+16    stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD   
+17   stream.cre.rollover.ti_lc.tenant_a.total -1.750000e+05      USD   
+18   stream.cre.unit.base_rent.tenant_a.total  2.428385e+06      USD   
+19   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
+20  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
+21  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
+22       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
+23       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
+24              stream.cre.vacancy.loss.total -1.800000e+05      USD   
+25   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
+
+        source  
+0   domain:cre  
+1   domain:cre  
+2   domain:cre  
+3   domain:cre  
+4         core  
+5         core  
+6         core  
+7         core  
+8         core  
+9         core  
+10        core  
+11        core  
+12        core  
+13        core  
+14        core  
+15        core  
+16        core  
+17        core  
+18        core  
+19        core  
+20        core  
+21        core  
+22        core  
+23        core  
+24        core  
+25        core  
+```
+
+## What-if
+
+Inspect the derived forward-NOI exit value and the DSCR domain metric.
+
+```python
+mf = results.metrics_frame()
+mf[mf["metric"].str.contains("dscr|noi|exit", case=False)]
+```
+
+```
+                            metric         value currency      source
+1                  domain.cre.dscr  1.067287e+00     None  domain:cre
+3                   domain.cre.noi  4.718934e+06      USD  domain:cre
+14  stream.cre.exit.proceeds.total  3.237143e+06      USD        core
+```

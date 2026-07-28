@@ -1,0 +1,14 @@
+[package]
+name = "cfdl-metrics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Domain metrics for CFDL results"
+publish = false
+
+[dependencies]
+serde = { workspace = true }
+cfdl-engine = { path = "../cfdl-engine" }
+cfdl-pack = { path = "../cfdl-pack" }

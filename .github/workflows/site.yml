@@ -1,0 +1,100 @@
+name: site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/**"
+      - "packs/**"
+      - "examples/**"
+      - "benchmarks/**"
+      - "distribution/install-configure.md"
+      - "editors/vscode/syntaxes/**"
+      - ".github/workflows/site.yml"
+  pull_request:
+    paths:
+      - "site/**"
+      - "docs/**"
+      - "packs/**"
+      - "examples/**"
+      - "benchmarks/**"
+      - "distribution/install-configure.md"
+      - "editors/vscode/syntaxes/**"
+      - ".github/workflows/site.yml"
+  workflow_dispatch:
+
+# Build-only. Deployment happens on Vercel; cfdl.dev DNS is a human-approved
+# launch step.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Match the Vercel build image so CI can't pass where deploys fail.
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        working-directory: site
+        run: npm ci
+
+      - name: Generated content is in sync with canonical sources
+        working-directory: site
+        run: npm run sync:check
+
+      - name: Design-system token guard
+        working-directory: site
+        run: npm run check:tokens
+
+      - name: Internal link check
+        working-directory: site
+        run: npm run check:links
+
+      - name: Playground examples match the repo's models
+        working-directory: site
+        run: npm run check:examples
+
+      - name: No native browser dialogs
+        working-directory: site
+        run: npm run check:dialogs
+
+      # The wasm bundle is committed because Vercel's build image has no Rust
+      # toolchain; make sure an engine change can't ship without a rebuild.
+      - name: Committed wasm bundle is fresh
+        working-directory: site
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-wasm-fresh.mjs "origin/${{ github.base_ref }}"
+          else
+            # On a push, compare against the commit before this push so a
+            # direct-to-main change cannot ship a stale engine.
+            node scripts/check-wasm-fresh.mjs "${{ github.event.before }}"
+          fi
+
+      # Notebook pages are committed for the same reason: rendering them means
+      # executing them, which needs Python and the compiled Rust extension.
+      - name: Committed notebook pages are fresh
+        working-directory: site
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-notebooks-fresh.mjs "origin/${{ github.base_ref }}"
+          else
+            node scripts/check-notebooks-fresh.mjs "${{ github.event.before }}"
+          fi
+
+      - name: Lint
+        working-directory: site
+        run: npm run lint
+
+      - name: Build
+        working-directory: site
+        run: npm run build
+
+      - name: Build Storybook
+        working-directory: site
+        run: npm run build-storybook

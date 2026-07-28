@@ -1,0 +1,27 @@
+[package]
+name = "cfdl-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "CFDL command-line interface"
+publish = false
+
+[[bin]]
+name = "cfdl"
+path = "src/main.rs"
+
+[dependencies]
+cfdl-parser = { path = "../cfdl-parser" }
+cfdl-lexer = { path = "../cfdl-lexer" }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+
+# Internal crates (to be implemented)
+cfdl-compile = { path = "../cfdl-compile" }
+cfdl-engine = { path = "../cfdl-engine" }
+cfdl-metrics = { path = "../cfdl-metrics" }
+cfdl-pack = { path = "../cfdl-pack" }

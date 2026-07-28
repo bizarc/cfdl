@@ -1,0 +1,6 @@
+# Benchmark case: retail strip — base-year stop with 95% gross-up,
+# percentage rent above breakpoint, net-lease inline shops, forward-NOI exit.
+# Reference: reference_gen.py (independent implementation).
+# Status: pending practitioner review against institutional-grade references.
+pack = "cre"
+period_tolerance = 0.01

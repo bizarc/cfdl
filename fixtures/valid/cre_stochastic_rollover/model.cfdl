@@ -1,0 +1,28 @@
+version 0.1
+model "cre-stochastic-rollover"
+time calendar monthly from 2031-01 for 24
+
+entity asset tower
+
+// The conventional expected-value blend replaced by a BINARY renewal outcome per
+// Monte Carlo trial: one uniform draw per trial decides renew vs re-lease,
+// so trial results show the true two-cluster distribution (rent level,
+// downtime, and turnover cost all consistent within a scenario) instead of
+// a single probability-weighted average.
+assume renewal_draw ~ Uniform(min=0, max=1)
+
+stream asset.rollover_rent on entity asset.tower inflow currency USD {
+  schedule every monthly from 2031-01 to 2032-12
+  amount = if(inputs.renewal_draw < 0.7, 520000 / 12, 560000 / 12)
+}
+
+// Re-lease scenario: 3 months of vacancy before the new tenant pays.
+stream asset.downtime_loss on entity asset.tower outflow currency USD {
+  schedule every monthly from 2031-01 to 2031-03
+  amount = if(inputs.renewal_draw < 0.7, 0, 560000 / 12)
+}
+
+stream asset.turnover_costs on entity asset.tower outflow currency USD {
+  schedule on 2031-01
+  amount = if(inputs.renewal_draw < 0.7, 100000, 350000)
+}

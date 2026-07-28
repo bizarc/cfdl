@@ -1,0 +1,57 @@
+# Energy domain metrics, evaluated in order.
+
+[[metrics]]
+id = "domain.energy.revenue"
+kind = "money"
+op = "sum"
+numerator_streams = [
+  "energy.ppa.revenue",
+  "energy.merchant.revenue",
+  "energy.storage.margin",
+  "energy.capacity.revenue",
+]
+formula = "sum(numerator_streams)"
+
+[[metrics]]
+id = "domain.energy.opex"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["energy.om.expense"]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+[[metrics]]
+id = "domain.energy.ebitda"
+kind = "money"
+op = "sum"
+numerator_streams = [
+  "energy.ppa.revenue",
+  "energy.merchant.revenue",
+  "energy.storage.margin",
+  "energy.capacity.revenue",
+]
+denominator_streams = ["energy.om.expense"]
+formula = "sum(numerator_streams) + sum(denominator_streams)"
+
+[[metrics]]
+id = "domain.energy.debt_service"
+kind = "money"
+op = "negated_sum"
+numerator_streams = ["energy.debt.service"]
+formula = "-sum(numerator_streams)"
+require_positive = true
+
+[[metrics]]
+id = "domain.energy.dscr"
+kind = "number"
+op = "ratio"
+numerator_metric = "domain.energy.ebitda"
+denominator_metric = "domain.energy.debt_service"
+formula = "domain.energy.ebitda / domain.energy.debt_service"
+
+[[metrics]]
+id = "domain.energy.tax_benefits"
+kind = "money"
+op = "sum"
+numerator_streams = ["energy.itc.credit", "energy.ptc.credit", "energy.macrs.shield"]
+formula = "sum(numerator_streams)"

@@ -1,0 +1,294 @@
+{
+  "results_version": "0.2",
+  "model_hash": "aa4d6d4763bd89456808c0ef9a9fe29be817f4683ec52e9cce6f6775a9aed79c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.3.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.real_estate.property.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 207078.30494,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.444444,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.cre.lease.base_rent.total": {
+        "amount": 237500.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1388.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 2777.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 5555.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 6944.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 8333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 9722.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 11111.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 12500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 13888.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 15277.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 16666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 18055.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 19444.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 20833.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 22222.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 23611.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 25000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.lease.base_rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1388.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 2777.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 5555.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 6944.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 8333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 9722.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 11111.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 12500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 13888.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 15277.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 16666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 18055.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 19444.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 20833.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 22222.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 23611.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 25000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 29166.666667,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.cre.lease.base_rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 29166.666667,
+              "currency": "USD"
+            },
+            {
+              "amount": 208333.333333,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

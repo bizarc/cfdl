@@ -1,0 +1,17 @@
+[package]
+name = "cfdl-validate"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Semantic validation and diagnostics for CFDL"
+publish = false
+
+[dependencies]
+thiserror = { workspace = true }
+
+cfdl-parser = { path = "../cfdl-parser" }
+cfdl-resolver = { path = "../cfdl-resolver" }
+[dev-dependencies]
+cfdl-lexer = { path = "../cfdl-lexer" }

@@ -1,0 +1,8 @@
+version 0.1
+model "cre-multi-file-example"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+import "time.cfdl"
+import "structure.cfdl"
+import "contracts.cfdl"

@@ -1,0 +1,4 @@
+stream legal.rent on entity legal.borrower inflow currency USD {
+  schedule every monthly from 2026-01 to 2027-12
+  amount = 1000
+}

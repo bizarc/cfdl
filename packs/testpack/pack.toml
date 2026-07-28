@@ -1,0 +1,8 @@
+name = "testpack"
+version = "0.1.0"
+description = "Minimal pack for deterministic lowering smoke tests."
+
+[entrypoints]
+aliases = "aliases.toml"
+templates = "templates.toml"
+lowering = "lowering/rules.toml"

@@ -1,0 +1,260 @@
+[[rules]]
+id = "cre_construction_stub_draws"
+contract_name = "cre.construction_stub"
+stream_name = "cre.construction.draws"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# `amount` is required: a construction draw is a material number and must be
+# stated by the model, never supplied by the pack.
+
+[[rules]]
+id = "cre_lease_base_rent"
+contract_name = "cre.lease"
+stream_name = "cre.lease.base_rent"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Rent accrues over the contract's own term, measured from its start:
+#   occupancy(m) = clamp((m + 1) / lease_up_months, 0, 1)
+#   rent(m)      = base_rent * occupancy(m)
+# where m is months since term_start. `lease_up_months = 1` (the default)
+# means fully occupied from the first month — a neutral default that invents
+# no lease-up assumption.
+amount_expr = "{{contract.base_rent}} * clamp((months_between(parse_date(\"{{contract.term_start}}\"), time.date) + 1) / {{contract.lease_up_months}}, 0, 1)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# `base_rent` is required.
+[rules.defaults]
+lease_up_months = "1"
+
+[[rules]]
+id = "cre_ops_revenue"
+contract_name = "cre.ops_revenue"
+stream_name = "cre.ops.revenue"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.amount}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# `amount` is required; the term supplies the schedule.
+
+[[rules]]
+id = "cre_ops_expense"
+contract_name = "cre.ops_expense"
+stream_name = "cre.ops.expense"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.amount}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+# `amount` is required; the term supplies the schedule.
+
+[[rules]]
+id = "cre_exit_cap_sale"
+contract_name = "cre.exit_cap"
+stream_name = "cre.exit.sale"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+amount_expr = "{{contract.noi_value}} / {{contract.exit_cap}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+# `noi_value` and `exit_cap` are required: an exit valuation is the single
+# largest number in most CRE models and must be stated, not assumed. The
+# contract's term supplies the sale date.
+
+# ---------------------------------------------------------------------------
+# Lease-by-lease contract types at institutional DCF parity (template-driven).
+# Lease-anniversary anchoring: lease_t = months_between(term_start, time.date).
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "cre_lease_unit_base_rent"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.base_rent.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Free rent burns off first; escalation steps on lease anniversaries.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.free_rent_months}}, 0, ({{contract.rent_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+free_rent_months = "0"
+escalation = "0"
+
+[[rules]]
+id = "cre_lease_unit_recoveries"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.recoveries.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Expense reimbursement above the stop, at the tenant's pro-rata share.
+# Opex escalates on the lease's own anniversary of the PROPERTY schedule:
+# anchored to the recovery base year via opex_year/opex_escalation terms.
+amount_expr = "max(0, {{contract.opex_year}} * {{contract.gross_up_factor}} * pow(1 + {{contract.opex_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+expense_stop_year = "0"
+opex_year = "0"
+opex_escalation = "0"
+pro_rata_share = "0"
+gross_up_factor = "1"
+
+[[rules]]
+id = "cre_lease_unit_ti_lc"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.ti_lc.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.ti_total}} + {{contract.lc_total}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+ti_total = "0"
+lc_total = "0"
+
+[[rules]]
+id = "cre_rollover_rent"
+contract_name = "cre.rollover"
+stream_name = "cre.rollover.rent.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Industry-standard market leasing assumption. The window starts AT EXPIRY
+# (term_start = expiry). During the first downtime_months, only the renewal
+# scenario pays (p * renewal rent — the re-lease scenario sits vacant);
+# afterwards rent is the full probability-weighted blend. Escalation steps on
+# window anniversaries.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.downtime_months}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+market_escalation = "0"
+downtime_months = "0"
+
+[[rules]]
+id = "cre_rollover_ti_lc"
+contract_name = "cre.rollover"
+stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+# Industry-standard timing: the renewal-scenario turnover cost (p * renewal_ti_lc) pays
+# at expiry; the re-lease cost ((1-p) * new_ti_lc) pays after downtime, when
+# the new tenant takes occupancy. With downtime_months = 0 both pay at the
+# window start.
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == 0, {{contract.renewal_probability}} * {{contract.renewal_ti_lc}}, 0) + if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == {{contract.downtime_months}}, (1 - {{contract.renewal_probability}}) * {{contract.new_ti_lc}}, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+renewal_ti_lc = "0"
+new_ti_lc = "0"
+downtime_months = "0"
+
+[[rules]]
+id = "cre_vacancy_loss"
+contract_name = "cre.vacancy_loss"
+stream_name = "cre.vacancy.loss"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "{{contract.rate}} * {{contract.potential_gross_year}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+id = "cre_property_opex"
+contract_name = "cre.property_opex"
+stream_name = "cre.property.opex"
+owner_entity = "${subject}"
+direction = "outflow"
+currency = "USD"
+amount_expr = "({{contract.opex_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+
+[[rules]]
+id = "cre_exit_forward_noi"
+contract_name = "cre.exit"
+stream_name = "cre.exit.proceeds"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Sale at term_start: forward-12-month NOI / exit cap, net of selling costs.
+amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"
+
+[[rules]]
+id = "cre_percentage_rent"
+contract_name = "cre.percentage_rent"
+stream_name = "cre.pct_rent{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Overage rent: pct of sales above the breakpoint, sales growing on the
+# lease's own anniversaries.
+amount_expr = "max(0, {{contract.sales_year}} * pow(1 + {{contract.sales_growth}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.breakpoint_year}}) * {{contract.overage_pct}} / 12"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+sales_growth = "0"
+
+[[rules]]
+id = "cre_exit_forward_noi_derived"
+contract_name = "cre.exit_forward"
+stream_name = "cre.exit.proceeds"
+owner_entity = "${subject}"
+direction = "inflow"
+currency = "USD"
+# Forward NOI derived from the modeled streams over the 12 months AFTER the
+# sale date (expense streams are signed negative, so adding them nets NOI).
+# Requires a projection tail (`time ... project 12`) so the window has data.
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + 12) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.pct_rent\", time.t + 1, time.t + 12) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + 12) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + 12) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + 12) + series_sum(\"cre.ops.expense\", time.t + 1, time.t + 12) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + 12) + series_sum(\"cre.property.opex\", time.t + 1, time.t + 12)) / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"

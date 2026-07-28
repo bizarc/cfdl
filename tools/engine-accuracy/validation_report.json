@@ -1,0 +1,237 @@
+{
+  "tolerance": 1e-06,
+  "validated_count": 17,
+  "match_count": 17,
+  "mismatch_count": 0,
+  "results": [
+    {
+      "file": "cre_developer_base.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_developer_base.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "cre_developer_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_developer_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "cre_developer_stress.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_developer_stress.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "cre_development_with_financing_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_development_with_financing_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.loan.construction_interest.total",
+        "stream.loan.permanent_debt_service.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "cre_lease_up_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_lease_up_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.lease.base_rent.total"
+      ]
+    },
+    {
+      "file": "cre_multi_file_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_multi_file_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "cre_phased_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/cre_phased_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.construction.draws.total",
+        "stream.cre.exit.sale.total",
+        "stream.cre.lease.base_rent.total",
+        "stream.real_estate.ops_expense.total",
+        "stream.real_estate.ops_revenue.total"
+      ]
+    },
+    {
+      "file": "language_tutorial_first_stream_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/language_tutorial_first_stream_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.legal.subscription_revenue.total",
+        "stream.legal.support_expense.total"
+      ]
+    },
+    {
+      "file": "language_tutorial_minimal_model_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/language_tutorial_minimal_model_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.legal.rent.total"
+      ]
+    },
+    {
+      "file": "language_tutorial_multi_file_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/language_tutorial_multi_file_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.legal.rent.total"
+      ]
+    },
+    {
+      "file": "language_tutorial_simple_contract_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/language_tutorial_simple_contract_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.cre.lease.base_rent.total"
+      ]
+    },
+    {
+      "file": "language_tutorial_with_pack_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/language_tutorial_with_pack_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.opex.recurring.total",
+        "stream.opco.revenue.recurring.total"
+      ]
+    },
+    {
+      "file": "opco_basic_base.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/opco_basic_base.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.exit.value.total",
+        "stream.opco.working_capital.adjustment.total",
+        "stream.operating.opex.total",
+        "stream.operating.revenue.total"
+      ]
+    },
+    {
+      "file": "opco_basic_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/opco_basic_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.exit.value.total",
+        "stream.opco.working_capital.adjustment.total",
+        "stream.operating.opex.total",
+        "stream.operating.revenue.total"
+      ]
+    },
+    {
+      "file": "opco_basic_stress.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/opco_basic_stress.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.exit.value.total",
+        "stream.opco.working_capital.adjustment.total",
+        "stream.operating.opex.total",
+        "stream.operating.revenue.total"
+      ]
+    },
+    {
+      "file": "opco_multi_file_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/opco_multi_file_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.exit.value.total",
+        "stream.opco.working_capital.adjustment.total",
+        "stream.operating.opex.total",
+        "stream.operating.revenue.total"
+      ]
+    },
+    {
+      "file": "opco_with_growth_default.results.json",
+      "path": "/Users/matthewmccrea/Documents/cfdl/tools/engine-accuracy/out/opco_with_growth_default.results.json",
+      "match": true,
+      "issues": [],
+      "checked": [
+        "model.total",
+        "model.npv",
+        "stream.opco.exit.value.total",
+        "stream.operating.opex.total",
+        "stream.operating.revenue.total"
+      ]
+    }
+  ]
+}

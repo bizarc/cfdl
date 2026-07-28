@@ -1,0 +1,6 @@
+[aliases]
+"opco.RevenueLine" = "opco_revenue_line"
+"opco.OpexLine" = "opco_opex_line"
+"opco.WorkingCapital" = "opco_working_capital"
+"opco.ExitMultiple" = "opco_exit_multiple"
+"opco.MarginAdjustment" = "opco_margin_adjustment"

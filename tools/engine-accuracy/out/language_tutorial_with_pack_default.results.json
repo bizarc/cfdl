@@ -1,0 +1,795 @@
+{
+  "results_version": "0.1",
+  "model_hash": "39e9c7fb51d9db64530bffbaf402b1d403e2b333005cdb641bee549a17adea99",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.1.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.operating.business.total": {
+        "amount": 3000000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 548193.651345,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 3000000.0,
+        "currency": "USD"
+      },
+      "run.discount_rate": 0.1,
+      "stream.opco.opex.recurring.total": {
+        "amount": -4200000.0,
+        "currency": "USD"
+      },
+      "stream.opco.revenue.recurring.total": {
+        "amount": 7200000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 60
+        },
+        "values": [
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.opex.recurring": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 60
+        },
+        "values": [
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -70000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.revenue.recurring": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 60
+        },
+        "values": [
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

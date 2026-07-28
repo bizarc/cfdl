@@ -1,0 +1,62 @@
+[
+  {
+    "code": "E6031_CRE_UNIT_INVALID_FREE_RENT",
+    "severity": "error",
+    "message": "CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 14,
+      "start_col": 5,
+      "end_line": 14,
+      "end_col": 25
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E6032_CRE_UNIT_INVALID_PRO_RATA",
+    "severity": "error",
+    "message": "CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 15,
+      "start_col": 5,
+      "end_line": 15,
+      "end_col": 24
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E6040_CRE_ROLLOVER_INVALID_PROBABILITY",
+    "severity": "error",
+    "message": "CRE rollover 'renewal_probability' must be a probability between 0 and 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 5,
+      "end_line": 22,
+      "end_col": 29
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E6041_CRE_ROLLOVER_INVALID_DOWNTIME",
+    "severity": "error",
+    "message": "CRE rollover 'downtime_months' must be a whole number of months, 0 or more.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 25,
+      "start_col": 5,
+      "end_line": 25,
+      "end_col": 24
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

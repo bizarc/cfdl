@@ -1,0 +1,105 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "assume-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "02d065fa981a81e0d9a2ee9671805e57",
+      "symbol": "legal.borrower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "base_fee": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "200 + 50"
+        },
+        "name": "base_fee",
+        "type": "Decimal"
+      }
+    },
+    "random": {
+      "growth": {
+        "dist": {
+          "clip": [
+            0.0,
+            0.08
+          ],
+          "kind": "Normal",
+          "params": {
+            "mean": 0.03,
+            "stdev": 0.01
+          }
+        },
+        "name": "growth",
+        "type": "Decimal"
+      }
+    }
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "a5703de3f77d0281e0060daec96700d1",
+      "name": "legal.fee",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.base_fee * (1.0 + inputs.growth)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.3.0",
+      "hash": "3dd725a46e236197b37bbbe916f8e592"
+    }
+  }
+}

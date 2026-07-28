@@ -1,0 +1,33 @@
+[package]
+name = "cfdl-compile"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "CFDL compiler - source to canonical IR"
+publish = false
+
+[features]
+# Bundle the standard packs into the binary (no filesystem) so the
+# source-string compile path (WASM/server) can resolve `use pack` without a
+# packs directory. Forwards to cfdl-pack's embedded registry.
+embedded-packs = ["cfdl-pack/embedded-packs"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+cfdl-lexer = { path = "../cfdl-lexer" }
+cfdl-parser = { path = "../cfdl-parser" }
+cfdl-resolver = { path = "../cfdl-resolver" }
+cfdl-validate = { path = "../cfdl-validate" }
+cfdl-expr = { path = "../cfdl-expr" }
+cfdl-pack = { path = "../cfdl-pack" }
+
+# These crates will be implemented later; keep commented until they exist.
+# cfdl-lexer = { path = "../cfdl-lexer" }
+# cfdl-parser = { path = "../cfdl-parser" }
+# cfdl-resolver = { path = "../cfdl-resolver" }
+# cfdl-validate = { path = "../cfdl-validate" }

@@ -1,0 +1,4 @@
+version 0.1
+model "import_cycle"
+time calendar monthly from 2026-01 for 1
+import "a.cfdl"
