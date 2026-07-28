@@ -1,4 +1,4 @@
-# Credit / lending pack v0.1 (Workstream D increment 8).
+# Credit / lending pack v0.1.
 #
 # Fixed-rate loan pools with CPR prepayments, CDR defaults, loss severity and
 # a recovery lag. The engine's expression dialect has no loops, so the pack

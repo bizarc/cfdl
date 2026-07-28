@@ -49,7 +49,7 @@ make gold    # golden suite only
 1. Start from a GitHub issue. Roadmap sequencing is planned internally, so if you
    are not on the maintaining team, open an issue and agree the change there
    before writing code — external pull requests are not accepted (see below).
-2. Branch from `main` (`ws/<letter>-<slug>` for workstream branches).
+2. Branch from `main`.
 3. Implement the minimal change required.
 4. Add/update fixtures in `fixtures/` and expected outputs in `gold/`
    (`CFDL_GOLD_UPDATE=1 ./tools/golden-runner run` — intentional changes only,

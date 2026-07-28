@@ -61,7 +61,7 @@ pub enum Punct {
     DotDot,
     Equal,
     Tilde,
-    // Expression operators (bare native expressions, Workstream B)
+    // Expression operators (bare native expressions)
     Plus,
     Minus,
     Star,

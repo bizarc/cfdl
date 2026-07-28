@@ -1,6 +1,6 @@
 //! cfdl-expr — the expression evaluation facade used by the compiler and engine.
 //!
-//! As of Workstream B this is backed by `cfdl-calc` (the CFDL-native expression
+//! This is backed by `cfdl-calc` (the CFDL-native expression
 //! engine: decimal-first numerics, spanned diagnostics, snake_case builtins).
 //! The public API — `compile_expr`, `eval`, `ExprEnv`, `Value` — is unchanged
 //! from the CEL era so `cfdl-compile` and `cfdl-engine` did not have to change.
