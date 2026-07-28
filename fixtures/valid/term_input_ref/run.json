@@ -1,9 +1,22 @@
 {
-  "deterministic": { "annual_discount_rate": 0.10 },
-  "scenarios": {
-    "p90_low":  { "parameters": { "inputs.annual_yield": 4300 } },
-    "p50_base": { "parameters": { "inputs.annual_yield": 5000 } },
-    "p10_high": { "parameters": { "inputs.annual_yield": 5700 } }
+  "deterministic": {
+    "annual_discount_rate": 0.1
   },
-  "monte_carlo": { "trial_count": 500, "seed": 20260728 }
+  "scenarios": {
+    "p90_low": {
+      "parameters": {
+        "inputs.annual_yield": 4300
+      }
+    },
+    "p50_base": {
+      "parameters": {
+        "inputs.annual_yield": 5000
+      }
+    },
+    "p10_high": {
+      "parameters": {
+        "inputs.annual_yield": 5700
+      }
+    }
+  }
 }

@@ -1,14 +1,40 @@
 {
-  "deterministic": { "annual_discount_rate": 0.10 },
+  "deterministic": {
+    "annual_discount_rate": 0.1
+  },
   "monte_carlo": {
-    "trial_count": 500,
+    "trial_count": 8,
     "seed": 20260728,
     "distributions": {
-      "inputs.n": { "kind": "normal", "mean": 100, "stdev": 10, "clip": [70, 130] },
-      "inputs.u": { "kind": "uniform", "min": 80, "max": 120 },
-      "inputs.t": { "kind": "triangular", "min": 80, "mode": 100, "max": 120 },
-      "inputs.l": { "kind": "log_normal", "mu": 4.6, "sigma": 0.1 },
-      "inputs.f": { "kind": "fixed", "value": 100 }
+      "inputs.n": {
+        "kind": "normal",
+        "mean": 100,
+        "stdev": 10,
+        "clip": [
+          70,
+          130
+        ]
+      },
+      "inputs.u": {
+        "kind": "uniform",
+        "min": 80,
+        "max": 120
+      },
+      "inputs.t": {
+        "kind": "triangular",
+        "min": 80,
+        "mode": 100,
+        "max": 120
+      },
+      "inputs.l": {
+        "kind": "log_normal",
+        "mu": 4.6,
+        "sigma": 0.1
+      },
+      "inputs.f": {
+        "kind": "fixed",
+        "value": 100
+      }
     }
   }
 }

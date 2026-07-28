@@ -157,6 +157,46 @@ stream lender.repayment on entity legal.lender inflow currency USD {
     return npv(run_model(src, (1.0 + 0.06 / 12.0) ** 12 - 1.0)), 0.0
 
 
+@check("a term deferring to an input disperses under Monte Carlo")
+def term_input_disperses() -> tuple[float, float]:
+    """Sampling must reach a driver referenced from a contract term.
+
+    Terms were once baked into lowered expressions as literals, so a trial
+    sampled a variable the expression did not contain and every trial returned
+    the same number. The golden suite cannot guard this: a long Monte Carlo run
+    over a pack expression is not bit-identical across platforms. What matters
+    is that the spread is real, so that is what is asserted.
+    """
+    src = """version 0.1
+model "term-dispersion"
+time calendar monthly from 2026-01 for 12
+entity project plant
+assume driver ~ Normal(mean=1000, stdev=100, clip=[600, 1400])
+stream plant.revenue on entity project.plant inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = inputs.driver
+}
+run monte_carlo trials 400 seed 20260728
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        d = pathlib.Path(tmp)
+        (d / "model.cfdl").write_text(src)
+        ir, res = d / "ir.json", d / "results.json"
+        for cmd in (
+            [str(CLI), "compile", str(d), "--out", str(ir)],
+            [str(CLI), "run", str(ir), "--out", str(res), "--rate", "0.1"],
+        ):
+            done = subprocess.run(cmd, capture_output=True, text=True)
+            if done.returncode != 0:
+                raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}")
+        block = json.loads(res.read_text()).get("monte_carlo") or {}
+    stdev = ((block.get("metrics") or {}).get("model.npv") or {}).get("stdev")
+    stdev = stdev["amount"] if isinstance(stdev, dict) else (stdev or 0.0)
+    # Any real spread proves the driver reached the expression; compare against
+    # a threshold rather than a value so the check is platform-independent.
+    return (1.0 if stdev > 1.0 else 0.0), 1.0
+
+
 def main() -> int:
     if not CLI.exists():
         print(f"analytic-checks: {CLI} not found — run `cargo build -p cfdl-cli`")
