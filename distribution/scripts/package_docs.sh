@@ -24,12 +24,14 @@ if tar --help 2>/dev/null | grep -q -- "--sort"; then
   )
 fi
 
+# Ship the whole docs tree rather than a hand-listed subset: the previous list
+# named three files that were renamed in the docs restructure, and the archive
+# had been failing to build on every tagged release since.
 tar \
   "${TAR_OPTS[@]}" \
+  --exclude=".DS_Store" \
   -C "${REPO_ROOT}" \
-  docs/LANGUAGE_GUIDE.md \
-  docs/USER_GUIDE.md \
-  docs/docs_packs_guide.md \
+  docs \
   distribution/install-configure.md \
   examples/language_tutorial
 

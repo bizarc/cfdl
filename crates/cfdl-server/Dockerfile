@@ -4,6 +4,12 @@
 # Publishing to ghcr.io is a human-approved step.
 
 FROM rust:1-slim AS builder
+# utoipa-swagger-ui's build script downloads the Swagger UI bundle at compile
+# time and shells out to curl when its reqwest feature is off. rust:1-slim
+# ships neither curl nor CA certificates, so the build script exits 101.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY . .
 RUN cargo build --release -p cfdl-server

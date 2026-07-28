@@ -1,0 +1,13 @@
+# The server image builds from the repository root, so keep the context small
+# and free of host-built artifacts that would otherwise be copied in.
+target/
+**/target/
+node_modules/
+**/node_modules/
+.git/
+site/.next/
+site/out/
+python/.venv/
+**/__pycache__/
+*.vsix
+.DS_Store
