@@ -22,5 +22,3 @@ One Jupyter notebook per pack walks a benchmark model through the Python SDK. Ea
 - [CRE office acquisition](/docs/notebooks/cre-office-acquisition)
 - [Credit loan pool](/docs/notebooks/credit-loan-pool)
 - [Operating company LBO](/docs/notebooks/opco-lbo)
-
-The sources live in [`examples/notebooks/`](https://github.com/bizarc/cfdl/blob/main/examples/notebooks).

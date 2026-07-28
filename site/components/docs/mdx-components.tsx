@@ -94,22 +94,27 @@ export const mdxComponents = {
     />
   ),
   // Charts rendered from the example notebooks are rasterised by matplotlib
-  // with an opaque light background, which would clash on a dark page. Sitting
-  // them on an explicit light plate makes that read as a deliberate figure in
-  // both themes instead of a stray white rectangle.
-  img: ({ alt = "", ...p }: ComponentPropsWithoutRef<"img">) => (
-    // Generated content: dimensions are unknown at author time, so next/image
-    // cannot be used here.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      {...p}
-      alt={alt}
-      className={cn(
-        "my-6 block h-auto max-w-full rounded-lg border border-default bg-figure p-3",
-        p.className,
-      )}
-    />
-  ),
+  // with an opaque light background, which would clash on a dark page, so they
+  // sit on an explicit light plate. Diagrams authored as SVG carry their own
+  // theme-aware styling and must NOT get that plate — it would trap a
+  // dark-theme diagram on a white rectangle.
+  img: ({ alt = "", ...p }: ComponentPropsWithoutRef<"img">) => {
+    const raster = !/\.svg($|\?)/i.test(String(p.src ?? ""));
+    return (
+      // Generated content: dimensions are unknown at author time, so next/image
+      // cannot be used here.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        {...p}
+        alt={alt}
+        className={cn(
+          "my-6 block h-auto max-w-full",
+          raster && "rounded-lg border border-default bg-figure p-3",
+          p.className,
+        )}
+      />
+    );
+  },
   // Inline code only — fenced blocks arrive pre-highlighted from Shiki and
   // render through `pre`.
   code: (p: ComponentPropsWithoutRef<"code">) => (

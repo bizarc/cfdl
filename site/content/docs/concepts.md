@@ -16,12 +16,7 @@ model always produces the same results, byte for byte.
 
 Every surface (CLI, Python, playground, API server) runs the same pipeline:
 
-```
-model.cfdl ──compile──▶ IR JSON ──run──▶ Results JSON
-             (lex → parse → resolve →      (schedule evaluation,
-              validate → lower)             scenarios, Monte Carlo,
-                                            metrics)
-```
+![The CFDL pipeline: model.cfdl is compiled to IR JSON, which the engine runs to produce Results JSON.](/diagrams/pipeline.svg)
 
 1. **Compile** — your `.cfdl` sources are lexed and parsed with full source
    spans, imports and symbols are resolved, the model is validated
@@ -54,7 +49,7 @@ Both documents have published JSON Schemas — see the
   expressions as `inputs.<name>`.
 - **Expressions** — bare, Excel-familiar formulas
   (`base_rent * pow(1 + escalation, years)`) with decimal money math and a
-  financial function library (`pmt`, `npv`, `year_frac`, `eomonth`, …). See
+  financial function library (`pmt`, `year_frac`, `eomonth`, `macrs_rate`, …). See
   the [expression environment](/docs/language-reference/expression-environment).
 
 ## Packs

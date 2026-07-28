@@ -28,16 +28,9 @@ This page is a usability-focused digest of the compiler spec for model authors a
 - Arrays in IR are canonically ordered (entities/contracts/streams/etc).
 - Deterministic IDs are derived from stable keys.
 
-## Sections to read in the full spec
+## Related reference
 
-- AST model and spans
-- Validation rules and required statements
-- Lowering and normalization rules
-- IR assembly and canonical ordering
-- Diagnostics contract and error code guide
-
-## Full compiler spec
-
-- [Open full compiler spec source](https://github.com/bizarc/cfdl/blob/main/docs/04_compiler_spec.md)
-
-If you need strict implementation-level details, use the full source spec above as authoritative.
+- [Diagnostics](/docs/language-reference/diagnostics) — the error code guide
+- [IR schema](/docs/language-reference/ir-schema) — canonical ordering and shape
+- [Pack interface](/docs/language-reference/pack-interface) — lowering rules
+- [Language spec](/docs/language-reference/language-spec) — validation rules

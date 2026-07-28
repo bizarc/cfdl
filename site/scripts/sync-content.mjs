@@ -9,7 +9,6 @@ const scriptDir = path.dirname(new URL(import.meta.url).pathname);
 const siteDir = path.resolve(scriptDir, "..");
 const repoRoot = path.resolve(siteDir, "..");
 const docsOutputRoot = path.resolve(siteDir, "content", "docs");
-const REPO_HTTP_BASE = "https://github.com/bizarc/cfdl/blob/main";
 
 /**
  * Remove only the top-level H1 so Docusaurus frontmatter title is authoritative.
@@ -39,10 +38,7 @@ function namespaceLegacyDocLinks(markdown) {
 
 function normalizeLinks(markdown) {
   return namespaceLegacyDocLinks(markdown
-    .replaceAll(
-      "](schemas/CFDL_v0_1_Grammar.ebnf)",
-      `](${REPO_HTTP_BASE}/docs/schemas/CFDL_v0_1_Grammar.ebnf)`
-    )
+    .replaceAll("](schemas/CFDL_v0_1_Grammar.ebnf)", "](/schemas/CFDL_v0_1_Grammar.ebnf)")
     .replaceAll(
       '"When to use streams vs contracts" in `docs/09_user_guide.md`',
       "[When to use streams vs contracts](/docs/language-guide#when-to-use-streams-vs-contracts)"
@@ -98,10 +94,6 @@ function readSource(relativePath) {
   return fs.readFileSync(absolutePath, "utf8");
 }
 
-function sourceHttpUrl(relativePath) {
-  return `${REPO_HTTP_BASE}/${toPosix(relativePath)}`;
-}
-
 /**
  * Provenance lives in frontmatter, not on the page.
  *
@@ -124,8 +116,7 @@ function renderDoc(frontmatter, sourcePath, body) {
   return fm.join("\n");
 }
 
-function buildCompilerSpecDigest(sourcePath) {
-  const sourceUrl = sourceHttpUrl(sourcePath);
+function buildCompilerSpecDigest() {
   return [
     "This page is a usability-focused digest of the compiler spec for model authors and SDK integrators.",
     "",
@@ -150,19 +141,13 @@ function buildCompilerSpecDigest(sourcePath) {
     "- Arrays in IR are canonically ordered (entities/contracts/streams/etc).",
     "- Deterministic IDs are derived from stable keys.",
     "",
-    "## Sections to read in the full spec",
+    "## Related reference",
     "",
-    "- AST model and spans",
-    "- Validation rules and required statements",
-    "- Lowering and normalization rules",
-    "- IR assembly and canonical ordering",
-    "- Diagnostics contract and error code guide",
+    "- [Diagnostics](/docs/language-reference/diagnostics) — the error code guide",
+    "- [IR schema](/docs/language-reference/ir-schema) — canonical ordering and shape",
+    "- [Pack interface](/docs/language-reference/pack-interface) — lowering rules",
+    "- [Language spec](/docs/language-reference/language-spec) — validation rules",
     "",
-    "## Full compiler spec",
-    "",
-    `- [Open full compiler spec source](${sourceUrl})`,
-    "",
-    "If you need strict implementation-level details, use the full source spec above as authoritative.",
     ""
   ].join("\n");
 }
@@ -310,7 +295,7 @@ const docSpecs = [
 
 for (const spec of docSpecs) {
   let body = spec.digestOnly
-    ? buildCompilerSpecDigest(spec.source)
+    ? buildCompilerSpecDigest()
     : normalizeLinks(stripLeadingH1(readSource(spec.source)));
   const rendered = renderDoc(spec.frontmatter, spec.source, body);
   writeGenerated(spec.output, rendered);
@@ -564,10 +549,7 @@ for (const [title, slug] of [
   cookbookIndexLines.push(`- [${title}](/docs/notebooks/${slug})`);
 }
 cookbookIndexLines.push("");
-cookbookIndexLines.push(
-  `The sources live in [\`examples/notebooks/\`](${REPO_HTTP_BASE}/examples/notebooks).`
-);
-cookbookIndexLines.push("");
+
 writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
 
 // --- Benchmark methodology page --------------------------------------------
@@ -627,9 +609,15 @@ writeGenerated("benchmarks.md", benchLines.join("\n"));
 
 // --- Stage JSON schemas at their $id path (static/schemas/...) --------------
 const schemaStaticDir = path.resolve(siteDir, "public", "schemas");
-for (const schema of ["CFDL_v0_1_IR.schema.json", "CFDL_v0_1_Results.schema.json"]) {
-  const src = path.resolve(repoRoot, "docs", "schemas",
-    schema.replace("CFDL_v0_1_IR", "ir").replace("CFDL_v0_1_Results", "results"));
+// The grammar is staged alongside the JSON schemas so the reference page can
+// offer a download instead of sending readers into the repository.
+const stagedSchemas = {
+  "CFDL_v0_1_IR.schema.json": "ir.schema.json",
+  "CFDL_v0_1_Results.schema.json": "results.schema.json",
+  "CFDL_v0_1_Grammar.ebnf": "CFDL_v0_1_Grammar.ebnf"
+};
+for (const [schema, sourceName] of Object.entries(stagedSchemas)) {
+  const src = path.resolve(repoRoot, "docs", "schemas", sourceName);
   const content = fs.readFileSync(src, "utf8");
   const target = path.resolve(schemaStaticDir, schema);
   if (checkMode) {
