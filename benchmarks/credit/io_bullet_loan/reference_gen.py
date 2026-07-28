@@ -53,10 +53,15 @@ def main():
         net[p] += recoveries[p]
         principal_flows[p] += recoveries[p]
         recovery_total += recoveries[p]
-    net[0] -= PRICE
 
-    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0
-    npv = sum(v / ((1.0 + monthly_rate) ** t) for t, v in enumerate(net))
+    monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
+    # period that earned them, so they are discounted one full period — the
+    # same convention as Excel's NPV. One-shot flows (purchase, advance,
+    # exit proceeds) settle on their own date and are not.
+    npv = -PRICE + sum(
+        v / ((1.0 + monthly_rate) ** (t + 1)) for t, v in enumerate(net)
+    )
+    net[0] -= PRICE
     inflows = sum(v for v in net if v > 0.0)
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows

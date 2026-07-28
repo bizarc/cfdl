@@ -665,6 +665,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut model_series = vec![0.0_f64; cash_periods];
+    // Each stream's series paired with where in its period the cash falls;
+    // valuation needs both, while reported cash uses model_series alone.
+    let mut valued_streams: Vec<(Vec<f64>, f64)> = Vec::new();
 
     // Phase 1: streams without series references. Their FULL (projection-
     // inclusive) values feed the series store for phase 2.
@@ -688,6 +691,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             None,
             &mut warnings,
         )?;
+        valued_streams.push((
+            values[..cash_periods.min(values.len())].to_vec(),
+            discount_offset(&stream.schedule),
+        ));
         record_stream(
             stream,
             &values,
@@ -713,6 +720,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Some(&full_series),
             &mut warnings,
         )?;
+        valued_streams.push((
+            values[..cash_periods.min(values.len())].to_vec(),
+            discount_offset(&stream.schedule),
+        ));
         record_stream(
             stream,
             &values,
@@ -729,6 +740,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         for (idx, value) in cash.iter().enumerate() {
             model_series[idx] += *value;
         }
+        valued_streams.push((cash.to_vec(), 0.0));
         let total = cash.iter().sum::<f64>();
         stream_totals.insert(format!("option.{name}"), total);
         stream_series.insert(format!("option.{name}"), cash.to_vec());
@@ -781,7 +793,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let model_total = model_series.iter().sum::<f64>();
     let ppy = periods_per_year(&ir.time.calendar);
     let per_period_rate = (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0;
-    let npv = npv(&model_series, per_period_rate);
+    let npv = npv_with_offsets(&valued_streams, per_period_rate);
     metrics.insert(
         "model.total".to_string(),
         Scalar::Money(Money {
@@ -796,7 +808,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             currency: ir.model.currency.clone(),
         }),
     );
-    if let Some(pp_irr) = irr(&model_series) {
+    if let Some(pp_irr) = irr_with_offsets(&valued_streams) {
         let annual_irr = (1.0 + pp_irr).powf(ppy) - 1.0;
         metrics.insert(
             "model.irr".to_string(),
@@ -1400,6 +1412,69 @@ fn periods_per_year(calendar: &str) -> f64 {
     }
 }
 
+/// How far through its period a payment falls, per docs/12_payment_timing.md.
+///
+/// A payment belongs to the period that earned it; this says where inside that
+/// period the cash sits, and so how far it is discounted. One mechanism covers
+/// every case — an annuity due sits at the start, an ordinary annuity at the
+/// end, and a day rule at its own point in between.
+fn discount_offset(schedule: &IrSchedule) -> f64 {
+    // A one-shot flow happens on its stated date, not at the end of the
+    // period containing it: a purchase on 2026-01 is settled then, so it is
+    // not discounted for a period it never waited through.
+    if schedule.kind == "OnDate" || schedule.due {
+        return 0.0;
+    }
+    match schedule.on_rule.as_ref() {
+        // `on day <n>`: n days into a nominal 30-day period.
+        Some(rule) if rule.kind == "DayOfMonth" => {
+            (rule.day.clamp(1, 31) as f64 / 30.0).min(1.0)
+        }
+        // End of month is the period end, same as the default.
+        _ => 1.0,
+    }
+}
+
+/// Present value of streams that each carry their own position in period.
+///
+/// `v / (1+r)^(t + offset)` factorises to `[v / (1+r)^offset] / (1+r)^t`, so a
+/// stream's offset is a constant scale on its whole series.
+fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
+    let mut total = 0.0_f64;
+    for (values, offset) in streams {
+        let scale = (1.0 + rate).powf(-offset);
+        for (i, value) in values.iter().enumerate() {
+            total += value * scale / (1.0 + rate).powi(i as i32);
+        }
+    }
+    total
+}
+
+/// IRR over offset-carrying streams: the rate at which their present value is
+/// zero. Bisection, because the basis is rebuilt for each candidate rate.
+fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
+    let f = |r: f64| npv_with_offsets(streams, r);
+    let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
+    let (mut f_lo, f_hi) = (f(lo), f(hi));
+    if f_lo.is_nan() || f_hi.is_nan() || f_lo * f_hi > 0.0 {
+        return None;
+    }
+    for _ in 0..200 {
+        let mid = (lo + hi) / 2.0;
+        let f_mid = f(mid);
+        if f_mid.abs() < 1e-10 {
+            return Some(mid);
+        }
+        if f_lo * f_mid < 0.0 {
+            hi = mid;
+        } else {
+            lo = mid;
+            f_lo = f_mid;
+        }
+    }
+    Some((lo + hi) / 2.0)
+}
+
 fn npv(values: &[f64], rate: f64) -> f64 {
     let mut total = 0.0_f64;
     for (i, value) in values.iter().enumerate() {
@@ -1434,6 +1509,17 @@ fn irr(values: &[f64]) -> Option<f64> {
         }
     }
     Some((lo + hi) / 2.0)
+}
+
+/// Advance a date by one interval.
+fn step_once(d: &Date, interval: &str) -> Date {
+    match interval {
+        "daily" => d.add_days(1),
+        "weekly" => d.add_days(7),
+        "quarterly" => d.add_months(3),
+        "annual" => d.add_months(12),
+        _ => d.add_months(1),
+    }
 }
 
 /// Occurrence dates from `from`, stepping by `interval`, up to and including `to`.
@@ -1545,18 +1631,34 @@ fn apply_schedule_indices(
 
             // Accruals run over [from, to]; each settles at its own end for an
             // ordinary annuity, or at its start for an annuity due.
-            let accruals = occurrences(&from_date, &to_date, interval)?;
-            let payments = accruals.clone();
-            for (accrual, payment) in accruals.iter().zip(payments.iter()) {
-                let placed = place_in_interval(payment, schedule.on_rule.as_ref());
-                let rolled = roll_date(&placed, roll);
-                let accrual_idx = match period_index(timeline, accrual) {
+            let starts = occurrences(&from_date, &to_date, interval)?;
+            for (k, start) in starts.iter().enumerate() {
+                let accrual_idx = match period_index(timeline, start) {
                     Some(i) => i,
                     None => continue,
                 };
-                if let Some(pay_idx) = period_index(timeline, &rolled) {
-                    out[pay_idx] = Some(accrual_idx);
-                }
+                // An annuity due pays as its interval opens. An ordinary
+                // annuity pays as it closes — the last calendar period the
+                // interval covers, which for an annual interval on a monthly
+                // grid is its twelfth month, not its first.
+                let pay_idx = if schedule.due {
+                    accrual_idx
+                } else {
+                    let next = starts
+                        .get(k + 1)
+                        .cloned()
+                        .unwrap_or_else(|| step_once(start, interval));
+                    match period_index(timeline, &next) {
+                        Some(i) if i > accrual_idx => i - 1,
+                        // The interval closes past the end of the timeline;
+                        // it still pays in its final representable period.
+                        _ => timeline.len().saturating_sub(1),
+                    }
+                };
+                let placed = place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref());
+                let rolled = roll_date(&placed, roll);
+                let settled = period_index(timeline, &rolled).unwrap_or(pay_idx);
+                out[settled] = Some(accrual_idx);
             }
         }
         other => {

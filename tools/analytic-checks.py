@@ -89,7 +89,7 @@ stream investor.purchase on entity legal.investor outflow currency USD {
   amount = 1000000
 }
 stream investor.coupon on entity legal.investor inflow currency USD {
-  schedule every year from 2026-01 to 2031-01
+  schedule every year from 2026-01 to 2030-12
   amount = 50000
 }
 stream investor.principal on entity legal.investor inflow currency USD {

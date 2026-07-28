@@ -40,21 +40,27 @@ def main():
             ti_lc += 210_000.0
         if t == 6:
             ti_lc += 130_000.0
-        net -= ti_lc
+        shot = -ti_lc
         if t == 83:
-            net += 640_000.0 / 0.0675 * 0.985
-        rows.append((t, net))
+            shot += 640_000.0 / 0.0675 * 0.985
+        rows.append((t, net, shot))
         noi_total += a_rent + a_rec + a_pct + s_rent + s_rec - vacancy - opex
         leasing_costs += ti_lc
 
-    monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0
-    npv = sum(net / ((1.0 + monthly_rate) ** t) for t, net in rows)
+    monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
+    # period that earned them, so they are discounted one full period — the
+    # same convention as Excel's NPV. One-shot flows (purchase, advance,
+    # exit proceeds) settle on their own date and are not.
+    npv = sum(
+        net / ((1.0 + monthly_rate) ** (t + 1)) + shot / ((1.0 + monthly_rate) ** t)
+        for t, net, shot in rows
+    )
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["period", "net_cash_flow"])
-        for t, net in rows:
-            writer.writerow([t, f"{net:.6f}"])
+        for t, net, shot in rows:
+            writer.writerow([t, f"{net + shot:.6f}"])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(

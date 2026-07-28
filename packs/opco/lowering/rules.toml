@@ -27,7 +27,6 @@ direction = "inflow"
 currency = "USD"
 amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -43,7 +42,6 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -61,7 +59,6 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "{{contract.amount}}"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -100,7 +97,6 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "(12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})) - if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == 0, 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t - 1, time.t - 1)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t - 1, time.t - 1)) * ({{contract.inv_days}} - {{contract.ap_days}}))) - if({{contract.release_at_end}} == 1 and months_between(time.date, parse_date(\"{{contract.term_end}}\")) == 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})), 0)"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -123,7 +119,6 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0) + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -203,7 +198,6 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "max(0, {{contract.tax_rate}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - {{contract.da_monthly}} * pow(1 + {{contract.da_growth}}, time.t / 12.0)))"
 schedule_kind = "every"
-schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
