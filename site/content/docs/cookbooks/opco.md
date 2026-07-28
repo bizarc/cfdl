@@ -120,9 +120,23 @@ contract opco.opex_line on entity operating.target {
   terms { amount = 650000 growth_rate = 0.04 }
 }
 
+// Net working capital nets to zero over the full term because
+// release_at_end returns the investment at exit — that is the point of the
+// term, not an inert stream.
+// examples-allow: working_capital.adjustment — released in full at exit
 contract opco.working_capital_policy on entity operating.target {
   term 2026-01..2030-12
   terms { ar_days = 45 ap_days = 30 inv_days = 10 release_at_end = 1 }
+}
+
+contract opco.capex_line on entity operating.target {
+  term 2026-01..2030-12
+  terms { amount = 40000 pct_of_revenue = 0.01 }
+}
+
+contract opco.term_debt on entity operating.target {
+  term 2026-01..2030-12
+  terms { principal = 20000000 rate = 0.09 amort_months = 84 }
 }
 ```
 

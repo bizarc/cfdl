@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci py-develop py-test py-wheel notebooks-render notebooks-check
+.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check
 
 help:
 	@echo "Targets:"
@@ -16,6 +16,7 @@ help:
 	@echo "  gold-update - update gold outputs (DANGEROUS; requires intent)"
 	@echo "  ci          - run fmt+lint+test+gold (CI parity)"
 	@echo "  py-develop  - maturin develop the Python SDK (editable, [dev,viz])"
+	@echo "  doc-examples - compile and run every example in the pack guides"
 	@echo "  py-test     - run the Python SDK pytest suite"
 	@echo "  notebooks-render - execute example notebooks into site docs pages"
 	@echo "  py-wheel    - build a local release wheel (sanity check)"
@@ -46,7 +47,12 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench
+ci: fmt lint test gold bench doc-examples
+
+# Documentation examples must compile, run, and exercise what they claim.
+doc-examples:
+	cargo build -p cfdl-cli
+	python3 tools/check-doc-examples.py
 
 py-develop:
 	pip install -e "python/[dev,viz]"

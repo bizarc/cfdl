@@ -118,7 +118,7 @@ benchmark purchases at a 1-point discount.
 
 ## Quick start
 
-A $25mm level-pay pool with prepayments, defaults, and a servicing strip:
+A $25mm level-pay pool with prepayments, defaults, a servicing strip, and a prepayment penalty:
 
 ```cfdl
 version 0.1
@@ -139,6 +139,7 @@ contract credit.pool_level_pay.auto_a on entity fund.buyer {
     severity = 0.35
     recovery_lag_months = 6
     servicing_fee = 0.005
+    prepay_penalty_rate = 0.01
   }
 }
 
