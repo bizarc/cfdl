@@ -260,6 +260,13 @@ pub struct LoweringRule {
     pub stream_name: String,
     pub owner_entity: String,
     pub direction: String,
+    /// Currency the stream is denominated in.
+    ///
+    /// Omit it unless the instrument is genuinely fixed to one currency: an
+    /// empty value inherits the model's declared currency, which is what makes
+    /// a pack usable outside the United States. A PPA in Rajasthan is not a
+    /// USD contract.
+    #[serde(default)]
     pub currency: String,
     /// May contain `{{contract.<key>}}` placeholders (see expand_rule_template).
     pub amount_expr: String,

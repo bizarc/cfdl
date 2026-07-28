@@ -1,0 +1,190 @@
+{
+  "results_version": "0.2",
+  "model_hash": "05e1f1f37d637a976803c984d5c2f3669e23f5e598594c906d663b588610631a",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.5.2"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.project.plant.total": {
+        "amount": 15000000.0,
+        "currency": "INR"
+      },
+      "model.npv": {
+        "amount": 14250609.786663,
+        "currency": "INR"
+      },
+      "model.total": {
+        "amount": 15000000.0,
+        "currency": "INR"
+      },
+      "model.wal_years": 0.458333,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.energy.ppa.revenue.plant_a.total": {
+        "amount": 15000000.0,
+        "currency": "INR"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "stream.energy.ppa.revenue.plant_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "INR"
+            }
+          ]
+        },
+        "stream.energy.ppa.revenue.plant_a": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "INR"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

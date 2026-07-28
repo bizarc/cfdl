@@ -1250,6 +1250,29 @@ fn lower_contract_streams(
             }
             let rule = &expanded_rule;
 
+            // An empty rule currency defers to the model's, which is what keeps
+            // a pack usable outside the United States. A rule that pins one is
+            // asserting the instrument is denominated in that currency, so the
+            // model must agree — cash flows are summed period by period, and
+            // the validate-time check only sees hand-written streams.
+            let rule_currency = if rule.currency.is_empty() {
+                ctx.model_currency.to_string()
+            } else {
+                rule.currency.clone()
+            };
+            if !rule_currency.eq_ignore_ascii_case(ctx.model_currency) {
+                diagnostics.push(lowering_rule_diag(
+                    "E2107_STREAM_CURRENCY_MISMATCH",
+                    &format!(
+                        "Pack lowering rule '{}' emits stream '{}' in {} but the model reports in {}. Remove the rule's `currency` so it inherits the model's, or declare the model in {}.",
+                        rule.id, rule.stream_name, rule_currency, ctx.model_currency, rule_currency
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
+
             let schedule =
                 lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
             let amount_src = rule.amount_expr.clone();
@@ -1288,11 +1311,7 @@ fn lower_contract_streams(
                     } else {
                         rule.direction.clone()
                     },
-                    currency: if rule.currency.is_empty() {
-                        ctx.model_currency.to_string()
-                    } else {
-                        rule.currency.clone()
-                    },
+                    currency: rule_currency.clone(),
                     schedule,
                     amount: IrExpr {
                         lang: "cfdl".to_string(),

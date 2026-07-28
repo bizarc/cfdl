@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
+import pathlib
 import sys
+import tarfile
 from pathlib import Path
 
 
@@ -29,6 +31,23 @@ def read_manifest_artifacts(path: Path) -> set[str]:
         else:
             names.add(str(item))
     return names
+
+
+EXPECTED_PACKS = ("cre", "credit", "energy", "opco")
+
+
+def _packs_missing_from(archive: pathlib.Path) -> list[str]:
+    """Packs that should be in the archive but have no manifest inside it."""
+    try:
+        with tarfile.open(archive, "r:gz") as tar:
+            members = set(tar.getnames())
+    except (OSError, tarfile.TarError) as exc:
+        return [f"<unreadable: {exc}>"]
+    return [
+        pack
+        for pack in EXPECTED_PACKS
+        if f"packs/{pack}/pack.toml" not in members
+    ]
 
 
 def main() -> int:
@@ -65,6 +84,16 @@ def main() -> int:
     if missing_assets:
         print("missing required assets:", file=sys.stderr)
         for name in missing_assets:
+            print(f"  - {name}", file=sys.stderr)
+        return 1
+
+    # Presence is not enough. The packs archive shipped for several releases
+    # carrying only two of the four packs, because nothing looked inside it.
+    packs_archive = assets_dir / f"cfdl-packs-{version}.tar.gz"
+    missing_packs = _packs_missing_from(packs_archive)
+    if missing_packs:
+        print(f"{packs_archive.name} is missing packs:", file=sys.stderr)
+        for name in missing_packs:
             print(f"  - {name}", file=sys.stderr)
         return 1
 
