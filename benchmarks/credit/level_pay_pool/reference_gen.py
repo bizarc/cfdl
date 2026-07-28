@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Independent reference for level_pay_pool.
 
+Collections are an ordinary annuity: a period's interest and principal are
+collected at the end of the period that earned them, so a pool funded at t=0
+collects nothing at t=0.
+
 Month-by-month recursion of the documented pool convention
 (packs/credit/lowering/rules.toml): defaults leave at the start of the
 period and earn no interest; interest and scheduled principal accrue on the
@@ -15,7 +19,9 @@ Regenerate: python3 reference_gen.py
 import csv
 import json
 
-PERIODS = 126
+# TERM_MONTHS accrual periods, each paying one period later, plus the
+# recovery lag on the final period's defaults.
+PERIODS = 127
 BALANCE, RATE, TERM_MONTHS = 25_000_000.0, 0.065, 120
 CPR, CDR, SEVERITY, RECOVERY_LAG = 0.08, 0.02, 0.35, 6
 SERVICING_FEE, PREPAY_PENALTY_RATE = 0.005, 0.01
@@ -48,9 +54,15 @@ def main():
         prepay = (performing - sched) * smm
         penalty = prepay * PREPAY_PENALTY_RATE
         bal = performing - sched - prepay
-        recoveries[p + RECOVERY_LAG] += default * (1.0 - SEVERITY)
-        net[p] += interest + sched + prepay + penalty - servicing
-        principal_flows[p] += sched + prepay
+        # A pool collection is an ordinary annuity: interest and principal
+        # accrue across period p and are collected when that period ends, so
+        # the cash lands in period p + 1. A pool funded at t=0 therefore
+        # collects nothing at t=0, exactly as a loan advanced today takes its
+        # first payment a month from now.
+        pay = p + 1
+        recoveries[pay + RECOVERY_LAG] += default * (1.0 - SEVERITY)
+        net[pay] += interest + sched + prepay + penalty - servicing
+        principal_flows[pay] += sched + prepay
         interest_total += interest
         principal_total += sched + prepay
         servicing_total += servicing

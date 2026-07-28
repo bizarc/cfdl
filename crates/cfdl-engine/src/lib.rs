@@ -1012,14 +1012,14 @@ fn evaluate_stream(
         }
     };
 
-    let schedule_mask = schedule_mask(&stream.schedule, timeline)?;
+    let schedule_accruals = schedule_accruals(&stream.schedule, timeline)?;
     let event_mask = event_sim.stream_active.get(&stream.name);
     let mut values = vec![0.0_f64; timeline.len()];
     let direction_sign = stream_direction_sign(stream, warnings);
-    for (idx, is_scheduled) in schedule_mask.iter().copied().enumerate() {
-        if !is_scheduled {
+    for (pay_idx, accrual) in schedule_accruals.iter().copied().enumerate() {
+        let Some(idx) = accrual else {
             continue;
-        }
+        };
         if let Some(mask) = event_mask {
             if !mask[idx] {
                 continue;
@@ -1046,7 +1046,8 @@ fn evaluate_stream(
                 warnings,
             )
         };
-        values[idx] += amount * direction_sign;
+        // Evaluated against the accrual period, settled in the payment period.
+        values[pay_idx] += amount * direction_sign;
     }
     Ok(values)
 }
@@ -1373,10 +1374,20 @@ fn insert_cfg_into_value(slot: &mut ExprValue, path: &[&str], value: f64) {
     insert_cfg_into_value(entry, tail, value);
 }
 
-fn schedule_mask(schedule: &IrSchedule, timeline: &[Date]) -> Result<Vec<bool>, EngineError> {
-    let mut values = vec![0.0_f64; timeline.len()];
-    apply_schedule(schedule, 1.0, timeline, &mut values)?;
-    Ok(values.into_iter().map(|value| value.abs() > 0.0).collect())
+/// For each timeline period, the period whose amount is paid there.
+///
+/// `None` means no payment. For an annuity due the two indices coincide. For
+/// an ordinary annuity the payment lands one interval after the period that
+/// earned it, so the amount must still be evaluated against the earning
+/// period — `time.t` inside the amount expression refers to accrual, not to
+/// settlement.
+fn schedule_accruals(
+    schedule: &IrSchedule,
+    timeline: &[Date],
+) -> Result<Vec<Option<usize>>, EngineError> {
+    let mut out = vec![None; timeline.len()];
+    apply_schedule_indices(schedule, timeline, &mut out)?;
+    Ok(out)
 }
 
 fn periods_per_year(calendar: &str) -> f64 {
@@ -1499,6 +1510,79 @@ fn period_index(timeline: &[Date], date: &Date) -> Option<usize> {
         return None;
     }
     timeline.iter().rposition(|d| d <= date)
+}
+
+/// Populate `out[payment] = Some(accrual)` for every occurrence.
+///
+/// Mirrors `apply_schedule`, but records which period earned each payment
+/// rather than accumulating an amount. `OnDate` and the explicit `also`/
+/// `except` dates are point events, so their accrual and payment periods are
+/// the same.
+fn apply_schedule_indices(
+    schedule: &IrSchedule,
+    timeline: &[Date],
+    out: &mut [Option<usize>],
+) -> Result<(), EngineError> {
+    let roll = schedule_roll(schedule)?;
+    match schedule.kind.as_str() {
+        "OnDate" => {
+            if let Some(on) = &schedule.on {
+                let target = roll_date(&Date::parse(on)?, roll);
+                if let Some(idx) = timeline.iter().position(|d| *d == target) {
+                    out[idx] = Some(idx);
+                }
+            }
+        }
+        "Every" => {
+            let default_from = timeline
+                .first()
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "1970-01-01".to_string());
+            let default_to = timeline
+                .last()
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "1970-01-01".to_string());
+            let from = schedule.from.as_deref().unwrap_or(default_from.as_str());
+            let to = schedule.to.as_deref().unwrap_or(default_to.as_str());
+            let from_date = Date::parse(from)?;
+            let to_date = Date::parse(to)?;
+            let interval = schedule.every.as_deref().unwrap_or("monthly");
+
+            // Accruals run over [from, to]; each settles at its own end for an
+            // ordinary annuity, or at its start for an annuity due.
+            let accruals = occurrences(&from_date, &to_date, interval, true)?;
+            let payments = occurrences(&from_date, &to_date, interval, schedule.due)?;
+            for (accrual, payment) in accruals.iter().zip(payments.iter()) {
+                let placed = place_in_interval(payment, schedule.on_rule.as_ref());
+                let rolled = roll_date(&placed, roll);
+                let accrual_idx = match period_index(timeline, accrual) {
+                    Some(i) => i,
+                    None => continue,
+                };
+                if let Some(pay_idx) = period_index(timeline, &rolled) {
+                    out[pay_idx] = Some(accrual_idx);
+                }
+            }
+        }
+        other => {
+            return Err(EngineError::Schedule(format!(
+                "unsupported schedule kind: {other}"
+            )));
+        }
+    }
+    for raw in &schedule.except_dates {
+        let target = roll_date(&Date::parse(raw)?, roll);
+        if let Some(idx) = timeline.iter().position(|d| *d == target) {
+            out[idx] = None;
+        }
+    }
+    for raw in &schedule.also_dates {
+        let target = roll_date(&Date::parse(raw)?, roll);
+        if let Some(idx) = timeline.iter().position(|d| *d == target) {
+            out[idx] = Some(idx);
+        }
+    }
+    Ok(())
 }
 
 fn apply_schedule(
