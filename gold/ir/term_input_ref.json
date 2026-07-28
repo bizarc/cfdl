@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "835e77750bfb7983f168672399a50731",
+      "id": "734e5dd401b2f9c20ac05e9059c1fb86",
       "symbol": "project.plant",
       "type": "core.Entity",
       "attrs": {},
@@ -53,7 +53,7 @@
   },
   "contracts": [
     {
-      "id": "45cf9955dab4db54f39a42db9128dea8",
+      "id": "60918e6bbd84e02a20bf6adec9e7fa0d",
       "name": "energy.ppa.plant_a",
       "type": "core.Contract",
       "subject": {
@@ -81,7 +81,7 @@
   ],
   "streams": [
     {
-      "id": "c7fcaa38a1f5e49b553880ef03400520",
+      "id": "a0f6b651501aea074b630997e06f1861",
       "name": "energy.ppa.revenue.plant_a",
       "owner": {
         "symbol": "project.plant"
@@ -135,8 +135,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "2fb89b7d5cfda1043485d0f377d306a5",
+      "version": "0.5.2",
+      "hash": "e4c47bd22039257906bab3747912211e",
       "notes": [
         "active_pack=energy@0.1.0"
       ]

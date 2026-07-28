@@ -12,14 +12,14 @@
   "phases": [],
   "entities": [
     {
-      "id": "c4a92329730a35ea3afccbf24df3d027",
+      "id": "397516372c7b01ef999dbb6464a546d3",
       "symbol": "loan.permanent",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "a15c6f30939d85433b38c50c52cc9dde",
+      "id": "571fd211825eb91359b135a20fab7f6c",
       "symbol": "real_estate.prop",
       "type": "core.Entity",
       "attrs": {},
@@ -33,7 +33,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "8ef819cf4d74293e86b227a3a521b338",
+      "id": "85e1e64507395f3f696355f942fedc21",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.prop"
@@ -65,7 +65,7 @@
       }
     },
     {
-      "id": "804ce80dfa9081857d534ccddb4e01f7",
+      "id": "e7dacb530ae1a94568d9498e418645c7",
       "name": "cre.ops.revenue",
       "owner": {
         "symbol": "real_estate.prop"
@@ -97,7 +97,7 @@
       }
     },
     {
-      "id": "1e4527a4fe74403be57adf431f7f7e92",
+      "id": "b34a63979c883b5e96a929c2b5faa092",
       "name": "loan.permanent_debt_service",
       "owner": {
         "symbol": "loan.permanent"
@@ -144,8 +144,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

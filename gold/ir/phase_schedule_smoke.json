@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "c5c906069a91b2814fc52ae1917e9906",
+      "id": "299e95b29973349f83e4ab1e32dda4d0",
       "name": "construction",
       "range": {
         "start": "2025-01-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "abde9e3cd23d33569a4ce84fa596ae36",
+      "id": "b448e0186d56a157c3ab7230afa504d1",
       "name": "operations",
       "range": {
         "start": "2026-01-01",
@@ -29,7 +29,7 @@
   ],
   "entities": [
     {
-      "id": "882bf00bae490b531b97d48658a7062a",
+      "id": "ddac5febf350030fb6a8acce0bdff8b3",
       "symbol": "legal.property",
       "type": "core.Entity",
       "attrs": {},
@@ -43,7 +43,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "1148f393d6ae1d59ed3667e1c807e09a",
+      "id": "9a09f004ed9ed855992f605f1f830791",
       "name": "legal.construction_draw",
       "owner": {
         "symbol": "legal.property"
@@ -74,7 +74,7 @@
       }
     },
     {
-      "id": "a1203cccdae8371fefc69837c5677fe9",
+      "id": "f98837004c21d9bad64b43bef6633de8",
       "name": "legal.operating_revenue",
       "owner": {
         "symbol": "legal.property"
@@ -122,8 +122,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

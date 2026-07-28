@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "8b8b3017d92d2295f71f2a4e55aee0b2",
+      "id": "f688f93f19b4f3ace98cb075df4e9816",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -51,7 +51,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "b84354739f8d427d856cf56605358eba",
+      "id": "4cc4bfacd81fa878146e2bcd7e5932a3",
       "name": "legal.fee",
       "owner": {
         "symbol": "legal.borrower"
@@ -98,8 +98,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

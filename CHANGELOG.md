@@ -6,6 +6,30 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.5.2] - 2026-07-28
+
+Release-pipeline fixes. No behaviour change: the compiler, engine and packs
+are identical to 0.5.0.
+
+- `distribution/scripts/package_docs.sh` named three documents that were
+  renamed in the docs restructure, so `tar` exited non-zero and the docs
+  archive failed to build on every tagged release. It now archives the docs
+  tree wholesale, which cannot drift as files are renamed.
+- The server image failed at `cargo build -p cfdl-server`:
+  `utoipa-swagger-ui`'s build script downloads the Swagger UI bundle at
+  compile time and shells out to `curl` when its reqwest feature is off, and
+  `rust:1-slim` ships neither `curl` nor CA certificates. Both are now
+  installed in the builder stage.
+- Adds a `.dockerignore`. The image builds from the repository root with
+  `COPY . .` and had no ignore file, so `target/`, `node_modules/` and `.git`
+  were all being sent as build context.
+
+Together with 0.5.1 this makes the full release pipeline green for the first
+time — the VS Code extension lockfile, the docs archive and the server image
+had each been failing independently since v0.3.0 or earlier.
+
+---
+
 ## [0.5.1] - 2026-07-28
 
 Release-pipeline fixes. No behaviour change: the compiler, engine and packs

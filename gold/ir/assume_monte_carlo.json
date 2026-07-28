@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "8b8b3017d92d2295f71f2a4e55aee0b2",
+      "id": "f688f93f19b4f3ace98cb075df4e9816",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -50,7 +50,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "9b5fcc9858cdd9a863aa0805914b05db",
+      "id": "d1ff8536b08fd4b431f9ca3b61e94cf7",
       "name": "legal.rent",
       "owner": {
         "symbol": "legal.borrower"
@@ -97,8 +97,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

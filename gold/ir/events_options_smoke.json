@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "327e3412fad53df5eb7bccde13d1e295",
+      "id": "6490e3d91254e47d431d4bc6e4f139b5",
       "symbol": "loan.senior",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "54b5e5b6a5ed35c677e1dffbcad20e63",
+      "id": "1b12c1ba9d7257407f3f580a0409c7dc",
       "name": "loan.debt_service",
       "owner": {
         "symbol": "loan.senior"
@@ -81,7 +81,7 @@
           "option": "refi_savings"
         }
       ],
-      "id": "72f1362950081f6407630fbe70380e78",
+      "id": "bccfffae18f7f80cb97dc7f98468ed4e",
       "name": "refi_trigger",
       "provenance": {
         "source_file": "model.cfdl",
@@ -104,7 +104,7 @@
         "lang": "cfdl",
         "src": "false"
       },
-      "id": "adab68f2c2496affdb5d9cc619479930",
+      "id": "c82ba2a0bc3c3299a17d45fa596e7a1d",
       "name": "refi_savings",
       "payoff": {
         "lang": "cfdl",
@@ -135,8 +135,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

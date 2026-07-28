@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "466e354ec903a7b7a8840a46cf86e5e6",
+      "id": "aff4ee0fcc1c554e1f1434df46d2f507",
       "symbol": "legal.co",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "5293f205fe1eef97edef807b8dbd1902",
+      "id": "f61f12e38c15a2deb092932be3dcc3cd",
       "name": "co.true_up",
       "owner": {
         "symbol": "legal.co"
@@ -73,8 +73,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }

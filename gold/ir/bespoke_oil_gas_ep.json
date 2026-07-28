@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "292b0909e1540ba2e65de723a8f501e5",
+      "id": "a0b54256a990e48cca71a66916e2ed67",
       "name": "drilling",
       "range": {
         "start": "2026-01-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "21d22f04e7c51efada73ba423b4359f0",
+      "id": "a3c8a7ea05169e14152c9e6331347e96",
       "name": "production",
       "range": {
         "start": "2027-01-01",
@@ -27,7 +27,7 @@
       }
     },
     {
-      "id": "73c260d06e1d4b5d2131e53365c224dd",
+      "id": "1e0841eaf142ef81558d7cb7e71bf443",
       "name": "ramp",
       "range": {
         "start": "2026-07-01",
@@ -37,21 +37,21 @@
   ],
   "entities": [
     {
-      "id": "1af8367ba38bc639fe0da0b7afdfaeb8",
+      "id": "ccc0860e339d12740f5705726660473a",
       "symbol": "capital.drillco",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "43f73e0de31ccfb39de60f90f530f80f",
+      "id": "d7931c78bc95d6be49a7e66f8e84672a",
       "symbol": "operations.opco",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "aa1379aaf301ea9958bc83d14772ede1",
+      "id": "be489fb257e429b1224b41feda541f65",
       "symbol": "wellbore.asset",
       "type": "core.Entity",
       "attrs": {},
@@ -65,7 +65,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "b456e8be6f82cd6042562725771e8ec1",
+      "id": "8205e8c6d8f908cf453cdc5b6e8919cb",
       "name": "capital.drilling_costs",
       "owner": {
         "symbol": "capital.drillco"
@@ -97,7 +97,7 @@
       }
     },
     {
-      "id": "551c0bcf30368c96d8d75ac5d37a06d2",
+      "id": "fe5ae6a2c9be1e872c71993414f9a675",
       "name": "capital.well_capex",
       "owner": {
         "symbol": "capital.drillco"
@@ -128,7 +128,7 @@
       }
     },
     {
-      "id": "f5f72dd1b4a12484a1a6997dd08f5942",
+      "id": "eaff71907a71868e5ef7e4e21d5809fa",
       "name": "opex.ga",
       "owner": {
         "symbol": "operations.opco"
@@ -160,7 +160,7 @@
       }
     },
     {
-      "id": "f32cada2eb50d976285106ba5753a934",
+      "id": "7a5b6b2930fa2a0855275bd3964f0e6d",
       "name": "opex.loe",
       "owner": {
         "symbol": "operations.opco"
@@ -192,7 +192,7 @@
       }
     },
     {
-      "id": "677d480e689e0132af5d61e286cec2e3",
+      "id": "d125e0f473e939a5783bedf8c16f6f0e",
       "name": "rev.gross_production",
       "owner": {
         "symbol": "wellbore.asset"
@@ -224,7 +224,7 @@
       }
     },
     {
-      "id": "d26ab33bc0c0a3f322b1e21caa4e6ce4",
+      "id": "108800bdfe20947d9027a82a5ec64bb8",
       "name": "rev.royalty_burden",
       "owner": {
         "symbol": "wellbore.asset"
@@ -271,8 +271,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.1",
-      "hash": "fa0f35615e03d6c1bcdbd2d3250243b3"
+      "version": "0.5.2",
+      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
     }
   }
 }
