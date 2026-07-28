@@ -239,7 +239,7 @@ v0.1 recommended declarative structure:
           "direction": "inflow",
           "currency": "${contract.currency}",
           "schedule": {"kind": "Every", "every": "monthly", "on_rule": {"kind": "EndOfMonth"}},
-          "amount_expr": {"lang": "cfdl", "src": "terms.base_rent"}
+          "amount_expr": {"lang": "cfdl", "src": "{{contract.base_rent}}"}
         }
       ]
     }

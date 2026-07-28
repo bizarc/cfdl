@@ -180,6 +180,27 @@ pub struct ContractTerm {
     pub span: Span,
 }
 
+impl ContractTerm {
+    /// Whether this term defers to a declared input rather than stating a
+    /// literal.
+    ///
+    /// A contract records what was signed, so most terms are literals. A term
+    /// that varies — a yield, an escalator under study — names an input
+    /// instead, and the value is supplied by `assume`, by a scenario, or by a
+    /// Monte Carlo draw. That keeps variation layered on top of the contract
+    /// rather than embedded in it.
+    pub fn is_input_ref(&self) -> bool {
+        self.value
+            .strip_prefix("inputs.")
+            .is_some_and(|name| !name.is_empty() && !name.contains('.'))
+    }
+
+    /// The input name behind an input-referencing term.
+    pub fn input_name(&self) -> Option<&str> {
+        self.is_input_ref().then(|| &self.value["inputs.".len()..])
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ScheduleSpec {
     pub kind: ScheduleKind,
@@ -838,6 +859,31 @@ impl<'a> Parser<'a> {
                         _ => continue,
                     };
                     end_span = value_tok.span;
+
+                    // A term holds exactly one value. Anything else before the
+                    // next term or the closing brace used to be discarded in
+                    // silence, so `mwh_year = 1000 + 500` compiled as 1000 and
+                    // the model said one thing while the engine did another.
+                    let next_starts_term =
+                        matches!(self.peek().kind, TokenKind::Ident(_) | TokenKind::Qname(_))
+                            && matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal));
+                    let next_ends_block = matches!(
+                        self.peek().kind,
+                        TokenKind::Punct(Punct::RBrace) | TokenKind::Eof
+                    );
+                    if !next_starts_term && !next_ends_block {
+                        let stray = self.peek().clone();
+                        self.push_expected(
+                            stray.span,
+                            format!(
+                                "Term '{key}' takes a single value. Expected the next term or '}}'. \
+                                 A term is a literal or one declared input (e.g. `inputs.yield`); \
+                                 compute derived values in an `assume` instead."
+                            ),
+                        );
+                        return None;
+                    }
+
                     terms.insert(
                         key.clone(),
                         ContractTerm {
@@ -2086,6 +2132,12 @@ impl<'a> Parser<'a> {
     fn peek(&self) -> &Token {
         self.tokens
             .get(self.idx)
+            .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
+    }
+
+    fn peek_ahead(&self, n: usize) -> &Token {
+        self.tokens
+            .get(self.idx + n)
             .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
     }
 

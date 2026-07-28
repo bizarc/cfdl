@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Term 'mwh_year' takes a single value. Expected the next term or '}'. A term is a literal or one declared input (e.g. `inputs.yield`); compute derived values in an `assume` instead.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 21,
+      "end_line": 13,
+      "end_col": 21
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1,0 +1,145 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "term-input-ref",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "14ca45a679e9dbcd37025fcf5d3e1335",
+      "symbol": "project.plant",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {
+      "annual_yield": {
+        "dist": {
+          "clip": [
+            4000.0,
+            6000.0
+          ],
+          "kind": "Normal",
+          "params": {
+            "mean": 5000.0,
+            "stdev": 350.0
+          }
+        },
+        "name": "annual_yield",
+        "type": "Decimal"
+      },
+      "degradation": {
+        "dist": {
+          "kind": "Triangular",
+          "params": {
+            "max": 0.007,
+            "min": 0.004,
+            "mode": 0.005
+          }
+        },
+        "name": "degradation",
+        "type": "Decimal"
+      }
+    }
+  },
+  "contracts": [
+    {
+      "id": "cc237c4fb65a1a9c224eee9ee163f975",
+      "name": "energy.ppa.plant_a",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.plant"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "caffc7f696db5d0d5a1d850b4904a353",
+      "name": "energy.ppa.revenue.plant_a",
+      "owner": {
+        "symbol": "project.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(inputs.annual_yield / 12.0) * 1.0 * pow(1.0 - inputs.degradation, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * 3000.0 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ppa_revenue"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.4.0",
+      "hash": "16aaac330ace1ef20b04819e70a58171",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}

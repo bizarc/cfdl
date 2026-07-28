@@ -1,0 +1,4855 @@
+{
+  "results_version": "0.2",
+  "model_hash": "251faee5f01bb1106816a99241e34d7268cdc8b325631ad4f7379370a47a954c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.4.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.project.plant.total": {
+        "amount": 29920000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 27136615.727089,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 29920000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.956996,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.energy.ppa.revenue.plant_a.total": {
+        "amount": 29920000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.ppa.revenue.plant_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1243333.333333,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 14920000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.ppa.revenue.plant_a": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 14920000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "ok",
+    "summaries": [
+      {
+        "name": "p10_high",
+        "metrics": {
+          "model.npv": {
+            "amount": 30935741.928881,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "name": "p50_base",
+        "metrics": {
+          "model.npv": {
+            "amount": 27136615.727089,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "name": "p90_low",
+        "metrics": {
+          "model.npv": {
+            "amount": 23337489.525296,
+            "currency": "USD"
+          }
+        }
+      }
+    ]
+  },
+  "monte_carlo": {
+    "status": "ok",
+    "trials": 500,
+    "seed": 20260728,
+    "metrics": {
+      "model.npv": {
+        "type": "money",
+        "mean": {
+          "amount": 27160277.360357,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 1917063.486497,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 21713608.145532,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 32576319.337588,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 27110349.463647,
+          "currency": "USD"
+        }
+      }
+    },
+    "trial_summaries": [
+      {
+        "trial": 0,
+        "metrics": {
+          "model.npv": {
+            "amount": 25298831.95493,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 1,
+        "metrics": {
+          "model.npv": {
+            "amount": 27102787.612863,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 2,
+        "metrics": {
+          "model.npv": {
+            "amount": 26955371.434794,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 3,
+        "metrics": {
+          "model.npv": {
+            "amount": 31204134.584339,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 4,
+        "metrics": {
+          "model.npv": {
+            "amount": 26922905.911056,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 5,
+        "metrics": {
+          "model.npv": {
+            "amount": 26378071.089385,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 6,
+        "metrics": {
+          "model.npv": {
+            "amount": 28015576.239129,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 7,
+        "metrics": {
+          "model.npv": {
+            "amount": 28156826.564348,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 8,
+        "metrics": {
+          "model.npv": {
+            "amount": 27636778.458906,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 9,
+        "metrics": {
+          "model.npv": {
+            "amount": 27633251.064556,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 10,
+        "metrics": {
+          "model.npv": {
+            "amount": 28040596.841917,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 11,
+        "metrics": {
+          "model.npv": {
+            "amount": 26827016.054135,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 12,
+        "metrics": {
+          "model.npv": {
+            "amount": 29016024.469108,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 13,
+        "metrics": {
+          "model.npv": {
+            "amount": 27315257.029363,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 14,
+        "metrics": {
+          "model.npv": {
+            "amount": 26933206.921163,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 15,
+        "metrics": {
+          "model.npv": {
+            "amount": 29097303.490507,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 16,
+        "metrics": {
+          "model.npv": {
+            "amount": 27046839.705898,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 17,
+        "metrics": {
+          "model.npv": {
+            "amount": 24685077.650568,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 18,
+        "metrics": {
+          "model.npv": {
+            "amount": 27536329.856911,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 19,
+        "metrics": {
+          "model.npv": {
+            "amount": 26161734.360393,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 20,
+        "metrics": {
+          "model.npv": {
+            "amount": 27826098.396987,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 21,
+        "metrics": {
+          "model.npv": {
+            "amount": 26079893.021786,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 22,
+        "metrics": {
+          "model.npv": {
+            "amount": 31783957.875541,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 23,
+        "metrics": {
+          "model.npv": {
+            "amount": 22882246.777875,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 24,
+        "metrics": {
+          "model.npv": {
+            "amount": 25314116.03638,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 25,
+        "metrics": {
+          "model.npv": {
+            "amount": 29814003.219308,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 26,
+        "metrics": {
+          "model.npv": {
+            "amount": 29373735.694361,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 27,
+        "metrics": {
+          "model.npv": {
+            "amount": 29025007.328945,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 28,
+        "metrics": {
+          "model.npv": {
+            "amount": 27161255.403076,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 29,
+        "metrics": {
+          "model.npv": {
+            "amount": 27685922.506133,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 30,
+        "metrics": {
+          "model.npv": {
+            "amount": 22232211.206452,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 31,
+        "metrics": {
+          "model.npv": {
+            "amount": 30252940.716646,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 32,
+        "metrics": {
+          "model.npv": {
+            "amount": 26909184.533332,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 33,
+        "metrics": {
+          "model.npv": {
+            "amount": 28176032.968098,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 34,
+        "metrics": {
+          "model.npv": {
+            "amount": 26494619.531324,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 35,
+        "metrics": {
+          "model.npv": {
+            "amount": 27692037.01707,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 36,
+        "metrics": {
+          "model.npv": {
+            "amount": 25535565.90136,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 37,
+        "metrics": {
+          "model.npv": {
+            "amount": 28205026.561992,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 38,
+        "metrics": {
+          "model.npv": {
+            "amount": 30319732.109831,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 39,
+        "metrics": {
+          "model.npv": {
+            "amount": 28304507.028611,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 40,
+        "metrics": {
+          "model.npv": {
+            "amount": 24387101.649708,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 41,
+        "metrics": {
+          "model.npv": {
+            "amount": 29859387.027305,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 42,
+        "metrics": {
+          "model.npv": {
+            "amount": 25544149.01655,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 43,
+        "metrics": {
+          "model.npv": {
+            "amount": 30298134.940792,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 44,
+        "metrics": {
+          "model.npv": {
+            "amount": 25994503.04701,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 45,
+        "metrics": {
+          "model.npv": {
+            "amount": 30449259.867138,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 46,
+        "metrics": {
+          "model.npv": {
+            "amount": 24702325.360596,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 47,
+        "metrics": {
+          "model.npv": {
+            "amount": 27863149.819236,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 48,
+        "metrics": {
+          "model.npv": {
+            "amount": 23594390.415233,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 49,
+        "metrics": {
+          "model.npv": {
+            "amount": 29920315.024688,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 50,
+        "metrics": {
+          "model.npv": {
+            "amount": 26294038.027714,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 51,
+        "metrics": {
+          "model.npv": {
+            "amount": 23791626.900899,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 52,
+        "metrics": {
+          "model.npv": {
+            "amount": 28222498.110428,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 53,
+        "metrics": {
+          "model.npv": {
+            "amount": 25689579.820377,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 54,
+        "metrics": {
+          "model.npv": {
+            "amount": 28671673.091783,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 55,
+        "metrics": {
+          "model.npv": {
+            "amount": 27503098.613708,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 56,
+        "metrics": {
+          "model.npv": {
+            "amount": 29067403.244073,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 57,
+        "metrics": {
+          "model.npv": {
+            "amount": 27293608.760591,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 58,
+        "metrics": {
+          "model.npv": {
+            "amount": 30236947.19303,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 59,
+        "metrics": {
+          "model.npv": {
+            "amount": 25976776.765718,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 60,
+        "metrics": {
+          "model.npv": {
+            "amount": 26365867.702854,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 61,
+        "metrics": {
+          "model.npv": {
+            "amount": 26255167.351451,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 62,
+        "metrics": {
+          "model.npv": {
+            "amount": 26744889.40319,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 63,
+        "metrics": {
+          "model.npv": {
+            "amount": 28838207.574035,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 64,
+        "metrics": {
+          "model.npv": {
+            "amount": 28982778.764577,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 65,
+        "metrics": {
+          "model.npv": {
+            "amount": 26305581.273964,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 66,
+        "metrics": {
+          "model.npv": {
+            "amount": 24861965.150454,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 67,
+        "metrics": {
+          "model.npv": {
+            "amount": 28867315.42883,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 68,
+        "metrics": {
+          "model.npv": {
+            "amount": 24539109.068983,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 69,
+        "metrics": {
+          "model.npv": {
+            "amount": 25008937.629601,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 70,
+        "metrics": {
+          "model.npv": {
+            "amount": 23598562.194844,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 71,
+        "metrics": {
+          "model.npv": {
+            "amount": 25723795.361867,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 72,
+        "metrics": {
+          "model.npv": {
+            "amount": 24547091.992755,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 73,
+        "metrics": {
+          "model.npv": {
+            "amount": 26045794.106786,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 74,
+        "metrics": {
+          "model.npv": {
+            "amount": 27524844.400265,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 75,
+        "metrics": {
+          "model.npv": {
+            "amount": 29419078.497545,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 76,
+        "metrics": {
+          "model.npv": {
+            "amount": 28401583.294909,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 77,
+        "metrics": {
+          "model.npv": {
+            "amount": 26480413.378971,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 78,
+        "metrics": {
+          "model.npv": {
+            "amount": 27233550.199154,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 79,
+        "metrics": {
+          "model.npv": {
+            "amount": 26965739.117888,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 80,
+        "metrics": {
+          "model.npv": {
+            "amount": 27034724.730193,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 81,
+        "metrics": {
+          "model.npv": {
+            "amount": 26940580.994101,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 82,
+        "metrics": {
+          "model.npv": {
+            "amount": 28987561.27051,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 83,
+        "metrics": {
+          "model.npv": {
+            "amount": 25289436.654072,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 84,
+        "metrics": {
+          "model.npv": {
+            "amount": 26406476.282294,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 85,
+        "metrics": {
+          "model.npv": {
+            "amount": 29087740.061391,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 86,
+        "metrics": {
+          "model.npv": {
+            "amount": 25798649.064286,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 87,
+        "metrics": {
+          "model.npv": {
+            "amount": 25610866.356323,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 88,
+        "metrics": {
+          "model.npv": {
+            "amount": 29516464.513144,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 89,
+        "metrics": {
+          "model.npv": {
+            "amount": 26949669.789146,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 90,
+        "metrics": {
+          "model.npv": {
+            "amount": 28297198.515978,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 91,
+        "metrics": {
+          "model.npv": {
+            "amount": 29703441.948243,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 92,
+        "metrics": {
+          "model.npv": {
+            "amount": 28228804.972108,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 93,
+        "metrics": {
+          "model.npv": {
+            "amount": 32576319.337588,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 94,
+        "metrics": {
+          "model.npv": {
+            "amount": 25330763.952233,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 95,
+        "metrics": {
+          "model.npv": {
+            "amount": 25843467.706801,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 96,
+        "metrics": {
+          "model.npv": {
+            "amount": 26043524.569474,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 97,
+        "metrics": {
+          "model.npv": {
+            "amount": 29251139.010249,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 98,
+        "metrics": {
+          "model.npv": {
+            "amount": 29346925.68026,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 99,
+        "metrics": {
+          "model.npv": {
+            "amount": 30858527.139942,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 100,
+        "metrics": {
+          "model.npv": {
+            "amount": 24871370.812313,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 101,
+        "metrics": {
+          "model.npv": {
+            "amount": 30286343.212573,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 102,
+        "metrics": {
+          "model.npv": {
+            "amount": 31515602.446566,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 103,
+        "metrics": {
+          "model.npv": {
+            "amount": 28415058.607064,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 104,
+        "metrics": {
+          "model.npv": {
+            "amount": 23779378.67507,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 105,
+        "metrics": {
+          "model.npv": {
+            "amount": 23800323.754126,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 106,
+        "metrics": {
+          "model.npv": {
+            "amount": 27317105.692093,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 107,
+        "metrics": {
+          "model.npv": {
+            "amount": 26284698.223776,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 108,
+        "metrics": {
+          "model.npv": {
+            "amount": 27841407.776291,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 109,
+        "metrics": {
+          "model.npv": {
+            "amount": 26619996.232529,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 110,
+        "metrics": {
+          "model.npv": {
+            "amount": 21713608.145532,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 111,
+        "metrics": {
+          "model.npv": {
+            "amount": 27150010.486892,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 112,
+        "metrics": {
+          "model.npv": {
+            "amount": 26428766.846604,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 113,
+        "metrics": {
+          "model.npv": {
+            "amount": 25388077.762594,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 114,
+        "metrics": {
+          "model.npv": {
+            "amount": 29265482.953374,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 115,
+        "metrics": {
+          "model.npv": {
+            "amount": 27280329.397593,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 116,
+        "metrics": {
+          "model.npv": {
+            "amount": 22741508.236952,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 117,
+        "metrics": {
+          "model.npv": {
+            "amount": 25269101.825403,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 118,
+        "metrics": {
+          "model.npv": {
+            "amount": 28418193.320396,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 119,
+        "metrics": {
+          "model.npv": {
+            "amount": 29151191.733186,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 120,
+        "metrics": {
+          "model.npv": {
+            "amount": 27873050.210142,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 121,
+        "metrics": {
+          "model.npv": {
+            "amount": 26657862.785421,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 122,
+        "metrics": {
+          "model.npv": {
+            "amount": 26967875.827642,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 123,
+        "metrics": {
+          "model.npv": {
+            "amount": 23805859.492083,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 124,
+        "metrics": {
+          "model.npv": {
+            "amount": 26869897.870747,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 125,
+        "metrics": {
+          "model.npv": {
+            "amount": 26993665.320992,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 126,
+        "metrics": {
+          "model.npv": {
+            "amount": 28191726.268245,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 127,
+        "metrics": {
+          "model.npv": {
+            "amount": 27959736.872948,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 128,
+        "metrics": {
+          "model.npv": {
+            "amount": 27844934.693929,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 129,
+        "metrics": {
+          "model.npv": {
+            "amount": 24322096.050644,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 130,
+        "metrics": {
+          "model.npv": {
+            "amount": 29785561.151265,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 131,
+        "metrics": {
+          "model.npv": {
+            "amount": 28317308.066631,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 132,
+        "metrics": {
+          "model.npv": {
+            "amount": 26176290.565156,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 133,
+        "metrics": {
+          "model.npv": {
+            "amount": 27975145.493154,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 134,
+        "metrics": {
+          "model.npv": {
+            "amount": 22381549.928165,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 135,
+        "metrics": {
+          "model.npv": {
+            "amount": 27503527.90173,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 136,
+        "metrics": {
+          "model.npv": {
+            "amount": 24265525.202159,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 137,
+        "metrics": {
+          "model.npv": {
+            "amount": 30497553.497838,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 138,
+        "metrics": {
+          "model.npv": {
+            "amount": 28978142.017321,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 139,
+        "metrics": {
+          "model.npv": {
+            "amount": 28214191.472833,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 140,
+        "metrics": {
+          "model.npv": {
+            "amount": 25643195.563914,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 141,
+        "metrics": {
+          "model.npv": {
+            "amount": 23523915.300661,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 142,
+        "metrics": {
+          "model.npv": {
+            "amount": 27208031.529302,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 143,
+        "metrics": {
+          "model.npv": {
+            "amount": 26320744.4583,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 144,
+        "metrics": {
+          "model.npv": {
+            "amount": 28032874.549071,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 145,
+        "metrics": {
+          "model.npv": {
+            "amount": 27103058.540099,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 146,
+        "metrics": {
+          "model.npv": {
+            "amount": 26233712.61521,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 147,
+        "metrics": {
+          "model.npv": {
+            "amount": 30289217.136377,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 148,
+        "metrics": {
+          "model.npv": {
+            "amount": 27475639.294562,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 149,
+        "metrics": {
+          "model.npv": {
+            "amount": 26807788.928648,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 150,
+        "metrics": {
+          "model.npv": {
+            "amount": 25955025.288096,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 151,
+        "metrics": {
+          "model.npv": {
+            "amount": 26515227.521212,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 152,
+        "metrics": {
+          "model.npv": {
+            "amount": 28853282.06451,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 153,
+        "metrics": {
+          "model.npv": {
+            "amount": 23336162.903489,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 154,
+        "metrics": {
+          "model.npv": {
+            "amount": 28555615.899994,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 155,
+        "metrics": {
+          "model.npv": {
+            "amount": 28249120.704581,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 156,
+        "metrics": {
+          "model.npv": {
+            "amount": 25957262.239607,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 157,
+        "metrics": {
+          "model.npv": {
+            "amount": 25122953.600192,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 158,
+        "metrics": {
+          "model.npv": {
+            "amount": 29214219.783851,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 159,
+        "metrics": {
+          "model.npv": {
+            "amount": 28031591.563487,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 160,
+        "metrics": {
+          "model.npv": {
+            "amount": 30913330.847313,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 161,
+        "metrics": {
+          "model.npv": {
+            "amount": 26166663.452093,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 162,
+        "metrics": {
+          "model.npv": {
+            "amount": 27014883.430848,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 163,
+        "metrics": {
+          "model.npv": {
+            "amount": 24471935.904224,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 164,
+        "metrics": {
+          "model.npv": {
+            "amount": 25470516.107114,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 165,
+        "metrics": {
+          "model.npv": {
+            "amount": 25696495.180932,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 166,
+        "metrics": {
+          "model.npv": {
+            "amount": 27882287.534908,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 167,
+        "metrics": {
+          "model.npv": {
+            "amount": 26545005.325386,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 168,
+        "metrics": {
+          "model.npv": {
+            "amount": 29933463.173152,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 169,
+        "metrics": {
+          "model.npv": {
+            "amount": 26560601.239599,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 170,
+        "metrics": {
+          "model.npv": {
+            "amount": 27248523.531469,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 171,
+        "metrics": {
+          "model.npv": {
+            "amount": 24819814.190905,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 172,
+        "metrics": {
+          "model.npv": {
+            "amount": 26222590.735362,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 173,
+        "metrics": {
+          "model.npv": {
+            "amount": 26993912.840822,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 174,
+        "metrics": {
+          "model.npv": {
+            "amount": 24971912.065205,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 175,
+        "metrics": {
+          "model.npv": {
+            "amount": 27552913.066281,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 176,
+        "metrics": {
+          "model.npv": {
+            "amount": 25858464.116264,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 177,
+        "metrics": {
+          "model.npv": {
+            "amount": 27279129.507664,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 178,
+        "metrics": {
+          "model.npv": {
+            "amount": 27345855.46923,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 179,
+        "metrics": {
+          "model.npv": {
+            "amount": 27651862.137195,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 180,
+        "metrics": {
+          "model.npv": {
+            "amount": 26896375.039518,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 181,
+        "metrics": {
+          "model.npv": {
+            "amount": 26508527.142447,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 182,
+        "metrics": {
+          "model.npv": {
+            "amount": 27288931.426495,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 183,
+        "metrics": {
+          "model.npv": {
+            "amount": 25332471.429361,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 184,
+        "metrics": {
+          "model.npv": {
+            "amount": 28038424.417219,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 185,
+        "metrics": {
+          "model.npv": {
+            "amount": 25858767.85685,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 186,
+        "metrics": {
+          "model.npv": {
+            "amount": 27042563.200092,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 187,
+        "metrics": {
+          "model.npv": {
+            "amount": 26414577.232538,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 188,
+        "metrics": {
+          "model.npv": {
+            "amount": 25732843.637593,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 189,
+        "metrics": {
+          "model.npv": {
+            "amount": 25796939.127791,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 190,
+        "metrics": {
+          "model.npv": {
+            "amount": 26896324.684496,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 191,
+        "metrics": {
+          "model.npv": {
+            "amount": 25775817.424222,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 192,
+        "metrics": {
+          "model.npv": {
+            "amount": 27120773.118809,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 193,
+        "metrics": {
+          "model.npv": {
+            "amount": 22847414.535696,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 194,
+        "metrics": {
+          "model.npv": {
+            "amount": 26047834.87053,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 195,
+        "metrics": {
+          "model.npv": {
+            "amount": 28308272.005766,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 196,
+        "metrics": {
+          "model.npv": {
+            "amount": 27240242.602032,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 197,
+        "metrics": {
+          "model.npv": {
+            "amount": 27205358.47835,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 198,
+        "metrics": {
+          "model.npv": {
+            "amount": 28413821.63853,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 199,
+        "metrics": {
+          "model.npv": {
+            "amount": 28251858.116864,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 200,
+        "metrics": {
+          "model.npv": {
+            "amount": 26419702.587613,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 201,
+        "metrics": {
+          "model.npv": {
+            "amount": 26452819.340742,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 202,
+        "metrics": {
+          "model.npv": {
+            "amount": 27359453.210657,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 203,
+        "metrics": {
+          "model.npv": {
+            "amount": 28955791.859756,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 204,
+        "metrics": {
+          "model.npv": {
+            "amount": 28838064.99185,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 205,
+        "metrics": {
+          "model.npv": {
+            "amount": 28142127.222125,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 206,
+        "metrics": {
+          "model.npv": {
+            "amount": 21713775.810386,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 207,
+        "metrics": {
+          "model.npv": {
+            "amount": 28063134.564415,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 208,
+        "metrics": {
+          "model.npv": {
+            "amount": 29021885.513856,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 209,
+        "metrics": {
+          "model.npv": {
+            "amount": 29635847.019642,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 210,
+        "metrics": {
+          "model.npv": {
+            "amount": 26958853.094921,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 211,
+        "metrics": {
+          "model.npv": {
+            "amount": 26758178.519922,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 212,
+        "metrics": {
+          "model.npv": {
+            "amount": 32570014.39532,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 213,
+        "metrics": {
+          "model.npv": {
+            "amount": 23203456.003483,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 214,
+        "metrics": {
+          "model.npv": {
+            "amount": 28624799.938869,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 215,
+        "metrics": {
+          "model.npv": {
+            "amount": 28614745.620577,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 216,
+        "metrics": {
+          "model.npv": {
+            "amount": 27514092.66385,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 217,
+        "metrics": {
+          "model.npv": {
+            "amount": 31406767.487977,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 218,
+        "metrics": {
+          "model.npv": {
+            "amount": 26323159.99717,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 219,
+        "metrics": {
+          "model.npv": {
+            "amount": 27647200.70263,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 220,
+        "metrics": {
+          "model.npv": {
+            "amount": 28760655.561526,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 221,
+        "metrics": {
+          "model.npv": {
+            "amount": 27842924.26742,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 222,
+        "metrics": {
+          "model.npv": {
+            "amount": 31364081.388117,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 223,
+        "metrics": {
+          "model.npv": {
+            "amount": 26172463.017973,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 224,
+        "metrics": {
+          "model.npv": {
+            "amount": 28736359.92906,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 225,
+        "metrics": {
+          "model.npv": {
+            "amount": 28289464.958455,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 226,
+        "metrics": {
+          "model.npv": {
+            "amount": 27123475.655256,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 227,
+        "metrics": {
+          "model.npv": {
+            "amount": 29429263.751533,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 228,
+        "metrics": {
+          "model.npv": {
+            "amount": 25852423.318427,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 229,
+        "metrics": {
+          "model.npv": {
+            "amount": 27232668.749642,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 230,
+        "metrics": {
+          "model.npv": {
+            "amount": 25571128.152102,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 231,
+        "metrics": {
+          "model.npv": {
+            "amount": 25503011.327361,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 232,
+        "metrics": {
+          "model.npv": {
+            "amount": 29151725.52679,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 233,
+        "metrics": {
+          "model.npv": {
+            "amount": 31130036.904682,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 234,
+        "metrics": {
+          "model.npv": {
+            "amount": 27546485.776384,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 235,
+        "metrics": {
+          "model.npv": {
+            "amount": 30122449.740503,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 236,
+        "metrics": {
+          "model.npv": {
+            "amount": 29337699.451935,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 237,
+        "metrics": {
+          "model.npv": {
+            "amount": 26941697.293666,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 238,
+        "metrics": {
+          "model.npv": {
+            "amount": 25465437.254371,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 239,
+        "metrics": {
+          "model.npv": {
+            "amount": 24313828.003952,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 240,
+        "metrics": {
+          "model.npv": {
+            "amount": 29512860.474575,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 241,
+        "metrics": {
+          "model.npv": {
+            "amount": 25716735.215075,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 242,
+        "metrics": {
+          "model.npv": {
+            "amount": 27058747.224279,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 243,
+        "metrics": {
+          "model.npv": {
+            "amount": 26565729.591755,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 244,
+        "metrics": {
+          "model.npv": {
+            "amount": 29566774.42987,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 245,
+        "metrics": {
+          "model.npv": {
+            "amount": 29871767.486393,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 246,
+        "metrics": {
+          "model.npv": {
+            "amount": 29131336.821446,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 247,
+        "metrics": {
+          "model.npv": {
+            "amount": 29760748.242582,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 248,
+        "metrics": {
+          "model.npv": {
+            "amount": 26162867.822048,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 249,
+        "metrics": {
+          "model.npv": {
+            "amount": 26798219.631234,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 250,
+        "metrics": {
+          "model.npv": {
+            "amount": 27435962.46984,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 251,
+        "metrics": {
+          "model.npv": {
+            "amount": 26311459.095744,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 252,
+        "metrics": {
+          "model.npv": {
+            "amount": 24932752.646708,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 253,
+        "metrics": {
+          "model.npv": {
+            "amount": 26224200.749908,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 254,
+        "metrics": {
+          "model.npv": {
+            "amount": 24902583.131957,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 255,
+        "metrics": {
+          "model.npv": {
+            "amount": 29083015.580626,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 256,
+        "metrics": {
+          "model.npv": {
+            "amount": 26793817.739565,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 257,
+        "metrics": {
+          "model.npv": {
+            "amount": 25451601.251299,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 258,
+        "metrics": {
+          "model.npv": {
+            "amount": 28762107.518416,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 259,
+        "metrics": {
+          "model.npv": {
+            "amount": 27506995.053435,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 260,
+        "metrics": {
+          "model.npv": {
+            "amount": 28101379.11699,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 261,
+        "metrics": {
+          "model.npv": {
+            "amount": 29128389.162624,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 262,
+        "metrics": {
+          "model.npv": {
+            "amount": 27068543.469317,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 263,
+        "metrics": {
+          "model.npv": {
+            "amount": 27088510.668682,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 264,
+        "metrics": {
+          "model.npv": {
+            "amount": 23313754.382645,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 265,
+        "metrics": {
+          "model.npv": {
+            "amount": 28588053.760107,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 266,
+        "metrics": {
+          "model.npv": {
+            "amount": 26889321.666528,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 267,
+        "metrics": {
+          "model.npv": {
+            "amount": 27180211.093358,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 268,
+        "metrics": {
+          "model.npv": {
+            "amount": 31789541.007768,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 269,
+        "metrics": {
+          "model.npv": {
+            "amount": 27566566.457552,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 270,
+        "metrics": {
+          "model.npv": {
+            "amount": 29354585.736879,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 271,
+        "metrics": {
+          "model.npv": {
+            "amount": 26512070.042219,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 272,
+        "metrics": {
+          "model.npv": {
+            "amount": 24730016.438893,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 273,
+        "metrics": {
+          "model.npv": {
+            "amount": 27908389.418521,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 274,
+        "metrics": {
+          "model.npv": {
+            "amount": 25431414.06832,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 275,
+        "metrics": {
+          "model.npv": {
+            "amount": 31795474.937904,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 276,
+        "metrics": {
+          "model.npv": {
+            "amount": 24310958.290507,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 277,
+        "metrics": {
+          "model.npv": {
+            "amount": 32573956.903551,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 278,
+        "metrics": {
+          "model.npv": {
+            "amount": 28553669.290326,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 279,
+        "metrics": {
+          "model.npv": {
+            "amount": 28100283.924083,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 280,
+        "metrics": {
+          "model.npv": {
+            "amount": 23934341.526161,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 281,
+        "metrics": {
+          "model.npv": {
+            "amount": 25739939.185351,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 282,
+        "metrics": {
+          "model.npv": {
+            "amount": 27523652.791846,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 283,
+        "metrics": {
+          "model.npv": {
+            "amount": 22899035.212768,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 284,
+        "metrics": {
+          "model.npv": {
+            "amount": 24642962.60333,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 285,
+        "metrics": {
+          "model.npv": {
+            "amount": 24542527.142026,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 286,
+        "metrics": {
+          "model.npv": {
+            "amount": 28028113.911012,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 287,
+        "metrics": {
+          "model.npv": {
+            "amount": 30450261.469143,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 288,
+        "metrics": {
+          "model.npv": {
+            "amount": 28262429.641038,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 289,
+        "metrics": {
+          "model.npv": {
+            "amount": 25138608.386235,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 290,
+        "metrics": {
+          "model.npv": {
+            "amount": 25696434.78165,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 291,
+        "metrics": {
+          "model.npv": {
+            "amount": 26387408.608286,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 292,
+        "metrics": {
+          "model.npv": {
+            "amount": 27655837.999725,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 293,
+        "metrics": {
+          "model.npv": {
+            "amount": 27729753.961544,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 294,
+        "metrics": {
+          "model.npv": {
+            "amount": 26509165.827631,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 295,
+        "metrics": {
+          "model.npv": {
+            "amount": 29049722.53527,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 296,
+        "metrics": {
+          "model.npv": {
+            "amount": 26911263.885268,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 297,
+        "metrics": {
+          "model.npv": {
+            "amount": 29368563.196562,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 298,
+        "metrics": {
+          "model.npv": {
+            "amount": 28654774.050277,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 299,
+        "metrics": {
+          "model.npv": {
+            "amount": 28199414.004484,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 300,
+        "metrics": {
+          "model.npv": {
+            "amount": 26832006.739104,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 301,
+        "metrics": {
+          "model.npv": {
+            "amount": 25344287.433091,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 302,
+        "metrics": {
+          "model.npv": {
+            "amount": 28023858.350421,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 303,
+        "metrics": {
+          "model.npv": {
+            "amount": 24841866.976792,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 304,
+        "metrics": {
+          "model.npv": {
+            "amount": 28075319.044505,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 305,
+        "metrics": {
+          "model.npv": {
+            "amount": 25117088.722,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 306,
+        "metrics": {
+          "model.npv": {
+            "amount": 27533754.508922,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 307,
+        "metrics": {
+          "model.npv": {
+            "amount": 25412129.083059,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 308,
+        "metrics": {
+          "model.npv": {
+            "amount": 25042369.816777,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 309,
+        "metrics": {
+          "model.npv": {
+            "amount": 27117640.387195,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 310,
+        "metrics": {
+          "model.npv": {
+            "amount": 30324479.211831,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 311,
+        "metrics": {
+          "model.npv": {
+            "amount": 25432058.39354,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 312,
+        "metrics": {
+          "model.npv": {
+            "amount": 28559494.194556,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 313,
+        "metrics": {
+          "model.npv": {
+            "amount": 27400286.797349,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 314,
+        "metrics": {
+          "model.npv": {
+            "amount": 27645916.020987,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 315,
+        "metrics": {
+          "model.npv": {
+            "amount": 25467863.219887,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 316,
+        "metrics": {
+          "model.npv": {
+            "amount": 26417603.86508,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 317,
+        "metrics": {
+          "model.npv": {
+            "amount": 27792724.104358,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 318,
+        "metrics": {
+          "model.npv": {
+            "amount": 31057020.62349,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 319,
+        "metrics": {
+          "model.npv": {
+            "amount": 27121604.47222,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 320,
+        "metrics": {
+          "model.npv": {
+            "amount": 23922236.99586,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 321,
+        "metrics": {
+          "model.npv": {
+            "amount": 26509772.039537,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 322,
+        "metrics": {
+          "model.npv": {
+            "amount": 25522853.158009,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 323,
+        "metrics": {
+          "model.npv": {
+            "amount": 28029345.084827,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 324,
+        "metrics": {
+          "model.npv": {
+            "amount": 29106622.254608,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 325,
+        "metrics": {
+          "model.npv": {
+            "amount": 26839562.611191,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 326,
+        "metrics": {
+          "model.npv": {
+            "amount": 26589922.047478,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 327,
+        "metrics": {
+          "model.npv": {
+            "amount": 28215415.668427,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 328,
+        "metrics": {
+          "model.npv": {
+            "amount": 27060354.073468,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 329,
+        "metrics": {
+          "model.npv": {
+            "amount": 26039671.256902,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 330,
+        "metrics": {
+          "model.npv": {
+            "amount": 26108878.591164,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 331,
+        "metrics": {
+          "model.npv": {
+            "amount": 29630929.939818,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 332,
+        "metrics": {
+          "model.npv": {
+            "amount": 26822802.146962,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 333,
+        "metrics": {
+          "model.npv": {
+            "amount": 27161278.996239,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 334,
+        "metrics": {
+          "model.npv": {
+            "amount": 25062261.808129,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 335,
+        "metrics": {
+          "model.npv": {
+            "amount": 28475502.618773,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 336,
+        "metrics": {
+          "model.npv": {
+            "amount": 26437400.570548,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 337,
+        "metrics": {
+          "model.npv": {
+            "amount": 31090790.924427,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 338,
+        "metrics": {
+          "model.npv": {
+            "amount": 30579870.834704,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 339,
+        "metrics": {
+          "model.npv": {
+            "amount": 27671920.65789,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 340,
+        "metrics": {
+          "model.npv": {
+            "amount": 25415367.103454,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 341,
+        "metrics": {
+          "model.npv": {
+            "amount": 27982264.136535,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 342,
+        "metrics": {
+          "model.npv": {
+            "amount": 25575833.07784,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 343,
+        "metrics": {
+          "model.npv": {
+            "amount": 26333059.765004,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 344,
+        "metrics": {
+          "model.npv": {
+            "amount": 27761769.045619,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 345,
+        "metrics": {
+          "model.npv": {
+            "amount": 25181202.292828,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 346,
+        "metrics": {
+          "model.npv": {
+            "amount": 27129013.806139,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 347,
+        "metrics": {
+          "model.npv": {
+            "amount": 29773352.621534,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 348,
+        "metrics": {
+          "model.npv": {
+            "amount": 26573773.876372,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 349,
+        "metrics": {
+          "model.npv": {
+            "amount": 30968440.518672,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 350,
+        "metrics": {
+          "model.npv": {
+            "amount": 25068543.867377,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 351,
+        "metrics": {
+          "model.npv": {
+            "amount": 28985048.706683,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 352,
+        "metrics": {
+          "model.npv": {
+            "amount": 25254175.043693,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 353,
+        "metrics": {
+          "model.npv": {
+            "amount": 28402895.034843,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 354,
+        "metrics": {
+          "model.npv": {
+            "amount": 28943904.1044,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 355,
+        "metrics": {
+          "model.npv": {
+            "amount": 25368409.730152,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 356,
+        "metrics": {
+          "model.npv": {
+            "amount": 30492229.292875,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 357,
+        "metrics": {
+          "model.npv": {
+            "amount": 27786042.892849,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 358,
+        "metrics": {
+          "model.npv": {
+            "amount": 25234691.914304,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 359,
+        "metrics": {
+          "model.npv": {
+            "amount": 28837012.695532,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 360,
+        "metrics": {
+          "model.npv": {
+            "amount": 30712317.479755,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 361,
+        "metrics": {
+          "model.npv": {
+            "amount": 23739089.226034,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 362,
+        "metrics": {
+          "model.npv": {
+            "amount": 25946551.166673,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 363,
+        "metrics": {
+          "model.npv": {
+            "amount": 26253699.015673,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 364,
+        "metrics": {
+          "model.npv": {
+            "amount": 28257978.901257,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 365,
+        "metrics": {
+          "model.npv": {
+            "amount": 25862601.022818,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 366,
+        "metrics": {
+          "model.npv": {
+            "amount": 24336843.960672,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 367,
+        "metrics": {
+          "model.npv": {
+            "amount": 23770726.185163,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 368,
+        "metrics": {
+          "model.npv": {
+            "amount": 27883791.724392,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 369,
+        "metrics": {
+          "model.npv": {
+            "amount": 26429373.737168,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 370,
+        "metrics": {
+          "model.npv": {
+            "amount": 27949753.490248,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 371,
+        "metrics": {
+          "model.npv": {
+            "amount": 26586926.222167,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 372,
+        "metrics": {
+          "model.npv": {
+            "amount": 30408447.908996,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 373,
+        "metrics": {
+          "model.npv": {
+            "amount": 28866516.190191,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 374,
+        "metrics": {
+          "model.npv": {
+            "amount": 27003975.754569,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 375,
+        "metrics": {
+          "model.npv": {
+            "amount": 27615056.630097,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 376,
+        "metrics": {
+          "model.npv": {
+            "amount": 28648858.163514,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 377,
+        "metrics": {
+          "model.npv": {
+            "amount": 28394513.077227,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 378,
+        "metrics": {
+          "model.npv": {
+            "amount": 26585893.753498,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 379,
+        "metrics": {
+          "model.npv": {
+            "amount": 27463200.426751,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 380,
+        "metrics": {
+          "model.npv": {
+            "amount": 24851327.392993,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 381,
+        "metrics": {
+          "model.npv": {
+            "amount": 26598129.47947,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 382,
+        "metrics": {
+          "model.npv": {
+            "amount": 30087683.01739,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 383,
+        "metrics": {
+          "model.npv": {
+            "amount": 25868810.749049,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 384,
+        "metrics": {
+          "model.npv": {
+            "amount": 27049133.44388,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 385,
+        "metrics": {
+          "model.npv": {
+            "amount": 26060662.584813,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 386,
+        "metrics": {
+          "model.npv": {
+            "amount": 26162642.379854,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 387,
+        "metrics": {
+          "model.npv": {
+            "amount": 24734976.095825,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 388,
+        "metrics": {
+          "model.npv": {
+            "amount": 25647517.281055,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 389,
+        "metrics": {
+          "model.npv": {
+            "amount": 26960257.381327,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 390,
+        "metrics": {
+          "model.npv": {
+            "amount": 26019375.232194,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 391,
+        "metrics": {
+          "model.npv": {
+            "amount": 27051656.143667,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 392,
+        "metrics": {
+          "model.npv": {
+            "amount": 25674382.116412,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 393,
+        "metrics": {
+          "model.npv": {
+            "amount": 24280815.355382,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 394,
+        "metrics": {
+          "model.npv": {
+            "amount": 27218071.835287,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 395,
+        "metrics": {
+          "model.npv": {
+            "amount": 23664531.278594,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 396,
+        "metrics": {
+          "model.npv": {
+            "amount": 25721043.821503,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 397,
+        "metrics": {
+          "model.npv": {
+            "amount": 26132689.966237,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 398,
+        "metrics": {
+          "model.npv": {
+            "amount": 27170715.8056,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 399,
+        "metrics": {
+          "model.npv": {
+            "amount": 28382492.705031,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 400,
+        "metrics": {
+          "model.npv": {
+            "amount": 26731308.772994,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 401,
+        "metrics": {
+          "model.npv": {
+            "amount": 28513553.036955,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 402,
+        "metrics": {
+          "model.npv": {
+            "amount": 30229266.425198,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 403,
+        "metrics": {
+          "model.npv": {
+            "amount": 26525718.517304,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 404,
+        "metrics": {
+          "model.npv": {
+            "amount": 25965686.783591,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 405,
+        "metrics": {
+          "model.npv": {
+            "amount": 27887501.618748,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 406,
+        "metrics": {
+          "model.npv": {
+            "amount": 28743394.194233,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 407,
+        "metrics": {
+          "model.npv": {
+            "amount": 29874481.000493,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 408,
+        "metrics": {
+          "model.npv": {
+            "amount": 27005488.577654,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 409,
+        "metrics": {
+          "model.npv": {
+            "amount": 25762399.021874,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 410,
+        "metrics": {
+          "model.npv": {
+            "amount": 26577526.286753,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 411,
+        "metrics": {
+          "model.npv": {
+            "amount": 28444520.227172,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 412,
+        "metrics": {
+          "model.npv": {
+            "amount": 26944607.421533,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 413,
+        "metrics": {
+          "model.npv": {
+            "amount": 25720723.401202,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 414,
+        "metrics": {
+          "model.npv": {
+            "amount": 29689462.069014,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 415,
+        "metrics": {
+          "model.npv": {
+            "amount": 25580556.161803,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 416,
+        "metrics": {
+          "model.npv": {
+            "amount": 26122429.458953,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 417,
+        "metrics": {
+          "model.npv": {
+            "amount": 27564072.101885,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 418,
+        "metrics": {
+          "model.npv": {
+            "amount": 23391329.099975,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 419,
+        "metrics": {
+          "model.npv": {
+            "amount": 22315986.933303,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 420,
+        "metrics": {
+          "model.npv": {
+            "amount": 26781629.831606,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 421,
+        "metrics": {
+          "model.npv": {
+            "amount": 28055638.18501,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 422,
+        "metrics": {
+          "model.npv": {
+            "amount": 26104082.153846,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 423,
+        "metrics": {
+          "model.npv": {
+            "amount": 27338322.472033,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 424,
+        "metrics": {
+          "model.npv": {
+            "amount": 28945716.00381,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 425,
+        "metrics": {
+          "model.npv": {
+            "amount": 28393214.344858,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 426,
+        "metrics": {
+          "model.npv": {
+            "amount": 29647271.948192,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 427,
+        "metrics": {
+          "model.npv": {
+            "amount": 27497626.760881,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 428,
+        "metrics": {
+          "model.npv": {
+            "amount": 27143163.020502,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 429,
+        "metrics": {
+          "model.npv": {
+            "amount": 25517995.397521,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 430,
+        "metrics": {
+          "model.npv": {
+            "amount": 28650521.827276,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 431,
+        "metrics": {
+          "model.npv": {
+            "amount": 25595793.309017,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 432,
+        "metrics": {
+          "model.npv": {
+            "amount": 26984371.695009,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 433,
+        "metrics": {
+          "model.npv": {
+            "amount": 24975583.265803,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 434,
+        "metrics": {
+          "model.npv": {
+            "amount": 24789129.716006,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 435,
+        "metrics": {
+          "model.npv": {
+            "amount": 27779807.227469,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 436,
+        "metrics": {
+          "model.npv": {
+            "amount": 25847535.904176,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 437,
+        "metrics": {
+          "model.npv": {
+            "amount": 25702411.425042,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 438,
+        "metrics": {
+          "model.npv": {
+            "amount": 22822420.846859,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 439,
+        "metrics": {
+          "model.npv": {
+            "amount": 25719094.866919,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 440,
+        "metrics": {
+          "model.npv": {
+            "amount": 24737848.122405,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 441,
+        "metrics": {
+          "model.npv": {
+            "amount": 26862586.829041,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 442,
+        "metrics": {
+          "model.npv": {
+            "amount": 29798973.696844,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 443,
+        "metrics": {
+          "model.npv": {
+            "amount": 26147137.29331,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 444,
+        "metrics": {
+          "model.npv": {
+            "amount": 29253372.904348,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 445,
+        "metrics": {
+          "model.npv": {
+            "amount": 27867237.445578,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 446,
+        "metrics": {
+          "model.npv": {
+            "amount": 24080325.819053,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 447,
+        "metrics": {
+          "model.npv": {
+            "amount": 28815772.04292,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 448,
+        "metrics": {
+          "model.npv": {
+            "amount": 30368603.279463,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 449,
+        "metrics": {
+          "model.npv": {
+            "amount": 28909600.624997,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 450,
+        "metrics": {
+          "model.npv": {
+            "amount": 27478298.204556,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 451,
+        "metrics": {
+          "model.npv": {
+            "amount": 22389005.311391,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 452,
+        "metrics": {
+          "model.npv": {
+            "amount": 28398647.151072,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 453,
+        "metrics": {
+          "model.npv": {
+            "amount": 25196867.862557,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 454,
+        "metrics": {
+          "model.npv": {
+            "amount": 26648449.817372,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 455,
+        "metrics": {
+          "model.npv": {
+            "amount": 29993408.292331,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 456,
+        "metrics": {
+          "model.npv": {
+            "amount": 31111513.881931,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 457,
+        "metrics": {
+          "model.npv": {
+            "amount": 26417189.27051,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 458,
+        "metrics": {
+          "model.npv": {
+            "amount": 24839742.31163,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 459,
+        "metrics": {
+          "model.npv": {
+            "amount": 27405318.401787,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 460,
+        "metrics": {
+          "model.npv": {
+            "amount": 28690896.932654,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 461,
+        "metrics": {
+          "model.npv": {
+            "amount": 27253176.016151,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 462,
+        "metrics": {
+          "model.npv": {
+            "amount": 28027359.611985,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 463,
+        "metrics": {
+          "model.npv": {
+            "amount": 25944518.185139,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 464,
+        "metrics": {
+          "model.npv": {
+            "amount": 28628822.028471,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 465,
+        "metrics": {
+          "model.npv": {
+            "amount": 24796749.09284,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 466,
+        "metrics": {
+          "model.npv": {
+            "amount": 28151036.143287,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 467,
+        "metrics": {
+          "model.npv": {
+            "amount": 26246714.359572,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 468,
+        "metrics": {
+          "model.npv": {
+            "amount": 29101526.089559,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 469,
+        "metrics": {
+          "model.npv": {
+            "amount": 27985618.562037,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 470,
+        "metrics": {
+          "model.npv": {
+            "amount": 25163610.81523,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 471,
+        "metrics": {
+          "model.npv": {
+            "amount": 24430866.725078,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 472,
+        "metrics": {
+          "model.npv": {
+            "amount": 24205622.426767,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 473,
+        "metrics": {
+          "model.npv": {
+            "amount": 27574567.796909,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 474,
+        "metrics": {
+          "model.npv": {
+            "amount": 25701384.524999,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 475,
+        "metrics": {
+          "model.npv": {
+            "amount": 27150439.459388,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 476,
+        "metrics": {
+          "model.npv": {
+            "amount": 28742964.677227,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 477,
+        "metrics": {
+          "model.npv": {
+            "amount": 27859194.862363,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 478,
+        "metrics": {
+          "model.npv": {
+            "amount": 29002178.590408,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 479,
+        "metrics": {
+          "model.npv": {
+            "amount": 29642136.6198,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 480,
+        "metrics": {
+          "model.npv": {
+            "amount": 26088252.796896,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 481,
+        "metrics": {
+          "model.npv": {
+            "amount": 27523015.210236,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 482,
+        "metrics": {
+          "model.npv": {
+            "amount": 25753685.336834,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 483,
+        "metrics": {
+          "model.npv": {
+            "amount": 30136794.358033,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 484,
+        "metrics": {
+          "model.npv": {
+            "amount": 27678539.923885,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 485,
+        "metrics": {
+          "model.npv": {
+            "amount": 26454378.284019,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 486,
+        "metrics": {
+          "model.npv": {
+            "amount": 28718700.290799,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 487,
+        "metrics": {
+          "model.npv": {
+            "amount": 25764896.198584,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 488,
+        "metrics": {
+          "model.npv": {
+            "amount": 26111482.310826,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 489,
+        "metrics": {
+          "model.npv": {
+            "amount": 27204578.865613,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 490,
+        "metrics": {
+          "model.npv": {
+            "amount": 26958089.403088,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 491,
+        "metrics": {
+          "model.npv": {
+            "amount": 24910132.198334,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 492,
+        "metrics": {
+          "model.npv": {
+            "amount": 26315180.877871,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 493,
+        "metrics": {
+          "model.npv": {
+            "amount": 28236790.525029,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 494,
+        "metrics": {
+          "model.npv": {
+            "amount": 27144477.746329,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 495,
+        "metrics": {
+          "model.npv": {
+            "amount": 28378138.035873,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 496,
+        "metrics": {
+          "model.npv": {
+            "amount": 26329253.741658,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 497,
+        "metrics": {
+          "model.npv": {
+            "amount": 25882216.558601,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 498,
+        "metrics": {
+          "model.npv": {
+            "amount": 29281405.804447,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 499,
+        "metrics": {
+          "model.npv": {
+            "amount": 29469962.711097,
+            "currency": "USD"
+          }
+        }
+      }
+    ],
+    "aggregates": {
+      "npv": {
+        "mean": 27160277.360357,
+        "median": 27110349.463647,
+        "stddev": 1917063.486497,
+        "p_negative": 0.0
+      }
+    }
+  }
+}

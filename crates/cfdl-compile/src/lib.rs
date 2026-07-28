@@ -3,7 +3,7 @@ mod pack_validation;
 use cfdl_parser::{Cadence, ScheduleKind, Stmt};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Default)]
@@ -1012,12 +1012,39 @@ fn lower_contract_streams(
     let mut rules = pack.lowering_rules.clone();
     rules.sort_by(|a, b| a.id.cmp(&b.id));
 
+    // Terms may defer to a declared input. Collect the declared names first so
+    // a term naming an input that does not exist is a compile error rather
+    // than an expression that quietly resolves to nothing at runtime.
+    let declared_inputs: BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|stmt| match &stmt.statement {
+            Stmt::Assume(assume) => Some(assume.name.clone()),
+            _ => None,
+        })
+        .collect();
+
     let mut lowered = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Contract(contract) = &source_stmt.statement else {
             continue;
         };
+        for (key, term) in &contract.terms {
+            if let Some(name) = term.input_name() {
+                if !declared_inputs.contains(name) {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5010_TERM_UNKNOWN_INPUT",
+                        &format!(
+                            "Contract '{}' term '{}' references input '{}', which is not declared. Add `assume {} = <value>` or `assume {} ~ <Dist>(...)`.",
+                            contract.name, key, name, name, name
+                        ),
+                        source_stmt,
+                        term.span,
+                    ));
+                }
+            }
+        }
         let before = diagnostics.len();
         diagnostics.extend(validate_pack_contract(
             pack,
@@ -1158,6 +1185,24 @@ fn lower_contract_streams(
             // Pack terms are applied declaratively via rule templates; the
             // legacy hardcoded paths (CRE, then OpCo) were removed with the
             // v1 rule migrations.
+
+            // Template expansion is a textual splice, so a term can produce an
+            // expression the parser rejects. Catch it here: the engine's
+            // fallback is to evaluate a failed expression as zero and carry on
+            // with a warning, which turns a malformed model into a silently
+            // empty stream.
+            if let Err(err) = cfdl_expr::compile_expr(&amount_src) {
+                diagnostics.push(lowering_rule_diag(
+                    "E5009_LOWERED_EXPR_INVALID",
+                    &format!(
+                        "Pack lowering rule '{}' produced an invalid amount expression for contract '{}' [{}]: {}. Expanded to: {}",
+                        rule.id, contract.name, err.code, err.message, amount_src
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
 
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),

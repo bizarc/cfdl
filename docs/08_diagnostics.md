@@ -231,6 +231,12 @@ Warnings:
 - `E5007_DUPLICATE_LOWERED_STREAM`
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
   malformed point in a `curve` statement
+- `E5009_LOWERED_EXPR_INVALID` — a pack lowering rule expanded to an amount
+  expression the parser rejects. Without this the engine evaluates the failed
+  expression as zero and continues with only a warning.
+- `E5010_TERM_UNKNOWN_INPUT` — a contract term references `inputs.<name>` for
+  an input that is not declared. Declare it with `assume <name> = …` or
+  `assume <name> ~ <Dist>(…)`.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
 
