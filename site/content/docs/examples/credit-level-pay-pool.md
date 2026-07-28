@@ -65,7 +65,7 @@ contract credit.purchase.auto_a on entity fund.buyer {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | -65,898.82 | ±1 |
+| `model.npv` | -185,467.92 | ±1 |
 | `model.moic` | 1.23151 | ±0.0001 |
 | `model.wal_years` | 3.824182 | ±0.0001 |
 | `domain.credit.interest` | 6,502,566.9 | ±1 |

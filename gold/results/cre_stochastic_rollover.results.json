@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "c85c23cac66b65329151c212a23830fafa9dd1c2a0c2c701bd2876ca388f5cf9",
+  "model_hash": "441fe23e53eb03bd3c29b70f80a2551ed43221046bbb08499d35cb767cfb07d2",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -13,10 +13,10 @@
         "amount": 940000.0,
         "currency": "USD"
       },
-      "model.irr": 911.143594,
+      "model.irr": 74.142798,
       "model.moic": 17.588235,
       "model.npv": {
-        "amount": 875449.081974,
+        "amount": 869964.760199,
         "currency": "USD"
       },
       "model.payback_periods": 2.0,
@@ -548,23 +548,23 @@
       "model.npv": {
         "type": "money",
         "mean": {
-          "amount": 787086.013056,
+          "amount": 781703.178001,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 141258.130472,
+          "amount": 141095.892735,
           "currency": "USD"
         },
         "min": {
-          "amount": 561269.281375,
+          "amount": 556145.801272,
           "currency": "USD"
         },
         "max": {
-          "amount": 875449.081974,
+          "amount": 869964.760199,
           "currency": "USD"
         },
         "p50": {
-          "amount": 875449.081974,
+          "amount": 869964.760199,
           "currency": "USD"
         }
       }
@@ -574,7 +574,7 @@
         "trial": 0,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -583,7 +583,7 @@
         "trial": 1,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -592,7 +592,7 @@
         "trial": 2,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -601,7 +601,7 @@
         "trial": 3,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -610,7 +610,7 @@
         "trial": 4,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -619,7 +619,7 @@
         "trial": 5,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -628,7 +628,7 @@
         "trial": 6,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -637,7 +637,7 @@
         "trial": 7,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -646,7 +646,7 @@
         "trial": 8,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -655,7 +655,7 @@
         "trial": 9,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -664,7 +664,7 @@
         "trial": 10,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -673,7 +673,7 @@
         "trial": 11,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -682,7 +682,7 @@
         "trial": 12,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -691,7 +691,7 @@
         "trial": 13,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -700,7 +700,7 @@
         "trial": 14,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -709,7 +709,7 @@
         "trial": 15,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -718,7 +718,7 @@
         "trial": 16,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -727,7 +727,7 @@
         "trial": 17,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -736,7 +736,7 @@
         "trial": 18,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -745,7 +745,7 @@
         "trial": 19,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -754,7 +754,7 @@
         "trial": 20,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -763,7 +763,7 @@
         "trial": 21,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -772,7 +772,7 @@
         "trial": 22,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -781,7 +781,7 @@
         "trial": 23,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -790,7 +790,7 @@
         "trial": 24,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -799,7 +799,7 @@
         "trial": 25,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -808,7 +808,7 @@
         "trial": 26,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -817,7 +817,7 @@
         "trial": 27,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -826,7 +826,7 @@
         "trial": 28,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -835,7 +835,7 @@
         "trial": 29,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -844,7 +844,7 @@
         "trial": 30,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -853,7 +853,7 @@
         "trial": 31,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -862,7 +862,7 @@
         "trial": 32,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -871,7 +871,7 @@
         "trial": 33,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -880,7 +880,7 @@
         "trial": 34,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -889,7 +889,7 @@
         "trial": 35,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -898,7 +898,7 @@
         "trial": 36,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -907,7 +907,7 @@
         "trial": 37,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -916,7 +916,7 @@
         "trial": 38,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -925,7 +925,7 @@
         "trial": 39,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -934,7 +934,7 @@
         "trial": 40,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -943,7 +943,7 @@
         "trial": 41,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -952,7 +952,7 @@
         "trial": 42,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -961,7 +961,7 @@
         "trial": 43,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -970,7 +970,7 @@
         "trial": 44,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -979,7 +979,7 @@
         "trial": 45,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -988,7 +988,7 @@
         "trial": 46,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -997,7 +997,7 @@
         "trial": 47,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1006,7 +1006,7 @@
         "trial": 48,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1015,7 +1015,7 @@
         "trial": 49,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1024,7 +1024,7 @@
         "trial": 50,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1033,7 +1033,7 @@
         "trial": 51,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1042,7 +1042,7 @@
         "trial": 52,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1051,7 +1051,7 @@
         "trial": 53,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1060,7 +1060,7 @@
         "trial": 54,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1069,7 +1069,7 @@
         "trial": 55,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1078,7 +1078,7 @@
         "trial": 56,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1087,7 +1087,7 @@
         "trial": 57,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1096,7 +1096,7 @@
         "trial": 58,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1105,7 +1105,7 @@
         "trial": 59,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1114,7 +1114,7 @@
         "trial": 60,
         "metrics": {
           "model.npv": {
-            "amount": 561269.281375,
+            "amount": 556145.801272,
             "currency": "USD"
           }
         }
@@ -1123,7 +1123,7 @@
         "trial": 61,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1132,7 +1132,7 @@
         "trial": 62,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1141,7 +1141,7 @@
         "trial": 63,
         "metrics": {
           "model.npv": {
-            "amount": 875449.081974,
+            "amount": 869964.760199,
             "currency": "USD"
           }
         }
@@ -1149,9 +1149,9 @@
     ],
     "aggregates": {
       "npv": {
-        "mean": 787086.013056,
-        "median": 875449.081974,
-        "stddev": 141258.130472,
+        "mean": 781703.178001,
+        "median": 869964.760199,
+        "stddev": 141095.892735,
         "p_negative": 0.0
       }
     }

@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "68d9e0e9185f1aa49e20104bc59606c5edb75b6bd137fce526dd9573076a3d63",
+  "model_hash": "5fddce75f3e64bf6d4838bb38e72d5aa083bca6ce05f997517b1ca77b5397191",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -14,14 +14,14 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 7370.86469,
+        "amount": 7197.310971,
         "currency": "USD"
       },
       "model.total": {
         "amount": 8000.0,
         "currency": "USD"
       },
-      "model.wal_years": 0.875,
+      "model.wal_years": 1.041667,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.co.coupon.total": {
@@ -38,10 +38,6 @@
         },
         "values": [
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -131,6 +127,10 @@
           },
           {
             "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
             "currency": "USD"
           }
         ]
@@ -143,10 +143,6 @@
         },
         "values": [
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -236,6 +232,10 @@
           },
           {
             "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
             "currency": "USD"
           }
         ]

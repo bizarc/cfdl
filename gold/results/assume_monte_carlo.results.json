@@ -1,9 +1,9 @@
 {
   "results_version": "0.2",
-  "model_hash": "ccbe99d75108b88746c3e5bd4839a99df7f1bd23b3425343c7b7da791323216a",
+  "model_hash": "47cf07ad14fdfc25332c19a20155427d437fefa00c873e44c2e36027fb9cb721",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "warnings": [],
   "deterministic": {
@@ -14,7 +14,7 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 5532.620796,
+        "amount": 5505.820934,
         "currency": "USD"
       },
       "model.total": {
@@ -140,23 +140,23 @@
       "model.npv": {
         "type": "money",
         "mean": {
-          "amount": 5548.984299,
+          "amount": 5522.105173,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 398.637827,
+          "amount": 396.706836,
           "currency": "USD"
         },
         "min": {
-          "amount": 5071.578691,
+          "amount": 5047.012105,
           "currency": "USD"
         },
         "max": {
-          "amount": 6182.491346,
+          "amount": 6152.54353,
           "currency": "USD"
         },
         "p50": {
-          "amount": 5401.958813,
+          "amount": 5375.791875,
           "currency": "USD"
         }
       }
@@ -166,7 +166,7 @@
         "trial": 0,
         "metrics": {
           "model.npv": {
-            "amount": 5709.233441,
+            "amount": 5681.578073,
             "currency": "USD"
           }
         }
@@ -175,7 +175,7 @@
         "trial": 1,
         "metrics": {
           "model.npv": {
-            "amount": 6182.491346,
+            "amount": 6152.54353,
             "currency": "USD"
           }
         }
@@ -184,7 +184,7 @@
         "trial": 2,
         "metrics": {
           "model.npv": {
-            "amount": 5071.578691,
+            "amount": 5047.012105,
             "currency": "USD"
           }
         }
@@ -193,7 +193,7 @@
         "trial": 3,
         "metrics": {
           "model.npv": {
-            "amount": 5409.220159,
+            "amount": 5383.018046,
             "currency": "USD"
           }
         }
@@ -202,7 +202,7 @@
         "trial": 4,
         "metrics": {
           "model.npv": {
-            "amount": 5291.599134,
+            "amount": 5265.966775,
             "currency": "USD"
           }
         }
@@ -211,7 +211,7 @@
         "trial": 5,
         "metrics": {
           "model.npv": {
-            "amount": 5394.697468,
+            "amount": 5368.565703,
             "currency": "USD"
           }
         }
@@ -220,7 +220,7 @@
         "trial": 6,
         "metrics": {
           "model.npv": {
-            "amount": 5177.062223,
+            "amount": 5151.984677,
             "currency": "USD"
           }
         }
@@ -229,7 +229,7 @@
         "trial": 7,
         "metrics": {
           "model.npv": {
-            "amount": 6155.991927,
+            "amount": 6126.172472,
             "currency": "USD"
           }
         }
@@ -237,9 +237,9 @@
     ],
     "aggregates": {
       "npv": {
-        "mean": 5548.984299,
-        "median": 5401.958813,
-        "stddev": 398.637827,
+        "mean": 5522.105173,
+        "median": 5375.791875,
+        "stddev": 396.706836,
         "p_negative": 0.0
       }
     }

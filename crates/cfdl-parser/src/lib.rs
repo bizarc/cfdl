@@ -1126,7 +1126,7 @@ impl<'a> Parser<'a> {
                     let mut spec = ScheduleSpec {
                         kind: ScheduleKind::PhaseEnter { phase },
                         every: None,
-                    due: false,
+                        due: false,
                         end_of_month: false,
                         from: None,
                         to: None,

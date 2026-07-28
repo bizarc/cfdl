@@ -1427,9 +1427,7 @@ fn discount_offset(schedule: &IrSchedule) -> f64 {
     }
     match schedule.on_rule.as_ref() {
         // `on day <n>`: n days into a nominal 30-day period.
-        Some(rule) if rule.kind == "DayOfMonth" => {
-            (rule.day.clamp(1, 31) as f64 / 30.0).min(1.0)
-        }
+        Some(rule) if rule.kind == "DayOfMonth" => (rule.day.clamp(1, 31) as f64 / 30.0).min(1.0),
         // End of month is the period end, same as the default.
         _ => 1.0,
     }
@@ -1470,42 +1468,6 @@ fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
         } else {
             lo = mid;
             f_lo = f_mid;
-        }
-    }
-    Some((lo + hi) / 2.0)
-}
-
-fn npv(values: &[f64], rate: f64) -> f64 {
-    let mut total = 0.0_f64;
-    for (i, value) in values.iter().enumerate() {
-        let discount = (1.0 + rate).powi(i as i32);
-        total += *value / discount;
-    }
-    total
-}
-
-/// IRR via bisection. Returns None if no sign change in cashflows (undefined) or no convergence.
-fn irr(values: &[f64]) -> Option<f64> {
-    let has_pos = values.iter().any(|&v| v > 0.0);
-    let has_neg = values.iter().any(|&v| v < 0.0);
-    if !has_pos || !has_neg {
-        return None;
-    }
-    let f = |r: f64| npv(values, r);
-    let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
-    if f(lo).signum() == f(hi).signum() {
-        return None;
-    }
-    for _ in 0..300 {
-        let mid = (lo + hi) / 2.0;
-        let v = f(mid);
-        if v.abs() < 1e-4 || (hi - lo) < 1e-12 {
-            return Some(mid);
-        }
-        if f(lo).signum() == v.signum() {
-            lo = mid;
-        } else {
-            hi = mid;
         }
     }
     Some((lo + hi) / 2.0)
@@ -1648,12 +1610,15 @@ fn apply_schedule_indices(
                         .get(k + 1)
                         .cloned()
                         .unwrap_or_else(|| step_once(start, interval));
-                    match period_index(timeline, &next) {
-                        Some(i) if i > accrual_idx => i - 1,
-                        // The interval closes past the end of the timeline;
-                        // it still pays in its final representable period.
-                        _ => timeline.len().saturating_sub(1),
-                    }
+                    // The interval closes in the last period before the
+                    // next one opens. Taking that directly, rather than
+                    // stepping back from the next interval's index, keeps the
+                    // final interval correct when it closes at or past the
+                    // end of the timeline.
+                    timeline
+                        .iter()
+                        .rposition(|d| *d < next)
+                        .unwrap_or(accrual_idx)
                 };
                 let placed = place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref());
                 let rolled = roll_date(&placed, roll);
@@ -1677,78 +1642,6 @@ fn apply_schedule_indices(
         let target = roll_date(&Date::parse(raw)?, roll);
         if let Some(idx) = timeline.iter().position(|d| *d == target) {
             out[idx] = Some(idx);
-        }
-    }
-    Ok(())
-}
-
-fn apply_schedule(
-    schedule: &IrSchedule,
-    amount: f64,
-    timeline: &[Date],
-    out_values: &mut [f64],
-) -> Result<(), EngineError> {
-    let roll = schedule_roll(schedule)?;
-    match schedule.kind.as_str() {
-        "OnDate" => {
-            if let Some(on) = &schedule.on {
-                let target = roll_date(&Date::parse(on)?, roll);
-                if let Some(idx) = timeline.iter().position(|d| *d == target) {
-                    out_values[idx] += amount;
-                }
-            }
-        }
-        "Every" => {
-            let default_from = timeline
-                .first()
-                .map(|d| d.to_string())
-                .unwrap_or_else(|| "1970-01-01".to_string());
-            let default_to = timeline
-                .last()
-                .map(|d| d.to_string())
-                .unwrap_or_else(|| "1970-01-01".to_string());
-            let from = schedule.from.as_deref().unwrap_or(default_from.as_str());
-            let to = schedule.to.as_deref().unwrap_or(default_to.as_str());
-            let from_date = Date::parse(from)?;
-            let to_date = Date::parse(to)?;
-
-            // Step by the declared interval and pay once per occurrence.
-            //
-            // This used to select every timeline period in [from, to], which
-            // made the interval decorative: a quarterly stream on a monthly
-            // grid paid twelve times a year. The interval now decides how far
-            // apart occurrences are; the timeline only decides which bucket
-            // each one lands in.
-            let interval = schedule.every.as_deref().unwrap_or("monthly");
-            // An ordinary annuity pays at the END of each interval: the first
-            // occurrence of `every year from 2026-01` is 2027-01, not 2026-01.
-            // An annuity due pays at the start, which is right for rent.
-            for occurrence in occurrences(&from_date, &to_date, interval)? {
-                let placed = place_in_interval(&occurrence, schedule.on_rule.as_ref());
-                let rolled = roll_date(&placed, roll);
-                if let Some(idx) = period_index(timeline, &rolled) {
-                    out_values[idx] += amount;
-                }
-            }
-        }
-        other => {
-            return Err(EngineError::Schedule(format!(
-                "unsupported schedule kind: {other}"
-            )));
-        }
-    }
-    // `except [dates]` removes matching periods; `also [dates]` adds extra
-    // ones. Point dates are roll-adjusted like `on` dates.
-    for raw in &schedule.except_dates {
-        let target = roll_date(&Date::parse(raw)?, roll);
-        if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out_values[idx] -= amount;
-        }
-    }
-    for raw in &schedule.also_dates {
-        let target = roll_date(&Date::parse(raw)?, roll);
-        if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out_values[idx] += amount;
         }
     }
     Ok(())
@@ -2792,7 +2685,8 @@ mod tests {
     #[test]
     fn irr_simple_two_period() {
         // Invest $1000, receive $1100 one period later → IRR = 10%
-        let result = super::irr(&[-1000.0, 1100.0]).expect("IRR should be defined");
+        let result = super::irr_with_offsets(&[(vec![-1000.0, 1100.0], 0.0)])
+            .expect("IRR should be defined");
         assert!(
             (result - 0.10).abs() < 1e-6,
             "expected IRR ≈ 0.10, got {result}"
@@ -2802,6 +2696,6 @@ mod tests {
     #[test]
     fn irr_undefined_all_positive() {
         // No sign change → IRR undefined
-        assert!(super::irr(&[100.0, 200.0]).is_none());
+        assert!(super::irr_with_offsets(&[(vec![100.0, 200.0], 0.0)]).is_none());
     }
 }

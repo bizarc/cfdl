@@ -99,7 +99,7 @@ contract cre.exit_forward on entity asset.tower {
 
 // Permanent debt (25-year amortization, 10-year hold window).
 stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
-  schedule every monthly from 2026-01 to 2035-12
+  schedule every month from 2026-01 to 2035-12
   amount = -pmt(0.055 / 12, 300, 6000000)
 }
 ```
@@ -118,7 +118,7 @@ stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | 1,434,622.67 | ±1 |
+| `model.npv` | 1,433,678.08 | ±1 |
 | `domain.cre.noi` | 4,718,933.9 | ±1 |
 | `domain.cre.leasing_costs` | 525,000 | ±1 |
 | `domain.cre.debt_service` | 4,421,429.94 | ±1 |

@@ -74,22 +74,28 @@ def main():
         opex = opex_month(t)
 
         net = a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex - debt_pay
+        # Initial lease TI/LC is a dated, one-shot cost (cre_lease_unit_ti_lc);
+        # the expiry turnover costs come from the recurring rollover rule
+        # (cre_rollover_ti_lc) and so close their period like other recurring
+        # flows.
         ti_lc = 0.0
+        ti_lc_dated = 0.0
+        shot = 0.0
         if t == 0:
-            ti_lc += 200_000.0
+            ti_lc_dated += 200_000.0
         if t == 6:
-            ti_lc += 150_000.0
+            ti_lc_dated += 150_000.0
+        shot -= ti_lc_dated
         if t == 60:
             ti_lc += 0.7 * 100_000.0  # renewal-scenario turnover cost at expiry
         if t == 63:
             ti_lc += 0.3 * 350_000.0  # re-lease turnover cost after downtime
         net -= ti_lc
-        shot = 0.0
         if t == 119:
             shot += forward_noi(119) / 0.065 * 0.98
         rows.append((t, net, shot))
         noi_total += a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex
-        leasing_costs += ti_lc
+        leasing_costs += ti_lc + ti_lc_dated
 
     monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
     # period that earned them, so they are discounted one full period — the

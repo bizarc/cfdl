@@ -89,7 +89,7 @@ contract energy.debt_service on entity project.microgrid {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | 1,239,647.39 | ±1 |
+| `model.npv` | 1,220,668.85 | ±1 |
 | `model.total` | 5,771,865.78 | ±1 |
 | `domain.energy.revenue` | 12,594,004.52 | ±1 |
 | `domain.energy.ebitda` | 10,202,961.05 | ±1 |

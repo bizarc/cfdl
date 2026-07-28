@@ -12,21 +12,21 @@
   "phases": [],
   "entities": [
     {
-      "id": "4f8741ebd317c89e98e2c00640d34f65",
+      "id": "2ced1c35ee40b96e9aa0a538dd97cf10",
       "symbol": "loan.construction",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "8990c94238226847ed55f208d00ba25b",
+      "id": "c796afcb30e53ad38943011d5c4c2136",
       "symbol": "loan.permanent",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "decd44881d55d1c95cbf6c652aa4aa16",
+      "id": "864867633f8c2f0de4f4a88d09270660",
       "symbol": "real_estate.property",
       "type": "core.Entity",
       "attrs": {},
@@ -39,7 +39,7 @@
   },
   "contracts": [
     {
-      "id": "db20544d56f4f6b2f59e26727579e49c",
+      "id": "d964bc2a2baf6ed9f71eccfc70c02cb6",
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
@@ -65,7 +65,7 @@
       }
     },
     {
-      "id": "0239963313bbd2b220e6a1d55f925ad3",
+      "id": "eec7a434be3c3cb3c21b6c3a756b8cff",
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
@@ -93,7 +93,7 @@
   ],
   "streams": [
     {
-      "id": "01f65aca73ef593a51d1162cc8fdd6d4",
+      "id": "d69b78d7de8785d8f9fc88e36a0d5a16",
       "name": "cre.exit.sale",
       "owner": {
         "symbol": "real_estate.property"
@@ -130,7 +130,7 @@
       }
     },
     {
-      "id": "eb946e558bdb39a0237da2da65fbff8c",
+      "id": "4010d23225dfded7659e7b00ea9b797f",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.property"
@@ -169,7 +169,7 @@
       }
     },
     {
-      "id": "ef5210ee9e16e3f880a3abe8f2d8b9f2",
+      "id": "5e012caaa70aa351323e4244d901e192",
       "name": "loan.io_interest",
       "owner": {
         "symbol": "loan.construction"
@@ -201,7 +201,7 @@
       }
     },
     {
-      "id": "6dfd6fac2ea69b9eee92ad86fe42377c",
+      "id": "600c97086069c1d9ed7f1f6bdc5faf92",
       "name": "loan.perm_debt_service",
       "owner": {
         "symbol": "loan.permanent"
@@ -233,7 +233,7 @@
       }
     },
     {
-      "id": "c157ee6ef9bf982874d5e6c25bed9b66",
+      "id": "95bbca360007378a98a5d36394f3d386",
       "name": "office.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -265,7 +265,7 @@
       }
     },
     {
-      "id": "f4fd6733676125ba92c4f83b4395645e",
+      "id": "8bd88c0679f1f96906c67c7362c629d7",
       "name": "resi.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -297,7 +297,7 @@
       }
     },
     {
-      "id": "7563a202ea9f4e05e4504955b17bd49b",
+      "id": "600c190ba7a4766a26621d758bd50ac0",
       "name": "retail.base_rent",
       "owner": {
         "symbol": "real_estate.property"
@@ -344,8 +344,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.3.0",
-      "hash": "d646b49bb0a0581aca01fe4366077210",
+      "version": "0.4.0",
+      "hash": "93932cb4bb82f9e5cf37deb6b6369047",
       "notes": [
         "active_pack=cre@0.1.0"
       ]
