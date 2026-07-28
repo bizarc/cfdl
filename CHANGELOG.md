@@ -6,7 +6,143 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
-## [0.3.0] - Unreleased
+## [0.5.0] - 2026-07-28
+
+Contract terms, stochastic layering, and currencies. Breaking: see below.
+
+### Contract terms are a literal or one declared input
+
+A term kept only the first token after `=` and silently discarded the rest, so
+`rent_year = 12 * 8500` compiled as `12` — no diagnostic, and no validation
+caught it because `12` parses cleanly. That is now an error
+(`E0004_EXPECTED_TOKEN`), and a term is defined as either a literal or a
+reference to one declared input:
+
+```cfdl
+assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
+
+terms {
+  ppa_price = 3000                 // contractual fact
+  mwh_year  = inputs.annual_yield  // driver, supplied per run
+}
+```
+
+Contracts stay declarative records of what was signed; anything that varies is
+named and supplied from outside. Because `inputs.*` is the single channel that
+scenarios and Monte Carlo already write to, one declaration serves a fixed
+case, a scenario sweep and a stochastic run alike.
+
+This also fixes Monte Carlo through pack contracts. Terms were baked into
+lowered expressions as literals, so a trial sampled a variable the expression
+did not contain and returned a degenerate distribution with no warning.
+
+- `E5010_TERM_UNKNOWN_INPUT` — a term naming an input that was never declared.
+- `E5011_TERM_CLIP_OUT_OF_BOUNDS` — a deferred term's value cannot be checked
+  at compile time, but its distribution's `clip` states the range it can reach,
+  so where a pack declares bounds the clip is checked against them.
+- `E5009_LOWERED_EXPR_INVALID` — pack-lowered amount expressions are now
+  compile-checked. The engine evaluates a failed expression as zero with only a
+  warning, so a malformed expansion became a silently empty stream.
+
+### Model currency
+
+`model "x" currency INR` now parses; every metric is denominated in it, and it
+defaults to USD when omitted. Streams must agree with it: cash flows are summed
+period by period, so a 500 USD outflow in an INR model was being subtracted as
+500 INR, producing a total in no currency at all
+(`E2107_STREAM_CURRENCY_MISMATCH`). Cross-currency models require an explicit
+conversion in the amount expression — the language applies no implicit FX.
+
+### Run configuration
+
+- All five distributions (`fixed`, `normal`, `uniform`, `log_normal`,
+  `triangular`) and `clip` now work from `run.json`, matching what
+  `assume x ~ Dist(...)` offers. `stdev` is accepted alongside `stddev`.
+- Unknown keys are rejected. Parsing was lenient and the override consumers
+  ignore unrecognised keys, so a misspelling produced a clean run with wrong
+  numbers and no warning.
+- `docs/schemas/run.schema.json` — the format had no schema at all.
+- An in-source `run monte_carlo trials N seed S` is honoured. It was parsed and
+  lowered, then dropped by the engine, so a model asked for trials and got a
+  single deterministic pass. An explicit run config still wins.
+
+### Breaking
+
+- Terms with trailing tokens, mixed-currency models, and unknown run-config
+  keys now fail to compile or run.
+- Twelve example run configs set `discount_rate`, which is not the wire name
+  (`annual_discount_rate`) and was therefore ignored — those examples ran
+  undiscounted while claiming 0.1. Migrated rather than aliased, so the
+  correction is visible; their numbers change.
+
+---
+
+## [0.4.0] - 2026-07-28
+
+Payment timing. Breaking: discounted metrics change for every model.
+
+### Schedules honour the declared interval
+
+A stream's recurrence interval was discarded — the parser dropped the token and
+the compiler substituted the model's calendar frequency — so every stream paid
+in every period. A model written `every quarterly` on a monthly grid paid twelve
+times a year, silently. Intervals are now parsed, required, and honoured.
+
+Interval and cadence became separate words because they are separate concepts:
+a calendar is adjectival and describes the grid (`time calendar monthly`); an
+interval is a noun and describes how far apart one stream's payments fall
+(`every month`). Only intervals have a weekly member.
+
+`on day <n>` and `on eom` work for the first time. The compiler had always
+emitted the rule; the engine had no field for it and dropped it on
+deserialization.
+
+### Payment timing is specified and discounted correctly
+
+A payment belongs to the period that earned it. What separates the two annuity
+conventions is where in that period the cash falls, and therefore how far it is
+discounted — one mechanism rather than three special cases:
+
+| Schedule | Position | Discounted from |
+|---|---|---|
+| `due` | start | period start |
+| default, `on eom` | end | period end |
+| `on day <n>` | day n | that point in the period |
+
+This is Excel's convention, matching `pmt(rate, nper, pv, [fv], [due])` in the
+expression library. Mid-period discounting follows from the same rule.
+
+Written honestly, a five-year par bond now returns an NPV of exactly zero — the
+identity that exposed the defect, since the first coupon previously landed
+undiscounted and the final year fell off the end of the range.
+
+See `docs/12_payment_timing.md`.
+
+### Verification against closed-form finance
+
+`tools/analytic-checks.py` asserts identities drawn from the definition of
+present value, so they hold for any correct implementation and cannot be
+satisfied by making two implementations agree: a par bond is worth par, a level
+annuity matches `(1-(1+i)^-n)/i`, an annuity due is worth `(1+i)` times the
+ordinary annuity, and a fully-amortising loan is worth its principal. Part of
+`make ci`.
+
+The benchmark suite compares each model against a reference implementation,
+which cannot detect a convention both sides share — that is how the original
+defect survived eight passing benchmarks. Every reference was corrected to
+separate one-shot flows from recurring ones.
+
+### Breaking
+
+- Discounted metrics (NPV, IRR, and anything derived) change for every model.
+  Undiscounted cash flows are unchanged for models scheduling at their calendar
+  frequency, which was every model in the repository.
+- Schedule intervals are spelled as singular nouns: `every month`, not
+  `every monthly`. The interval is now required after `every`.
+
+---
+
+## [0.3.0] - 2026-07-27
 
 First public release. CFDL is pre-1.0: the language and IR spec is v0.1, and
 interfaces may change until 1.0 freezes the IR and Results schemas.
