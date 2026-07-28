@@ -192,6 +192,11 @@ pub struct ScheduleSpec {
     pub day_of_month: Option<i32>,
     /// `on eom` — place the occurrence on the last day of its period.
     pub end_of_month: bool,
+    /// Annuity due: payment at the START of each interval, as for rent.
+    /// The default is an ordinary annuity — payment at the END of each
+    /// interval — matching `pmt(rate, nper, pv, [fv], [due])` in the
+    /// expression library and Excel's `type` argument.
+    pub due: bool,
     /// Business-day roll convention: none/following/modified_following/
     /// preceding/modified_preceding.
     pub convention: Option<String>,
@@ -1121,6 +1126,7 @@ impl<'a> Parser<'a> {
                     let mut spec = ScheduleSpec {
                         kind: ScheduleKind::PhaseEnter { phase },
                         every: None,
+                    due: false,
                         end_of_month: false,
                         from: None,
                         to: None,
@@ -1150,6 +1156,7 @@ impl<'a> Parser<'a> {
                     kind: ScheduleKind::OnDate,
                     every: None,
                     end_of_month: false,
+                    due: false,
                     from: Some(date.clone()),
                     to: Some(date),
                     day_of_month: None,
@@ -1165,6 +1172,15 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Every) => {
                 let _ = self.bump();
                 let every = self.parse_schedule_interval()?;
+                let mut due = false;
+                // Ordinary annuity by default: the interval elapses, then
+                // payment falls, so `every year from 2026-01` first pays
+                // 2027-01. `due` makes it an annuity due — payment at the
+                // start of each interval, as for rent.
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Due)) {
+                    let _ = self.bump();
+                    due = true;
+                }
 
                 let mut day_of_month = None;
                 let mut end_of_month = false;
@@ -1245,6 +1261,7 @@ impl<'a> Parser<'a> {
                         kind: ScheduleKind::EveryPhase { phase },
                         every: Some(every.clone()),
                         end_of_month,
+                        due,
                         from: None,
                         to: None,
                         day_of_month,
@@ -1285,6 +1302,7 @@ impl<'a> Parser<'a> {
                     kind: ScheduleKind::Every,
                     every: Some(every),
                     end_of_month,
+                    due,
                     from: Some(from),
                     to: Some(to),
                     day_of_month,
@@ -2146,6 +2164,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Monthly => "monthly",
         Keyword::Quarterly => "quarterly",
         Keyword::Annual => "annual",
+        Keyword::Due => "due",
         Keyword::Week => "week",
         Keyword::Month => "month",
         Keyword::Quarter => "quarter",
