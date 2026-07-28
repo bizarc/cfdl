@@ -471,10 +471,10 @@ struct IrSchedule {
     on: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     every: Option<String>,
-    /// Payment falls at the end of each interval. Default for recurring
-    /// schedules; `in advance` clears it.
+    /// Annuity due: payment at the start of each interval. Omitted for an
+    /// ordinary annuity, which is the default and the common case.
     #[serde(skip_serializing_if = "std::ops::Not::not", default)]
-    arrears: bool,
+    due: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1308,7 +1308,7 @@ fn lower_pack_rule_schedule(
     if rule.schedule_kind.eq_ignore_ascii_case("on_date") {
         IrSchedule {
             kind: "OnDate".to_string(),
-            arrears: false,
+            due: false,
             on: Some(normalize_date(&rule.schedule_from)),
             every: None,
             from: None,
@@ -1323,7 +1323,7 @@ fn lower_pack_rule_schedule(
     } else {
         IrSchedule {
             kind: "Every".to_string(),
-            arrears: false,
+            due: rule.schedule_due,
             on: None,
             every: Some(time_calendar.to_string()),
             from: Some(normalize_date(if rule.schedule_from.is_empty() {
@@ -1793,7 +1793,7 @@ fn lower_schedule(
     let Some(schedule) = schedule else {
         return Ok(IrSchedule {
             kind: "OnDate".to_string(),
-            arrears: false,
+            due: false,
             on: Some(time_start.to_string()),
             every: None,
             from: None,
@@ -1823,7 +1823,7 @@ fn lower_schedule(
     match &schedule.kind {
         ScheduleKind::OnDate => Ok(IrSchedule {
             kind: "OnDate".to_string(),
-            arrears: false,
+            due: false,
             on: Some(normalize_date(
                 schedule.from.as_deref().unwrap_or(time_start),
             )),
@@ -1847,7 +1847,7 @@ fn lower_schedule(
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
-            arrears: false,
+            due: false,
             on: None,
             every: Some(
                 schedule
@@ -1883,7 +1883,7 @@ fn lower_schedule(
             })?;
             Ok(IrSchedule {
                 kind: "OnDate".to_string(),
-                arrears: false,
+                due: false,
                 on: Some(start.clone()),
                 every: None,
                 from: None,
@@ -1910,7 +1910,7 @@ fn lower_schedule(
             })?;
             Ok(IrSchedule {
                 kind: "Every".to_string(),
-                arrears: false,
+                due: false,
                 on: None,
                 every: Some(
                     schedule

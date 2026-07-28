@@ -15,6 +15,7 @@ direction = "inflow"
 currency = "USD"
 amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.ppa_price}} * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -32,6 +33,7 @@ direction = "inflow"
 currency = "USD"
 amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.price}} * pow(1 + {{contract.price_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -49,6 +51,7 @@ direction = "inflow"
 currency = "USD"
 amount_expr = "({{contract.mwh_cycled_year}} / 12) * {{contract.spread}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -64,6 +67,7 @@ direction = "inflow"
 currency = "USD"
 amount_expr = "{{contract.payment_year}} / 12"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -76,6 +80,7 @@ direction = "outflow"
 currency = "USD"
 amount_expr = "({{contract.om_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -132,6 +137,7 @@ currency = "USD"
 # term bounds the credit window (statutorily 10 years).
 amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) * {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
@@ -152,6 +158,7 @@ currency = "USD"
 # returns 0 beyond the recovery period, so the term can simply span the model.
 amount_expr = "{{contract.basis}} * macrs_rate(round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0), {{contract.life}}) / 12 * {{contract.tax_rate}}"
 schedule_kind = "every"
+schedule_due = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 

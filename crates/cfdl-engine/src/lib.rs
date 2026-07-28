@@ -1426,7 +1426,12 @@ fn irr(values: &[f64]) -> Option<f64> {
 }
 
 /// Occurrence dates from `from`, stepping by `interval`, up to and including `to`.
-fn occurrences(from: &Date, to: &Date, interval: &str) -> Result<Vec<Date>, EngineError> {
+fn occurrences(
+    from: &Date,
+    to: &Date,
+    interval: &str,
+    due: bool,
+) -> Result<Vec<Date>, EngineError> {
     // Guard against a zero step producing an unbounded loop.
     let step_months = match interval {
         "monthly" => Some(1),
@@ -1446,17 +1451,22 @@ fn occurrences(from: &Date, to: &Date, interval: &str) -> Result<Vec<Date>, Engi
     };
 
     let mut out = Vec::new();
-    let mut cursor = from.clone();
+    let advance = |d: &Date| match (step_months, step_days) {
+        (Some(m), _) => d.add_months(m),
+        (_, Some(days)) => d.add_days(days),
+        _ => d.clone(),
+    };
+    let mut cursor = if due { from.clone() } else { advance(from) };
     // A monthly stream over a century is ~1200 occurrences; this ceiling only
     // exists so a malformed range cannot spin.
     let limit = 100_000;
     while cursor <= *to && out.len() < limit {
         out.push(cursor.clone());
-        cursor = match (step_months, step_days) {
-            (Some(m), _) => cursor.add_months(m),
-            (_, Some(d)) => cursor.add_days(d),
-            _ => break,
-        };
+        let next = advance(&cursor);
+        if next == cursor {
+            break;
+        }
+        cursor = next;
     }
     Ok(out)
 }
@@ -1528,7 +1538,10 @@ fn apply_schedule(
             // apart occurrences are; the timeline only decides which bucket
             // each one lands in.
             let interval = schedule.every.as_deref().unwrap_or("monthly");
-            for occurrence in occurrences(&from_date, &to_date, interval)? {
+            // An ordinary annuity pays at the END of each interval: the first
+            // occurrence of `every year from 2026-01` is 2027-01, not 2026-01.
+            // An annuity due pays at the start, which is right for rent.
+            for occurrence in occurrences(&from_date, &to_date, interval, schedule.due)? {
                 let placed = place_in_interval(&occurrence, schedule.on_rule.as_ref());
                 let rolled = roll_date(&placed, roll);
                 if let Some(idx) = period_index(timeline, &rolled) {
@@ -1910,6 +1923,10 @@ struct IrSchedule {
     on: Option<String>,
     #[serde(default)]
     every: Option<String>,
+    /// Annuity due: payment at the start of each interval. Absent means an
+    /// ordinary annuity — the interval elapses, then payment falls.
+    #[serde(default)]
+    due: bool,
     from: Option<String>,
     to: Option<String>,
     /// Places an occurrence within its interval (`on day <n>` / `on eom`).
