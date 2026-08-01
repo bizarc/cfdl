@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E7010_OPCO_LINE_AMBIGUOUS_AMOUNT",
+    "severity": "error",
+    "message": "OpCo line states both 'amount' (per period) and 'amount_year' (annual); they would be summed. Give one.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 18,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

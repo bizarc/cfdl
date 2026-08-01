@@ -1,0 +1,18 @@
+version 0.1
+model "pack-ambiguous-amount"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity operating business
+
+// `amount` is per period and `amount_year` is annual: two ways to say the
+// same thing. A lowering rule sums them with zero defaults, because templates
+// have no conditional, so giving both quietly means 240,000 a period rather
+// than either figure the author had in mind.
+contract opco.revenue_line {
+  term 2026-01..2026-12
+  terms {
+    amount = 120000
+    amount_year = 1440000
+  }
+}

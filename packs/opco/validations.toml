@@ -124,3 +124,20 @@ term = "rate"
 when = "always"
 on_invalid = "report"
 min = 0.0
+
+# Class C pairs: the same figure in two units. A rule sums both with zero
+# defaults because templates have no conditional, so stating both would
+# silently add them.
+[[validations]]
+contracts = ["opco.revenue_line", "opco.opex_line", "opco.capex_line"]
+code = "E7010_OPCO_LINE_AMBIGUOUS_AMOUNT"
+message = "OpCo line states both 'amount' (per period) and 'amount_year' (annual); they would be summed. Give one."
+check = "terms_mutually_exclusive"
+terms = ["amount", "amount_year"]
+
+[[validations]]
+contract = "opco.cash_taxes"
+code = "E7011_OPCO_TAXES_AMBIGUOUS_DA"
+message = "OpCo cash taxes state both 'da_monthly' (per period) and 'da_year' (annual); they would be summed. Give one."
+check = "terms_mutually_exclusive"
+terms = ["da_monthly", "da_year"]

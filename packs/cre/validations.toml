@@ -147,3 +147,11 @@ number = "integer"
 when = "present"
 on_invalid = "report"
 min = 0.0
+
+# Class C pair: per-period rent versus annual rent. Summed if both are given.
+[[validations]]
+contract = "cre.lease"
+code = "E6030_CRE_LEASE_AMBIGUOUS_RENT"
+message = "CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one."
+check = "terms_mutually_exclusive"
+terms = ["base_rent", "base_rent_year"]

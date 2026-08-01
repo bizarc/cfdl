@@ -357,7 +357,7 @@ Validation must:
 Validations are declared as data in `packs/<pack>/validations.toml` and
 evaluated by the compiler; they are not implemented in the engine. Each rule
 names the contract it applies to, the check, a stable diagnostic code, and a
-message. Available checks: `term_present`, `any_term_present`, `term_number`
+message. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
 (integer or decimal, with `min`/`max`/`exclusive_min`/`exclusive_max`, and
 `when`/`on_invalid` to control absent and unparseable values),
 `term_range_within_timeline`, `term_enum`, and `term_compare`. The set is

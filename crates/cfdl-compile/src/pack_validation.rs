@@ -139,6 +139,14 @@ pub(crate) fn evaluate(
                 .terms
                 .iter()
                 .any(|term| contract.terms.contains_key(term.as_str())),
+            ValidationCheck::TermsMutuallyExclusive => {
+                validation
+                    .terms
+                    .iter()
+                    .filter(|term| contract.terms.contains_key(term.as_str()))
+                    .count()
+                    > 1
+            }
             ValidationCheck::TermNumber => term_number_fires(validation, contract),
             ValidationCheck::TermRangeWithinTimeline => !term_range_ok,
             ValidationCheck::TermEnum => term_enum_fires(validation, contract),

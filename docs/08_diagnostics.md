@@ -297,6 +297,13 @@ expressions become cadence-neutral.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
 
+Two term spellings that mean the same figure in different units — a per-period
+`amount` and an annual `amount_year` — are checked in both directions: at
+least one must be given (`any_term_present`), and at most one may be
+(`terms_mutually_exclusive`). The second matters because a lowering rule sums
+the pair with zero defaults, templates having no conditional, so stating both
+would silently add them. `E6030`, `E7010` and `E7011` are those checks.
+
 These diagnostics come from a pack's own `validations.toml`, evaluated by the
 compiler against each contract. They are pack-origin diagnostics and must
 include file/span (contract span when a term-level span is unavailable).

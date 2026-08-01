@@ -149,6 +149,13 @@ pub enum ValidationCheck {
     TermPresent,
     /// At least one of `terms` must be present.
     AnyTermPresent,
+    /// At most one of `terms` may be present.
+    ///
+    /// For a pair that says the same thing in different units — a per-period
+    /// `amount` and an annual `amount_year`. Templates have no conditional, so
+    /// a rule sums both with zero defaults; stating both would silently add
+    /// them, which is almost never what anyone means.
+    TermsMutuallyExclusive,
     /// The term must parse as a number and satisfy any declared bounds.
     TermNumber,
     /// The contract term range must be valid and inside the model timeline.
@@ -879,7 +886,7 @@ fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, Pac
                     )));
                 }
             }
-            ValidationCheck::AnyTermPresent => {
+            ValidationCheck::AnyTermPresent | ValidationCheck::TermsMutuallyExclusive => {
                 if validation.terms.is_empty() {
                     return Err(fail(format!(
                         "validation '{}' requires a non-empty `terms`.",
