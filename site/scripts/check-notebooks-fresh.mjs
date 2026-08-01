@@ -53,7 +53,14 @@ try {
 const sourceChanges = changed.filter((f) => SOURCE_PATHS.some((p) => f.startsWith(p)));
 const rendersChanged = changed.some((f) => RENDER_PATHS.some((p) => f.startsWith(p)));
 
-if (sourceChanges.length > 0 && !rendersChanged) {
+// A render is fresh when it ran against the current inputs, which the stamp
+// records. Requiring a *diff* in the rendered pages was wrong: a change that
+// does not alter notebook output — a new diagnostic, say — left the gate
+// unsatisfiable, because re-rendering produced nothing to commit.
+const stampPath = "site/content/docs/notebooks/.render-stamp";
+const stampChanged = changed.includes(stampPath);
+
+if (sourceChanges.length > 0 && !rendersChanged && !stampChanged) {
   console.error(
     "check-notebooks-fresh: notebook inputs changed but the rendered pages were not regenerated.\n",
   );
@@ -66,5 +73,5 @@ if (sourceChanges.length > 0 && !rendersChanged) {
 console.log(
   sourceChanges.length === 0
     ? "check-notebooks-fresh: OK (no notebook inputs changed in this range)"
-    : "check-notebooks-fresh: OK (inputs changed and the pages were re-rendered)",
+    : "check-notebooks-fresh: OK (inputs changed and the render ran against them)",
 );
