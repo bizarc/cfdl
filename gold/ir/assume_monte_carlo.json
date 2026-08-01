@@ -97,8 +97,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.6.0",
-      "hash": "9185eab14e4fe744bd35f7bbcbd1ae4e"
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
     }
   }
 }

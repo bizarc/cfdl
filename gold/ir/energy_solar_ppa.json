@@ -493,8 +493,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.6.0",
-      "hash": "169eabf0698ea2d1df93b2a1f201985b",
+      "version": "0.7.0",
+      "hash": "e37f7451351cef8ab4e58f32498a7a9f",
       "notes": [
         "active_pack=energy@0.1.0"
       ]

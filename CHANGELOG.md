@@ -6,6 +6,87 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.7.0] - 2026-07-28
+
+Schedules, contract terms and the published surface. Breaking: see below.
+
+### Schedules honour what they declare
+
+A stream's recurrence interval was discarded at parse time, so every stream
+paid in every period. This release completes the fix end to end.
+
+- An interval finer than the model's calendar is rejected
+  (`E2108_SCHEDULE_FINER_THAN_CALENDAR`) rather than collapsed. A weekly
+  schedule on a monthly grid paid twelve times a year instead of about
+  fifty-two: several occurrences fall in one period, and a period holds one
+  payment. This is section 10.3's own rule, finally implemented.
+- A lowering rule may declare `schedule_every`, so a pack can express a
+  quarterly coupon or an annual true-up rather than being pinned to the
+  calendar cadence. Unset means the cadence, which is every shipped rule.
+- `stub` is rejected instead of accepted and discarded — a model could ask
+  for a short front stub and silently receive a full period.
+- The doc-examples gate counts payments: a stream may not pay in more periods
+  than its schedule declares. That is the check that would have caught the
+  original defect.
+
+### Contract terms
+
+A term is a literal or a reference to one declared input. Trailing tokens are
+rejected: `rent_year = 12 * 8500` compiled as `12`, silently, in any pack.
+
+A term naming an input defers to it, so scenarios and Monte Carlo drive it
+through the one channel they already write to. Terms were previously baked
+into lowered expressions as literals, so a Monte Carlo run sampled a variable
+the expression did not contain and returned a degenerate distribution with no
+warning.
+
+### Currencies
+
+`model "x" currency INR` parses, and every metric reports in it. Pack
+lowering rules no longer hardcode USD — a PPA in Rajasthan is not a USD
+contract — and a stream whose currency differs from the model's is rejected
+rather than summed as though the units matched.
+
+### The published surface describes the language that exists
+
+The EBNF splits `cadence` from `interval`, documents `due`, and drops the
+`stub` and weekday productions nothing implements.
+
+The IR schema was public at cfdl.dev/schemas and checked against nothing. It
+listed `metrics` as required though no compiler emits it, declared `stub` and
+weekday rules that are never produced, and used `oneOf` for a union whose
+members overlap, which could never be satisfied. `tools/check-ir-schema.py`
+validates every IR golden against it and is part of `make ci`; it immediately
+caught an `on eom` rule emitting `day: 0` against its own 1..31 bound.
+
+The pack manifest documentation described a format the loader never read — a
+pack written to it would have loaded with no entrypoints at all.
+
+### Tooling
+
+- The four standard packs are built into the CLI, so `cfdl compile my-model`
+  resolves `use pack` with no flag and no download. A packs directory that
+  holds packs stays authoritative.
+- A pack present at a different version says so, naming both versions,
+  instead of reporting "not found".
+- `cfdl validate` applies the same `./packs` default as compile and run.
+- Object ids no longer depend on the compiler version. Every release rewrote
+  every id, churning goldens and making a downstream store treat the same
+  entity as new after an upgrade. Ids move once here and should not again.
+- `run.json` gained a JSON Schema, all five distributions, `clip`, and
+  rejection of unknown keys — which found twelve example configs running
+  undiscounted while claiming 0.1.
+
+### Breaking
+
+- `stub`, schedules finer than the calendar, mixed-currency models, and terms
+  with trailing tokens no longer compile.
+- Schedule intervals are singular nouns: `every month`, not `every monthly`.
+- Object ids change once, as described above.
+- A pack rule pinning a currency the model does not declare is rejected.
+
+---
+
 ## [0.6.0] - 2026-07-28
 
 Packs work outside the United States. Breaking: see below.
