@@ -1090,10 +1090,20 @@ impl<'a> Parser<'a> {
                 }
                 TokenKind::Keyword(Keyword::Schedule) => {
                     let _ = self.bump();
+                    let before = self.diagnostics.len();
                     let parsed = self.parse_schedule_expr();
                     if let Some(spec) = parsed {
                         end_span = spec.span;
                         schedule = Some(spec);
+                    }
+                    // A rejected schedule clause (`net` on a one-shot, `stub`)
+                    // stops parsing with its own diagnostic and leaves the
+                    // offending tokens behind. Swallow them quietly rather than
+                    // letting the unknown-item arm report the same mistake a
+                    // second time — §4.2 of the diagnostics spec: one logical
+                    // issue, one diagnostic.
+                    if self.diagnostics.len() > before && !self.at_stream_item_boundary() {
+                        end_span = self.consume_stream_item();
                     }
                 }
                 TokenKind::Ident(ref ident) if ident == "amount" => {
@@ -1113,7 +1123,33 @@ impl<'a> Parser<'a> {
                     }
                 }
                 _ => {
-                    end_span = self.bump().span;
+                    // This used to bump and discard. A stream body therefore
+                    // swallowed anything it did not recognise: a typo'd key, or
+                    // `payment net 60 days` written on its own line rather than
+                    // inline in the schedule, compiled clean and did nothing.
+                    // docs/10_implementation_status.md is explicit that a
+                    // construct either works end to end or is rejected.
+                    //
+                    // consume_stream_item skips to the next recognised item, so
+                    // one bad item yields one diagnostic rather than one per
+                    // token.
+                    let span = tok.span;
+                    // Name the offending word where we can; a bare
+                    // "<identifier>" sends the reader hunting.
+                    let found = match &tok.kind {
+                        TokenKind::Ident(name) => format!("'{name}'"),
+                        other => token_label(&Token {
+                            kind: other.clone(),
+                            span,
+                        }),
+                    };
+                    self.push_expected(
+                        span,
+                        format!(
+                            "Unexpected {found} in a stream body. Expected 'schedule', 'amount', 'active when', or '}}'. Payment terms go inside the schedule: `schedule every month net 30 from …`."
+                        ),
+                    );
+                    end_span = self.consume_stream_item();
                 }
             }
         }
@@ -1194,6 +1230,16 @@ impl<'a> Parser<'a> {
             span: merge_spans(start_span, expr_span),
             expr_span,
         })
+    }
+
+    /// Whether the cursor already sits on the start of the next stream item,
+    /// so there is nothing left over to discard.
+    fn at_stream_item_boundary(&self) -> bool {
+        matches!(self.peek().kind, TokenKind::Punct(Punct::RBrace))
+            || matches!(self.peek().kind, TokenKind::Keyword(Keyword::Schedule))
+            || matches!(self.peek().kind, TokenKind::Keyword(Keyword::Active))
+            || matches!(self.peek().kind, TokenKind::Ident(ref ident) if ident == "amount")
+            || self.is_eof()
     }
 
     fn consume_stream_item(&mut self) -> Span {
