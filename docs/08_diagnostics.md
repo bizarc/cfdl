@@ -275,6 +275,18 @@ Warnings:
   whole life. Always satisfied on a monthly calendar, where every `YYYY-MM`
   term is a boundary.
 
+- `E5015_TERM_MONTHS_NOT_DIVISIBLE` — a `_months` term used as a count of
+  payment periods does not divide into whole periods on this grid. A 30-month
+  loan is not two and a half annual payments, and no closed form can express
+  one, so this is an error rather than a rounding. Thresholds such as
+  `free_rent_months` pro-rate instead and never reach here.
+- `E5016_RESERVED_TERM_PREFIX` — a contract term begins `model.`, `time.`,
+  `periods.` or `whole_periods.`. Lowering rules resolve those prefixes before
+  contract terms, so the term would be shadowed and never read. Term keys may
+  legitimately be dotted, so this is reachable by accident.
+- `E5017_PERIOD_TERM_NOT_LITERAL` — a `_months` term that a rule converts into
+  periods defers to `inputs.<name>`. The conversion happens at compile time and
+  an input is not known until the run.
 - `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` is not one of
   `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap
   between act/360 and act/365 is roughly 1.4% of interest.

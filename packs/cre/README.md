@@ -172,13 +172,22 @@ stabilized occupancy before the stop test); a base-year structure is the
 stop set to year-0 grossed-up opex.
 
 Rollover downtime follows industry-standard expected-value semantics: the window
-starts at expiry, the first `downtime_months` pay only the renewal-scenario
-rent (p × renewal), and the full probability-weighted blend applies after.
-`cre.exit_forward` derives the sale-year NOI from the modeled streams over
-the 12 months after the sale date (requires `time ... project 12`);
-`cre.exit` remains for analyst-supplied forward NOI. Remaining simplification
-(documented): blended rollover TI/LC pays entirely at expiry rather than
-splitting the new-lease portion to after downtime.
+starts at expiry, the renewal scenario (p × renewal) pays throughout, and the
+re-let scenario's rent phases in once the downtime has elapsed. Turnover costs
+split the same way — the renewal portion at expiry, the re-let portion when the
+new tenant takes occupancy.
+
+`cre.exit_forward` derives the sale-year NOI from the modeled streams over the
+**year** after the sale date, which needs a projection tail of one year:
+`project 12` on a monthly model, `project 4` quarterly, `project 1` annually.
+`cre.exit` remains for analyst-supplied forward NOI.
+
+Both exit rules settle **on their stated date**, which discounts from the start
+of the period containing it rather than the end. On a monthly model that is one
+month of discounting; on an annual model it is a full year, and a reversion is
+usually taken at period end. If that matters to your model, express the sale as
+a one-period stream on an ordinary schedule instead — see
+`benchmarks/cre/mit_rentleg_plaza`, which does exactly that and documents why.
 
 ### Simple whole-property contracts
 
