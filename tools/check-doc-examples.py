@@ -15,7 +15,12 @@ This compiles and runs every complete model in the documentation and fails on:
     reads to a newcomer as a broken feature;
   * a stream whose total contradicts its declared direction — an `outflow`
     that nets positive is the pmt sign error that once reported debt service
-    as income and overstated an example's NPV tenfold.
+    as income and overstated an example's NPV tenfold;
+  * a stream that pays in more periods than its schedule declares — a
+    quarterly schedule that paid every month, twelve times a year instead of
+    four, went unnoticed because nothing counted. An upper bound rather than
+    equality, since an amount expression may legitimately be zero in some
+    periods and a conditional can only reduce the count.
 
 Both stream checks can be waived per-stream where the zero or the sign is the
 point being made, using the repo's existing escape-hatch convention:
@@ -36,6 +41,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import datetime
 import tempfile
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -108,6 +114,63 @@ def stream_totals(results: dict) -> dict[str, float]:
     }
 
 
+def _parse_date(value: str) -> datetime.date | None:
+    for fmt in ("%Y-%m-%d", "%Y-%m"):
+        try:
+            return datetime.datetime.strptime(value, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _add_months(d: datetime.date, months: int) -> datetime.date:
+    total = d.year * 12 + (d.month - 1) + months
+    year, month = divmod(total, 12)
+    month += 1
+    day = min(d.day, [31, 29 if year % 4 == 0 and (year % 100 or year % 400 == 0) else 28,
+                      31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+    return datetime.date(year, month, day)
+
+
+def scheduled_occurrences(schedule: dict) -> int | None:
+    """How many payments the schedule declares, or None if not countable.
+
+    Only recurring schedules with a resolvable range are counted; `OnDate` and
+    phase-bounded schedules are left alone.
+    """
+    if schedule.get("kind") != "Every":
+        return None
+    start, end = _parse_date(schedule.get("from") or ""), _parse_date(schedule.get("to") or "")
+    if not start or not end or end < start:
+        return None
+
+    every = schedule.get("every") or "monthly"
+    step_months = {"monthly": 1, "quarterly": 3, "annual": 12}.get(every)
+    step_days = {"daily": 1, "weekly": 7}.get(every)
+    if step_months is None and step_days is None:
+        return None
+
+    count, cursor = 0, start
+    while cursor <= end and count < 100_000:
+        count += 1
+        cursor = (_add_months(cursor, step_months) if step_months
+                  else cursor + datetime.timedelta(days=step_days))
+    return count
+
+
+def schedules(ir: dict) -> dict[str, dict]:
+    return {s["name"]: s.get("schedule", {}) for s in ir.get("streams", [])}
+
+
+def nonzero_period_counts(results: dict) -> dict[str, int]:
+    series = results["deterministic"]["series"]
+    return {
+        name: sum(1 for point in block["values"] if abs(point["amount"]) > 0.005)
+        for name, block in series.items()
+        if name != "model.net_cash_flow"
+    }
+
+
 def directions(ir: dict) -> dict[str, str]:
     """Declared direction per stream name, from the IR."""
     return {s["name"]: s.get("direction", "") for s in ir.get("streams", [])}
@@ -128,6 +191,8 @@ def check(path: pathlib.Path, line: int, source: str, verbose: bool) -> list[str
         return [f"{path.relative_to(REPO_ROOT)}:{line}: model emits no streams"]
 
     declared = directions(ir)
+    declared_schedules = schedules(ir)
+    nonzero = nonzero_period_counts(results)
     for name, total in sorted(totals.items()):
         if verbose:
             print(f"      {name:52} {total:16,.2f}")
@@ -153,6 +218,20 @@ def check(path: pathlib.Path, line: int, source: str, verbose: bool) -> list[str
             problems.append(
                 f"{path.relative_to(REPO_ROOT)}:{line}: stream `{name}` is declared "
                 f"`inflow` but totals {total:,.2f} — check the sign of its amount"
+            )
+
+        # A stream must not pay more often than its schedule declares. This is
+        # the check that would have caught the interval being discarded: a
+        # quarterly schedule paid in every month, twelve times a year instead
+        # of four, and nothing objected. An upper bound rather than equality,
+        # because an amount expression may legitimately evaluate to zero in
+        # some periods — a conditional can only reduce the count.
+        expected = scheduled_occurrences(declared_schedules.get(bare, {}))
+        if expected is not None and nonzero.get(name, 0) > expected:
+            problems.append(
+                f"{path.relative_to(REPO_ROOT)}:{line}: stream `{name}` pays in "
+                f"{nonzero[name]} periods but its schedule declares {expected} "
+                f"(every {declared_schedules[bare].get('every')}) — the interval is being ignored"
             )
 
     return problems
