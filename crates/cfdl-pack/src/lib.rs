@@ -318,6 +318,17 @@ pub struct LoweringRule {
     /// the interval that earned them, which is the default.
     #[serde(default)]
     pub schedule_due: bool,
+    /// For a one-shot (`on_date`) rule: settle at the END of the period the
+    /// date falls in rather than its start.
+    ///
+    /// `on_date` otherwise means "on the stated date", which discounts from
+    /// the period's open — right for an acquisition, wrong for a disposal. A
+    /// reversion is taken at the end of the holding period, so a year-5 sale
+    /// must be discounted five periods, not four. On a monthly model the
+    /// difference is one month and easy to miss; on an annual model it is a
+    /// full year.
+    #[serde(default)]
+    pub schedule_at_period_end: bool,
     /// May contain `{{contract.term_start}}` / `{{contract.<key>}}` placeholders.
     pub schedule_from: String,
     /// May contain `{{contract.term_end}}` / `{{contract.<key>}}` placeholders.

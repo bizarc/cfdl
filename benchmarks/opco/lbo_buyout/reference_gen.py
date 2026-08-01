@@ -56,6 +56,7 @@ def main():
     }
     net = [0.0] * PERIODS
     shots = [0.0] * PERIODS
+    exit_shots = [0.0] * PERIODS
     for t in range(PERIODS):
         revenue, ox = rev(t), opex(t)
         ebitda = revenue - ox
@@ -80,7 +81,7 @@ def main():
             shots[t] += PRINCIPAL - PRICE
         if t == PERIODS - 1:
             trailing = sum(rev(s) - opex(s) for s in range(PERIODS - 12, PERIODS))
-            shots[t] += EXIT_MULTIPLE * trailing * (1.0 - SELLING_COSTS)
+            exit_shots[t] += EXIT_MULTIPLE * trailing * (1.0 - SELLING_COSTS)
         totals["revenue"] += revenue
         totals["ebitda"] += ebitda
         totals["capex"] += capex
@@ -91,13 +92,19 @@ def main():
 
     monthly_rate = (1.0 + ANNUAL_DISCOUNT) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
     # period that earned them, so they are discounted one full period — the
-    # same convention as Excel's NPV. One-shot flows (purchase, advance,
-    # exit proceeds) settle on their own date and are not.
+    # same convention as Excel's NPV.
+    # One-shot flows split by KIND. A purchase, advance or dated leasing cost
+    # happens on its date and discounts from the period's open; a DISPOSAL is
+    # taken at the end of the holding period and discounts the full n periods.
+    # Both this reference and the engine used to treat every one-shot alike —
+    # the shared-misunderstanding failure analytic-checks.py exists to catch.
+    # External tiebreaker: benchmarks/cre/mit_rentleg_plaza only reproduces
+    # MIT's published $2,292,810 with the reversion discounted five periods.
     npv = sum(
         v / ((1.0 + monthly_rate) ** (t + 1)) for t, v in enumerate(net)
-    ) + sum(v / ((1.0 + monthly_rate) ** t) for t, v in enumerate(shots))
+    ) + sum(v / ((1.0 + monthly_rate) ** t) for t, v in enumerate(shots)) + sum(v / ((1.0 + monthly_rate) ** (t + 1)) for t, v in enumerate(exit_shots))
     for t in range(PERIODS):
-        net[t] += shots[t]
+        net[t] += shots[t] + exit_shots[t]
     inflows = sum(v for v in net if v > 0.0)
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows

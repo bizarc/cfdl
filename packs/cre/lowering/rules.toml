@@ -68,7 +68,11 @@ stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
 direction = "inflow"
 amount_expr = "{{contract.noi_value}} / {{contract.exit_cap}}"
+# A disposal is taken at the END of the holding period, so it discounts
+# the full n periods. `on_date` alone would settle it at the period's
+# open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
+schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -206,7 +210,11 @@ owner_entity = "${subject}"
 direction = "inflow"
 # Sale at term_start: forward-12-month NOI / exit cap, net of selling costs.
 amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+# A disposal is taken at the END of the holding period, so it discounts
+# the full n periods. `on_date` alone would settle it at the period's
+# open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
+schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -239,7 +247,11 @@ direction = "inflow"
 # sale date (expense streams are signed negative, so adding them nets NOI).
 # Requires a projection tail (`time ... project 12`) so the window has data.
 amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.expense\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.property.opex\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+# A disposal is taken at the END of the holding period, so it discounts
+# the full n periods. `on_date` alone would settle it at the period's
+# open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
+schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 

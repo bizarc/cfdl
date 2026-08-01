@@ -1616,7 +1616,17 @@ fn discount_offset(schedule: &IrSchedule) -> f64 {
     // A one-shot flow happens on its stated date, not at the end of the
     // period containing it: a purchase on 2026-01 is settled then, so it is
     // not discounted for a period it never waited through.
-    if schedule.kind == "OnDate" || schedule.due {
+    //
+    // Unless it says otherwise. That default is right for an acquisition and
+    // wrong for a disposal: a reversion is taken at the END of the holding
+    // period, so a year-5 sale must discount five periods rather than four.
+    // The date names the period; `at_period_end` says where in it the cash
+    // falls. On a monthly model the gap is one month; on an annual one it is a
+    // whole year, and 9% of the reversion at 12%.
+    if schedule.kind == "OnDate" {
+        return if schedule.at_period_end { 1.0 } else { 0.0 };
+    }
+    if schedule.due {
         return 0.0;
     }
     match schedule.on_rule.as_ref() {
@@ -2324,6 +2334,9 @@ struct IrSchedule {
     /// ordinary annuity — the interval elapses, then payment falls.
     #[serde(default)]
     due: bool,
+    /// A one-shot flow that settles at the END of its period.
+    #[serde(default)]
+    at_period_end: bool,
     /// How long after a flow is earned its cash moves. Absent means the cash
     /// lands in the period that earned it.
     #[serde(default)]

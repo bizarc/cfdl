@@ -192,7 +192,8 @@
       "currency": "USD",
       "schedule": {
         "kind": "OnDate",
-        "on": "2032-12-01"
+        "on": "2032-12-01",
+        "at_period_end": true
       },
       "amount": {
         "lang": "cfdl",

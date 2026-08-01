@@ -40,6 +40,8 @@ payment inside its own period, and therefore how far it is discounted.
 
 | Written | Position in period | Discounted from |
 |---|---|---|
+| `on <date>` | start (default) | the period's open |
+| `on <date>`, rule sets `schedule_at_period_end` | end | the period's close |
 | `every month from … to …` | end (default) | end of the period |
 | `every month due from … to …` | start | start of the period |
 | `every month on eom from … to …` | end | end of the period |
@@ -49,6 +51,20 @@ This is Excel's convention: `NPV` discounts the first value by one full
 period, and an annuity due is the same series with the first payment left
 undiscounted (`PMT`'s `type` argument, and `pmt(rate, nper, pv, [fv], [due])`
 in the CFDL expression library).
+
+A one-shot flow defaults to its period's open, because that is right for the
+case it was written for: a purchase on 2026-01 settles then and has not waited
+through a period. It is wrong for a **disposal**. A reversion is taken at the
+end of the holding period, so a year-5 sale discounts five periods, not four —
+the date names the period, and the position within it is a separate fact. A
+pack lowering rule says which it means with `schedule_at_period_end`; the
+disposal rules in `cre` and `opco` set it, and acquisitions, funding draws,
+dated leasing costs and tax credits do not.
+
+On a monthly model the difference is one month. On an annual model it is a
+year, and about 9% of a reversion at 12% — see
+`benchmarks/cre/mit_rentleg_plaza`, whose published figure is only reproducible
+with the later placement.
 
 ### The unified rule
 

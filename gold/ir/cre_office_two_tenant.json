@@ -193,7 +193,8 @@
       "currency": "USD",
       "schedule": {
         "kind": "OnDate",
-        "on": "2035-12-01"
+        "on": "2035-12-01",
+        "at_period_end": true
       },
       "amount": {
         "lang": "cfdl",

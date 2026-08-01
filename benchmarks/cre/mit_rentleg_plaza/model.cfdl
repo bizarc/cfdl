@@ -8,23 +8,23 @@
 // Footnote markers below (MIT fn N) refer to the footnotes under the
 // published pro forma table, which define how each tagged number is computed.
 //
-// NOTE ON PACK USE: this model declares no `use pack "cre"`. Every rule in
-// packs/cre/lowering/rules.toml is hard-wired to a monthly grid — each one
-// divides by 12 and anchors on months_between() — so no CRE contract lowers
-// correctly on an annual calendar. Streams are therefore declared natively,
-// but named to the pack's stream taxonomy so `--pack cre` domain metrics
-// still aggregate them. See NOTES.md.
+// NOTE ON PACK USE: the reversion is a CRE pack contract. The operating
+// streams are still native, because two pack features this deal needs do not
+// exist yet: occupancy-varying opex (MIT fn 7 splits it 81% fixed / 19%
+// variable) and an expense stop that resets to a computed later-year value
+// (fn 5). They are named to the pack's stream taxonomy so `--pack cre` domain
+// metrics aggregate them and `cre.exit_forward` can read them. See NOTES.md.
 //
 // NOTE ON THE 2006 COLUMN: the reversion needs 2006 NOI, one year past the
-// hold. The natural expression is a `project 1` tail read back with
-// series_sum, as packs/cre's cre.exit_forward does. That is unavailable here:
-// E2103_SCHEDULE_OUT_OF_BOUNDS measures a NATIVE stream's schedule against the
-// base timeline only, so no hand-written stream can reach the tail, though a
-// pack-lowered contract can. The 2006 NOI is therefore evaluated inline from
-// the same closed-form expressions used by the operating streams. See NOTES.md.
+// hold. It is derived by `cre.exit_forward` from the modelled streams over the
+// `project 1` tail. That was impossible when this file was written — E2103
+// measured a native stream against the cash horizon, so the operating streams
+// could not reach the tail — and the 2006 NOI was carried inline, duplicating
+// the opex formula. See NOTES.md.
 
 version 0.1
 model "mit-rentleg-plaza"
+use pack "cre" version "0.1.0"
 time calendar annual from 2001-01 for 5 project 1
 
 entity asset rentleg
@@ -58,8 +58,6 @@ assume lc_renew_pct    = 0.03
 assume downtime_years  = 0.50       // 6 months vacancy if the tenant leaves
 assume abatement_months = 5         // 1 month free per year of a 5-year term
 
-assume exit_cap        = 0.10       // sale at 10x forward NOI
-assume selling_costs   = 0.05       // MIT fn 11
 
 // Suite 100's replacement lease resets its stop to actual 2004 opex/SF
 // (MIT fn 5). Opex per SF is closed-form in t, so the 2004 value is stated
@@ -213,28 +211,25 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 // a negative sign, so the terms simply add.
 // ---------------------------------------------------------------------------
 
-// MIT fn 11 — the reversion.
+// MIT fn 11 — the reversion, as a CRE pack contract.
 //
-// Sale at the end of 2005 for 10x the FOLLOWING year's NOI, net of a 5%
-// selling commission. The 2006 NOI is now DERIVED from the modelled streams
-// over the `project 1` tail rather than restated inline: E2103 used to measure
-// a native stream's schedule against the cash horizon, so no hand-written
-// model could reach the tail and this file carried a duplicated closed form.
-// Outflow streams are signed negative, so the terms simply add.
+// This is the acceptance test for the whole cadence programme. Reaching it
+// took three fixes, each of which this file used to document as a blocker:
 //
-// Deliberately a native stream rather than `cre.exit_forward`. That contract
-// lowers to an `on_date` schedule, which discounts from the START of the
-// period it lands in — a year-5 sale would be discounted four years, not five,
-// worth $207,783 here. MIT fn 12 places the reversion at the end of year 5,
-// which is also ordinary DCF practice. On a monthly model the same convention
-// costs one month of discounting and is easy to miss; on an annual one it is
-// a full year. See NOTES.md.
-stream cre.exit.proceeds on entity asset.rentleg inflow currency USD {
-  schedule every year from 2005-01 to 2005-01
-  amount = (series_sum("cre.unit.base_rent.*", time.t + 1, time.t + 1)
-            + series_sum("cre.unit.recoveries.*", time.t + 1, time.t + 1)
-            + series_sum("cre.vacancy.loss", time.t + 1, time.t + 1)
-            + series_sum("cre.abatement.suite_200", time.t + 1, time.t + 1)
-            + series_sum("cre.property.opex", time.t + 1, time.t + 1))
-           / inputs.exit_cap * (1 - inputs.selling_costs)
+//   the CRE pack refused to lower on a non-monthly calendar at all;
+//   E2103 measured a native stream against the cash horizon, so the operating
+//     streams could not reach the `project 1` tail this contract reads;
+//   `cre.exit_forward` settled on its stated date, discounting from the start
+//     of 2005 rather than its end — four years instead of five, worth
+//     $207,783 here. Disposals now settle at period end.
+//
+// `exit_cap = 0.10` is MIT's "10 times the following year's NOI"; the 5%
+// selling commission is fn 11. The forward NOI is derived from the modelled
+// streams, not restated.
+contract cre.exit_forward on entity asset.rentleg {
+  term 2005-01..2005-01
+  terms {
+    exit_cap = 0.10
+    selling_costs = 0.05
+  }
 }

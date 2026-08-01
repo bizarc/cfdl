@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "c5c7cb7bb20352a12deb40b77d1b145e7455aae472c0410cdf7e310b72a6b78c",
+  "model_hash": "341687ca18c519252796537c31c2a56c11f12db244daee9f5a1abd51ce7585a5",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -14,7 +14,7 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 1832680.255325,
+        "amount": 1818181.818182,
         "currency": "USD"
       },
       "model.total": {

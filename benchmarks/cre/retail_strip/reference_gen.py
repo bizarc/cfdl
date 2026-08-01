@@ -41,26 +41,35 @@ def main():
         if t == 6:
             ti_lc += 130_000.0
         shot = -ti_lc
+        exit_shot = 0.0
         if t == 83:
-            shot += 640_000.0 / 0.0675 * 0.985
-        rows.append((t, net, shot))
+            exit_shot += 640_000.0 / 0.0675 * 0.985
+        rows.append((t, net, shot, exit_shot))
         noi_total += a_rent + a_rec + a_pct + s_rent + s_rec - vacancy - opex
         leasing_costs += ti_lc
 
     monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
     # period that earned them, so they are discounted one full period — the
-    # same convention as Excel's NPV. One-shot flows (purchase, advance,
-    # exit proceeds) settle on their own date and are not.
+    # same convention as Excel's NPV.
+    # One-shot flows split by KIND. A purchase, advance or dated leasing cost
+    # happens on its date and discounts from the period's open; a DISPOSAL is
+    # taken at the end of the holding period and discounts the full n periods.
+    # Both this reference and the engine used to treat every one-shot alike —
+    # the shared-misunderstanding failure analytic-checks.py exists to catch.
+    # External tiebreaker: benchmarks/cre/mit_rentleg_plaza only reproduces
+    # MIT's published $2,292,810 with the reversion discounted five periods.
     npv = sum(
-        net / ((1.0 + monthly_rate) ** (t + 1)) + shot / ((1.0 + monthly_rate) ** t)
-        for t, net, shot in rows
+        net / ((1.0 + monthly_rate) ** (t + 1))
+        + shot / ((1.0 + monthly_rate) ** t)
+        + exit_shot / ((1.0 + monthly_rate) ** (t + 1))
+        for t, net, shot, exit_shot in rows
     )
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["period", "net_cash_flow"])
-        for t, net, shot in rows:
-            writer.writerow([t, f"{net + shot:.6f}"])
+        for t, net, shot, exit_shot in rows:
+            writer.writerow([t, f"{net + shot + exit_shot:.6f}"])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(

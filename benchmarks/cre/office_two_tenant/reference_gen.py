@@ -81,6 +81,7 @@ def main():
         ti_lc = 0.0
         ti_lc_dated = 0.0
         shot = 0.0
+        exit_shot = 0.0
         if t == 0:
             ti_lc_dated += 200_000.0
         if t == 6:
@@ -92,26 +93,39 @@ def main():
             ti_lc += 0.3 * 350_000.0  # re-lease turnover cost after downtime
         net -= ti_lc
         if t == 119:
-            shot += forward_noi(119) / 0.065 * 0.98
-        rows.append((t, net, shot))
+            exit_shot += forward_noi(119) / 0.065 * 0.98
+        rows.append((t, net, shot, exit_shot))
         noi_total += a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex
         leasing_costs += ti_lc + ti_lc_dated
 
     monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
     # period that earned them, so they are discounted one full period — the
-    # same convention as Excel's NPV. One-shot flows (purchase, advance,
-    # exit proceeds) settle on their own date and are not.
+    # same convention as Excel's NPV.
+    # One-shot flows split by KIND, not by being one-shot. A purchase, a debt
+    # advance or a dated TI/LC cost happens on its date and is discounted from
+    # the period's open. A DISPOSAL does not: a reversion is taken at the end
+    # of the holding period, so it discounts the full n periods like any
+    # end-of-period flow.
+    #
+    # Both this reference and the engine used to treat every one-shot the same
+    # way, which is the shared-misunderstanding failure analytic-checks.py
+    # exists to catch — two implementations agreeing is not evidence when they
+    # were written from the same assumption. The tiebreaker is external:
+    # benchmarks/cre/mit_rentleg_plaza reproduces MIT's published $2,292,810
+    # only when the reversion discounts a full five periods.
     npv = sum(
-        net / ((1.0 + monthly_rate) ** (t + 1)) + shot / ((1.0 + monthly_rate) ** t)
-        for t, net, shot in rows
+        net / ((1.0 + monthly_rate) ** (t + 1))
+        + shot / ((1.0 + monthly_rate) ** t)
+        + exit_shot / ((1.0 + monthly_rate) ** (t + 1))
+        for t, net, shot, exit_shot in rows
     )
     debt_total = debt_pay * PERIODS
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
         writer.writerow(["period", "net_cash_flow"])
-        for t, net, shot in rows:
-            writer.writerow([t, f"{net + shot:.6f}"])
+        for t, net, shot, exit_shot in rows:
+            writer.writerow([t, f"{net + shot + exit_shot:.6f}"])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(

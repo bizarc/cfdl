@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "da5de997b6f8c21c53d154a0017ef4bd6136c3c353ed8ca00b859defaeec4806",
+  "model_hash": "1ac599564046f65db33564aa93a152bfdec3af34f4150225add3d57170259551",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -14,7 +14,7 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 25291905.062763,
+        "amount": 25175934.305753,
         "currency": "USD"
       },
       "model.total": {
@@ -1445,7 +1445,7 @@
         "name": "base",
         "metrics": {
           "model.npv": {
-            "amount": 25291905.061146,
+            "amount": 25175934.304146,
             "currency": "USD"
           }
         }
@@ -1454,7 +1454,7 @@
         "name": "downside",
         "metrics": {
           "model.npv": {
-            "amount": 21066789.436402,
+            "amount": 20972553.103426,
             "currency": "USD"
           }
         }

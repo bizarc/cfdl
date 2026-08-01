@@ -28,25 +28,28 @@ Fixed. The bound now spans the evaluation window and is mirrored onto lowered
 streams. The reversion derives 2006 NOI from the modelled streams over
 `project 1`, and the duplicated formula is gone.
 
-## 3. OPEN — the exit contracts discount from the start of their period
+## 3. RESOLVED — disposals settle at the end of their period
 
-`cre.exit_forward` lowers to an `on_date` schedule, which discounts from the
-START of the period it lands in. A sale placed in year 5 is therefore
-discounted four years, not five.
+Originally: `cre.exit_forward` lowered to an `on_date` schedule, which
+discounts from the START of the period the date falls in. A sale placed in
+year 5 was discounted four years, not five. Using the pack contract here gave
+$2,500,593.30 against the published $2,292,810 — a gap of exactly
+`reversion / 1.12^4 - reversion / 1.12^5`.
 
-Using the pack contract here gives $2,500,593.30 against the published
-$2,292,810 — a difference of $207,783.13, which is exactly
-`reversion / 1.12^4 - reversion / 1.12^5`. MIT fn 12 places the reversion at
-the end of year 5, which is also ordinary DCF practice.
+Fixed. A lowering rule may now declare `schedule_at_period_end`, and the
+disposal rules in cre and opco do. Acquisitions, funding draws, dated TI/LC and
+tax credits keep the original placement, because for those "on its stated date"
+is right — the defect was treating every one-shot flow alike.
 
-On a monthly model the same convention costs one month of discounting (~0.6%
-at 7.25%), which is small enough to have gone unnoticed. On an annual model it
-is a full year. The reversion here is therefore a native stream on an ordinary
-annual schedule, which discounts from period end.
+The in-house reference generators had the same conflation, having been written
+alongside the engine. That is the failure mode `tools/analytic-checks.py` was
+created for: two implementations agreeing is not evidence when both came from
+one assumption. The external published figure was the tiebreaker, which is the
+argument for this benchmark existing at all.
 
-Fixing it means placing the pack's capital events at period end, which moves
-every existing CRE benchmark's NPV slightly — a deliberate decision, not a
-drive-by.
+Correcting it moved eight CRE and opco models by about a period of discounting
+— office_two_tenant's NPV fell 0.93%, the right direction for a reversion that
+now waits one more month.
 
 ## 4. Pack gaps that remain
 

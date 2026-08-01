@@ -611,6 +611,14 @@ may contain `{{...}}` placeholders, resolved at compile time:
 A placeholder with no contract value and no default is a compile error
 (`E5006_MISSING_CONTRACT_TERM`), one diagnostic per missing key.
 
+### Where a one-shot flow sits in its period
+
+`schedule_kind = "on_date"` settles on the stated date, which discounts from
+the period's open. Set `schedule_at_period_end = true` for a **disposal**: a
+reversion is taken at the end of the holding period and discounts the full n
+periods. The distinction is by kind, not by being one-shot — acquisitions,
+draws, dated leasing costs and tax credits all want the default.
+
 ### Cadence placeholders
 
 A rule must not assume how long a period is. These placeholders carry that,
