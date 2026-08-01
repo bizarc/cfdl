@@ -271,6 +271,16 @@ pub struct LoweringRule {
     /// May contain `{{contract.<key>}}` placeholders (see expand_rule_template).
     pub amount_expr: String,
     pub schedule_kind: String,
+    /// Recurrence interval for a recurring rule: `day`, `week`, `month`,
+    /// `quarter` or `year`.
+    ///
+    /// Omit it to pay at the model's calendar cadence, which is what most
+    /// rules want. Set it when the instrument genuinely pays on its own
+    /// rhythm — a quarterly coupon or an annual true-up on a monthly model.
+    /// The interval must be no finer than the calendar, since several
+    /// payments in one period would collapse into one.
+    #[serde(default)]
+    pub schedule_every: String,
     /// Annuity due: the stream pays at the start of each interval.
     ///
     /// Streams that behave like an expense — opex, rent paid, fees, capex —

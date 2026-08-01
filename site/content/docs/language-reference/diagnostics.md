@@ -251,6 +251,8 @@ Warnings:
 - `E5010_TERM_UNKNOWN_INPUT` — a contract term references `inputs.<name>` for
   an input that is not declared. Declare it with `assume <name> = …` or
   `assume <name> ~ <Dist>(…)`.
+- `E5012_RULE_INVALID_INTERVAL` — a lowering rule's `schedule_every` is not
+  one of `day`, `week`, `month`, `quarter`, `year`.
 - `E5011_TERM_CLIP_OUT_OF_BOUNDS` — a term defers to an input whose `clip`
   can produce values outside the range the pack allows for that term. The
   value itself cannot be checked until the run, but the clip states the range

@@ -256,6 +256,24 @@ Template rules:
 - `${subject}` resolves to the contract subject entity symbol.
 - `${contract.currency}` resolves to the contract currency.
 
+### Schedule interval
+
+Omit `schedule_every` and a recurring rule pays at the model's calendar
+cadence, which is what every shipped rule does. Set it when the instrument
+pays on its own rhythm regardless of the grid the model happens to use — a
+quarterly coupon or an annual true-up on a monthly model:
+
+```toml
+schedule_kind = "every"
+schedule_every = "quarter"
+```
+
+Values are the schedule intervals: `day`, `week`, `month`, `quarter`, `year`.
+An unrecognised value is `E5012_RULE_INVALID_INTERVAL`. An interval finer than
+the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — several
+payments would fall in one period and collapse into one, so a pack cannot
+express what a model may not.
+
 ### Currency
 
 Omit `currency` from a lowering rule. An empty value inherits the model's
