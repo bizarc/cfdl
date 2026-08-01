@@ -915,19 +915,32 @@ fn resolve_active_pack_inner(
         }]
     };
 
-    let registry = match packs_dir.as_ref() {
-        Some(dir) => cfdl_pack::PackRegistry::load_from_dir(dir).map_err(|err| {
+    let from_dir = match packs_dir.as_ref() {
+        Some(dir) => Some(cfdl_pack::PackRegistry::load_from_dir(dir).map_err(|err| {
             pack_diag(
                 err.message,
                 None,
                 vec![format!("pack root: {}", dir.display())],
             )
-        })?,
-        None => load_embedded_registry(&pack_diag)?,
+        })?),
+        None => None,
     };
-    let where_ = match packs_dir.as_ref() {
-        Some(dir) => format!("under '{}'", dir.display()),
-        None => "in the embedded pack registry".to_string(),
+
+    // Fall back to the packs built into the binary when the directory holds
+    // none — the usual case for a model outside a checkout, where the default
+    // `<model_root>/packs` simply does not exist. A directory that *does*
+    // contain packs is authoritative: falling back from it would silently
+    // hand a pack author the stock pack when they mistyped a path to their
+    // own, which is worse than failing.
+    let used_embedded = from_dir.as_ref().is_none_or(|reg| reg.list().is_empty());
+    let registry = match from_dir {
+        Some(reg) if !reg.list().is_empty() => reg,
+        _ => load_embedded_registry(&pack_diag)?,
+    };
+    let where_ = match (used_embedded, packs_dir.as_ref()) {
+        (true, _) => "in the packs built into this binary".to_string(),
+        (false, Some(dir)) => format!("under '{}'", dir.display()),
+        (false, None) => "in the embedded pack registry".to_string(),
     };
     let active = match registry.resolve_pack(&use_pack.name, &use_pack.version) {
         cfdl_pack::PackLookup::Found(active) => active,
