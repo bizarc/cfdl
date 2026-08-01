@@ -116,7 +116,7 @@ owner_entity = "${subject}"
 direction = "outflow"
 # pmt() returns the Excel-convention negative payment for a positive pv;
 # negate for a positive outflow amount. Decimal-exact for whole-month terms.
-amount_expr = "-pmt({{contract.rate}} / {{model.periods_per_year}}, {{whole_periods.term_months}}, {{contract.principal}})"
+amount_expr = "-pmt({{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}, {{contract.principal}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"

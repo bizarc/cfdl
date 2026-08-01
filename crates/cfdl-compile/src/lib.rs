@@ -1314,6 +1314,34 @@ fn lower_contract_streams(
                 }
                 let from_contract = match key {
                     "model.periods_per_year" => Some(ppy.to_string()),
+                    // What a NOMINAL annual rate is divided by to get this
+                    // period's rate. The default is periods-per-year, which is
+                    // the 30/360 reading — every period is 1/ppy of a year —
+                    // and expands to exactly the same text as
+                    // {{model.periods_per_year}}, so adopting this placeholder
+                    // changes no existing model.
+                    //
+                    // Actual conventions divide by a year length scaled to the
+                    // period's real days: rate / (360 / days) is rate * days /
+                    // 360. On a monthly grid that correctly pays more in a
+                    // 31-day month; on daily it collapses to rate / 360.
+                    "model.accrual_divisor" => Some(
+                        match resolve_plain("day_count")
+                            .unwrap_or_default()
+                            .trim()
+                            .trim_matches('"')
+                        {
+                            "" | "30/360" | "30e/360" => ppy.to_string(),
+                            "act/360" => "(360 / time.days_in_period)".to_string(),
+                            "act/365" => "(365 / time.days_in_period)".to_string(),
+                            // Unreachable in practice: validate_pack_contract
+                            // rejects an unknown value once per contract and
+                            // short-circuits lowering, which is where the
+                            // diagnostic belongs — emitting it here would give
+                            // one copy per matching rule.
+                            _ => ppy.to_string(),
+                        },
+                    ),
                     "model.calendar" => Some(rule_freq.clone()),
                     "time.elapsed_periods" => contract
                         .term_start
@@ -1662,6 +1690,23 @@ fn validate_pack_contract(
                 &format!(
                     "Contract '{}' declares term '{}', but '{}' is reserved for cadence placeholders that lowering rules resolve before contract terms. The term would never be read. Rename it.",
                     contract.name, key, prefix
+                ),
+                source_stmt,
+                term.span,
+            ));
+        }
+    }
+
+    // A misspelled day count must not fall back to a default in silence: the
+    // gap between act/360 and act/365 is about 1.4% of interest.
+    if let Some(term) = contract.terms.get("day_count") {
+        let value = term.value.trim().trim_matches('"');
+        if !matches!(value, "30/360" | "30e/360" | "act/360" | "act/365") {
+            diagnostics.push(pack_diag(
+                "E5019_UNKNOWN_DAY_COUNT",
+                &format!(
+                    "Contract '{}' declares day_count = '{}'. Supported: 30/360, 30e/360, act/360, act/365.",
+                    contract.name, value
                 ),
                 source_stmt,
                 term.span,

@@ -1,0 +1,312 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-day-count-act360",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2025-01-01",
+    "periods": 13
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a14d0ee52b2812f4856211fc4d53634a",
+      "symbol": "fund.buyer",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "b8e2c28edbc80717fa7abb67d53e46a7",
+      "name": "credit.pool_io_bullet.p",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "fund.buyer"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2026-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "cad423574f0b196274ceee786d98a31a",
+      "name": "credit.pool.bullet.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.0, 12.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_bullet"
+        }
+      }
+    },
+    {
+      "id": "707afd2a7dcab0acb36e95103bb1433f",
+      "name": "credit.pool.interest.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.0, 12.0)) * (0.06 / (360.0 / time.days_in_period)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_interest"
+        }
+      }
+    },
+    {
+      "id": "c7641659427c74fb777bb330296d4fbc",
+      "name": "credit.pool.penalty.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.0, 12.0)) * cpr_to_periodic(0.0, 12.0) * 0.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_penalty"
+        }
+      }
+    },
+    {
+      "id": "2753865269e4956cb4bd661ac435bcdc",
+      "name": "credit.pool.prepay.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.0, 12.0)) * cpr_to_periodic(0.0, 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_prepay"
+        }
+      }
+    },
+    {
+      "id": "1c53d1f0229fcef6e682b04f24bb3b78",
+      "name": "credit.pool.recoveries.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 + 0.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date) - 0.0) * cpr_to_periodic(0.0, 12.0) * (1.0 - 0.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_recoveries"
+        }
+      }
+    },
+    {
+      "id": "60051a29b488cbf1dd698ffa23d187d7",
+      "name": "credit.pool.servicing.p",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2025-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * pow((1.0 - cpr_to_periodic(0.0, 12.0)) * (1.0 - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.0, 12.0)) * (0.0 / (360.0 / time.days_in_period)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_io_bullet_servicing"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "31da3be174317bd7ff88b2a1dfa8f026",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

@@ -622,6 +622,7 @@ reserved prefixes `model.`, `time.`, `periods.` or `whole_periods.` is
 |---|---|
 | `{{model.periods_per_year}}` | `365` / `52` / `12` / `4` / `1` |
 | `{{model.calendar}}` | the rule's effective frequency name |
+| `{{model.accrual_divisor}}` | what a nominal annual rate divides by |
 | `{{periods.<term>}}` | `<term>` months as periods, fractional allowed |
 | `{{whole_periods.<term>}}` | the same, but must be integral |
 | `{{time.elapsed_periods}}` | whole periods since `term_start` |
@@ -649,6 +650,29 @@ meaningless: a 30-month loan is not 2.5 annual payments, so that is
 `E5015_TERM_MONTHS_NOT_DIVISIBLE` rather than a rounding. Both need a literal;
 a term deferred to `inputs.<name>` cannot be converted at compile time
 (`E5017_PERIOD_TERM_NOT_LITERAL`).
+
+**Day count.** A nominal annual rate becomes a periodic one by dividing, but
+by what depends on the convention. `{{model.accrual_divisor}}` reads the
+contract's `day_count` term and expands to:
+
+| `day_count` | expands to | meaning |
+|---|---|---|
+| absent, `30/360`, `30e/360` | `<ppy>` | every period is 1/ppy of a year |
+| `act/360` | `(360 / time.days_in_period)` | actual days over a 360-day year |
+| `act/365` | `(365 / time.days_in_period)` | actual days over a 365-day year |
+
+Dividing by `(360 / days)` is multiplying by `days / 360`, so a 31-day January
+accrues more than a 28-day February — which is the point of an Actual
+convention. On a daily grid it collapses to `rate / 360`. The default expands
+to exactly the same text as `{{model.periods_per_year}}`, so a rule can adopt
+the placeholder without changing any existing model. An unrecognised value is
+`E5019_UNKNOWN_DAY_COUNT` rather than a silent fallback: act/360 against
+act/365 is about 1.4% of interest.
+
+Use it for every **nominal** rate — note rates, servicing strips, floating
+index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
+`om_year`), which spread by `{{model.periods_per_year}}` regardless of day
+count.
 
 Two conventions that must not be confused when dividing by periods-per-year:
 note rates are **nominal** and divide (`rate / ppy`), while CPR and CDR are

@@ -275,6 +275,10 @@ Warnings:
   whole life. Always satisfied on a monthly calendar, where every `YYYY-MM`
   term is a boundary.
 
+- `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` is not one of
+  `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap
+  between act/360 and act/365 is roughly 1.4% of interest.
+
 Both `cadences` gates are a migration scaffold rather than a permanent
 statement about a pack: the entries are removed rule by rule as the
 expressions become cadence-neutral.

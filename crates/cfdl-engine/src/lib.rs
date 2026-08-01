@@ -1364,6 +1364,13 @@ fn build_base_env(
         "ppy".to_string(),
         ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
     );
+    // Actual calendar days in this period, so an Actual/360 or Actual/365
+    // accrual can be expressed. Packs reach it through
+    // {{model.accrual_divisor}}; a hand-written model may use it directly.
+    env.time.insert(
+        "days_in_period".to_string(),
+        ExprValue::Decimal(days_in_period(&ir.time.calendar, date)),
+    );
     env.curves = ir_curve_defs(ir);
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
@@ -1437,6 +1444,13 @@ fn build_expr_env(
     env.time.insert(
         "ppy".to_string(),
         ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
+    );
+    // Actual calendar days in this period, so an Actual/360 or Actual/365
+    // accrual can be expressed. Packs reach it through
+    // {{model.accrual_divisor}}; a hand-written model may use it directly.
+    env.time.insert(
+        "days_in_period".to_string(),
+        ExprValue::Decimal(days_in_period(&ir.time.calendar, date)),
     );
 
     env.entity.insert(
@@ -1563,6 +1577,23 @@ fn schedule_accruals(
     let mut out = vec![Vec::new(); timeline.len()];
     apply_schedule_indices(schedule, timeline, &mut out)?;
     Ok(out)
+}
+
+/// Calendar days in the period beginning `date` on `calendar`.
+///
+/// Derived from the calendar rather than the timeline so it is available
+/// wherever the expression environment is built, including the projection
+/// tail. Actual days, not a nominal 30 — that is the whole point: an
+/// Actual/360 accrual pays more in a 31-day month than a 30-day one.
+fn days_in_period(calendar: &str, date: &Date) -> f64 {
+    let next = match calendar {
+        "daily" => return 1.0,
+        "monthly" => date.add_months(1),
+        "quarterly" => date.add_months(3),
+        "annual" => date.add_months(12),
+        _ => date.add_months(1),
+    };
+    days_between(date, &next).max(1) as f64
 }
 
 fn periods_per_year(calendar: &str) -> f64 {

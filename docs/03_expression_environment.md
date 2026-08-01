@@ -52,7 +52,7 @@ The host (compiler or engine) provides values under five roots:
 | Root | Contents |
 |---|---|
 | `model` | `model.id`, `model.base_currency` |
-| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar) |
+| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period` |
 | `entity` | attributes of the stream's owning entity |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
@@ -72,6 +72,11 @@ periods-per-year at compile time (`{{model.periods_per_year}}`, see
 `docs/07_pack_interface.md`), because a rule may pay on its own interval: a
 monthly-paying loan carried on a daily book divides by 12, not 365, and only
 the compiler can see that. `time.ppy` reads the calendar and would say 365.
+
+`time.days_in_period` is the actual calendar days the current period spans —
+31 in January, 28 in a non-leap February, 1 on a daily grid. It is what makes
+an Actual/360 or Actual/365 accrual expressible: `rate * time.days_in_period /
+360`. Packs reach it through `{{model.accrual_divisor}}` rather than directly.
 
 ## 4. Builtin functions
 
