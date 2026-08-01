@@ -166,7 +166,30 @@ period falls in, which the expression environment does not expose
 Low urgency — the four cover most instruments — but `act/act` is the government
 bond convention and will be wanted if a sovereign or municipal pack appears.
 
-### 4.2 An acquisition or disposal in a period other than the term's
+### 4.2 excel_compat cannot be selected for a model run
+
+`cfdl_expr::eval_with_mode` takes a `Mode`, and `Mode::ExcelCompat` evaluates
+in IEEE-754 float64 to reproduce Excel's representation artifacts. But the
+engine always calls the plain `eval`, which hardcodes `Mode::Decimal`, and
+there is no CLI flag or run-config key. Nothing in the repo calls
+`eval_with_mode` at all, so the capability is real at the library boundary and
+unreachable above it.
+
+Whether it would change anything is now measured rather than guessed:
+`excel_compat_stability` in `crates/cfdl-calc/src/lib.rs` pins the credit
+pack's arithmetic below 1e-12 relative across both modes. So this is not
+urgent — it matters for a model that accumulates long sums or compares for
+equality, which the packs do not.
+
+Worth having when the first Excel-parity benchmark lands: the catalogue's
+A.CRE and Finamodel workbooks are Excel, and "our decimal answer differs from
+the spreadsheet in the fifteenth digit" is a question best answered by running
+both ways rather than by argument.
+
+Found while validating the credit pack against SIFMA and asking whether Excel
+mode would move the numbers. It cannot be turned on to find out.
+
+### 4.3 An acquisition or disposal in a period other than the term's
 
 `schedule_kind = "on_date"` places a one-shot flow in the period containing its
 date, and `schedule_at_period_end` now says where in that period it sits. What

@@ -414,3 +414,62 @@ mod tests {
         assert!(err.message.contains("pmt"), "{}", err.message);
     }
 }
+
+#[cfg(test)]
+mod excel_compat_stability {
+    use super::*;
+
+    fn both(src: &str) -> (f64, f64) {
+        let env = MapEnv::new();
+        let num = |m| match eval_str(src, &env, m).unwrap() {
+            Value::Number(x) => x.to_string().parse::<f64>().unwrap(),
+            other => panic!("expected number, got {other:?}"),
+        };
+        (num(Mode::Decimal), num(Mode::ExcelCompat))
+    }
+
+    #[test]
+    fn credit_pool_arithmetic_is_mode_stable() {
+        // Does running the credit pack in excel_compat change its answers?
+        // No — and this pins that, because it is not obvious. The pack looks
+        // float-sensitive: 360 periods of compounding through pow().
+        //
+        // It is stable because the shapes that actually diverge are absent
+        // here. Decimal mode already routes fractional exponents through the
+        // f64 escape, so cpr_to_periodic is identical in both. What remains is
+        // integer-exponent pow and multiplication, where 28 decimal digits and
+        // f64's ~16 both far exceed whole-dollar precision. The divergence
+        // excel_compat exists to reproduce — 0.1 + 0.2 != 0.3, and equality
+        // comparisons on accumulated sums — the pack never performs.
+        //
+        // Worst observed is ~4e-14 relative, roughly ten orders of magnitude
+        // inside benchmarks/credit/sifma_cash_flow_a's 0.51 tolerance.
+        let r = "0.08 / 12";
+        let smm = "cpr_to_periodic(0.11361512828387077, 12)";
+        let k = format!("((1 - {smm}) - {smm})");
+        let cases = [
+            smm.to_string(),
+            k.clone(),
+            format!("100000000 * (1 - {smm}) * ({r})"),
+            format!("100000000 * (1 - ({r}) / (pow(1 + {r}, 360) - 1)) * {smm}"),
+            format!("pow({k}, 348)"),
+            format!(
+                "100000000 * ((pow(1 + {r}, 360) - pow(1 + {r}, 347)) / (pow(1 + {r}, 360) - 1)) \
+                 * pow({k}, 347) * (1 - {smm}) * ({r})"
+            ),
+        ];
+        for src in &cases {
+            let (decimal, excel) = both(src);
+            let rel = if decimal == 0.0 {
+                (excel - decimal).abs()
+            } else {
+                (excel - decimal).abs() / decimal.abs()
+            };
+            assert!(
+                rel < 1e-12,
+                "mode divergence {rel:e} exceeds 1e-12 for `{src}` \
+                 (decimal {decimal}, excel_compat {excel})"
+            );
+        }
+    }
+}

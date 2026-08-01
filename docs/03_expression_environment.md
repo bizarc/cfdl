@@ -24,11 +24,23 @@ Two evaluation modes exist; models always run in **decimal mode**.
   Float64 is used ONLY as a documented escape for transcendental operations:
   fractional exponents (`x ^ 0.5`), and iterative solvers (`rate`,
   `cpr_to_smm`). Integer exponents are decimal-exact.
-- **excel_compat mode.** Available to benchmark harnesses via
-  `cfdl_expr::eval_with_mode`. All arithmetic runs in IEEE-754 float64,
-  reproducing Excel's representation artifacts (`0.1 + 0.2 - 0.3` yields
-  ~5.55e-17, exactly as Excel does). Used to prove parity against Excel
-  reference models and to explain decimal-vs-float differences.
+- **excel_compat mode.** All arithmetic runs in IEEE-754 float64, reproducing
+  Excel's representation artifacts (`0.1 + 0.2 - 0.3` yields ~5.55e-17, exactly
+  as Excel does), for proving parity against Excel reference models and
+  explaining decimal-vs-float differences.
+
+  It is reachable **only from Rust**, via `cfdl_expr::eval_with_mode`. There is
+  no CLI flag and no run-config key, so a *model* cannot be run in it — the
+  engine always evaluates in decimal. Nothing in the repo calls
+  `eval_with_mode` today. See `docs/13_feature_backlog.md`.
+
+  Whether that matters is measured rather than assumed:
+  `excel_compat_stability` in `crates/cfdl-calc/src/lib.rs` runs the credit
+  pack's arithmetic both ways and pins the divergence below 1e-12 — about ten
+  orders of magnitude inside the tolerance of the benchmark it feeds. Decimal
+  mode already routes fractional exponents through the f64 escape, so the two
+  modes differ only where a model accumulates long sums or compares for
+  equality.
 
 Rounding: `round()` follows Excel semantics (half away from zero), not
 banker's rounding. `round_down`/`round_up` truncate toward/away from zero.
