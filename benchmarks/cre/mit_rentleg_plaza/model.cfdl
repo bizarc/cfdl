@@ -25,7 +25,7 @@
 
 version 0.1
 model "mit-rentleg-plaza"
-time calendar annual from 2001-01 for 5
+time calendar annual from 2001-01 for 5 project 1
 
 entity asset rentleg
 
@@ -67,8 +67,6 @@ assume selling_costs   = 0.05       // MIT fn 11
 // value, so the opex formula is necessarily duplicated — see NOTES.md.
 assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
 
-// 2006 opex per SF, at full occupancy (the fixed/variable split collapses to 1).
-assume opex_psf_2006 = 4.81 * pow(1.04, 5)
 
 // ---------------------------------------------------------------------------
 // Potential gross revenue — rent roll
@@ -77,7 +75,7 @@ assume opex_psf_2006 = 4.81 * pow(1.04, 5)
 // Suite 100: contract rent at $15.00/SF through 2003, then re-leased at the
 // post-spike market rent of $16.80/SF from 2004.
 stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_100_sf * if(time.t <= 2,
              inputs.suite_100_rent_psf,
              inputs.market_rent_psf * (1 + inputs.rent_spike))
@@ -86,7 +84,7 @@ stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD 
 // Suite 200: vacant in 2001 (offset by the vacancy line below), then a 5-year
 // lease signed 1/02 at the then-current $14.00/SF, flat through 2006.
 stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_200_sf * inputs.market_rent_psf
 }
 
@@ -97,7 +95,7 @@ stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD 
 // MIT fn 1 — Suite 200 vacant all of 2001.
 // MIT fn 2 — Suite 100 expected 2004 vacancy: 50% x 6mo = 25% of its PGR.
 stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = if(time.t == 0,
             inputs.suite_200_sf * inputs.market_rent_psf,
             if(time.t == 3,
@@ -108,7 +106,7 @@ stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
 
 // MIT fn 3 — 5 months free rent on the new Suite 200 lease, taken in 2002.
 stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = if(time.t == 1,
             (inputs.abatement_months / 12) * inputs.suite_200_sf * inputs.market_rent_psf,
             0)
@@ -124,7 +122,7 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 // ---------------------------------------------------------------------------
 
 stream cre.property.opex on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.building_sf * inputs.opex_psf_full
            * pow(1 + inputs.opex_growth, time.t)
            * (inputs.opex_pct_fixed
@@ -144,7 +142,7 @@ stream cre.property.opex on entity asset.rentleg outflow currency USD {
 // MIT fn 4 (2001-03, $4.00 stop) and fn 5 (2005-06, stop reset to actual
 // 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
 stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_100_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -158,7 +156,7 @@ stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD
 
 // MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.
 stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2002-01 to 2005-01
+  schedule every year from 2002-01 to 2006-01
   amount = inputs.suite_200_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -215,14 +213,28 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 // a negative sign, so the terms simply add.
 // ---------------------------------------------------------------------------
 
-// 2006 is fully leased and concession-free, so its NOI is: both suites at
-// contract rent, both reimbursing above their stops, less full-occupancy opex.
+// MIT fn 11 — the reversion.
+//
+// Sale at the end of 2005 for 10x the FOLLOWING year's NOI, net of a 5%
+// selling commission. The 2006 NOI is now DERIVED from the modelled streams
+// over the `project 1` tail rather than restated inline: E2103 used to measure
+// a native stream's schedule against the cash horizon, so no hand-written
+// model could reach the tail and this file carried a duplicated closed form.
+// Outflow streams are signed negative, so the terms simply add.
+//
+// Deliberately a native stream rather than `cre.exit_forward`. That contract
+// lowers to an `on_date` schedule, which discounts from the START of the
+// period it lands in — a year-5 sale would be discounted four years, not five,
+// worth $207,783 here. MIT fn 12 places the reversion at the end of year 5,
+// which is also ordinary DCF practice. On a monthly model the same convention
+// costs one month of discounting and is easy to miss; on an annual one it is
+// a full year. See NOTES.md.
 stream cre.exit.proceeds on entity asset.rentleg inflow currency USD {
   schedule every year from 2005-01 to 2005-01
-  amount = (inputs.suite_100_sf * inputs.market_rent_psf * (1 + inputs.rent_spike)
-            + inputs.suite_200_sf * inputs.market_rent_psf
-            + inputs.suite_100_sf * max(0, inputs.opex_psf_2006 - inputs.opex_psf_2004)
-            + inputs.suite_200_sf * max(0, inputs.opex_psf_2006 - inputs.suite_200_stop_psf)
-            - inputs.building_sf * inputs.opex_psf_2006)
+  amount = (series_sum("cre.unit.base_rent.*", time.t + 1, time.t + 1)
+            + series_sum("cre.unit.recoveries.*", time.t + 1, time.t + 1)
+            + series_sum("cre.vacancy.loss", time.t + 1, time.t + 1)
+            + series_sum("cre.abatement.suite_200", time.t + 1, time.t + 1)
+            + series_sum("cre.property.opex", time.t + 1, time.t + 1))
            / inputs.exit_cap * (1 - inputs.selling_costs)
 }

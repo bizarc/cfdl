@@ -4,68 +4,51 @@ Internal validation notes. The model reproduces MIT OCW 11.431J PS1 exactly
 (every pro forma line, and PV = $2,292,810.18 against a published $2,292,810).
 These are the places the language or the CRE pack pushed back on the way there.
 
-## 1. The CRE pack cannot be used at all on a non-monthly calendar
+## 1. RESOLVED — the CRE pack now lowers on any calendar
 
-Every rule in `packs/cre/lowering/rules.toml` divides by 12 and anchors time
-with `months_between(term_start, time.date)`. On an `annual` calendar
-`months_between` steps by 12 per period while the `/ 12` still divides a year's
-figure into a month's, so a `cre.lease_unit` on an annual grid pays 1/12 of the
-rent once a year.
+Originally: every rule divided annual figures by a literal 12 and anchored on
+`months_between`, so a `cre.lease_unit` on an annual grid paid one twelfth of
+its rent once a year, silently. Nothing rejected it.
 
-`time calendar annual` is documented as supported (`docs/10_implementation_status.md`)
-and the language handles it correctly — this is a pack-authoring assumption, not
-an engine limit. Nothing rejects the combination; it silently produces numbers
-that are wrong by 12x. That is the behaviour `10_implementation_status.md`
-explicitly says the project does not want ("nothing is accepted and silently
-discarded").
+Fixed. All four packs are cadence-neutral; `tools/cadence-parity.py` asserts
+that one deal produces the same annual figures on every calendar. This
+benchmark's own five-months-free term was the decisive case for the pro-rating
+policy — `_months` means calendar months on every grid, so five months is
+0.417 of an annual period and year one is 480,000 x 7/12.
 
-**No model in the repo uses a non-monthly calendar**, so this has never been
-exercised. This benchmark is the first.
+## 2. RESOLVED — the projection tail is reachable from a native model
 
-Options: gate the pack to monthly with a diagnostic, or parameterise the
-rules on periods-per-year.
+Originally: `E2103_SCHEDULE_OUT_OF_BOUNDS` measured a native stream's schedule
+against the cash horizon and excluded the `project` tail, while a pack-lowered
+stream was not bounds-checked at all. So this model could not read a forward
+year and carried its 2006 NOI as an inline closed form, duplicating the opex
+formula.
 
-## 2. `E2103_SCHEDULE_OUT_OF_BOUNDS` blocks native streams from the projection tail
+Fixed. The bound now spans the evaluation window and is mirrored onto lowered
+streams. The reversion derives 2006 NOI from the modelled streams over
+`project 1`, and the duplicated formula is gone.
 
-`cfdl-validate/src/lib.rs:331` computes the timeline end as
-`end_of_timeline(start, cadence, time.periods)` — `time.projection` is not
-included. The check then walks *source AST* stream statements, so:
+## 3. OPEN — the exit contracts discount from the start of their period
 
-- a **pack-lowered** stream may schedule into the tail (`office_two_tenant`
-  runs `cre.property.opex` to 2036-12 under `for 120 project 12`);
-- a **hand-written** stream with the same reach is rejected.
+`cre.exit_forward` lowers to an `on_date` schedule, which discounts from the
+START of the period it lands in. A sale placed in year 5 is therefore
+discounted four years, not five.
 
-Net effect: the projection tail is reachable only through a pack contract. The
-documented `cre.exit_forward` recipe — derive forward NOI from the modelled
-streams via `series_sum` over the tail — cannot be written natively.
+Using the pack contract here gives $2,500,593.30 against the published
+$2,292,810 — a difference of $207,783.13, which is exactly
+`reversion / 1.12^4 - reversion / 1.12^5`. MIT fn 12 places the reversion at
+the end of year 5, which is also ordinary DCF practice.
 
-To be clear, this is **not** evidence that the pack benchmarks are wrong.
-`office_two_tenant` was re-run during this work and reproduces its blessed
-values exactly (`model.npv` 1,433,678.078 vs 1,433,678.08; all four domain
-metrics to the cent), and its `cre.exit.proceeds` of 3,237,142.70 implies a
-forward NOI of ~214,708, which is only possible if `series_sum` genuinely read
-non-zero data past period 120. The tail works. The bounds check is just applied
-asymmetrically.
+On a monthly model the same convention costs one month of discounting (~0.6%
+at 7.25%), which is small enough to have gone unnoticed. On an annual model it
+is a full year. The reversion here is therefore a native stream on an ordinary
+annual schedule, which discounts from period end.
 
-Consequence here: this model computes 2006 NOI inline from the same closed-form
-expressions instead of reading it back from a tail.
+Fixing it means placing the pack's capital events at period end, which moves
+every existing CRE benchmark's NPV slightly — a deliberate decision, not a
+drive-by.
 
-## 3. No way to reference another period's phase-1 value
-
-MIT fn 5 resets Suite 100's expense stop, on re-lease, to *actual 2004 opex per
-SF*. Expressing that needs the value of the opex stream at t=3 from inside the
-recoveries stream.
-
-`series_sum` would do it, but it makes the caller a phase-2 stream, and phase-2
-streams cannot reference each other — so the recoveries stream and the exit
-stream could not both use it. The opex formula is therefore duplicated into an
-`assume` (`opex_psf_2004`). It is correct but it is a second copy of a formula
-that must stay in sync with the stream.
-
-Base-year and base-year-reset stops are standard in full-service office leases,
-so this is not an exotic requirement.
-
-## 4. Pack gaps that a monthly rewrite would not fix
+## 4. Pack gaps that remain
 
 Independent of calendar, three things in this deal cannot be expressed through
 CRE pack contracts:
@@ -93,17 +76,20 @@ institutional pro formas (and this one) report Abatements as its own deduction
 from potential gross revenue. Reporting it as a line and having it counted in
 NOI are currently mutually exclusive.
 
-## 6. Playground: the shipped wasm is stale
+## 6. RESOLVED — the playground shipped a stale engine
 
-`site/public/wasm/` was built 2026-07-27; HEAD is 2026-08-01. The stale build
-rejects **every** `schedule every <interval> from ...` form — `every month`,
-`every quarter`, `every year`, on every calendar — with
-`E0004_EXPECTED_TOKEN: Expected token 'from', found <identifier>`. The same
-source compiles clean on a current CLI build.
+`site/public/wasm/` was built five days and four breaking grammar changes
+before HEAD, and rejected every `schedule every <interval> from ...`. A
+freshness gate existed and had never fired: `site.yml`'s `paths:` filter
+excluded `crates/**`, and every checkout is shallow so the gate's `git diff`
+threw and it exited 0.
 
-So anything a user writes in the playground that uses an interval schedule
-fails, which is most non-trivial models. `npm run build:wasm` regenerates it;
-worth wiring into CI so the asset cannot drift from the grammar again.
+Fixed and gated four ways — engine version literal, a source hash, a
+functional smoke test over the shipped bundle, and a wasm32 build in CI.
+Rebuilding it immediately exposed a second bug it had been masking: seven run
+configs still used `discount_rate`, renamed to `annual_discount_rate` some
+releases earlier, so every language-tutorial example in the playground was
+erroring.
 
 ## Why this stays annual
 
