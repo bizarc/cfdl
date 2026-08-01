@@ -12,14 +12,14 @@
   "phases": [],
   "entities": [
     {
-      "id": "9157fe73f343ed0744c9bec994b1fa8c",
+      "id": "c7544124b51b01d1e9e582c1330e554c",
       "symbol": "real_estate.first_entity",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "15c1489bd6275a8b479cb4e0bdaee7cd",
+      "id": "6ae18598bf14243380e14c3dfd5c9e4f",
       "symbol": "real_estate.second_entity",
       "type": "core.Entity",
       "attrs": {},
@@ -32,7 +32,7 @@
   },
   "contracts": [
     {
-      "id": "ceab9c9d324b8eb1d0b9d6bfa0542fb9",
+      "id": "08c8b9a9dda66c66239d4536354d6dcd",
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
@@ -60,7 +60,7 @@
   ],
   "streams": [
     {
-      "id": "15364bf5510a5b253fb90feabe6d4d98",
+      "id": "1bd47f99d3ab874531b239cd0d473bd1",
       "name": "cre.ops.expense",
       "owner": {
         "symbol": "real_estate.first_entity"

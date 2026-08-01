@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "4ce176b36aa2d26e2361e50743834c66",
+      "id": "5aaf690eec768282e056de165354fb73",
       "symbol": "project.plant",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "69fe5f24e09dc5dea83b4550bafc3930",
+      "id": "b5fdae5303724d501b22109f1ac66ca8",
       "name": "plant.opex",
       "owner": {
         "symbol": "project.plant"
@@ -58,7 +58,7 @@
       }
     },
     {
-      "id": "8a60c1cf366fc205c047230f7053ca6b",
+      "id": "327dcd0f0062ecf38e6786c7a3ca1246",
       "name": "plant.revenue",
       "owner": {
         "symbol": "project.plant"

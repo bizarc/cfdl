@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "a3c13f67a6ef2935c7474e60b9c0281f",
+      "id": "41fd228904054acae87e152102d7194d",
       "symbol": "operating.business",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "1ad84895f1d83ba34ec72025fefc737d",
+      "id": "593979d7679e224d6876971abd27b740",
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "147ee1a1fb19147f8315cf30604c2105",
+      "id": "8be92e7fdf9ebfcb0607ffe280885e76",
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
@@ -79,7 +79,7 @@
   ],
   "streams": [
     {
-      "id": "7d46ee9e0e775507b3537066c868fbe1",
+      "id": "4eec156f295fcddc4e6642e887288376",
       "name": "opco.opex.recurring",
       "owner": {
         "symbol": "operating.business"
@@ -118,7 +118,7 @@
       }
     },
     {
-      "id": "9b2f5b6b60dc80212ed55c766e025126",
+      "id": "cf1275cc300972e467c3732a37056442",
       "name": "opco.revenue.recurring",
       "owner": {
         "symbol": "operating.business"

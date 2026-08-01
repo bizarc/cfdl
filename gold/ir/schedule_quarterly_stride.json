@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "0341a5ea4761b9da3938677ffe47e3fd",
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
       "symbol": "legal.co",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "8139a538f95bae271b1adcb9888f48cb",
+      "id": "7cbdd09105f1ace6ccfb6a0f26910723",
       "name": "co.coupon",
       "owner": {
         "symbol": "legal.co"

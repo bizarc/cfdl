@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "7ed56abac80b61f2a7bb90864562c1bb",
+      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -51,7 +51,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "05a164dfcbc7b444892b67b005ec07f8",
+      "id": "7f7c44cfd86694bcdd6f61d368e127e7",
       "name": "legal.fee",
       "owner": {
         "symbol": "legal.borrower"

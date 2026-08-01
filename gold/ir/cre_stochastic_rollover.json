@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "c87c1508293604c05724986fcc783732",
+      "id": "a17cdce0ecf04a18a578649e6b9d2bce",
       "symbol": "asset.tower",
       "type": "core.Entity",
       "attrs": {},
@@ -38,7 +38,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "d025dc9bd20713873f235022a49b8d0c",
+      "id": "44e02bccaf30a20c1bc7d5976981f1b3",
       "name": "asset.downtime_loss",
       "owner": {
         "symbol": "asset.tower"
@@ -70,7 +70,7 @@
       }
     },
     {
-      "id": "f98c6d7ea1bc80740f70d9f5a4e17e24",
+      "id": "35a104c28ca3b1148ed5fa17861c9325",
       "name": "asset.rollover_rent",
       "owner": {
         "symbol": "asset.tower"
@@ -102,7 +102,7 @@
       }
     },
     {
-      "id": "4ac29c3affb526a2bff45075d55d3404",
+      "id": "621773a497ef99ecf6c5e4c8c6446f23",
       "name": "asset.turnover_costs",
       "owner": {
         "symbol": "asset.tower"

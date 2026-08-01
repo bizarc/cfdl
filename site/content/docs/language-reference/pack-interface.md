@@ -114,24 +114,31 @@ packs/
 A pack directory MUST include `pack.toml`:
 
 ```toml
-pack_id = "cre"
-version = "0.1"
+name = "cre"
+version = "0.1.0"
 description = "Commercial Real Estate domain pack"
-ir_versions = ["0.1"]
 
 [entrypoints]
-types = "ontology/types.toml"
 aliases = "aliases.toml"
-contract_schemas = "contracts/schemas.toml"
-lowering_rules = "contracts/lowering.toml"
-outputs = "outputs.toml"
-docs = "docs/index.toml"
+lowering = "lowering/rules.toml"
+metrics = "metrics.toml"
+validations = "validations.toml"
 ```
 
 Rules:
-- `pack_id`, `version`, `ir_versions`, and `entrypoints.types` are REQUIRED.
-- `entrypoints.outputs` is REQUIRED for packs that define domain-specific metrics and aggregations.
-- Other entrypoints are optional.
+- `name` and `version` are REQUIRED. `description` is optional.
+- Every entrypoint is optional; a pack supplies only what it defines. The
+  recognised keys are `aliases`, `templates`, `lowering`, `metrics` and
+  `validations`, each a path relative to the pack directory.
+- `version` is matched against the model's `use pack "<name>" version "<v>"`
+  by exact string equality — there is no semver range logic. A pack present at
+  a different version reports `E4004_MISSING_PACK` naming both versions, not
+  a bare "not found".
+
+Earlier revisions of this page described `pack_id`, `ir_versions`,
+`entrypoints.types`, `contract_schemas`, `outputs` and `docs`. The loader has
+never read any of them and no shipped pack declares them; a manifest written
+to that description would load with no entrypoints at all.
 
 ### 5.2 Pack formats
 - All pack artifacts are TOML-based.
@@ -502,7 +509,7 @@ Metric rules:
 ### 7.1 Pack loader interface
 The compiler should expose a minimal interface:
 
-- `load_pack(pack_id, version) -> Pack`
+- `load_pack(name, version) -> Pack`
 - `Pack.type_registry() -> TypeRegistry`
 - `Pack.aliases() -> AliasRegistry`
 - `Pack.contract_schema(type_id) -> Option<ContractSchema>`
@@ -530,7 +537,14 @@ Recommended CLI behaviors:
 
 ### 8.1 Determinism
 Pack identity MUST participate in determinism:
-- ID generation seed includes `pack_id@version` if present.
+- The id generation seed includes `<name>@<version>` when a pack is active,
+  because a different pack lowers a contract differently and so produces a
+  genuinely different object.
+- The seed MUST NOT include the compiler version. An id identifies a thing in
+  a model, not the build that emitted it; including the version rewrote every
+  id on every release, churning goldens and making a downstream store treat
+  the same entity as new after an upgrade. The compiler version belongs in
+  provenance, and stays there.
 
 ### 8.2 Provenance
 The compiler SHOULD record pack info in top-level provenance notes.

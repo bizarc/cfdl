@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "bf515335aa2bff185d331ec978fdc431",
+      "id": "3388cfd913652af0f66b3b1d1452bf10",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "a04ab12d681f0b5fc6ae7961e9e4dc5a",
+      "id": "5d49d8bac726bbed064770b5940c3a51",
       "name": "test.coupon_contract",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "406f027614e95d8cb6020a9701bf27aa",
+      "id": "89621d0ac0e756607e2b2ad488054323",
       "name": "testpack.coupon",
       "owner": {
         "symbol": "legal.borrower"

@@ -529,6 +529,18 @@ pub fn expand_rule_template(
     }
 }
 
+/// Outcome of resolving a `use pack` request.
+#[derive(Debug, Clone)]
+pub enum PackLookup {
+    Found(ActivePack),
+    /// No pack of that name in the registry.
+    Absent,
+    /// The pack exists, at a different version.
+    VersionMismatch {
+        available: String,
+    },
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActivePack {
     pub name: String,
@@ -628,16 +640,30 @@ impl PackRegistry {
     }
 
     pub fn active_pack(&self, name: &str, version: &str) -> Option<ActivePack> {
-        self.packs.get(name).and_then(|pack| {
-            if pack.manifest.version == version {
-                Some(ActivePack {
-                    name: pack.manifest.name.clone(),
-                    version: pack.manifest.version.clone(),
-                })
-            } else {
-                None
-            }
-        })
+        match self.resolve_pack(name, version) {
+            PackLookup::Found(active) => Some(active),
+            _ => None,
+        }
+    }
+
+    /// Resolve a `use pack` request, distinguishing absence from a version
+    /// mismatch.
+    ///
+    /// Both used to collapse into `None`, so a pack sitting right there at a
+    /// different version was reported as "not found" — sending the reader off
+    /// to check their `--packs` path when the real problem was one digit in a
+    /// version string.
+    pub fn resolve_pack(&self, name: &str, version: &str) -> PackLookup {
+        match self.packs.get(name) {
+            None => PackLookup::Absent,
+            Some(pack) if pack.manifest.version == version => PackLookup::Found(ActivePack {
+                name: pack.manifest.name.clone(),
+                version: pack.manifest.version.clone(),
+            }),
+            Some(pack) => PackLookup::VersionMismatch {
+                available: pack.manifest.version.clone(),
+            },
+        }
     }
 
     pub fn lookup_alias(&self, pack_name: &str, alias: &str) -> Option<&str> {
