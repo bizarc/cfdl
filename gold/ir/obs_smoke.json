@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "7ed56abac80b61f2a7bb90864562c1bb",
+      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "5beea20b551f8d672635c2013ce34357",
+      "id": "b72111d1d66c17f72b3111387c950ab6",
       "name": "legal.rate_payment",
       "owner": {
         "symbol": "legal.borrower"

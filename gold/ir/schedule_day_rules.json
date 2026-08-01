@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "0341a5ea4761b9da3938677ffe47e3fd",
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
       "symbol": "legal.co",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "664c465d96378de9ecb26f211ae3ba61",
+      "id": "e6820339fcb892ae755d62c5412b3d01",
       "name": "co.rent",
       "owner": {
         "symbol": "legal.co"
@@ -62,7 +62,7 @@
       }
     },
     {
-      "id": "72bd25c340317462801289971fece404",
+      "id": "a413f9acf1890492eb24d2b53e6b3301",
       "name": "co.sweep",
       "owner": {
         "symbol": "legal.co"

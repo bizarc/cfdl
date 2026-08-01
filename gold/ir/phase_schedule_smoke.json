@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "d12331b485001ac65eb6e0e4f49cd412",
+      "id": "a5744678a4d8b3483f064c14f20f80b5",
       "name": "construction",
       "range": {
         "start": "2025-01-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "36e99ad18b868cb2e26c8249e86697dc",
+      "id": "256713c84902341fc212778a5af98538",
       "name": "operations",
       "range": {
         "start": "2026-01-01",
@@ -29,7 +29,7 @@
   ],
   "entities": [
     {
-      "id": "a22393812ed16be5cfb8cc340cede9c6",
+      "id": "a7bbd8fe393cafdeca3ad7b7c969479a",
       "symbol": "legal.property",
       "type": "core.Entity",
       "attrs": {},
@@ -43,7 +43,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "a9135edc8c7985a064844e2d492f8823",
+      "id": "de5cd821ee32aaa89ae372c255cc5d07",
       "name": "legal.construction_draw",
       "owner": {
         "symbol": "legal.property"
@@ -74,7 +74,7 @@
       }
     },
     {
-      "id": "d120e4136cdca1dab8e8e4a3e9a6a045",
+      "id": "f79d2345148edd9e7a3403620eaccd2a",
       "name": "legal.operating_revenue",
       "owner": {
         "symbol": "legal.property"

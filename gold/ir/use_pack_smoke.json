@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "bf515335aa2bff185d331ec978fdc431",
+      "id": "3388cfd913652af0f66b3b1d1452bf10",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "990bd5a6d92a43b79aecc81ca1ccc760",
+      "id": "48bd0f2bf6ee0a454f2cd981aa4f6c0a",
       "name": "test.lease_contract",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "0e2a82e41c438117e8c9a45af44c093b",
+      "id": "cb4eca730ea91e8f40051cd44aec78b7",
       "name": "testpack.lowered",
       "owner": {
         "symbol": "legal.borrower"

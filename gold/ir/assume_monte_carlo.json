@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "7ed56abac80b61f2a7bb90864562c1bb",
+      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -50,7 +50,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "4804b49417c377186367110635d5e782",
+      "id": "fdc2a2e2b548777ae42256206a3a9be8",
       "name": "legal.rent",
       "owner": {
         "symbol": "legal.borrower"

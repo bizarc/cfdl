@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "0b15a70b21c0cd60ede55f8c570e0235",
+      "id": "91dc0be2f15e7cab309d3108dce23b60",
       "name": "growth",
       "range": {
         "start": "2026-07-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "cee5ab62ccc0aa95c108c8d879402938",
+      "id": "6be41fc820d603ac28f7bc343f5f592b",
       "name": "ramp",
       "range": {
         "start": "2026-01-01",
@@ -27,7 +27,7 @@
       }
     },
     {
-      "id": "1b9456826190ad4b5a84529b14e2deaf",
+      "id": "87e84681f90dbfa1aabdb60633c0a320",
       "name": "scale",
       "range": {
         "start": "2028-01-01",
@@ -37,14 +37,14 @@
   ],
   "entities": [
     {
-      "id": "ba1d0cac47218495f093331ad639c2e6",
+      "id": "0de94ebc8fa7e2405c74d40644a65214",
       "symbol": "ops.team",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "f18f20b51004bbf88d8123891ec43ad8",
+      "id": "60969c1ff88b2b86182ce509aad52a1a",
       "symbol": "saas.product",
       "type": "core.Entity",
       "attrs": {},
@@ -58,7 +58,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "da4cf7bd5031a91a18e25c34d8595d8c",
+      "id": "ff01c5ad29fd96ebcab08cb2389f08d3",
       "name": "ops.seed_investment",
       "owner": {
         "symbol": "ops.team"
@@ -89,7 +89,7 @@
       }
     },
     {
-      "id": "831f6efb15b358e0ecb066f3bd53bb87",
+      "id": "625abeae1357e6e3f9de5f9d896e2d61",
       "name": "ops.team_cost",
       "owner": {
         "symbol": "ops.team"
@@ -121,7 +121,7 @@
       }
     },
     {
-      "id": "953c09075d66e946cba6f6d707fa8dd8",
+      "id": "3b412232907fb1a383cee528bcf7a362",
       "name": "saas.infra_cost",
       "owner": {
         "symbol": "saas.product"
@@ -153,7 +153,7 @@
       }
     },
     {
-      "id": "09480633abdaacb9ca04fae77ce1e433",
+      "id": "00641faaa02443fbccbdb7b373a6ea33",
       "name": "saas.mrr",
       "owner": {
         "symbol": "saas.product"

@@ -554,10 +554,16 @@ fn build_ir(
         .map(|pack| format!("{}@{}", pack.name, pack.version))
         .unwrap_or_default();
     let compiler_hash = hash_hex(&format!("cfdl:{compiler_version}:{pack_seed}"));
+    // Object ids identify a thing in a model, so they depend on the model and
+    // on the pack that lowered it — not on which compiler build ran. Including
+    // the compiler version meant every release rewrote every id: goldens
+    // churned wholesale, burying real changes, and any downstream store keyed
+    // on an id saw the same entity as a new one after an upgrade. The version
+    // still appears in provenance, which is where a build belongs.
     let id_seed = if pack_seed.is_empty() {
-        format!("cfdl:{compiler_version}:{compiler_hash}")
+        "cfdl".to_string()
     } else {
-        format!("cfdl:{compiler_version}:{compiler_hash}:{pack_seed}")
+        format!("cfdl:{pack_seed}")
     };
 
     let mut phases: Vec<((String, String), IrPhase)> = resolve_output
@@ -919,19 +925,35 @@ fn resolve_active_pack_inner(
         })?,
         None => load_embedded_registry(&pack_diag)?,
     };
-    let Some(active) = registry.active_pack(&use_pack.name, &use_pack.version) else {
-        let where_ = match packs_dir.as_ref() {
-            Some(dir) => format!("under '{}'", dir.display()),
-            None => "in the embedded pack registry".to_string(),
-        };
-        return Err(pack_diag(
-            format!(
-                "Pack '{}@{}' was not found {where_}.",
-                use_pack.name, use_pack.version
-            ),
-            Some("Add a matching pack manifest or pass --packs <dir>.".to_string()),
-            vec![],
-        ));
+    let where_ = match packs_dir.as_ref() {
+        Some(dir) => format!("under '{}'", dir.display()),
+        None => "in the embedded pack registry".to_string(),
+    };
+    let active = match registry.resolve_pack(&use_pack.name, &use_pack.version) {
+        cfdl_pack::PackLookup::Found(active) => active,
+        cfdl_pack::PackLookup::Absent => {
+            return Err(pack_diag(
+                format!("Pack '{}' was not found {where_}.", use_pack.name),
+                Some("Add a matching pack manifest or pass --packs <dir>.".to_string()),
+                vec![],
+            ));
+        }
+        // The pack is present; only the version differs. Saying "not found"
+        // here sends the reader to check their --packs path when the fix is
+        // one digit in the model.
+        cfdl_pack::PackLookup::VersionMismatch { available } => {
+            return Err(pack_diag(
+                format!(
+                    "Model requires pack '{}' version {}, but the pack found {where_} is version {}.",
+                    use_pack.name, use_pack.version, available
+                ),
+                Some(format!(
+                    "Change the model to `use pack \"{}\" version \"{}\"`, or point --packs at a registry holding {}.",
+                    use_pack.name, available, use_pack.version
+                )),
+                vec![],
+            ));
+        }
     };
 
     Ok(Some(ActivePackContext {

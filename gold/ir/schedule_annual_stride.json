@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "0341a5ea4761b9da3938677ffe47e3fd",
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
       "symbol": "legal.co",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "a216203eda1499dde4ecb8265e726f39",
+      "id": "a81b65b8d4eae944a7fc3516bb3fb834",
       "name": "co.true_up",
       "owner": {
         "symbol": "legal.co"

@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "0341a5ea4761b9da3938677ffe47e3fd",
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
       "symbol": "legal.co",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "7ea56ce872f8e0bc061ab37b01fd6b2d",
+      "id": "3c53a27fa98340a1a9d0db61c4c4c1ef",
       "name": "co.payroll",
       "owner": {
         "symbol": "legal.co"

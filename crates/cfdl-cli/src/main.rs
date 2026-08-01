@@ -89,9 +89,14 @@ fn main() -> Result<()> {
                 }
             }
         }
+        // `validate` applies the same ./packs default as compile and run.
+        // Without it the two disagreed: a model that compiled cleanly could
+        // fail validation, because validate alone could not find the pack.
         Command::Validate { model_root, packs } => match cfdl_compile::validate_only_with(
             &model_root,
-            &cfdl_compile::CompileOptions { packs_dir: packs },
+            &cfdl_compile::CompileOptions {
+                packs_dir: packs.or_else(default_packs_dir),
+            },
         ) {
             Ok(()) => Ok(()),
             Err(diags) => {

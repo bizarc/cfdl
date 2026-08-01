@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "bf515335aa2bff185d331ec978fdc431",
+      "id": "3388cfd913652af0f66b3b1d1452bf10",
       "symbol": "legal.borrower",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "3ca7f9b9a72ae9b437b93cb641b94d81",
+      "id": "59b99a2bb2b836050e5adf8be8c645c8",
       "name": "test.fee_contract",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "dfc704d29e99ce132f91d32f9b241828",
+      "id": "0f808a91d6b4f8e48970ddad5fdf4ede",
       "name": "testpack.fee",
       "owner": {
         "symbol": "legal.borrower"

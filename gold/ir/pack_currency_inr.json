@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "cc1ff4367dcacd87c0860d4500e7e1e6",
+      "id": "e87099c672c8159a4ac330854d1d6b3a",
       "symbol": "project.plant",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "c3451e8cdfe15b291bebe27f3dac59a9",
+      "id": "a0337ee6854e092c9c2b8f8da6b15e5f",
       "name": "energy.ppa.plant_a",
       "type": "core.Contract",
       "subject": {
@@ -53,7 +53,7 @@
   ],
   "streams": [
     {
-      "id": "7785c168f3f7507109c7d2eb85c1b686",
+      "id": "01e75b37cd2aa7955e2572e2062927c0",
       "name": "energy.ppa.revenue.plant_a",
       "owner": {
         "symbol": "project.plant"
