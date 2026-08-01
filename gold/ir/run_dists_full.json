@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "fe587076b702da36ed2cbd4a2f0edea2",
+      "id": "4ce176b36aa2d26e2361e50743834c66",
       "symbol": "project.plant",
       "type": "core.Entity",
       "attrs": {},
@@ -26,7 +26,7 @@
   "contracts": [],
   "streams": [
     {
-      "id": "04ce351e68fb01e466419ea08f5cd4c9",
+      "id": "8a60c1cf366fc205c047230f7053ca6b",
       "name": "plant.revenue",
       "owner": {
         "symbol": "project.plant"
@@ -73,8 +73,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.2",
-      "hash": "451b90bdf6a370cd642a5125e0adf5c0"
+      "version": "0.6.0",
+      "hash": "9185eab14e4fe744bd35f7bbcbd1ae4e"
     }
   }
 }

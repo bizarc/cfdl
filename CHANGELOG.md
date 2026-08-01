@@ -6,6 +6,55 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [0.6.0] - 2026-07-28
+
+Packs work outside the United States. Breaking: see below.
+
+### Lowering rules inherit the model's currency
+
+All 58 lowering rules across the four packs hardcoded `currency = "USD"`, and
+the compiler fell back to the model's currency only when a rule left the field
+empty. An INR model using the energy pack therefore reported INR metrics over
+USD-labelled streams — a PPA in Rajasthan is not a USD contract.
+
+Nothing caught it. `E2107_STREAM_CURRENCY_MISMATCH` lives in `cfdl-validate`,
+which runs on the AST and so sees only hand-written streams; pack-lowered
+streams are generated afterwards and bypassed it. The guarantee 0.5.0 made —
+that currencies cannot be silently mixed — held for hand-written models and
+not for pack-based ones, which is every serious model. The check now also runs
+where lowered streams are built.
+
+Rules omit `currency` rather than defaulting it to USD, because the default
+already exists one level up: an unset rule currency takes the model's, and a
+model that declares none takes USD. Two defaults would shadow each other and
+reinstate the bug. An empty value is a deferral, not a missing value — the same
+shape as a term deferring to a declared input. Pin a currency only when the
+instrument is genuinely fixed to one, and the model must then agree.
+
+No golden moved, which is the check that the fallback is wired correctly:
+every model in the repository is USD, so the inherited value is identical.
+
+### The packs archive ships what the docs promise
+
+`package_packs.sh` archived only `cre` and `opco` while the install page
+promised all four, so the flagship energy pack was undownloadable for anyone
+without a checkout. It now discovers packs by their manifests rather than
+listing them, so a new pack ships automatically.
+
+`verify_release_assets.py` previously checked only that the archive's filename
+existed. It now looks inside — a tarball missing half its packs passed three
+releases undetected.
+
+### Breaking
+
+- A pack lowering rule that pins a currency the model does not declare is
+  rejected with `E2107_STREAM_CURRENCY_MISMATCH`. No shipped rule pins one, so
+  this affects third-party packs only.
+- `LoweringRule.currency` is optional. Packs that omit it now inherit the
+  model's currency instead of failing to parse.
+
+---
+
 ## [0.5.2] - 2026-07-28
 
 Release-pipeline fixes. No behaviour change: the compiler, engine and packs

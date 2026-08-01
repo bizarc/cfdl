@@ -12,7 +12,7 @@
   "phases": [],
   "entities": [
     {
-      "id": "81e37ba8686ea540f51409211c099fb0",
+      "id": "22755bc2cc49a58269473e38a7b89d71",
       "symbol": "asset.strip_center",
       "type": "core.Entity",
       "attrs": {},
@@ -25,7 +25,7 @@
   },
   "contracts": [
     {
-      "id": "0676aeebe4af0bb3d1b089061ac48836",
+      "id": "d377ddeacf6a5658c9df8beed130adaa",
       "name": "cre.exit",
       "type": "core.Contract",
       "subject": {
@@ -51,7 +51,7 @@
       }
     },
     {
-      "id": "e02f6cc7fc50cd15302bfe05bddd017b",
+      "id": "25357a2e83850d4dc00650592bb103db",
       "name": "cre.lease_unit.anchor",
       "type": "core.Contract",
       "subject": {
@@ -77,7 +77,7 @@
       }
     },
     {
-      "id": "e545741317bd7e76ecb1e6df79a26fc7",
+      "id": "b17de9e729b50dbe9482186bdb769b0a",
       "name": "cre.lease_unit.shops",
       "type": "core.Contract",
       "subject": {
@@ -103,7 +103,7 @@
       }
     },
     {
-      "id": "cbab3217ca329149767a5983969783b7",
+      "id": "6be8f54dabdfb0593f8f5358a82065c7",
       "name": "cre.percentage_rent.anchor",
       "type": "core.Contract",
       "subject": {
@@ -129,7 +129,7 @@
       }
     },
     {
-      "id": "e69897b8934611189851901bdd49c08e",
+      "id": "cb6c195eeed0d36a7fd0725ffec6110e",
       "name": "cre.property_opex",
       "type": "core.Contract",
       "subject": {
@@ -155,7 +155,7 @@
       }
     },
     {
-      "id": "230a487bfc75f909b202c38ceaecbcc3",
+      "id": "6a7685d555f4d247e1eb8942ed7c2e31",
       "name": "cre.vacancy_loss",
       "type": "core.Contract",
       "subject": {
@@ -183,7 +183,7 @@
   ],
   "streams": [
     {
-      "id": "ef5e5e9000039bc0c57ab5a4ad959494",
+      "id": "5215649b33dac6473f0e872b8b052709",
       "name": "cre.exit.proceeds",
       "owner": {
         "symbol": "asset.strip_center"
@@ -220,7 +220,7 @@
       }
     },
     {
-      "id": "9f385e281c5f8e026ca84f0d7c18f6d0",
+      "id": "ec6207e2eb00f5662d2b316f3389d5ec",
       "name": "cre.pct_rent.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -259,7 +259,7 @@
       }
     },
     {
-      "id": "5aef3ad62f9e1790b7662baab5617c9c",
+      "id": "1161715e640a8072700a38a014c7dd57",
       "name": "cre.property.opex",
       "owner": {
         "symbol": "asset.strip_center"
@@ -298,7 +298,7 @@
       }
     },
     {
-      "id": "fcef070b213db076b732f205d2b7cd04",
+      "id": "936bf784021424ddded2ccd6adfef0a5",
       "name": "cre.unit.base_rent.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -337,7 +337,7 @@
       }
     },
     {
-      "id": "b24d37018ee6a511f30c9019c56e76dc",
+      "id": "60803a708bf1285880cf4b3505ed1392",
       "name": "cre.unit.base_rent.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -376,7 +376,7 @@
       }
     },
     {
-      "id": "f6a3245309e073f3ffc9e5173dae6a58",
+      "id": "1d68614cbfc7d7dd1aba04d19f998f86",
       "name": "cre.unit.recoveries.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -415,7 +415,7 @@
       }
     },
     {
-      "id": "ec7e94d5b01f91b3b66f713ed6ed8193",
+      "id": "9dbc0dc3b1ffa77e042fcec7be41afd5",
       "name": "cre.unit.recoveries.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -454,7 +454,7 @@
       }
     },
     {
-      "id": "401d471cafa0653778c6ce2cb03e176b",
+      "id": "fda3463f1d236c270dacbf802f74da39",
       "name": "cre.unit.ti_lc.anchor",
       "owner": {
         "symbol": "asset.strip_center"
@@ -491,7 +491,7 @@
       }
     },
     {
-      "id": "1686473bd54773e9e87876d7a9b892a1",
+      "id": "a7589819c53f5ffffc7ef531e009ea1c",
       "name": "cre.unit.ti_lc.shops",
       "owner": {
         "symbol": "asset.strip_center"
@@ -528,7 +528,7 @@
       }
     },
     {
-      "id": "9e4f3744fb84061f03cbd2b6b8182040",
+      "id": "1f34a0072432708e22a5df792ea4f819",
       "name": "cre.vacancy.loss",
       "owner": {
         "symbol": "asset.strip_center"
@@ -582,8 +582,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.2",
-      "hash": "1cf40c5849bd25b0917bf25699e947da",
+      "version": "0.6.0",
+      "hash": "faea39907c6c1384004e42e64a96645f",
       "notes": [
         "active_pack=cre@0.1.0"
       ]

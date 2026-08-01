@@ -200,27 +200,26 @@ results.metrics_frame()
 2                    domain.cre.leasing_costs  5.250000e+05      USD   
 3                              domain.cre.noi  4.718934e+06      USD   
 4                    entity.asset.tower.total  3.009647e+06      USD   
-5                                   model.irr -1.000000e+00     None   
-6                                  model.moic  3.234175e+00     None   
-7                                   model.npv  1.434623e+06      USD   
-8                       model.payback_periods  5.300000e+01     None   
-9                         model.payback_years  4.416667e+00     None   
-10                                model.total  3.009647e+06      USD   
-11                            model.wal_years  8.442742e+00     None   
-12                   run.annual_discount_rate  7.250000e-02     None   
-13                       run.periods_per_year  1.200000e+01     None   
-14             stream.cre.exit.proceeds.total  3.237143e+06      USD   
-15             stream.cre.property.opex.total -3.361015e+06      USD   
-16    stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD   
-17   stream.cre.rollover.ti_lc.tenant_a.total -1.750000e+05      USD   
-18   stream.cre.unit.base_rent.tenant_a.total  2.428385e+06      USD   
-19   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
-20  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
-21  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
-22       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
-23       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
-24              stream.cre.vacancy.loss.total -1.800000e+05      USD   
-25   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
+5                                  model.moic  3.234175e+00     None   
+6                                   model.npv  1.433678e+06      USD   
+7                       model.payback_periods  5.300000e+01     None   
+8                         model.payback_years  4.416667e+00     None   
+9                                 model.total  3.009647e+06      USD   
+10                            model.wal_years  8.442742e+00     None   
+11                   run.annual_discount_rate  7.250000e-02     None   
+12                       run.periods_per_year  1.200000e+01     None   
+13             stream.cre.exit.proceeds.total  3.237143e+06      USD   
+14             stream.cre.property.opex.total -3.361015e+06      USD   
+15    stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD   
+16   stream.cre.rollover.ti_lc.tenant_a.total -1.750000e+05      USD   
+17   stream.cre.unit.base_rent.tenant_a.total  2.428385e+06      USD   
+18   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
+19  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
+20  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
+21       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
+22       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
+23              stream.cre.vacancy.loss.total -1.800000e+05      USD   
+24   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
 
         source  
 0   domain:cre  
@@ -248,7 +247,6 @@ results.metrics_frame()
 22        core  
 23        core  
 24        core  
-25        core  
 ```
 
 ## What-if
@@ -264,5 +262,5 @@ mf[mf["metric"].str.contains("dscr|noi|exit", case=False)]
                             metric         value currency      source
 1                  domain.cre.dscr  1.067287e+00     None  domain:cre
 3                   domain.cre.noi  4.718934e+06      USD  domain:cre
-14  stream.cre.exit.proceeds.total  3.237143e+06      USD        core
+13  stream.cre.exit.proceeds.total  3.237143e+06      USD        core
 ```

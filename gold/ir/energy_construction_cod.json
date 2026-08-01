@@ -11,7 +11,7 @@
   },
   "phases": [
     {
-      "id": "6c3f3c1256abf21247909b44a069e729",
+      "id": "949889826b487bca8d97fe8d8278f84c",
       "name": "construction",
       "range": {
         "start": "2026-01-01",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "id": "16365d006e1702ac63e791b362969448",
+      "id": "e682f0d648fc561d8577aabb36bc8d97",
       "name": "operations",
       "range": {
         "start": "2027-01-01",
@@ -29,7 +29,7 @@
   ],
   "entities": [
     {
-      "id": "6f509178c23c9012a927d443f4fa677e",
+      "id": "0f34dcd9746594160fa5898fc0ceaf1a",
       "symbol": "project.microgrid",
       "type": "core.Entity",
       "attrs": {},
@@ -42,7 +42,7 @@
   },
   "contracts": [
     {
-      "id": "15af08c8b9a8bc7f5a07ba32e17c0ca0",
+      "id": "3d8631f7effbad8d1a94caf360443b89",
       "name": "energy.capex",
       "type": "core.Contract",
       "subject": {
@@ -68,7 +68,7 @@
       }
     },
     {
-      "id": "43d2df7878d2ca9637094179cfbbbc7e",
+      "id": "b41313250b9451589905aef25c96efb6",
       "name": "energy.capex.final_draw",
       "type": "core.Contract",
       "subject": {
@@ -94,7 +94,7 @@
       }
     },
     {
-      "id": "8d60456d8ca72039b1df17055ce620d4",
+      "id": "c52b7ce9c405d21f6cdc6450e0da76c9",
       "name": "energy.om",
       "type": "core.Contract",
       "subject": {
@@ -120,7 +120,7 @@
       }
     },
     {
-      "id": "dbdbdc0d0f3af48414627da05fa54d5d",
+      "id": "9606f040748aa314643d700eaf5031ee",
       "name": "energy.ppa",
       "type": "core.Contract",
       "subject": {
@@ -148,7 +148,7 @@
   ],
   "streams": [
     {
-      "id": "67239027237b9d4cbb2606bf2e0dde29",
+      "id": "649f561c195705a7ca65ccdeb59e5015",
       "name": "energy.capex.outlay",
       "owner": {
         "symbol": "project.microgrid"
@@ -185,7 +185,7 @@
       }
     },
     {
-      "id": "ffa2a6281a6fcf8e1fde6ecfc832b939",
+      "id": "eb0e10f436c9f6eaa0040fc84dd8dee3",
       "name": "energy.capex.outlay.final_draw",
       "owner": {
         "symbol": "project.microgrid"
@@ -222,7 +222,7 @@
       }
     },
     {
-      "id": "6d7df3664a3019886401b5ce05422a20",
+      "id": "71c0827dd73c3941daccb6b001450bba",
       "name": "energy.om.expense",
       "owner": {
         "symbol": "project.microgrid"
@@ -261,7 +261,7 @@
       }
     },
     {
-      "id": "bde74dd33b8dd29c6f3f50f77b225d7f",
+      "id": "de77fae56098ae07af07c7c232928e66",
       "name": "energy.ppa.revenue",
       "owner": {
         "symbol": "project.microgrid"
@@ -315,8 +315,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.5.2",
-      "hash": "e4c47bd22039257906bab3747912211e",
+      "version": "0.6.0",
+      "hash": "169eabf0698ea2d1df93b2a1f201985b",
       "notes": [
         "active_pack=energy@0.1.0"
       ]

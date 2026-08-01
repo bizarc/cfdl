@@ -162,22 +162,21 @@ results.metrics_frame()
 4                  domain.energy.revenue  1.259400e+07      USD  domain:energy
 5             domain.energy.tax_benefits  7.200000e+05      USD  domain:energy
 6         entity.project.microgrid.total  5.771866e+06      USD           core
-7                              model.irr  1.485950e-01     None           core
-8                             model.moic  3.423834e+00     None           core
-9                              model.npv  1.239647e+06      USD           core
-10                 model.payback_periods  8.500000e+01     None           core
-11                   model.payback_years  7.083333e+00     None           core
-12                           model.total  5.771866e+06      USD           core
-13                       model.wal_years  1.294588e+01     None           core
-14              run.annual_discount_rate  8.000000e-02     None           core
-15                  run.periods_per_year  1.200000e+01     None           core
-16  stream.energy.capacity.revenue.total  1.500000e+06      USD           core
-17      stream.energy.capex.outlay.total -2.400000e+06      USD           core
-18      stream.energy.debt.service.total -2.751095e+06      USD           core
-19        stream.energy.itc.credit.total  7.200000e+05      USD           core
-20        stream.energy.om.expense.total -2.391043e+06      USD           core
-21       stream.energy.ppa.revenue.total  1.071900e+07      USD           core
-22    stream.energy.storage.margin.total  3.750000e+05      USD           core
+7                             model.moic  3.423834e+00     None           core
+8                              model.npv  1.220669e+06      USD           core
+9                  model.payback_periods  8.500000e+01     None           core
+10                   model.payback_years  7.083333e+00     None           core
+11                           model.total  5.771866e+06      USD           core
+12                       model.wal_years  1.294588e+01     None           core
+13              run.annual_discount_rate  8.000000e-02     None           core
+14                  run.periods_per_year  1.200000e+01     None           core
+15  stream.energy.capacity.revenue.total  1.500000e+06      USD           core
+16      stream.energy.capex.outlay.total -2.400000e+06      USD           core
+17      stream.energy.debt.service.total -2.751095e+06      USD           core
+18        stream.energy.itc.credit.total  7.200000e+05      USD           core
+19        stream.energy.om.expense.total -2.391043e+06      USD           core
+20       stream.energy.ppa.revenue.total  1.071900e+07      USD           core
+21    stream.energy.storage.margin.total  3.750000e+05      USD           core
 ```
 
 ## What-if
@@ -192,6 +191,6 @@ print(f"NPV @ 10%: {stressed.metrics()['model.npv']:,.0f}")
 ```
 
 ```
-NPV @ base: 1,239,647
-NPV @ 10%: 757,036
+NPV @ base: 1,220,669
+NPV @ 10%: 737,280
 ```

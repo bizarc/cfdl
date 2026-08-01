@@ -306,7 +306,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-calc"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "rust_decimal",
  "thiserror 1.0.69",
@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-cli"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "cfdl-compile",
@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-compile"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-expr",
  "cfdl-lexer",
@@ -346,7 +346,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-engine"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-calc",
  "cfdl-expr",
@@ -357,7 +357,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-expr"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-calc",
  "rust_decimal",
@@ -365,7 +365,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-lexer"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "serde",
  "thiserror 1.0.69",
@@ -373,7 +373,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-lsp"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-lexer",
@@ -389,7 +389,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-metrics"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-engine",
  "cfdl-pack",
@@ -398,7 +398,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-pack"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "serde",
  "toml",
@@ -406,7 +406,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-parser"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-lexer",
  "serde",
@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-py"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-engine",
@@ -427,7 +427,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-resolver"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-lexer",
  "cfdl-parser",
@@ -436,7 +436,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-server"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "axum",
  "cfdl-compile",
@@ -457,7 +457,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-validate"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-lexer",
  "cfdl-parser",
@@ -467,7 +467,7 @@ dependencies = [
 
 [[package]]
 name = "cfdl-wasm"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "cfdl-compile",
  "cfdl-engine",
