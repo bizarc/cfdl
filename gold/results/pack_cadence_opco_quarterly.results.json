@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "787726c1f91a9a347ef07bea7fceca29b8c58885354ad18364447a082114479a",
+  "model_hash": "2e3645978d7399ef8dc00c2ac4ebd9cfd38120eb4f9139e7b427f20f1ba70643",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,341 +10,319 @@
     "status": "ok",
     "metrics": {
       "entity.operating.business.total": {
-        "amount": 1241057.556571,
+        "amount": 1173600.0,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 1116742.000887,
+        "amount": 1008614.334648,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 1241057.556571,
+        "amount": 1173600.0,
         "currency": "USD"
       },
-      "model.wal_years": 1.03973,
+      "model.wal_years": 1.375,
       "run.annual_discount_rate": 0.1,
-      "run.periods_per_year": 12.0,
+      "run.periods_per_year": 4.0,
+      "stream.opco.capex.total": {
+        "amount": -266400.0,
+        "currency": "USD"
+      },
       "stream.opco.opex.recurring.total": {
-        "amount": -1440000.0,
+        "amount": -2520000.0,
         "currency": "USD"
       },
       "stream.opco.revenue.recurring.total": {
-        "amount": 2681057.556571,
+        "amount": 4320000.0,
+        "currency": "USD"
+      },
+      "stream.opco.taxes.total": {
+        "amount": -360000.0,
         "currency": "USD"
       }
     },
     "series": {
       "model.net_cash_flow": {
         "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 24
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
         },
         "values": [
           {
-            "amount": 40000.0,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 40948.879293,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 41906.762306,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 42873.734472,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 43849.882037,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 44835.292064,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 45830.052443,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 46834.251896,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 47847.979991,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 48871.327142,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 49904.384621,
+            "amount": 97800.0,
             "currency": "USD"
           },
           {
-            "amount": 50947.24457,
+            "amount": 97800.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.capex": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 52000.0,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 53062.744809,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 54135.573783,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 55218.582609,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 56311.867881,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 57415.527112,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 58529.658736,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 59654.362124,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 60789.73759,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 61935.886399,
+            "amount": -22200.0,
             "currency": "USD"
           },
           {
-            "amount": 63092.910776,
-            "currency": "USD"
-          },
-          {
-            "amount": 64260.913918,
+            "amount": -22200.0,
             "currency": "USD"
           }
         ]
       },
       "stream.opco.opex.recurring": {
         "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 24
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
         },
         "values": [
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           },
           {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -60000.0,
+            "amount": -210000.0,
             "currency": "USD"
           }
         ]
       },
       "stream.opco.revenue.recurring": {
         "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 24
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
         },
         "values": [
           {
-            "amount": 100000.0,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 100948.879293,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 101906.762306,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 102873.734472,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 103849.882037,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 104835.292064,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 105830.052443,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 106834.251896,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 107847.979991,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 108871.327142,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 109904.384621,
+            "amount": 360000.0,
             "currency": "USD"
           },
           {
-            "amount": 110947.24457,
+            "amount": 360000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.taxes": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 112000.0,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 113062.744809,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 114135.573783,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 115218.582609,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 116311.867881,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 117415.527112,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 118529.658736,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 119654.362124,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 120789.73759,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 121935.886399,
+            "amount": -30000.0,
             "currency": "USD"
           },
           {
-            "amount": 123092.910776,
-            "currency": "USD"
-          },
-          {
-            "amount": 124260.913918,
+            "amount": -30000.0,
             "currency": "USD"
           }
         ]
@@ -355,16 +333,41 @@
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
+            "start": "2025-01-01",
+            "periods": 3
           },
           "values": [
             {
-              "amount": 544649.790835,
+              "amount": 391200.0,
               "currency": "USD"
             },
             {
-              "amount": 696407.765736,
+              "amount": 391200.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 391200.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.opco.capex": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": -88800.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -88800.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -88800.0,
               "currency": "USD"
             }
           ]
@@ -372,16 +375,20 @@
         "stream.opco.opex.recurring": {
           "index": {
             "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
+            "start": "2025-01-01",
+            "periods": 3
           },
           "values": [
             {
-              "amount": -720000.0,
+              "amount": -840000.0,
               "currency": "USD"
             },
             {
-              "amount": -720000.0,
+              "amount": -840000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -840000.0,
               "currency": "USD"
             }
           ]
@@ -389,16 +396,41 @@
         "stream.opco.revenue.recurring": {
           "index": {
             "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
+            "start": "2025-01-01",
+            "periods": 3
           },
           "values": [
             {
-              "amount": 1264649.790835,
+              "amount": 1440000.0,
               "currency": "USD"
             },
             {
-              "amount": 1416407.765736,
+              "amount": 1440000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 1440000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.opco.taxes": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": -120000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -120000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -120000.0,
               "currency": "USD"
             }
           ]

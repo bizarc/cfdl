@@ -5,14 +5,28 @@ working capital, capex, scheduled term debt, cash taxes, and entry/exit —
 benchmarked in `benchmarks/opco/` against an independent month-by-month
 reference. All lowering is template-driven.
 
-> **Supported calendars: `monthly` only.**
-> Every rule in this pack divides annual figures by a literal 12 and counts
-> elapsed time in months, so one period must be one month. On any other grid
-> the schedule adapts but the amounts do not — figures come out twelve times
-> too small with no diagnostic. The pack therefore declares
-> `cadences = ["monthly"]` and a model on another calendar is rejected with
-> `E5013_PACK_CADENCE_UNSUPPORTED` rather than given a plausible wrong answer.
-> This is a migration scaffold and is being lifted rule by rule.
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Annual quantities divide by the rule's own periods-per-year rather
+> than a literal 12.
+>
+> Two things are per-period by definition and so mean different economics on
+> different grids: `amount` and `da_monthly`. Use their annual siblings —
+> `amount_year`, `da_year` — to state a deal grid-independently. A line must
+> state one of `amount` / `amount_year` (`E7001`); giving both sums them.
+>
+> **`growth_rate` compounds continuously on the model clock**, `(1+g)^(t/ppy)`,
+> which is a deliberate convention and is inherently grid-sensitive: a finer
+> grid captures more intra-year compounding. At 5% annual growth, year-one
+> revenue on a 120,000/period line is 1,472,709 monthly against 1,440,000
+> annually. Both are right for their convention. If you need annual totals to
+> match across calendars, hold `growth_rate` at zero and step the amount
+> explicitly, or model on the grid you intend to report on.
+>
+> Term debt and policy-driven working capital are correct on every calendar but
+> are not annual-total invariant either: nominal rate accrual differs by
+> cadence by design (a 6% loan is 0.5%/month and 1.5%/quarter), and the
+> working-capital delta telescopes, so only its sum over the contract's life is
+> invariant.
 
 ## Activation
 

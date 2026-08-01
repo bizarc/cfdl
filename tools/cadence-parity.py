@@ -75,27 +75,42 @@ GROUPS: list[tuple[str, str, list[str], dict[str, str]]] = [
         ["monthly", "quarterly", "annual", "daily"],
         {},
     ),
+    (
+        "pack_cadence_opco",
+        "opco",
+        ["monthly", "quarterly", "annual"],
+        {},
+    ),
 ]
+
+
+class FixtureError(RuntimeError):
+    """A fixture failed to compile or run; carries the CLI's own diagnostics."""
+
+
+def _cfdl(args: list[str], what: str) -> None:
+    done = subprocess.run(args, capture_output=True, text=True)
+    if done.returncode != 0:
+        # Surface the compiler's diagnostics. A traceback here says only that
+        # a subprocess exited non-zero, which sends the reader to the wrong
+        # place entirely.
+        detail = (done.stdout + done.stderr).strip() or f"exit {done.returncode}"
+        raise FixtureError(f"{what} failed:\n" + "\n".join(
+            "      " + line for line in detail.splitlines()[:8]))
 
 
 def run_fixture(directory: pathlib.Path, pack: str) -> dict:
     with tempfile.TemporaryDirectory() as tmp:
         ir = pathlib.Path(tmp) / "ir.json"
         results = pathlib.Path(tmp) / "results.json"
-        subprocess.run(
+        _cfdl(
             [str(CLI), "compile", str(directory), "--packs", str(PACKS), "--out", str(ir)],
-            check=True,
-            capture_output=True,
+            f"compiling {directory.name}",
         )
-        subprocess.run(
-            [
-                str(CLI), "run", str(ir),
-                "--packs", str(PACKS),
-                "--pack", pack,
-                "--out", str(results),
-            ],
-            check=True,
-            capture_output=True,
+        _cfdl(
+            [str(CLI), "run", str(ir), "--packs", str(PACKS), "--pack", pack,
+             "--out", str(results)],
+            f"running {directory.name}",
         )
         return json.loads(results.read_text())["deterministic"]
 
@@ -156,7 +171,12 @@ def main() -> int:
                 print(f"  FAIL  {prefix}: missing fixture {directory.relative_to(REPO_ROOT)}")
                 failed += 1
                 break
-            runs[calendar] = annual_series(run_fixture(directory, pack))
+            try:
+                runs[calendar] = annual_series(run_fixture(directory, pack))
+            except FixtureError as error:
+                print(f"  FAIL  {prefix}: {error}")
+                failed += 1
+                break
         else:
             baseline_calendar = calendars[0]
             for calendar in calendars[1:]:
