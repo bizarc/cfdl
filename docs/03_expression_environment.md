@@ -52,12 +52,26 @@ The host (compiler or engine) provides values under five roots:
 | Root | Contents |
 |---|---|
 | `model` | `model.id`, `model.base_currency` |
-| `time` | `time.t` (0-based period index), `time.date`, `time.phase` |
+| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar) |
 | `entity` | attributes of the stream's owning entity |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
 
 Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
+
+`time.ppy` is how many periods of the model's calendar make a year — 365, 12,
+4 or 1 — so a model can spread an annual figure without hardcoding a divisor
+and without being rewritten when the calendar changes:
+
+```
+amount = inputs.rent_year / time.ppy
+```
+
+Domain packs do **not** use it. A lowering rule resolves its own
+periods-per-year at compile time (`{{model.periods_per_year}}`, see
+`docs/07_pack_interface.md`), because a rule may pay on its own interval: a
+monthly-paying loan carried on a daily book divides by 12, not 365, and only
+the compiler can see that. `time.ppy` reads the calendar and would say 365.
 
 ## 4. Builtin functions
 
@@ -83,7 +97,14 @@ Depreciation: `macrs_rate(year, life)` — IRS Pub 946 GDS half-year convention
 percentages for 5/7/15/20-year property (`year` is 0-based; 0 beyond the
 recovery period).
 
-Credit: `cpr_to_smm(cpr)`.
+Credit: `cpr_to_smm(cpr)`, `cpr_to_periodic(cpr, ppy)`.
+
+`cpr_to_smm(x)` is `1 - (1-x)^(1/12)` and always means *monthly*.
+`cpr_to_periodic(x, ppy)` is the same conversion on a grid of `ppy` periods per
+year, and `cpr_to_periodic(x, 12) == cpr_to_smm(x)` exactly. Note this is a
+**root**, not a division: CPR and CDR are effective annual rates, so they
+convert by taking a root, while note rates are nominal and convert by dividing.
+Using one convention for the other is a silent factor-level error.
 
 Curves: `curve_value(name, date)` looks up a model-declared `curve`
 statement at a date. `step` curves (the default) are flat-forward: the last
@@ -103,7 +124,7 @@ excluded from cash results and NPV.
 
 Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `edate(d, months)`, `eomonth(d, months)`, `months_between(d1, d2)`,
-`year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;
+`days_between(d1, d2)`, `year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;
 `d + n` / `d - n` shift by days.
 
 Day-count bases for `year_frac`: `"30/360"` (aliases `"30/360 us"`, `"bond"`),

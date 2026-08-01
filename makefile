@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check
+.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity
 
 help:
 	@echo "Targets:"
@@ -19,6 +19,7 @@ help:
 	@echo "  doc-examples - compile and run every example in the pack guides"
 	@echo "  wasm        - rebuild the committed playground wasm bundle"
 	@echo "  wasm-check  - verify the committed bundle matches the engine sources"
+	@echo "  cadence-parity - one deal on every calendar must give the same annual economics"
 	@echo "  py-test     - run the Python SDK pytest suite"
 	@echo "  notebooks-render - execute example notebooks into site docs pages"
 	@echo "  py-wheel    - build a local release wheel (sanity check)"
@@ -49,7 +50,7 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench analytic ir-schema doc-examples wasm-check
+ci: fmt lint test gold bench analytic cadence-parity ir-schema doc-examples wasm-check
 
 # The wasm bundle is committed (Vercel has no Rust toolchain), so it can drift
 # from the engine silently. `make ci` never covered it, and a five-day-old
@@ -59,6 +60,13 @@ wasm:
 
 wasm-check:
 	cd site && npm run check:wasm
+
+# A pack must lower the same deal to the same annual economics on every
+# calendar. The golden runner compares a fixture to its own blessed output and
+# so structurally cannot express this; it takes two fixtures.
+cadence-parity:
+	cargo build -p cfdl-cli
+	python3 tools/cadence-parity.py
 
 # The published IR schema is a contract; check the emitter still satisfies it.
 ir-schema:

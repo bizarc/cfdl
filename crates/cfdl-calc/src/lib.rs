@@ -206,6 +206,55 @@ mod tests {
     }
 
     #[test]
+    fn cpr_to_periodic_generalises_cpr_to_smm() {
+        // The whole point of the pair: cpr_to_smm is the ppy = 12 case, and
+        // must stay bit-identical to it, or converting the credit pack to
+        // cpr_to_periodic would move every monthly number.
+        for cpr in ["0.0", "0.02", "0.06", "0.25", "0.9"] {
+            assert_eq!(
+                n(&format!("cpr_to_periodic({cpr}, 12)")),
+                n(&format!("cpr_to_smm({cpr})")),
+                "cpr_to_periodic({cpr}, 12) must equal cpr_to_smm({cpr})"
+            );
+        }
+    }
+
+    #[test]
+    fn cpr_to_periodic_survives_a_full_year_at_any_cadence() {
+        // A periodic mortality is correct when compounding it over one year of
+        // its own periods reproduces the annual CPR. This holds by definition
+        // for a root and would not for a division, which is why CPR converts
+        // differently from a note rate.
+        for (ppy, periods) in [(1, 1), (4, 4), (12, 12), (365, 365)] {
+            let survival =
+                format!("round(1 - pow(1 - cpr_to_periodic(0.06, {ppy}), {periods}), 8)");
+            assert_eq!(n(&survival), dec("0.06"), "ppy = {ppy} must recover CPR");
+        }
+    }
+
+    #[test]
+    fn days_between_counts_whole_days_and_signs() {
+        assert_eq!(
+            n("days_between(date(2026,1,1), date(2026,1,31))"),
+            dec("30")
+        );
+        assert_eq!(
+            n("days_between(date(2026,1,31), date(2026,1,1))"),
+            dec("-30")
+        );
+        // 2028 is a leap year, so February contributes 29 days.
+        assert_eq!(
+            n("days_between(date(2028,1,1), date(2029,1,1))"),
+            dec("366")
+        );
+        // Agrees with the `-` operator, which is the same underlying count.
+        assert_eq!(
+            n("days_between(date(2026,3,1), date(2026,6,1))"),
+            n("date(2026,6,1) - date(2026,3,1)")
+        );
+    }
+
+    #[test]
     fn date_functions() {
         let env = MapEnv::new();
         // eomonth / edate

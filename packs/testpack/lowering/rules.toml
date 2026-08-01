@@ -52,3 +52,25 @@ cadences = ["monthly"]
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+# Exercises every cadence primitive at once, so a fixture can prove they
+# resolve correctly on each calendar rather than only compiling.
+#   {{model.periods_per_year}}  annual figure -> per-period figure
+#   {{time.elapsed_periods}}    whole periods since term_start
+#   {{time.elapsed_years}}      whole years since term_start (anniversary step)
+#   {{periods.<term>}}          months -> possibly-fractional periods
+#   {{whole_periods.<term>}}    months -> integral periods, or E5015
+id = "emit_cadence_probe"
+contract_name = "test.cadence_probe"
+stream_name = "testpack.cadence_probe"
+owner_entity = "legal.borrower"
+direction = "inflow"
+amount_expr = "({{contract.amount_year}} / {{model.periods_per_year}}) * clamp({{time.elapsed_periods}} + 1 - {{periods.free_months}}, 0, 1) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}) * if({{time.elapsed_periods}} < {{whole_periods.term_months}}, 1, 0)"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+escalation = "0"
+free_months = "0"

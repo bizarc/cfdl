@@ -597,8 +597,9 @@ This v0.1 interface is designed to evolve without breaking core models.
 
 ## Parameterized lowering rules (templates)
 
-Lowering-rule fields `amount_expr`, `schedule_from`, and `schedule_to` may
-contain `{{contract.<key>}}` placeholders, resolved at compile time:
+Lowering-rule fields `amount_expr`, `schedule_from`, `schedule_to`,
+`stream_name`, `schedule_net_days`, `schedule_net_months` and `schedule_every`
+may contain `{{...}}` placeholders, resolved at compile time:
 
 1. `{{contract.term_start}}` / `{{contract.term_end}}` — the contract's
    `term A..B` range (normalized dates).
@@ -609,6 +610,50 @@ contain `{{contract.<key>}}` placeholders, resolved at compile time:
 
 A placeholder with no contract value and no default is a compile error
 (`E5006_MISSING_CONTRACT_TERM`), one diagnostic per missing key.
+
+### Cadence placeholders
+
+A rule must not assume how long a period is. These placeholders carry that,
+and are resolved *before* contract terms — declaring a term under one of the
+reserved prefixes `model.`, `time.`, `periods.` or `whole_periods.` is
+`E5016_RESERVED_TERM_PREFIX`, because the term would never be read.
+
+| Placeholder | Expands to |
+|---|---|
+| `{{model.periods_per_year}}` | `365` / `52` / `12` / `4` / `1` |
+| `{{model.calendar}}` | the rule's effective frequency name |
+| `{{periods.<term>}}` | `<term>` months as periods, fractional allowed |
+| `{{whole_periods.<term>}}` | the same, but must be integral |
+| `{{time.elapsed_periods}}` | whole periods since `term_start` |
+| `{{time.elapsed_years}}` | whole years since `term_start` |
+| `{{time.periods_to_term_end}}` | whole periods from now to `term_end` |
+
+**Periods-per-year comes from the rule's payment interval, not the model's
+calendar.** A rule that declares `schedule_every` accrues on that rhythm, so a
+monthly-paying loan carried on a daily book divides by 12, not 365. This is why
+the value is resolved here rather than exposed at run time: the expression
+environment sees the calendar and knows nothing of the schedule. Hand-written
+models get `time.ppy` instead, which is the calendar-based equivalent.
+
+`schedule_every` is itself templated, so a contract can declare its own rhythm
+(`payment_frequency = "month"`) and one rule can serve the monthly, quarterly
+and daily-book versions of an instrument.
+
+**`_months` terms always mean calendar months**, on every calendar: they
+describe the contract, not the modeller's grid. `{{periods.X}}` converts one
+into a possibly-fractional period count and is for thresholds — five months
+free rent is 5 periods monthly, 1.667 quarterly, 0.417 annually, and pro-rates
+exactly in each case. `{{whole_periods.X}}` is for payment *counts* that go
+into `pow` exponents and annuity term arguments, where a fractional value is
+meaningless: a 30-month loan is not 2.5 annual payments, so that is
+`E5015_TERM_MONTHS_NOT_DIVISIBLE` rather than a rounding. Both need a literal;
+a term deferred to `inputs.<name>` cannot be converted at compile time
+(`E5017_PERIOD_TERM_NOT_LITERAL`).
+
+Two conventions that must not be confused when dividing by periods-per-year:
+note rates are **nominal** and divide (`rate / ppy`), while CPR and CDR are
+**effective annual** and take a root (`cpr_to_periodic(x, ppy)`). Growth and
+escalation are effective-annual too and step on `{{time.elapsed_years}}`.
 
 Substitution is textual: numeric terms yield valid expression fragments;
 string-valued terms must be quoted inside the template. Example:

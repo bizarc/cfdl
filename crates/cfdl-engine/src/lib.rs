@@ -1317,6 +1317,17 @@ fn build_base_env(
     );
     env.time
         .insert("phase".to_string(), ExprValue::Optional(None));
+    // Periods per year for the model's calendar, so a hand-written model can
+    // spread an annual figure without hardcoding a divisor:
+    //   amount = inputs.rent_year / time.ppy
+    // Packs do NOT use this — a lowering rule resolves its own periods-per-year
+    // at compile time, because a rule may pay on its own interval (a monthly
+    // coupon on a daily grid needs 12, not 365) and only the compiler can see
+    // that. See {{model.periods_per_year}} in cfdl-compile.
+    env.time.insert(
+        "ppy".to_string(),
+        ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
+    );
     env.curves = ir_curve_defs(ir);
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
@@ -1380,6 +1391,17 @@ fn build_expr_env(
     );
     env.time
         .insert("phase".to_string(), ExprValue::Optional(None));
+    // Periods per year for the model's calendar, so a hand-written model can
+    // spread an annual figure without hardcoding a divisor:
+    //   amount = inputs.rent_year / time.ppy
+    // Packs do NOT use this — a lowering rule resolves its own periods-per-year
+    // at compile time, because a rule may pay on its own interval (a monthly
+    // coupon on a daily grid needs 12, not 365) and only the compiler can see
+    // that. See {{model.periods_per_year}} in cfdl-compile.
+    env.time.insert(
+        "ppy".to_string(),
+        ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
+    );
 
     env.entity.insert(
         "id".to_string(),
