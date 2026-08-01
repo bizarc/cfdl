@@ -113,6 +113,9 @@ pub enum Keyword {
     On,
     Term,
     Terms,
+    // Payment terms: when cash moves relative to when it was earned.
+    Payment,
+    Net,
     Effects,
     Parties,
     Tags,
@@ -630,6 +633,8 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "contract" => Keyword::Contract,
         "on" => Keyword::On,
         "term" => Keyword::Term,
+        "payment" => Keyword::Payment,
+        "net" => Keyword::Net,
         "terms" => Keyword::Terms,
         "effects" => Keyword::Effects,
         "parties" => Keyword::Parties,

@@ -173,6 +173,11 @@ pub struct ContractStmt {
     pub has_effects: bool,
     pub term_start: Option<String>,
     pub term_end: Option<String>,
+    /// `payment net <n>` — days between a flow being earned and its cash
+    /// moving. Applies to every stream the contract lowers. `None` means the
+    /// cash lands in the period that earned it, which is the historical
+    /// behaviour and what every model without the clause gets.
+    pub payment_net_days: Option<i64>,
     pub terms: BTreeMap<String, ContractTerm>,
     pub span: Span,
 }
@@ -216,6 +221,9 @@ pub struct ScheduleSpec {
     pub day_of_month: Option<i32>,
     /// `on eom` — place the occurrence on the last day of its period.
     pub end_of_month: bool,
+    /// `net <n>` — days between a flow being earned and its cash moving,
+    /// overriding the contract's payment terms for this stream.
+    pub net_days: Option<i64>,
     /// Annuity due: payment at the START of each interval, as for rent.
     /// The default is an ordinary annuity — payment at the END of each
     /// interval — matching `pmt(rate, nper, pv, [fv], [due])` in the
@@ -732,6 +740,7 @@ impl<'a> Parser<'a> {
         let mut has_effects = false;
         let mut term_start = None;
         let mut term_end = None;
+        let mut payment_net_days = None;
         let mut terms = BTreeMap::new();
         let mut end_span = start.span;
         let mut depth = 0usize;
@@ -766,6 +775,45 @@ impl<'a> Parser<'a> {
                         term_start = Some(from);
                         term_end = Some(to);
                         end_span = span;
+                    }
+                }
+                // `payment net <n>` — a sibling of `term`, stating when cash
+                // moves relative to when it was earned.
+                TokenKind::Keyword(Keyword::Payment) if depth == 0 => {
+                    let net_kw = self.bump();
+                    if !matches!(net_kw.kind, TokenKind::Keyword(Keyword::Net)) {
+                        self.push_expected(
+                            net_kw.span,
+                            "Expected 'net' after 'payment', as in `payment net 45`.".to_string(),
+                        );
+                        continue;
+                    }
+                    let days_tok = self.bump();
+                    match days_tok.kind {
+                        TokenKind::Number(ref n) => match n.parse::<i64>() {
+                            // Cash cannot arrive before the activity that
+                            // earned it.
+                            Ok(days) if days >= 0 => {
+                                payment_net_days = Some(days);
+                                end_span = days_tok.span;
+                            }
+                            _ => {
+                                self.push_expected(
+                                    days_tok.span,
+                                    "Payment terms must be a whole number of days, zero or more."
+                                        .to_string(),
+                                );
+                                continue;
+                            }
+                        },
+                        _ => {
+                            self.push_expected(
+                                days_tok.span,
+                                "Expected a number of days after 'net', as in `payment net 45`."
+                                    .to_string(),
+                            );
+                            continue;
+                        }
                     }
                 }
                 TokenKind::Keyword(Keyword::Terms) => {
@@ -809,6 +857,7 @@ impl<'a> Parser<'a> {
         }
 
         Some(ContractStmt {
+            payment_net_days,
             name: final_name,
             subject_entity,
             has_term,
@@ -1202,6 +1251,7 @@ impl<'a> Parser<'a> {
                         every: None,
                         due: false,
                         end_of_month: false,
+                        net_days: None,
                         from: None,
                         to: None,
                         day_of_month: None,
@@ -1230,6 +1280,7 @@ impl<'a> Parser<'a> {
                     kind: ScheduleKind::OnDate,
                     every: None,
                     end_of_month: false,
+                    net_days: None,
                     due: false,
                     from: Some(date.clone()),
                     to: Some(date),
@@ -1247,6 +1298,7 @@ impl<'a> Parser<'a> {
                 let _ = self.bump();
                 let every = self.parse_schedule_interval()?;
                 let mut due = false;
+                let mut net_days = None;
                 // Ordinary annuity by default: the interval elapses, then
                 // payment falls, so `every year from 2026-01` first pays
                 // 2027-01. `due` makes it an annuity due — payment at the
@@ -1254,6 +1306,33 @@ impl<'a> Parser<'a> {
                 if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Due)) {
                     let _ = self.bump();
                     due = true;
+                }
+                // `net <n>` sits beside `due` because both describe when cash
+                // moves, and it reads as one clause: `every month net 30 from …`.
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Net)) {
+                    let _ = self.bump();
+                    let days_tok = self.bump();
+                    match days_tok.kind {
+                        TokenKind::Number(ref n) => match n.parse::<i64>() {
+                            Ok(days) if days >= 0 => net_days = Some(days),
+                            _ => {
+                                self.push_expected(
+                                    days_tok.span,
+                                    "Payment terms must be a whole number of days, zero or more."
+                                        .to_string(),
+                                );
+                                return None;
+                            }
+                        },
+                        _ => {
+                            self.push_expected(
+                                days_tok.span,
+                                "Expected a number of days after 'net', as in `net 45`."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
                 }
 
                 let mut day_of_month = None;
@@ -1335,6 +1414,7 @@ impl<'a> Parser<'a> {
                         kind: ScheduleKind::EveryPhase { phase },
                         every: Some(every.clone()),
                         end_of_month,
+                        net_days,
                         due,
                         from: None,
                         to: None,
@@ -1376,6 +1456,7 @@ impl<'a> Parser<'a> {
                     kind: ScheduleKind::Every,
                     every: Some(every),
                     end_of_month,
+                    net_days,
                     due,
                     from: Some(from),
                     to: Some(to),
@@ -2268,6 +2349,8 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Contract => "contract",
         Keyword::On => "on",
         Keyword::Term => "term",
+        Keyword::Payment => "payment",
+        Keyword::Net => "net",
         Keyword::Terms => "terms",
         Keyword::Effects => "effects",
         Keyword::Parties => "parties",

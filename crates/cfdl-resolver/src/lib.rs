@@ -750,6 +750,7 @@ mod tests {
                 SourceStatement {
                     file: "model.cfdl".to_string(),
                     statement: Stmt::Contract(cfdl_parser::ContractStmt {
+                        payment_net_days: None,
                         name: "lease.core.primary".to_string(),
                         subject_entity: Some("borrower".to_string()),
                         has_term: true,
