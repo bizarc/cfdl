@@ -159,6 +159,17 @@ The model must span period 126 for that cash to land; a flow scheduled past
 the end of the timeline is rejected by `E2103_SCHEDULE_OUT_OF_BOUNDS` rather
 than silently dropped.
 
+"The end of the timeline" means the cash horizon **plus** any `project <n>`
+tail, because the engine evaluates streams over both. A schedule may therefore
+reach into the tail deliberately — that is how a forward-NOI exit reads a year
+past the sale.
+
+Cash that *settles* in the tail is a different matter. The tail is computed for
+series lookups and excluded from cash results and NPV, so a payment pushed
+there by its terms — a schedule ending on the horizon under net-60 — is
+excluded from the totals. That would be a silent drop, so the engine warns and
+names the amount. Extend `for <n>` to cover the lag, or shorten the schedule.
+
 ## 6. What packs declare
 
 A lowering rule sets `schedule_due = true` when the stream behaves like an

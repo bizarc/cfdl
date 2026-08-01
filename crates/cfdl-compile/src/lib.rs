@@ -326,6 +326,8 @@ struct LoweringContext<'a> {
     time_start: &'a str,
     time_periods: u32,
     timeline_end: &'a str,
+    /// Cash horizon plus the projection tail; the bound a schedule may reach.
+    timeline_eval_end: &'a str,
     default_owner: &'a str,
 }
 
@@ -558,6 +560,15 @@ fn build_ir(
     let (time_calendar, time_start, time_periods, time_projection) = find_time(resolve_output)
         .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1, 0));
     let timeline_end = add_periods_for_timeline_end(&time_start, &time_calendar, time_periods);
+    // The furthest period a schedule may legally reach: the cash horizon plus
+    // any `project <n>` tail, which the engine also evaluates. Used ONLY for
+    // the bounds check — `timeline_end` above stays the cash horizon because it
+    // shapes the IR itself.
+    let timeline_eval_end = add_periods_for_timeline_end(
+        &time_start,
+        &time_calendar,
+        time_periods.saturating_add(time_projection),
+    );
     let compiler_version = env!("CARGO_PKG_VERSION").to_string();
     let pack_seed = active_pack
         .map(|pack| format!("{}@{}", pack.name, pack.version))
@@ -750,6 +761,7 @@ fn build_ir(
             time_start: &time_start,
             time_periods,
             timeline_end: &timeline_end,
+            timeline_eval_end: &timeline_eval_end,
             default_owner: &first_entity_symbol,
         },
     );
@@ -1474,6 +1486,33 @@ fn lower_contract_streams(
                         continue;
                     }
                     _ => {}
+                }
+            }
+
+            // Mirror the bounds check cfdl-validate applies to hand-written
+            // streams. It cannot run there: validation completes and returns
+            // before build_ir synthesises these. Without this a pack could
+            // schedule cash the engine never evaluates, which a model may not.
+            //
+            // Only `Every` schedules, matching the native path, which requires
+            // both `from` and `to` and so skips `on_date`.
+            if expanded_rule.schedule_kind == "every" {
+                let from = normalize_date(&expanded_rule.schedule_from);
+                let to = normalize_date(&expanded_rule.schedule_to);
+                if !from.is_empty()
+                    && !to.is_empty()
+                    && (from.as_str() < ctx.time_start || to.as_str() > ctx.timeline_eval_end)
+                {
+                    diagnostics.push(lowering_rule_diag(
+                        "E2103_SCHEDULE_OUT_OF_BOUNDS",
+                        &format!(
+                            "Pack lowering rule '{}' produced a schedule {} to {} for contract '{}', outside the model timeline ({} to {}).",
+                            rule.id, from, to, contract.name, ctx.time_start, ctx.timeline_eval_end
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                    continue;
                 }
             }
 
@@ -2648,12 +2687,45 @@ fn add_periods_for_timeline_end(start: &str, calendar: &str, periods: u32) -> St
     }
     let offset = periods.saturating_sub(1);
     match calendar {
-        "daily" => format!("{year:04}-{month:02}-{day:02}"),
+        // This branch used to ignore `offset` entirely and return the start
+        // date, so a daily model's timeline "ended" on day one. It was
+        // unreachable in practice — nothing bounds-checked lowered streams and
+        // no daily model used a pack — until both changed.
+        "daily" => add_days(year, month, day, offset as i32),
         "monthly" => add_months(year, month, day, offset as i32),
         "quarterly" => add_months(year, month, day, (offset as i32) * 3),
         "annual" => add_months(year, month, day, (offset as i32) * 12),
         _ => format!("{year:04}-{month:02}-{day:02}"),
     }
+}
+
+/// Civil date plus `days`, via a day count from an epoch. Mirrors the engine's
+/// own date arithmetic (cfdl-calc's CalcDate), which is the definition the
+/// timeline is actually built from.
+fn add_days(year: i32, month: u32, day: u32, days: i32) -> String {
+    let mut y = year;
+    let mut m = month as i32;
+    if m <= 2 {
+        y -= 1;
+        m += 12;
+    }
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let doy = (153 * (m - 3) + 2) / 5 + day as i32 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let epoch = era as i64 * 146_097 + doe as i64 - 719_468 + days as i64;
+
+    let z = epoch + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
 }
 
 fn add_months(year: i32, month: u32, day: u32, months: i32) -> String {
@@ -3174,5 +3246,42 @@ mod pack_validation_parity_tests {
         // periods_to_* is the same count with the arguments reversed, so a
         // rule can ask "is this the last period" on any grid.
         assert!(periods_to_expr("monthly", "2030-12-01").starts_with("months_between(time.date,"));
+    }
+
+    #[test]
+    fn daily_timeline_end_advances_by_days() {
+        // Regression: this branch ignored the period count and returned the
+        // start date, so a daily model's timeline "ended" on day one. Only
+        // reachable once lowered streams were bounds-checked.
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 1),
+            "2025-01-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 31),
+            "2025-01-31"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 1095),
+            "2027-12-31"
+        );
+        // Across a leap day: 2028-02-29 exists, so +60 from Jan 1 is Feb 29.
+        assert_eq!(
+            add_periods_for_timeline_end("2028-01-01", "daily", 60),
+            "2028-02-29"
+        );
+        // And the coarser calendars are unaffected.
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "monthly", 12),
+            "2026-12-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "quarterly", 4),
+            "2026-10-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "annual", 3),
+            "2028-01-01"
+        );
     }
 }

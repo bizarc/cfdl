@@ -751,6 +751,40 @@ fn simulate_events(
     }
 }
 
+/// Warn when a stream's cash settles in the projection tail.
+///
+/// The tail is evaluated so `series_sum` can look forward — a forward-NOI exit
+/// reads a year past the sale — but it contributes nothing to cash results,
+/// totals or NPV. A stream that *deliberately* runs into the tail to feed a
+/// valuation is doing the right thing, and its tail values are meant to be
+/// excluded; warning on those would fire on every forward-NOI model.
+///
+/// What is worth flagging is cash that lands there without the author asking:
+/// a schedule ending on the cash horizon whose payment terms then move the
+/// last settlement past it. docs/12_payment_timing.md promises a flow is never
+/// silently dropped, and before this it was — the amount simply vanished.
+fn warn_if_cash_settles_in_tail(
+    stream: &IrStream,
+    values: &[f64],
+    cash_periods: usize,
+    warnings: &mut Vec<String>,
+) {
+    if values.len() <= cash_periods {
+        return;
+    }
+    if stream.schedule.net_days.is_none() && stream.schedule.net_months.is_none() {
+        return;
+    }
+    let stranded: f64 = values[cash_periods..].iter().sum();
+    if stranded.abs() < 1e-9 {
+        return;
+    }
+    warnings.push(format!(
+        "Stream '{}' settles {:.2} in the projection tail: its payment terms move cash past period {}, and the tail is computed for series lookups only, so that amount is excluded from cash results and NPV. Extend `for <n>` to cover the lag, or shorten the schedule.",
+        stream.name, stranded, cash_periods
+    ));
+}
+
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
     // Cash horizon vs full evaluation window: the projection tail
     // (`time ... project <n>`) is computed so series_sum/series_avg can read
@@ -794,6 +828,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             None,
             &mut warnings,
         )?;
+        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
             discount_offset(&stream.schedule),
@@ -823,6 +858,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Some(&full_series),
             &mut warnings,
         )?;
+        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
             discount_offset(&stream.schedule),

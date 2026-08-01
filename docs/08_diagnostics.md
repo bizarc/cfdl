@@ -195,7 +195,12 @@ Parser errors MUST use `E0xxx_...` codes.
 
 - `E2101_STREAM_MISSING_SCHEDULE`
 - `E2102_STREAM_MISSING_AMOUNT`
-- `E2103_SCHEDULE_OUT_OF_BOUNDS`
+- `E2103_SCHEDULE_OUT_OF_BOUNDS` — a schedule reaches outside the model
+  timeline. The bound is the cash horizon **plus** any `project <n>` tail,
+  since the engine evaluates streams over both; a schedule may reach into the
+  tail deliberately to feed a `series_sum` valuation. Applied to hand-written
+  streams during validation and mirrored onto pack-lowered ones during
+  lowering, so a pack cannot express what a model may not.
 - `E2104_SCHEDULE_INVALID_RANGE`
 - `E2105_SCHEDULE_INVALID_DAY_OF_MONTH`
 - `E2106_SCHEDULE_PHASE_NOT_FOUND`

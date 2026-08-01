@@ -328,12 +328,18 @@ fn choose_timeline(output: &ResolveOutput) -> Option<(String, Timeline)> {
     for source_stmt in &output.source_statements {
         if let Stmt::Time(time) = &source_stmt.statement {
             if let Some(start) = parse_date(&time.from) {
-                let end = end_of_timeline(start, time.cadence, time.periods);
+                let cash_end = end_of_timeline(start, time.cadence, time.periods);
+                let end = end_of_timeline(
+                    start,
+                    time.cadence,
+                    time.periods.saturating_add(time.projection),
+                );
                 return Some((
                     source_stmt.file.clone(),
                     Timeline {
                         start,
                         end,
+                        cash_end,
                         cadence: time.cadence,
                     },
                 ));
@@ -385,7 +391,14 @@ fn cadence_name(cadence: Cadence) -> &'static str {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Timeline {
     start: Date,
+    /// Last period a schedule may legally reach — the CASH horizon plus any
+    /// `project <n>` tail, because the engine evaluates streams over both.
     end: Date,
+    /// Last period whose cash reaches results and NPV. Between this and `end`
+    /// lies the projection tail: computed for `series_sum` lookups, excluded
+    /// from cash. A flow settling there is legal but silently absent from the
+    /// totals, so it warrants a warning rather than an error.
+    cash_end: Date,
     cadence: Cadence,
 }
 
