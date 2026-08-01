@@ -86,7 +86,7 @@ stream_name = "cre.unit.base_rent.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 # Free rent burns off first; escalation steps on lease anniversaries.
-amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.free_rent_months}}, 0, ({{contract.rent_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)))"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.free_rent_months}}, 0, ({{contract.rent_year}} / 12) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -104,7 +104,7 @@ direction = "inflow"
 # Expense reimbursement above the stop, at the tenant's pro-rata share.
 # Opex escalates on the lease's own anniversary of the PROPERTY schedule:
 # anchored to the recovery base year via opex_year/opex_escalation terms.
-amount_expr = "max(0, {{contract.opex_year}} * {{contract.gross_up_factor}} * pow(1 + {{contract.opex_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
+amount_expr = "max(0, {{contract.opex_year}} * {{contract.gross_up_factor}} * pow(1 + {{contract.opex_escalation}}, {{time.elapsed_years}}) - {{contract.expense_stop_year}}) * {{contract.pro_rata_share}} / 12"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -142,7 +142,7 @@ direction = "inflow"
 # scenario pays (p * renewal rent — the re-lease scenario sits vacant);
 # afterwards rent is the full probability-weighted blend. Escalation steps on
 # window anniversaries.
-amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.downtime_months}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.downtime_months}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}}, {{contract.renewal_probability}} * {{contract.renewal_rent_year}} + (1 - {{contract.renewal_probability}}) * {{contract.market_rent_year}}) / 12 * pow(1 + {{contract.market_escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -188,7 +188,7 @@ contract_name = "cre.property_opex"
 stream_name = "cre.property.opex"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "({{contract.opex_year}} / 12) * pow(1 + {{contract.escalation}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0))"
+amount_expr = "({{contract.opex_year}} / 12) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -219,7 +219,7 @@ owner_entity = "${subject}"
 direction = "inflow"
 # Overage rent: pct of sales above the breakpoint, sales growing on the
 # lease's own anniversaries.
-amount_expr = "max(0, {{contract.sales_year}} * pow(1 + {{contract.sales_growth}}, round_down(months_between(parse_date(\"{{contract.term_start}}\"), time.date) / 12, 0)) - {{contract.breakpoint_year}}) * {{contract.overage_pct}} / 12"
+amount_expr = "max(0, {{contract.sales_year}} * pow(1 + {{contract.sales_growth}}, {{time.elapsed_years}}) - {{contract.breakpoint_year}}) * {{contract.overage_pct}} / 12"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
