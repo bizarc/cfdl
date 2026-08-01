@@ -26,6 +26,12 @@ implementations.
 > CDR are **effective annual** and take a root — `cpr_to_periodic(x, ppy)`,
 > which is exactly `cpr_to_smm(x)` at ppy = 12.
 >
+> **Day count on daily accrual is Act/365 Fixed.** Shape 2 divides the note
+> rate by 365, so a 6% loan accrues 0.0164384%/day. That is a real and widely
+> used convention, but USD credit conventionally accrues Act/360 — about
+> 885 more interest per million per year. There is no `day_count` term yet;
+> if you need Act/360, state the rate grossed up by 365/360.
+>
 > Annual totals do **not** match across monthly / quarterly / annual, and
 > should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
 > which are different instruments. Those cadences are checked against the
