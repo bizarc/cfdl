@@ -2,7 +2,13 @@
 # Location: repo root `/rust-toolchain.toml`
 
 [toolchain]
-channel = "stable"
+# A concrete release, not "stable". The committed wasm bundle is built from
+# this toolchain and rustc bakes `/rustc/<commit>/` paths into the module, so a
+# moving channel means two honest builds differ. The freshness gates hash
+# sources rather than output precisely so this is not load-bearing — but a
+# pinned compiler still keeps CI, Vercel and contributors on one answer.
+# Bump deliberately, and rebuild the bundle in the same commit.
+channel = "1.87.0"
 profile = "minimal"
 components = ["rustfmt", "clippy"]
 

@@ -45,9 +45,18 @@ try {
   changed = execSync(`git diff --name-only ${base}...HEAD`, { encoding: "utf8" })
     .split("\n")
     .filter(Boolean);
-} catch {
-  console.log(`check-notebooks-fresh: cannot diff against ${base} — skipping.`);
-  process.exit(0);
+} catch (error) {
+  // Fatal, not skip — see the same change in check-wasm-fresh.mjs. A shallow
+  // checkout makes this throw on every CI run, so exiting 0 here disabled the
+  // gate entirely without ever saying so.
+  console.error(`check-notebooks-fresh: cannot diff against ${base}.\n`);
+  console.error(`  ${error instanceof Error ? error.message.split("\n")[0] : String(error)}\n`);
+  console.error("The base ref must be present locally. In CI, set:");
+  console.error("  - uses: actions/checkout@v4");
+  console.error("    with:");
+  console.error("      fetch-depth: 0");
+  console.error("\nLocally, fetch it:\n  git fetch origin main");
+  process.exit(1);
 }
 
 const sourceChanges = changed.filter((f) => SOURCE_PATHS.some((p) => f.startsWith(p)));

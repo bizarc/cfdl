@@ -11,7 +11,7 @@
     "root": "model.cfdl",
     "config": {
       "deterministic": {
-        "discount_rate": 0.1
+        "annual_discount_rate": 0.1
       }
     },
     "files": {
@@ -30,7 +30,7 @@
     "root": "model.cfdl",
     "config": {
       "deterministic": {
-        "discount_rate": 0.1
+        "annual_discount_rate": 0.1
       }
     },
     "files": {
@@ -50,7 +50,7 @@
     "pack": "cre",
     "config": {
       "deterministic": {
-        "discount_rate": 0.1,
+        "annual_discount_rate": 0.1,
         "parameters": {
           "stream.cre.lease.base_rent:amount": 25000
         }
@@ -73,7 +73,7 @@
     "pack": "opco",
     "config": {
       "deterministic": {
-        "discount_rate": 0.1
+        "annual_discount_rate": 0.1
       }
     },
     "files": {
@@ -92,7 +92,7 @@
     "root": "model.cfdl",
     "config": {
       "deterministic": {
-        "discount_rate": 0.1
+        "annual_discount_rate": 0.1
       }
     },
     "files": {

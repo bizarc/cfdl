@@ -26,10 +26,22 @@ if [[ "${SKIP_WASM:-0}" == "1" ]]; then
   exit 0
 fi
 
+# Pinned so every build of the committed bundle comes from one toolchain.
+# Bump deliberately and rebuild in the same commit.
+WASM_PACK_VERSION=0.13.1
+
 if ! command -v wasm-pack >/dev/null 2>&1; then
   echo "build-wasm: wasm-pack not found." >&2
-  echo "  Install:  cargo install wasm-pack" >&2
+  echo "  Install:  cargo install wasm-pack --version ${WASM_PACK_VERSION}" >&2
   echo "  Or skip:  SKIP_WASM=1 npm run build:wasm" >&2
+  exit 1
+fi
+
+HAVE_WASM_PACK="$(wasm-pack --version 2>/dev/null | awk '{print $2}')"
+if [[ "${HAVE_WASM_PACK}" != "${WASM_PACK_VERSION}" ]]; then
+  echo "build-wasm: wasm-pack ${HAVE_WASM_PACK} found, but this repo pins ${WASM_PACK_VERSION}." >&2
+  echo "  Install:  cargo install wasm-pack --version ${WASM_PACK_VERSION} --force" >&2
+  echo "  Or bump WASM_PACK_VERSION in this script, deliberately." >&2
   exit 1
 fi
 
@@ -54,6 +66,13 @@ if [[ ! -f "${WASM_FILE}" ]]; then
   echo "build-wasm: expected ${WASM_FILE} to exist after the build." >&2
   exit 1
 fi
+
+# Record what the bundle was built from. Hashing the *sources* rather than the
+# output keeps the check reproducible: wasm-pack, binaryen and the rustc path
+# prefixes baked into the module all vary by machine, so byte-comparing two
+# honest builds produces false failures. Mirrors write_render_stamp in
+# tools/render-notebooks.py.
+node "${SITE_DIR}/scripts/wasm-stamp.mjs" --write
 
 RAW_KB=$(( $(wc -c < "${WASM_FILE}") / 1024 ))
 GZIP_KB=$(( $(gzip -c "${WASM_FILE}" | wc -c) / 1024 ))
