@@ -259,7 +259,11 @@ cargo build -p cfdl-cli
 ./target/debug/cfdl compile <model_dir> --out <ir.json> [--packs <packs_dir>]
 ```
 
-- `--packs` is optional; a local `packs/` directory is used automatically if present.
+- `--packs` is optional. The four standard packs are built into the binary, so
+  `use pack` resolves without it. A local `packs/` directory is used when
+  present, and takes precedence — a directory holding packs is authoritative,
+  so a mistyped path fails rather than silently falling back to the built-in
+  copies.
 
 ### Run IR
 

@@ -21,7 +21,11 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 
 # Internal crates (to be implemented)
-cfdl-compile = { path = "../cfdl-compile" }
+# Bundle the standard packs so `cfdl compile` resolves `use pack` with no
+# flag and no download. Without this the installed CLI could not compile a
+# model the browser playground compiles fine, since only wasm and the
+# server enabled the feature.
+cfdl-compile = { path = "../cfdl-compile", features = ["embedded-packs"] }
 cfdl-engine = { path = "../cfdl-engine" }
 cfdl-metrics = { path = "../cfdl-metrics" }
-cfdl-pack = { path = "../cfdl-pack" }
+cfdl-pack = { path = "../cfdl-pack", features = ["embedded-packs"] }

@@ -41,14 +41,20 @@ cargo build --release -p cfdl-cli
 
 ## Getting the packs
 
-The CLI resolves `use pack` against a packs directory passed with
-`--packs`. Domain packs (energy, cre, credit, opco) ship as a
-`cfdl-packs-<version>.tar.gz` release asset; from a checkout, use the
-repo's `packs/` directory:
+The four domain packs — energy, cre, credit and opco — are built into the
+binary, so `use pack` resolves with no flag and no download:
 
 ```bash
-cfdl compile my-model --packs packs --out my-model/ir.json
+cfdl compile my-model --out my-model/ir.json
 ```
+
+Pass `--packs <dir>` to use your own packs instead. A directory containing
+packs is authoritative: the CLI will not silently fall back to the built-in
+copies if it does not hold the pack your model asks for, so a mistyped path
+fails rather than quietly compiling against a different pack than you meant.
+
+The packs also ship as a `cfdl-packs-<version>.tar.gz` release asset if you
+want to read or fork one.
 
 ## Verify
 
