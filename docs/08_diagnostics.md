@@ -215,6 +215,11 @@ Parser errors MUST use `E0xxx_...` codes.
   a finer calendar.
 
 ### 7.6 Events and actions (E22xx)
+- `E2109_SCHEDULE_CONFLICTING_PLACEMENT` — a schedule combines `mid` with
+  `due`, a day rule, or `net` payment terms. Each states where in its period
+  the cash sits; two placements is a contradiction, not a refinement. See
+  `docs/12_payment_timing.md`.
+
 - `E2201_EVENT_WHEN_NOT_BOOL`
 - `E2202_STREAM_ACTIVE_NOT_BOOL`
 - `E2203_ACTION_SET_FIELD_INVALID`

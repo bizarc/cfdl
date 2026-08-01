@@ -178,6 +178,45 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 }
 
                 let schedule = stream.schedule.as_ref().expect("checked is_some");
+
+                // `mid` names where in its period the cash sits, and so do
+                // `due` and a day rule. Two placements is not a refinement,
+                // it is a contradiction, so it is rejected rather than
+                // resolved by precedence.
+                //
+                // `net` is rejected for a different reason. Payment terms are
+                // resolved on the CALENDAR — bill date, add the lag, find the
+                // period the result lands in — while `mid` is a discounting
+                // convention applied to whichever period the cash lands in.
+                // Combining them would bill at the period end and then
+                // discount as though the cash had arrived halfway through it,
+                // which is not a convention anyone runs. Composing them
+                // properly means billing from the midpoint and carrying the
+                // lag's sub-period residual into the offset; that is a real
+                // design question and it is not answered by picking one.
+                if schedule.mid {
+                    let clash = if schedule.due {
+                        Some("`due`, which places the same cash at the start of the period")
+                    } else if schedule.day_of_month.is_some() || schedule.end_of_month {
+                        Some("a day rule, which places the same cash on a stated date")
+                    } else if schedule.net.is_some() {
+                        Some("`net` payment terms, which are resolved on the calendar rather than as a position in the period")
+                    } else {
+                        None
+                    };
+                    if let Some(clash) = clash {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: "E2109_SCHEDULE_CONFLICTING_PLACEMENT",
+                            message: format!(
+                                "Stream '{}' combines `mid` with {}. A schedule states one position in its period, not two.",
+                                stream.name, clash
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: schedule.span,
+                        });
+                    }
+                }
+
                 if let Some(day) = schedule.day_of_month {
                     if !(1..=31).contains(&day) {
                         diagnostics.push(ValidationDiagnostic {

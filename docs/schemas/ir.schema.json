@@ -716,6 +716,10 @@
           "description": "A one-shot (`on_date`) flow that settles at the END of the period its date falls in, rather than on the date itself. Set by a pack lowering rule for a DISPOSAL: a reversion is taken at the end of the holding period and so discounts the full n periods, where an acquisition settles on its date and does not. Omitted for the default. See 12_payment_timing.md.",
           "type": "boolean"
         },
+        "mid": {
+          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar — which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
+          "type": "boolean"
+        },
         "net_days": {
           "description": "Days between a flow being earned and its cash moving. Omitted when cash lands in the period that earned it.",
           "type": "integer",

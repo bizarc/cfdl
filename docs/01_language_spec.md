@@ -384,18 +384,33 @@ schedule on 2026-02-15
 schedule every month from 2026-02-01 to 2028-01-31
 ```
 
-#### 10.2.3 Day rules
+#### 10.2.3 Position in the period
+```cfdl
+schedule every year due from 2026-01 to 2030-01   // start of each period
+schedule every year from 2026-01 to 2030-01       // end (the default)
+schedule every year mid from 2026-01 to 2030-01   // halfway through
+schedule on 2029-06 mid                           // one-shot, same axis
+```
+
+`due`, the default and `mid` say where in its period a payment sits, and so how
+far it is discounted. `mid` is the project-finance mid-period convention: cash
+arrives through the period rather than at one end, so it is summarised at the
+midpoint — half a period on **every** calendar, unlike a day rule. Stating two
+positions at once is `E2109_SCHEDULE_CONFLICTING_PLACEMENT`. See
+`docs/12_payment_timing.md`.
+
+#### 10.2.4 Day rules
 ```cfdl
 schedule every month on day 1 from 2026-02-01 to 2028-01-31
 schedule every month on eom from 2026-02-01 to 2028-01-31
 ```
 
-#### 10.2.4 Weekday sets (daily/weekly)
+#### 10.2.5 Weekday sets (daily/weekly)
 ```cfdl
 schedule every week on Mon,Wed,Fri from 2026-02-01 to 2026-06-30
 ```
 
-#### 10.2.5 Business-day conventions
+#### 10.2.6 Business-day conventions
 ```cfdl
 schedule every month on eom
   from 2026-02-01 to 2028-01-31
@@ -410,7 +425,7 @@ Conventions:
 - `preceding`
 - `modified_preceding`
 
-#### 10.2.6 Stub rules
+#### 10.2.7 Stub rules
 ```cfdl
 schedule every month on day 15
   from 2026-02-01 to 2026-12-31

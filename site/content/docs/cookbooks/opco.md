@@ -244,6 +244,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
+- [opco: banker dcf conventions](/docs/examples/opco-banker-dcf-conventions)
 - [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)
 - [Operating Business examples overview](/docs/examples/operating-business-examples)
 - [Basic OpCo](/docs/examples/opco_basic)

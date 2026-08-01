@@ -42,11 +42,11 @@ figure the model computes rather than one the analyst states.
 MIT fn 5 does exactly this: the replacement Suite 100 lease takes its stop from
 actual 2004 opex, which is why its 2004 reimbursement is exactly zero.
 
-Blocks: the same benchmark. Also forces a duplicated opex formula — see 4.1,
+Blocks: the same benchmark. Also forces a duplicated opex formula — see 5.1,
 which is the underlying cause.
 
 Shape: a term that names a period rather than an amount, resolved after the
-opex stream exists. Depends on 4.1.
+opex stream exists. Depends on 5.1.
 
 ### 1.3 Abatements as a first-class NOI line
 
@@ -79,7 +79,7 @@ min(month, 30)), 100)` is closed-form and is already asserted in
 factor is a cumulative product with no elementary closed form, and the
 expression language has no `exp`/`ln` to sum logs instead.
 
-**This is not item 4.2 (per-period state) and should not be bundled with it.** A
+**This is not item 5.2 (per-period state) and should not be bundled with it.** A
 PSA ramp is deterministic in loan age — nothing accumulates — so the natural
 fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
 a published table behind a function. Substituting one call for `pow(k, p)`
@@ -120,9 +120,72 @@ way in. Note the conversion is cadence-dependent, so it belongs with
 
 ---
 
-## 3. Energy pack
+## 3. OpCo pack
 
-### 3.1 A rounding builtin, and the production credit that needs one
+### 3.1 A stub first period
+
+`time calendar <c> from <d> for <n>` produces `n` periods of one length. A
+valuation dated off a fiscal-year boundary — which is every live deal, because
+valuation dates are negotiated and fiscal years are not — has a **stub** first
+period, and there is no way to say so.
+
+Reproducing a disclosed banker DCF made this concrete: valuation date 30
+September, fiscal year ending 30 June, so the first forecast period is nine
+months and the full years after it sit at 1.25, 2.25, 3.25 and 4.25 years out
+rather than 1, 2, 3, 4. `benchmarks/opco/banker_dcf_conventions` works around it
+by dropping to a monthly grid and placing each fiscal year's cash on the date
+that carries its convention. Every exponent lands exactly, which is luck — the
+offsets happen to be month boundaries except the stub's, which happens to be a
+month midpoint. A valuation dated mid-month has no such out.
+
+Shape: a leading partial period the calendar knows the length of, so period
+lengths are `[stub, p, p, …]` and discounting, escalation and `elapsed_years`
+all read it. Note the schedule grammar already has `stub short_front` /
+`long_front` for *schedules*; this is the same idea for the *calendar*, and the
+two should probably share a spelling.
+
+### 3.2 A one-shot cannot settle at its period's end from surface syntax
+
+`schedule on <date>` discounts from the period's open. A pack lowering rule can
+move it to the close with `schedule_at_period_end` — added when the CRE
+reversion turned out to be discounted a period short — but no surface syntax
+exposes it, so a hand-written model cannot say it.
+
+The workaround is a single-occurrence `every`: `schedule every month from
+2025-12 to 2025-12` is an ordinary annuity, so it falls at its period's end.
+That produces the right answer and reads like a workaround.
+
+Shape: `schedule on <date> at end`, beside the `mid` modifier that already
+works there. Small, and it closes an asymmetry between what packs can express
+and what models can.
+
+Found the same way. Related to 3.1 — both are about a flow whose position is
+not one of the three the calendar offers.
+
+### 3.3 A settlement lag's sub-period residual is dropped from discounting
+
+Not found by the DCF, but exposed while deciding how `mid` should interact with
+payment terms. `net <n>` is resolved on the calendar — billing date, plus the
+lag, rolled for business days — and then the cash is moved into whichever
+**period** the result lands in. The lag is therefore honoured to whole periods
+and its remainder is dropped from the discounting.
+
+On a monthly model with `net 30` that is exact. With `net 45`, the cash lands
+one period later and the extra fifteen days are not discounted for. The error
+is small and one-directional, and it applies to every schedule carrying payment
+terms, not only to the ones that also want a position.
+
+`mid` with `net` is rejected outright today
+(`E2109_SCHEDULE_CONFLICTING_PLACEMENT`) rather than composed, because
+composing them means answering this. Doing it properly means carrying a
+fractional residual out of the bucketing step and adding it to the stream's
+offset — which the offset mechanism already supports, since it is a float.
+
+---
+
+## 4. Energy pack
+
+### 4.1 A rounding builtin, and the production credit that needs one
 
 `energy_ptc_credit` carries the escalated credit rate as a continuous quantity.
 The statutory credit is published **rounded to the nearest 0.1 cent per kWh**
@@ -144,7 +207,7 @@ project-finance model. `benchmarks/energy/wind_ptc_macrs` asserts the unrounded
 figure against an in-house generator, so both sides carried the same omission
 and had always agreed.
 
-### 3.2 A derived depreciable basis
+### 4.2 A derived depreciable basis
 
 `energy.macrs_shield` takes `basis` as an input. Taking an investment credit
 conventionally reduces the depreciable basis by half the credit, so a model
@@ -163,9 +226,9 @@ Found the same way. Documented in `packs/energy/README.md` in the meantime.
 
 ---
 
-## 4. Language and engine
+## 5. Language and engine
 
-### 4.1 A stream may not read another period's value
+### 5.1 A stream may not read another period's value
 
 Phase-1 streams cannot look at each other at all; phase-2 streams can read
 phase-1 through `series_sum`/`series_avg` but not each other, which is what
@@ -183,7 +246,7 @@ both cases. Note this is close to the per-period persistent state the pack
 roadmap identifies as the gate on roughly two thirds of its candidate packs, so
 it is worth designing the two together rather than separately.
 
-### 4.2 Per-period persistent state
+### 5.2 Per-period persistent state
 
 No accumulator, no carryforward, no balance that a period can add to and a
 later period draw down. Cash sweeps, revolver draws, FF&E reserves, escrow
@@ -191,13 +254,13 @@ accounts, NOL carryforwards and construction-interest capitalisation all need
 it, and `packs/opco/lowering/rules.toml` says so in its header.
 
 Not discovered by this work — it is a known absence — but recorded here because
-4.1 is a strictly smaller version of it and the two should share a design.
+5.1 is a strictly smaller version of it and the two should share a design.
 
 ---
 
-## 5. Cross-pack
+## 6. Cross-pack
 
-### 5.1 Day count beyond the four supported bases
+### 6.1 Day count beyond the four supported bases
 
 `{{model.accrual_divisor}}` handles `30/360`, `30e/360`, `act/360` and
 `act/365`. `act/act` is not supported: it needs the days in the *year* the
@@ -207,7 +270,7 @@ period falls in, which the expression environment does not expose
 Low urgency — the four cover most instruments — but `act/act` is the government
 bond convention and will be wanted if a sovereign or municipal pack appears.
 
-### 5.2 excel_compat cannot be selected for a model run
+### 6.2 excel_compat cannot be selected for a model run
 
 `cfdl_expr::eval_with_mode` takes a `Mode`, and `Mode::ExcelCompat` evaluates
 in IEEE-754 float64 to reproduce Excel's representation artifacts. But the
@@ -227,10 +290,35 @@ A.CRE and Finamodel workbooks are Excel, and "our decimal answer differs from
 the spreadsheet in the fifteenth digit" is a question best answered by running
 both ways rather than by argument.
 
+**Now measured against a float64 reference.** Reconciling
+`benchmarks/energy/utility_pv_singleowner` left a residual, and decomposing it
+says what the mode is worth. Against the same reference, on the streams that are
+a plain geometric series or a single `pmt`:
+
+| stream | decimal (shipped) | float64 |
+|---|---|---|
+| `energy.om.expense` | 4.68e-7 | 4.66e-10 (1 ulp) |
+| `energy.debt.service` | 2.54e-7 | 9.31e-10 (1 ulp) |
+| `energy.ppa.revenue` | 9.15e-7 | 5.57e-7 |
+
+So float64 lands on the reference to the last representable bit where the
+reference's own arithmetic is short, and gains almost nothing on PPA revenue,
+where the residual is accumulated error inside the reference's longer chain
+rather than decimal-versus-float64 at all.
+
+Two things follow. The mode would make a parity claim exact rather than merely
+tight — worth having. And **closer is not more correct**: the decimal answer is
+the exact one, and float64 agrees better precisely because it reproduces the
+reference's rounding as well as its arithmetic. At 5e-7 on 2e6 that is 2e-13
+relative, below any tolerance a case would declare. The caveat: this was
+measured with an independent float64 reimplementation, so it indicates what the
+mode would do rather than proving it — `pow` can differ by under an ulp between
+libm implementations.
+
 Found while validating the credit pack against an external reference and asking
 whether Excel mode would move the numbers. It cannot be turned on to find out.
 
-### 5.3 An acquisition or disposal in a period other than the term's
+### 6.3 An acquisition or disposal in a period other than the term's
 
 `schedule_kind = "on_date"` places a one-shot flow in the period containing its
 date, and `schedule_at_period_end` now says where in that period it sits. What
@@ -246,7 +334,7 @@ disposal discounting.
 
 ## Where these came from
 
-Section 1 and item 4.1 were found building `benchmarks/cre/mit_rentleg_plaza`
+Section 1 and item 5.1 were found building `benchmarks/cre/mit_rentleg_plaza`
 against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
 checked against a published third-party figure rather than an in-house
 reference. Section 2 came the same way, from `benchmarks/credit/mbs_pool_conventions`
@@ -254,7 +342,14 @@ against the published industry reference for MBS cash flows — which also found
 three outright defects, in the prepayment base, the recovery basis and the
 payment-striking divisor, all fixed rather than listed here.
 
-Section 3 came from `benchmarks/energy/utility_pv_singleowner` against a
+Section 3 came from `benchmarks/opco/banker_dcf_conventions` against a
+disclosed valuation in a public merger filing — the opco pack's first external
+check. All nine cells of the banker's answer grid reproduce within $1.2mm on
+$19bn. It also found two outright engine defects, fixed rather than listed
+here: mid-period discounting had no spelling at all, and `on day <n>` divided
+by a literal 30 on every calendar.
+
+Section 4 came from `benchmarks/energy/utility_pv_singleowner` against a
 national laboratory's open-source project-finance model — the energy pack's
 first external check of any kind. Five rules reproduced it to within 1e-6
 dollars on the first attempt; the two items above are what the reconciliation

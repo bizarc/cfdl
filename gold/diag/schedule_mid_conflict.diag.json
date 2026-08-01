@@ -1,0 +1,47 @@
+[
+  {
+    "code": "E2109_SCHEDULE_CONFLICTING_PLACEMENT",
+    "severity": "error",
+    "message": "Stream 'co.mid_and_due' combines `mid` with `due`, which places the same cash at the start of the period. A schedule states one position in its period, not two.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 12,
+      "end_line": 8,
+      "end_col": 53
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E2109_SCHEDULE_CONFLICTING_PLACEMENT",
+    "severity": "error",
+    "message": "Stream 'co.mid_and_net' combines `mid` with `net` payment terms, which are resolved on the calendar rather than as a position in the period. A schedule states one position in its period, not two.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 12,
+      "end_line": 16,
+      "end_col": 56
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E2109_SCHEDULE_CONFLICTING_PLACEMENT",
+    "severity": "error",
+    "message": "Stream 'co.mid_and_day' combines `mid` with a day rule, which places the same cash on a stated date. A schedule states one position in its period, not two.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 12,
+      "end_line": 22,
+      "end_col": 59
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -54,6 +54,20 @@ worst disagreement on any period of any stream:
 That is decimal arithmetic against IEEE-754 float64 over 25 years of
 compounding, so the residual is the reference's representation error, not ours.
 
+Decomposed, because "would Excel mode be closer?" is the obvious question. An
+independent float64 reimplementation of the same three streams lands on the
+reference at **1 ulp** for O&M (4.66e-10) and debt service (9.31e-10), against
+4.68e-7 and 2.54e-7 for the shipped decimal path — three orders of magnitude
+closer. On PPA revenue it gains almost nothing (5.57e-7 against 9.15e-7),
+because there the residual is accumulated error inside the reference's own
+longer chain rather than decimal-versus-float64.
+
+Closer is not more correct: decimal is the exact answer, and float64 agrees
+better because it reproduces the reference's rounding as well as its arithmetic.
+At 5e-7 on 2e6 that is 2e-13 relative. It would matter for a parity *claim*,
+which is what `docs/13_feature_backlog.md` 5.2 is about, and for nothing else
+here.
+
 It matched on the first attempt, which is worth stating plainly — nothing was
 adjusted to make it agree. The findings below are all *convention* differences
 that a modeller has to know about, plus one real gap.

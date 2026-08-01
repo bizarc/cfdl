@@ -1,0 +1,26 @@
+# Benchmark case: a sell-side banker's DCF of an enterprise-software business.
+#
+# Reconciled against the analysis disclosed in a public merger filing — free,
+# citable, and unusually complete: the filing gives the unlevered free cash
+# flow build-up line by line, the discount rate, the terminal multiple, the
+# discounting convention, the dilution assumption, AND the answer grid. See
+# NOTES.md for what it is and what reproducing it found.
+#
+# There is deliberately no reference_gen.py. Every figure asserted here is the
+# filing's; a second implementation of our own is what an external source
+# replaces.
+#
+# The asserted metric is the centre of the disclosed 3x3 grid — 10.375% WACC,
+# 25.0x terminal multiple, published implied enterprise value $15,764mm. That
+# one cell exercises every convention in the case: the mid-period stub, the
+# four full-year placements, and a terminal value discounted whole rather than
+# mid-period. All nine cells were reconciled (worst +1.17 on $19bn, which is
+# the filing's own whole-$mm rounding); the other eight need a different
+# discount rate or multiple per run, so they live in NOTES.md.
+#
+# tolerance 1.0 — a million on sixteen billion, set by the filing's rounding
+# rather than by the engine. The engine's own agreement is +0.16.
+#
+# Units are $mm throughout, matching the filing.
+pack = "opco"
+period_tolerance = 0.001

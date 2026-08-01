@@ -325,6 +325,17 @@ pub struct LoweringRule {
     /// the interval that earned them, which is the default.
     #[serde(default)]
     pub schedule_due: bool,
+    /// Mid-period convention: the stream's cash is discounted from halfway
+    /// through the period that earned it.
+    ///
+    /// A convention, not a date — half a period on every calendar. It is what
+    /// a project-finance or banker DCF means by "mid-year discounting": a
+    /// year's cash arrives evenly, so treating it as a single point at the
+    /// year's midpoint is closer than treating it as arriving on 31 December.
+    /// Mutually exclusive with `schedule_due` and with a day rule, since all
+    /// three name a position in the period.
+    #[serde(default)]
+    pub schedule_mid: bool,
     /// For a one-shot (`on_date`) rule: settle at the END of the period the
     /// date falls in rather than its start.
     ///

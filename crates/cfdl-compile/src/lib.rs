@@ -485,6 +485,10 @@ struct IrSchedule {
     /// the stated date. Disposals want this; acquisitions do not.
     #[serde(skip_serializing_if = "std::ops::Not::not", default)]
     at_period_end: bool,
+    /// Mid-period convention: cash discounted from halfway through the period
+    /// that earned it, rather than from its end. Omitted for the default.
+    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
+    mid: bool,
     /// How long after a flow is earned its cash moves. Omitted when cash
     /// lands in the period that earned it.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2018,6 +2022,7 @@ fn lower_pack_rule_schedule(
             kind: "OnDate".to_string(),
             due: false,
             at_period_end: rule.schedule_at_period_end,
+            mid: false,
             net_days: None,
             net_months: None,
             on: Some(normalize_date(&rule.schedule_from)),
@@ -2036,6 +2041,7 @@ fn lower_pack_rule_schedule(
             kind: "Every".to_string(),
             due: rule.schedule_due,
             at_period_end: false,
+            mid: rule.schedule_mid,
             net_days,
             net_months,
             on: None,
@@ -2525,6 +2531,7 @@ fn lower_schedule(
             kind: "OnDate".to_string(),
             due: false,
             at_period_end: false,
+            mid: false,
             net_days: None,
             net_months: None,
             on: Some(time_start.to_string()),
@@ -2564,6 +2571,7 @@ fn lower_schedule(
             kind: "OnDate".to_string(),
             due: false,
             at_period_end: false,
+            mid: schedule.mid,
             net_days: None,
             net_months: None,
             on: Some(normalize_date(
@@ -2591,6 +2599,7 @@ fn lower_schedule(
             kind: "Every".to_string(),
             due: schedule.due,
             at_period_end: false,
+            mid: schedule.mid,
             net_days: split_payment_terms(schedule.net).0,
             net_months: split_payment_terms(schedule.net).1,
             on: None,
@@ -2630,6 +2639,7 @@ fn lower_schedule(
                 kind: "OnDate".to_string(),
                 due: false,
                 at_period_end: false,
+                mid: false,
                 net_days: None,
                 net_months: None,
                 on: Some(start.clone()),
@@ -2660,6 +2670,7 @@ fn lower_schedule(
                 kind: "Every".to_string(),
                 due: schedule.due,
                 at_period_end: false,
+                mid: schedule.mid,
                 net_days: split_payment_terms(schedule.net).0,
             net_months: split_payment_terms(schedule.net).1,
                 on: None,

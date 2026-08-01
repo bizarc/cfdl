@@ -236,6 +236,13 @@ pub struct ScheduleSpec {
     /// `net <n>` — days between a flow being earned and its cash moving,
     /// overriding the contract's payment terms for this stream.
     pub net: Option<PaymentTerms>,
+    /// Mid-period convention: cash discounted from halfway through the period
+    /// that earned it. Standard in project finance and banker DCFs, where a
+    /// year's cash is taken as arriving evenly rather than all on 31 December.
+    /// Unlike `on day <n>` this is a convention, not a date, so it is half a
+    /// period on every calendar.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub mid: bool,
     /// Annuity due: payment at the START of each interval, as for rent.
     /// The default is an ordinary annuity — payment at the END of each
     /// interval — matching `pmt(rate, nper, pv, [fv], [due])` in the
@@ -1324,6 +1331,7 @@ impl<'a> Parser<'a> {
                         kind: ScheduleKind::PhaseEnter { phase },
                         every: None,
                         due: false,
+                        mid: false,
                         end_of_month: false,
                         net: None,
                         from: None,
@@ -1363,12 +1371,22 @@ impl<'a> Parser<'a> {
                     );
                     return None;
                 }
+                // `on <date> mid` treats the flow as arriving evenly across
+                // the period its date falls in, rather than at that period's
+                // open. A valuation date that is not a period boundary needs
+                // it: the cash sits inside the period, not at either edge.
+                let mut on_date_mid = false;
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Mid)) {
+                    let _ = self.bump();
+                    on_date_mid = true;
+                }
                 let mut spec = ScheduleSpec {
                     kind: ScheduleKind::OnDate,
                     every: None,
                     end_of_month: false,
                     net: None,
                     due: false,
+                    mid: on_date_mid,
                     from: Some(date.clone()),
                     to: Some(date),
                     day_of_month: None,
@@ -1393,6 +1411,16 @@ impl<'a> Parser<'a> {
                 if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Due)) {
                     let _ = self.bump();
                     due = true;
+                }
+                // `mid` is the other end of the same axis: `due` puts the cash
+                // at the start of the interval, the default at the end, `mid`
+                // halfway. Mutually exclusive with `due` by construction —
+                // taking both would be contradictory, so the second wins the
+                // parse and E1015 rejects it.
+                let mut mid = false;
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Mid)) {
+                    let _ = self.bump();
+                    mid = true;
                 }
                 // `net <n>` sits beside `due` because both describe when cash
                 // moves, and it reads as one clause: `every month net 30 from …`.
@@ -1503,6 +1531,7 @@ impl<'a> Parser<'a> {
                         end_of_month,
                         net,
                         due,
+                        mid,
                         from: None,
                         to: None,
                         day_of_month,
@@ -1545,6 +1574,7 @@ impl<'a> Parser<'a> {
                     end_of_month,
                     net,
                     due,
+                    mid,
                     from: Some(from),
                     to: Some(to),
                     day_of_month,
@@ -2425,6 +2455,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Quarterly => "quarterly",
         Keyword::Annual => "annual",
         Keyword::Due => "due",
+        Keyword::Mid => "mid",
         Keyword::Week => "week",
         Keyword::Month => "month",
         Keyword::Months => "months",

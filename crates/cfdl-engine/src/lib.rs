@@ -831,7 +831,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
-            discount_offset(&stream.schedule),
+            discount_offset(&stream.schedule, &ir.time.calendar),
         ));
         record_stream(
             stream,
@@ -861,7 +861,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
-            discount_offset(&stream.schedule),
+            discount_offset(&stream.schedule, &ir.time.calendar),
         ));
         record_stream(
             stream,
@@ -1612,7 +1612,7 @@ fn periods_per_year(calendar: &str) -> f64 {
 /// period the cash sits, and so how far it is discounted. One mechanism covers
 /// every case — an annuity due sits at the start, an ordinary annuity at the
 /// end, and a day rule at its own point in between.
-fn discount_offset(schedule: &IrSchedule) -> f64 {
+fn discount_offset(schedule: &IrSchedule, calendar: &str) -> f64 {
     // A one-shot flow happens on its stated date, not at the end of the
     // period containing it: a purchase on 2026-01 is settled then, so it is
     // not discounted for a period it never waited through.
@@ -1624,14 +1624,33 @@ fn discount_offset(schedule: &IrSchedule) -> f64 {
     // falls. On a monthly model the gap is one month; on an annual one it is a
     // whole year, and 9% of the reversion at 12%.
     if schedule.kind == "OnDate" {
-        return if schedule.at_period_end { 1.0 } else { 0.0 };
+        // Three placements, same axis: the stated date's period opens (the
+        // default, right for an acquisition), closes (`at_period_end`, right
+        // for a disposal), or is treated as arriving evenly across it (`mid`).
+        return if schedule.mid {
+            0.5
+        } else if schedule.at_period_end {
+            1.0
+        } else {
+            0.0
+        };
     }
     if schedule.due {
         return 0.0;
     }
+    if schedule.mid {
+        return 0.5;
+    }
     match schedule.on_rule.as_ref() {
-        // `on day <n>`: n days into a nominal 30-day period.
-        Some(rule) if rule.kind == "DayOfMonth" => (rule.day.clamp(1, 31) as f64 / 30.0).min(1.0),
+        // `on day <n>`: n days into the period, so the divisor is the period's
+        // own length. It was a literal 30 until an annual model wanted the
+        // mid-period convention and got it from `on day 15` — which is right
+        // only on a monthly grid. On a quarterly or annual calendar `day 15`
+        // is 15 days into a quarter or a year, not half of one, and on a daily
+        // calendar the payment date IS the period, so it clamps to its end.
+        Some(rule) if rule.kind == "DayOfMonth" => {
+            (rule.day.clamp(1, 31) as f64 / (365.0 / periods_per_year(calendar))).min(1.0)
+        }
         // End of month is the period end, same as the default.
         _ => 1.0,
     }
@@ -2337,6 +2356,11 @@ struct IrSchedule {
     /// A one-shot flow that settles at the END of its period.
     #[serde(default)]
     at_period_end: bool,
+    /// Mid-period convention: cash treated as arriving halfway through the
+    /// period it was earned in. A discounting convention rather than a date,
+    /// so it is 0.5 of a period on every calendar.
+    #[serde(default)]
+    mid: bool,
     /// How long after a flow is earned its cash moves. Absent means the cash
     /// lands in the period that earned it.
     #[serde(default)]

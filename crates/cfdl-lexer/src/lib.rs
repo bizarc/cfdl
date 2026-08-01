@@ -101,6 +101,7 @@ pub enum Keyword {
     // `day` reuses the existing Keyword::Day, which `on day <n>` also uses;
     // position disambiguates them.
     Due,
+    Mid,
     Week,
     Month,
     // Plural forms, accepted only as a payment-term unit.
@@ -625,6 +626,7 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "quarterly" => Keyword::Quarterly,
         "annual" => Keyword::Annual,
         "due" => Keyword::Due,
+        "mid" => Keyword::Mid,
         "week" => Keyword::Week,
         "month" => Keyword::Month,
         "months" => Keyword::Months,

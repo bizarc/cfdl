@@ -46,6 +46,7 @@ payment inside its own period, and therefore how far it is discounted.
 | `every month due from … to …` | start | start of the period |
 | `every month on eom from … to …` | end | end of the period |
 | `every month on day 15 from … to …` | day 15 | that point in the period |
+| `every year mid from … to …` | halfway | the period's midpoint |
 
 This is Excel's convention: `NPV` discounts the first value by one full
 period, and an annuity due is the same series with the first payment left
@@ -80,13 +81,31 @@ where `offset` is:
 | Schedule detail | offset |
 |---|---|
 | `due` | `0.0` |
+| `mid` | `0.5` |
 | default, or `on eom` | `1.0` |
 | `on day <n>` | `n / days_in_period` |
 
 There is one mechanism, not three special cases. A schedule specified more
-precisely simply produces a more precise offset — `on day 15` of a 30-day
-month discounts from halfway through, which is the mid-period convention
-project finance uses routinely.
+precisely simply produces a more precise offset.
+
+**`mid` is a convention, not a date**, and that is what separates it from a day
+rule. `on day 15` asks where in the period the 15th falls, and the answer
+depends on how long the period is — half a month, a sixth of a quarter, a
+twenty-fourth of a year. `mid` says the cash arrived evenly and is therefore
+summarised at the midpoint, which is half a period on every calendar. It is
+what project finance and banker DCFs mean by mid-period or mid-year
+discounting, and it applies to flows rather than to prices: a terminal value or
+a sale is struck at a point in time and is discounted whole.
+
+`mid` states a position, so it cannot be combined with another one. With `due`,
+a day rule, or `net` payment terms it is
+`E2109_SCHEDULE_CONFLICTING_PLACEMENT`. The `net` case is the interesting one:
+payment terms are resolved on the calendar and move cash between period
+buckets, while `mid` positions cash inside whichever bucket it lands in.
+Combining them would bill at the period end and then discount as though the
+cash had arrived halfway through it. Composing them properly means billing from
+the midpoint and carrying the lag's sub-period residual into the offset — a
+real design question, not a default to pick quietly.
 
 ### Worked example
 

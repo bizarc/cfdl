@@ -1021,6 +1021,7 @@ fn completion_items(context: &AnalysisContext) -> Vec<CompletionItem> {
         keyword_completion("quarter"),
         keyword_completion("year"),
         keyword_completion("due"),
+        keyword_completion("mid"),
         keyword_completion("on"),
     ];
 
