@@ -1,0 +1,31 @@
+version 0.1
+model "pack-cadence-credit-monthly"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2025-01 for 39
+
+entity fund buyer
+
+// The SAME pool: a 36-month level-pay loan with a 3-month recovery lag, once
+// on a monthly grid and once on a DAILY book that still pays monthly.
+//
+// A 30-year mortgage carried on a daily book is still 360 monthly payments,
+// not 10,950 daily ones — the daily grid is there for accrual, day-count and
+// daily-reset floaters. `payment_frequency` says so, and periods-per-year
+// then comes from the payment rhythm (12) rather than the calendar (365).
+//
+// So these two must agree EXACTLY on annual totals: they are literally the
+// same 36 payments. That is the sharpest available proof that the payment
+// grid and the model grid are separated correctly.
+contract credit.pool_level_pay.book on entity fund.buyer {
+  term 2025-01..2028-03
+  terms {
+    balance = 1200000
+    rate = 0.06
+    term_months = 36
+    cpr = 0.10
+    cdr = 0.03
+    severity = 0.50
+    recovery_lag_months = 3
+
+  }
+}

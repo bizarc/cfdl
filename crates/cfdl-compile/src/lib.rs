@@ -3167,8 +3167,8 @@ mod pack_validation_parity_tests {
         //
         // Terminal state: STILL_MONTHLY empty, every pack unconstrained, and
         // the `cadences` field deleted from every manifest.
-        const STILL_MONTHLY: [&str; 2] = ["cre", "credit"];
-        const CADENCE_NEUTRAL: [&str; 3] = ["energy", "opco", "testpack"];
+        const STILL_MONTHLY: [&str; 1] = ["cre"];
+        const CADENCE_NEUTRAL: [&str; 4] = ["credit", "energy", "opco", "testpack"];
 
         for pack in STILL_MONTHLY {
             assert_eq!(

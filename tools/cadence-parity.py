@@ -81,6 +81,18 @@ GROUPS: list[tuple[str, str, list[str], dict[str, str]]] = [
         ["monthly", "quarterly", "annual"],
         {},
     ),
+    # Credit is NOT an I1 group across quarterly/annual: `rate / ppy` is a
+    # nominal accrual, so a 6% loan genuinely differs at 0.5%/month against
+    # 1.5%/quarter. Those cadences are covered by the benchmark reference
+    # generators instead (I2). What IS an exact identity is the daily-book
+    # case: a daily grid paying monthly is the same 36 payments as a monthly
+    # grid, so its annual totals must match to the last cent.
+    (
+        "pack_cadence_credit",
+        "credit",
+        ["monthly", "daily_monthly_pay"],
+        {},
+    ),
 ]
 
 

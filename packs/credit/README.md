@@ -5,14 +5,31 @@ defaults, loss severity and a recovery lag. Benchmarked in
 `benchmarks/credit/` against independent month-by-month reference
 implementations.
 
-> **Supported calendars: `monthly` only.**
-> Every rule in this pack divides annual figures by a literal 12 and counts
-> elapsed time in months, so one period must be one month. On any other grid
-> the schedule adapts but the amounts do not — figures come out twelve times
-> too small with no diagnostic. The pack therefore declares
-> `cadences = ["monthly"]` and a model on another calendar is rejected with
-> `E5013_PACK_CADENCE_UNSUPPORTED` rather than given a plausible wrong answer.
-> This is a migration scaffold and is being lifted rule by rule.
+> **Supported calendars: all of them.** Two distinct daily shapes both work,
+> and the difference matters:
+>
+> 1. **A daily book that pays monthly** — the ordinary mortgage or ABS pool.
+>    Declare `payment_frequency = "month"` and periods-per-year comes from the
+>    payment rhythm (12), not the calendar (365). A 30-year mortgage on a daily
+>    book is still 360 payments, not 10,950. Verified exactly: the same pool on
+>    a 39-period monthly grid and an 1186-period daily book agrees to the cent
+>    on every stream.
+> 2. **Genuinely daily accrual** — warehouse lines, repo, revolvers,
+>    daily-reset floaters. Leave `payment_frequency` unset and ppy is 365.
+>
+> `term_months` must divide into whole payment periods. For daily accrual that
+> means a tenor that is a multiple of 12 months (360 months → 10,950 days);
+> otherwise `E5015_TERM_MONTHS_NOT_DIVISIBLE` names the nearest legal values.
+>
+> Note the two rate conventions, which must not be confused. The note rate,
+> servicing strip and float margin are **nominal** and divide by ppy. CPR and
+> CDR are **effective annual** and take a root — `cpr_to_periodic(x, ppy)`,
+> which is exactly `cpr_to_smm(x)` at ppy = 12.
+>
+> Annual totals do **not** match across monthly / quarterly / annual, and
+> should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
+> which are different instruments. Those cadences are checked against the
+> benchmark reference generators rather than against each other.
 
 ## Contract types
 
