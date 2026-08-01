@@ -284,18 +284,17 @@ stream holder.payment on entity legal.holder inflow currency USD {{
     return worst
 
 
-# SIFMA, Standard Formulas for the Analysis of Mortgage-Backed Securities
-# (Uniform Practices Manual, Chapter SF). The definitional source for CPR, SMM
-# and PSA — the conventions the credit pack's own term names come from. Free to
-# download, NOT redistributable, so these assert its published figures without
-# reproducing the document.
+# Market-standard MBS prepayment conventions — CPR, SMM and the standard
+# prepayment curve — which the credit pack's term names come from. Checked for
+# parity against the published industry reference; the figures below are cited
+# as facts, and no external document is reproduced.
 #
 # These belong here rather than in a benchmark because they are identities: they
 # follow from the definitions and hold for any correct implementation.
 
 
-@check("SIFMA: (1 - SMM)^12 = 1 - CPR, and cpr_to_periodic inverts it at any cadence")
-def sifma_smm_cpr_identity() -> tuple[float, float]:
+@check("MBS: (1 - SMM)^12 = 1 - CPR, and cpr_to_periodic inverts it at any cadence")
+def mbs_smm_cpr_identity() -> tuple[float, float]:
     worst = (0.0, 0.0)
     for cpr in ["0.02", "0.06", "0.1136151282838708", "0.25"]:
         # Compounding the periodic rate over a year must recover the annual one.
@@ -309,18 +308,18 @@ def sifma_smm_cpr_identity() -> tuple[float, float]:
     return worst
 
 
-@check("SIFMA: the published 6/89 GNMA worked example, every intermediate")
-def sifma_worked_example() -> tuple[float, float]:
+@check("MBS: a published GNMA pool-factor back-out, every intermediate")
+def mbs_pool_factor_backout() -> tuple[float, float]:
     # A Ginnie Mae I 9.0% pass-through issued 3/1/88, 359 months remaining at
-    # 6/1/89, 9.5% gross coupon. Chapter SF section 2 works it end to end and
-    # publishes every step, so each is asserted rather than only the answer.
+    # 6/1/89, 9.5% gross coupon. The industry reference works this end to end
+    # and gives every step, so each is asserted rather than only the answer.
     r = "0.095 / 12"
     bal = lambda k: f"(1 - pow(1 + {r}, -{k})) / (1 - pow(1 + {r}, -359))"
     fsched = f"0.85150625 * ({bal(343)}) / ({bal(344)})"
     smm = f"100 * (({fsched}) - 0.84732282) / ({fsched})"
     cpr = f"100 * (1 - pow(1 - ({smm}) / 100, 12))"
 
-    # Scales are set by the SOURCE's precision, not by how tight we could make
+    # Scales are set by the reference's precision, not by how tight we could make
     # them. The factors are published to eight decimals, so at scale 1e6 the
     # module's 0.01 tolerance asserts +/- 1e-8 — exactly the published figure,
     # and no further. Asserting past a source's own rounding is not rigour.
@@ -347,8 +346,8 @@ def sifma_worked_example() -> tuple[float, float]:
     return worst
 
 
-@check("SIFMA: the PSA ramp, 0.2% CPR per month to 6.0% at month 30 and flat after")
-def sifma_psa_curve() -> tuple[float, float]:
+@check("MBS: the standard prepayment curve, 0.2% CPR/month to 6.0% at month 30")
+def mbs_standard_prepayment_curve() -> tuple[float, float]:
     # CPR = min(PSA/100 * 0.2 * max(1, min(MONTH, 30)), 100). Closed-form
     # today; the pack cannot yet USE it, because a ramped hazard makes the pool
     # factor a cumulative product rather than pow(k, p) — see the backlog. This

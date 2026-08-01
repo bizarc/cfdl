@@ -443,7 +443,7 @@ mod excel_compat_stability {
         // comparisons on accumulated sums — the pack never performs.
         //
         // Worst observed is ~4e-14 relative, roughly ten orders of magnitude
-        // inside benchmarks/credit/sifma_cash_flow_a's 0.51 tolerance.
+        // inside benchmarks/credit/mbs_pool_conventions's 0.51 tolerance.
         let r = "0.08 / 12";
         let smm = "cpr_to_periodic(0.11361512828387077, 12)";
         let k = format!("((1 - {smm}) - {smm})");

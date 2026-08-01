@@ -145,7 +145,7 @@ Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `d + n` / `d - n` shift by days.
 
 Day-count bases for `year_frac`: `"30/360"` (aliases `"30/360 us"`, `"bond"`),
-`"30e/360"` (alias `"eurobond"`), `"act/360"`, `"act/365"`, per ISDA/SIFMA
+`"30e/360"` (alias `"eurobond"`), `"act/360"`, `"act/365"`, per the standard market conventions
 definitions.
 
 Business days: `is_business_day(d, calendar)`, `roll(d, convention, calendar)`,

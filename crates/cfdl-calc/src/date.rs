@@ -115,7 +115,7 @@ impl CalcDate {
     }
 }
 
-/// Day-count conventions per ISDA/SIFMA definitions.
+/// Day-count conventions, per the standard market definitions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DayCount {
     /// 30/360 US (Bond Basis) with the standard end-of-month adjustments.

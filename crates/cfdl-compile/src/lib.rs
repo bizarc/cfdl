@@ -1329,6 +1329,26 @@ fn lower_contract_streams(
                     // period's real days: rate / (360 / days) is rate * days /
                     // 360. On a monthly grid that correctly pays more in a
                     // 31-day month; on daily it collapses to rate / 360.
+                    // What the constant PAYMENT is struck on, as distinct from
+                    // what interest accrues on. A commercial Actual/360 loan
+                    // fixes its payment on a 30/360 schedule and lets principal
+                    // absorb the difference; recomputing both legs from one
+                    // varying divisor makes the payment swing with month length,
+                    // which no loan document does. Defaults to `day_count`, so a
+                    // contract that says nothing keeps a single basis.
+                    "model.amortization_divisor" => Some(
+                        match resolve_plain("amortization_day_count")
+                            .or_else(|| resolve_plain("day_count"))
+                            .unwrap_or_default()
+                            .trim()
+                            .trim_matches('"')
+                        {
+                            "" | "30/360" | "30e/360" => ppy.to_string(),
+                            "act/360" => "(360 / time.days_in_period)".to_string(),
+                            "act/365" => "(365 / time.days_in_period)".to_string(),
+                            _ => ppy.to_string(),
+                        },
+                    ),
                     "model.accrual_divisor" => Some(
                         match resolve_plain("day_count")
                             .unwrap_or_default()
@@ -1703,14 +1723,17 @@ fn validate_pack_contract(
 
     // A misspelled day count must not fall back to a default in silence: the
     // gap between act/360 and act/365 is about 1.4% of interest.
-    if let Some(term) = contract.terms.get("day_count") {
+    for key in ["day_count", "amortization_day_count"] {
+        let Some(term) = contract.terms.get(key) else {
+            continue;
+        };
         let value = term.value.trim().trim_matches('"');
         if !matches!(value, "30/360" | "30e/360" | "act/360" | "act/365") {
             diagnostics.push(pack_diag(
                 "E5019_UNKNOWN_DAY_COUNT",
                 &format!(
-                    "Contract '{}' declares day_count = '{}'. Supported: 30/360, 30e/360, act/360, act/365.",
-                    contract.name, value
+                    "Contract '{}' declares {} = '{}'. Supported: 30/360, 30e/360, act/360, act/365.",
+                    contract.name, key, value
                 ),
                 source_stmt,
                 term.span,

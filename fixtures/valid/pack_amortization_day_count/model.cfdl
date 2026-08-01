@@ -1,0 +1,28 @@
+version 0.1
+model "pack-amortization-day-count"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2025-01 for 13
+
+entity fund buyer
+
+// A commercial Actual/360 loan: interest accrues on actual days, but the
+// payment is struck once on a 30/360 schedule and held constant, with
+// principal absorbing the month-length variation. Recomputing both legs from
+// one varying divisor makes the payment swing with the length of the month,
+// which no loan document does.
+//
+// No prepayments or defaults, so this isolates the two rate bases.
+contract credit.pool_level_pay.p on entity fund.buyer {
+  term 2025-01..2025-12
+  terms {
+    balance = 100000000
+    rate = 0.08
+    term_months = 360
+    cpr = 0
+    cdr = 0
+    severity = 0
+    recovery_lag_months = 0
+    day_count = "act/360"
+    amortization_day_count = "30/360"
+  }
+}

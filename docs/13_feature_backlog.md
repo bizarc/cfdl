@@ -65,12 +65,12 @@ Shape: add an abatement stream family to the metric's denominator, and have
 
 ## 2. Credit pack
 
-### 2.1 PSA and SDA ramps
+### 2.1 Age-varying prepayment and default curves
 
 `cpr` and `cdr` are single constants per contract. A hazard that varies with
-loan age cannot be expressed, so SIFMA's Standard Prepayment Model — 0.2% CPR
-in month 1 rising 0.2%/month to 6.0% at month 30, times a speed — is out of
-reach, and so is SDA.
+loan age cannot be expressed, so the standard prepayment model — 0.2% CPR in
+month 1 rising 0.2%/month to 6.0% at month 30, times a speed — is out of reach,
+and so is its default counterpart.
 
 The hazard itself is not the problem: `min(speed / 100 * 0.2 * max(1,
 min(month, 30)), 100)` is closed-form and is already asserted in
@@ -85,33 +85,31 @@ fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
 a published table behind a function. Substituting one call for `pow(k, p)`
 would make every existing pool rule work under a ramp.
 
-Found building `benchmarks/credit/sifma_cash_flow_a`. Cash Flow A (constant 1%
-SMM / 1% MDR) reproduces to the published figure; Cash Flow B on the same pool
-(150% PSA, 100% SDA) needs this.
+Found building `benchmarks/credit/mbs_pool_conventions`. The constant-hazard
+case (1% SMM / 1% MDR) reproduces to the reference figure; the ramped variant on
+the same pool (150% PSA, 100% SDA) needs this.
 
-### 2.2 Recovery on the amortised balance, not on face
+### 2.2 Actual-day-count amortisation on a pool
 
-The pack recovers `(1 - severity)` of **face** after `recovery_lag_months`.
-SIFMA continues to amortise a defaulted loan while it is in foreclosure —
-Chapter SF: "the amortization schedule continues to be computed even while it
-is in foreclosure" — and recovers `(1 - severity)` of the **amortised**
-balance.
+**Resolved for the payment.** `amortization_day_count` now strikes the level-pay
+payment while `day_count` accrues interest, so an Actual-convention loan holds a
+constant payment with interest varying by month length. What remains is the pool
+factor: `S(p)` is built from a single periodic rate, so a pool that *amortises*
+on an Actual basis (rather than merely accruing on one) still needs a per-period
+divisor inside the closed form, which has no elementary form.
 
-Measured against the published Cash Flow A, the pack over-recovers by ~1.1% at
-month 13 rising to ~7.9% by month 240. The mechanism is confirmed; the exact
-formula is not. Two candidates were tested and neither reproduced the published
-Principal Recovery column: the pool-level factor ratio `S(m)/S(m-12)` is within
-0.2% early and drifts to 12% at the tail, and the per-loan remaining-balance
-ratio is a flat ~7.4% out.
+Today `amortization_day_count = "act/360"` on a pool is accepted and computes a
+month-length-varying schedule — correct for a single loan, an approximation for
+a pool whose factor assumes constancy. Worth a validation gate, or an explicit
+rejection, before an Actual-amortising pool benchmark lands.
 
-Left open deliberately rather than guessed at. `Principal Recovery` is
-therefore the one published column `benchmarks/credit/sifma_cash_flow_a` does
-not assert.
+Found closing the recovery gap in `benchmarks/credit/mbs_pool_conventions`; the
+recovery basis itself is fixed and asserted there.
 
 ### 2.3 SMM and MDR as direct terms
 
 The pack accepts only annual `cpr`/`cdr`. Practitioners quote monthly SMM and
-MDR — SIFMA's own sample cash flows are specified that way — so a 1% SMM pool
+MDR — the published reference schedules are specified that way — so a 1% SMM pool
 has to be entered as `cpr = 1 - 0.99^12 = 0.11361512828387077`, computed by
 hand and unrecognisable to a reader.
 
@@ -186,8 +184,8 @@ A.CRE and Finamodel workbooks are Excel, and "our decimal answer differs from
 the spreadsheet in the fifteenth digit" is a question best answered by running
 both ways rather than by argument.
 
-Found while validating the credit pack against SIFMA and asking whether Excel
-mode would move the numbers. It cannot be turned on to find out.
+Found while validating the credit pack against an external reference and asking
+whether Excel mode would move the numbers. It cannot be turned on to find out.
 
 ### 4.3 An acquisition or disposal in a period other than the term's
 
@@ -208,9 +206,10 @@ disposal discounting.
 Section 1 and item 3.1 were found building `benchmarks/cre/mit_rentleg_plaza`
 against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
 checked against a published third-party figure rather than an in-house
-reference. Section 2 came the same way, from `benchmarks/credit/sifma_cash_flow_a`
-against SIFMA's Standard Formulas — which also found two outright defects in
-the prepayment base, fixed rather than listed here.
+reference. Section 2 came the same way, from `benchmarks/credit/mbs_pool_conventions`
+against the published industry reference for MBS cash flows — which also found
+three outright defects, in the prepayment base, the recovery basis and the
+payment-striking divisor, all fixed rather than listed here.
 
 That is the argument for building more of them: an external number finds gaps
 that two of your own implementations agreeing never will. See

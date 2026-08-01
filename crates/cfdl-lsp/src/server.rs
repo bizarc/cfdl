@@ -1094,7 +1094,7 @@ pub const EXPR_BUILTINS: &[(&str, &str, &str)] = &[
     ("date", "date(y, m, d)", "Construct a calendar date."),
     ("edate", "edate(d, months)", "Shift a date by whole months, clamping to month end (Excel EDATE)."),
     ("eomonth", "eomonth(d, months)", "End of the month `months` away (Excel EOMONTH)."),
-    ("year_frac", "year_frac(d1, d2, basis)", "Year fraction per ISDA/SIFMA day-count basis: \"30/360\", \"act/360\", \"act/365\"."),
+    ("year_frac", "year_frac(d1, d2, basis)", "Year fraction on a standard day-count basis: \"30/360\", \"act/360\", \"act/365\"."),
 ];
 
 /// Well-known namespace variables available in expressions.

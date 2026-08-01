@@ -63,12 +63,13 @@ def main():
         performing = bal - default
         interest = performing * coupon / 12.0
         if p < TERM_MONTHS - 1:
-            # SIFMA Standard Formulas section 2a: SMM is the fraction of the balance
+            # By convention SMM is the fraction of the balance
             # outstanding AT THE BEGINNING of the month, net of SCHEDULED
             # amortisation only — defaults are not removed from the base. This
             # reference previously used the post-default balance, the same
             # misreading as the engine, which is why the two agreed. The published
-            # Cash Flow A is the tiebreaker; see benchmarks/credit/sifma_cash_flow_a.
+            # The external reference is the tiebreaker; see
+            # benchmarks/credit/mbs_pool_conventions.
             prepay = bal * smm
             bullet = 0.0
         else:

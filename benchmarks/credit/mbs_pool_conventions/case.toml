@@ -1,0 +1,17 @@
+# Benchmark case: a 30-year agency-MBS pool at market-standard prepayment,
+# default and recovery conventions.
+#
+# Validated for parity against the published industry reference schedule for
+# MBS cash flows. That source is external and not redistributable, so it is not
+# vendored and its tables are not reproduced — the figures below are anchor
+# values carried for regression, cited as facts.
+#
+# Every number asserted here is external, not ours. There is deliberately no
+# reference_gen.py and no expected_metrics.json: a second implementation of our
+# own is exactly what this case exists to replace. See NOTES.md.
+#
+# period_tolerance = 0.51 — the reference figures are rounded to whole dollars,
+# so half a dollar is the tightest bound they can support. Not loosened beyond
+# that: every asserted figure matches within it.
+pack = "credit"
+period_tolerance = 0.51

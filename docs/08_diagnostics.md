@@ -287,9 +287,10 @@ Warnings:
 - `E5017_PERIOD_TERM_NOT_LITERAL` — a `_months` term that a rule converts into
   periods defers to `inputs.<name>`. The conversion happens at compile time and
   an input is not known until the run.
-- `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` is not one of
-  `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap
-  between act/360 and act/365 is roughly 1.4% of interest.
+- `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` or
+  `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`,
+  `act/365`. Not defaulted silently: the gap between act/360 and act/365 is
+  roughly 1.4% of interest.
 
 Both `cadences` gates are a migration scaffold rather than a permanent
 statement about a pack: the entries are removed rule by rule as the

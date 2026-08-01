@@ -639,6 +639,7 @@ reserved prefixes `model.`, `time.`, `periods.` or `whole_periods.` is
 | `{{model.periods_per_year}}` | `365` / `52` / `12` / `4` / `1` |
 | `{{model.calendar}}` | the rule's effective frequency name |
 | `{{model.accrual_divisor}}` | what a nominal annual rate divides by |
+| `{{model.amortization_divisor}}` | what a level payment is struck from |
 | `{{periods.<term>}}` | `<term>` months as periods, fractional allowed |
 | `{{whole_periods.<term>}}` | the same, but must be integral |
 | `{{time.elapsed_periods}}` | whole periods since `term_start` |
@@ -689,6 +690,25 @@ Use it for every **nominal** rate — note rates, servicing strips, floating
 index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
 `om_year`), which spread by `{{model.periods_per_year}}` regardless of day
 count.
+
+**Amortisation is a second, separate basis.** An amortising loan strikes its
+level payment once, from a schedule the parties agree, and then accrues interest
+period by period on whatever the accrual convention says; principal is the plug.
+Those are two different divisors, and collapsing them makes the payment itself
+move with month length — which no amortising instrument does.
+`{{model.amortization_divisor}}` reads an `amortization_day_count` term and
+expands by the same table as `{{model.accrual_divisor}}`, **defaulting to
+`day_count`** when absent. So:
+
+- a rule that uses only `{{model.accrual_divisor}}` is unchanged;
+- a model that sets only `day_count` is unchanged, both divisors agreeing;
+- `day_count = "act/360"` with `amortization_day_count = "30/360"` is the
+  common US commercial case — a fixed payment, interest varying by month length.
+
+An amortising rule should therefore strike the annuity factor from
+`{{model.amortization_divisor}}`, accrue interest from
+`{{model.accrual_divisor}}`, and make scheduled principal the difference.
+`amortization_day_count` is validated by the same `E5019_UNKNOWN_DAY_COUNT`.
 
 Two conventions that must not be confused when dividing by periods-per-year:
 note rates are **nominal** and divide (`rate / ppy`), while CPR and CDR are

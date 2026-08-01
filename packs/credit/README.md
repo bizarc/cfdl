@@ -37,6 +37,15 @@ implementations.
 > and it is the USD credit default. A misspelling is `E5019_UNKNOWN_DAY_COUNT`,
 > not a silent fallback.
 >
+> **Amortisation has its own day count.** A level-pay pool strikes its payment
+> once and then accrues interest period by period, so `amortization_day_count`
+> selects the basis the payment is struck from and defaults to `day_count`.
+> Setting `day_count = "act/360"` with `amortization_day_count = "30/360"` — the
+> common US commercial case — holds the payment constant while interest varies
+> with month length and scheduled principal absorbs the difference. Setting only
+> `day_count` leaves every existing model unchanged. Applies to
+> `credit.pool_level_pay`; IO/bullet contracts have no amortisation to strike.
+>
 > Annual totals do **not** match across monthly / quarterly / annual, and
 > should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
 > which are different instruments. Those cadences are checked against the
@@ -44,21 +53,23 @@ implementations.
 
 ## Conventions, and where they come from
 
-Prepayment and default follow **SIFMA, Standard Formulas for the Analysis of
-Mortgage-Backed Securities** (Uniform Practices Manual, Chapter SF), the
-industry's definitional source for CPR, SMM, PSA and SDA.
+Prepayment and default follow the market-standard MBS conventions for CPR,
+SMM and the standard prepayment and default curves; the pack is checked for
+parity against the published industry reference schedule.
 
 - **SMM applies to the balance at the BEGINNING of the period, net of
-  scheduled amortisation only** (§2a). Defaults are not removed from the base.
+  scheduled amortisation only.** Defaults are not removed from the base.
 - Because both attritions are drawn from that same base, survival is
   **additive**: `k = (1 - mdr) - smm`, not `(1 - mdr)(1 - smm)`.
 - CPR and CDR are effective annual rates and convert by a root
   (`cpr_to_periodic`); note rates are nominal and convert by division.
 
-`benchmarks/credit/sifma_cash_flow_a` asserts 1044 published figures across 348
-months and passes. Two known gaps remain, both in `docs/13_feature_backlog.md`:
-recovery is taken on face rather than on the amortised balance, and PSA/SDA
-ramps are not expressible, so only constant-hazard pools can be modelled.
+`benchmarks/credit/mbs_pool_conventions` asserts anchor figures across the life
+of a 30-year pool and passes, including recoveries — a level-pay pool's
+defaulted balance keeps amortising in foreclosure, so what is liquidated is the
+amortised balance rather than face. One known gap remains, in
+`docs/13_feature_backlog.md`: age-varying prepayment and default curves are not
+expressible, so only constant-hazard pools can be modelled.
 
 ## Contract types
 
