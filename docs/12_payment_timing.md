@@ -99,6 +99,56 @@ If a future convention ever separates them, the amount MUST still be evaluated
 against the accrual period. Evaluating against settlement silently skips the
 first accrual and shifts every subsequent amount by one period.
 
+## 4a. Payment terms (normative)
+
+A contract states when its cash moves relative to when it was earned:
+
+```cfdl
+contract energy.ppa.plant_a on entity project.plant {
+  term 2026-01..2050-12
+  payment net 45
+  terms { ppa_price = 3000 }
+}
+```
+
+Rules:
+- `payment net <n>` applies to every stream the contract lowers. A schedule may
+  state its own with `net <n>`, for the case where one contract's streams
+  settle on different terms.
+- A bare count is **days** — "net 45" means 45 days, as it does commercially.
+  `net 6 months` steps by the calendar instead, because a six-month lag is six
+  months and diverges from any day count once billing is not at a month end.
+- Billing happens when a period **closes**, not when it opens: January's output
+  is invoiced on 31 January, so net-30 falls in early March, not late January.
+  A day rule (`on day 15`, `on eom`) names the billing date explicitly and
+  overrides that.
+- The due date is then rolled by the schedule's `convention` and `calendar`.
+  It is the due date that moves off a weekend, not the bill.
+- The amount is still evaluated against the **accrual** period. `time.t` in an
+  amount expression refers to when the flow was earned, never to when its cash
+  arrives.
+- Several accruals may settle in one period — under net-30 both January and
+  February land in March — and their amounts sum. Cash is delayed, never lost.
+- Payment terms do not apply to `schedule on <date>`: a one-shot flow has no
+  accrual period to settle after, and the attempt is rejected rather than
+  ignored.
+- A payment settling past the end of the timeline is rejected. Placing it in
+  the final period would overstate that period.
+
+### Discounting is at bucket granularity
+
+A payment is discounted from the period it lands in. The fraction of a period
+between that period's boundary and the actual due date is **not** modelled.
+
+On a monthly grid at 12% that is worth roughly 0.5% on an affected flow, set
+against the first-order effect — moving the cash two periods later — which is
+captured. It matters more on a daily or weekly grid, where a 45-day term lands
+near a bucket boundary anyway.
+
+This is a stated convention, not an oversight. Removing it means giving each
+payment its own discount offset rather than one per stream, which is a
+separate change to `npv_with_offsets`.
+
 ## 5. Lags compose on top of placement
 
 A lag — recovery lag, collection delay — is counted in periods from the period

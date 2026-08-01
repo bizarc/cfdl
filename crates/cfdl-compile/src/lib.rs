@@ -476,10 +476,12 @@ struct IrSchedule {
     /// ordinary annuity, which is the default and the common case.
     #[serde(skip_serializing_if = "std::ops::Not::not", default)]
     due: bool,
-    /// Days between a flow being earned and its cash moving. Omitted when
-    /// cash lands in the period that earned it.
+    /// How long after a flow is earned its cash moves. Omitted when cash
+    /// lands in the period that earned it.
     #[serde(skip_serializing_if = "Option::is_none")]
     net_days: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    net_months: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1250,6 +1252,14 @@ fn lower_contract_streams(
                 (&rule.schedule_from, &mut expanded_rule.schedule_from),
                 (&rule.schedule_to, &mut expanded_rule.schedule_to),
                 (&rule.stream_name, &mut expanded_rule.stream_name),
+                (
+                    &rule.schedule_net_days,
+                    &mut expanded_rule.schedule_net_days,
+                ),
+                (
+                    &rule.schedule_net_months,
+                    &mut expanded_rule.schedule_net_months,
+                ),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -1354,7 +1364,7 @@ fn lower_contract_streams(
                 ctx.time_calendar,
                 ctx.time_start,
                 ctx.timeline_end,
-                contract.payment_net_days,
+                contract.payment_net,
             );
             let amount_src = rule.amount_expr.clone();
             // Pack terms are applied declaratively via rule templates; the
@@ -1545,17 +1555,25 @@ fn lower_pack_rule_schedule(
     time_calendar: &str,
     time_start: &str,
     timeline_end: &str,
-    contract_net_days: Option<i64>,
+    contract_net: Option<cfdl_parser::PaymentTerms>,
 ) -> IrSchedule {
     // A rule may state its own terms; otherwise it inherits the contract's,
     // which is the ordinary case — a contract states its payment terms once
     // and everything billed under it settles that way.
-    let net_days = rule.schedule_net.or(contract_net_days);
+    // A rule may state its own terms, templated so it can defer to a contract
+    // term; otherwise it inherits the contract's.
+    let rule_days = rule.schedule_net_days.trim().parse::<i64>().ok();
+    let rule_months = rule.schedule_net_months.trim().parse::<i64>().ok();
+    let (net_days, net_months) = match (rule_days, rule_months) {
+        (None, None) => split_payment_terms(contract_net),
+        pair => pair,
+    };
     if rule.schedule_kind.eq_ignore_ascii_case("on_date") {
         IrSchedule {
             kind: "OnDate".to_string(),
             due: false,
             net_days: None,
+            net_months: None,
             on: Some(normalize_date(&rule.schedule_from)),
             every: None,
             from: None,
@@ -1572,6 +1590,7 @@ fn lower_pack_rule_schedule(
             kind: "Every".to_string(),
             due: rule.schedule_due,
             net_days,
+            net_months,
             on: None,
             // A rule may pay on its own rhythm — a quarterly coupon on a
             // monthly model. Unset means the calendar cadence, which is what
@@ -2038,6 +2057,15 @@ fn sort_compile_diagnostics(diags: &mut [Diagnostic]) {
     });
 }
 
+/// Split payment terms into the two IR fields.
+fn split_payment_terms(terms: Option<cfdl_parser::PaymentTerms>) -> (Option<i64>, Option<i64>) {
+    match terms {
+        Some(cfdl_parser::PaymentTerms::Days(n)) => (Some(n), None),
+        Some(cfdl_parser::PaymentTerms::Months(n)) => (None, Some(n)),
+        None => (None, None),
+    }
+}
+
 fn lower_schedule(
     schedule: Option<&cfdl_parser::ScheduleSpec>,
     time_calendar: &str,
@@ -2050,6 +2078,7 @@ fn lower_schedule(
             kind: "OnDate".to_string(),
             due: false,
             net_days: None,
+            net_months: None,
             on: Some(time_start.to_string()),
             every: None,
             from: None,
@@ -2079,7 +2108,7 @@ fn lower_schedule(
         })
     };
     match &schedule.kind {
-        ScheduleKind::OnDate if schedule.net_days.is_some() => Err(
+        ScheduleKind::OnDate if schedule.net.is_some() => Err(
             "Payment terms do not apply to `schedule on <date>`: a one-shot flow has no accrual period to settle after. State the date the cash moves."
                 .to_string(),
         ),
@@ -2087,6 +2116,7 @@ fn lower_schedule(
             kind: "OnDate".to_string(),
             due: false,
             net_days: None,
+            net_months: None,
             on: Some(normalize_date(
                 schedule.from.as_deref().unwrap_or(time_start),
             )),
@@ -2111,7 +2141,8 @@ fn lower_schedule(
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
             due: schedule.due,
-            net_days: schedule.net_days,
+            net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
             on: None,
             every: Some(
                 schedule
@@ -2149,6 +2180,7 @@ fn lower_schedule(
                 kind: "OnDate".to_string(),
                 due: false,
                 net_days: None,
+                net_months: None,
                 on: Some(start.clone()),
                 every: None,
                 from: None,
@@ -2176,7 +2208,8 @@ fn lower_schedule(
             Ok(IrSchedule {
                 kind: "Every".to_string(),
                 due: schedule.due,
-                net_days: schedule.net_days,
+                net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
                 on: None,
                 every: Some(
                     schedule
@@ -2490,7 +2523,7 @@ mod pack_validation_parity_tests {
             );
         }
         cfdl_parser::ContractStmt {
-            payment_net_days: None,
+            payment_net: None,
             name: name.to_string(),
             subject_entity: None,
             has_term: term_range,

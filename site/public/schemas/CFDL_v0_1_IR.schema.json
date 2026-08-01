@@ -711,6 +711,16 @@
         "due": {
           "description": "Annuity due: payment falls at the start of each interval, as for rent. Omitted for an ordinary annuity, which pays at the interval's end and is the default. Determines how far a payment is discounted, not which period holds it \u2014 see 12_payment_timing.md.",
           "type": "boolean"
+        },
+        "net_days": {
+          "description": "Days between a flow being earned and its cash moving. Omitted when cash lands in the period that earned it.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "net_months": {
+          "description": "Months between a flow being earned and its cash moving, stepped by the calendar rather than as 30-day units.",
+          "type": "integer",
+          "minimum": 0
         }
       },
       "allOf": [

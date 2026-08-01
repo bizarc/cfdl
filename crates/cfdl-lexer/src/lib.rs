@@ -103,6 +103,9 @@ pub enum Keyword {
     Due,
     Week,
     Month,
+    // Plural forms, accepted only as a payment-term unit.
+    Months,
+    Days,
     Quarter,
     Year,
     Phase,
@@ -624,6 +627,8 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "due" => Keyword::Due,
         "week" => Keyword::Week,
         "month" => Keyword::Month,
+        "months" => Keyword::Months,
+        "days" => Keyword::Days,
         "quarter" => Keyword::Quarter,
         "year" => Keyword::Year,
         "phase" => Keyword::Phase,

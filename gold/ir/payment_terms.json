@@ -1,0 +1,212 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "payment-terms",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 18
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
+      "symbol": "legal.co",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "1ffc3bbac1de853fa5c721808e131b5c",
+      "name": "co.net0",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "net_days": 0,
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 19,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a2cc0206101f035e271106f4a98d3b96",
+      "name": "co.net2m",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "net_months": 2,
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "b9f8dc71f4b6b5e3b43aa2bed87250a1",
+      "name": "co.net30",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "net_days": 30,
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9a9126dd7b97881a91987f70e1e53682",
+      "name": "co.net45",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "net_days": 45,
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "7e1838069d7c4b6ba4640fc682a4874c",
+      "name": "co.on_time",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

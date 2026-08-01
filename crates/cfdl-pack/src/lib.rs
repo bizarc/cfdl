@@ -281,10 +281,15 @@ pub struct LoweringRule {
     /// payments in one period would collapse into one.
     #[serde(default)]
     pub schedule_every: String,
-    /// Days between a flow being earned and its cash moving, overriding the
-    /// contract's `payment net <n>` for this rule. Omit it to inherit.
+    /// How long after a flow is earned its cash moves, overriding the
+    /// contract's `payment net <n>` for this rule. Omit both to inherit.
+    ///
+    /// Templated, so a rule can defer to a contract term:
+    /// `schedule_net_months = "{{contract.recovery_lag_months}}"`.
     #[serde(default)]
-    pub schedule_net: Option<i64>,
+    pub schedule_net_days: String,
+    #[serde(default)]
+    pub schedule_net_months: String,
     /// Annuity due: the stream pays at the start of each interval.
     ///
     /// Streams that behave like an expense — opex, rent paid, fees, capex —

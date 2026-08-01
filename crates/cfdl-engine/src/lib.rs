@@ -1775,12 +1775,18 @@ fn apply_schedule_indices(
                 // net-30 falls in early March, not late January. A day rule
                 // (`on day 15`, `on eom`) names the billing date explicitly
                 // and overrides that.
-                let billed = match (schedule.net_days, schedule.on_rule.as_ref()) {
-                    (Some(days), None) if days != 0 => period_end(timeline, pay_idx),
+                let has_terms = schedule.net_days.is_some_and(|d| d != 0)
+                    || schedule.net_months.is_some_and(|m| m != 0);
+                let billed = match (has_terms, schedule.on_rule.as_ref()) {
+                    (true, None) => period_end(timeline, pay_idx),
                     _ => place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref()),
                 };
-                let due = match schedule.net_days {
-                    Some(days) if days != 0 => billed.add_days(days as i32),
+                // Months step by the calendar, not by 30 days: a six-month lag
+                // is six months, and the two diverge once billing is not at a
+                // month end.
+                let due = match (schedule.net_days, schedule.net_months) {
+                    (_, Some(m)) if m != 0 => billed.add_months(m as i32),
+                    (Some(d), _) if d != 0 => billed.add_days(d as i32),
                     _ => billed,
                 };
                 let rolled = roll_date(&due, roll);
@@ -2229,10 +2235,12 @@ struct IrSchedule {
     /// ordinary annuity — the interval elapses, then payment falls.
     #[serde(default)]
     due: bool,
-    /// Days between a flow being earned and its cash moving. Absent means the
-    /// cash lands in the period that earned it.
+    /// How long after a flow is earned its cash moves. Absent means the cash
+    /// lands in the period that earned it.
     #[serde(default)]
     net_days: Option<i64>,
+    #[serde(default)]
+    net_months: Option<i64>,
     from: Option<String>,
     to: Option<String>,
     /// Places an occurrence within its interval (`on day <n>` / `on eom`).

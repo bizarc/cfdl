@@ -1,0 +1,264 @@
+---
+id: benchmark-cre-mit-rentleg-plaza
+title: "cre: mit rentleg plaza"
+slug: "/docs/examples/cre-mit-rentleg-plaza"
+source: benchmarks/cre/mit_rentleg_plaza
+---
+
+# cre: mit rentleg plaza
+
+Rentleg Plaza — MIT OCW 11.431J Problem Set 1, Part C. 30,000 NRSF office, two suites, annual 5-year DCF (2001-2005). Expense stops at two different levels, a base-year stop reset on re-lease, occupancy-varying operating expenses, probability-weighted rollover, a one-time market rent spike, and a reversion at 10x forward NOI net of a 5% commission. Set 1 (CC BY-NC-SA 4.0). The problem set publishes both the full pro forma table and the answer, PV @ 12% = $2,292,810. This is the first benchmark in the suite checked against a published third-party number rather than against an in-house reference_gen.py.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+// Rentleg Plaza — MIT OCW 11.431J/15.426J Problem Set 1, Part C.
+//
+// External reference case. 30,000 NRSF office, two suites, 5-year annual
+// pro forma (2001-2005) with a 2006 projection year for the reversion.
+// The problem set publishes the answer: PV @ 12% = $2,292,810.
+//
+// Source: MIT OpenCourseWare 11.431J Fall 2006, Problem Set 1 (CC BY-NC-SA).
+// Footnote markers below (MIT fn N) refer to the footnotes under the
+// published pro forma table, which define how each tagged number is computed.
+//
+// NOTE ON PACK USE: this model declares no `use pack "cre"`. Every rule in
+// packs/cre/lowering/rules.toml is hard-wired to a monthly grid — each one
+// divides by 12 and anchors on months_between() — so no CRE contract lowers
+// correctly on an annual calendar. Streams are therefore declared natively,
+// but named to the pack's stream taxonomy so `--pack cre` domain metrics
+// still aggregate them. See NOTES.md.
+//
+// NOTE ON THE 2006 COLUMN: the reversion needs 2006 NOI, one year past the
+// hold. The natural expression is a `project 1` tail read back with
+// series_sum, as packs/cre's cre.exit_forward does. That is unavailable here:
+// E2103_SCHEDULE_OUT_OF_BOUNDS measures a NATIVE stream's schedule against the
+// base timeline only, so no hand-written stream can reach the tail, though a
+// pack-lowered contract can. The 2006 NOI is therefore evaluated inline from
+// the same closed-form expressions used by the operating streams. See NOTES.md.
+
+version 0.1
+model "mit-rentleg-plaza"
+time calendar annual from 2001-01 for 5
+
+entity asset rentleg
+
+// ---------------------------------------------------------------------------
+// Inputs — every figure below is stated in the problem set.
+// ---------------------------------------------------------------------------
+
+assume building_sf      = 30000
+assume suite_100_sf     = 20000
+assume suite_200_sf     = 10000
+
+assume suite_100_rent_psf = 15.00   // in-place lease, signed 1/99, expires 12/03
+assume market_rent_psf    = 14.00   // prevailing market rent, soft market
+assume rent_spike         = 0.20    // one-time 20% step in 2004, flat thereafter
+
+assume opex_psf_full   = 4.81       // at 100% occupancy, projected 2001
+assume opex_growth     = 0.04
+assume opex_pct_fixed  = 0.81       // remaining 19% varies directly with occupancy
+
+assume capex_psf       = 1.00       // general capital improvements, uninflated
+
+assume suite_100_stop_psf = 4.00    // MIT fn 4 — stop in the in-place lease
+assume suite_200_stop_psf = 5.00    // MIT fn 6 — stop in the new Suite 200 lease
+
+assume renewal_prob    = 0.50       // Suite 100 rollover at 12/03
+assume ti_new_psf      = 10.00
+assume ti_renew_psf    = 3.00
+assume lc_new_pct      = 0.06
+assume lc_renew_pct    = 0.03
+assume downtime_years  = 0.50       // 6 months vacancy if the tenant leaves
+assume abatement_months = 5         // 1 month free per year of a 5-year term
+
+assume exit_cap        = 0.10       // sale at 10x forward NOI
+assume selling_costs   = 0.05       // MIT fn 11
+
+// Suite 100's replacement lease resets its stop to actual 2004 opex/SF
+// (MIT fn 5). Opex per SF is closed-form in t, so the 2004 value is stated
+// here as a constant. The engine has no way to read another period's phase-1
+// value, so the opex formula is necessarily duplicated — see NOTES.md.
+assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
+
+// 2006 opex per SF, at full occupancy (the fixed/variable split collapses to 1).
+assume opex_psf_2006 = 4.81 * pow(1.04, 5)
+
+// ---------------------------------------------------------------------------
+// Potential gross revenue — rent roll
+// ---------------------------------------------------------------------------
+
+// Suite 100: contract rent at $15.00/SF through 2003, then re-leased at the
+// post-spike market rent of $16.80/SF from 2004.
+stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = inputs.suite_100_sf * if(time.t <= 2,
+             inputs.suite_100_rent_psf,
+             inputs.market_rent_psf * (1 + inputs.rent_spike))
+}
+
+// Suite 200: vacant in 2001 (offset by the vacancy line below), then a 5-year
+// lease signed 1/02 at the then-current $14.00/SF, flat through 2006.
+stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = inputs.suite_200_sf * inputs.market_rent_psf
+}
+
+// ---------------------------------------------------------------------------
+// Deductions from potential gross revenue
+// ---------------------------------------------------------------------------
+
+// MIT fn 1 — Suite 200 vacant all of 2001.
+// MIT fn 2 — Suite 100 expected 2004 vacancy: 50% x 6mo = 25% of its PGR.
+stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = if(time.t == 0,
+            inputs.suite_200_sf * inputs.market_rent_psf,
+            if(time.t == 3,
+              (1 - inputs.renewal_prob) * inputs.downtime_years
+                * inputs.suite_100_sf * inputs.market_rent_psf * (1 + inputs.rent_spike),
+              0))
+}
+
+// MIT fn 3 — 5 months free rent on the new Suite 200 lease, taken in 2002.
+stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = if(time.t == 1,
+            (inputs.abatement_months / 12) * inputs.suite_200_sf * inputs.market_rent_psf,
+            0)
+}
+
+// ---------------------------------------------------------------------------
+// Operating expenses
+//
+// $4.81/SF at full occupancy, growing 4%/yr, of which 81% is fixed and 19%
+// varies directly with occupancy. Occupancy: 2/3 in 2001 (Suite 200 dark),
+// full in 2002-03, 5/6 in 2004 (MIT fn 7 — Suite 100 dark 0.25yr on 20k SF
+// of 30k), full thereafter.
+// ---------------------------------------------------------------------------
+
+stream cre.property.opex on entity asset.rentleg outflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = inputs.building_sf * inputs.opex_psf_full
+           * pow(1 + inputs.opex_growth, time.t)
+           * (inputs.opex_pct_fixed
+              + (1 - inputs.opex_pct_fixed)
+                * if(time.t == 0, 2.0 / 3.0, if(time.t == 3, 5.0 / 6.0, 1.0)))
+}
+
+// ---------------------------------------------------------------------------
+// Expense reimbursements
+//
+// Full-service leases with an expense stop: the tenant pays its pro-rata share
+// of actual opex per SF above the stop stated in its own lease. Stops are NOT
+// grossed up to full occupancy here — the problem set is explicit that the
+// stop is tested against actual building opex however full or vacant it is.
+// ---------------------------------------------------------------------------
+
+// MIT fn 4 (2001-03, $4.00 stop) and fn 5 (2005-06, stop reset to actual
+// 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
+stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = inputs.suite_100_sf
+           * max(0,
+               (inputs.building_sf * inputs.opex_psf_full
+                 * pow(1 + inputs.opex_growth, time.t)
+                 * (inputs.opex_pct_fixed
+                    + (1 - inputs.opex_pct_fixed)
+                      * if(time.t == 0, 2.0 / 3.0, if(time.t == 3, 5.0 / 6.0, 1.0)))
+               ) / inputs.building_sf
+               - if(time.t <= 2, inputs.suite_100_stop_psf, inputs.opex_psf_2004))
+}
+
+// MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.
+stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD {
+  schedule every year from 2002-01 to 2005-01
+  amount = inputs.suite_200_sf
+           * max(0,
+               (inputs.building_sf * inputs.opex_psf_full
+                 * pow(1 + inputs.opex_growth, time.t)
+                 * (inputs.opex_pct_fixed
+                    + (1 - inputs.opex_pct_fixed)
+                      * if(time.t == 3, 5.0 / 6.0, 1.0))
+               ) / inputs.building_sf
+               - inputs.suite_200_stop_psf)
+}
+
+// ---------------------------------------------------------------------------
+// Leasing and capital expenditures (below NOI)
+// ---------------------------------------------------------------------------
+
+// Suite 200 lease-up in 2002: $10/SF TI, plus a 6% commission struck on
+// cumulative lease revenue net of the free-rent concession (MIT fn 9):
+//   0.06 * (5 * $14 - (5/12) * $14) * 10,000 SF
+stream cre.unit.ti_lc.suite_200 on entity asset.rentleg outflow currency USD {
+  schedule every year from 2002-01 to 2002-01
+  amount = inputs.suite_200_sf
+           * (inputs.ti_new_psf
+              + inputs.lc_new_pct
+                * (5 * inputs.market_rent_psf
+                   - (inputs.abatement_months / 12) * inputs.market_rent_psf))
+}
+
+// Suite 100 rollover in 2004, probability-weighted across renew / re-let.
+// MIT fn 8  — TI:  (50% * $10 + 50% * $3) * 20,000 SF
+// MIT fn 10 — LC:  (50% * 6% + 50% * 3%) * (5 * $16.80) * 20,000 SF
+//                  (no abatement deduction: concessions are gone by 2004)
+stream cre.unit.ti_lc.suite_100 on entity asset.rentleg outflow currency USD {
+  schedule every year from 2004-01 to 2004-01
+  amount = inputs.suite_100_sf
+           * ((inputs.renewal_prob * inputs.ti_renew_psf
+               + (1 - inputs.renewal_prob) * inputs.ti_new_psf)
+              + (inputs.renewal_prob * inputs.lc_renew_pct
+                 + (1 - inputs.renewal_prob) * inputs.lc_new_pct)
+                * 5 * inputs.market_rent_psf * (1 + inputs.rent_spike))
+}
+
+// $1.00/SF/yr of general capital improvements, uninflated, over the hold.
+stream cre.capex on entity asset.rentleg outflow currency USD {
+  schedule every year from 2001-01 to 2005-01
+  amount = inputs.building_sf * inputs.capex_psf
+}
+
+// ---------------------------------------------------------------------------
+// Reversion — MIT fn 11
+//
+// Sale at the end of 2005 for 10x the FOLLOWING year's NOI, net of a 5%
+// selling commission. The 2006 NOI is derived from the modeled streams over
+// the projection tail rather than restated as an input. Outflow streams carry
+// a negative sign, so the terms simply add.
+// ---------------------------------------------------------------------------
+
+// 2006 is fully leased and concession-free, so its NOI is: both suites at
+// contract rent, both reimbursing above their stops, less full-occupancy opex.
+stream cre.exit.proceeds on entity asset.rentleg inflow currency USD {
+  schedule every year from 2005-01 to 2005-01
+  amount = (inputs.suite_100_sf * inputs.market_rent_psf * (1 + inputs.rent_spike)
+            + inputs.suite_200_sf * inputs.market_rent_psf
+            + inputs.suite_100_sf * max(0, inputs.opex_psf_2006 - inputs.opex_psf_2004)
+            + inputs.suite_200_sf * max(0, inputs.opex_psf_2006 - inputs.suite_200_stop_psf)
+            - inputs.building_sf * inputs.opex_psf_2006)
+           / inputs.exit_cap * (1 - inputs.selling_costs)
+}
+```
+
+## Run configuration
+
+```json
+{
+  "deterministic": {
+    "annual_discount_rate": 0.12
+  }
+}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|
+| `model.npv` | 2,292,810.18 | ±1 |
+| `model.total` | 3,852,483.13 | ±1 |

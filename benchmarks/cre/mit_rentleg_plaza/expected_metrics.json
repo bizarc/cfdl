@@ -1,0 +1,11 @@
+{
+  "model.npv": {
+    "value": 2292810.18,
+    "tolerance": 1.0,
+    "source": "MIT OCW 11.431J PS1 publishes $2,292,810"
+  },
+  "model.total": {
+    "value": 3852483.13,
+    "tolerance": 1.0
+  }
+}

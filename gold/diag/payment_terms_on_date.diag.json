@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Payment terms do not apply to `schedule on <date>`: a one-shot flow has no accrual period to settle after. State the date the cash moves.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 23,
+      "end_line": 10,
+      "end_col": 25
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -177,9 +177,21 @@ pub struct ContractStmt {
     /// moving. Applies to every stream the contract lowers. `None` means the
     /// cash lands in the period that earned it, which is the historical
     /// behaviour and what every model without the clause gets.
-    pub payment_net_days: Option<i64>,
+    pub payment_net: Option<PaymentTerms>,
     pub terms: BTreeMap<String, ContractTerm>,
     pub span: Span,
+}
+
+/// How long after a flow is earned its cash moves.
+///
+/// Days is the commercial default — "net 45" means 45 days. Months exist
+/// because some lags are genuinely month-based: a six-month recovery lag is
+/// six months, not 180 days, and the two diverge as soon as billing is not at
+/// a month end.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub enum PaymentTerms {
+    Days(i64),
+    Months(i64),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -223,7 +235,7 @@ pub struct ScheduleSpec {
     pub end_of_month: bool,
     /// `net <n>` — days between a flow being earned and its cash moving,
     /// overriding the contract's payment terms for this stream.
-    pub net_days: Option<i64>,
+    pub net: Option<PaymentTerms>,
     /// Annuity due: payment at the START of each interval, as for rent.
     /// The default is an ordinary annuity — payment at the END of each
     /// interval — matching `pmt(rate, nper, pv, [fv], [due])` in the
@@ -740,7 +752,7 @@ impl<'a> Parser<'a> {
         let mut has_effects = false;
         let mut term_start = None;
         let mut term_end = None;
-        let mut payment_net_days = None;
+        let mut payment_net = None;
         let mut terms = BTreeMap::new();
         let mut end_span = start.span;
         let mut depth = 0usize;
@@ -779,7 +791,7 @@ impl<'a> Parser<'a> {
                 }
                 // `payment net <n>` — a sibling of `term`, stating when cash
                 // moves relative to when it was earned.
-                TokenKind::Keyword(Keyword::Payment) if depth == 0 => {
+                TokenKind::Keyword(Keyword::Payment) => {
                     let net_kw = self.bump();
                     if !matches!(net_kw.kind, TokenKind::Keyword(Keyword::Net)) {
                         self.push_expected(
@@ -794,7 +806,7 @@ impl<'a> Parser<'a> {
                             // Cash cannot arrive before the activity that
                             // earned it.
                             Ok(days) if days >= 0 => {
-                                payment_net_days = Some(days);
+                                payment_net = Some(self.parse_payment_unit(days));
                                 end_span = days_tok.span;
                             }
                             _ => {
@@ -857,7 +869,7 @@ impl<'a> Parser<'a> {
         }
 
         Some(ContractStmt {
-            payment_net_days,
+            payment_net,
             name: final_name,
             subject_entity,
             has_term,
@@ -1205,6 +1217,22 @@ impl<'a> Parser<'a> {
     /// was bumped and discarded, so `every from … to …` parsed and the
     /// compiler substituted the model calendar. Requiring it here is what
     /// makes the declared interval trustworthy downstream.
+    /// The optional unit after a payment-term count. Bare means days, which
+    /// is what "net 45" means commercially.
+    fn parse_payment_unit(&mut self, count: i64) -> PaymentTerms {
+        match self.peek().kind {
+            TokenKind::Keyword(Keyword::Month) | TokenKind::Keyword(Keyword::Months) => {
+                let _ = self.bump();
+                PaymentTerms::Months(count)
+            }
+            TokenKind::Keyword(Keyword::Day) | TokenKind::Keyword(Keyword::Days) => {
+                let _ = self.bump();
+                PaymentTerms::Days(count)
+            }
+            _ => PaymentTerms::Days(count),
+        }
+    }
+
     fn parse_schedule_interval(&mut self) -> Option<String> {
         let tok = self.peek().clone();
         let interval = match tok.kind {
@@ -1251,7 +1279,7 @@ impl<'a> Parser<'a> {
                         every: None,
                         due: false,
                         end_of_month: false,
-                        net_days: None,
+                        net: None,
                         from: None,
                         to: None,
                         day_of_month: None,
@@ -1276,11 +1304,24 @@ impl<'a> Parser<'a> {
                         return None;
                     }
                 };
+                // `net` after a one-shot date was silently ignored, so a
+                // model could state payment terms and get none. There is no
+                // accrual period to settle after: the date named is already
+                // the date the cash moves.
+                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Net)) {
+                    let tok = self.peek().clone();
+                    self.push_expected(
+                        tok.span,
+                        "Payment terms do not apply to `schedule on <date>`: a one-shot flow has no accrual period to settle after. State the date the cash moves."
+                            .to_string(),
+                    );
+                    return None;
+                }
                 let mut spec = ScheduleSpec {
                     kind: ScheduleKind::OnDate,
                     every: None,
                     end_of_month: false,
-                    net_days: None,
+                    net: None,
                     due: false,
                     from: Some(date.clone()),
                     to: Some(date),
@@ -1298,7 +1339,7 @@ impl<'a> Parser<'a> {
                 let _ = self.bump();
                 let every = self.parse_schedule_interval()?;
                 let mut due = false;
-                let mut net_days = None;
+                let mut net = None;
                 // Ordinary annuity by default: the interval elapses, then
                 // payment falls, so `every year from 2026-01` first pays
                 // 2027-01. `due` makes it an annuity due — payment at the
@@ -1314,7 +1355,7 @@ impl<'a> Parser<'a> {
                     let days_tok = self.bump();
                     match days_tok.kind {
                         TokenKind::Number(ref n) => match n.parse::<i64>() {
-                            Ok(days) if days >= 0 => net_days = Some(days),
+                            Ok(days) if days >= 0 => net = Some(self.parse_payment_unit(days)),
                             _ => {
                                 self.push_expected(
                                     days_tok.span,
@@ -1414,7 +1455,7 @@ impl<'a> Parser<'a> {
                         kind: ScheduleKind::EveryPhase { phase },
                         every: Some(every.clone()),
                         end_of_month,
-                        net_days,
+                        net,
                         due,
                         from: None,
                         to: None,
@@ -1456,7 +1497,7 @@ impl<'a> Parser<'a> {
                     kind: ScheduleKind::Every,
                     every: Some(every),
                     end_of_month,
-                    net_days,
+                    net,
                     due,
                     from: Some(from),
                     to: Some(to),
@@ -2340,6 +2381,8 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Due => "due",
         Keyword::Week => "week",
         Keyword::Month => "month",
+        Keyword::Months => "months",
+        Keyword::Days => "days",
         Keyword::Quarter => "quarter",
         Keyword::Year => "year",
         Keyword::Phase => "phase",

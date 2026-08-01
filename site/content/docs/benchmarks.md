@@ -28,6 +28,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 
 | Pack | Case |
 |---|---|
+| cre | `mit_rentleg_plaza` |
 | cre | `office_two_tenant` |
 | cre | `retail_strip` |
 | credit | `float_bridge_pool` |
