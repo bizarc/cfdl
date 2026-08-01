@@ -1,0 +1,20 @@
+version 0.1
+model "pack-currency-inr" currency INR
+use pack "energy" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity project plant
+
+// A pack contract in a non-USD model. Lowering rules leave `currency` unset,
+// so the streams they emit inherit the model's currency rather than asserting
+// the instrument is American — a PPA in Rajasthan is not a USD contract.
+contract energy.ppa.plant_a on entity project.plant {
+  term 2026-01..2026-12
+  terms {
+    mwh_year = 5000
+    ppa_price = 3000
+    escalation = 0.0
+    degradation = 0.005
+    availability = 1.0
+  }
+}

@@ -256,6 +256,20 @@ Template rules:
 - `${subject}` resolves to the contract subject entity symbol.
 - `${contract.currency}` resolves to the contract currency.
 
+### Currency
+
+Omit `currency` from a lowering rule. An empty value inherits the model's
+declared currency, which is what keeps a pack usable outside the United
+States — a PPA in Rajasthan is not a USD contract, and a lease in Frankfurt is
+not either. The model is where a currency belongs, and it defaults to `USD`
+when a model declares none, so nothing is lost by leaving it out here.
+
+Set it only when the instrument is genuinely denominated in a fixed currency
+regardless of the model around it — a USD-denominated eurobond, say. A rule
+that pins a currency the model does not declare is rejected with
+`E2107_STREAM_CURRENCY_MISMATCH`, because cash flows are summed period by
+period and the two would otherwise be added as though the units matched.
+
 Compiler behavior:
 - Lowering runs after core validation.
 - Generated streams MUST carry provenance notes referencing the contract.
@@ -562,7 +576,6 @@ contract_name = "cre.lease"
 stream_name = "cre.lease.base_rent"
 owner_entity = "${subject}"
 direction = "inflow"
-currency = "USD"
 amount_expr = "{{contract.base_rent}} * clamp((time.t - {{contract.lease_up.start_period}} + 1) / {{contract.lease_up.months}}, 0, 1)"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"

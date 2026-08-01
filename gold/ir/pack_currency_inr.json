@@ -1,0 +1,117 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-currency-inr",
+    "currency": "INR"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "734e5dd401b2f9c20ac05e9059c1fb86",
+      "symbol": "project.plant",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "60918e6bbd84e02a20bf6adec9e7fa0d",
+      "name": "energy.ppa.plant_a",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "project.plant"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      },
+      "currency": "INR",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 20,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "a0f6b651501aea074b630997e06f1861",
+      "name": "energy.ppa.revenue.plant_a",
+      "owner": {
+        "symbol": "project.plant"
+      },
+      "direction": "inflow",
+      "currency": "INR",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(5000.0 / 12.0) * 1.0 * pow(1.0 - 0.005, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * 3000.0 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 20,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ppa_revenue"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.5.2",
+      "hash": "e4c47bd22039257906bab3747912211e",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}
