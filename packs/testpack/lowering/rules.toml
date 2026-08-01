@@ -36,3 +36,19 @@ schedule_kind = "every"
 schedule_every = "quarter"
 schedule_from = "2026-01"
 schedule_to = "2027-12"
+
+[[rules]]
+# A rule that narrows the pack's cadence support. testpack itself declares no
+# `cadences`, so it is unconstrained; this rule is month-locked on its own.
+# Covers E5014 — the per-rule gate that lets a pack carry neutral and
+# month-locked rules side by side while it is being migrated.
+id = "emit_monthly_only_fee"
+contract_name = "test.monthly_only_contract"
+stream_name = "testpack.monthly_only"
+owner_entity = "legal.borrower"
+direction = "inflow"
+amount_expr = "{{contract.amount_year}} / 12"
+cadences = ["monthly"]
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"

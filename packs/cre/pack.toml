@@ -2,10 +2,16 @@ name = "cre"
 version = "0.1.0"
 description = "Commercial Real Estate pack v0.1 (deterministic lowering)."
 
+# Every rule in this pack divides annual figures by a literal 12 and counts
+# elapsed time in months, so one period must be one month. On any other
+# calendar the schedule adapts but the amounts do not, producing figures out
+# by a factor of twelve with no diagnostic. Migration scaffold: removed rule
+# by rule as the expressions become cadence-neutral.
+cadences = ["monthly"]
+
 [entrypoints]
 aliases = "aliases.toml"
 templates = "templates.toml"
 lowering = "lowering/rules.toml"
 validations = "validations.toml"
-defaults = "defaults.toml"
 metrics = "metrics.toml"

@@ -29,6 +29,18 @@ pub struct PackManifest {
     pub version: String,
     #[serde(default)]
     pub description: Option<String>,
+    /// Model calendars this pack's rules lower correctly on.
+    ///
+    /// Empty means all of them, so a pack that says nothing is unconstrained
+    /// and third-party packs are unaffected. A pack whose expressions assume
+    /// one period is one month — dividing annual figures by a literal 12 —
+    /// must say `cadences = ["monthly"]`, or it will silently produce amounts
+    /// scaled to the wrong period on any other grid.
+    ///
+    /// This is a migration scaffold, not a statement about what a pack can
+    /// ever do: it is removed as each rule becomes cadence-neutral.
+    #[serde(default)]
+    pub cadences: Vec<String>,
     #[serde(default)]
     pub entrypoints: PackEntrypoints,
 }
@@ -281,6 +293,14 @@ pub struct LoweringRule {
     /// payments in one period would collapse into one.
     #[serde(default)]
     pub schedule_every: String,
+    /// Model calendars this rule lowers correctly on; empty means all.
+    ///
+    /// Overrides the pack manifest's `cadences`, so a pack can carry a mix of
+    /// neutral rules and month-locked ones while it is being migrated, rather
+    /// than being gated wholesale. As each rule is made cadence-neutral its
+    /// entry widens and then disappears.
+    #[serde(default)]
+    pub cadences: Vec<String>,
     /// How long after a flow is earned its cash moves, overriding the
     /// contract's `payment net <n>` for this rule. Omit both to inherit.
     ///
@@ -700,6 +720,15 @@ impl PackRegistry {
         self.packs
             .get(pack_name)
             .map(|pack| pack.lowering_rules.clone())
+            .unwrap_or_default()
+    }
+
+    /// Model calendars the pack declares it lowers correctly on. Empty means
+    /// unconstrained — see `PackManifest::cadences`.
+    pub fn cadences(&self, pack_name: &str) -> Vec<String> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.manifest.cadences.clone())
             .unwrap_or_default()
     }
 

@@ -1,0 +1,112 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "schedule-quarterly-grid",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "quarterly",
+    "start": "2026-01-01",
+    "periods": 8
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
+      "symbol": "legal.co",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "e6820339fcb892ae755d62c5412b3d01",
+      "name": "co.rent",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2026-01-01",
+        "to": "2027-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "30000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a81b65b8d4eae944a7fc3516bb3fb834",
+      "name": "co.true_up",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

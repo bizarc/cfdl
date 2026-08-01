@@ -5,6 +5,15 @@ arbitrage, capacity payments, O&M, investment tax credits, capex, and level-pay
 project debt. All rules are template-driven (`{{contract.*}}` + defaults) —
 no hardcoded amounts.
 
+> **Supported calendars: `monthly` only.**
+> Every rule in this pack divides annual figures by a literal 12 and counts
+> elapsed time in months, so one period must be one month. On any other grid
+> the schedule adapts but the amounts do not — figures come out twelve times
+> too small with no diagnostic. The pack therefore declares
+> `cadences = ["monthly"]` and a model on another calendar is rejected with
+> `E5013_PACK_CADENCE_UNSUPPORTED` rather than given a plausible wrong answer.
+> This is a migration scaffold and is being lifted rule by rule.
+
 ## Conventions
 
 - Annual quantities (`mwh_year`, `om_year`, `payment_year`) spread evenly

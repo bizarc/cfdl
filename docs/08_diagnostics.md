@@ -252,6 +252,27 @@ Warnings:
   can produce values outside the range the pack allows for that term. The
   value itself cannot be checked until the run, but the clip states the range
   the driver can reach, so it can be.
+- `E5013_PACK_CADENCE_UNSUPPORTED` — the model's calendar is not one the pack
+  declares in `cadences`. A pack whose expressions divide annual figures by a
+  literal 12 assumes one period is one month; on any other grid the *schedule*
+  adapts correctly and only the *amount* does not, so the model produces
+  plausible figures out by a factor of twelve. Refusing to lower is the only
+  honest option. Use a calendar the pack supports, or a pack that supports the
+  calendar.
+- `E5014_RULE_CADENCE_UNSUPPORTED` — as above, but declared by one lowering
+  rule rather than the whole pack. This exists so a pack can carry neutral and
+  month-locked rules side by side while it is being migrated, instead of being
+  gated wholesale.
+- `E5018_TERM_START_OFF_GRID` — a pack contract's `term_start` does not fall on
+  one of the model's period boundaries. Periods step from the model's start by
+  whole calendar units, and elapsed-period counting measures whole steps from
+  the term, so a term beginning mid-period counts short for the contract's
+  whole life. Always satisfied on a monthly calendar, where every `YYYY-MM`
+  term is a boundary.
+
+Both `cadences` gates are a migration scaffold rather than a permanent
+statement about a pack: the entries are removed rule by rule as the
+expressions become cadence-neutral.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
 

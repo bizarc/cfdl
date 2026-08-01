@@ -68,7 +68,10 @@ A pack MUST have a semver-like version string:
 
 ### 3.3 Compatibility
 - Compiler version and pack version are **independently versioned**.
-- A pack MUST declare supported compiler IR versions.
+- A pack declares which model *calendars* it supports via `cadences` (§5.1).
+  It does NOT declare supported compiler IR versions: earlier revisions of this
+  page said it MUST, but no such field has ever been read or shipped. See the
+  note under §5.1 on fields this page once described that do not exist.
 
 ---
 
@@ -112,6 +115,7 @@ A pack directory MUST include `pack.toml`:
 name = "cre"
 version = "0.1.0"
 description = "Commercial Real Estate domain pack"
+cadences = ["monthly"]   # optional; empty or absent means every calendar
 
 [entrypoints]
 aliases = "aliases.toml"
@@ -122,9 +126,22 @@ validations = "validations.toml"
 
 Rules:
 - `name` and `version` are REQUIRED. `description` is optional.
+- `cadences` is optional and lists the model calendars the pack's rules lower
+  correctly on (`daily`, `monthly`, `quarterly`, `annual`). Omit it, or leave
+  it empty, and the pack is unconstrained — so a third-party pack that says
+  nothing is unaffected. Declare it when the expressions assume a period
+  length: a rule that divides an annual figure by a literal 12 is only correct
+  on a monthly grid, and on any other one the schedule adapts while the amount
+  does not. A model on an unlisted calendar is `E5013_PACK_CADENCE_UNSUPPORTED`.
+  A single rule may narrow this further with its own `cadences`
+  (`E5014_RULE_CADENCE_UNSUPPORTED`), which is what lets a pack carry neutral
+  and month-locked rules side by side mid-migration.
 - Every entrypoint is optional; a pack supplies only what it defines. The
   recognised keys are `aliases`, `templates`, `lowering`, `metrics` and
-  `validations`, each a path relative to the pack directory.
+  `validations`, each a path relative to the pack directory. An unrecognised
+  key is accepted and ignored, so check spelling: `packs/cre/pack.toml` once
+  declared `defaults = "defaults.toml"`, which the loader has no field for, and
+  the file sat unread.
 - `version` is matched against the model's `use pack "<name>" version "<v>"`
   by exact string equality — there is no semver range logic. A pack present at
   a different version reports `E4004_MISSING_PACK` naming both versions, not

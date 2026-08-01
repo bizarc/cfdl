@@ -307,6 +307,9 @@ fn map_validation_diag(diag: cfdl_validate::ValidationDiagnostic) -> Diagnostic 
 struct ActivePackContext {
     name: String,
     version: String,
+    /// Model calendars the pack declares it lowers correctly on; empty means
+    /// all. See `cfdl_pack::PackManifest::cadences`.
+    cadences: Vec<String>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
 }
@@ -978,6 +981,7 @@ fn resolve_active_pack_inner(
     Ok(Some(ActivePackContext {
         name: active.name.clone(),
         version: active.version.clone(),
+        cadences: registry.cadences(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
     }))
@@ -1300,6 +1304,29 @@ fn lower_contract_streams(
             }
             let rule = &expanded_rule;
 
+            // A rule may narrow the pack's cadence support, so a pack can
+            // carry neutral and month-locked rules side by side while it is
+            // being migrated instead of being gated wholesale.
+            if !rule.cadences.is_empty()
+                && !rule
+                    .cadences
+                    .iter()
+                    .any(|cadence| cadence == ctx.time_calendar)
+            {
+                diagnostics.push(lowering_rule_diag(
+                    "E5014_RULE_CADENCE_UNSUPPORTED",
+                    &format!(
+                        "Pack lowering rule '{}' lowers correctly on {} calendars; this model declares '{}'. It would produce amounts scaled to the wrong period.",
+                        rule.id,
+                        rule.cadences.join(", "),
+                        ctx.time_calendar
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
+
             // A rule may declare its own interval; it must be a real one and no
             // finer than the grid, or several payments would land in one
             // period and collapse into a single figure.
@@ -1437,15 +1464,63 @@ fn validate_pack_contract(
     pack: &ActivePackContext,
     source_stmt: &cfdl_resolver::SourceStatement,
     contract: &cfdl_parser::ContractStmt,
-    _timeline_calendar: &str,
+    timeline_calendar: &str,
     timeline_start: &str,
     _timeline_periods: u32,
     timeline_end: &str,
 ) -> Vec<Diagnostic> {
+    let mut diagnostics = Vec::new();
+
+    // A pack whose expressions assume one period is one month produces amounts
+    // scaled to the wrong period on any other grid — silently, because the
+    // schedule adapts correctly and only the amount is wrong. Refuse to lower
+    // rather than emit a plausible number that is out by a factor of twelve.
+    if !pack.cadences.is_empty()
+        && !pack
+            .cadences
+            .iter()
+            .any(|cadence| cadence == timeline_calendar)
+    {
+        diagnostics.push(pack_diag(
+            "E5013_PACK_CADENCE_UNSUPPORTED",
+            &format!(
+                "Pack '{}' v{} lowers correctly on {} calendars; this model declares '{}'. Its rules would produce amounts scaled to the wrong period.",
+                pack.name,
+                pack.version,
+                pack.cadences.join(", "),
+                timeline_calendar
+            ),
+            source_stmt,
+            contract.span,
+        ));
+    }
+
+    // Elapsed-period counting measures whole calendar steps from the
+    // contract's start, so a term that does not begin on a period boundary
+    // lands mid-period and counts short. On a monthly grid every `YYYY-MM`
+    // term is on-grid and this never fires; it exists so quarterly and annual
+    // models cannot silently inherit an off-by-one.
+    if let Some(term_start) = contract.term_start.as_deref() {
+        if !term_start_on_grid(timeline_start, term_start, timeline_calendar) {
+            diagnostics.push(pack_diag(
+                "E5018_TERM_START_OFF_GRID",
+                &format!(
+                    "Contract '{}' starts {} but the model's {} periods begin {} and step from there. A term must start on a period boundary, or elapsed-period counting is off by a partial period.",
+                    contract.name,
+                    normalize_date(term_start),
+                    timeline_calendar,
+                    normalize_date(timeline_start)
+                ),
+                source_stmt,
+                contract.span,
+            ));
+        }
+    }
+
     // Domain constraints are declared by the pack in validations.toml; the
     // compiler supplies only what a pack cannot see — the source span and
     // whether the contract's term sits inside the model timeline.
-    pack_validation::evaluate(
+    diagnostics.extend(pack_validation::evaluate(
         &pack.validations,
         contract,
         valid_contract_term_range(contract, timeline_start, timeline_end),
@@ -1454,7 +1529,39 @@ fn validate_pack_contract(
             diag.severity = severity.as_str().to_string();
             diag
         },
-    )
+    ));
+
+    diagnostics
+}
+
+/// Whether `term_start` falls on one of the model's period boundaries.
+///
+/// Periods step from `timeline_start` by whole calendar units, so this is a
+/// divisibility test on the offset — months for monthly/quarterly/annual, days
+/// for daily. An unparseable date is treated as on-grid; the date itself is
+/// reported by the parser and by E2104/E2103, and two diagnostics for one typo
+/// is noise.
+fn term_start_on_grid(timeline_start: &str, term_start: &str, calendar: &str) -> bool {
+    let step_months = match calendar {
+        "monthly" => 1,
+        "quarterly" => 3,
+        "annual" => 12,
+        // Daily periods step one day at a time, so every date is on-grid.
+        _ => return true,
+    };
+    let (Some((sy, sm, _)), Some((ty, tm, td))) = (
+        parse_ymd(&normalize_date(timeline_start)),
+        parse_ymd(&normalize_date(term_start)),
+    ) else {
+        return true;
+    };
+    // A term is anchored to the first of its month; a mid-month start is not a
+    // period boundary on any monthly-or-coarser grid.
+    if td != 1 {
+        return false;
+    }
+    let offset = (ty - sy) * 12 + (tm as i32 - sm as i32);
+    offset.rem_euclid(step_months) == 0
 }
 
 fn pack_diag(
@@ -2551,6 +2658,7 @@ mod pack_validation_parity_tests {
         ActivePackContext {
             name: pack.to_string(),
             version: "0.1.0".to_string(),
+            cadences: registry.cadences(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
         }
@@ -2709,5 +2817,62 @@ mod pack_validation_parity_tests {
     fn unknown_contracts_produce_nothing() {
         assert_parity("cre", "cre.not_a_contract", &[], true);
         assert_parity("opco", "opco.not_a_contract", &[], true);
+    }
+
+    #[test]
+    fn term_start_on_grid_accepts_every_month_on_a_monthly_grid() {
+        // The gate must be inert on monthly, where every `YYYY-MM` term is a
+        // period boundary — otherwise it would reject the entire existing
+        // corpus. This is the assertion that makes S0 a no-op for today.
+        for month in 1..=12 {
+            let term = format!("2026-{month:02}");
+            assert!(
+                term_start_on_grid("2026-01", &term, "monthly"),
+                "monthly grid rejected {term}"
+            );
+        }
+    }
+
+    #[test]
+    fn term_start_on_grid_tracks_the_period_stride() {
+        // Quarterly periods begin 2026-01, 2026-04, 2026-07, 2026-10.
+        assert!(term_start_on_grid("2026-01", "2026-01", "quarterly"));
+        assert!(term_start_on_grid("2026-01", "2026-04", "quarterly"));
+        assert!(term_start_on_grid("2026-01", "2027-01", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2026-02", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2026-03", "quarterly"));
+
+        // Annual periods begin every January from the model start.
+        assert!(term_start_on_grid("2026-01", "2028-01", "annual"));
+        assert!(!term_start_on_grid("2026-01", "2026-07", "annual"));
+
+        // A term before the model start is still measured on the same stride,
+        // so the check must not assume a non-negative offset.
+        assert!(term_start_on_grid("2026-01", "2025-10", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2025-11", "quarterly"));
+
+        // Daily periods step one day, so every date is a boundary.
+        assert!(term_start_on_grid("2026-01-01", "2026-03-17", "daily"));
+
+        // A mid-month start is not a boundary on any monthly-or-coarser grid.
+        assert!(!term_start_on_grid("2026-01", "2026-02-15", "monthly"));
+    }
+
+    #[test]
+    fn shipped_packs_declare_their_cadence_support() {
+        // The four first-party packs divide by a literal 12 throughout, so
+        // each must gate itself to monthly until its rules are neutralised.
+        // testpack's rules are literal amounts and are genuinely unconstrained.
+        for pack in ["cre", "credit", "energy", "opco"] {
+            assert_eq!(
+                ctx(pack).cadences,
+                vec!["monthly".to_string()],
+                "{pack} must declare its cadence support"
+            );
+        }
+        assert!(
+            ctx("testpack").cadences.is_empty(),
+            "testpack is cadence-free and must stay unconstrained"
+        );
     }
 }

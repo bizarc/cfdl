@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5013_PACK_CADENCE_UNSUPPORTED",
+    "severity": "error",
+    "message": "Pack 'cre' v0.1.0 lowers correctly on monthly calendars; this model declares 'annual'. Its rules would produce amounts scaled to the wrong period.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 17,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

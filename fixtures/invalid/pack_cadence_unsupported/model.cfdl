@@ -1,0 +1,17 @@
+version 0.1
+model "pack-cadence-unsupported"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 5
+
+entity asset tower
+
+// The CRE pack's rules divide annual figures by a literal 12 and count elapsed
+// time in months. On an annual grid the schedule adapts — one payment a year —
+// but the amount does not, so this lease would pay one twelfth of its rent
+// once a year. That used to compile and produce a plausible-looking number.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2030-01
+  terms {
+    rent_year = 480000
+  }
+}
