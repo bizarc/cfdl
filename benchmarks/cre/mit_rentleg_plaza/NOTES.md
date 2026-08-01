@@ -51,35 +51,21 @@ Correcting it moved eight CRE and opco models by about a period of discounting
 — office_two_tenant's NPV fell 0.93%, the right direction for a reversion that
 now waits one more month.
 
-## 4. Pack gaps that remain
+## 4. Pack gaps that remain — tracked in the backlog
 
-Independent of calendar, three things in this deal cannot be expressed through
-CRE pack contracts:
+Two CRE pack features this deal needs and does not have, which is why its opex
+and recoveries are still native streams while everything else runs through pack
+contracts:
 
-- **Occupancy-varying opex.** `cre.property_opex` takes `opex_year` and
-  `escalation` only. MIT splits opex 81% fixed / 19% variable-with-occupancy —
-  that is what produces $135,161 rather than $144,300 in 2001. `terms` accept
-  one literal or one `inputs.*` reference each, and inputs are static scalars,
-  so no term can carry a time-varying occupancy factor.
-- **A one-time market rent step.** `cre.rollover` has a single scalar
-  `market_escalation`. The 0%/0%/0%/+20%/0% path is not expressible.
-- **A stop reset to a computed later-year value.** `expense_stop_year` is a
-  literal.
+- occupancy-varying opex (MIT fn 7 splits it 81% fixed / 19% variable, which is
+  what makes 2001 opex $135,161 rather than $144,300);
+- an expense stop that resets to a computed later-year value (fn 5, which makes
+  the 2004 reimbursement exactly zero).
 
-Each currently forces a drop to native streams, which then costs the pack's
-`domain.cre.*` metrics unless the native streams are hand-named into the pack's
-taxonomy (which is what this model does).
+Both are recorded in `docs/13_feature_backlog.md` §1.1 and §1.2, along with the
+abatement-line gap that was §5 here. They are additive features, not defects.
 
-## 5. `domain.cre.noi` has no slot for abatements
-
-The metric's denominator is `cre.ops.expense`, `cre.vacancy.loss`,
-`cre.property.opex`. Free rent has no line. In the pack's own `cre.lease_unit`
-rule free rent is folded into base rent, so it never surfaces separately — but
-institutional pro formas (and this one) report Abatements as its own deduction
-from potential gross revenue. Reporting it as a line and having it counted in
-NOI are currently mutually exclusive.
-
-## 6. RESOLVED — the playground shipped a stale engine
+## 5. RESOLVED — the playground shipped a stale engine
 
 `site/public/wasm/` was built five days and four breaking grammar changes
 before HEAD, and rejected every `schedule every <interval> from ...`. A

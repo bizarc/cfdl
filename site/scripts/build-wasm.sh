@@ -27,7 +27,15 @@ if [[ "${SKIP_WASM:-0}" == "1" ]]; then
 fi
 
 # Pinned so every build of the committed bundle comes from one toolchain.
-# Bump deliberately and rebuild in the same commit.
+#
+# Held at 0.13.1 on purpose, not out of neglect. wasm-pack 0.15.0 needs rustc
+# 1.88 or newer (sysinfo and time both require it), and this repo tracks the
+# `stable` channel rather than pinning a release. Moving to 0.15.0 therefore
+# means raising the compiler for the whole workspace, which is a separate
+# decision with its own blast radius — CI runs clippy with `-D warnings`, so a
+# compiler jump brings new lints with it.
+#
+# Bump both together, deliberately, and rebuild the bundle in the same commit.
 WASM_PACK_VERSION=0.13.1
 
 if ! command -v wasm-pack >/dev/null 2>&1; then
@@ -56,11 +64,29 @@ if ! rustup target list --installed 2>/dev/null | grep -q wasm32-unknown-unknown
 fi
 
 echo "build-wasm: building cfdl-wasm (release)…"
-wasm-pack build "${REPO_ROOT}/crates/cfdl-wasm" \
+# wasm-pack nags about a newer release on every single build. We know, and the
+# comment on WASM_PACK_VERSION says why we are not taking it.
+#
+# Filtered by capturing the log rather than piping through grep. Piping needs a
+# `|| true` to tolerate grep matching nothing, and that swallows a failed build
+# — an earlier revision of this script exited 0 on a compile error because of
+# exactly that. On failure the log is replayed untouched; only a successful
+# build is filtered, and only that one line. `--log-level error` was the other
+# option and would have hidden real warnings too.
+WASM_LOG="$(mktemp)"
+trap 'rm -f "${WASM_LOG}"' EXIT
+
+if ! wasm-pack build "${REPO_ROOT}/crates/cfdl-wasm" \
   --release \
   --target web \
   --out-dir "${OUT_DIR}" \
-  --out-name cfdl_wasm
+  --out-name cfdl_wasm >"${WASM_LOG}" 2>&1
+then
+  cat "${WASM_LOG}" >&2
+  echo "build-wasm: wasm-pack failed." >&2
+  exit 1
+fi
+grep -v "There's a newer version of wasm-pack available" "${WASM_LOG}" || true
 
 # wasm-pack drops packaging files we don't serve.
 rm -f "${OUT_DIR}/package.json" "${OUT_DIR}/README.md" "${OUT_DIR}/.gitignore"
