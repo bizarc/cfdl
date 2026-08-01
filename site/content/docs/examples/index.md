@@ -26,6 +26,7 @@ Complete models for every pack, each checked period-by-period against an indepen
 
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)
+- [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)

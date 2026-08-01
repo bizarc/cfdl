@@ -26,8 +26,16 @@ export function EnginePrefetch() {
         ? window.requestIdleCallback
         : (cb: () => void) => window.setTimeout(cb, 2000);
 
+    // Must carry the same cache-busting build id the worker uses
+    // (lib/playground/engine.worker.ts), or the prefetch warms a URL nobody
+    // requests and every visitor pays for the engine twice.
+    const build = process.env.NEXT_PUBLIC_WASM_BUILD ?? "dev";
+
     const handle = schedule(() => {
-      for (const href of ["/wasm/cfdl_wasm.js", "/wasm/cfdl_wasm_bg.wasm"]) {
+      for (const href of [
+        `/wasm/cfdl_wasm.js?v=${build}`,
+        `/wasm/cfdl_wasm_bg.wasm?v=${build}`,
+      ]) {
         if (document.querySelector(`link[rel="prefetch"][href="${href}"]`)) continue;
         const link = document.createElement("link");
         link.rel = "prefetch";

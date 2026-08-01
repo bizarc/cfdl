@@ -1,0 +1,55 @@
+version 0.1
+model "pack-cadence-opco-quarterly"
+use pack "opco" version "0.1.0"
+time calendar quarterly from 2025-01 for 12
+
+entity operating business
+
+// One operating business on three calendars. Stated with the ANNUAL siblings
+// (`amount_year`), which is what makes the deal grid-independent: the bare
+// `amount` term is per-period by definition and would mean different
+// economics on each calendar.
+//
+// Growth is held at zero on purpose. opco compounds growth CONTINUOUSLY on
+// the model clock — (1+g)^(t/ppy), a documented convention — so a finer grid
+// genuinely captures more intra-year compounding: 5% annual growth yields
+// 1,472,709 of year-one revenue monthly against 1,440,000 annually. That is a
+// real economic difference, not a cadence defect, and it would mask the thing
+// this fixture exists to test. See packs/opco/README.md.
+//
+// Term debt and policy-driven working capital are deliberately absent. Both
+// are correct but not annual-rollup invariant: nominal rate accrual differs
+// by cadence by design (a 6% loan is 0.5%/month and 1.5%/quarter), and the
+// working-capital delta telescopes so only its sum over life is invariant.
+// Those are covered by the benchmark reference generators instead.
+contract opco.revenue_line {
+  term 2025-01..2027-10
+  terms {
+    amount_year = 1440000
+    growth_rate = 0.0
+  }
+}
+
+contract opco.opex_line {
+  term 2025-01..2027-10
+  terms {
+    amount_year = 840000
+    growth_rate = 0.0
+  }
+}
+
+contract opco.capex_line {
+  term 2025-01..2027-10
+  terms {
+    amount_year = 60000
+    pct_of_revenue = 0.02
+  }
+}
+
+contract opco.cash_taxes {
+  term 2025-01..2027-10
+  terms {
+    tax_rate = 0.25
+    da_year = 120000
+  }
+}

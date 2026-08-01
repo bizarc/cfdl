@@ -2,10 +2,10 @@ name = "cre"
 version = "0.1.0"
 description = "Commercial Real Estate pack v0.1 (deterministic lowering)."
 
+
 [entrypoints]
 aliases = "aliases.toml"
 templates = "templates.toml"
 lowering = "lowering/rules.toml"
 validations = "validations.toml"
-defaults = "defaults.toml"
 metrics = "metrics.toml"

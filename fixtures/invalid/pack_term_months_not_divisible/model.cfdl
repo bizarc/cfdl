@@ -1,0 +1,18 @@
+version 0.1
+model "pack-term-months-not-divisible"
+use pack "testpack" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+entity legal borrower
+
+// term_months is a count of payment periods: it goes into pow exponents and
+// annuity term arguments. 30 months is two and a half annual periods, which
+// no closed form can express — a 30-month loan is not 2.5 annual payments.
+// Thresholds pro-rate; counts cannot, so this is an error rather than a round.
+contract test.cadence_probe on entity legal.borrower {
+  term 2026-01..2029-01
+  terms {
+    amount_year = 120000
+    term_months = 30
+  }
+}

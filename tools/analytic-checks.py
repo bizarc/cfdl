@@ -58,7 +58,12 @@ def npv(block: dict) -> float:
 
 
 def monthly_rate(annual: float) -> float:
-    return (1.0 + annual) ** (1.0 / 12.0) - 1.0
+    return periodic_rate(annual, 12)
+
+
+def periodic_rate(annual: float, ppy: int) -> float:
+    """The per-period rate the engine discounts at on a `ppy`-period grid."""
+    return (1.0 + annual) ** (1.0 / ppy) - 1.0
 
 
 def annuity_factor(n: int, i: float) -> float:
@@ -196,6 +201,66 @@ run monte_carlo trials 400 seed 20260728
     # a threshold rather than a value so the check is platform-independent.
     return (1.0 if stdev > 1.0 else 0.0), 1.0
 
+
+
+# Until the cadence work, every model in the repo — fixtures, benchmarks, and
+# every check above — was monthly. The engine's discount_offset and annuity-due
+# placement had therefore never run on a quarterly or annual grid at all. These
+# assert the same closed forms there, so that a pack dividing by
+# periods-per-year is composing with discounting that is known to be right.
+
+
+@check("a level annuity matches a(n,i) on quarterly and annual grids")
+def level_annuity_off_monthly() -> tuple[float, float]:
+    worst = (0.0, 0.0)
+    for calendar, interval, ppy, periods in [
+        ("quarterly", "quarter", 4, 20),
+        ("annual", "year", 1, 5),
+    ]:
+        src = f"""version 0.1
+model "level-annuity-{calendar}"
+time calendar {calendar} from 2026-01 for {periods + 1}
+entity legal holder
+stream holder.payment on entity legal.holder inflow currency USD {{
+  schedule every {interval} from 2026-01 to {2026 + (periods * 12 // ppy - 12) // 12}-{((periods - 1) * 12 // ppy) % 12 + 1:02d}
+  amount = 1000
+}}
+"""
+        i = periodic_rate(0.06, ppy)
+        got = npv(run_model(src, 0.06))
+        expected = 1000.0 * annuity_factor(periods, i)
+        if abs(got - expected) > abs(worst[0] - worst[1]):
+            worst = (got, expected)
+    return worst
+
+
+@check("an annuity due is worth (1+i) times the ordinary annuity, off monthly")
+def annuity_due_ratio_off_monthly() -> tuple[float, float]:
+    worst = (0.0, 0.0)
+    for calendar, interval, ppy, periods in [
+        ("quarterly", "quarter", 4, 20),
+        ("annual", "year", 1, 5),
+    ]:
+        last_month = ((periods - 1) * 12 // ppy) % 12 + 1
+        last_year = 2026 + (periods - 1) * 12 // ppy // 12
+        ordinary = f"""version 0.1
+model "ordinary-{calendar}"
+time calendar {calendar} from 2026-01 for {periods + 1}
+entity legal holder
+stream holder.payment on entity legal.holder inflow currency USD {{
+  schedule every {interval} from 2026-01 to {last_year}-{last_month:02d}
+  amount = 1000
+}}
+"""
+        due = ordinary.replace(
+            f"schedule every {interval} from", f"schedule every {interval} due from"
+        ).replace(f'model "ordinary-{calendar}"', f'model "due-{calendar}"')
+        i = periodic_rate(0.06, ppy)
+        got = npv(run_model(due, 0.06))
+        expected = npv(run_model(ordinary, 0.06)) * (1.0 + i)
+        if abs(got - expected) > abs(worst[0] - worst[1]):
+            worst = (got, expected)
+    return worst
 
 def main() -> int:
     if not CLI.exists():

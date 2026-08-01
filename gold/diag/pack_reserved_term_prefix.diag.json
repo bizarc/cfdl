@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5016_RESERVED_TERM_PREFIX",
+    "severity": "error",
+    "message": "Contract 'test.cadence_probe' declares term 'model.periods_per_year', but 'model.' is reserved for cadence placeholders that lowering rules resolve before contract terms. The term would never be read. Rename it.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 5,
+      "end_line": 16,
+      "end_col": 30
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

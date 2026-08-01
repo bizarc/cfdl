@@ -1,0 +1,294 @@
+{
+  "results_version": "0.2",
+  "model_hash": "a298f74cc67d78395fd315c4ac108af0c8cfbbe55b675eea5c672491586f6a6c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.project.plant.total": {
+        "amount": 18000000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 16831232.278293,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 18000000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.625,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.energy.ppa.revenue.plant_a.total": {
+        "amount": 18000000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.ppa.revenue.plant_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3000000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.energy.ppa.revenue.plant_a": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3000000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

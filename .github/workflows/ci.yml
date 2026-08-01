@@ -53,6 +53,16 @@ jobs:
           chmod +x ./tools/golden-runner
           ./tools/golden-runner run
 
+      # cargo test --all only builds cfdl-wasm for the HOST, so a break specific
+      # to wasm32 reached main undetected. The functional smoke test of the
+      # shipped bundle lives in site.yml, where Node is already set up.
+      - name: WebAssembly target builds
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo build -p cfdl-wasm --release --target wasm32-unknown-unknown
+
       # Guards the examples a reader meets first: they must compile, run, and
       # actually exercise the features their prose advertises.
       - name: Documentation examples

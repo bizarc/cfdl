@@ -1,7 +1,12 @@
-# Pin Rust toolchain for deterministic CI/dev behavior
+# Rust toolchain selection for CI and local development.
 # Location: repo root `/rust-toolchain.toml`
-
 [toolchain]
+# Deliberately a moving channel. A concrete pin was tried while adding the wasm
+# freshness gates and reverted: those gates hash the engine SOURCES rather than
+# the built artifact, so byte-reproducibility of the bundle is not load-bearing
+# and the pin bought nothing they need. It did cost every contributor a
+# re-added wasm32 target. Pinning is a repo-wide policy call to make on its own
+# merits, not a side effect of the bundle work.
 channel = "stable"
 profile = "minimal"
 components = ["rustfmt", "clippy"]

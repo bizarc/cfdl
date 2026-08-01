@@ -307,6 +307,9 @@ fn map_validation_diag(diag: cfdl_validate::ValidationDiagnostic) -> Diagnostic 
 struct ActivePackContext {
     name: String,
     version: String,
+    /// Model calendars the pack declares it lowers correctly on; empty means
+    /// all. See `cfdl_pack::PackManifest::cadences`.
+    cadences: Vec<String>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
 }
@@ -323,6 +326,8 @@ struct LoweringContext<'a> {
     time_start: &'a str,
     time_periods: u32,
     timeline_end: &'a str,
+    /// Cash horizon plus the projection tail; the bound a schedule may reach.
+    timeline_eval_end: &'a str,
     default_owner: &'a str,
 }
 
@@ -476,6 +481,12 @@ struct IrSchedule {
     /// ordinary annuity, which is the default and the common case.
     #[serde(skip_serializing_if = "std::ops::Not::not", default)]
     due: bool,
+    /// How long after a flow is earned its cash moves. Omitted when cash
+    /// lands in the period that earned it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    net_days: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    net_months: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -549,6 +560,15 @@ fn build_ir(
     let (time_calendar, time_start, time_periods, time_projection) = find_time(resolve_output)
         .unwrap_or_else(|| ("monthly".to_string(), "1970-01-01".to_string(), 1, 0));
     let timeline_end = add_periods_for_timeline_end(&time_start, &time_calendar, time_periods);
+    // The furthest period a schedule may legally reach: the cash horizon plus
+    // any `project <n>` tail, which the engine also evaluates. Used ONLY for
+    // the bounds check — `timeline_end` above stays the cash horizon because it
+    // shapes the IR itself.
+    let timeline_eval_end = add_periods_for_timeline_end(
+        &time_start,
+        &time_calendar,
+        time_periods.saturating_add(time_projection),
+    );
     let compiler_version = env!("CARGO_PKG_VERSION").to_string();
     let pack_seed = active_pack
         .map(|pack| format!("{}@{}", pack.name, pack.version))
@@ -741,6 +761,7 @@ fn build_ir(
             time_start: &time_start,
             time_periods,
             timeline_end: &timeline_end,
+            timeline_eval_end: &timeline_eval_end,
             default_owner: &first_entity_symbol,
         },
     );
@@ -972,6 +993,7 @@ fn resolve_active_pack_inner(
     Ok(Some(ActivePackContext {
         name: active.name.clone(),
         version: active.version.clone(),
+        cadences: registry.cadences(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
     }))
@@ -1207,11 +1229,132 @@ fn lower_contract_streams(
                 ));
                 continue;
             }
+            // Terms feed both passes below, and `schedule_every` may defer to
+            // one, so resolve plain contract terms first with no cadence
+            // awareness. A frequency can only ever come from a literal term
+            // (`payment_frequency = "month"`), never from an expression that
+            // depends on periods-per-year, so this ordering is well-founded.
+            let resolve_plain = |key: &str| -> Option<String> {
+                contract
+                    .terms
+                    .get(key)
+                    .map(|term| term.value.clone())
+                    .or_else(|| rule.defaults.get(key).cloned())
+            };
+            let schedule_every =
+                cfdl_pack::expand_rule_template(&rule.schedule_every, &resolve_plain)
+                    .unwrap_or_else(|_| rule.schedule_every.clone());
+
+            // How many of this rule's periods make a year, and how to count
+            // them. Keyed off the rule's own payment interval when it declares
+            // one — a monthly-paying loan on a daily book divides by 12, not
+            // 365 — falling back to the model's calendar.
+            let rule_freq = rule_frequency(&schedule_every, ctx.time_calendar).to_string();
+            let ppy = periods_per_year(&rule_freq);
+            // Errors raised from inside the resolver, which can only return
+            // Option and so cannot emit diagnostics itself.
+            let period_errors: std::cell::RefCell<Vec<(String, String)>> =
+                std::cell::RefCell::new(Vec::new());
+
+            // Converts a months-denominated term into this rule's periods.
+            // `_months` always means calendar months, on every calendar: it
+            // describes the contract, not the modeller's grid choice.
+            let months_to_periods = |key: &str, whole: bool| -> Option<String> {
+                let raw = resolve_plain(key)?;
+                if raw.trim_start().starts_with("inputs.") {
+                    period_errors.borrow_mut().push((
+                        "E5017_PERIOD_TERM_NOT_LITERAL".to_string(),
+                        format!(
+                            "Pack lowering rule '{}' converts term '{}' from months into periods, so it must be a literal; contract '{}' defers it to {}.",
+                            rule.id, key, contract.name, raw.trim()
+                        ),
+                    ));
+                    return None;
+                }
+                let months: f64 = raw.trim().parse().ok()?;
+                let periods = months * f64::from(ppy) / 12.0;
+                if whole && (periods.fract().abs() > 1e-9) {
+                    period_errors.borrow_mut().push((
+                        "E5015_TERM_MONTHS_NOT_DIVISIBLE".to_string(),
+                        format!(
+                            "Pack lowering rule '{}' uses term '{}' as a count of payment periods, but {} months is {} periods at {} frequency. Use a multiple of {} months, declare a finer payment_frequency, or model on a finer calendar.",
+                            rule.id,
+                            key,
+                            months,
+                            periods,
+                            rule_freq,
+                            12.0 / f64::from(ppy)
+                        ),
+                    ));
+                    return None;
+                }
+                Some(if whole {
+                    format!("{}", periods.round() as i64)
+                } else {
+                    // Trim to a plain decimal: template output is expression
+                    // source, and 0.4166666666666667 reads better than an
+                    // exponent form.
+                    let text = format!("{periods:.10}");
+                    let trimmed = text.trim_end_matches('0').trim_end_matches('.');
+                    trimmed.to_string()
+                })
+            };
+
             // Template expansion: resolve {{contract.<key>}} placeholders from
             // contract terms (term_start/term_end from the term range), then
             // rule defaults. Missing keys are compile errors.
             let resolve = |key: &str| -> Option<String> {
+                // Cadence primitives are claimed before contract terms, so a
+                // term could shadow one — E5016 rejects that outright.
+                if let Some(term) = key.strip_prefix("periods.") {
+                    return months_to_periods(term, false);
+                }
+                if let Some(term) = key.strip_prefix("whole_periods.") {
+                    return months_to_periods(term, true);
+                }
                 let from_contract = match key {
+                    "model.periods_per_year" => Some(ppy.to_string()),
+                    // What a NOMINAL annual rate is divided by to get this
+                    // period's rate. The default is periods-per-year, which is
+                    // the 30/360 reading — every period is 1/ppy of a year —
+                    // and expands to exactly the same text as
+                    // {{model.periods_per_year}}, so adopting this placeholder
+                    // changes no existing model.
+                    //
+                    // Actual conventions divide by a year length scaled to the
+                    // period's real days: rate / (360 / days) is rate * days /
+                    // 360. On a monthly grid that correctly pays more in a
+                    // 31-day month; on daily it collapses to rate / 360.
+                    "model.accrual_divisor" => Some(
+                        match resolve_plain("day_count")
+                            .unwrap_or_default()
+                            .trim()
+                            .trim_matches('"')
+                        {
+                            "" | "30/360" | "30e/360" => ppy.to_string(),
+                            "act/360" => "(360 / time.days_in_period)".to_string(),
+                            "act/365" => "(365 / time.days_in_period)".to_string(),
+                            // Unreachable in practice: validate_pack_contract
+                            // rejects an unknown value once per contract and
+                            // short-circuits lowering, which is where the
+                            // diagnostic belongs — emitting it here would give
+                            // one copy per matching rule.
+                            _ => ppy.to_string(),
+                        },
+                    ),
+                    "model.calendar" => Some(rule_freq.clone()),
+                    "time.elapsed_periods" => contract
+                        .term_start
+                        .as_deref()
+                        .map(|start| elapsed_periods_expr(&rule_freq, &normalize_date(start))),
+                    "time.elapsed_years" => contract
+                        .term_start
+                        .as_deref()
+                        .map(|start| elapsed_years_expr(&normalize_date(start))),
+                    "time.periods_to_term_end" => contract
+                        .term_end
+                        .as_deref()
+                        .map(|end| periods_to_expr(&rule_freq, &normalize_date(end))),
                     "term_start" => contract.term_start.as_deref().map(normalize_date),
                     "term_end" => contract.term_end.as_deref().map(normalize_date),
                     // Full contract name / the suffix beyond the rule's
@@ -1246,6 +1389,20 @@ fn lower_contract_streams(
                 (&rule.schedule_from, &mut expanded_rule.schedule_from),
                 (&rule.schedule_to, &mut expanded_rule.schedule_to),
                 (&rule.stream_name, &mut expanded_rule.stream_name),
+                (
+                    &rule.schedule_net_days,
+                    &mut expanded_rule.schedule_net_days,
+                ),
+                (
+                    &rule.schedule_net_months,
+                    &mut expanded_rule.schedule_net_months,
+                ),
+                // Templated so a contract can declare its own payment rhythm
+                // (`payment_frequency = "month"`), letting one rule serve a
+                // monthly, quarterly and daily-book version of the same
+                // instrument. Already expanded above to derive ppy; expanding
+                // it again here is what puts the result on the rule.
+                (&rule.schedule_every, &mut expanded_rule.schedule_every),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -1257,6 +1414,21 @@ fn lower_contract_streams(
                         }
                     }
                 }
+            }
+            // A months-to-periods conversion that could not be done — a
+            // non-integral payment count, or a term deferred to an input —
+            // would otherwise silently drop the placeholder.
+            let period_errors = period_errors.into_inner();
+            if !period_errors.is_empty() {
+                for (code, message) in &period_errors {
+                    diagnostics.push(lowering_rule_diag(
+                        code,
+                        message,
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+                continue;
             }
             if !missing_keys.is_empty() {
                 for key in &missing_keys {
@@ -1285,6 +1457,29 @@ fn lower_contract_streams(
                 continue;
             }
             let rule = &expanded_rule;
+
+            // A rule may narrow the pack's cadence support, so a pack can
+            // carry neutral and month-locked rules side by side while it is
+            // being migrated instead of being gated wholesale.
+            if !rule.cadences.is_empty()
+                && !rule
+                    .cadences
+                    .iter()
+                    .any(|cadence| cadence == ctx.time_calendar)
+            {
+                diagnostics.push(lowering_rule_diag(
+                    "E5014_RULE_CADENCE_UNSUPPORTED",
+                    &format!(
+                        "Pack lowering rule '{}' lowers correctly on {} calendars; this model declares '{}'. It would produce amounts scaled to the wrong period.",
+                        rule.id,
+                        rule.cadences.join(", "),
+                        ctx.time_calendar
+                    ),
+                    source_stmt,
+                    contract.span,
+                ));
+                continue;
+            }
 
             // A rule may declare its own interval; it must be a real one and no
             // finer than the grid, or several payments would land in one
@@ -1322,6 +1517,33 @@ fn lower_contract_streams(
                 }
             }
 
+            // Mirror the bounds check cfdl-validate applies to hand-written
+            // streams. It cannot run there: validation completes and returns
+            // before build_ir synthesises these. Without this a pack could
+            // schedule cash the engine never evaluates, which a model may not.
+            //
+            // Only `Every` schedules, matching the native path, which requires
+            // both `from` and `to` and so skips `on_date`.
+            if expanded_rule.schedule_kind == "every" {
+                let from = normalize_date(&expanded_rule.schedule_from);
+                let to = normalize_date(&expanded_rule.schedule_to);
+                if !from.is_empty()
+                    && !to.is_empty()
+                    && (from.as_str() < ctx.time_start || to.as_str() > ctx.timeline_eval_end)
+                {
+                    diagnostics.push(lowering_rule_diag(
+                        "E2103_SCHEDULE_OUT_OF_BOUNDS",
+                        &format!(
+                            "Pack lowering rule '{}' produced a schedule {} to {} for contract '{}', outside the model timeline ({} to {}).",
+                            rule.id, from, to, contract.name, ctx.time_start, ctx.timeline_eval_end
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                    continue;
+                }
+            }
+
             // An empty rule currency defers to the model's, which is what keeps
             // a pack usable outside the United States. A rule that pins one is
             // asserting the instrument is denominated in that currency, so the
@@ -1345,8 +1567,13 @@ fn lower_contract_streams(
                 continue;
             }
 
-            let schedule =
-                lower_pack_rule_schedule(rule, ctx.time_calendar, ctx.time_start, ctx.timeline_end);
+            let schedule = lower_pack_rule_schedule(
+                rule,
+                ctx.time_calendar,
+                ctx.time_start,
+                ctx.timeline_end,
+                contract.payment_net,
+            );
             let amount_src = rule.amount_expr.clone();
             // Pack terms are applied declaratively via rule templates; the
             // legacy hardcoded paths (CRE, then OpCo) were removed with the
@@ -1418,15 +1645,101 @@ fn validate_pack_contract(
     pack: &ActivePackContext,
     source_stmt: &cfdl_resolver::SourceStatement,
     contract: &cfdl_parser::ContractStmt,
-    _timeline_calendar: &str,
+    timeline_calendar: &str,
     timeline_start: &str,
     _timeline_periods: u32,
     timeline_end: &str,
 ) -> Vec<Diagnostic> {
+    let mut diagnostics = Vec::new();
+
+    // A pack whose expressions assume one period is one month produces amounts
+    // scaled to the wrong period on any other grid — silently, because the
+    // schedule adapts correctly and only the amount is wrong. Refuse to lower
+    // rather than emit a plausible number that is out by a factor of twelve.
+    if !pack.cadences.is_empty()
+        && !pack
+            .cadences
+            .iter()
+            .any(|cadence| cadence == timeline_calendar)
+    {
+        diagnostics.push(pack_diag(
+            "E5013_PACK_CADENCE_UNSUPPORTED",
+            &format!(
+                "Pack '{}' v{} lowers correctly on {} calendars; this model declares '{}'. Its rules would produce amounts scaled to the wrong period.",
+                pack.name,
+                pack.version,
+                pack.cadences.join(", "),
+                timeline_calendar
+            ),
+            source_stmt,
+            contract.span,
+        ));
+    }
+
+    // The template resolver claims these prefixes before it consults contract
+    // terms, so a term named `model.periods_per_year` would be silently
+    // unreachable. Contract term keys may legitimately be dotted, so this is
+    // reachable by accident rather than only by perversity.
+    for (key, term) in &contract.terms {
+        if let Some(prefix) = RESERVED_TERM_PREFIXES
+            .iter()
+            .find(|prefix| key.starts_with(**prefix))
+        {
+            diagnostics.push(pack_diag(
+                "E5016_RESERVED_TERM_PREFIX",
+                &format!(
+                    "Contract '{}' declares term '{}', but '{}' is reserved for cadence placeholders that lowering rules resolve before contract terms. The term would never be read. Rename it.",
+                    contract.name, key, prefix
+                ),
+                source_stmt,
+                term.span,
+            ));
+        }
+    }
+
+    // A misspelled day count must not fall back to a default in silence: the
+    // gap between act/360 and act/365 is about 1.4% of interest.
+    if let Some(term) = contract.terms.get("day_count") {
+        let value = term.value.trim().trim_matches('"');
+        if !matches!(value, "30/360" | "30e/360" | "act/360" | "act/365") {
+            diagnostics.push(pack_diag(
+                "E5019_UNKNOWN_DAY_COUNT",
+                &format!(
+                    "Contract '{}' declares day_count = '{}'. Supported: 30/360, 30e/360, act/360, act/365.",
+                    contract.name, value
+                ),
+                source_stmt,
+                term.span,
+            ));
+        }
+    }
+
+    // Elapsed-period counting measures whole calendar steps from the
+    // contract's start, so a term that does not begin on a period boundary
+    // lands mid-period and counts short. On a monthly grid every `YYYY-MM`
+    // term is on-grid and this never fires; it exists so quarterly and annual
+    // models cannot silently inherit an off-by-one.
+    if let Some(term_start) = contract.term_start.as_deref() {
+        if !term_start_on_grid(timeline_start, term_start, timeline_calendar) {
+            diagnostics.push(pack_diag(
+                "E5018_TERM_START_OFF_GRID",
+                &format!(
+                    "Contract '{}' starts {} but the model's {} periods begin {} and step from there. A term must start on a period boundary, or elapsed-period counting is off by a partial period.",
+                    contract.name,
+                    normalize_date(term_start),
+                    timeline_calendar,
+                    normalize_date(timeline_start)
+                ),
+                source_stmt,
+                contract.span,
+            ));
+        }
+    }
+
     // Domain constraints are declared by the pack in validations.toml; the
     // compiler supplies only what a pack cannot see — the source span and
     // whether the contract's term sits inside the model timeline.
-    pack_validation::evaluate(
+    diagnostics.extend(pack_validation::evaluate(
         &pack.validations,
         contract,
         valid_contract_term_range(contract, timeline_start, timeline_end),
@@ -1435,7 +1748,39 @@ fn validate_pack_contract(
             diag.severity = severity.as_str().to_string();
             diag
         },
-    )
+    ));
+
+    diagnostics
+}
+
+/// Whether `term_start` falls on one of the model's period boundaries.
+///
+/// Periods step from `timeline_start` by whole calendar units, so this is a
+/// divisibility test on the offset — months for monthly/quarterly/annual, days
+/// for daily. An unparseable date is treated as on-grid; the date itself is
+/// reported by the parser and by E2104/E2103, and two diagnostics for one typo
+/// is noise.
+fn term_start_on_grid(timeline_start: &str, term_start: &str, calendar: &str) -> bool {
+    let step_months = match calendar {
+        "monthly" => 1,
+        "quarterly" => 3,
+        "annual" => 12,
+        // Daily periods step one day at a time, so every date is on-grid.
+        _ => return true,
+    };
+    let (Some((sy, sm, _)), Some((ty, tm, td))) = (
+        parse_ymd(&normalize_date(timeline_start)),
+        parse_ymd(&normalize_date(term_start)),
+    ) else {
+        return true;
+    };
+    // A term is anchored to the first of its month; a mid-month start is not a
+    // period boundary on any monthly-or-coarser grid.
+    if td != 1 {
+        return false;
+    }
+    let offset = (ty - sy) * 12 + (tm as i32 - sm as i32);
+    offset.rem_euclid(step_months) == 0
 }
 
 fn pack_diag(
@@ -1531,16 +1876,122 @@ fn cadence_grain(cadence: &str) -> Option<u8> {
     }
 }
 
+/// Periods per year for a frequency, as a **pack lowering convention**.
+///
+/// Deliberately a second copy of the engine's table rather than a shared
+/// helper. They encode different things — this one converts an annual figure
+/// into a per-period one at compile time; the engine's drives discounting and
+/// weighted-average life at run time — and a future change to one must not
+/// silently move the other. `compile_and_engine_ppy_tables_agree` asserts they
+/// match over the four real calendars.
+///
+/// `weekly` is here because it is a valid rule *interval* (`schedule_every =
+/// "week"`) even though it is not a valid model calendar.
+fn periods_per_year(frequency: &str) -> u32 {
+    match frequency {
+        "daily" => 365,
+        "weekly" => 52,
+        "monthly" => 12,
+        "quarterly" => 4,
+        "annual" => 1,
+        _ => 1,
+    }
+}
+
+/// The frequency a rule's amounts are denominated in.
+///
+/// A rule that declares its own interval accrues on that rhythm, not the
+/// model's: a monthly-paying loan carried on a daily book still makes twelve
+/// payments a year, so its annual figures divide by 12 and not 365. Only the
+/// compiler can see this — at run time the expression environment knows the
+/// calendar and nothing about the schedule — which is why periods-per-year is
+/// resolved here rather than exposed as a runtime binding for packs.
+fn rule_frequency<'a>(schedule_every: &'a str, calendar: &'a str) -> &'a str {
+    if schedule_every.is_empty() {
+        calendar
+    } else {
+        interval_to_frequency(schedule_every)
+    }
+}
+
+/// An expression counting whole elapsed periods of `frequency` from `anchor`
+/// to `time.date`, for substitution into a lowering rule.
+///
+/// Date-based rather than `time.t - <start index>` on purpose: the compiler
+/// would otherwise have to reimplement the engine's timeline construction,
+/// creating a second model of time in a second crate that can drift. This form
+/// needs no knowledge of where the model starts and composes with projection
+/// tails for free. Its one weakness — a term that does not begin on a period
+/// boundary — is closed by `E5018_TERM_START_OFF_GRID`.
+fn elapsed_periods_expr(frequency: &str, anchor: &str) -> String {
+    match frequency {
+        "daily" => format!("days_between(parse_date(\"{anchor}\"), time.date)"),
+        "weekly" => format!("round_down(days_between(parse_date(\"{anchor}\"), time.date) / 7, 0)"),
+        "monthly" => format!("months_between(parse_date(\"{anchor}\"), time.date)"),
+        "quarterly" => {
+            format!("round_down(months_between(parse_date(\"{anchor}\"), time.date) / 3, 0)")
+        }
+        // Annual, and the fallback: whole years is the safest reading of an
+        // unknown frequency, and `annual` is the only one that reaches here.
+        _ => format!("round_down(months_between(parse_date(\"{anchor}\"), time.date) / 12, 0)"),
+    }
+}
+
+/// Whole elapsed years since `anchor`, for anniversary stepping.
+///
+/// Cadence-independent by construction: `months_between` ignores the day and
+/// the timeline steps in whole months on every calendar coarser than daily, so
+/// this yields correct completed years on all of them. It expands to exactly
+/// the text the packs already contain, which is what lets the rename land with
+/// an empty gold diff.
+fn elapsed_years_expr(anchor: &str) -> String {
+    format!("round_down(months_between(parse_date(\"{anchor}\"), time.date) / 12, 0)")
+}
+
+/// Whole periods remaining from `time.date` to `anchor` — the mirror of
+/// `elapsed_periods_expr`, for "is this the last period" tests.
+fn periods_to_expr(frequency: &str, anchor: &str) -> String {
+    match frequency {
+        "daily" => format!("days_between(time.date, parse_date(\"{anchor}\"))"),
+        "weekly" => format!("round_down(days_between(time.date, parse_date(\"{anchor}\")) / 7, 0)"),
+        "monthly" => format!("months_between(time.date, parse_date(\"{anchor}\"))"),
+        "quarterly" => {
+            format!("round_down(months_between(time.date, parse_date(\"{anchor}\")) / 3, 0)")
+        }
+        _ => format!("round_down(months_between(time.date, parse_date(\"{anchor}\")) / 12, 0)"),
+    }
+}
+
+/// Template prefixes the resolver claims before contract terms are consulted.
+///
+/// A contract term with one of these names would be shadowed and silently
+/// unreachable, so declaring one is `E5016_RESERVED_TERM_PREFIX`.
+const RESERVED_TERM_PREFIXES: [&str; 4] = ["model.", "time.", "periods.", "whole_periods."];
+
 fn lower_pack_rule_schedule(
     rule: &cfdl_pack::LoweringRule,
     time_calendar: &str,
     time_start: &str,
     timeline_end: &str,
+    contract_net: Option<cfdl_parser::PaymentTerms>,
 ) -> IrSchedule {
+    // A rule may state its own terms; otherwise it inherits the contract's,
+    // which is the ordinary case — a contract states its payment terms once
+    // and everything billed under it settles that way.
+    // A rule may state its own terms, templated so it can defer to a contract
+    // term; otherwise it inherits the contract's.
+    let rule_days = rule.schedule_net_days.trim().parse::<i64>().ok();
+    let rule_months = rule.schedule_net_months.trim().parse::<i64>().ok();
+    let (net_days, net_months) = match (rule_days, rule_months) {
+        (None, None) => split_payment_terms(contract_net),
+        pair => pair,
+    };
     if rule.schedule_kind.eq_ignore_ascii_case("on_date") {
         IrSchedule {
             kind: "OnDate".to_string(),
             due: false,
+            net_days: None,
+            net_months: None,
             on: Some(normalize_date(&rule.schedule_from)),
             every: None,
             from: None,
@@ -1556,6 +2007,8 @@ fn lower_pack_rule_schedule(
         IrSchedule {
             kind: "Every".to_string(),
             due: rule.schedule_due,
+            net_days,
+            net_months,
             on: None,
             // A rule may pay on its own rhythm — a quarterly coupon on a
             // monthly model. Unset means the calendar cadence, which is what
@@ -2022,6 +2475,15 @@ fn sort_compile_diagnostics(diags: &mut [Diagnostic]) {
     });
 }
 
+/// Split payment terms into the two IR fields.
+fn split_payment_terms(terms: Option<cfdl_parser::PaymentTerms>) -> (Option<i64>, Option<i64>) {
+    match terms {
+        Some(cfdl_parser::PaymentTerms::Days(n)) => (Some(n), None),
+        Some(cfdl_parser::PaymentTerms::Months(n)) => (None, Some(n)),
+        None => (None, None),
+    }
+}
+
 fn lower_schedule(
     schedule: Option<&cfdl_parser::ScheduleSpec>,
     time_calendar: &str,
@@ -2033,6 +2495,8 @@ fn lower_schedule(
         return Ok(IrSchedule {
             kind: "OnDate".to_string(),
             due: false,
+            net_days: None,
+            net_months: None,
             on: Some(time_start.to_string()),
             every: None,
             from: None,
@@ -2062,9 +2526,15 @@ fn lower_schedule(
         })
     };
     match &schedule.kind {
+        ScheduleKind::OnDate if schedule.net.is_some() => Err(
+            "Payment terms do not apply to `schedule on <date>`: a one-shot flow has no accrual period to settle after. State the date the cash moves."
+                .to_string(),
+        ),
         ScheduleKind::OnDate => Ok(IrSchedule {
             kind: "OnDate".to_string(),
             due: false,
+            net_days: None,
+            net_months: None,
             on: Some(normalize_date(
                 schedule.from.as_deref().unwrap_or(time_start),
             )),
@@ -2089,6 +2559,8 @@ fn lower_schedule(
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
             due: schedule.due,
+            net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
             on: None,
             every: Some(
                 schedule
@@ -2125,6 +2597,8 @@ fn lower_schedule(
             Ok(IrSchedule {
                 kind: "OnDate".to_string(),
                 due: false,
+                net_days: None,
+                net_months: None,
                 on: Some(start.clone()),
                 every: None,
                 from: None,
@@ -2152,6 +2626,8 @@ fn lower_schedule(
             Ok(IrSchedule {
                 kind: "Every".to_string(),
                 due: schedule.due,
+                net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
                 on: None,
                 every: Some(
                     schedule
@@ -2256,12 +2732,45 @@ fn add_periods_for_timeline_end(start: &str, calendar: &str, periods: u32) -> St
     }
     let offset = periods.saturating_sub(1);
     match calendar {
-        "daily" => format!("{year:04}-{month:02}-{day:02}"),
+        // This branch used to ignore `offset` entirely and return the start
+        // date, so a daily model's timeline "ended" on day one. It was
+        // unreachable in practice — nothing bounds-checked lowered streams and
+        // no daily model used a pack — until both changed.
+        "daily" => add_days(year, month, day, offset as i32),
         "monthly" => add_months(year, month, day, offset as i32),
         "quarterly" => add_months(year, month, day, (offset as i32) * 3),
         "annual" => add_months(year, month, day, (offset as i32) * 12),
         _ => format!("{year:04}-{month:02}-{day:02}"),
     }
+}
+
+/// Civil date plus `days`, via a day count from an epoch. Mirrors the engine's
+/// own date arithmetic (cfdl-calc's CalcDate), which is the definition the
+/// timeline is actually built from.
+fn add_days(year: i32, month: u32, day: u32, days: i32) -> String {
+    let mut y = year;
+    let mut m = month as i32;
+    if m <= 2 {
+        y -= 1;
+        m += 12;
+    }
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let doy = (153 * (m - 3) + 2) / 5 + day as i32 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let epoch = era as i64 * 146_097 + doe as i64 - 719_468 + days as i64;
+
+    let z = epoch + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
 }
 
 fn add_months(year: i32, month: u32, day: u32, months: i32) -> String {
@@ -2465,6 +2974,7 @@ mod pack_validation_parity_tests {
             );
         }
         cfdl_parser::ContractStmt {
+            payment_net: None,
             name: name.to_string(),
             subject_entity: None,
             has_term: term_range,
@@ -2492,6 +3002,7 @@ mod pack_validation_parity_tests {
         ActivePackContext {
             name: pack.to_string(),
             version: "0.1.0".to_string(),
+            cadences: registry.cadences(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
         }
@@ -2650,5 +3161,241 @@ mod pack_validation_parity_tests {
     fn unknown_contracts_produce_nothing() {
         assert_parity("cre", "cre.not_a_contract", &[], true);
         assert_parity("opco", "opco.not_a_contract", &[], true);
+    }
+
+    #[test]
+    fn term_start_on_grid_accepts_every_month_on_a_monthly_grid() {
+        // The gate must be inert on monthly, where every `YYYY-MM` term is a
+        // period boundary — otherwise it would reject the entire existing
+        // corpus. This is the assertion that makes S0 a no-op for today.
+        for month in 1..=12 {
+            let term = format!("2026-{month:02}");
+            assert!(
+                term_start_on_grid("2026-01", &term, "monthly"),
+                "monthly grid rejected {term}"
+            );
+        }
+    }
+
+    #[test]
+    fn term_start_on_grid_tracks_the_period_stride() {
+        // Quarterly periods begin 2026-01, 2026-04, 2026-07, 2026-10.
+        assert!(term_start_on_grid("2026-01", "2026-01", "quarterly"));
+        assert!(term_start_on_grid("2026-01", "2026-04", "quarterly"));
+        assert!(term_start_on_grid("2026-01", "2027-01", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2026-02", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2026-03", "quarterly"));
+
+        // Annual periods begin every January from the model start.
+        assert!(term_start_on_grid("2026-01", "2028-01", "annual"));
+        assert!(!term_start_on_grid("2026-01", "2026-07", "annual"));
+
+        // A term before the model start is still measured on the same stride,
+        // so the check must not assume a non-negative offset.
+        assert!(term_start_on_grid("2026-01", "2025-10", "quarterly"));
+        assert!(!term_start_on_grid("2026-01", "2025-11", "quarterly"));
+
+        // Daily periods step one day, so every date is a boundary.
+        assert!(term_start_on_grid("2026-01-01", "2026-03-17", "daily"));
+
+        // A mid-month start is not a boundary on any monthly-or-coarser grid.
+        assert!(!term_start_on_grid("2026-01", "2026-02-15", "monthly"));
+    }
+
+    #[test]
+    fn shipped_packs_declare_their_cadence_support() {
+        // The cadence ratchet, asserted rather than tracked by hand. A pack
+        // that still divides by a literal 12 must gate itself to monthly; a
+        // converted pack must be unconstrained. Moving a pack between these
+        // lists is the deliberate act of declaring it neutral, and it fails
+        // here until the conversion actually lands.
+        //
+        // Terminal state, now reached: no first-party pack is gated. The
+        // `cadences` field stays in the schema — a third-party pack may still
+        // need it, and it is the honest way to say "these rules assume a
+        // period length" — but no shipped pack declares it any more.
+        const STILL_MONTHLY: [&str; 0] = [];
+        const CADENCE_NEUTRAL: [&str; 5] = ["cre", "credit", "energy", "opco", "testpack"];
+
+        for pack in STILL_MONTHLY {
+            assert_eq!(
+                ctx(pack).cadences,
+                vec!["monthly".to_string()],
+                "{pack} still has month-locked rules and must declare it"
+            );
+        }
+        for pack in CADENCE_NEUTRAL {
+            assert!(
+                ctx(pack).cadences.is_empty(),
+                "{pack} is cadence-neutral and must not be gated"
+            );
+        }
+    }
+
+    #[test]
+    fn compile_and_engine_ppy_tables_agree() {
+        // The lowering convention and the engine's discounting constant are
+        // deliberately separate tables (see `periods_per_year`'s comment), so
+        // pin the values that must match. The engine side is verified
+        // independently: tools/analytic-checks.py asserts closed-form annuity
+        // identities on quarterly and annual grids, which only hold if its own
+        // periods-per-year is right, and `run.periods_per_year` in
+        // gold/results/schedule_quarterly_grid.results.json reads 4.
+        for (calendar, expected) in [
+            ("daily", 365),
+            ("monthly", 12),
+            ("quarterly", 4),
+            ("annual", 1),
+        ] {
+            assert_eq!(
+                periods_per_year(calendar),
+                expected,
+                "{calendar} periods per year"
+            );
+        }
+    }
+
+    #[test]
+    fn a_rules_own_interval_wins_over_the_calendar() {
+        // The case that forces periods-per-year to be resolved at compile
+        // time: a monthly-paying instrument carried on a daily book still
+        // makes twelve payments a year, and the runtime cannot see that
+        // because it only knows the calendar.
+        assert_eq!(rule_frequency("month", "daily"), "monthly");
+        assert_eq!(periods_per_year(rule_frequency("month", "daily")), 12);
+        assert_eq!(periods_per_year(rule_frequency("quarter", "monthly")), 4);
+        // No declared interval: the rule accrues on the model's grid.
+        assert_eq!(rule_frequency("", "quarterly"), "quarterly");
+        assert_eq!(periods_per_year(rule_frequency("", "quarterly")), 4);
+    }
+
+    #[test]
+    fn elapsed_years_expands_to_the_idiom_the_packs_already_use() {
+        // The rename in S2 is only safe — and only provably gold-neutral — if
+        // this is byte-identical to what the rules contain today.
+        assert_eq!(
+            elapsed_years_expr("2026-01-01"),
+            "round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12, 0)"
+        );
+        // And on a monthly grid, elapsed periods is the bare month count the
+        // rules already use as their anchor.
+        assert_eq!(
+            elapsed_periods_expr("monthly", "2026-01-01"),
+            "months_between(parse_date(\"2026-01-01\"), time.date)"
+        );
+    }
+
+    #[test]
+    fn elapsed_periods_counts_the_rules_own_rhythm() {
+        assert!(elapsed_periods_expr("quarterly", "2026-01-01").contains("/ 3"));
+        assert!(elapsed_periods_expr("annual", "2026-01-01").contains("/ 12"));
+        assert!(elapsed_periods_expr("daily", "2026-01-01").starts_with("days_between("));
+        // periods_to_* is the same count with the arguments reversed, so a
+        // rule can ask "is this the last period" on any grid.
+        assert!(periods_to_expr("monthly", "2030-12-01").starts_with("months_between(time.date,"));
+    }
+
+    #[test]
+    fn daily_timeline_end_advances_by_days() {
+        // Regression: this branch ignored the period count and returned the
+        // start date, so a daily model's timeline "ended" on day one. Only
+        // reachable once lowered streams were bounds-checked.
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 1),
+            "2025-01-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 31),
+            "2025-01-31"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2025-01-01", "daily", 1095),
+            "2027-12-31"
+        );
+        // Across a leap day: 2028-02-29 exists, so +60 from Jan 1 is Feb 29.
+        assert_eq!(
+            add_periods_for_timeline_end("2028-01-01", "daily", 60),
+            "2028-02-29"
+        );
+        // And the coarser calendars are unaffected.
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "monthly", 12),
+            "2026-12-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "quarterly", 4),
+            "2026-10-01"
+        );
+        assert_eq!(
+            add_periods_for_timeline_end("2026-01-01", "annual", 3),
+            "2028-01-01"
+        );
+    }
+
+    #[test]
+    fn a_gated_pack_refuses_a_calendar_it_does_not_support() {
+        // E5013's fixture used the cre pack on an annual calendar. That now
+        // compiles — cre is neutral — so the check moves here rather than
+        // being lost. `cadences` remains a supported manifest field: a
+        // third-party pack whose rules assume a period length still needs an
+        // honest way to say so.
+        let mut pack = ctx("testpack");
+        pack.cadences = vec!["monthly".to_string()];
+        let contract = contract("test.fee_contract", &[("rate", "100")], true);
+        let stmt = source_stmt(&contract);
+
+        let on_quarterly = validate_pack_contract(
+            &pack,
+            &stmt,
+            &contract,
+            "quarterly",
+            "2026-01-01",
+            8,
+            "2027-10-01",
+        );
+        assert!(
+            on_quarterly
+                .iter()
+                .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+            "expected E5013 on an unsupported calendar, got {:?}",
+            on_quarterly.iter().map(|d| &d.code).collect::<Vec<_>>()
+        );
+
+        let on_monthly = validate_pack_contract(
+            &pack,
+            &stmt,
+            &contract,
+            "monthly",
+            "2026-01-01",
+            12,
+            "2026-12-01",
+        );
+        assert!(
+            !on_monthly
+                .iter()
+                .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+            "a supported calendar must not fire E5013"
+        );
+
+        // And an unconstrained pack is unaffected on every calendar.
+        let open = ctx("testpack");
+        assert!(open.cadences.is_empty());
+        for calendar in ["daily", "monthly", "quarterly", "annual"] {
+            let diags = validate_pack_contract(
+                &open,
+                &stmt,
+                &contract,
+                calendar,
+                "2026-01-01",
+                12,
+                "2026-12-01",
+            );
+            assert!(
+                !diags
+                    .iter()
+                    .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+                "an unconstrained pack must not be gated on {calendar}"
+            );
+        }
     }
 }

@@ -313,7 +313,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, (540000.0 / 12.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)))"
+        "src": "(540000.0 / 12.0) * clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -352,7 +352,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-07-01\"), time.date) < 2.0, 0.0, (288000.0 / 12.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0)))"
+        "src": "(288000.0 / 12.0) * clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 2.0, 0.0, 1.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",

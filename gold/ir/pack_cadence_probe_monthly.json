@@ -1,0 +1,117 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-cadence-probe-monthly",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 36
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "3388cfd913652af0f66b3b1d1452bf10",
+      "symbol": "legal.borrower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "dfb3d21090427af0dd7e1ac6381fe7f2",
+      "name": "test.cadence_probe",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "legal.borrower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "af97f9cdf7afb2ee54bbabaa7b37ec9c",
+      "name": "testpack.cadence_probe",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2028-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(120000.0 / 12.0) * clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 5.0, 0.0, 1.0) * pow(1.0 + 0.10, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * if(months_between(parse_date(\"2026-01-01\"), time.date) < 36.0, 1.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 14,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "testpack",
+            "version": "0.1.0"
+          },
+          "rule_id": "emit_cadence_probe"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "7c97529016c0c7396a13afe28130af0c",
+      "notes": [
+        "active_pack=testpack@0.1.0"
+      ]
+    }
+  }
+}

@@ -1,0 +1,28 @@
+version 0.1
+model "pack-day-count-act360"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2025-01 for 13
+
+entity fund buyer
+
+// Actual/360, the USD credit convention. A nominal annual rate is divided by
+// the rule's accrual divisor, which the default reads as periods-per-year —
+// every period is 1/ppy of a year, the 30/360 reading — and which act/360
+// scales by the period's real days.
+//
+// So interest is 6,200 in a 31-day January and 5,600 in a 28-day February,
+// against a flat 6,000 under 30/360, and 73,000 over a 365-day year rather
+// than 72,000. That 365/360 uplift is the point of the convention.
+contract credit.pool_io_bullet.p on entity fund.buyer {
+  term 2025-01..2025-12
+  terms {
+    balance = 1200000
+    rate = 0.06
+    term_months = 12
+    cpr = 0
+    cdr = 0
+    severity = 0
+    recovery_lag_months = 0
+    day_count = "act/360"
+  }
+}

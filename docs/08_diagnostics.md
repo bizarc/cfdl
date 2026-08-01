@@ -195,7 +195,12 @@ Parser errors MUST use `E0xxx_...` codes.
 
 - `E2101_STREAM_MISSING_SCHEDULE`
 - `E2102_STREAM_MISSING_AMOUNT`
-- `E2103_SCHEDULE_OUT_OF_BOUNDS`
+- `E2103_SCHEDULE_OUT_OF_BOUNDS` — a schedule reaches outside the model
+  timeline. The bound is the cash horizon **plus** any `project <n>` tail,
+  since the engine evaluates streams over both; a schedule may reach into the
+  tail deliberately to feed a `series_sum` valuation. Applied to hand-written
+  streams during validation and mirrored onto pack-lowered ones during
+  lowering, so a pack cannot express what a model may not.
 - `E2104_SCHEDULE_INVALID_RANGE`
 - `E2105_SCHEDULE_INVALID_DAY_OF_MONTH`
 - `E2106_SCHEDULE_PHASE_NOT_FOUND`
@@ -252,6 +257,31 @@ Warnings:
   can produce values outside the range the pack allows for that term. The
   value itself cannot be checked until the run, but the clip states the range
   the driver can reach, so it can be.
+- `E5013_PACK_CADENCE_UNSUPPORTED` — the model's calendar is not one the pack
+  declares in `cadences`. A pack whose expressions divide annual figures by a
+  literal 12 assumes one period is one month; on any other grid the *schedule*
+  adapts correctly and only the *amount* does not, so the model produces
+  plausible figures out by a factor of twelve. Refusing to lower is the only
+  honest option. Use a calendar the pack supports, or a pack that supports the
+  calendar.
+- `E5014_RULE_CADENCE_UNSUPPORTED` — as above, but declared by one lowering
+  rule rather than the whole pack. This exists so a pack can carry neutral and
+  month-locked rules side by side while it is being migrated, instead of being
+  gated wholesale.
+- `E5018_TERM_START_OFF_GRID` — a pack contract's `term_start` does not fall on
+  one of the model's period boundaries. Periods step from the model's start by
+  whole calendar units, and elapsed-period counting measures whole steps from
+  the term, so a term beginning mid-period counts short for the contract's
+  whole life. Always satisfied on a monthly calendar, where every `YYYY-MM`
+  term is a boundary.
+
+- `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` is not one of
+  `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap
+  between act/360 and act/365 is roughly 1.4% of interest.
+
+Both `cadences` gates are a migration scaffold rather than a permanent
+statement about a pack: the entries are removed rule by rule as the
+expressions become cadence-neutral.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
 

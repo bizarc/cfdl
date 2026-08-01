@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5018_TERM_START_OFF_GRID",
+    "severity": "error",
+    "message": "Contract 'test.fee_contract' starts 2026-02-01 but the model's quarterly periods begin 2026-01-01 and step from there. A term must start on a period boundary, or elapsed-period counting is off by a partial period.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

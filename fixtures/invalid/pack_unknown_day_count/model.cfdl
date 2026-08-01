@@ -1,0 +1,22 @@
+version 0.1
+model "pack-unknown-day-count"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2025-01 for 13
+
+entity fund buyer
+
+// A misspelled convention must not fall back to a default silently: the
+// difference between act/360 and act/365 is about 1.4% of interest.
+contract credit.pool_io_bullet.p on entity fund.buyer {
+  term 2025-01..2025-12
+  terms {
+    balance = 1200000
+    rate = 0.06
+    term_months = 12
+    cpr = 0
+    cdr = 0
+    severity = 0
+    recovery_lag_months = 0
+    day_count = "actual/360"
+  }
+}

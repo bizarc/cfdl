@@ -1,0 +1,312 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-cadence-credit-monthly",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2025-01-01",
+    "periods": 39
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a14d0ee52b2812f4856211fc4d53634a",
+      "symbol": "fund.buyer",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "a4835fbae4b45ef98841555fae108bcd",
+      "name": "credit.pool_level_pay.book",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "fund.buyer"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2028-03-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "fff18624a7073585b85ba5e58fc35eb4",
+      "name": "credit.pool.interest.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_interest"
+        }
+      }
+    },
+    {
+      "id": "bb535ef15bcdb72c5bfe213d76a51dc4",
+      "name": "credit.pool.penalty.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - (0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date)) - 1.0)) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_penalty"
+        }
+      }
+    },
+    {
+      "id": "1c56514e36da054a62431229c3c7db9a",
+      "name": "credit.pool.prepay.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - (0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date)) - 1.0)) * cpr_to_periodic(0.10, 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_prepay"
+        }
+      }
+    },
+    {
+      "id": "a6663135fa4e880941385918c1d8e048",
+      "name": "credit.pool.recoveries.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) * cpr_to_periodic(0.03, 12.0) * (1.0 - 0.50), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_recoveries"
+        }
+      }
+    },
+    {
+      "id": "3121716324013d0f6446e0e3e132d1a2",
+      "name": "credit.pool.sched_principal.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date)) - 1.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_sched_principal"
+        }
+      }
+    },
+    {
+      "id": "df682b917942c8e28b69a036fcc9997f",
+      "name": "credit.pool.servicing.book",
+      "owner": {
+        "symbol": "fund.buyer"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 36.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2025-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 36.0) - 1.0)) * pow((1.0 - cpr_to_periodic(0.03, 12.0)) * (1.0 - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_servicing"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "31da3be174317bd7ff88b2a1dfa8f026",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

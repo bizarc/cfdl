@@ -1,6 +1,6 @@
 {
   "deterministic": {
-    "discount_rate": 0.1,
+    "annual_discount_rate": 0.1,
     "parameters": {
       "stream.cre.lease.base_rent:amount": 25000.0,
       "stream.cre.ops.expense.amount": 12000.0,

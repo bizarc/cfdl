@@ -318,6 +318,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
+- [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
 - [CRE examples overview](/docs/examples/cre-examples)

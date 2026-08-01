@@ -1,0 +1,41 @@
+version 0.1
+model "pack-cadence-energy-daily"
+use pack "energy" version "0.1.0"
+time calendar daily from 2025-01 for 1095
+
+entity project microgrid
+
+// One three-year PPA + O&M deal, written identically on four calendars. Only
+// `time calendar` differs, so the annual figures must agree exactly.
+//
+// The window is 2025-2027 for a reason: all three are non-leap years. On a
+// daily grid an annual figure is spread as X_year / 365 every day, which is
+// the Act/365-Fixed convention — so a 366-day year genuinely pays 366/365 of
+// the annual amount. That is correct, not drift, but it means the annual
+// parity identity does not hold across a leap year on a daily calendar. See
+// packs/energy/README.md.
+//
+// Terms start on 2025-01 and run whole years so contract anniversaries line up
+// with the rollup boundaries; I1 is an annual identity, not a within-year one.
+contract energy.ppa on entity project.microgrid {
+  term 2025-01..2027-12-31
+  terms {
+    mwh_year = 4200
+    ppa_price = 85
+    escalation = 0.02
+    degradation = 0.005
+  }
+}
+
+contract energy.om on entity project.microgrid {
+  term 2025-01..2027-12-31
+  terms {
+    om_year = 48000
+    escalation = 0.025
+  }
+}
+
+contract energy.capacity on entity project.microgrid {
+  term 2025-01..2027-12-31
+  terms { payment_year = 60000 }
+}

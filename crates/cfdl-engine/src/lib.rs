@@ -751,6 +751,40 @@ fn simulate_events(
     }
 }
 
+/// Warn when a stream's cash settles in the projection tail.
+///
+/// The tail is evaluated so `series_sum` can look forward — a forward-NOI exit
+/// reads a year past the sale — but it contributes nothing to cash results,
+/// totals or NPV. A stream that *deliberately* runs into the tail to feed a
+/// valuation is doing the right thing, and its tail values are meant to be
+/// excluded; warning on those would fire on every forward-NOI model.
+///
+/// What is worth flagging is cash that lands there without the author asking:
+/// a schedule ending on the cash horizon whose payment terms then move the
+/// last settlement past it. docs/12_payment_timing.md promises a flow is never
+/// silently dropped, and before this it was — the amount simply vanished.
+fn warn_if_cash_settles_in_tail(
+    stream: &IrStream,
+    values: &[f64],
+    cash_periods: usize,
+    warnings: &mut Vec<String>,
+) {
+    if values.len() <= cash_periods {
+        return;
+    }
+    if stream.schedule.net_days.is_none() && stream.schedule.net_months.is_none() {
+        return;
+    }
+    let stranded: f64 = values[cash_periods..].iter().sum();
+    if stranded.abs() < 1e-9 {
+        return;
+    }
+    warnings.push(format!(
+        "Stream '{}' settles {:.2} in the projection tail: its payment terms move cash past period {}, and the tail is computed for series lookups only, so that amount is excluded from cash results and NPV. Extend `for <n>` to cover the lag, or shorten the schedule.",
+        stream.name, stranded, cash_periods
+    ));
+}
+
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
     // Cash horizon vs full evaluation window: the projection tail
     // (`time ... project <n>`) is computed so series_sum/series_avg can read
@@ -794,6 +828,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             None,
             &mut warnings,
         )?;
+        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
             discount_offset(&stream.schedule),
@@ -823,6 +858,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Some(&full_series),
             &mut warnings,
         )?;
+        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
         valued_streams.push((
             values[..cash_periods.min(values.len())].to_vec(),
             discount_offset(&stream.schedule),
@@ -1131,38 +1167,40 @@ fn evaluate_stream(
     let event_mask = event_sim.stream_active.get(&stream.name);
     let mut values = vec![0.0_f64; timeline.len()];
     let direction_sign = stream_direction_sign(stream, warnings);
-    for (pay_idx, accrual) in schedule_accruals.iter().copied().enumerate() {
-        let Some(idx) = accrual else {
-            continue;
-        };
-        if let Some(mask) = event_mask {
-            if !mask[idx] {
+    // A period may receive several accruals — under net-30 both February and
+    // March settle in March — so their amounts sum into that period.
+    for (pay_idx, accruals) in schedule_accruals.iter().enumerate() {
+        for &idx in accruals {
+            if let Some(mask) = event_mask {
+                if !mask[idx] {
+                    continue;
+                }
+            }
+            let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], base_inputs);
+            apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
+            if let Some(series) = series {
+                env.series = series.clone();
+            }
+            let active_value =
+                eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
+            if !active_value {
                 continue;
             }
+            let amount = if let Some(override_value) = stream_amount_override(config, &stream.name)
+            {
+                override_value
+            } else {
+                eval_amount_expr(
+                    &amount_expr,
+                    &env,
+                    &stream.name,
+                    &ir.model.currency,
+                    warnings,
+                )
+            };
+            // Evaluated against the accrual period, paid in the payment period.
+            values[pay_idx] += amount * direction_sign;
         }
-        let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], base_inputs);
-        apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
-        if let Some(series) = series {
-            env.series = series.clone();
-        }
-        let active_value =
-            eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
-        if !active_value {
-            continue;
-        }
-        let amount = if let Some(override_value) = stream_amount_override(config, &stream.name) {
-            override_value
-        } else {
-            eval_amount_expr(
-                &amount_expr,
-                &env,
-                &stream.name,
-                &ir.model.currency,
-                warnings,
-            )
-        };
-        // Evaluated against the accrual period, settled in the payment period.
-        values[pay_idx] += amount * direction_sign;
     }
     Ok(values)
 }
@@ -1315,6 +1353,24 @@ fn build_base_env(
     );
     env.time
         .insert("phase".to_string(), ExprValue::Optional(None));
+    // Periods per year for the model's calendar, so a hand-written model can
+    // spread an annual figure without hardcoding a divisor:
+    //   amount = inputs.rent_year / time.ppy
+    // Packs do NOT use this — a lowering rule resolves its own periods-per-year
+    // at compile time, because a rule may pay on its own interval (a monthly
+    // coupon on a daily grid needs 12, not 365) and only the compiler can see
+    // that. See {{model.periods_per_year}} in cfdl-compile.
+    env.time.insert(
+        "ppy".to_string(),
+        ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
+    );
+    // Actual calendar days in this period, so an Actual/360 or Actual/365
+    // accrual can be expressed. Packs reach it through
+    // {{model.accrual_divisor}}; a hand-written model may use it directly.
+    env.time.insert(
+        "days_in_period".to_string(),
+        ExprValue::Decimal(days_in_period(&ir.time.calendar, date)),
+    );
     env.curves = ir_curve_defs(ir);
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
@@ -1378,6 +1434,24 @@ fn build_expr_env(
     );
     env.time
         .insert("phase".to_string(), ExprValue::Optional(None));
+    // Periods per year for the model's calendar, so a hand-written model can
+    // spread an annual figure without hardcoding a divisor:
+    //   amount = inputs.rent_year / time.ppy
+    // Packs do NOT use this — a lowering rule resolves its own periods-per-year
+    // at compile time, because a rule may pay on its own interval (a monthly
+    // coupon on a daily grid needs 12, not 365) and only the compiler can see
+    // that. See {{model.periods_per_year}} in cfdl-compile.
+    env.time.insert(
+        "ppy".to_string(),
+        ExprValue::Decimal(periods_per_year(&ir.time.calendar)),
+    );
+    // Actual calendar days in this period, so an Actual/360 or Actual/365
+    // accrual can be expressed. Packs reach it through
+    // {{model.accrual_divisor}}; a hand-written model may use it directly.
+    env.time.insert(
+        "days_in_period".to_string(),
+        ExprValue::Decimal(days_in_period(&ir.time.calendar, date)),
+    );
 
     env.entity.insert(
         "id".to_string(),
@@ -1499,10 +1573,27 @@ fn insert_cfg_into_value(slot: &mut ExprValue, path: &[&str], value: f64) {
 fn schedule_accruals(
     schedule: &IrSchedule,
     timeline: &[Date],
-) -> Result<Vec<Option<usize>>, EngineError> {
-    let mut out = vec![None; timeline.len()];
+) -> Result<Vec<Vec<usize>>, EngineError> {
+    let mut out = vec![Vec::new(); timeline.len()];
     apply_schedule_indices(schedule, timeline, &mut out)?;
     Ok(out)
+}
+
+/// Calendar days in the period beginning `date` on `calendar`.
+///
+/// Derived from the calendar rather than the timeline so it is available
+/// wherever the expression environment is built, including the projection
+/// tail. Actual days, not a nominal 30 — that is the whole point: an
+/// Actual/360 accrual pays more in a 31-day month than a 30-day one.
+fn days_in_period(calendar: &str, date: &Date) -> f64 {
+    let next = match calendar {
+        "daily" => return 1.0,
+        "monthly" => date.add_months(1),
+        "quarterly" => date.add_months(3),
+        "annual" => date.add_months(12),
+        _ => date.add_months(1),
+    };
+    days_between(date, &next).max(1) as f64
 }
 
 fn periods_per_year(calendar: &str) -> f64 {
@@ -1664,10 +1755,51 @@ fn period_index(timeline: &[Date], date: &Date) -> Option<usize> {
 /// rather than accumulating an amount. `OnDate` and the explicit `also`/
 /// `except` dates are point events, so their accrual and payment periods are
 /// the same.
+/// The last day of the period at `idx` — the day before the next one starts.
+///
+/// A period's spacing is taken from its neighbours rather than the calendar,
+/// so this works on any cadence. The final period borrows the spacing of the
+/// one before it.
+fn period_end(timeline: &[Date], idx: usize) -> Date {
+    match timeline.get(idx + 1) {
+        Some(next) => next.add_days(-1).max(timeline[idx].clone()),
+        None => {
+            let span = timeline
+                .get(idx.wrapping_sub(1))
+                .map(|prev| days_between(prev, &timeline[idx]))
+                .unwrap_or(30)
+                .max(1);
+            timeline[idx].add_days(span - 1)
+        }
+    }
+}
+
+/// Whole days from `from` to `to`, negative if `to` precedes it.
+fn days_between(from: &Date, to: &Date) -> i32 {
+    (to.to_epoch_days() - from.to_epoch_days()) as i32
+}
+
+/// Whether a date falls past the last period the timeline models.
+///
+/// The final period spans from its start date up to the next one that would
+/// have followed, so a date inside that span still belongs to it. Spacing is
+/// taken from the last two periods rather than the calendar, which keeps this
+/// independent of the cadence.
+fn beyond_timeline(timeline: &[Date], date: &Date) -> bool {
+    let (Some(last), Some(prev)) = (
+        timeline.last(),
+        timeline.get(timeline.len().wrapping_sub(2)),
+    ) else {
+        return false;
+    };
+    let span_days = days_between(prev, last).max(1);
+    *date >= last.add_days(span_days)
+}
+
 fn apply_schedule_indices(
     schedule: &IrSchedule,
     timeline: &[Date],
-    out: &mut [Option<usize>],
+    out: &mut [Vec<usize>],
 ) -> Result<(), EngineError> {
     let roll = schedule_roll(schedule)?;
     match schedule.kind.as_str() {
@@ -1675,7 +1807,7 @@ fn apply_schedule_indices(
             if let Some(on) = &schedule.on {
                 let target = roll_date(&Date::parse(on)?, roll);
                 if let Some(idx) = timeline.iter().position(|d| *d == target) {
-                    out[idx] = Some(idx);
+                    out[idx].push(idx);
                 }
             }
         }
@@ -1723,10 +1855,44 @@ fn apply_schedule_indices(
                         .rposition(|d| *d < next)
                         .unwrap_or(accrual_idx)
                 };
-                let placed = place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref());
-                let rolled = roll_date(&placed, roll);
+                // The billing date, then the payment terms, then the roll.
+                // Order matters: the due date is N days after billing, and it
+                // is that due date which moves off a weekend — not the bill.
+                //
+                // Billing happens when the period closes, not when it opens:
+                // January's electricity is invoiced at the end of January, so
+                // net-30 falls in early March, not late January. A day rule
+                // (`on day 15`, `on eom`) names the billing date explicitly
+                // and overrides that.
+                let has_terms = schedule.net_days.is_some_and(|d| d != 0)
+                    || schedule.net_months.is_some_and(|m| m != 0);
+                let billed = match (has_terms, schedule.on_rule.as_ref()) {
+                    (true, None) => period_end(timeline, pay_idx),
+                    _ => place_in_interval(&timeline[pay_idx], schedule.on_rule.as_ref()),
+                };
+                // Months step by the calendar, not by 30 days: a six-month lag
+                // is six months, and the two diverge once billing is not at a
+                // month end.
+                let due = match (schedule.net_days, schedule.net_months) {
+                    (_, Some(m)) if m != 0 => billed.add_months(m as i32),
+                    (Some(d), _) if d != 0 => billed.add_days(d as i32),
+                    _ => billed,
+                };
+                let rolled = roll_date(&due, roll);
+
+                // period_index clamps a date past the end to the last period,
+                // which would pile deferred cash into the final bucket and
+                // overstate it. A payment that falls outside the modelled
+                // horizon is a modelling error, not a rounding one.
+                if beyond_timeline(timeline, &rolled) {
+                    return Err(EngineError::Schedule(format!(
+                        "a payment accruing in period {} settles on {} under these payment terms, past the end of the model timeline. Extend the timeline so the cash has a period to land in.",
+                        accrual_idx + 1,
+                        rolled
+                    )));
+                }
                 let settled = period_index(timeline, &rolled).unwrap_or(pay_idx);
-                out[settled] = Some(accrual_idx);
+                out[settled].push(accrual_idx);
             }
         }
         other => {
@@ -1738,13 +1904,13 @@ fn apply_schedule_indices(
     for raw in &schedule.except_dates {
         let target = roll_date(&Date::parse(raw)?, roll);
         if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out[idx] = None;
+            out[idx].clear();
         }
     }
     for raw in &schedule.also_dates {
         let target = roll_date(&Date::parse(raw)?, roll);
         if let Some(idx) = timeline.iter().position(|d| *d == target) {
-            out[idx] = Some(idx);
+            out[idx].push(idx);
         }
     }
     Ok(())
@@ -1888,9 +2054,48 @@ impl Date {
         }
     }
 
+    /// Days since 1970-01-01, negative before it.
+    ///
+    /// Hinnant's civil-from-days, the standard branch-free formulation. Used
+    /// for date differences; `add_days` still walks day by day, which is fine
+    /// for the small offsets payment terms produce.
+    fn to_epoch_days(&self) -> i64 {
+        let y = if self.month <= 2 {
+            self.year - 1
+        } else {
+            self.year
+        } as i64;
+        let era = if y >= 0 { y } else { y - 399 } / 400;
+        let yoe = y - era * 400;
+        let m = self.month as i64;
+        let d = self.day as i64;
+        let doy = (153 * (if m > 2 { m - 3 } else { m + 9 }) + 2) / 5 + d - 1;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        era * 146_097 + doe - 719_468
+    }
+
     fn add_days(&self, days: i32) -> Self {
-        if days <= 0 {
+        if days == 0 {
             return self.clone();
+        }
+        // Stepping backwards used to be a silent no-op, so any caller asking
+        // for a day before a date got the date itself.
+        if days < 0 {
+            let mut out = self.clone();
+            for _ in 0..(-days) {
+                if out.day > 1 {
+                    out.day -= 1;
+                } else {
+                    if out.month == 1 {
+                        out.month = 12;
+                        out.year -= 1;
+                    } else {
+                        out.month -= 1;
+                    }
+                    out.day = days_in_month(out.year, out.month);
+                }
+            }
+            return out;
         }
         let mut out = self.clone();
         for _ in 0..days {
@@ -2119,6 +2324,12 @@ struct IrSchedule {
     /// ordinary annuity — the interval elapses, then payment falls.
     #[serde(default)]
     due: bool,
+    /// How long after a flow is earned its cash moves. Absent means the cash
+    /// lands in the period that earned it.
+    #[serde(default)]
+    net_days: Option<i64>,
+    #[serde(default)]
+    net_months: Option<i64>,
     from: Option<String>,
     to: Option<String>,
     /// Places an occurrence within its interval (`on day <n>` / `on eom`).

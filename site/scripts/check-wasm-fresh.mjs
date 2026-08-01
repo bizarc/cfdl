@@ -35,9 +35,20 @@ try {
   changed = execSync(`git diff --name-only ${base}...HEAD`, { encoding: "utf8" })
     .split("\n")
     .filter(Boolean);
-} catch {
-  console.log(`check-wasm-fresh: cannot diff against ${base} — skipping.`);
-  process.exit(0);
+} catch (error) {
+  // This used to exit 0. It should not: the usual reason the diff fails is a
+  // shallow checkout that never fetched the base ref, which is the default for
+  // actions/checkout. So the gate skipped itself on every CI run and a
+  // five-day-old engine shipped. A guard that cannot see its inputs has not
+  // passed — it has failed to run, and that is a red build.
+  console.error(`check-wasm-fresh: cannot diff against ${base}.\n`);
+  console.error(`  ${error instanceof Error ? error.message.split("\n")[0] : String(error)}\n`);
+  console.error("The base ref must be present locally. In CI, set:");
+  console.error("  - uses: actions/checkout@v4");
+  console.error("    with:");
+  console.error("      fetch-depth: 0");
+  console.error("\nLocally, fetch it:\n  git fetch origin main");
+  process.exit(1);
 }
 
 const engineChanges = changed.filter((f) => ENGINE_PATHS.some((p) => f.startsWith(p)));

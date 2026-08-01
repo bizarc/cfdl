@@ -1,0 +1,312 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-cadence-opco-quarterly",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "quarterly",
+    "start": "2025-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "41fd228904054acae87e152102d7194d",
+      "symbol": "operating.business",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "4ba2aa2a2fa6f1b566fdf3641bfa2f2c",
+      "name": "opco.capex_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2027-10-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 41,
+          "start_col": 1,
+          "end_line": 47,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "002348d044c7ac83ec0f5313684d5d41",
+      "name": "opco.cash_taxes",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2027-10-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 49,
+          "start_col": 1,
+          "end_line": 55,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "593979d7679e224d6876971abd27b740",
+      "name": "opco.opex_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2027-10-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 33,
+          "start_col": 1,
+          "end_line": 39,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "8be92e7fdf9ebfcb0607ffe280885e76",
+      "name": "opco.revenue_line",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "operating.business"
+      },
+      "term": {
+        "start": "2025-01-01",
+        "end": "2027-10-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "e395e791b206a3c302f162ecfbbb2702",
+      "name": "opco.capex",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2025-01-01",
+        "to": "2027-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(0.0 + 60000.0 / 4.0) * pow(1.0 + 0.0, time.t / 4.0) + 0.02 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 41,
+          "start_col": 1,
+          "end_line": 47,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_capex_line"
+        }
+      }
+    },
+    {
+      "id": "4eec156f295fcddc4e6642e887288376",
+      "name": "opco.opex.recurring",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2025-01-01",
+        "to": "2027-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(0.0 + 840000.0 / 4.0) * pow(1.0 + 0.0, time.t / 4.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 33,
+          "start_col": 1,
+          "end_line": 39,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_opex_line"
+        }
+      }
+    },
+    {
+      "id": "cf1275cc300972e467c3732a37056442",
+      "name": "opco.revenue.recurring",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2025-01-01",
+        "to": "2027-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(0.0 + 1440000.0 / 4.0) * pow(1.0 + 0.0, time.t / 4.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_revenue_line"
+        }
+      }
+    },
+    {
+      "id": "ef50f4b10beba460a31f8e4121012d65",
+      "name": "opco.taxes",
+      "owner": {
+        "symbol": "operating.business"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2025-01-01",
+        "to": "2027-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "max(0.0, 0.25 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - (0.0 + 120000.0 / 4.0) * pow(1.0 + 0.0, time.t / 4.0)))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 49,
+          "start_col": 1,
+          "end_line": 55,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_cash_taxes"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e34c911fc30e425c340680e8ce0ae3cc",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

@@ -132,6 +132,30 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             let smm = 1.0 - (1.0 - to_f64(cpr, span)?).powf(1.0 / 12.0);
             Ok(Value::Number(from_f64(smm, span)?))
         }
+        // The cadence-general form of cpr_to_smm: the periodic mortality
+        // equivalent to an annual CPR on a grid of `ppy` periods per year.
+        //
+        // A separate name rather than an optional second argument on
+        // cpr_to_smm, because `cpr_to_smm(0.06, 4)` would read as "single
+        // MONTHLY mortality, quarterly" — a lie in the name. cpr_to_smm keeps
+        // meaning exactly what packs/credit/README.md says it means, forever.
+        //
+        // Note this is a root, not a division: CPR is an effective annual
+        // survival rate, so it converts by (1-x)^(1/ppy). Note rates are
+        // nominal and convert by division. Collapsing the two would be the
+        // next silent-wrong-answer bug.
+        "cpr_to_periodic" => {
+            let [cpr, ppy] = exactly::<2>(name, args, span)?;
+            let periods = to_f64(num(ppy)?, span)?;
+            if periods <= 0.0 {
+                return Err(CalcError::new(
+                    format!("{name}: periods per year must be positive, got {periods}"),
+                    Some(span),
+                ));
+            }
+            let rate = 1.0 - (1.0 - to_f64(num(cpr)?, span)?).powf(1.0 / periods);
+            Ok(Value::Number(from_f64(rate, span)?))
+        }
         "date" => {
             let [y, m, d] = exactly::<3>(name, args, span)?;
             let (y, m, d) = (int(y)?, int(m)?, int(d)?);
@@ -179,6 +203,15 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             let months =
                 (b.year() as i64 - a.year() as i64) * 12 + (b.month() as i64 - a.month() as i64);
             Ok(Value::Number(Decimal::from(months)))
+        }
+        // Whole days from d1 to d2, the day-grid counterpart of
+        // months_between. `d2 - d1` already yields days; this is the named
+        // form, so a pack lowering rule can count elapsed periods on a daily
+        // calendar the same way it does on a monthly one.
+        "days_between" => {
+            let [d1, d2] = exactly::<2>(name, args, span)?;
+            let (a, b) = (date(d1)?, date(d2)?);
+            Ok(Value::Number(Decimal::from(a.days_between(&b))))
         }
         "edate" => {
             let [d, m] = exactly::<2>(name, args, span)?;

@@ -5,6 +5,43 @@ defaults, loss severity and a recovery lag. Benchmarked in
 `benchmarks/credit/` against independent month-by-month reference
 implementations.
 
+> **Supported calendars: all of them.** Two distinct daily shapes both work,
+> and the difference matters:
+>
+> 1. **A daily book that pays monthly** — the ordinary mortgage or ABS pool.
+>    Declare `payment_frequency = "month"` and periods-per-year comes from the
+>    payment rhythm (12), not the calendar (365). A 30-year mortgage on a daily
+>    book is still 360 payments, not 10,950. Verified exactly: the same pool on
+>    a 39-period monthly grid and an 1186-period daily book agrees to the cent
+>    on every stream.
+> 2. **Genuinely daily accrual** — warehouse lines, repo, revolvers,
+>    daily-reset floaters. Leave `payment_frequency` unset and ppy is 365.
+>
+> `term_months` must divide into whole payment periods. For daily accrual that
+> means a tenor that is a multiple of 12 months (360 months → 10,950 days);
+> otherwise `E5015_TERM_MONTHS_NOT_DIVISIBLE` names the nearest legal values.
+>
+> Note the two rate conventions, which must not be confused. The note rate,
+> servicing strip and float margin are **nominal** and divide by ppy. CPR and
+> CDR are **effective annual** and take a root — `cpr_to_periodic(x, ppy)`,
+> which is exactly `cpr_to_smm(x)` at ppy = 12.
+>
+> **Day count is selectable** via a `day_count` term: `30/360` (the default,
+> and what every existing model gets), `30e/360`, `act/360` or `act/365`. It
+> applies to the note rate, the servicing strip and the floating
+> index-plus-margin — every nominal rate in the pack.
+>
+> Under `act/360`, 6% on 1,200,000 accrues 6,200 in a 31-day January and 5,600
+> in February, against a flat 6,000 under 30/360, and 73,000 over a 365-day
+> year rather than 72,000. That 365/360 uplift is the convention's whole point,
+> and it is the USD credit default. A misspelling is `E5019_UNKNOWN_DAY_COUNT`,
+> not a silent fallback.
+>
+> Annual totals do **not** match across monthly / quarterly / annual, and
+> should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
+> which are different instruments. Those cadences are checked against the
+> benchmark reference generators rather than against each other.
+
 ## Contract types
 
 ### `credit.pool_level_pay`

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5015_TERM_MONTHS_NOT_DIVISIBLE",
+    "severity": "error",
+    "message": "Pack lowering rule 'emit_cadence_probe' uses term 'term_months' as a count of payment periods, but 30 months is 2.5 periods at annual frequency. Use a multiple of 12 months, declare a finer payment_frequency, or model on a finer calendar.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 18,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

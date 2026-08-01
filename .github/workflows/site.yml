@@ -7,6 +7,10 @@ on:
       - "site/**"
       - "docs/**"
       - "packs/**"
+      # Engine sources are compiled into the committed wasm bundle, so a
+      # change here can stale it. Without this the freshness gate never runs.
+      - "crates/**"
+      - "Cargo.toml"
       - "examples/**"
       - "benchmarks/**"
       - "distribution/install-configure.md"
@@ -17,6 +21,10 @@ on:
       - "site/**"
       - "docs/**"
       - "packs/**"
+      # Engine sources are compiled into the committed wasm bundle, so a
+      # change here can stale it. Without this the freshness gate never runs.
+      - "crates/**"
+      - "Cargo.toml"
       - "examples/**"
       - "benchmarks/**"
       - "distribution/install-configure.md"
@@ -31,6 +39,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The freshness gates diff against a base ref; the default
+          # shallow clone does not contain it and they now fail hard
+          # rather than skipping.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -62,6 +75,13 @@ jobs:
       - name: No native browser dialogs
         working-directory: site
         run: npm run check:dialogs
+
+      # Two gates that need neither git history nor a triggered path filter:
+      # the engine version baked into the bundle, and a hash of the sources
+      # it was built from. These catch what the commit-range check cannot.
+      - name: Committed wasm bundle matches the engine sources
+        working-directory: site
+        run: npm run check:wasm
 
       # The wasm bundle is committed because Vercel's build image has no Rust
       # toolchain; make sure an engine change can't ship without a rebuild.

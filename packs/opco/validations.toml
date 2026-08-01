@@ -6,13 +6,17 @@ code_prefix = "E7"
 
 # --- operating lines --------------------------------------------------------
 
-# `when = "always"` with no bounds: an absent or unparseable amount both fail.
+# A line must state its size, as either a per-period `amount` or an annual
+# `amount_year`. The pair exists because `amount` is per-period by definition,
+# so the same number means different economics on each calendar; `amount_year`
+# is the grid-independent way to say it. Stating both sums them, which is
+# almost never intended but is not currently rejected.
 [[validations]]
 contracts = ["opco.revenue_line", "opco.opex_line"]
 code = "E7001_OPCO_LINE_MISSING_AMOUNT"
-message = "OpCo line is missing required numeric term 'amount'."
-check = "term_number"
-term = "amount"
+message = "OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual)."
+check = "any_term_present"
+terms = ["amount", "amount_year"]
 when = "always"
 on_invalid = "report"
 

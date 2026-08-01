@@ -65,7 +65,15 @@ contract_stmt   = "contract" qname qname
 
 contract_block  = "{" { contract_item } "}" ;
 
-contract_item   = currency_stmt
+(* Payment terms: how long after a flow is earned its cash moves. Applies to
+   every stream the contract lowers; a schedule may state its own. Bare counts
+   are days, the commercial default — "net 45" is 45 days. Months exist because
+   some lags are genuinely month-based and diverge from any day count once
+   billing is not at a month end. *)
+payment_stmt    = "payment" "net" INT [ "days" | "months" ] ;
+
+contract_item   = payment_stmt
+                | currency_stmt
                 | terms_block
                 | effects_block
                 | parties_block
@@ -127,7 +135,7 @@ schedule_every_phase = "every" interval [ "due" ]
                        "to" "phase_end" "(" string_lit ")"
                        [ schedule_opts ] ;
 
-schedule_every  = "every" interval [ "due" ]
+schedule_every  = "every" interval [ "due" ] [ "net" INT [ "days" | "months" ] ]
                   [ schedule_on_day ]
                   "from" date_lit "to" date_lit
                   [ schedule_opts ] ;

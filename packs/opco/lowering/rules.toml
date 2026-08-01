@@ -3,7 +3,16 @@
 # All rules are template-driven ({{contract.*}}); no hardcoded
 # apply_opco_contract_terms compile path is retired. Conventions:
 #   - Growth is annual-compound, stepped continuously on the MODEL clock:
-#     value(t) = amount * (1 + growth)^(time.t / 12).
+#     value(t) = amount * (1 + growth)^(time.t / periods_per_year).
+#     Note this is the model clock, not the contract's — a deliberate opco
+#     convention, unlike cre/energy anniversary stepping off term_start.
+#   - Annual quantities divide by {{model.periods_per_year}}; NOMINAL rates
+#     divide too (`rate / ppy`). Effective-annual figures would take a root
+#     instead — do not mix the conventions.
+#   - `_months` terms mean calendar months on every calendar. As payment
+#     counts they must divide into whole periods ({{whole_periods.X}}).
+#   - `amount` and `da_monthly` are PER-PERIOD by definition, on whatever grid
+#     the model declares; `da_year` is the annual sibling of the latter.
 #   - Cross-stream contracts (working-capital policy, %-of-revenue capex,
 #     cash taxes, EBITDA exit) reference phase-1 streams via series_sum and
 #     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
@@ -24,12 +33,15 @@ contract_name = "opco.revenue_line"
 stream_name = "opco.revenue.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.growth_rate}}, time.t / {{model.periods_per_year}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+# Either term satisfies E7001; the unstated one contributes zero.
+amount = "0"
+amount_year = "0"
 growth_rate = "0"
 
 [[rules]]
@@ -38,15 +50,18 @@ contract_name = "opco.opex_line"
 stream_name = "opco.opex.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0)"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.growth_rate}}, time.t / {{model.periods_per_year}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+# Either term satisfies E7001; the unstated one contributes zero.
+amount = "0"
+amount_year = "0"
 growth_rate = "0"
 
-# Fixed working-capital adjustment: a constant monthly outflow. For
+# Fixed working-capital adjustment: a constant per-period outflow. For
 # policy-driven working capital see opco.working_capital_policy below.
 [[rules]]
 id = "opco_working_capital"
@@ -90,7 +105,7 @@ contract_name = "opco.working_capital_policy"
 stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "(12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})) - if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) == 0, 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t - 1, time.t - 1)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t - 1, time.t - 1)) * ({{contract.inv_days}} - {{contract.ap_days}}))) - if({{contract.release_at_end}} == 1 and months_between(time.date, parse_date(\"{{contract.term_end}}\")) == 0, (12.0 / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})), 0)"
+amount_expr = "({{model.periods_per_year}} / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})) - if({{time.elapsed_periods}} == 0, 0, ({{model.periods_per_year}} / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t - 1, time.t - 1)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t - 1, time.t - 1)) * ({{contract.inv_days}} - {{contract.ap_days}}))) - if({{contract.release_at_end}} == 1 and {{time.periods_to_term_end}} == 0, ({{model.periods_per_year}} / 365.0) * ((series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.ar_days}} - (series_sum(\"opco.opex.recurring.*\", time.t, time.t)) * ({{contract.inv_days}} - {{contract.ap_days}})), 0)"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -111,12 +126,13 @@ contract_name = "opco.capex_line"
 stream_name = "opco.capex{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "{{contract.amount}} * pow(1 + {{contract.growth_rate}}, time.t / 12.0) + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.growth_rate}}, time.t / {{model.periods_per_year}}) + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+amount_year = "0"
 amount = "0"
 growth_rate = "0"
 pct_of_revenue = "0"
@@ -150,7 +166,7 @@ contract_name = "opco.term_debt"
 stream_name = "opco.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.io_months}}, {{contract.principal}} * ({{contract.rate}} / 12), -ipmt({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, {{contract.amort_months}}, {{contract.principal}}))"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -ipmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}}))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -165,7 +181,7 @@ stream_name = "opco.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 # Scheduled amortization plus the balloon (remaining balance) at term_end.
-amount_expr = "if(months_between(parse_date(\"{{contract.term_start}}\"), time.date) < {{contract.io_months}}, 0, -ppmt({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, {{contract.amort_months}}, {{contract.principal}})) + if(months_between(time.date, parse_date(\"{{contract.term_end}}\")) == 0, -fv({{contract.rate}} / 12, months_between(parse_date(\"{{contract.term_start}}\"), time.date) - {{contract.io_months}} + 1, pmt({{contract.rate}} / 12, {{contract.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, 0, -ppmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -186,13 +202,14 @@ contract_name = "opco.cash_taxes"
 stream_name = "opco.taxes{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "max(0, {{contract.tax_rate}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - {{contract.da_monthly}} * pow(1 + {{contract.da_growth}}, time.t / 12.0)))"
+amount_expr = "max(0, {{contract.tax_rate}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - ({{contract.da_monthly}} + {{contract.da_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.da_growth}}, time.t / {{model.periods_per_year}})))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 da_monthly = "0"
+da_year = "0"
 da_growth = "0"
 
 # ---------------------------------------------------------------------------
@@ -207,7 +224,7 @@ contract_name = "opco.exit_ebitda"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - 11, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 11, time.t)) * (1 - {{contract.selling_costs}})"
+amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * (1 - {{contract.selling_costs}})"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""

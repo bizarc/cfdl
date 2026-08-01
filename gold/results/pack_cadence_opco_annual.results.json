@@ -1,0 +1,163 @@
+{
+  "results_version": "0.2",
+  "model_hash": "cb173eaad1fb2cd92519f36d85b5cd31e6886c823b5b03ae36bbf8a43f2b491c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.operating.business.total": {
+        "amount": 1173600.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 972856.498873,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1173600.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.opco.capex.total": {
+        "amount": -266400.0,
+        "currency": "USD"
+      },
+      "stream.opco.opex.recurring.total": {
+        "amount": -2520000.0,
+        "currency": "USD"
+      },
+      "stream.opco.revenue.recurring.total": {
+        "amount": 4320000.0,
+        "currency": "USD"
+      },
+      "stream.opco.taxes.total": {
+        "amount": -360000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 391200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 391200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 391200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.capex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.opex.recurring": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -840000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -840000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -840000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.revenue.recurring": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1440000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1440000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1440000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.taxes": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -120000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

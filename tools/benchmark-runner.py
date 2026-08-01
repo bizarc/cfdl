@@ -5,11 +5,19 @@ Each case directory (benchmarks/<pack>/<case>/) contains:
   model.cfdl            the CFDL model
   run.json              run configuration
   case.toml             pack name + per-period tolerance
-  expected.csv          period,net_cash_flow from an independent reference
+  expected.csv          per-period expectations from an independent reference
   expected_metrics.json metric -> {value, tolerance}
 
 The harness compiles and runs each case with the cfdl CLI and fails if any
-period-level net cash flow or summary metric drifts outside its tolerance.
+period-level value or summary metric drifts outside its tolerance.
+
+expected.csv is indexed by either `period` (the 0-based period number) or
+`year` (any label; rows are taken in order, so the first row is period 0).
+Every other column names a series to check: `net_cash_flow` is the model
+total, and anything else is a stream id, matched against `stream.<column>`.
+A case may check the total alone, or every stream line individually — the
+latter localises a break to one stream instead of only reporting that the
+total moved. Blank cells are skipped, so a column need not span every row.
 """
 import csv
 import json
@@ -33,6 +41,36 @@ def scalar(value):
     if isinstance(value, dict) and "amount" in value:
         return float(value["amount"])
     return float(value)
+
+
+def resolve_columns(fieldnames, series, failures):
+    """Map expected.csv headers onto result series.
+
+    Returns (index_column, [(csv_column, series_key, label)]) or None if the
+    header cannot be resolved, in which case `failures` says why.
+    """
+    fields = list(fieldnames or [])
+    index_col = next((c for c in ("period", "year") if c in fields), None)
+    if index_col is None:
+        failures.append("expected.csv: need a 'period' or 'year' column")
+        return None
+
+    columns = []
+    for column in fields:
+        if column == index_col:
+            continue
+        if column == "net_cash_flow":
+            key, label = "model.net_cash_flow", "net"
+        else:
+            key, label = f"stream.{column}", column
+        if key not in series:
+            failures.append(f"expected.csv column {column!r}: no series {key!r} in results")
+            continue
+        columns.append((column, key, label))
+    if not columns:
+        failures.append("expected.csv: no columns to check")
+        return None
+    return index_col, columns
 
 
 def run_case(case_dir: pathlib.Path) -> list[str]:
@@ -60,24 +98,38 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
     if results.get("warnings"):
         failures.append(f"engine warnings: {results['warnings'][:3]}")
 
-    actual = [
-        scalar(v)
-        for v in results["deterministic"]["series"]["model.net_cash_flow"]["values"]
-    ]
+    series = results["deterministic"]["series"]
     tolerance = float(case.get("period_tolerance", 0.01))
     with open(case_dir / "expected.csv") as fh:
-        for row in csv.DictReader(fh):
-            t = int(row["period"])
-            expected = float(row["net_cash_flow"])
-            got = actual[t]
-            if abs(got - expected) > tolerance:
-                failures.append(
-                    f"period {t}: net {got:.6f} vs expected {expected:.6f} "
-                    f"(|diff| {abs(got - expected):.6f} > {tolerance})"
-                )
-                if len(failures) > 5:
-                    failures.append("... (truncated)")
+        reader = csv.DictReader(fh)
+        resolved = resolve_columns(reader.fieldnames, series, failures)
+        if resolved is None:
+            return failures
+        index_col, columns = resolved
+        values = {
+            key: [scalar(v) for v in series[key]["values"]] for _, key, _ in columns
+        }
+        for row_no, row in enumerate(reader):
+            t = int(row[index_col]) if index_col == "period" else row_no
+            for column, key, label in columns:
+                cell = (row.get(column) or "").strip()
+                if not cell:
+                    continue
+                actual = values[key]
+                if t >= len(actual):
+                    failures.append(
+                        f"{label} period {t}: beyond the {len(actual)}-period timeline"
+                    )
                     return failures
+                got, expected = actual[t], float(cell)
+                if abs(got - expected) > tolerance:
+                    failures.append(
+                        f"{label} period {t}: {got:.6f} vs expected {expected:.6f} "
+                        f"(|diff| {abs(got - expected):.6f} > {tolerance})"
+                    )
+                    if len(failures) > 5:
+                        failures.append("... (truncated)")
+                        return failures
 
     metrics = dict(results["deterministic"]["metrics"])
     domain = results.get("domain_metrics") or {}

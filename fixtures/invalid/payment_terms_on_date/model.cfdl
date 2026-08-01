@@ -1,0 +1,12 @@
+version 0.1
+model "payment-terms-on-date"
+time calendar monthly from 2026-01 for 12
+
+entity legal co
+
+// A one-shot flow has no accrual period to settle after: the date it names is
+// already the date the cash moves.
+stream co.fee on entity legal.co outflow currency USD {
+  schedule on 2026-03 net 30
+  amount = 500
+}

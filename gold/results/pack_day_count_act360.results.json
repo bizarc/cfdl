@@ -1,0 +1,616 @@
+{
+  "results_version": "0.2",
+  "model_hash": "0d651a34ca0c426303dea4e88114a58a9c556d48b284df32a3416a6c31cbbb68",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.fund.buyer.total": {
+        "amount": 1273000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1160247.662274,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1273000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.890508,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.credit.pool.bullet.p.total": {
+        "amount": 1200000.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.interest.p.total": {
+        "amount": 73000.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.penalty.p.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.prepay.p.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.recoveries.p.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.servicing.p.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5600.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1206200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.bullet.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.interest.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5600.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.penalty.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.prepay.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.recoveries.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.servicing.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1273000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.bullet.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1200000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.interest.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 73000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.penalty.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.prepay.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.recoveries.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.servicing.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

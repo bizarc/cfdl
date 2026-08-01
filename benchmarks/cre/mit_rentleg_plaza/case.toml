@@ -1,0 +1,15 @@
+# Benchmark case: Rentleg Plaza — MIT OCW 11.431J Problem Set 1, Part C.
+#
+# 30,000 NRSF office, two suites, annual 5-year DCF (2001-2005). Expense stops
+# at two different levels, a base-year stop reset on re-lease, occupancy-varying
+# operating expenses, probability-weighted rollover, a one-time market rent
+# spike, and a reversion at 10x forward NOI net of a 5% commission.
+#
+# Reference: EXTERNAL. MIT OpenCourseWare 11.431J/15.426J Fall 2006, Problem
+# Set 1 (CC BY-NC-SA 4.0). The problem set publishes both the full pro forma
+# table and the answer, PV @ 12% = $2,292,810. This is the first benchmark in
+# the suite checked against a published third-party number rather than against
+# an in-house reference_gen.py.
+# Status: verified — every pro forma line and the published PV reproduce.
+pack = "cre"
+period_tolerance = 0.01

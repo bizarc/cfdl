@@ -30,8 +30,12 @@ async function loadWasm(): Promise<WasmModule> {
   if (!loading) {
     loading = (async () => {
       const base = self.location.origin;
-      const glueUrl = `${base}/wasm/cfdl_wasm.js`;
-      const binaryUrl = `${base}/wasm/cfdl_wasm_bg.wasm`;
+      // Both URLs are fixed, so a returning visitor would otherwise keep a
+      // cached engine after a new one deploys. The build id is a hash of the
+      // engine and pack sources: it changes exactly when the bundle does.
+      const build = process.env.NEXT_PUBLIC_WASM_BUILD ?? "dev";
+      const glueUrl = `${base}/wasm/cfdl_wasm.js?v=${build}`;
+      const binaryUrl = `${base}/wasm/cfdl_wasm_bg.wasm?v=${build}`;
       const mod = (await import(/* webpackIgnore: true */ glueUrl)) as WasmModule;
       await mod.default(binaryUrl);
       wasm = mod;
