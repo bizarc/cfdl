@@ -75,8 +75,7 @@
         "from": "2026-01-01",
         "to": "2026-03-31",
         "on_rule": {
-          "kind": "EndOfMonth",
-          "day": 0
+          "kind": "EndOfMonth"
         }
       },
       "amount": {

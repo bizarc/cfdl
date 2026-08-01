@@ -1013,6 +1013,14 @@ fn completion_items(context: &AnalysisContext) -> Vec<CompletionItem> {
         keyword_completion("stream"),
         keyword_completion("schedule"),
         keyword_completion("every"),
+        // Schedule intervals, offered after `every`. Distinct from the
+        // calendar cadence keywords, which describe the model's grid.
+        keyword_completion("day"),
+        keyword_completion("week"),
+        keyword_completion("month"),
+        keyword_completion("quarter"),
+        keyword_completion("year"),
+        keyword_completion("due"),
         keyword_completion("on"),
     ];
 

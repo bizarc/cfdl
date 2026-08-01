@@ -47,7 +47,11 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench analytic doc-examples
+ci: fmt lint test gold bench analytic ir-schema doc-examples
+
+# The published IR schema is a contract; check the emitter still satisfies it.
+ir-schema:
+	python3 tools/check-ir-schema.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot

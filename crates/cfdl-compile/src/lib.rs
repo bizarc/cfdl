@@ -461,7 +461,8 @@ struct IrContract {
 #[derive(Debug, Serialize)]
 struct IrOnRule {
     kind: String,
-    day: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    day: Option<i32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1945,14 +1946,16 @@ fn lower_schedule(
     // The IR's OnRule already declares EndOfMonth; `on eom` now reaches it
     // instead of failing to parse.
     let on_rule = if schedule.end_of_month {
+        // End of month has no day-of-month; the field is omitted rather than
+        // written as 0, which the IR schema's 1..31 bound rejects.
         Some(IrOnRule {
             kind: "EndOfMonth".to_string(),
-            day: 0,
+            day: None,
         })
     } else {
         schedule.day_of_month.map(|day| IrOnRule {
             kind: "DayOfMonth".to_string(),
-            day,
+            day: Some(day),
         })
     };
     match &schedule.kind {
