@@ -3165,10 +3165,12 @@ mod pack_validation_parity_tests {
         // lists is the deliberate act of declaring it neutral, and it fails
         // here until the conversion actually lands.
         //
-        // Terminal state: STILL_MONTHLY empty, every pack unconstrained, and
-        // the `cadences` field deleted from every manifest.
-        const STILL_MONTHLY: [&str; 1] = ["cre"];
-        const CADENCE_NEUTRAL: [&str; 4] = ["credit", "energy", "opco", "testpack"];
+        // Terminal state, now reached: no first-party pack is gated. The
+        // `cadences` field stays in the schema — a third-party pack may still
+        // need it, and it is the honest way to say "these rules assume a
+        // period length" — but no shipped pack declares it any more.
+        const STILL_MONTHLY: [&str; 0] = [];
+        const CADENCE_NEUTRAL: [&str; 5] = ["cre", "credit", "energy", "opco", "testpack"];
 
         for pack in STILL_MONTHLY {
             assert_eq!(
@@ -3283,5 +3285,72 @@ mod pack_validation_parity_tests {
             add_periods_for_timeline_end("2026-01-01", "annual", 3),
             "2028-01-01"
         );
+    }
+
+    #[test]
+    fn a_gated_pack_refuses_a_calendar_it_does_not_support() {
+        // E5013's fixture used the cre pack on an annual calendar. That now
+        // compiles — cre is neutral — so the check moves here rather than
+        // being lost. `cadences` remains a supported manifest field: a
+        // third-party pack whose rules assume a period length still needs an
+        // honest way to say so.
+        let mut pack = ctx("testpack");
+        pack.cadences = vec!["monthly".to_string()];
+        let contract = contract("test.fee_contract", &[("rate", "100")], true);
+        let stmt = source_stmt(&contract);
+
+        let on_quarterly = validate_pack_contract(
+            &pack,
+            &stmt,
+            &contract,
+            "quarterly",
+            "2026-01-01",
+            8,
+            "2027-10-01",
+        );
+        assert!(
+            on_quarterly
+                .iter()
+                .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+            "expected E5013 on an unsupported calendar, got {:?}",
+            on_quarterly.iter().map(|d| &d.code).collect::<Vec<_>>()
+        );
+
+        let on_monthly = validate_pack_contract(
+            &pack,
+            &stmt,
+            &contract,
+            "monthly",
+            "2026-01-01",
+            12,
+            "2026-12-01",
+        );
+        assert!(
+            !on_monthly
+                .iter()
+                .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+            "a supported calendar must not fire E5013"
+        );
+
+        // And an unconstrained pack is unaffected on every calendar.
+        let open = ctx("testpack");
+        assert!(open.cadences.is_empty());
+        for calendar in ["daily", "monthly", "quarterly", "annual"] {
+            let diags = validate_pack_contract(
+                &open,
+                &stmt,
+                &contract,
+                calendar,
+                "2026-01-01",
+                12,
+                "2026-12-01",
+            );
+            assert!(
+                !diags
+                    .iter()
+                    .any(|d| d.code == "E5013_PACK_CADENCE_UNSUPPORTED"),
+                "an unconstrained pack must not be gated on {calendar}"
+            );
+        }
     }
 }

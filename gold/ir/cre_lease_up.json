@@ -68,7 +68,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "25000.0 * clamp((months_between(parse_date(\"2026-07-01\"), time.date) + 1.0) / 18.0, 0.0, 1.0)"
+        "src": "(25000.0 + 0.0 / 12.0) * clamp((months_between(parse_date(\"2026-07-01\"), time.date) + 1.0) / 18.0, 0.0, 1.0)"
       },
       "active_when": {
         "lang": "cfdl",

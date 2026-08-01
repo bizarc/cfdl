@@ -1,0 +1,48 @@
+version 0.1
+model "pack-cadence-cre-annual"
+use pack "cre" version "0.1.0"
+time calendar annual from 2025-01 for 3 project 1
+
+entity asset tower
+
+// One lease on three calendars: 480,000/yr, five months free at the start,
+// 3% anniversary escalation, recoveries above a 300,000 stop at 40%.
+//
+// The five free months are the interesting part. They are FIVE CALENDAR
+// MONTHS on every grid — a fact about the lease, not the modeller's choice —
+// so they pro-rate: 5 periods monthly, 1.667 quarterly, 0.417 annually. Only
+// exact pro-rating makes the annual figures agree.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2025-01..2028-01
+  terms {
+    rent_year = 480000
+    free_rent_months = 5
+    escalation = 0.03
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 300000
+    pro_rata_share = 0.40
+  }
+}
+
+contract cre.property_opex on entity asset.tower {
+  term 2025-01..2028-01
+  terms {
+    opex_year = 300000
+    escalation = 0.025
+  }
+}
+
+// The operating terms run through the projection tail so the exit has a
+// forward year to read. A hand-written stream could not reach the tail
+// before E2103 was widened; a pack contract always could.
+// Exit on forward NOI derived from the modelled streams over the next YEAR,
+// which is `project 1` periods on this grid — the window that used to be a
+// hardcoded twelve.
+contract cre.exit_forward on entity asset.tower {
+  term 2027-01..2027-01
+  terms {
+    exit_cap = 0.065
+    selling_costs = 0.02
+  }
+}

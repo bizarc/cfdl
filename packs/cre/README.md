@@ -3,14 +3,25 @@
 This pack provides deterministic lowering for a minimal Commercial Real Estate
 developer lifecycle:
 
-> **Supported calendars: `monthly` only.**
-> Every rule in this pack divides annual figures by a literal 12 and counts
-> elapsed time in months, so one period must be one month. On any other grid
-> the schedule adapts but the amounts do not — figures come out twelve times
-> too small with no diagnostic. The pack therefore declares
-> `cadences = ["monthly"]` and a model on another calendar is rejected with
-> `E5013_PACK_CADENCE_UNSUPPORTED` rather than given a plausible wrong answer.
-> This is a migration scaffold and is being lifted rule by rule.
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Annual quantities (`rent_year`, `opex_year`, `market_rent_year`,
+> `potential_gross_year`, `sales_year`) divide by the rule's own
+> periods-per-year, not a literal 12.
+>
+> `_months` terms — `free_rent_months`, `downtime_months`, `lease_up_months` —
+> always mean **calendar months**, on every calendar. They describe the lease,
+> not the modeller's grid, so they pro-rate exactly: five months free rent is
+> 5 periods monthly, 1.667 quarterly and 0.417 annually, and year one comes out
+> at 480,000 x 7/12 = 280,000 on all three.
+>
+> `base_rent` on `cre.lease` is per-period by definition; `base_rent_year` is
+> its annual sibling and is how to state a lease grid-independently. A lease
+> must give one of the two (`E6001`).
+>
+> `cre.exit_forward` derives NOI over the **year** after the sale, which is
+> `project 12` on a monthly model, `project 4` quarterly and `project 1`
+> annually — it used to be a hardcoded twelve periods, meaning twelve years on
+> an annual grid.
 
 - construction (`cre.construction_stub`)
 - lease-up (`cre.lease`)
@@ -247,8 +258,9 @@ contract cre.rollover.tenant_a on entity asset.tower {
 }
 ```
 
-The `project 12` tail extends evaluation past the hold so exit valuation
-sees a full forward year. Rollover windows start AT EXPIRY; escalations
+The projection tail extends evaluation past the hold so exit valuation sees
+a full forward year: `project 12` on a monthly model, `project 4` quarterly,
+`project 1` annually. Rollover windows start AT EXPIRY; escalations
 step on lease anniversaries.
 
 ## Run it

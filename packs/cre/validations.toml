@@ -14,9 +14,9 @@ code_prefix = "E6"
 [[validations]]
 contract = "cre.lease"
 code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
-message = "CRE lease is missing required term 'base_rent'."
-check = "term_present"
-term = "base_rent"
+message = "CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual)."
+check = "any_term_present"
+terms = ["base_rent", "base_rent_year"]
 
 [[validations]]
 contract = "cre.lease"

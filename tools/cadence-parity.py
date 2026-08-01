@@ -93,6 +93,12 @@ GROUPS: list[tuple[str, str, list[str], dict[str, str]]] = [
         ["monthly", "daily_monthly_pay"],
         {},
     ),
+    (
+        "pack_cadence_cre",
+        "cre",
+        ["monthly", "quarterly", "annual"],
+        {},
+    ),
 ]
 
 
