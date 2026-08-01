@@ -22,3 +22,17 @@ schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 units = "10"
+
+[[rules]]
+# A rule that pays on its own rhythm rather than the model's calendar cadence:
+# a quarterly coupon on a monthly model. Covers schedule_every end to end.
+id = "emit_quarterly_coupon"
+contract_name = "test.coupon_contract"
+stream_name = "testpack.coupon"
+owner_entity = "legal.borrower"
+direction = "inflow"
+amount_expr = "2500"
+schedule_kind = "every"
+schedule_every = "quarter"
+schedule_from = "2026-01"
+schedule_to = "2027-12"

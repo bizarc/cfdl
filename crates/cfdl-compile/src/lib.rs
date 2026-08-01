@@ -1251,6 +1251,42 @@ fn lower_contract_streams(
             }
             let rule = &expanded_rule;
 
+            // A rule may declare its own interval; it must be a real one and no
+            // finer than the grid, or several payments would land in one
+            // period and collapse into a single figure.
+            if !rule.schedule_every.is_empty() {
+                match (
+                    interval_grain(&rule.schedule_every),
+                    cadence_grain(ctx.time_calendar),
+                ) {
+                    (None, _) => {
+                        diagnostics.push(lowering_rule_diag(
+                            "E5012_RULE_INVALID_INTERVAL",
+                            &format!(
+                                "Pack lowering rule '{}' declares schedule_every = '{}', which is not an interval. Use day, week, month, quarter or year.",
+                                rule.id, rule.schedule_every
+                            ),
+                            source_stmt,
+                            contract.span,
+                        ));
+                        continue;
+                    }
+                    (Some(i), Some(c)) if i < c => {
+                        diagnostics.push(lowering_rule_diag(
+                            "E2108_SCHEDULE_FINER_THAN_CALENDAR",
+                            &format!(
+                                "Pack lowering rule '{}' pays every {} but the model's calendar is {}. Several payments would fall in one period and collapse into one.",
+                                rule.id, rule.schedule_every, ctx.time_calendar
+                            ),
+                            source_stmt,
+                            contract.span,
+                        ));
+                        continue;
+                    }
+                    _ => {}
+                }
+            }
+
             // An empty rule currency defers to the model's, which is what keeps
             // a pack usable outside the United States. A rule that pins one is
             // asserting the instrument is denominated in that currency, so the
@@ -1435,6 +1471,31 @@ fn rule_matches_contract(rule_contract: &str, contract_name: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('.'))
 }
 
+/// Relative coarseness of a schedule interval and a calendar cadence, so the
+/// two can be compared. Mirrors `cfdl_validate`'s check for hand-written
+/// streams; a pack must not be able to express what a model may not.
+fn interval_grain(interval: &str) -> Option<u8> {
+    match interval {
+        "day" => Some(0),
+        "week" => Some(1),
+        "month" => Some(2),
+        "quarter" => Some(3),
+        "year" => Some(4),
+        _ => None,
+    }
+}
+
+fn cadence_grain(cadence: &str) -> Option<u8> {
+    match cadence {
+        "daily" => Some(0),
+        "weekly" => Some(1),
+        "monthly" => Some(2),
+        "quarterly" => Some(3),
+        "annual" => Some(4),
+        _ => None,
+    }
+}
+
 fn lower_pack_rule_schedule(
     rule: &cfdl_pack::LoweringRule,
     time_calendar: &str,
@@ -1461,7 +1522,14 @@ fn lower_pack_rule_schedule(
             kind: "Every".to_string(),
             due: rule.schedule_due,
             on: None,
-            every: Some(time_calendar.to_string()),
+            // A rule may pay on its own rhythm — a quarterly coupon on a
+            // monthly model. Unset means the calendar cadence, which is what
+            // most rules want and what every shipped rule uses.
+            every: Some(if rule.schedule_every.is_empty() {
+                time_calendar.to_string()
+            } else {
+                interval_to_frequency(&rule.schedule_every).to_string()
+            }),
             from: Some(normalize_date(if rule.schedule_from.is_empty() {
                 time_start
             } else {

@@ -1,0 +1,117 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-quarterly-interval",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "bf515335aa2bff185d331ec978fdc431",
+      "symbol": "legal.borrower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "a04ab12d681f0b5fc6ae7961e9e4dc5a",
+      "name": "test.coupon_contract",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "legal.borrower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "406f027614e95d8cb6020a9701bf27aa",
+      "name": "testpack.coupon",
+      "owner": {
+        "symbol": "legal.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "2500.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "testpack",
+            "version": "0.1.0"
+          },
+          "rule_id": "emit_quarterly_coupon"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.6.0",
+      "hash": "652ac8a2baee6d55af40add259f106fc",
+      "notes": [
+        "active_pack=testpack@0.1.0"
+      ]
+    }
+  }
+}
