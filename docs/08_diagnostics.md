@@ -403,5 +403,14 @@ For invalid fixtures, store expected diagnostics as:
 
 Rules:
 - Assert `code`, `severity`, `file`, and `span`.
-- Messages may be asserted via substring match to allow minor wording changes.
+- Messages are asserted in FULL. `tools/golden-runner` compares canonical JSON
+  and diffs it, so rewording a message changes a golden and must be re-blessed
+  with `CFDL_GOLD_UPDATE=1`.
+
+  An earlier revision of this page said messages "may be asserted via substring
+  match to allow minor wording changes". No runner has ever done that. The
+  exact comparison is the better behaviour and is kept deliberately: a
+  diagnostic's wording is part of its contract with the reader, and a silent
+  drift in what the compiler says is exactly as bad as a silent drift in what
+  it computes. Making a reword show up in a diff is the point, not friction.
 

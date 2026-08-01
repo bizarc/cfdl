@@ -261,7 +261,7 @@ v0.1 recommended declarative structure:
           "stream_name": "rent",
           "owner": "${subject}",
           "direction": "inflow",
-          "currency": "${contract.currency}",
+          "currency": "",
           "schedule": {"kind": "Every", "every": "monthly", "on_rule": {"kind": "EndOfMonth"}},
           "amount_expr": {"lang": "cfdl", "src": "{{contract.base_rent}}"}
         }
@@ -272,8 +272,16 @@ v0.1 recommended declarative structure:
 ```
 
 Template rules:
-- `${subject}` resolves to the contract subject entity symbol.
-- `${contract.currency}` resolves to the contract currency.
+- `${subject}` resolves to the contract subject entity symbol. It is the only
+  `${...}` substitution, and it applies to `owner_entity` alone.
+
+`currency` is **not** templated, and earlier revisions of this page were wrong
+to describe a `${contract.currency}`: a contract has no currency to resolve —
+`ContractStmt` carries no such field, so nothing could ever have supplied one.
+The real mechanism is simpler. Leave a rule's `currency` empty and the stream
+inherits the model's declared currency, which is what keeps a pack usable
+outside the United States. Set it only when the instrument is genuinely fixed
+to one currency, and the model must then agree (`E2107`).
 
 ### Schedule interval
 

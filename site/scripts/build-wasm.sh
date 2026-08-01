@@ -39,10 +39,14 @@ fi
 
 HAVE_WASM_PACK="$(wasm-pack --version 2>/dev/null | awk '{print $2}')"
 if [[ "${HAVE_WASM_PACK}" != "${WASM_PACK_VERSION}" ]]; then
-  echo "build-wasm: wasm-pack ${HAVE_WASM_PACK} found, but this repo pins ${WASM_PACK_VERSION}." >&2
-  echo "  Install:  cargo install wasm-pack --version ${WASM_PACK_VERSION} --force" >&2
-  echo "  Or bump WASM_PACK_VERSION in this script, deliberately." >&2
-  exit 1
+  # A warning, not an error. wasm-pack installs globally, so failing here would
+  # push contributors into `cargo install --force`, downgrading the copy every
+  # other project on their machine uses — disproportionate for a difference
+  # that shows up as bundle size and wasm-bindgen glue, not as wrong numbers.
+  # The freshness gates hash SOURCES, so they stay correct either way.
+  echo "build-wasm: NOTE — wasm-pack ${HAVE_WASM_PACK} in use; this repo builds with ${WASM_PACK_VERSION}." >&2
+  echo "  The bundle will differ in size and glue from the committed one." >&2
+  echo "  To match exactly:  cargo install wasm-pack --version ${WASM_PACK_VERSION}" >&2
 fi
 
 if ! rustup target list --installed 2>/dev/null | grep -q wasm32-unknown-unknown; then
