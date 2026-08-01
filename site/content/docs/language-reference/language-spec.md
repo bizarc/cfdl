@@ -447,6 +447,13 @@ schedule every quarter from phase_start("hold") to phase_end("hold")
   - (a) define a deterministic mapping rule, or
   - (b) reject schedules that cannot be represented at the timeline grain.
 
+A schedule MUST NOT be finer than the master timeline. An interval of `week`
+on a monthly calendar, or `month` on a quarterly one, is rejected
+(`E2108_SCHEDULE_FINER_THAN_CALENDAR`) rather than silently collapsed: several
+occurrences in one period cannot be distinguished once they land in the same
+bucket. Coarser is fine — a quarterly schedule on a monthly grid pays in every
+third period, which is representable.
+
 Recommended v0.1 rule (normative):
 - If timeline is monthly/quarterly/annual, schedule occurrences are represented at that period’s end-date unless the schedule specifies otherwise.
 

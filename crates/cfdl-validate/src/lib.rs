@@ -236,7 +236,34 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                             });
                         }
                     }
-                    ScheduleKind::OnDate | ScheduleKind::Every => {}
+                    ScheduleKind::OnDate => {}
+                    ScheduleKind::Every => {
+                        // A schedule finer than the grid cannot be
+                        // represented: several occurrences would fall in one
+                        // period and collapse into a single payment. A weekly
+                        // schedule on a monthly grid used to pay twelve times
+                        // a year instead of fifty-two, silently.
+                        if let Some(interval) = schedule.every.as_deref() {
+                            if let (Some(i), Some(c)) =
+                                (interval_grain(interval), cadence_grain(timeline.cadence))
+                            {
+                                if i < c {
+                                    diagnostics.push(ValidationDiagnostic {
+                                        code: "E2108_SCHEDULE_FINER_THAN_CALENDAR",
+                                        message: format!(
+                                            "Stream '{}' pays every {} but the model's calendar is {}. Several payments would fall in one period and collapse into one. Use an interval of {} or longer, or declare a finer calendar.",
+                                            stream.name,
+                                            interval,
+                                            cadence_name(timeline.cadence),
+                                            cadence_name(timeline.cadence),
+                                        ),
+                                        file: source_stmt.file.clone(),
+                                        span: schedule.span,
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             }
             _ => {}
@@ -302,7 +329,14 @@ fn choose_timeline(output: &ResolveOutput) -> Option<(String, Timeline)> {
         if let Stmt::Time(time) = &source_stmt.statement {
             if let Some(start) = parse_date(&time.from) {
                 let end = end_of_timeline(start, time.cadence, time.periods);
-                return Some((source_stmt.file.clone(), Timeline { start, end }));
+                return Some((
+                    source_stmt.file.clone(),
+                    Timeline {
+                        start,
+                        end,
+                        cadence: time.cadence,
+                    },
+                ));
             }
         }
     }
@@ -316,10 +350,43 @@ struct Date {
     day: u32,
 }
 
+/// Relative coarseness, so a schedule interval can be compared against the
+/// calendar cadence. Higher is coarser; a schedule must be at least as coarse
+/// as the grid it is evaluated on.
+fn interval_grain(interval: &str) -> Option<u8> {
+    match interval {
+        "day" => Some(0),
+        "week" => Some(1),
+        "month" => Some(2),
+        "quarter" => Some(3),
+        "year" => Some(4),
+        _ => None,
+    }
+}
+
+fn cadence_grain(cadence: Cadence) -> Option<u8> {
+    match cadence {
+        Cadence::Daily => Some(0),
+        Cadence::Monthly => Some(2),
+        Cadence::Quarterly => Some(3),
+        Cadence::Annual => Some(4),
+    }
+}
+
+fn cadence_name(cadence: Cadence) -> &'static str {
+    match cadence {
+        Cadence::Daily => "daily",
+        Cadence::Monthly => "monthly",
+        Cadence::Quarterly => "quarterly",
+        Cadence::Annual => "annual",
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Timeline {
     start: Date,
     end: Date,
+    cadence: Cadence,
 }
 
 fn parse_date(raw: &str) -> Option<Date> {

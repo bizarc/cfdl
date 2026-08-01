@@ -1,0 +1,13 @@
+version 0.1
+model "schedule-finer-than-calendar"
+time calendar monthly from 2026-01 for 24
+
+entity legal co
+
+// A weekly schedule on a monthly grid is unrepresentable: four or five
+// occurrences fall in each period and collapse into a single payment, so the
+// model paid 24 times over two years instead of about 104 — silently.
+stream co.rent on entity legal.co inflow currency USD {
+  schedule every week from 2026-01 to 2027-12
+  amount = 1000
+}

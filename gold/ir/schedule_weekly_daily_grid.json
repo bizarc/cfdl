@@ -1,0 +1,80 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "schedule-weekly-daily-grid",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "daily",
+    "start": "2026-01-01",
+    "periods": 120
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0341a5ea4761b9da3938677ffe47e3fd",
+      "symbol": "legal.co",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "7ea56ce872f8e0bc061ab37b01fd6b2d",
+      "name": "co.payroll",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "weekly",
+        "from": "2026-01-01",
+        "to": "2026-03-31"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 13,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.6.0",
+      "hash": "9185eab14e4fe744bd35f7bbcbd1ae4e"
+    }
+  }
+}
