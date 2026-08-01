@@ -203,6 +203,11 @@ Parser errors MUST use `E0xxx_...` codes.
   model's reporting currency. Cash flows are summed period by period, so the
   two would be added as if they were the same unit. Convert explicitly in the
   amount expression, or declare the model in that currency.
+- `E2108_SCHEDULE_FINER_THAN_CALENDAR` — the schedule's interval is finer than
+  the model's calendar cadence, so several occurrences would fall in one period
+  and collapse into a single payment. A weekly schedule on a monthly grid paid
+  twelve times a year rather than fifty-two. Use a coarser interval, or declare
+  a finer calendar.
 
 ### 7.6 Events and actions (E22xx)
 - `E2201_EVENT_WHEN_NOT_BOOL`

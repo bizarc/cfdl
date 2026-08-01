@@ -23,15 +23,18 @@ statement       = version_stmt
 version_stmt    = "version" number ;
 
 model_stmt      = "model" string_lit model_attr* ;
-model_attr      = "currency" IDENT ;
+model_attr      = "currency" IDENT ;   (* reporting currency; defaults to USD *)
 
 use_pack_stmt   = "use" "pack" string_lit "version" string_lit ;
 
 import_stmt     = "import" string_lit [ "as" IDENT ] ;
 
 (* --- time --- *)
-time_stmt       = "time" "calendar" frequency "from" date_lit "for" INT [ "project" INT ] ;
-frequency       = "daily" | "monthly" | "quarterly" | "annual" ;
+time_stmt       = "time" "calendar" cadence "from" date_lit "for" INT [ "project" INT ] ;
+
+(* The grid a model is evaluated on. Adjectival, and deliberately spelled
+   differently from a schedule interval. *)
+cadence         = "daily" | "monthly" | "quarterly" | "annual" ;
 
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
 
@@ -119,31 +122,37 @@ schedule_on     = "on" date_lit ;
 
 schedule_phase_enter = "on" "phase_enter" "(" string_lit ")" ;
 
-schedule_every_phase = "every" frequency
+schedule_every_phase = "every" interval [ "due" ]
                        "from" "phase_start" "(" string_lit ")"
                        "to" "phase_end" "(" string_lit ")"
                        [ schedule_opts ] ;
 
-schedule_every  = "every" frequency
+schedule_every  = "every" interval [ "due" ]
                   [ schedule_on_day ]
                   "from" date_lit "to" date_lit
                   [ schedule_opts ] ;
 
-schedule_on_day = "on" ( "day" INT | "eom" | weekday_list ) ;
-weekday_list    = weekday { "," weekday } ;
-weekday         = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun" ;
+(* An interval is how far apart a stream's payments fall. It is distinct from
+   the calendar cadence, which is the grid the model is evaluated on: a stream
+   may pay quarterly on a monthly grid. Only intervals have a weekly member —
+   a weekly grid is not representable, a weekly schedule on a daily grid is. *)
+interval        = "day" | "week" | "month" | "quarter" | "year" ;
+
+(* `due` marks an annuity due: payment at the start of each interval, as for
+   rent. Without it the schedule is an ordinary annuity, paid at the interval's
+   end, which is right for coupons and debt service. See 12_payment_timing.md. *)
+
+schedule_on_day = "on" ( "day" INT | "eom" ) ;
 
 schedule_opts   = { schedule_opt } ;
 
 schedule_opt    = "convention" convention
                 | "calendar" string_lit
-                | "stub" stub_policy
                 | "except" list_date
                 | "also" list_date
                 ;
 
 convention      = "none" | "following" | "modified_following" | "preceding" | "modified_preceding" ;
-stub_policy     = "none" | "short_front" | "short_back" | "long_front" | "long_back" ;
 
 list_date       = "[" date_lit { "," date_lit } "]" ;
 

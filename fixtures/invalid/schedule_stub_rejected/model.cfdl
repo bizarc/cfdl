@@ -1,0 +1,12 @@
+version 0.1
+model "schedule-stub-rejected"
+time calendar monthly from 2026-01 for 12
+
+entity legal co
+
+// `stub` is lexed and was previously discarded in silence, so a model could
+// ask for a short front stub and get a full period with no diagnostic.
+stream co.rent on entity legal.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-12 stub short_front
+  amount = 1000
+}

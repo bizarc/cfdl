@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E2108_SCHEDULE_FINER_THAN_CALENDAR",
+    "severity": "error",
+    "message": "Stream 'co.rent' pays every week but the model's calendar is monthly. Several payments would fall in one period and collapse into one. Use an interval of monthly or longer, or declare a finer calendar.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 12,
+      "end_line": 11,
+      "end_col": 45
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

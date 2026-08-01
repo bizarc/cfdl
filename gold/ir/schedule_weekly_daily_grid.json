@@ -1,13 +1,13 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "schedule-day-rules",
+    "name": "schedule-weekly-daily-grid",
     "currency": "USD"
   },
   "time": {
     "calendar": "daily",
     "start": "2026-01-01",
-    "periods": 90
+    "periods": 120
   },
   "phases": [],
   "entities": [
@@ -26,44 +26,8 @@
   "contracts": [],
   "streams": [
     {
-      "id": "664c465d96378de9ecb26f211ae3ba61",
-      "name": "co.rent",
-      "owner": {
-        "symbol": "legal.co"
-      },
-      "direction": "inflow",
-      "currency": "USD",
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2026-03-31",
-        "on_rule": {
-          "kind": "DayOfMonth",
-          "day": 15
-        }
-      },
-      "amount": {
-        "lang": "cfdl",
-        "src": "100.0"
-      },
-      "active_when": {
-        "lang": "cfdl",
-        "src": "true"
-      },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 7,
-          "start_col": 1,
-          "end_line": 10,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "id": "72bd25c340317462801289971fece404",
-      "name": "co.sweep",
+      "id": "7ea56ce872f8e0bc061ab37b01fd6b2d",
+      "name": "co.payroll",
       "owner": {
         "symbol": "legal.co"
       },
@@ -71,16 +35,13 @@
       "currency": "USD",
       "schedule": {
         "kind": "Every",
-        "every": "monthly",
+        "every": "weekly",
         "from": "2026-01-01",
-        "to": "2026-03-31",
-        "on_rule": {
-          "kind": "EndOfMonth"
-        }
+        "to": "2026-03-31"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "50.0"
+        "src": "5000.0"
       },
       "active_when": {
         "lang": "cfdl",
@@ -89,9 +50,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 13,
+          "start_line": 10,
           "start_col": 1,
-          "end_line": 16,
+          "end_line": 13,
           "end_col": 1
         }
       }

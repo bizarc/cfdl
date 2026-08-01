@@ -1853,6 +1853,18 @@ impl<'a> Parser<'a> {
     fn parse_schedule_opts(&mut self, spec: &mut ScheduleSpec) {
         loop {
             match self.peek().kind {
+                // `stub` is lexed and was silently discarded here: a model
+                // could ask for a short front stub and get a full period with
+                // no diagnostic. Reject it until the engine implements it.
+                TokenKind::Keyword(Keyword::Stub) => {
+                    let tok = self.peek().clone();
+                    self.push_expected(
+                        tok.span,
+                        "Stub periods are not supported. Remove `stub`, or express the partial period as its own schedule."
+                            .to_string(),
+                    );
+                    return;
+                }
                 TokenKind::Keyword(Keyword::Convention) => {
                     let _ = self.bump();
                     let tok = self.bump();

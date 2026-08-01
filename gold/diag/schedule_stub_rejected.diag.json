@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Stub periods are not supported. Remove `stub`, or express the partial period as its own schedule.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 48,
+      "end_line": 10,
+      "end_col": 51
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

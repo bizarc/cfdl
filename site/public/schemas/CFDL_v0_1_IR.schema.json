@@ -16,7 +16,6 @@
     "events",
     "options",
     "runs",
-    "metrics",
     "required_observables",
     "required_refs",
     "provenance"
@@ -132,7 +131,8 @@
       "minItems": 0,
       "items": {
         "$ref": "#/$defs/Metric"
-      }
+      },
+      "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
     "required_observables": {
       "type": "array",
@@ -191,6 +191,7 @@
       "type": "string",
       "enum": [
         "daily",
+        "weekly",
         "monthly",
         "quarterly",
         "annual"
@@ -328,8 +329,8 @@
       }
     },
     "TypedValue": {
-      "description": "Strongly-typed value union used for attrs/terms/state",
-      "oneOf": [
+      "description": "Strongly-typed value union used for attrs/terms/state. anyOf, not oneOf: the members overlap structurally \u2014 an Expr {lang, src} is also a valid Map of strings \u2014 so requiring exactly one match can never hold for an untagged union.",
+      "anyOf": [
         {
           "type": "string"
         },
@@ -370,21 +371,39 @@
     },
     "Curve": {
       "type": "object",
-      "required": ["name", "points"],
+      "required": [
+        "name",
+        "points"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string" },
-        "interpolation": { "type": "string", "enum": ["step", "linear"] },
+        "name": {
+          "type": "string"
+        },
+        "interpolation": {
+          "type": "string",
+          "enum": [
+            "step",
+            "linear"
+          ]
+        },
         "points": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["date", "value"],
+            "required": [
+              "date",
+              "value"
+            ],
             "additionalProperties": false,
             "properties": {
-              "date": { "type": "string" },
-              "value": { "type": "number" }
+              "date": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
             }
           }
         }
@@ -673,21 +692,6 @@
         "calendar": {
           "type": "string"
         },
-        "stub": {
-          "$ref": "#/$defs/StubPolicy"
-        },
-        "except": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Date"
-          }
-        },
-        "also": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Date"
-          }
-        },
         "phase": {
           "type": "string",
           "description": "Phase name for PhaseEnter/EveryPhase"
@@ -703,6 +707,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "due": {
+          "description": "Annuity due: payment falls at the start of each interval, as for rent. Omitted for an ordinary annuity, which pays at the interval's end and is the default. Determines how far a payment is discounted, not which period holds it \u2014 see 12_payment_timing.md.",
+          "type": "boolean"
         }
       },
       "allOf": [
@@ -778,22 +786,13 @@
           "type": "string",
           "enum": [
             "DayOfMonth",
-            "EndOfMonth",
-            "Weekdays"
+            "EndOfMonth"
           ]
         },
         "day": {
           "type": "integer",
           "minimum": 1,
           "maximum": 31
-        },
-        "weekdays": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Weekday"
-          },
-          "minItems": 1,
-          "uniqueItems": true
         }
       },
       "allOf": [
@@ -808,20 +807,6 @@
           "then": {
             "required": [
               "day"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "Weekdays"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "weekdays"
             ]
           }
         }
@@ -847,16 +832,6 @@
         "modified_following",
         "preceding",
         "modified_preceding"
-      ]
-    },
-    "StubPolicy": {
-      "type": "string",
-      "enum": [
-        "none",
-        "short_front",
-        "short_back",
-        "long_front",
-        "long_back"
       ]
     },
     "Event": {

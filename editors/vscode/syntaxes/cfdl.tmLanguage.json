@@ -59,11 +59,11 @@
       "patterns": [
         {
           "name": "keyword.control.cfdl",
-          "match": "\\b(version|model|use|pack|import|as|time|calendar|from|for|to|phase|entity|assume|contract|on|term|terms|effects|parties|tags|stream|owner|direction|inflow|outflow|schedule|every|phase_enter|phase_start|phase_end|day|eom|convention|stub|except|also|event|when|set|activate|deactivate|exercise|option|type|exercisable|in|payoff|run|metric|active|and|or|not|currency)\\b"
+          "match": "\\b(version|model|use|pack|import|as|time|calendar|from|for|to|phase|entity|assume|contract|on|term|terms|effects|parties|tags|stream|owner|direction|inflow|outflow|schedule|every|due|phase_enter|phase_start|phase_end|day|eom|convention|except|also|event|when|set|activate|deactivate|exercise|option|type|exercisable|in|payoff|run|metric|active|and|or|not|currency)\\b"
         },
         {
           "name": "keyword.control.frequency.cfdl",
-          "match": "\\b(daily|monthly|quarterly|annual)\\b"
+          "match": "\\b(daily|monthly|quarterly|annual|day|week|month|quarter|year)\\b"
         },
         {
           "name": "keyword.control.weekday.cfdl",

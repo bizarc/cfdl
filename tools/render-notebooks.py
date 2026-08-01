@@ -240,6 +240,41 @@ def index_page(toc: list[tuple[str, str, str]]) -> str:
     return "\n".join(lines)
 
 
+# Paths whose contents can change what a rendered notebook page says. Kept in
+# step with SOURCE_PATHS in site/scripts/check-notebooks-fresh.mjs.
+STAMP_INPUTS = [
+    "examples/notebooks", "benchmarks", "packs", "python/cfdl_sdk",
+    "crates/cfdl-py", "crates/cfdl-compile", "crates/cfdl-engine",
+    "crates/cfdl-metrics", "crates/cfdl-pack", "crates/cfdl-calc",
+    "crates/cfdl-parser", "crates/cfdl-lexer", "crates/cfdl-resolver",
+    "crates/cfdl-validate", "tools/render-notebooks.py",
+]
+
+
+def write_render_stamp(repo_root: pathlib.Path) -> None:
+    """Record what the pages were rendered against.
+
+    The freshness guard used to require that a render produced a diff whenever
+    an input changed. A compiler change that does not alter notebook output —
+    a new diagnostic, say — then made the gate unsatisfiable: re-rendering
+    yielded nothing to commit, so the gate stayed red. A stamp records that the
+    render *ran* against these inputs, which is the thing actually being
+    asserted.
+    """
+    digest = hashlib.sha256()
+    for rel in sorted(STAMP_INPUTS):
+        target = repo_root / rel
+        files = sorted(target.rglob("*")) if target.is_dir() else [target]
+        for f in files:
+            if not f.is_file() or f.name == ".DS_Store":
+                continue
+            digest.update(str(f.relative_to(repo_root)).encode())
+            digest.update(f.read_bytes())
+    stamp = repo_root / "site" / "content" / "docs" / "notebooks" / ".render-stamp"
+    stamp.write_text(digest.hexdigest() + "\n")
+    print(f"wrote {stamp.relative_to(repo_root)}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -291,6 +326,7 @@ def main() -> int:
         print("\nRegenerate them:\n  make notebooks-render", file=sys.stderr)
         return 1
 
+    write_render_stamp(REPO_ROOT)
     return 0
 
 

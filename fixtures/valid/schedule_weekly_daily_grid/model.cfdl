@@ -1,0 +1,13 @@
+version 0.1
+model "schedule-weekly-daily-grid"
+time calendar daily from 2026-01-01 for 120
+
+entity legal co
+
+// A weekly schedule is representable on a daily grid: each occurrence gets
+// its own period. This is the case the interval vocabulary exists for — a
+// weekly grid is not representable, a weekly schedule on a daily one is.
+stream co.payroll on entity legal.co outflow currency USD {
+  schedule every week from 2026-01-01 to 2026-03-31
+  amount = 5000
+}
