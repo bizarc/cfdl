@@ -42,6 +42,24 @@ implementations.
 > which are different instruments. Those cadences are checked against the
 > benchmark reference generators rather than against each other.
 
+## Conventions, and where they come from
+
+Prepayment and default follow **SIFMA, Standard Formulas for the Analysis of
+Mortgage-Backed Securities** (Uniform Practices Manual, Chapter SF), the
+industry's definitional source for CPR, SMM, PSA and SDA.
+
+- **SMM applies to the balance at the BEGINNING of the period, net of
+  scheduled amortisation only** (§2a). Defaults are not removed from the base.
+- Because both attritions are drawn from that same base, survival is
+  **additive**: `k = (1 - mdr) - smm`, not `(1 - mdr)(1 - smm)`.
+- CPR and CDR are effective annual rates and convert by a root
+  (`cpr_to_periodic`); note rates are nominal and convert by division.
+
+`benchmarks/credit/sifma_cash_flow_a` asserts 1044 published figures across 348
+months and passes. Two known gaps remain, both in `docs/13_feature_backlog.md`:
+recovery is taken on face rather than on the amortised balance, and PSA/SDA
+ramps are not expressible, so only constant-hazard pools can be modelled.
+
 ## Contract types
 
 ### `credit.pool_level_pay`

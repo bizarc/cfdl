@@ -18,15 +18,43 @@
 #   smm      = cpr_to_periodic(cpr, ppy), mdr = cpr_to_periodic(cdr, ppy)
 #              [1 - (1-x)^(1/ppy) — CPR/CDR are EFFECTIVE annual rates, so
 #               they take a root. Do not confuse the two conventions.]
-#   k        = (1 - mdr) * (1 - smm)                     [survival per period]
+#   k        = (1 - mdr) - smm      [survival; additive, see PREPAYMENT BASE]
 #   S(p)     = ((1+r)^n - (1+r)^p) / ((1+r)^n - 1)       [sched balance factor]
 #   B_beg(p) = balance * S(p) * k^p                      [level-pay pools]
 #   B_beg(p) = balance * k^p                             [IO/bullet pools]
 #   Each period: defaults leave at the start of the period (no interest on
 #   defaulted balance); interest and scheduled principal accrue on the
-#   performing balance; prepayment applies SMM to performing balance net of
-#   scheduled principal; defaulted balance returns (1 - severity) of face,
-#   recovery_lag_months later.
+#   performing balance.
+#
+#   PREPAYMENT BASE — SIFMA Standard Formulas, Chapter SF section 2a. SMM is
+#   "the percentage of the mortgage loans outstanding AT THE BEGINNING of a
+#   month assumed to terminate during the month", and its formula is
+#   SMM = (Fsched - F2) / Fsched where Fsched = F1 * BAL2/BAL1 — the beginning
+#   balance after SCHEDULED amortisation only. Defaults are NOT removed from
+#   the base. This pack previously applied SMM to the balance net of defaults,
+#   which understated prepayments by the default rate and contradicted the
+#   definition of the quantity it calls SMM. Verified against the document's
+#   published Cash Flow A: 999,329 in period 1, not 989,336.
+#
+#   The survival factor changes with it, which is not obvious and is worth
+#   spelling out. When prepayments are taken from the SURVIVORS the two
+#   attritions compose multiplicatively, k = (1 - mdr)(1 - smm). When both are
+#   taken from the SAME beginning balance, as SIFMA specifies, they are
+#   additive on that base and k = (1 - mdr) - smm. The difference is the
+#   product mdr*smm — 9,993 in period 1 of Cash Flow A — which compounds over
+#   360 periods. Getting the base right and leaving k alone would have been
+#   internally inconsistent, and the published ending balance says so:
+#   97,934,244 additive against 97,944,237 multiplicative.
+#
+#   RECOVERY — defaulted balance returns (1 - severity) of face,
+#   recovery_lag_months later. This is a KNOWN DIVERGENCE from SIFMA, which
+#   continues to amortise a defaulted loan while it sits in foreclosure
+#   (Chapter SF: "the amortization schedule continues to be computed even
+#   while it is in foreclosure"), so it recovers (1 - severity) of the
+#   amortised balance rather than of face. Measured against Cash Flow A this
+#   pack over-recovers by ~1% at month 13, rising to ~8% by month 240. The
+#   exact SIFMA formula has not been reproduced; see
+#   docs/13_feature_backlog.md rather than guessing at it.
 #
 # Not supported in v0.1 (see packs/credit/README.md):
 #   - zero note rate on level-pay pools (S(p) is undefined at r = 0)
@@ -54,7 +82,7 @@ stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 # interest = performing balance * monthly rate
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.rate}} / {{model.accrual_divisor}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.rate}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -74,7 +102,7 @@ stream_name = "credit.pool.sched_principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 # scheduled principal = performing balance * c(t), c(t) = r / ((1+r)^(n-p) - 1)
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -95,7 +123,7 @@ owner_entity = "${subject}"
 direction = "inflow"
 # prepayment = (performing - scheduled principal) * smm
 #            = performing * (1 - c(t)) * smm
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - ({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - ({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -118,7 +146,7 @@ direction = "inflow"
 #             = B_beg(p - lag) * mdr * (1 - severity)
 # Set the contract term to cover term_months + recovery_lag_months so the
 # recovery tail has schedule periods.
-amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -139,7 +167,7 @@ owner_entity = "${subject}"
 direction = "outflow"
 # Servicing fee accrues on the performing balance (a NOMINAL annual rate, so
 # rate / ppy).
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -161,7 +189,7 @@ owner_entity = "${subject}"
 direction = "inflow"
 # Prepayment penalty: flat rate on voluntary prepayments (simplified yield
 # maintenance; full make-whole needs a discounting engine primitive).
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - ({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.balance}} * ((pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}})) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}) - 1)) * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}})) * (1 - ({{contract.rate}} / {{model.accrual_divisor}}) / (pow(1 + {{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}) - 1)) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -188,7 +216,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.rate}} / {{model.accrual_divisor}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.rate}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -207,7 +235,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -226,7 +254,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} == {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})), 0)"
+amount_expr = "if({{time.elapsed_periods}} == {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -245,7 +273,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -264,7 +292,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -284,7 +312,7 @@ contract_name = "credit.pool_io_bullet"
 stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -313,7 +341,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * clamp(curve_value(\"{{contract.index_curve}}\", time.date) + {{contract.margin}}, {{contract.rate_floor}}, {{contract.rate_cap}}) / {{model.accrual_divisor}}, 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * clamp(curve_value(\"{{contract.index_curve}}\", time.date) + {{contract.margin}}, {{contract.rate_floor}}, {{contract.rate_cap}}) / {{model.accrual_divisor}}, 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -335,7 +363,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.prepay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -354,7 +382,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.bullet{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} == {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})), 0)"
+amount_expr = "if({{time.elapsed_periods}} == {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -373,7 +401,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.recoveries{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}) * cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}}) * (1 - {{contract.severity}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -392,7 +420,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.servicing{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -412,7 +440,7 @@ contract_name = "credit.pool_float_io_bullet"
 stream_name = "credit.pool.penalty{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * (1 - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * (1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}} - 1, {{contract.balance}} * pow(((1 - cpr_to_periodic({{contract.cdr}}, {{model.periods_per_year}})) - cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}})), {{time.elapsed_periods}}) * cpr_to_periodic({{contract.cpr}}, {{model.periods_per_year}}) * {{contract.prepay_penalty_rate}}, 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"

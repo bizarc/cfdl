@@ -63,9 +63,68 @@ Shape: add an abatement stream family to the metric's denominator, and have
 
 ---
 
-## 2. Language and engine
+## 2. Credit pack
 
-### 2.1 A stream may not read another period's value
+### 2.1 PSA and SDA ramps
+
+`cpr` and `cdr` are single constants per contract. A hazard that varies with
+loan age cannot be expressed, so SIFMA's Standard Prepayment Model — 0.2% CPR
+in month 1 rising 0.2%/month to 6.0% at month 30, times a speed — is out of
+reach, and so is SDA.
+
+The hazard itself is not the problem: `min(speed / 100 * 0.2 * max(1,
+min(month, 30)), 100)` is closed-form and is already asserted in
+`tools/analytic-checks.py`. The balance is. Every pool factor in the pack is
+`pow(k, p)`, which is only valid for constant `k`; under a ramp the survival
+factor is a cumulative product with no elementary closed form, and the
+expression language has no `exp`/`ln` to sum logs instead.
+
+**This is not item 3.2 (per-period state) and should not be bundled with it.** A
+PSA ramp is deterministic in loan age — nothing accumulates — so the natural
+fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
+a published table behind a function. Substituting one call for `pow(k, p)`
+would make every existing pool rule work under a ramp.
+
+Found building `benchmarks/credit/sifma_cash_flow_a`. Cash Flow A (constant 1%
+SMM / 1% MDR) reproduces to the published figure; Cash Flow B on the same pool
+(150% PSA, 100% SDA) needs this.
+
+### 2.2 Recovery on the amortised balance, not on face
+
+The pack recovers `(1 - severity)` of **face** after `recovery_lag_months`.
+SIFMA continues to amortise a defaulted loan while it is in foreclosure —
+Chapter SF: "the amortization schedule continues to be computed even while it
+is in foreclosure" — and recovers `(1 - severity)` of the **amortised**
+balance.
+
+Measured against the published Cash Flow A, the pack over-recovers by ~1.1% at
+month 13 rising to ~7.9% by month 240. The mechanism is confirmed; the exact
+formula is not. Two candidates were tested and neither reproduced the published
+Principal Recovery column: the pool-level factor ratio `S(m)/S(m-12)` is within
+0.2% early and drifts to 12% at the tail, and the per-loan remaining-balance
+ratio is a flat ~7.4% out.
+
+Left open deliberately rather than guessed at. `Principal Recovery` is
+therefore the one published column `benchmarks/credit/sifma_cash_flow_a` does
+not assert.
+
+### 2.3 SMM and MDR as direct terms
+
+The pack accepts only annual `cpr`/`cdr`. Practitioners quote monthly SMM and
+MDR — SIFMA's own sample cash flows are specified that way — so a 1% SMM pool
+has to be entered as `cpr = 1 - 0.99^12 = 0.11361512828387077`, computed by
+hand and unrecognisable to a reader.
+
+Shape: accept `smm`/`mdr` alongside `cpr`/`cdr`, mutually exclusive with them
+(the `terms_mutually_exclusive` check kind already exists), converting on the
+way in. Note the conversion is cadence-dependent, so it belongs with
+`{{model.periods_per_year}}` rather than a literal 12.
+
+---
+
+## 3. Language and engine
+
+### 3.1 A stream may not read another period's value
 
 Phase-1 streams cannot look at each other at all; phase-2 streams can read
 phase-1 through `series_sum`/`series_avg` but not each other, which is what
@@ -83,7 +142,7 @@ both cases. Note this is close to the per-period persistent state the pack
 roadmap identifies as the gate on roughly two thirds of its candidate packs, so
 it is worth designing the two together rather than separately.
 
-### 2.2 Per-period persistent state
+### 3.2 Per-period persistent state
 
 No accumulator, no carryforward, no balance that a period can add to and a
 later period draw down. Cash sweeps, revolver draws, FF&E reserves, escrow
@@ -91,13 +150,13 @@ accounts, NOL carryforwards and construction-interest capitalisation all need
 it, and `packs/opco/lowering/rules.toml` says so in its header.
 
 Not discovered by this work — it is a known absence — but recorded here because
-2.1 is a strictly smaller version of it and the two should share a design.
+3.1 is a strictly smaller version of it and the two should share a design.
 
 ---
 
-## 3. Cross-pack
+## 4. Cross-pack
 
-### 3.1 Day count beyond the four supported bases
+### 4.1 Day count beyond the four supported bases
 
 `{{model.accrual_divisor}}` handles `30/360`, `30e/360`, `act/360` and
 `act/365`. `act/act` is not supported: it needs the days in the *year* the
@@ -107,7 +166,7 @@ period falls in, which the expression environment does not expose
 Low urgency — the four cover most instruments — but `act/act` is the government
 bond convention and will be wanted if a sovereign or municipal pack appears.
 
-### 3.2 An acquisition or disposal in a period other than the term's
+### 4.2 An acquisition or disposal in a period other than the term's
 
 `schedule_kind = "on_date"` places a one-shot flow in the period containing its
 date, and `schedule_at_period_end` now says where in that period it sits. What
@@ -123,9 +182,13 @@ disposal discounting.
 
 ## Where these came from
 
-Sections 1 and 2.1 were found building `benchmarks/cre/mit_rentleg_plaza`
+Section 1 and item 3.1 were found building `benchmarks/cre/mit_rentleg_plaza`
 against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
 checked against a published third-party figure rather than an in-house
-reference. That is the argument for building more of them: an external number
-finds gaps that two of your own implementations agreeing never will. See
+reference. Section 2 came the same way, from `benchmarks/credit/sifma_cash_flow_a`
+against SIFMA's Standard Formulas — which also found two outright defects in
+the prepayment base, fixed rather than listed here.
+
+That is the argument for building more of them: an external number finds gaps
+that two of your own implementations agreeing never will. See
 `research/CFDL_pack_roadmap_and_model_sourcing.md` for the catalogue.

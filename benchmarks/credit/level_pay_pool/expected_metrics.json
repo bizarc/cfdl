@@ -1,42 +1,42 @@
 {
   "model.npv": {
-    "value": -185467.92,
+    "value": -185188.63,
     "tolerance": 1.0
   },
   "model.moic": {
-    "value": 1.23151,
+    "value": 1.231428,
     "tolerance": 0.0001
   },
   "model.wal_years": {
-    "value": 3.824182,
+    "value": 3.82277,
     "tolerance": 0.0001
   },
   "domain.credit.interest": {
-    "value": 6502566.9,
+    "value": 6499894.55,
     "tolerance": 1.0
   },
   "domain.credit.principal": {
-    "value": 22977229.2,
+    "value": 22978060.49,
     "tolerance": 1.0
   },
   "domain.credit.recoveries": {
-    "value": 1314801.02,
+    "value": 1314260.68,
     "tolerance": 1.0
   },
   "domain.credit.servicing": {
-    "value": 500197.45,
+    "value": 499991.89,
     "tolerance": 1.0
   },
   "domain.credit.penalties": {
-    "value": 82102.89,
+    "value": 82207.68,
     "tolerance": 1.0
   },
   "domain.credit.wal_years": {
-    "value": 3.98146,
+    "value": 3.979761,
     "tolerance": 0.0001
   },
   "domain.credit.collections": {
-    "value": 30876700.0,
+    "value": 30874423.4,
     "tolerance": 1.0
   },
   "domain.credit.purchase": {
@@ -44,7 +44,7 @@
     "tolerance": 1.0
   },
   "domain.credit.collections_multiple": {
-    "value": 1.247543,
+    "value": 1.247451,
     "tolerance": 0.0001
   }
 }

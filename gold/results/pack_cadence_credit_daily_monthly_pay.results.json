@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "410de8080b74ff244da2bc68e7c244a866b659dfbe11d62f17f5d3e5f6a427e9",
+  "model_hash": "7ad0109b723240cee25d855bf27d44004c566ad659acca2fe1f850e6e1b3e113",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,22 +10,22 @@
     "status": "ok",
     "metrics": {
       "entity.fund.buyer.total": {
-        "amount": 1274665.701956,
+        "amount": 1274647.254282,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 1121905.693895,
+        "amount": 1121924.096891,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 1274665.701956,
+        "amount": 1274647.254282,
         "currency": "USD"
       },
-      "model.wal_years": 1.371015,
+      "model.wal_years": 1.370687,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 365.0,
       "stream.credit.pool.interest.book.total": {
-        "amount": 100108.086136,
+        "amount": 100083.352406,
         "currency": "USD"
       },
       "stream.credit.pool.penalty.book.total": {
@@ -33,15 +33,15 @@
         "currency": "USD"
       },
       "stream.credit.pool.prepay.book.total": {
-        "amount": 166430.944757,
+        "amount": 166813.820421,
         "currency": "USD"
       },
       "stream.credit.pool.recoveries.book.total": {
-        "amount": 25442.38418,
+        "amount": 25436.098124,
         "currency": "USD"
       },
       "stream.credit.pool.sched_principal.book.total": {
-        "amount": 982684.286883,
+        "amount": 982313.983332,
         "currency": "USD"
       },
       "stream.credit.pool.servicing.book.total": {
@@ -178,7 +178,7 @@
             "currency": "USD"
           },
           {
-            "amount": 46611.121897,
+            "amount": 46637.038355,
             "currency": "USD"
           },
           {
@@ -290,7 +290,7 @@
             "currency": "USD"
           },
           {
-            "amount": 45822.217328,
+            "amount": 45846.142786,
             "currency": "USD"
           },
           {
@@ -414,7 +414,7 @@
             "currency": "USD"
           },
           {
-            "amount": 45043.859547,
+            "amount": 45065.844043,
             "currency": "USD"
           },
           {
@@ -534,7 +534,7 @@
             "currency": "USD"
           },
           {
-            "amount": 45796.948495,
+            "amount": 45817.041168,
             "currency": "USD"
           },
           {
@@ -658,7 +658,7 @@
             "currency": "USD"
           },
           {
-            "amount": 44983.947386,
+            "amount": 45002.163639,
             "currency": "USD"
           },
           {
@@ -778,7 +778,7 @@
             "currency": "USD"
           },
           {
-            "amount": 44181.974153,
+            "amount": 44198.36381,
             "currency": "USD"
           },
           {
@@ -902,7 +902,7 @@
             "currency": "USD"
           },
           {
-            "amount": 43390.892831,
+            "amount": 43405.504803,
             "currency": "USD"
           },
           {
@@ -1026,7 +1026,7 @@
             "currency": "USD"
           },
           {
-            "amount": 42610.569061,
+            "amount": 42623.451355,
             "currency": "USD"
           },
           {
@@ -1146,7 +1146,7 @@
             "currency": "USD"
           },
           {
-            "amount": 41840.870069,
+            "amount": 41852.069807,
             "currency": "USD"
           },
           {
@@ -1270,7 +1270,7 @@
             "currency": "USD"
           },
           {
-            "amount": 41081.664651,
+            "amount": 41091.228081,
             "currency": "USD"
           },
           {
@@ -1390,7 +1390,7 @@
             "currency": "USD"
           },
           {
-            "amount": 40332.823152,
+            "amount": 40340.795661,
             "currency": "USD"
           },
           {
@@ -1514,7 +1514,7 @@
             "currency": "USD"
           },
           {
-            "amount": 39594.217449,
+            "amount": 39600.64358,
             "currency": "USD"
           },
           {
@@ -1638,7 +1638,7 @@
             "currency": "USD"
           },
           {
-            "amount": 38865.720933,
+            "amount": 38870.644396,
             "currency": "USD"
           },
           {
@@ -1750,7 +1750,7 @@
             "currency": "USD"
           },
           {
-            "amount": 38147.208494,
+            "amount": 38150.672178,
             "currency": "USD"
           },
           {
@@ -1874,7 +1874,7 @@
             "currency": "USD"
           },
           {
-            "amount": 37438.556499,
+            "amount": 37440.602487,
             "currency": "USD"
           },
           {
@@ -1994,7 +1994,7 @@
             "currency": "USD"
           },
           {
-            "amount": 36739.642779,
+            "amount": 36740.31236,
             "currency": "USD"
           },
           {
@@ -2118,7 +2118,7 @@
             "currency": "USD"
           },
           {
-            "amount": 36050.34661,
+            "amount": 36049.680292,
             "currency": "USD"
           },
           {
@@ -2238,7 +2238,7 @@
             "currency": "USD"
           },
           {
-            "amount": 35370.548698,
+            "amount": 35368.586219,
             "currency": "USD"
           },
           {
@@ -2362,7 +2362,7 @@
             "currency": "USD"
           },
           {
-            "amount": 34700.131159,
+            "amount": 34696.911502,
             "currency": "USD"
           },
           {
@@ -2486,7 +2486,7 @@
             "currency": "USD"
           },
           {
-            "amount": 34038.977508,
+            "amount": 34034.538908,
             "currency": "USD"
           },
           {
@@ -2606,7 +2606,7 @@
             "currency": "USD"
           },
           {
-            "amount": 33386.972638,
+            "amount": 33381.3526,
             "currency": "USD"
           },
           {
@@ -2730,7 +2730,7 @@
             "currency": "USD"
           },
           {
-            "amount": 32744.002806,
+            "amount": 32737.238112,
             "currency": "USD"
           },
           {
@@ -2850,7 +2850,7 @@
             "currency": "USD"
           },
           {
-            "amount": 32109.955617,
+            "amount": 32102.08234,
             "currency": "USD"
           },
           {
@@ -2974,7 +2974,7 @@
             "currency": "USD"
           },
           {
-            "amount": 31484.720011,
+            "amount": 31475.773524,
             "currency": "USD"
           },
           {
@@ -3098,7 +3098,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30868.186241,
+            "amount": 30858.201231,
             "currency": "USD"
           },
           {
@@ -3210,7 +3210,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30260.245865,
+            "amount": 30249.256342,
             "currency": "USD"
           },
           {
@@ -3334,7 +3334,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29660.791727,
+            "amount": 29648.831036,
             "currency": "USD"
           },
           {
@@ -3454,7 +3454,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29069.717942,
+            "amount": 29056.818772,
             "currency": "USD"
           },
           {
@@ -3578,7 +3578,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28486.919882,
+            "amount": 28473.114281,
             "currency": "USD"
           },
           {
@@ -3698,7 +3698,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27912.294165,
+            "amount": 27897.613542,
             "currency": "USD"
           },
           {
@@ -3822,7 +3822,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27345.738632,
+            "amount": 27330.213777,
             "currency": "USD"
           },
           {
@@ -3946,7 +3946,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26787.152342,
+            "amount": 26770.813429,
             "currency": "USD"
           },
           {
@@ -4066,7 +4066,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26236.435551,
+            "amount": 26219.312151,
             "currency": "USD"
           },
           {
@@ -4190,7 +4190,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25693.489705,
+            "amount": 25675.610795,
             "currency": "USD"
           },
           {
@@ -4310,7 +4310,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25158.217417,
+            "amount": 25139.61139,
             "currency": "USD"
           },
           {
@@ -4434,7 +4434,7 @@
             "currency": "USD"
           },
           {
-            "amount": 24630.522463,
+            "amount": 24611.217137,
             "currency": "USD"
           },
           {
@@ -4558,7 +4558,7 @@
             "currency": "USD"
           },
           {
-            "amount": 94.603306,
+            "amount": 94.533361,
             "currency": "USD"
           },
           {
@@ -4674,7 +4674,7 @@
             "currency": "USD"
           },
           {
-            "amount": 62.514441,
+            "amount": 62.466821,
             "currency": "USD"
           },
           {
@@ -4798,7 +4798,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30.982507,
+            "amount": 30.958213,
             "currency": "USD"
           }
         ]
@@ -5043,7 +5043,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5767.001263,
+            "amount": 5766.872009,
             "currency": "USD"
           },
           {
@@ -5167,7 +5167,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5552.613264,
+            "amount": 5552.364369,
             "currency": "USD"
           },
           {
@@ -5287,7 +5287,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5341.581449,
+            "amount": 5341.2223,
             "currency": "USD"
           },
           {
@@ -5411,7 +5411,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5133.862093,
+            "amount": 5133.401855,
             "currency": "USD"
           },
           {
@@ -5531,7 +5531,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4929.412001,
+            "amount": 4928.859619,
             "currency": "USD"
           },
           {
@@ -5655,7 +5655,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4728.188499,
+            "amount": 4727.552707,
             "currency": "USD"
           },
           {
@@ -5779,7 +5779,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4530.149433,
+            "amount": 4529.438752,
             "currency": "USD"
           },
           {
@@ -5899,7 +5899,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4335.253159,
+            "amount": 4334.475904,
             "currency": "USD"
           },
           {
@@ -6023,7 +6023,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4143.45854,
+            "amount": 4142.622821,
             "currency": "USD"
           },
           {
@@ -6143,7 +6143,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3954.724935,
+            "amount": 3953.838665,
             "currency": "USD"
           },
           {
@@ -6267,7 +6267,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3769.0122,
+            "amount": 3768.083094,
             "currency": "USD"
           },
           {
@@ -6391,7 +6391,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3586.280676,
+            "amount": 3585.316258,
             "currency": "USD"
           },
           {
@@ -6503,7 +6503,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3406.491189,
+            "amount": 3405.498792,
             "currency": "USD"
           },
           {
@@ -6627,7 +6627,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3229.605039,
+            "amount": 3228.59181,
             "currency": "USD"
           },
           {
@@ -6747,7 +6747,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3055.583997,
+            "amount": 3054.556902,
             "currency": "USD"
           },
           {
@@ -6871,7 +6871,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2884.3903,
+            "amount": 2883.356125,
             "currency": "USD"
           },
           {
@@ -6991,7 +6991,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2715.986646,
+            "amount": 2714.952,
             "currency": "USD"
           },
           {
@@ -7115,7 +7115,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2550.336185,
+            "amount": 2549.307505,
             "currency": "USD"
           },
           {
@@ -7239,7 +7239,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2387.402518,
+            "amount": 2386.38607,
             "currency": "USD"
           },
           {
@@ -7359,7 +7359,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2227.149687,
+            "amount": 2226.151573,
             "currency": "USD"
           },
           {
@@ -7483,7 +7483,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2069.542177,
+            "amount": 2068.568333,
             "currency": "USD"
           },
           {
@@ -7603,7 +7603,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1914.544904,
+            "amount": 1913.601105,
             "currency": "USD"
           },
           {
@@ -7727,7 +7727,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1762.12321,
+            "amount": 1761.215076,
             "currency": "USD"
           },
           {
@@ -7851,7 +7851,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1612.242866,
+            "amount": 1611.375858,
             "currency": "USD"
           },
           {
@@ -7963,7 +7963,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1464.870056,
+            "amount": 1464.049486,
             "currency": "USD"
           },
           {
@@ -8087,7 +8087,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1319.971381,
+            "amount": 1319.202411,
             "currency": "USD"
           },
           {
@@ -8207,7 +8207,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1177.513848,
+            "amount": 1176.801493,
             "currency": "USD"
           },
           {
@@ -8331,7 +8331,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1037.464871,
+            "amount": 1036.814002,
             "currency": "USD"
           },
           {
@@ -8451,7 +8451,7 @@
             "currency": "USD"
           },
           {
-            "amount": 899.792259,
+            "amount": 899.207607,
             "currency": "USD"
           },
           {
@@ -8575,7 +8575,7 @@
             "currency": "USD"
           },
           {
-            "amount": 764.464218,
+            "amount": 763.950375,
             "currency": "USD"
           },
           {
@@ -8699,7 +8699,7 @@
             "currency": "USD"
           },
           {
-            "amount": 631.449343,
+            "amount": 631.010765,
             "currency": "USD"
           },
           {
@@ -8819,7 +8819,7 @@
             "currency": "USD"
           },
           {
-            "amount": 500.716615,
+            "amount": 500.357624,
             "currency": "USD"
           },
           {
@@ -8943,7 +8943,7 @@
             "currency": "USD"
           },
           {
-            "amount": 372.235395,
+            "amount": 371.960182,
             "currency": "USD"
           },
           {
@@ -9063,7 +9063,7 @@
             "currency": "USD"
           },
           {
-            "amount": 245.975418,
+            "amount": 245.788047,
             "currency": "USD"
           },
           {
@@ -9187,7 +9187,7 @@
             "currency": "USD"
           },
           {
-            "amount": 121.906795,
+            "amount": 121.811202,
             "currency": "USD"
           },
           {
@@ -14437,7 +14437,7 @@
             "currency": "USD"
           },
           {
-            "amount": 10197.342263,
+            "amount": 10223.258721,
             "currency": "USD"
           },
           {
@@ -14549,7 +14549,7 @@
             "currency": "USD"
           },
           {
-            "amount": 9818.256547,
+            "amount": 9842.988949,
             "currency": "USD"
           },
           {
@@ -14673,7 +14673,7 @@
             "currency": "USD"
           },
           {
-            "amount": 9445.105312,
+            "amount": 9468.685515,
             "currency": "USD"
           },
           {
@@ -14793,7 +14793,7 @@
             "currency": "USD"
           },
           {
-            "amount": 9077.811242,
+            "amount": 9100.27051,
             "currency": "USD"
           },
           {
@@ -14917,7 +14917,7 @@
             "currency": "USD"
           },
           {
-            "amount": 8716.297957,
+            "amount": 8737.666972,
             "currency": "USD"
           },
           {
@@ -15037,7 +15037,7 @@
             "currency": "USD"
           },
           {
-            "amount": 8360.490003,
+            "amount": 8380.798874,
             "currency": "USD"
           },
           {
@@ -15161,7 +15161,7 @@
             "currency": "USD"
           },
           {
-            "amount": 8010.312841,
+            "amount": 8029.591111,
             "currency": "USD"
           },
           {
@@ -15285,7 +15285,7 @@
             "currency": "USD"
           },
           {
-            "amount": 7665.692835,
+            "amount": 7683.969493,
             "currency": "USD"
           },
           {
@@ -15405,7 +15405,7 @@
             "currency": "USD"
           },
           {
-            "amount": 7326.557244,
+            "amount": 7343.860731,
             "currency": "USD"
           },
           {
@@ -15529,7 +15529,7 @@
             "currency": "USD"
           },
           {
-            "amount": 6992.834209,
+            "amount": 7009.192428,
             "currency": "USD"
           },
           {
@@ -15649,7 +15649,7 @@
             "currency": "USD"
           },
           {
-            "amount": 6664.452744,
+            "amount": 6679.893068,
             "currency": "USD"
           },
           {
@@ -15773,7 +15773,7 @@
             "currency": "USD"
           },
           {
-            "amount": 6341.342725,
+            "amount": 6355.892006,
             "currency": "USD"
           },
           {
@@ -15897,7 +15897,7 @@
             "currency": "USD"
           },
           {
-            "amount": 6023.434881,
+            "amount": 6037.119459,
             "currency": "USD"
           },
           {
@@ -16009,7 +16009,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5710.660784,
+            "amount": 5723.506491,
             "currency": "USD"
           },
           {
@@ -16133,7 +16133,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5402.952836,
+            "amount": 5414.98501,
             "currency": "USD"
           },
           {
@@ -16253,7 +16253,7 @@
             "currency": "USD"
           },
           {
-            "amount": 5100.244264,
+            "amount": 5111.487753,
             "currency": "USD"
           },
           {
@@ -16377,7 +16377,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4802.469108,
+            "amount": 4812.948279,
             "currency": "USD"
           },
           {
@@ -16497,7 +16497,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4509.562211,
+            "amount": 4519.300955,
             "currency": "USD"
           },
           {
@@ -16621,7 +16621,7 @@
             "currency": "USD"
           },
           {
-            "amount": 4221.459209,
+            "amount": 4230.480955,
             "currency": "USD"
           },
           {
@@ -16745,7 +16745,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3938.096525,
+            "amount": 3946.42424,
             "currency": "USD"
           },
           {
@@ -16865,7 +16865,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3659.411356,
+            "amount": 3667.067557,
             "currency": "USD"
           },
           {
@@ -16989,7 +16989,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3385.341665,
+            "amount": 3392.348426,
             "currency": "USD"
           },
           {
@@ -17109,7 +17109,7 @@
             "currency": "USD"
           },
           {
-            "amount": 3115.826175,
+            "amount": 3122.205132,
             "currency": "USD"
           },
           {
@@ -17233,7 +17233,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2850.804355,
+            "amount": 2856.576714,
             "currency": "USD"
           },
           {
@@ -17357,7 +17357,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2590.216415,
+            "amount": 2595.402959,
             "currency": "USD"
           },
           {
@@ -17469,7 +17469,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2334.003295,
+            "amount": 2338.624393,
             "currency": "USD"
           },
           {
@@ -17593,7 +17593,7 @@
             "currency": "USD"
           },
           {
-            "amount": 2082.106659,
+            "amount": 2086.182268,
             "currency": "USD"
           },
           {
@@ -17713,7 +17713,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1834.468884,
+            "amount": 1838.01856,
             "currency": "USD"
           },
           {
@@ -17837,7 +17837,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1591.033053,
+            "amount": 1594.075956,
             "currency": "USD"
           },
           {
@@ -17957,7 +17957,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1351.742946,
+            "amount": 1354.297844,
             "currency": "USD"
           },
           {
@@ -18081,7 +18081,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1116.543032,
+            "amount": 1118.628312,
             "currency": "USD"
           },
           {
@@ -18205,7 +18205,7 @@
             "currency": "USD"
           },
           {
-            "amount": 885.378461,
+            "amount": 887.012133,
             "currency": "USD"
           },
           {
@@ -18325,7 +18325,7 @@
             "currency": "USD"
           },
           {
-            "amount": 658.195057,
+            "amount": 659.394758,
             "currency": "USD"
           },
           {
@@ -18449,7 +18449,7 @@
             "currency": "USD"
           },
           {
-            "amount": 434.939306,
+            "amount": 435.72231,
             "currency": "USD"
           },
           {
@@ -18569,7 +18569,7 @@
             "currency": "USD"
           },
           {
-            "amount": 215.558356,
+            "amount": 215.941577,
             "currency": "USD"
           },
           {
@@ -19670,7 +19670,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1465.678422,
+            "amount": 1465.645572,
             "currency": "USD"
           },
           {
@@ -19790,7 +19790,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1411.191896,
+            "amount": 1411.128639,
             "currency": "USD"
           },
           {
@@ -19914,7 +19914,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1357.558341,
+            "amount": 1357.467064,
             "currency": "USD"
           },
           {
@@ -20038,7 +20038,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1304.766645,
+            "amount": 1304.649676,
             "currency": "USD"
           },
           {
@@ -20158,7 +20158,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1252.80583,
+            "amount": 1252.665442,
             "currency": "USD"
           },
           {
@@ -20282,7 +20282,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1201.665049,
+            "amount": 1201.503463,
             "currency": "USD"
           },
           {
@@ -20402,7 +20402,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1151.333591,
+            "amount": 1151.152972,
             "currency": "USD"
           },
           {
@@ -20526,7 +20526,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1101.80087,
+            "amount": 1101.603331,
             "currency": "USD"
           },
           {
@@ -20650,7 +20650,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1053.056432,
+            "amount": 1052.844035,
             "currency": "USD"
           },
           {
@@ -20762,7 +20762,7 @@
             "currency": "USD"
           },
           {
-            "amount": 1005.089948,
+            "amount": 1004.864704,
             "currency": "USD"
           },
           {
@@ -20886,7 +20886,7 @@
             "currency": "USD"
           },
           {
-            "amount": 957.891216,
+            "amount": 957.655085,
             "currency": "USD"
           },
           {
@@ -21006,7 +21006,7 @@
             "currency": "USD"
           },
           {
-            "amount": 911.450156,
+            "amount": 911.20505,
             "currency": "USD"
           },
           {
@@ -21130,7 +21130,7 @@
             "currency": "USD"
           },
           {
-            "amount": 865.756812,
+            "amount": 865.504595,
             "currency": "USD"
           },
           {
@@ -21250,7 +21250,7 @@
             "currency": "USD"
           },
           {
-            "amount": 820.801349,
+            "amount": 820.543838,
             "currency": "USD"
           },
           {
@@ -21374,7 +21374,7 @@
             "currency": "USD"
           },
           {
-            "amount": 776.574051,
+            "amount": 776.313015,
             "currency": "USD"
           },
           {
@@ -21498,7 +21498,7 @@
             "currency": "USD"
           },
           {
-            "amount": 733.06532,
+            "amount": 732.802485,
             "currency": "USD"
           },
           {
@@ -21618,7 +21618,7 @@
             "currency": "USD"
           },
           {
-            "amount": 690.265675,
+            "amount": 690.002721,
             "currency": "USD"
           },
           {
@@ -21742,7 +21742,7 @@
             "currency": "USD"
           },
           {
-            "amount": 648.165753,
+            "amount": 647.904315,
             "currency": "USD"
           },
           {
@@ -21862,7 +21862,7 @@
             "currency": "USD"
           },
           {
-            "amount": 606.756301,
+            "amount": 606.497972,
             "currency": "USD"
           },
           {
@@ -21986,7 +21986,7 @@
             "currency": "USD"
           },
           {
-            "amount": 566.028182,
+            "amount": 565.774512,
             "currency": "USD"
           },
           {
@@ -22110,7 +22110,7 @@
             "currency": "USD"
           },
           {
-            "amount": 525.972368,
+            "amount": 525.724867,
             "currency": "USD"
           },
           {
@@ -22222,7 +22222,7 @@
             "currency": "USD"
           },
           {
-            "amount": 486.579944,
+            "amount": 486.340079,
             "currency": "USD"
           },
           {
@@ -22346,7 +22346,7 @@
             "currency": "USD"
           },
           {
-            "amount": 447.842102,
+            "amount": 447.6113,
             "currency": "USD"
           },
           {
@@ -22466,7 +22466,7 @@
             "currency": "USD"
           },
           {
-            "amount": 409.750141,
+            "amount": 409.529791,
             "currency": "USD"
           },
           {
@@ -22590,7 +22590,7 @@
             "currency": "USD"
           },
           {
-            "amount": 372.295468,
+            "amount": 372.086921,
             "currency": "USD"
           },
           {
@@ -22710,7 +22710,7 @@
             "currency": "USD"
           },
           {
-            "amount": 335.469594,
+            "amount": 335.274161,
             "currency": "USD"
           },
           {
@@ -22834,7 +22834,7 @@
             "currency": "USD"
           },
           {
-            "amount": 299.264134,
+            "amount": 299.08309,
             "currency": "USD"
           },
           {
@@ -22958,7 +22958,7 @@
             "currency": "USD"
           },
           {
-            "amount": 263.670807,
+            "amount": 263.505389,
             "currency": "USD"
           },
           {
@@ -23078,7 +23078,7 @@
             "currency": "USD"
           },
           {
-            "amount": 228.68143,
+            "amount": 228.532842,
             "currency": "USD"
           },
           {
@@ -23202,7 +23202,7 @@
             "currency": "USD"
           },
           {
-            "amount": 194.287925,
+            "amount": 194.157332,
             "currency": "USD"
           },
           {
@@ -23322,7 +23322,7 @@
             "currency": "USD"
           },
           {
-            "amount": 160.482309,
+            "amount": 160.370844,
             "currency": "USD"
           },
           {
@@ -23446,7 +23446,7 @@
             "currency": "USD"
           },
           {
-            "amount": 127.256698,
+            "amount": 127.165461,
             "currency": "USD"
           },
           {
@@ -23570,7 +23570,7 @@
             "currency": "USD"
           },
           {
-            "amount": 94.603306,
+            "amount": 94.533361,
             "currency": "USD"
           },
           {
@@ -23686,7 +23686,7 @@
             "currency": "USD"
           },
           {
-            "amount": 62.514441,
+            "amount": 62.466821,
             "currency": "USD"
           },
           {
@@ -23810,7 +23810,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30.982507,
+            "amount": 30.958213,
             "currency": "USD"
           }
         ]
@@ -24055,7 +24055,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30236.959518,
+            "amount": 30236.281828,
             "currency": "USD"
           },
           {
@@ -24179,7 +24179,7 @@
             "currency": "USD"
           },
           {
-            "amount": 30046.140971,
+            "amount": 30044.794159,
             "currency": "USD"
           },
           {
@@ -24299,7 +24299,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29856.526636,
+            "amount": 29854.519189,
             "currency": "USD"
           },
           {
@@ -24423,7 +24423,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29668.108914,
+            "amount": 29665.44924,
             "currency": "USD"
           },
           {
@@ -24543,7 +24543,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29480.880253,
+            "amount": 29477.576678,
             "currency": "USD"
           },
           {
@@ -24667,7 +24667,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29294.83315,
+            "amount": 29290.893921,
             "currency": "USD"
           },
           {
@@ -24791,7 +24791,7 @@
             "currency": "USD"
           },
           {
-            "amount": 29109.960147,
+            "amount": 29105.393434,
             "currency": "USD"
           },
           {
@@ -24911,7 +24911,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28926.253836,
+            "amount": 28921.06773,
             "currency": "USD"
           },
           {
@@ -25035,7 +25035,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28743.706853,
+            "amount": 28737.909368,
             "currency": "USD"
           },
           {
@@ -25155,7 +25155,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28562.311882,
+            "amount": 28555.910956,
             "currency": "USD"
           },
           {
@@ -25279,7 +25279,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28382.061654,
+            "amount": 28375.065148,
             "currency": "USD"
           },
           {
@@ -25403,7 +25403,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28202.948944,
+            "amount": 28195.364644,
             "currency": "USD"
           },
           {
@@ -25515,7 +25515,7 @@
             "currency": "USD"
           },
           {
-            "amount": 28024.966573,
+            "amount": 28016.802191,
             "currency": "USD"
           },
           {
@@ -25639,7 +25639,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27848.107408,
+            "amount": 27839.370582,
             "currency": "USD"
           },
           {
@@ -25759,7 +25759,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27672.364362,
+            "amount": 27663.062655,
             "currency": "USD"
           },
           {
@@ -25883,7 +25883,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27497.730389,
+            "amount": 27487.871293,
             "currency": "USD"
           },
           {
@@ -26003,7 +26003,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27324.198491,
+            "amount": 27313.789426,
             "currency": "USD"
           },
           {
@@ -26127,7 +26127,7 @@
             "currency": "USD"
           },
           {
-            "amount": 27151.761714,
+            "amount": 27140.810027,
             "currency": "USD"
           },
           {
@@ -26251,7 +26251,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26980.413146,
+            "amount": 26968.926113,
             "currency": "USD"
           },
           {
@@ -26371,7 +26371,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26810.145919,
+            "amount": 26798.130748,
             "currency": "USD"
           },
           {
@@ -26495,7 +26495,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26640.95321,
+            "amount": 26628.417038,
             "currency": "USD"
           },
           {
@@ -26615,7 +26615,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26472.828238,
+            "amount": 26459.778131,
             "currency": "USD"
           },
           {
@@ -26739,7 +26739,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26305.764264,
+            "amount": 26292.207222,
             "currency": "USD"
           },
           {
@@ -26863,7 +26863,7 @@
             "currency": "USD"
           },
           {
-            "amount": 26139.754592,
+            "amount": 26125.697546,
             "currency": "USD"
           },
           {
@@ -26975,7 +26975,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25974.79257,
+            "amount": 25960.242384,
             "currency": "USD"
           },
           {
@@ -27099,7 +27099,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25810.871585,
+            "amount": 25795.835056,
             "currency": "USD"
           },
           {
@@ -27219,7 +27219,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25647.985068,
+            "amount": 25632.468927,
             "currency": "USD"
           },
           {
@@ -27343,7 +27343,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25486.126491,
+            "amount": 25470.137403,
             "currency": "USD"
           },
           {
@@ -27463,7 +27463,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25325.289367,
+            "amount": 25308.833931,
             "currency": "USD"
           },
           {
@@ -27587,7 +27587,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25165.467248,
+            "amount": 25148.552,
             "currency": "USD"
           },
           {
@@ -27711,7 +27711,7 @@
             "currency": "USD"
           },
           {
-            "amount": 25006.653731,
+            "amount": 24989.285143,
             "currency": "USD"
           },
           {
@@ -27831,7 +27831,7 @@
             "currency": "USD"
           },
           {
-            "amount": 24848.842449,
+            "amount": 24831.026928,
             "currency": "USD"
           },
           {
@@ -27955,7 +27955,7 @@
             "currency": "USD"
           },
           {
-            "amount": 24692.027079,
+            "amount": 24673.770971,
             "currency": "USD"
           },
           {
@@ -28075,7 +28075,7 @@
             "currency": "USD"
           },
           {
-            "amount": 24536.201334,
+            "amount": 24517.510921,
             "currency": "USD"
           },
           {
@@ -28199,7 +28199,7 @@
             "currency": "USD"
           },
           {
-            "amount": 24381.35897,
+            "amount": 24362.240474,
             "currency": "USD"
           },
           {
@@ -33332,19 +33332,19 @@
           },
           "values": [
             {
-              "amount": 521291.106018,
+              "amount": 521480.287089,
               "currency": "USD"
             },
             {
-              "amount": 421076.783751,
+              "amount": 421048.394918,
               "currency": "USD"
             },
             {
-              "amount": 332109.711932,
+              "amount": 331930.613881,
               "currency": "USD"
             },
             {
-              "amount": 188.100255,
+              "amount": 187.958395,
               "currency": "USD"
             }
           ]
@@ -33357,15 +33357,15 @@
           },
           "values": [
             {
-              "amount": 58170.046543,
+              "amount": 58163.521806,
               "currency": "USD"
             },
             {
-              "amount": 31789.436528,
+              "amount": 31777.501549,
               "currency": "USD"
             },
             {
-              "amount": 10148.603065,
+              "amount": 10142.329051,
               "currency": "USD"
             },
             {
@@ -33407,15 +33407,15 @@
           },
           "values": [
             {
-              "amount": 98616.495923,
+              "amount": 98856.068378,
               "currency": "USD"
             },
             {
-              "amount": 52720.26337,
+              "amount": 52834.450972,
               "currency": "USD"
             },
             {
-              "amount": 15094.185463,
+              "amount": 15123.301071,
               "currency": "USD"
             },
             {
@@ -33432,19 +33432,19 @@
           },
           "values": [
             {
-              "amount": 11767.829812,
+              "amount": 11766.845328,
               "currency": "USD"
             },
             {
-              "amount": 9634.901194,
+              "amount": 9631.912326,
               "currency": "USD"
             },
             {
-              "amount": 3851.552919,
+              "amount": 3849.382075,
               "currency": "USD"
             },
             {
-              "amount": 188.100255,
+              "amount": 187.958395,
               "currency": "USD"
             }
           ]
@@ -33457,15 +33457,15 @@
           },
           "values": [
             {
-              "amount": 352736.733739,
+              "amount": 352693.851576,
               "currency": "USD"
             },
             {
-              "amount": 326932.182658,
+              "amount": 326804.530071,
               "currency": "USD"
             },
             {
-              "amount": 303015.370485,
+              "amount": 302815.601684,
               "currency": "USD"
             },
             {

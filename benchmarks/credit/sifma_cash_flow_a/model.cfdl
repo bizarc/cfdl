@@ -1,0 +1,35 @@
+version 0.1
+model "sifma-cash-flow-a"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 372
+
+entity fund buyer
+
+// SIFMA, Standard Formulas for the Analysis of Mortgage-Backed Securities
+// (Uniform Practices Manual, Chapter SF), "Sample Cash Flows", Cash Flow A.
+//
+// A new 30-year pool: $100m, 8% WAC, 20% loss severity, 12-month recovery,
+// servicer advances. Cash Flow A runs it at a flat 1% SMM and 1% MDR — the
+// constant-hazard case, which is why it is reproducible today. Cash Flow B on
+// the same pool uses 150% PSA and 100% SDA, whose ramps the pack cannot yet
+// express; see docs/13_feature_backlog.md.
+//
+// The pack takes ANNUAL cpr/cdr and converts with cpr_to_periodic, so the
+// document's monthly 1% SMM is stated here as its annual equivalent:
+//   cpr = 1 - (1 - 0.01)^12 = 0.11361512828387077
+// which converts back to exactly 0.01. Practitioners quote SMM directly, so
+// having to do this by hand is itself a small gap — also in the backlog.
+//
+// 372 periods = 360 months of pool life plus the 12-month recovery tail.
+contract credit.pool_level_pay.a on entity fund.buyer {
+  term 2026-01..2056-12
+  terms {
+    balance = 100000000
+    rate = 0.08
+    term_months = 360
+    cpr = 0.11361512828387077
+    cdr = 0.11361512828387077
+    severity = 0.20
+    recovery_lag_months = 12
+  }
+}
