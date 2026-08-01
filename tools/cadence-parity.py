@@ -29,6 +29,13 @@ What I1 deliberately does NOT cover:
     against a ppy-parameterised reference generator instead, not against each
     other.
 
+  * Leap years on a DAILY grid. An annual quantity spread as X_year / 365 is
+    the Act/365-Fixed convention, so a 366-day year pays 366/365 of it — about
+    0.27% more. The convention is right; the annual identity simply does not
+    hold across a leap year at daily resolution. Daily fixtures therefore use a
+    non-leap window rather than a loosened tolerance, which would also hide
+    real errors of that size.
+
 Add a group by dropping fixtures named `<prefix>_<calendar>` into
 fixtures/valid/ and listing the prefix in GROUPS.
 
@@ -60,6 +67,12 @@ GROUPS: list[tuple[str, str, list[str], dict[str, str]]] = [
         "pack_cadence_probe",
         "testpack",
         ["monthly", "quarterly", "annual"],
+        {},
+    ),
+    (
+        "pack_cadence_energy",
+        "energy",
+        ["monthly", "quarterly", "annual", "daily"],
         {},
     ),
 ]

@@ -1,9 +1,18 @@
 # Energy pack lowering rules — fully template-driven ({{contract.*}} + defaults).
 #
 # Conventions (documented in README.md):
-# - Annual quantities are spread evenly across months (X / 12 per period).
-# - Escalation and degradation step ANNUALLY: factor^floor(t/12), matching
-#   common project-finance Excel practice.
+# - Annual quantities (`X_year`) are spread evenly across the rule's own
+#   periods: X_year / {{model.periods_per_year}}. That is the model's calendar
+#   unless the rule declares its own schedule_every, in which case it is the
+#   payment rhythm — a monthly-paying instrument on a daily book divides by 12.
+# - Escalation and degradation step ANNUALLY via {{time.elapsed_years}},
+#   matching common project-finance Excel practice. This is cadence-neutral
+#   already: it counts whole years, not periods.
+# - Rates are NOMINAL and divide (`rate / ppy`); a 6% loan is 0.5%/month and
+#   1.5%/quarter, and those are different instruments. Effective annual figures
+#   (CPR-style) would take a root instead — do not mix the two.
+# - `_months` terms always mean calendar months, on every calendar. Used as a
+#   payment count they must divide into whole periods ({{whole_periods.X}}).
 # - time.t is the 0-based period index; contract term ranges gate schedules.
 
 [[rules]]
@@ -12,7 +21,7 @@ contract_name = "energy.ppa"
 stream_name = "energy.ppa.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.ppa_price}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.ppa_price}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -28,7 +37,7 @@ contract_name = "energy.merchant"
 stream_name = "energy.merchant.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.price}} * pow(1 + {{contract.price_escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.price}} * pow(1 + {{contract.price_escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -44,7 +53,7 @@ contract_name = "energy.storage_arbitrage"
 stream_name = "energy.storage.margin{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "({{contract.mwh_cycled_year}} / 12) * {{contract.spread}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.mwh_cycled_year}} / {{model.periods_per_year}}) * {{contract.spread}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -58,7 +67,7 @@ contract_name = "energy.capacity"
 stream_name = "energy.capacity.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-amount_expr = "{{contract.payment_year}} / 12"
+amount_expr = "{{contract.payment_year}} / {{model.periods_per_year}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -69,7 +78,7 @@ contract_name = "energy.om"
 stream_name = "energy.om.expense{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-amount_expr = "({{contract.om_year}} / 12) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.om_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -107,7 +116,7 @@ owner_entity = "${subject}"
 direction = "outflow"
 # pmt() returns the Excel-convention negative payment for a positive pv;
 # negate for a positive outflow amount. Decimal-exact for whole-month terms.
-amount_expr = "-pmt({{contract.rate}} / 12, {{contract.term_months}}, {{contract.principal}})"
+amount_expr = "-pmt({{contract.rate}} / {{model.periods_per_year}}, {{whole_periods.term_months}}, {{contract.principal}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -121,7 +130,7 @@ direction = "inflow"
 # Production tax credit on generated MWh; credit rate is typically
 # inflation-adjusted (escalation), production degrades annually. The contract
 # term bounds the credit window (statutorily 10 years).
-amount_expr = "({{contract.mwh_year}} / 12) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -140,7 +149,7 @@ direction = "inflow"
 # Cash value of MACRS depreciation deductions: basis * rate(year) * tax_rate,
 # spread monthly. macrs_rate() follows IRS Pub 946 GDS half-year tables and
 # returns 0 beyond the recovery period, so the term can simply span the model.
-amount_expr = "{{contract.basis}} * macrs_rate({{time.elapsed_years}}, {{contract.life}}) / 12 * {{contract.tax_rate}}"
+amount_expr = "{{contract.basis}} * macrs_rate({{time.elapsed_years}}, {{contract.life}}) / {{model.periods_per_year}} * {{contract.tax_rate}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"

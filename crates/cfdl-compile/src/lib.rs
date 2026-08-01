@@ -3087,20 +3087,30 @@ mod pack_validation_parity_tests {
 
     #[test]
     fn shipped_packs_declare_their_cadence_support() {
-        // The four first-party packs divide by a literal 12 throughout, so
-        // each must gate itself to monthly until its rules are neutralised.
-        // testpack's rules are literal amounts and are genuinely unconstrained.
-        for pack in ["cre", "credit", "energy", "opco"] {
+        // The cadence ratchet, asserted rather than tracked by hand. A pack
+        // that still divides by a literal 12 must gate itself to monthly; a
+        // converted pack must be unconstrained. Moving a pack between these
+        // lists is the deliberate act of declaring it neutral, and it fails
+        // here until the conversion actually lands.
+        //
+        // Terminal state: STILL_MONTHLY empty, every pack unconstrained, and
+        // the `cadences` field deleted from every manifest.
+        const STILL_MONTHLY: [&str; 3] = ["cre", "credit", "opco"];
+        const CADENCE_NEUTRAL: [&str; 2] = ["energy", "testpack"];
+
+        for pack in STILL_MONTHLY {
             assert_eq!(
                 ctx(pack).cadences,
                 vec!["monthly".to_string()],
-                "{pack} must declare its cadence support"
+                "{pack} still has month-locked rules and must declare it"
             );
         }
-        assert!(
-            ctx("testpack").cadences.is_empty(),
-            "testpack is cadence-free and must stay unconstrained"
-        );
+        for pack in CADENCE_NEUTRAL {
+            assert!(
+                ctx(pack).cadences.is_empty(),
+                "{pack} is cadence-neutral and must not be gated"
+            );
+        }
     }
 
     #[test]

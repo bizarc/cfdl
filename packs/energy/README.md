@@ -5,19 +5,23 @@ arbitrage, capacity payments, O&M, investment tax credits, capex, and level-pay
 project debt. All rules are template-driven (`{{contract.*}}` + defaults) —
 no hardcoded amounts.
 
-> **Supported calendars: `monthly` only.**
-> Every rule in this pack divides annual figures by a literal 12 and counts
-> elapsed time in months, so one period must be one month. On any other grid
-> the schedule adapts but the amounts do not — figures come out twelve times
-> too small with no diagnostic. The pack therefore declares
-> `cadences = ["monthly"]` and a model on another calendar is rejected with
-> `E5013_PACK_CADENCE_UNSUPPORTED` rather than given a plausible wrong answer.
-> This is a migration scaffold and is being lifted rule by rule.
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Every rule divides annual quantities by the rule's own
+> periods-per-year rather than a literal 12, so the same deal produces the same
+> annual figures on any grid. `tools/cadence-parity.py` asserts it.
+>
+> One honest caveat, on daily only. An annual quantity is spread as
+> `X_year / 365` every day — the Act/365-Fixed convention — so a **leap year
+> pays 366/365** of the annual amount, about 0.27% more. That is the convention
+> behaving correctly, not drift, and it is why the daily parity fixture uses a
+> non-leap window. If you need exact annual totals on a daily grid across a
+> leap year, model the quantity per-period rather than per-year.
 
 ## Conventions
 
 - Annual quantities (`mwh_year`, `om_year`, `payment_year`) spread evenly
-  across months.
+  across the rule's own periods: `X_year / periods_per_year`, which is the
+  model's calendar unless a rule declares its own `schedule_every`.
 - Escalation and degradation step **annually**: `factor ^ floor(t / 12)`,
   matching common project-finance Excel practice.
 - `energy.debt_service` uses the engine's decimal-exact `pmt()` (Excel sign

@@ -1,0 +1,138 @@
+{
+  "results_version": "0.2",
+  "model_hash": "328793b9e82a09226b129c32540a356a41080c74635f5a1b7d91cb130472d858",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.project.microgrid.total": {
+        "amount": 1119407.15757,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 927279.554899,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1119407.15757,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.007404,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.energy.capacity.revenue.total": {
+        "amount": 180000.0,
+        "currency": "USD"
+      },
+      "stream.energy.om.expense.total": {
+        "amount": -147630.0,
+        "currency": "USD"
+      },
+      "stream.energy.ppa.revenue.total": {
+        "amount": 1087037.15757,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 369000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 373119.3,
+            "currency": "USD"
+          },
+          {
+            "amount": 377287.85757,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.capacity.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 60000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.om.expense": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -48000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -49200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -50430.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.ppa.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 357000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 362319.3,
+            "currency": "USD"
+          },
+          {
+            "amount": 367717.85757,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
