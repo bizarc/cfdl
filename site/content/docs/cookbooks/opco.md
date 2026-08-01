@@ -10,6 +10,29 @@ working capital, capex, scheduled term debt, cash taxes, and entry/exit —
 benchmarked in `benchmarks/opco/` against an independent month-by-month
 reference. All lowering is template-driven.
 
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Annual quantities divide by the rule's own periods-per-year rather
+> than a literal 12.
+>
+> Two things are per-period by definition and so mean different economics on
+> different grids: `amount` and `da_monthly`. Use their annual siblings —
+> `amount_year`, `da_year` — to state a deal grid-independently. A line must
+> state one of `amount` / `amount_year` (`E7001`); giving both sums them.
+>
+> **`growth_rate` compounds continuously on the model clock**, `(1+g)^(t/ppy)`,
+> which is a deliberate convention and is inherently grid-sensitive: a finer
+> grid captures more intra-year compounding. At 5% annual growth, year-one
+> revenue on a 120,000/period line is 1,472,709 monthly against 1,440,000
+> annually. Both are right for their convention. If you need annual totals to
+> match across calendars, hold `growth_rate` at zero and step the amount
+> explicitly, or model on the grid you intend to report on.
+>
+> Term debt and policy-driven working capital are correct on every calendar but
+> are not annual-total invariant either: nominal rate accrual differs by
+> cadence by design (a 6% loan is 0.5%/month and 1.5%/quarter), and the
+> working-capital delta telescopes, so only its sum over the contract's life is
+> invariant.
+
 ## Activation
 
 ```cfdl
@@ -201,7 +224,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 
 | Code | Rejects |
 |---|---|
-| `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line is missing required numeric term 'amount'. |
+| `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual). |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | OpCo line term range is missing, invalid, or outside model timeline. |
 | `E7003_OPCO_LINE_INVALID_GROWTH` | OpCo line has invalid 'growth_rate' term. |
 | `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
@@ -213,6 +236,8 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE` | OpCo EBITDA exit requires 'exit_multiple' greater than 0. |
 | `E7030_OPCO_DEBT_INVALID_AMORT` | OpCo term debt requires 'amort_months' greater than 0. |
 | `E7031_OPCO_DEBT_INVALID_RATE` | OpCo term debt requires a non-negative 'rate'. |
+| `E7010_OPCO_LINE_AMBIGUOUS_AMOUNT` | OpCo line states both 'amount' (per period) and 'amount_year' (annual); they would be summed. Give one. |
+| `E7011_OPCO_TAXES_AMBIGUOUS_DA` | OpCo cash taxes state both 'da_monthly' (per period) and 'da_year' (annual); they would be summed. Give one. |
 
 ## Worked example models
 

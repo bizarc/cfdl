@@ -51,6 +51,7 @@ source: docs/05_ir_schema.md
       "properties": {
         "calendar": { "$ref": "#/$defs/Frequency" },
         "start": { "$ref": "#/$defs/Date" },
+        "projection": { "type": "integer", "minimum": 0 },
         "periods": { "type": "integer", "minimum": 1 }
       }
     },

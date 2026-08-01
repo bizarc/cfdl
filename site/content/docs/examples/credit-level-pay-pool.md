@@ -65,15 +65,15 @@ contract credit.purchase.auto_a on entity fund.buyer {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | -185,467.92 | ±1 |
-| `model.moic` | 1.23151 | ±0.0001 |
-| `model.wal_years` | 3.824182 | ±0.0001 |
-| `domain.credit.interest` | 6,502,566.9 | ±1 |
-| `domain.credit.principal` | 22,977,229.2 | ±1 |
-| `domain.credit.recoveries` | 1,314,801.02 | ±1 |
-| `domain.credit.servicing` | 500,197.45 | ±1 |
-| `domain.credit.penalties` | 82,102.89 | ±1 |
-| `domain.credit.wal_years` | 3.98146 | ±0.0001 |
-| `domain.credit.collections` | 30,876,700 | ±1 |
+| `model.npv` | -295,975.22 | ±1 |
+| `model.moic` | 1.225381 | ±0.0001 |
+| `model.wal_years` | 3.817027 | ±0.0001 |
+| `domain.credit.interest` | 6,499,894.55 | ±1 |
+| `domain.credit.principal` | 22,978,060.49 | ±1 |
+| `domain.credit.recoveries` | 1,167,319.89 | ±1 |
+| `domain.credit.servicing` | 499,991.89 | ±1 |
+| `domain.credit.penalties` | 82,207.68 | ±1 |
+| `domain.credit.wal_years` | 3.973633 | ±0.0001 |
+| `domain.credit.collections` | 30,727,482.61 | ±1 |
 | `domain.credit.purchase` | 24,750,000 | ±1 |
-| `domain.credit.collections_multiple` | 1.247543 | ±0.0001 |
+| `domain.credit.collections_multiple` | 1.241514 | ±0.0001 |

@@ -8,6 +8,26 @@ source: packs/cre/README.md
 This pack provides deterministic lowering for a minimal Commercial Real Estate
 developer lifecycle:
 
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Annual quantities (`rent_year`, `opex_year`, `market_rent_year`,
+> `potential_gross_year`, `sales_year`) divide by the rule's own
+> periods-per-year, not a literal 12.
+>
+> `_months` terms — `free_rent_months`, `downtime_months`, `lease_up_months` —
+> always mean **calendar months**, on every calendar. They describe the lease,
+> not the modeller's grid, so they pro-rate exactly: five months free rent is
+> 5 periods monthly, 1.667 quarterly and 0.417 annually, and year one comes out
+> at 480,000 x 7/12 = 280,000 on all three.
+>
+> `base_rent` on `cre.lease` is per-period by definition; `base_rent_year` is
+> its annual sibling and is how to state a lease grid-independently. A lease
+> must give one of the two (`E6001`).
+>
+> `cre.exit_forward` derives NOI over the **year** after the sale, which is
+> `project 12` on a monthly model, `project 4` quarterly and `project 1`
+> annually — it used to be a hardcoded twelve periods, meaning twelve years on
+> an annual grid.
+
 - construction (`cre.construction_stub`)
 - lease-up (`cre.lease`)
 - stabilized operations (`cre.ops_revenue`, `cre.ops_expense`)
@@ -157,13 +177,22 @@ stabilized occupancy before the stop test); a base-year structure is the
 stop set to year-0 grossed-up opex.
 
 Rollover downtime follows industry-standard expected-value semantics: the window
-starts at expiry, the first `downtime_months` pay only the renewal-scenario
-rent (p × renewal), and the full probability-weighted blend applies after.
-`cre.exit_forward` derives the sale-year NOI from the modeled streams over
-the 12 months after the sale date (requires `time ... project 12`);
-`cre.exit` remains for analyst-supplied forward NOI. Remaining simplification
-(documented): blended rollover TI/LC pays entirely at expiry rather than
-splitting the new-lease portion to after downtime.
+starts at expiry, the renewal scenario (p × renewal) pays throughout, and the
+re-let scenario's rent phases in once the downtime has elapsed. Turnover costs
+split the same way — the renewal portion at expiry, the re-let portion when the
+new tenant takes occupancy.
+
+`cre.exit_forward` derives the sale-year NOI from the modeled streams over the
+**year** after the sale date, which needs a projection tail of one year:
+`project 12` on a monthly model, `project 4` quarterly, `project 1` annually.
+`cre.exit` remains for analyst-supplied forward NOI.
+
+Both exit rules settle **on their stated date**, which discounts from the start
+of the period containing it rather than the end. On a monthly model that is one
+month of discounting; on an annual model it is a full year, and a reversion is
+usually taken at period end. If that matters to your model, express the sale as
+a one-period stream on an ordinary schedule instead — see
+`benchmarks/cre/mit_rentleg_plaza`, which does exactly that and documents why.
 
 ### Simple whole-property contracts
 
@@ -243,8 +272,9 @@ contract cre.rollover.tenant_a on entity asset.tower {
 }
 ```
 
-The `project 12` tail extends evaluation past the hold so exit valuation
-sees a full forward year. Rollover windows start AT EXPIRY; escalations
+The projection tail extends evaluation past the hold so exit valuation sees
+a full forward year: `project 12` on a monthly model, `project 4` quarterly,
+`project 1` annually. Rollover windows start AT EXPIRY; escalations
 step on lease anniversaries.
 
 ## Run it
@@ -299,7 +329,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 
 | Code | Rejects |
 |---|---|
-| `E6001_CRE_LEASE_MISSING_BASE_RENT` | CRE lease is missing required term 'base_rent'. |
+| `E6001_CRE_LEASE_MISSING_BASE_RENT` | CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual). |
 | `E6002_CRE_LEASE_INVALID_TERM_RANGE` | CRE lease term range is missing, invalid, or outside model timeline. |
 | `E6003_CRE_LEASE_UP_MISSING_MONTHS` | CRE lease_up requires term 'lease_up_months' > 0. |
 | `E6010_CRE_EXIT_MISSING_EXIT_CAP` | CRE exit contract is missing required term 'exit_cap'. |
@@ -312,6 +342,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E6032_CRE_UNIT_INVALID_PRO_RATA` | CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1. |
 | `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | CRE rollover 'renewal_probability' must be a probability between 0 and 1. |
 | `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | CRE rollover 'downtime_months' must be a whole number of months, 0 or more. |
+| `E6030_CRE_LEASE_AMBIGUOUS_RENT` | CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one. |
 
 ## Worked example models
 

@@ -42,11 +42,11 @@ figure the model computes rather than one the analyst states.
 MIT fn 5 does exactly this: the replacement Suite 100 lease takes its stop from
 actual 2004 opex, which is why its 2004 reimbursement is exactly zero.
 
-Blocks: the same benchmark. Also forces a duplicated opex formula — see 3.1,
+Blocks: the same benchmark. Also forces a duplicated opex formula — see 4.1,
 which is the underlying cause.
 
 Shape: a term that names a period rather than an amount, resolved after the
-opex stream exists. Depends on 3.1.
+opex stream exists. Depends on 4.1.
 
 ### 1.3 Abatements as a first-class NOI line
 
@@ -79,7 +79,7 @@ min(month, 30)), 100)` is closed-form and is already asserted in
 factor is a cumulative product with no elementary closed form, and the
 expression language has no `exp`/`ln` to sum logs instead.
 
-**This is not item 3.2 (per-period state) and should not be bundled with it.** A
+**This is not item 4.2 (per-period state) and should not be bundled with it.** A
 PSA ramp is deterministic in loan age — nothing accumulates — so the natural
 fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
 a published table behind a function. Substituting one call for `pow(k, p)`
@@ -120,9 +120,52 @@ way in. Note the conversion is cadence-dependent, so it belongs with
 
 ---
 
-## 3. Language and engine
+## 3. Energy pack
 
-### 3.1 A stream may not read another period's value
+### 3.1 A rounding builtin, and the production credit that needs one
+
+`energy_ptc_credit` carries the escalated credit rate as a continuous quantity.
+The statutory credit is published **rounded to the nearest 0.1 cent per kWh**
+after each year's inflation adjustment, so the real schedule is a staircase and
+the pack computes the ramp underneath it.
+
+The error alternates sign rather than drifting — reconciled over a 10-year
+window it runs from -1.79% in year 1 to +1.18% in year 5, netting -0.30% over
+the window. Small in aggregate, up to 1.8% in any single year, and a debt sizing
+struck off one year's coverage will feel it.
+
+The blocker is the language, not the pack: there is no `round_to(x, step)` in
+the expression environment, so the staircase cannot be written. That builtin is
+the item; the rule change is one call once it exists. It would also serve
+tariff blocks, tranche denominations and any other quantity quoted to a tick.
+
+Found reconciling `benchmarks/energy/utility_pv_singleowner` against an external
+project-finance model. `benchmarks/energy/wind_ptc_macrs` asserts the unrounded
+figure against an in-house generator, so both sides carried the same omission
+and had always agreed.
+
+### 3.2 A derived depreciable basis
+
+`energy.macrs_shield` takes `basis` as an input. Taking an investment credit
+conventionally reduces the depreciable basis by half the credit, so a model
+claiming a 30% ITC on $100m must enter $85m by hand; entering $100m overstates
+the shield by 17.6% and nothing objects.
+
+Deliberate today — basis adjustments are jurisdictional and there are several,
+and a wrong default is worse than no default. But the commonest one is
+mechanical, and the pack already has both the credit and the cost in scope.
+
+Shape: an optional `itc_basis_reduction` term on `energy.macrs_shield`, or a
+cross-contract rule that reads `energy.itc`. The latter is phase-2 machinery for
+a one-line arithmetic adjustment, so probably the former.
+
+Found the same way. Documented in `packs/energy/README.md` in the meantime.
+
+---
+
+## 4. Language and engine
+
+### 4.1 A stream may not read another period's value
 
 Phase-1 streams cannot look at each other at all; phase-2 streams can read
 phase-1 through `series_sum`/`series_avg` but not each other, which is what
@@ -140,7 +183,7 @@ both cases. Note this is close to the per-period persistent state the pack
 roadmap identifies as the gate on roughly two thirds of its candidate packs, so
 it is worth designing the two together rather than separately.
 
-### 3.2 Per-period persistent state
+### 4.2 Per-period persistent state
 
 No accumulator, no carryforward, no balance that a period can add to and a
 later period draw down. Cash sweeps, revolver draws, FF&E reserves, escrow
@@ -148,13 +191,13 @@ accounts, NOL carryforwards and construction-interest capitalisation all need
 it, and `packs/opco/lowering/rules.toml` says so in its header.
 
 Not discovered by this work — it is a known absence — but recorded here because
-3.1 is a strictly smaller version of it and the two should share a design.
+4.1 is a strictly smaller version of it and the two should share a design.
 
 ---
 
-## 4. Cross-pack
+## 5. Cross-pack
 
-### 4.1 Day count beyond the four supported bases
+### 5.1 Day count beyond the four supported bases
 
 `{{model.accrual_divisor}}` handles `30/360`, `30e/360`, `act/360` and
 `act/365`. `act/act` is not supported: it needs the days in the *year* the
@@ -164,7 +207,7 @@ period falls in, which the expression environment does not expose
 Low urgency — the four cover most instruments — but `act/act` is the government
 bond convention and will be wanted if a sovereign or municipal pack appears.
 
-### 4.2 excel_compat cannot be selected for a model run
+### 5.2 excel_compat cannot be selected for a model run
 
 `cfdl_expr::eval_with_mode` takes a `Mode`, and `Mode::ExcelCompat` evaluates
 in IEEE-754 float64 to reproduce Excel's representation artifacts. But the
@@ -187,7 +230,7 @@ both ways rather than by argument.
 Found while validating the credit pack against an external reference and asking
 whether Excel mode would move the numbers. It cannot be turned on to find out.
 
-### 4.3 An acquisition or disposal in a period other than the term's
+### 5.3 An acquisition or disposal in a period other than the term's
 
 `schedule_kind = "on_date"` places a one-shot flow in the period containing its
 date, and `schedule_at_period_end` now says where in that period it sits. What
@@ -203,13 +246,19 @@ disposal discounting.
 
 ## Where these came from
 
-Section 1 and item 3.1 were found building `benchmarks/cre/mit_rentleg_plaza`
+Section 1 and item 4.1 were found building `benchmarks/cre/mit_rentleg_plaza`
 against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
 checked against a published third-party figure rather than an in-house
 reference. Section 2 came the same way, from `benchmarks/credit/mbs_pool_conventions`
 against the published industry reference for MBS cash flows — which also found
 three outright defects, in the prepayment base, the recovery basis and the
 payment-striking divisor, all fixed rather than listed here.
+
+Section 3 came from `benchmarks/energy/utility_pv_singleowner` against a
+national laboratory's open-source project-finance model — the energy pack's
+first external check of any kind. Five rules reproduced it to within 1e-6
+dollars on the first attempt; the two items above are what the reconciliation
+found *around* the agreement.
 
 That is the argument for building more of them: an external number finds gaps
 that two of your own implementations agreeing never will. See

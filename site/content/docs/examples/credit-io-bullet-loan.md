@@ -61,13 +61,13 @@ contract credit.purchase.bridge_a on entity fund.buyer {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | -61,379.09 | ±1 |
-| `model.moic` | 1.286095 | ±0.0001 |
-| `model.wal_years` | 3.812657 | ±0.0001 |
-| `domain.credit.interest` | 3,089,263.09 | ±1 |
-| `domain.credit.principal` | 9,355,594.23 | ±1 |
-| `domain.credit.recoveries` | 386,643.46 | ±1 |
-| `domain.credit.wal_years` | 4.245605 | ±0.0001 |
-| `domain.credit.collections` | 12,831,500.78 | ±1 |
+| `model.npv` | -61,370.42 | ±1 |
+| `model.moic` | 1.286054 | ±0.0001 |
+| `model.wal_years` | 3.812188 | ±0.0001 |
+| `domain.credit.interest` | 3,088,798.79 | ±1 |
+| `domain.credit.principal` | 9,355,691.08 | ±1 |
+| `domain.credit.recoveries` | 386,585.35 | ±1 |
+| `domain.credit.wal_years` | 4.244941 | ±0.0001 |
+| `domain.credit.collections` | 12,831,075.22 | ±1 |
 | `domain.credit.purchase` | 10,000,000 | ±1 |
-| `domain.credit.collections_multiple` | 1.28315 | ±0.0001 |
+| `domain.credit.collections_multiple` | 1.283108 | ±0.0001 |

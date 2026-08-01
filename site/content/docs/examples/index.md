@@ -25,6 +25,7 @@ Use these examples to learn the language and run real models.
 Complete models for every pack, each checked period-by-period against an independent reference implementation. These are the most detailed examples on the site, and their numbers are verified rather than asserted.
 
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
+- [energy: utility pv singleowner](/docs/examples/energy-utility-pv-singleowner)
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)
 - [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
@@ -32,4 +33,5 @@ Complete models for every pack, each checked period-by-period against an indepen
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
+- [credit: mbs pool conventions](/docs/examples/credit-mbs-pool-conventions)
 - [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)

@@ -200,7 +200,12 @@ Parser errors MUST use `E0xxx_...` codes.
 
 - `E2101_STREAM_MISSING_SCHEDULE`
 - `E2102_STREAM_MISSING_AMOUNT`
-- `E2103_SCHEDULE_OUT_OF_BOUNDS`
+- `E2103_SCHEDULE_OUT_OF_BOUNDS` — a schedule reaches outside the model
+  timeline. The bound is the cash horizon **plus** any `project <n>` tail,
+  since the engine evaluates streams over both; a schedule may reach into the
+  tail deliberately to feed a `series_sum` valuation. Applied to hand-written
+  streams during validation and mirrored onto pack-lowered ones during
+  lowering, so a pack cannot express what a model may not.
 - `E2104_SCHEDULE_INVALID_RANGE`
 - `E2105_SCHEDULE_INVALID_DAY_OF_MONTH`
 - `E2106_SCHEDULE_PHASE_NOT_FOUND`
@@ -257,8 +262,53 @@ Warnings:
   can produce values outside the range the pack allows for that term. The
   value itself cannot be checked until the run, but the clip states the range
   the driver can reach, so it can be.
+- `E5013_PACK_CADENCE_UNSUPPORTED` — the model's calendar is not one the pack
+  declares in `cadences`. A pack whose expressions divide annual figures by a
+  literal 12 assumes one period is one month; on any other grid the *schedule*
+  adapts correctly and only the *amount* does not, so the model produces
+  plausible figures out by a factor of twelve. Refusing to lower is the only
+  honest option. Use a calendar the pack supports, or a pack that supports the
+  calendar.
+- `E5014_RULE_CADENCE_UNSUPPORTED` — as above, but declared by one lowering
+  rule rather than the whole pack. This exists so a pack can carry neutral and
+  month-locked rules side by side while it is being migrated, instead of being
+  gated wholesale.
+- `E5018_TERM_START_OFF_GRID` — a pack contract's `term_start` does not fall on
+  one of the model's period boundaries. Periods step from the model's start by
+  whole calendar units, and elapsed-period counting measures whole steps from
+  the term, so a term beginning mid-period counts short for the contract's
+  whole life. Always satisfied on a monthly calendar, where every `YYYY-MM`
+  term is a boundary.
+
+- `E5015_TERM_MONTHS_NOT_DIVISIBLE` — a `_months` term used as a count of
+  payment periods does not divide into whole periods on this grid. A 30-month
+  loan is not two and a half annual payments, and no closed form can express
+  one, so this is an error rather than a rounding. Thresholds such as
+  `free_rent_months` pro-rate instead and never reach here.
+- `E5016_RESERVED_TERM_PREFIX` — a contract term begins `model.`, `time.`,
+  `periods.` or `whole_periods.`. Lowering rules resolve those prefixes before
+  contract terms, so the term would be shadowed and never read. Term keys may
+  legitimately be dotted, so this is reachable by accident.
+- `E5017_PERIOD_TERM_NOT_LITERAL` — a `_months` term that a rule converts into
+  periods defers to `inputs.<name>`. The conversion happens at compile time and
+  an input is not known until the run.
+- `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` or
+  `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`,
+  `act/365`. Not defaulted silently: the gap between act/360 and act/365 is
+  roughly 1.4% of interest.
+
+Both `cadences` gates are a migration scaffold rather than a permanent
+statement about a pack: the entries are removed rule by rule as the
+expressions become cadence-neutral.
 
 ### 7.10 Pack domain validations (E6xxx–E9xxx)
+
+Two term spellings that mean the same figure in different units — a per-period
+`amount` and an annual `amount_year` — are checked in both directions: at
+least one must be given (`any_term_present`), and at most one may be
+(`terms_mutually_exclusive`). The second matters because a lowering rule sums
+the pair with zero defaults, templates having no conditional, so stating both
+would silently add them. `E6030`, `E7010` and `E7011` are those checks.
 
 These diagnostics come from a pack's own `validations.toml`, evaluated by the
 compiler against each contract. They are pack-origin diagnostics and must
@@ -359,4 +409,13 @@ For invalid fixtures, store expected diagnostics as:
 
 Rules:
 - Assert `code`, `severity`, `file`, and `span`.
-- Messages may be asserted via substring match to allow minor wording changes.
+- Messages are asserted in FULL. `tools/golden-runner` compares canonical JSON
+  and diffs it, so rewording a message changes a golden and must be re-blessed
+  with `CFDL_GOLD_UPDATE=1`.
+
+  An earlier revision of this page said messages "may be asserted via substring
+  match to allow minor wording changes". No runner has ever done that. The
+  exact comparison is the better behaviour and is kept deliberately: a
+  diagnostic's wording is part of its contract with the reader, and a silent
+  drift in what the compiler says is exactly as bad as a silent drift in what
+  it computes. Making a reword show up in a diff is the point, not friction.

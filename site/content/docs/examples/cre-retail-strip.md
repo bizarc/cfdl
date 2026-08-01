@@ -106,6 +106,6 @@ contract cre.exit on entity asset.strip_center {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | 8,363,049.65 | ±1 |
+| `model.npv` | 8,328,491.23 | ±1 |
 | `domain.cre.noi` | 4,012,080.73 | ±1 |
 | `domain.cre.leasing_costs` | 340,000 | ±1 |

@@ -10,6 +10,72 @@ defaults, loss severity and a recovery lag. Benchmarked in
 `benchmarks/credit/` against independent month-by-month reference
 implementations.
 
+> **Supported calendars: all of them.** Two distinct daily shapes both work,
+> and the difference matters:
+>
+> 1. **A daily book that pays monthly** — the ordinary mortgage or ABS pool.
+>    Declare `payment_frequency = "month"` and periods-per-year comes from the
+>    payment rhythm (12), not the calendar (365). A 30-year mortgage on a daily
+>    book is still 360 payments, not 10,950. Verified exactly: the same pool on
+>    a 39-period monthly grid and an 1186-period daily book agrees to the cent
+>    on every stream.
+> 2. **Genuinely daily accrual** — warehouse lines, repo, revolvers,
+>    daily-reset floaters. Leave `payment_frequency` unset and ppy is 365.
+>
+> `term_months` must divide into whole payment periods. For daily accrual that
+> means a tenor that is a multiple of 12 months (360 months → 10,950 days);
+> otherwise `E5015_TERM_MONTHS_NOT_DIVISIBLE` names the nearest legal values.
+>
+> Note the two rate conventions, which must not be confused. The note rate,
+> servicing strip and float margin are **nominal** and divide by ppy. CPR and
+> CDR are **effective annual** and take a root — `cpr_to_periodic(x, ppy)`,
+> which is exactly `cpr_to_smm(x)` at ppy = 12.
+>
+> **Day count is selectable** via a `day_count` term: `30/360` (the default,
+> and what every existing model gets), `30e/360`, `act/360` or `act/365`. It
+> applies to the note rate, the servicing strip and the floating
+> index-plus-margin — every nominal rate in the pack.
+>
+> Under `act/360`, 6% on 1,200,000 accrues 6,200 in a 31-day January and 5,600
+> in February, against a flat 6,000 under 30/360, and 73,000 over a 365-day
+> year rather than 72,000. That 365/360 uplift is the convention's whole point,
+> and it is the USD credit default. A misspelling is `E5019_UNKNOWN_DAY_COUNT`,
+> not a silent fallback.
+>
+> **Amortisation has its own day count.** A level-pay pool strikes its payment
+> once and then accrues interest period by period, so `amortization_day_count`
+> selects the basis the payment is struck from and defaults to `day_count`.
+> Setting `day_count = "act/360"` with `amortization_day_count = "30/360"` — the
+> common US commercial case — holds the payment constant while interest varies
+> with month length and scheduled principal absorbs the difference. Setting only
+> `day_count` leaves every existing model unchanged. Applies to
+> `credit.pool_level_pay`; IO/bullet contracts have no amortisation to strike.
+>
+> Annual totals do **not** match across monthly / quarterly / annual, and
+> should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
+> which are different instruments. Those cadences are checked against the
+> benchmark reference generators rather than against each other.
+
+## Conventions, and where they come from
+
+Prepayment and default follow the market-standard MBS conventions for CPR,
+SMM and the standard prepayment and default curves; the pack is checked for
+parity against the published industry reference schedule.
+
+- **SMM applies to the balance at the BEGINNING of the period, net of
+  scheduled amortisation only.** Defaults are not removed from the base.
+- Because both attritions are drawn from that same base, survival is
+  **additive**: `k = (1 - mdr) - smm`, not `(1 - mdr)(1 - smm)`.
+- CPR and CDR are effective annual rates and convert by a root
+  (`cpr_to_periodic`); note rates are nominal and convert by division.
+
+`benchmarks/credit/mbs_pool_conventions` asserts anchor figures across the life
+of a 30-year pool and passes, including recoveries — a level-pay pool's
+defaulted balance keeps amortising in foreclosure, so what is liquidated is the
+amortised balance rather than face. One known gap remains, in
+`docs/13_feature_backlog.md`: age-varying prepayment and default curves are not
+expressible, so only constant-hazard pools can be modelled.
+
 ## Contract types
 
 ### `credit.pool_level_pay`
@@ -242,3 +308,4 @@ reference implementation.
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
+- [credit: mbs pool conventions](/docs/examples/credit-mbs-pool-conventions)

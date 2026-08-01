@@ -29,11 +29,23 @@ Two evaluation modes exist; models always run in **decimal mode**.
   Float64 is used ONLY as a documented escape for transcendental operations:
   fractional exponents (`x ^ 0.5`), and iterative solvers (`rate`,
   `cpr_to_smm`). Integer exponents are decimal-exact.
-- **excel_compat mode.** Available to benchmark harnesses via
-  `cfdl_expr::eval_with_mode`. All arithmetic runs in IEEE-754 float64,
-  reproducing Excel's representation artifacts (`0.1 + 0.2 - 0.3` yields
-  ~5.55e-17, exactly as Excel does). Used to prove parity against Excel
-  reference models and to explain decimal-vs-float differences.
+- **excel_compat mode.** All arithmetic runs in IEEE-754 float64, reproducing
+  Excel's representation artifacts (`0.1 + 0.2 - 0.3` yields ~5.55e-17, exactly
+  as Excel does), for proving parity against Excel reference models and
+  explaining decimal-vs-float differences.
+
+  It is reachable **only from Rust**, via `cfdl_expr::eval_with_mode`. There is
+  no CLI flag and no run-config key, so a *model* cannot be run in it — the
+  engine always evaluates in decimal. Nothing in the repo calls
+  `eval_with_mode` today. See `docs/13_feature_backlog.md`.
+
+  Whether that matters is measured rather than assumed:
+  `excel_compat_stability` in `crates/cfdl-calc/src/lib.rs` runs the credit
+  pack's arithmetic both ways and pins the divergence below 1e-12 — about ten
+  orders of magnitude inside the tolerance of the benchmark it feeds. Decimal
+  mode already routes fractional exponents through the f64 escape, so the two
+  modes differ only where a model accumulates long sums or compares for
+  equality.
 
 Rounding: `round()` follows Excel semantics (half away from zero), not
 banker's rounding. `round_down`/`round_up` truncate toward/away from zero.
@@ -57,12 +69,31 @@ The host (compiler or engine) provides values under five roots:
 | Root | Contents |
 |---|---|
 | `model` | `model.id`, `model.base_currency` |
-| `time` | `time.t` (0-based period index), `time.date`, `time.phase` |
+| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period` |
 | `entity` | attributes of the stream's owning entity |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
 
 Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
+
+`time.ppy` is how many periods of the model's calendar make a year — 365, 12,
+4 or 1 — so a model can spread an annual figure without hardcoding a divisor
+and without being rewritten when the calendar changes:
+
+```
+amount = inputs.rent_year / time.ppy
+```
+
+Domain packs do **not** use it. A lowering rule resolves its own
+periods-per-year at compile time (`{{model.periods_per_year}}`, see
+[Pack Interface](/docs/language-reference/pack-interface)), because a rule may pay on its own interval: a
+monthly-paying loan carried on a daily book divides by 12, not 365, and only
+the compiler can see that. `time.ppy` reads the calendar and would say 365.
+
+`time.days_in_period` is the actual calendar days the current period spans —
+31 in January, 28 in a non-leap February, 1 on a daily grid. It is what makes
+an Actual/360 or Actual/365 accrual expressible: `rate * time.days_in_period /
+360`. Packs reach it through `{{model.accrual_divisor}}` rather than directly.
 
 ## 4. Builtin functions
 
@@ -88,7 +119,14 @@ Depreciation: `macrs_rate(year, life)` — IRS Pub 946 GDS half-year convention
 percentages for 5/7/15/20-year property (`year` is 0-based; 0 beyond the
 recovery period).
 
-Credit: `cpr_to_smm(cpr)`.
+Credit: `cpr_to_smm(cpr)`, `cpr_to_periodic(cpr, ppy)`.
+
+`cpr_to_smm(x)` is `1 - (1-x)^(1/12)` and always means *monthly*.
+`cpr_to_periodic(x, ppy)` is the same conversion on a grid of `ppy` periods per
+year, and `cpr_to_periodic(x, 12) == cpr_to_smm(x)` exactly. Note this is a
+**root**, not a division: CPR and CDR are effective annual rates, so they
+convert by taking a root, while note rates are nominal and convert by dividing.
+Using one convention for the other is a silent factor-level error.
 
 Curves: `curve_value(name, date)` looks up a model-declared `curve`
 statement at a date. `step` curves (the default) are flat-forward: the last
@@ -108,7 +146,7 @@ excluded from cash results and NPV.
 
 Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `edate(d, months)`, `eomonth(d, months)`, `months_between(d1, d2)`,
-`year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;
+`days_between(d1, d2)`, `year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;
 `d + n` / `d - n` shift by days.
 
 Day-count bases for `year_frac`: `"30/360"` (aliases `"30/360 us"`, `"bond"`),

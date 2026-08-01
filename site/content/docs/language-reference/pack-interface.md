@@ -73,7 +73,10 @@ A pack MUST have a semver-like version string:
 
 ### 3.3 Compatibility
 - Compiler version and pack version are **independently versioned**.
-- A pack MUST declare supported compiler IR versions.
+- A pack declares which model *calendars* it supports via `cadences` (§5.1).
+  It does NOT declare supported compiler IR versions: earlier revisions of this
+  page said it MUST, but no such field has ever been read or shipped. See the
+  note under §5.1 on fields this page once described that do not exist.
 
 ---
 
@@ -117,6 +120,7 @@ A pack directory MUST include `pack.toml`:
 name = "cre"
 version = "0.1.0"
 description = "Commercial Real Estate domain pack"
+cadences = ["monthly"]   # optional; empty or absent means every calendar
 
 [entrypoints]
 aliases = "aliases.toml"
@@ -127,9 +131,22 @@ validations = "validations.toml"
 
 Rules:
 - `name` and `version` are REQUIRED. `description` is optional.
+- `cadences` is optional and lists the model calendars the pack's rules lower
+  correctly on (`daily`, `monthly`, `quarterly`, `annual`). Omit it, or leave
+  it empty, and the pack is unconstrained — so a third-party pack that says
+  nothing is unaffected. Declare it when the expressions assume a period
+  length: a rule that divides an annual figure by a literal 12 is only correct
+  on a monthly grid, and on any other one the schedule adapts while the amount
+  does not. A model on an unlisted calendar is `E5013_PACK_CADENCE_UNSUPPORTED`.
+  A single rule may narrow this further with its own `cadences`
+  (`E5014_RULE_CADENCE_UNSUPPORTED`), which is what lets a pack carry neutral
+  and month-locked rules side by side mid-migration.
 - Every entrypoint is optional; a pack supplies only what it defines. The
   recognised keys are `aliases`, `templates`, `lowering`, `metrics` and
-  `validations`, each a path relative to the pack directory.
+  `validations`, each a path relative to the pack directory. An unrecognised
+  key is accepted and ignored, so check spelling: `packs/cre/pack.toml` once
+  declared `defaults = "defaults.toml"`, which the loader has no field for, and
+  the file sat unread.
 - `version` is matched against the model's `use pack "<name>" version "<v>"`
   by exact string equality — there is no semver range logic. A pack present at
   a different version reports `E4004_MISSING_PACK` naming both versions, not
@@ -249,7 +266,7 @@ v0.1 recommended declarative structure:
           "stream_name": "rent",
           "owner": "${subject}",
           "direction": "inflow",
-          "currency": "${contract.currency}",
+          "currency": "",
           "schedule": {"kind": "Every", "every": "monthly", "on_rule": {"kind": "EndOfMonth"}},
           "amount_expr": {"lang": "cfdl", "src": "{{contract.base_rent}}"}
         }
@@ -260,8 +277,16 @@ v0.1 recommended declarative structure:
 ```
 
 Template rules:
-- `${subject}` resolves to the contract subject entity symbol.
-- `${contract.currency}` resolves to the contract currency.
+- `${subject}` resolves to the contract subject entity symbol. It is the only
+  `${...}` substitution, and it applies to `owner_entity` alone.
+
+`currency` is **not** templated, and earlier revisions of this page were wrong
+to describe a `${contract.currency}`: a contract has no currency to resolve —
+`ContractStmt` carries no such field, so nothing could ever have supplied one.
+The real mechanism is simpler. Leave a rule's `currency` empty and the stream
+inherits the model's declared currency, which is what keeps a pack usable
+outside the United States. Set it only when the instrument is genuinely fixed
+to one currency, and the model must then agree (`E2107`).
 
 ### Schedule interval
 
@@ -345,7 +370,7 @@ Validation must:
 Validations are declared as data in `packs/<pack>/validations.toml` and
 evaluated by the compiler; they are not implemented in the engine. Each rule
 names the contract it applies to, the check, a stable diagnostic code, and a
-message. Available checks: `term_present`, `any_term_present`, `term_number`
+message. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
 (integer or decimal, with `min`/`max`/`exclusive_min`/`exclusive_max`, and
 `when`/`on_invalid` to control absent and unparseable values),
 `term_range_within_timeline`, `term_enum`, and `term_compare`. The set is
@@ -585,8 +610,9 @@ This v0.1 interface is designed to evolve without breaking core models.
 
 ## Parameterized lowering rules (templates)
 
-Lowering-rule fields `amount_expr`, `schedule_from`, and `schedule_to` may
-contain `{{contract.<key>}}` placeholders, resolved at compile time:
+Lowering-rule fields `amount_expr`, `schedule_from`, `schedule_to`,
+`stream_name`, `schedule_net_days`, `schedule_net_months` and `schedule_every`
+may contain `{{...}}` placeholders, resolved at compile time:
 
 1. `{{contract.term_start}}` / `{{contract.term_end}}` — the contract's
    `term A..B` range (normalized dates).
@@ -597,6 +623,102 @@ contain `{{contract.<key>}}` placeholders, resolved at compile time:
 
 A placeholder with no contract value and no default is a compile error
 (`E5006_MISSING_CONTRACT_TERM`), one diagnostic per missing key.
+
+### Where a one-shot flow sits in its period
+
+`schedule_kind = "on_date"` settles on the stated date, which discounts from
+the period's open. Set `schedule_at_period_end = true` for a **disposal**: a
+reversion is taken at the end of the holding period and discounts the full n
+periods. The distinction is by kind, not by being one-shot — acquisitions,
+draws, dated leasing costs and tax credits all want the default.
+
+### Cadence placeholders
+
+A rule must not assume how long a period is. These placeholders carry that,
+and are resolved *before* contract terms — declaring a term under one of the
+reserved prefixes `model.`, `time.`, `periods.` or `whole_periods.` is
+`E5016_RESERVED_TERM_PREFIX`, because the term would never be read.
+
+| Placeholder | Expands to |
+|---|---|
+| `{{model.periods_per_year}}` | `365` / `52` / `12` / `4` / `1` |
+| `{{model.calendar}}` | the rule's effective frequency name |
+| `{{model.accrual_divisor}}` | what a nominal annual rate divides by |
+| `{{model.amortization_divisor}}` | what a level payment is struck from |
+| `{{periods.<term>}}` | `<term>` months as periods, fractional allowed |
+| `{{whole_periods.<term>}}` | the same, but must be integral |
+| `{{time.elapsed_periods}}` | whole periods since `term_start` |
+| `{{time.elapsed_years}}` | whole years since `term_start` |
+| `{{time.periods_to_term_end}}` | whole periods from now to `term_end` |
+
+**Periods-per-year comes from the rule's payment interval, not the model's
+calendar.** A rule that declares `schedule_every` accrues on that rhythm, so a
+monthly-paying loan carried on a daily book divides by 12, not 365. This is why
+the value is resolved here rather than exposed at run time: the expression
+environment sees the calendar and knows nothing of the schedule. Hand-written
+models get `time.ppy` instead, which is the calendar-based equivalent.
+
+`schedule_every` is itself templated, so a contract can declare its own rhythm
+(`payment_frequency = "month"`) and one rule can serve the monthly, quarterly
+and daily-book versions of an instrument.
+
+**`_months` terms always mean calendar months**, on every calendar: they
+describe the contract, not the modeller's grid. `{{periods.X}}` converts one
+into a possibly-fractional period count and is for thresholds — five months
+free rent is 5 periods monthly, 1.667 quarterly, 0.417 annually, and pro-rates
+exactly in each case. `{{whole_periods.X}}` is for payment *counts* that go
+into `pow` exponents and annuity term arguments, where a fractional value is
+meaningless: a 30-month loan is not 2.5 annual payments, so that is
+`E5015_TERM_MONTHS_NOT_DIVISIBLE` rather than a rounding. Both need a literal;
+a term deferred to `inputs.<name>` cannot be converted at compile time
+(`E5017_PERIOD_TERM_NOT_LITERAL`).
+
+**Day count.** A nominal annual rate becomes a periodic one by dividing, but
+by what depends on the convention. `{{model.accrual_divisor}}` reads the
+contract's `day_count` term and expands to:
+
+| `day_count` | expands to | meaning |
+|---|---|---|
+| absent, `30/360`, `30e/360` | `<ppy>` | every period is 1/ppy of a year |
+| `act/360` | `(360 / time.days_in_period)` | actual days over a 360-day year |
+| `act/365` | `(365 / time.days_in_period)` | actual days over a 365-day year |
+
+Dividing by `(360 / days)` is multiplying by `days / 360`, so a 31-day January
+accrues more than a 28-day February — which is the point of an Actual
+convention. On a daily grid it collapses to `rate / 360`. The default expands
+to exactly the same text as `{{model.periods_per_year}}`, so a rule can adopt
+the placeholder without changing any existing model. An unrecognised value is
+`E5019_UNKNOWN_DAY_COUNT` rather than a silent fallback: act/360 against
+act/365 is about 1.4% of interest.
+
+Use it for every **nominal** rate — note rates, servicing strips, floating
+index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
+`om_year`), which spread by `{{model.periods_per_year}}` regardless of day
+count.
+
+**Amortisation is a second, separate basis.** An amortising loan strikes its
+level payment once, from a schedule the parties agree, and then accrues interest
+period by period on whatever the accrual convention says; principal is the plug.
+Those are two different divisors, and collapsing them makes the payment itself
+move with month length — which no amortising instrument does.
+`{{model.amortization_divisor}}` reads an `amortization_day_count` term and
+expands by the same table as `{{model.accrual_divisor}}`, **defaulting to
+`day_count`** when absent. So:
+
+- a rule that uses only `{{model.accrual_divisor}}` is unchanged;
+- a model that sets only `day_count` is unchanged, both divisors agreeing;
+- `day_count = "act/360"` with `amortization_day_count = "30/360"` is the
+  common US commercial case — a fixed payment, interest varying by month length.
+
+An amortising rule should therefore strike the annuity factor from
+`{{model.amortization_divisor}}`, accrue interest from
+`{{model.accrual_divisor}}`, and make scheduled principal the difference.
+`amortization_day_count` is validated by the same `E5019_UNKNOWN_DAY_COUNT`.
+
+Two conventions that must not be confused when dividing by periods-per-year:
+note rates are **nominal** and divide (`rate / ppy`), while CPR and CDR are
+**effective annual** and take a root (`cpr_to_periodic(x, ppy)`). Growth and
+escalation are effective-annual too and step on `{{time.elapsed_years}}`.
 
 Substitution is textual: numeric terms yield valid expression fragments;
 string-valued terms must be quoted inside the template. Example:

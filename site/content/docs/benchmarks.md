@@ -5,8 +5,16 @@ slug: "/docs/benchmarks"
 ---
 
 Every pack is gated by a parity suite: each CFDL model is diffed against an
-**independent reference** implementation, period-by-period and on summary
-metrics, inside a tolerance the case declares.
+**independent reference**, period-by-period and on summary metrics, inside a
+tolerance the case declares.
+
+Two kinds of reference, and the difference matters. Most cases carry a
+`reference_gen.py` — a second implementation written against the same
+specification, which catches arithmetic and lowering errors. Some are
+reconciled instead against an **external** model or published schedule, and
+those carry a `NOTES.md` and no generator: two of your own implementations
+agreeing is not evidence when both came from one assumption, and every
+convention defect found so far has come from the external kind.
 
 ## How a case is built
 
@@ -15,10 +23,12 @@ Each `benchmarks/<pack>/<case>/` directory contains:
 - `model.cfdl` — the CFDL model;
 - `run.json` — the run configuration;
 - `case.toml` — the pack name and per-period tolerance;
-- `expected.csv` — period-level net cash flow from the reference;
+- `expected.csv` — period-level expectations from the reference: the model
+  total, or each stream in its own column;
 - `expected_metrics.json` — summary metrics, each with its own tolerance;
-- `reference_gen.py` — the independent reference that produces the expected
-  files (a month-by-month recursion, distinct from the engine's evaluation).
+- either `reference_gen.py`, the independent implementation that produces the
+  expected files, or `NOTES.md`, recording the external reconciliation — what
+  was compared, what diverged, and how to repeat it.
 
 `tools/benchmark-runner.py` compiles and runs each case with the `cfdl` CLI
 and fails if any period or metric drifts outside tolerance. Schedule math is
@@ -34,9 +44,11 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | credit | `float_bridge_pool` |
 | credit | `io_bullet_loan` |
 | credit | `level_pay_pool` |
+| credit | `mbs_pool_conventions` |
 | energy | `solar_ppa_microgrid` |
+| energy | `utility_pv_singleowner` |
 | energy | `wind_ptc_macrs` |
 | opco | `lbo_buyout` |
 
-> Reference models are independent implementations; those still awaiting
-> practitioner verification say so in their `case.toml`.
+> Each case says in its `case.toml` where its figures came from, and which
+> are still awaiting practitioner verification.

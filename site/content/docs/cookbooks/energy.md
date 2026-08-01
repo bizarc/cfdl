@@ -10,14 +10,49 @@ arbitrage, capacity payments, O&M, investment tax credits, capex, and level-pay
 project debt. All rules are template-driven (`{{contract.*}}` + defaults) —
 no hardcoded amounts.
 
+> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
+> `annual`. Every rule divides annual quantities by the rule's own
+> periods-per-year rather than a literal 12, so the same deal produces the same
+> annual figures on any grid. `tools/cadence-parity.py` asserts it.
+>
+> One honest caveat, on daily only. An annual quantity is spread as
+> `X_year / 365` every day — the Act/365-Fixed convention — so a **leap year
+> pays 366/365** of the annual amount, about 0.27% more. That is the convention
+> behaving correctly, not drift, and it is why the daily parity fixture uses a
+> non-leap window. If you need exact annual totals on a daily grid across a
+> leap year, model the quantity per-period rather than per-year.
+
 ## Conventions
 
 - Annual quantities (`mwh_year`, `om_year`, `payment_year`) spread evenly
-  across months.
+  across the rule's own periods: `X_year / periods_per_year`, which is the
+  model's calendar unless a rule declares its own `schedule_every`.
 - Escalation and degradation step **annually**: `factor ^ floor(t / 12)`,
   matching common project-finance Excel practice.
 - `energy.debt_service` uses the engine's decimal-exact `pmt()` (Excel sign
   conventions).
+
+> **Escalation here is NOMINAL.** `escalation` is one rate and it is applied
+> whole: `pow(1 + escalation, elapsed_years)`. Project-finance tools commonly
+> state escalation as a *real* rate carried on top of a separate inflation
+> assumption, and at least one widely used model combines the two **additively**
+> — 2.5% inflation plus 2.0% real escalation is 4.5%/yr, not 4.55%/yr. Moving a
+> deal across means entering `escalation = inflation + real`, and the difference
+> compounds. Verified in `benchmarks/energy/utility_pv_singleowner`.
+>
+> **The ITC reduces the depreciable basis, and this pack will not do it for
+> you.** `energy.macrs_shield` takes `basis` as an input rather than deriving
+> it, because basis adjustments are jurisdictional and there are several. A 30%
+> investment credit conventionally removes half the credit from the basis, so a
+> $100m project taking $30m of credit depreciates $85m. Entering the installed
+> cost instead overstates the shield by 17.6% for the life of the schedule and
+> nothing here will object. State the adjusted figure.
+>
+> **`energy.ptc` does not round.** The statutory production credit is published
+> rounded to the nearest 0.1 c/kWh after inflation adjustment; this rule carries
+> the escalated rate continuously. The error alternates sign year to year, up to
+> about 1.8% in any one year and roughly -0.3% over a 10-year credit window.
+> See `docs/13_feature_backlog.md`.
 
 ## Contract types
 
@@ -152,4 +187,5 @@ Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
+- [energy: utility pv singleowner](/docs/examples/energy-utility-pv-singleowner)
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)

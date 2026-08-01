@@ -26,24 +26,24 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 // Footnote markers below (MIT fn N) refer to the footnotes under the
 // published pro forma table, which define how each tagged number is computed.
 //
-// NOTE ON PACK USE: this model declares no `use pack "cre"`. Every rule in
-// packs/cre/lowering/rules.toml is hard-wired to a monthly grid — each one
-// divides by 12 and anchors on months_between() — so no CRE contract lowers
-// correctly on an annual calendar. Streams are therefore declared natively,
-// but named to the pack's stream taxonomy so `--pack cre` domain metrics
-// still aggregate them. See NOTES.md.
+// NOTE ON PACK USE: the reversion is a CRE pack contract. The operating
+// streams are still native, because two pack features this deal needs do not
+// exist yet: occupancy-varying opex (MIT fn 7 splits it 81% fixed / 19%
+// variable) and an expense stop that resets to a computed later-year value
+// (fn 5). They are named to the pack's stream taxonomy so `--pack cre` domain
+// metrics aggregate them and `cre.exit_forward` can read them. See NOTES.md.
 //
 // NOTE ON THE 2006 COLUMN: the reversion needs 2006 NOI, one year past the
-// hold. The natural expression is a `project 1` tail read back with
-// series_sum, as packs/cre's cre.exit_forward does. That is unavailable here:
-// E2103_SCHEDULE_OUT_OF_BOUNDS measures a NATIVE stream's schedule against the
-// base timeline only, so no hand-written stream can reach the tail, though a
-// pack-lowered contract can. The 2006 NOI is therefore evaluated inline from
-// the same closed-form expressions used by the operating streams. See NOTES.md.
+// hold. It is derived by `cre.exit_forward` from the modelled streams over the
+// `project 1` tail. That was impossible when this file was written — E2103
+// measured a native stream against the cash horizon, so the operating streams
+// could not reach the tail — and the 2006 NOI was carried inline, duplicating
+// the opex formula. See NOTES.md.
 
 version 0.1
 model "mit-rentleg-plaza"
-time calendar annual from 2001-01 for 5
+use pack "cre" version "0.1.0"
+time calendar annual from 2001-01 for 5 project 1
 
 entity asset rentleg
 
@@ -76,8 +76,6 @@ assume lc_renew_pct    = 0.03
 assume downtime_years  = 0.50       // 6 months vacancy if the tenant leaves
 assume abatement_months = 5         // 1 month free per year of a 5-year term
 
-assume exit_cap        = 0.10       // sale at 10x forward NOI
-assume selling_costs   = 0.05       // MIT fn 11
 
 // Suite 100's replacement lease resets its stop to actual 2004 opex/SF
 // (MIT fn 5). Opex per SF is closed-form in t, so the 2004 value is stated
@@ -85,8 +83,6 @@ assume selling_costs   = 0.05       // MIT fn 11
 // value, so the opex formula is necessarily duplicated — see NOTES.md.
 assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
 
-// 2006 opex per SF, at full occupancy (the fixed/variable split collapses to 1).
-assume opex_psf_2006 = 4.81 * pow(1.04, 5)
 
 // ---------------------------------------------------------------------------
 // Potential gross revenue — rent roll
@@ -95,7 +91,7 @@ assume opex_psf_2006 = 4.81 * pow(1.04, 5)
 // Suite 100: contract rent at $15.00/SF through 2003, then re-leased at the
 // post-spike market rent of $16.80/SF from 2004.
 stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_100_sf * if(time.t <= 2,
              inputs.suite_100_rent_psf,
              inputs.market_rent_psf * (1 + inputs.rent_spike))
@@ -104,7 +100,7 @@ stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD 
 // Suite 200: vacant in 2001 (offset by the vacancy line below), then a 5-year
 // lease signed 1/02 at the then-current $14.00/SF, flat through 2006.
 stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_200_sf * inputs.market_rent_psf
 }
 
@@ -115,7 +111,7 @@ stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD 
 // MIT fn 1 — Suite 200 vacant all of 2001.
 // MIT fn 2 — Suite 100 expected 2004 vacancy: 50% x 6mo = 25% of its PGR.
 stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = if(time.t == 0,
             inputs.suite_200_sf * inputs.market_rent_psf,
             if(time.t == 3,
@@ -126,7 +122,7 @@ stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
 
 // MIT fn 3 — 5 months free rent on the new Suite 200 lease, taken in 2002.
 stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = if(time.t == 1,
             (inputs.abatement_months / 12) * inputs.suite_200_sf * inputs.market_rent_psf,
             0)
@@ -142,7 +138,7 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 // ---------------------------------------------------------------------------
 
 stream cre.property.opex on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.building_sf * inputs.opex_psf_full
            * pow(1 + inputs.opex_growth, time.t)
            * (inputs.opex_pct_fixed
@@ -162,7 +158,7 @@ stream cre.property.opex on entity asset.rentleg outflow currency USD {
 // MIT fn 4 (2001-03, $4.00 stop) and fn 5 (2005-06, stop reset to actual
 // 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
 stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2001-01 to 2005-01
+  schedule every year from 2001-01 to 2006-01
   amount = inputs.suite_100_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -176,7 +172,7 @@ stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD
 
 // MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.
 stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD {
-  schedule every year from 2002-01 to 2005-01
+  schedule every year from 2002-01 to 2006-01
   amount = inputs.suite_200_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -233,16 +229,27 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 // a negative sign, so the terms simply add.
 // ---------------------------------------------------------------------------
 
-// 2006 is fully leased and concession-free, so its NOI is: both suites at
-// contract rent, both reimbursing above their stops, less full-occupancy opex.
-stream cre.exit.proceeds on entity asset.rentleg inflow currency USD {
-  schedule every year from 2005-01 to 2005-01
-  amount = (inputs.suite_100_sf * inputs.market_rent_psf * (1 + inputs.rent_spike)
-            + inputs.suite_200_sf * inputs.market_rent_psf
-            + inputs.suite_100_sf * max(0, inputs.opex_psf_2006 - inputs.opex_psf_2004)
-            + inputs.suite_200_sf * max(0, inputs.opex_psf_2006 - inputs.suite_200_stop_psf)
-            - inputs.building_sf * inputs.opex_psf_2006)
-           / inputs.exit_cap * (1 - inputs.selling_costs)
+// MIT fn 11 — the reversion, as a CRE pack contract.
+//
+// This is the acceptance test for the whole cadence programme. Reaching it
+// took three fixes, each of which this file used to document as a blocker:
+//
+//   the CRE pack refused to lower on a non-monthly calendar at all;
+//   E2103 measured a native stream against the cash horizon, so the operating
+//     streams could not reach the `project 1` tail this contract reads;
+//   `cre.exit_forward` settled on its stated date, discounting from the start
+//     of 2005 rather than its end — four years instead of five, worth
+//     $207,783 here. Disposals now settle at period end.
+//
+// `exit_cap = 0.10` is MIT's "10 times the following year's NOI"; the 5%
+// selling commission is fn 11. The forward NOI is derived from the modelled
+// streams, not restated.
+contract cre.exit_forward on entity asset.rentleg {
+  term 2005-01..2005-01
+  terms {
+    exit_cap = 0.10
+    selling_costs = 0.05
+  }
 }
 ```
 

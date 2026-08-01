@@ -36,7 +36,7 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `contract` (subject, `term A..B`, `terms { k = v }`) | ✅ | terms feed `{{contract.*}}` lowering templates |
 | `contract effects { ... }` | 🟡 | the block is **required** (`E2002`) but its contents are block-skipped: a stream declared inside is never emitted. Declare streams at top level or via a pack |
 | `contract parties` / `tags` blocks | 🟡 | accepted and discarded; absent from the IR |
-| `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions |
+| `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions. An unrecognised item in the body is rejected (`E0004`); it used to be bumped and discarded, so `payment net 60 days` on its own line — and every typo'd key — compiled clean and did nothing |
 | `schedule on <date>` | ✅ | settles on its own date, undiscounted for the period it lands in |
 | `schedule every <interval> from .. to ..` | ✅ | `day`, `week`, `month`, `quarter`, `year`. Distinct from the calendar cadence: a stream may pay quarterly on a monthly grid |
 | `schedule every <interval> due` | ✅ | annuity due — payment at the interval's start. Without it the schedule is an ordinary annuity, paid at the end. See `12_payment_timing.md` |
