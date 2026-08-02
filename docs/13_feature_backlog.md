@@ -330,6 +330,16 @@ Found the same way. Documented in `packs/energy/README.md` in the meantime.
 
 ### 5.1 A stream may not read another period's value
 
+**A design now exists: `docs/14_state_and_recurrence.md`.** It proposes a
+declared state variable — named, mandatorily seeded, updated once per period,
+readable by streams — whose update expression evaluates in an environment that
+*excludes* same-period values. That keeps "cycles are impossible by
+construction" intact rather than trading it for cycle detection, and it is the
+design Lustre/SCADE, HDL registers, Analytica and Anaplan all converge on.
+
+The entry below is the original statement of the problem, kept for provenance.
+
+
 Phase-1 streams cannot look at each other at all; phase-2 streams can read
 phase-1 through `series_sum`/`series_avg` but not each other, which is what
 makes cycles impossible by construction. The cost is that any rule needing
@@ -347,6 +357,15 @@ roadmap identifies as the gate on roughly two thirds of its candidate packs, so
 it is worth designing the two together rather than separately.
 
 ### 5.2 Per-period persistent state
+
+**Scope boundary now settled** (`docs/14_state_and_recurrence.md` §5): the
+backward-only state variable in 5.1 does *not* reach this. A cash sweep needs
+same-period information — how much cash remains after this period's debt
+service — which is an instantaneous dependency. The right shape here is an
+**ordered allocation pass**: a waterfall is an author-declared priority over a
+pot, not a dependency graph to be solved, so it needs no cycle detection either.
+Design it separately; do not relax the stream reference rules to get it.
+
 
 No accumulator, no carryforward, no balance that a period can add to and a
 later period draw down. Cash sweeps, revolver draws, FF&E reserves, escrow
