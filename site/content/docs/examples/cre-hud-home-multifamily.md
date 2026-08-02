@@ -1,0 +1,137 @@
+---
+id: benchmark-cre-hud-home-multifamily
+title: "cre: hud home multifamily"
+slug: "/docs/examples/cre-hud-home-multifamily"
+source: benchmarks/cre/hud_home_multifamily
+---
+
+# cre: hud home multifamily
+
+HUD HOME Multifamily Underwriting Template, populated Sample. THE ONE SOURCE WE CAN SHIP. A US federal work dedicated to the public domain, so the reference workbook itself is committed under reference/ — the first and only external case in this repo where a reader can open the source and check us, rather than take the reconciliation on trust. Every figure in expected.csv and expected_metrics.json is read out of that workbook's Operating Pro Forma. There is deliberately no reference_gen.py. Anchors: years 1-3 and 5 pin the trends, 10 pins the compounding, and 14/15/16/17 bracket BOTH the first mortgage maturing and the affordability cliff, where restricted rents revert to market and gross rent steps 46% in one year. Those four are the point of the case — a model with the right trend and the wrong switch looks correct for thirteen years. period_tolerance = 13 — and it is worth saying exactly what sets it, because it is looser than this repo's norm and only one line needs it.   cre.unit.base_rent.home       worst 0.48   whole-dollar rounding   cre.vacancy.loss              worst 0.48   whole-dollar rounding   cre.ops.revenue               worst 0.47   whole-dollar rounding   loan.permanent_debt_service   worst 0.00   exact   cre.ops.expense               worst 4.35   see below   cre.property.opex             worst 12.26  see below   <- sets the tolerance The two expense lines drift because the workbook escalates them as a RECURRENCE — each year is last year's ROUNDED figure times the trend — while we carry exact decimals from a base. Verified: two of its four expense sub-lines reproduce exactly under that recurrence and not under a closed form. Expressing it needs a backward period reference (backlog 5.1) and a rounding builtin (4.1); we have neither, so the residual is structural, monotone in years compounded, and 0.006% at year 29. See NOTES.md.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+// HUD HOME Multifamily Underwriting Template — populated Sample workbook.
+//
+// A 20-unit HOME-assisted rental development, 29-year operating pro forma.
+//
+// THIS IS THE ONE SOURCE WE CAN SHIP. It is a US federal work dedicated to the
+// public domain, so unlike every other external case in this repo the reference
+// workbook itself sits beside this model, in reference/, and the source can be
+// named rather than described. See NOTES.md.
+//
+// THE AFFORDABILITY CLIFF is the interesting mechanic. HOME-assisted units are
+// rent-restricted for the affordability period and revert to market rents after
+// it. The workbook carries both tracks side by side and switches between them,
+// so gross rent steps 199,062 -> 290,708 between years 14 and 15 — a 46% jump
+// that dwarfs the 2% trend either side of it. A model that got the trend right
+// and the switch wrong would look correct for thirteen years.
+//
+// WHY THESE ARE NATIVE STREAMS. Two CRE pack rules nearly fit and do not:
+// `cre.property_opex` emits a single un-suffixed stream, so a property cannot
+// have more than one expense line; and `cre.vacancy_loss` takes a CONSTANT
+// `potential_gross_year`, so vacancy cannot track a rent roll that grows. Both
+// are recorded in docs/13_feature_backlog.md. The streams below are named into
+// the pack's taxonomy so `--pack cre` domain metrics still aggregate them,
+// which is the same posture benchmarks/cre/mit_rentleg_plaza takes.
+//
+// Rounding: the workbook rounds every pro forma line to whole dollars, and
+// computes rent loss from the ROUNDED gross rent. We carry full precision, so
+// agreement is to the dollar rather than to the cent. That is the source's
+// floor, not ours.
+
+version 0.1
+model "hud-home-multifamily"
+use pack "cre" version "0.1.0"
+time calendar annual from 2024-01 for 29
+
+entity asset home_project
+
+// ---------------------------------------------------------------------------
+// Stated in the Sample workbook's Pro Forma Assumptions tab.
+// ---------------------------------------------------------------------------
+
+assume rent_restricted_y1 = 153881.28   // HOME-restricted gross rent, year 1
+assume rent_market_y1     = 220320.00   // the market track the same units revert to
+assume rent_trend         = 0.02
+assume other_income_y1    = 2448.00
+assume other_trend        = 0.02
+assume vacancy_rate       = 0.07
+assume opex_y1            = 102501.00   // management + O&M + utilities + taxes/ins
+assume opex_trend         = 0.025
+assume reserve_y1         = 21013.00    // replacement reserve deposit
+assume debt_service_year  = 13989.00    // first mortgage, level annual payment
+
+// Restriction runs through year 14; year 15 is the first at market rents. The
+// assumptions tab states a 15-year affordability period, and the workbook's own
+// switch fires one year earlier than that label reads — see NOTES.md.
+assume restricted_years   = 14
+
+// ---------------------------------------------------------------------------
+// Revenue
+// ---------------------------------------------------------------------------
+
+stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = if(time.t < inputs.restricted_years,
+            inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
+            inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+}
+
+stream cre.ops.revenue on entity asset.home_project inflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, time.t)
+}
+
+// Vacancy tracks the active rent track, so it steps at the cliff too.
+stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.vacancy_rate *
+           if(time.t < inputs.restricted_years,
+             inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
+             inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+}
+
+// ---------------------------------------------------------------------------
+// Expenses — total operating expense and the replacement reserve are separate
+// published lines, and both feed the NOI metric's denominator.
+// ---------------------------------------------------------------------------
+
+stream cre.property.opex on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.opex_y1 * pow(1 + inputs.opex_trend, time.t)
+}
+
+stream cre.ops.expense on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.reserve_y1 * pow(1 + inputs.opex_trend, time.t)
+}
+
+// ---------------------------------------------------------------------------
+// Debt — level annual payment for 14 years, then the first mortgage matures.
+// Named to match what domain.cre.debt_service reads.
+// ---------------------------------------------------------------------------
+
+stream loan.permanent_debt_service on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2037-01
+  amount = inputs.debt_service_year
+}
+```
+
+## Run configuration
+
+```json
+{"deterministic":{"annual_discount_rate":0.10}}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|
+| `domain.cre.noi` | 1,886,475 | ±130 |
+| `domain.cre.debt_service` | 195,846 | ±1 |

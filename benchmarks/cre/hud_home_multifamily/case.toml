@@ -1,0 +1,35 @@
+# Benchmark case: HUD HOME Multifamily Underwriting Template, populated Sample.
+#
+# THE ONE SOURCE WE CAN SHIP. A US federal work dedicated to the public domain,
+# so the reference workbook itself is committed under reference/ — the first and
+# only external case in this repo where a reader can open the source and check
+# us, rather than take the reconciliation on trust.
+#
+# Every figure in expected.csv and expected_metrics.json is read out of that
+# workbook's Operating Pro Forma. There is deliberately no reference_gen.py.
+#
+# Anchors: years 1-3 and 5 pin the trends, 10 pins the compounding, and
+# 14/15/16/17 bracket BOTH the first mortgage maturing and the affordability
+# cliff, where restricted rents revert to market and gross rent steps 46% in one
+# year. Those four are the point of the case — a model with the right trend and
+# the wrong switch looks correct for thirteen years.
+#
+# period_tolerance = 13 — and it is worth saying exactly what sets it, because
+# it is looser than this repo's norm and only one line needs it.
+#
+#   cre.unit.base_rent.home       worst 0.48   whole-dollar rounding
+#   cre.vacancy.loss              worst 0.48   whole-dollar rounding
+#   cre.ops.revenue               worst 0.47   whole-dollar rounding
+#   loan.permanent_debt_service   worst 0.00   exact
+#   cre.ops.expense               worst 4.35   see below
+#   cre.property.opex             worst 12.26  see below   <- sets the tolerance
+#
+# The two expense lines drift because the workbook escalates them as a
+# RECURRENCE — each year is last year's ROUNDED figure times the trend — while
+# we carry exact decimals from a base. Verified: two of its four expense
+# sub-lines reproduce exactly under that recurrence and not under a closed form.
+# Expressing it needs a backward period reference (backlog 5.1) and a rounding
+# builtin (4.1); we have neither, so the residual is structural, monotone in
+# years compounded, and 0.006% at year 29. See NOTES.md.
+pack = "cre"
+period_tolerance = 13.0

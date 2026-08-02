@@ -27,6 +27,7 @@ Complete models for every pack, each checked period-by-period against an indepen
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
 - [energy: utility pv singleowner](/docs/examples/energy-utility-pv-singleowner)
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)
+- [cre: hud home multifamily](/docs/examples/cre-hud-home-multifamily)
 - [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)

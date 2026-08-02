@@ -1,0 +1,105 @@
+// HUD HOME Multifamily Underwriting Template — populated Sample workbook.
+//
+// A 20-unit HOME-assisted rental development, 29-year operating pro forma.
+//
+// THIS IS THE ONE SOURCE WE CAN SHIP. It is a US federal work dedicated to the
+// public domain, so unlike every other external case in this repo the reference
+// workbook itself sits beside this model, in reference/, and the source can be
+// named rather than described. See NOTES.md.
+//
+// THE AFFORDABILITY CLIFF is the interesting mechanic. HOME-assisted units are
+// rent-restricted for the affordability period and revert to market rents after
+// it. The workbook carries both tracks side by side and switches between them,
+// so gross rent steps 199,062 -> 290,708 between years 14 and 15 — a 46% jump
+// that dwarfs the 2% trend either side of it. A model that got the trend right
+// and the switch wrong would look correct for thirteen years.
+//
+// WHY THESE ARE NATIVE STREAMS. Two CRE pack rules nearly fit and do not:
+// `cre.property_opex` emits a single un-suffixed stream, so a property cannot
+// have more than one expense line; and `cre.vacancy_loss` takes a CONSTANT
+// `potential_gross_year`, so vacancy cannot track a rent roll that grows. Both
+// are recorded in docs/13_feature_backlog.md. The streams below are named into
+// the pack's taxonomy so `--pack cre` domain metrics still aggregate them,
+// which is the same posture benchmarks/cre/mit_rentleg_plaza takes.
+//
+// Rounding: the workbook rounds every pro forma line to whole dollars, and
+// computes rent loss from the ROUNDED gross rent. We carry full precision, so
+// agreement is to the dollar rather than to the cent. That is the source's
+// floor, not ours.
+
+version 0.1
+model "hud-home-multifamily"
+use pack "cre" version "0.1.0"
+time calendar annual from 2024-01 for 29
+
+entity asset home_project
+
+// ---------------------------------------------------------------------------
+// Stated in the Sample workbook's Pro Forma Assumptions tab.
+// ---------------------------------------------------------------------------
+
+assume rent_restricted_y1 = 153881.28   // HOME-restricted gross rent, year 1
+assume rent_market_y1     = 220320.00   // the market track the same units revert to
+assume rent_trend         = 0.02
+assume other_income_y1    = 2448.00
+assume other_trend        = 0.02
+assume vacancy_rate       = 0.07
+assume opex_y1            = 102501.00   // management + O&M + utilities + taxes/ins
+assume opex_trend         = 0.025
+assume reserve_y1         = 21013.00    // replacement reserve deposit
+assume debt_service_year  = 13989.00    // first mortgage, level annual payment
+
+// Restriction runs through year 14; year 15 is the first at market rents. The
+// assumptions tab states a 15-year affordability period, and the workbook's own
+// switch fires one year earlier than that label reads — see NOTES.md.
+assume restricted_years   = 14
+
+// ---------------------------------------------------------------------------
+// Revenue
+// ---------------------------------------------------------------------------
+
+stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = if(time.t < inputs.restricted_years,
+            inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
+            inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+}
+
+stream cre.ops.revenue on entity asset.home_project inflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, time.t)
+}
+
+// Vacancy tracks the active rent track, so it steps at the cliff too.
+stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.vacancy_rate *
+           if(time.t < inputs.restricted_years,
+             inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
+             inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+}
+
+// ---------------------------------------------------------------------------
+// Expenses — total operating expense and the replacement reserve are separate
+// published lines, and both feed the NOI metric's denominator.
+// ---------------------------------------------------------------------------
+
+stream cre.property.opex on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.opex_y1 * pow(1 + inputs.opex_trend, time.t)
+}
+
+stream cre.ops.expense on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  amount = inputs.reserve_y1 * pow(1 + inputs.opex_trend, time.t)
+}
+
+// ---------------------------------------------------------------------------
+// Debt — level annual payment for 14 years, then the first mortgage matures.
+// Named to match what domain.cre.debt_service reads.
+// ---------------------------------------------------------------------------
+
+stream loan.permanent_debt_service on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2037-01
+  amount = inputs.debt_service_year
+}

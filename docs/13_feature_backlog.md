@@ -61,6 +61,68 @@ have it counted in NOI, not both.
 Shape: add an abatement stream family to the metric's denominator, and have
 `cre.lease_unit` emit the deduction separately rather than netting it.
 
+### 1.4 Coverage ratios are lifetime aggregates, not per-period tests
+
+`domain.cre.dscr` divides total NOI by total debt service over the whole hold.
+That is not what a debt service coverage ratio is. A lender tests coverage
+**every year**, and a covenant breaches in a single year — a lifetime ratio of
+1.4 can contain a year at 0.9 and report nothing.
+
+`benchmarks/cre/hud_home_multifamily` is exactly that shape: coverage declines
+from 1.576 to 1.289 across the hold as 2.5% expense growth outruns 2.0% rent
+growth, and the source publishes the ratio at four separate years to sixteen
+significant figures precisely because the path matters. We reproduce all four by
+hand, and cannot assert any of them.
+
+Shape: a per-period metric kind, so `dscr` yields a series and the aggregate
+becomes one reduction of it (min, mean, or the covenant test "never below x").
+The same applies to `domain.energy.dscr` and `domain.opco.fcf_to_debt_service`.
+Note this is a metrics-layer change, not an engine one — the series it needs are
+all already computed.
+
+### 1.5 A property may have only one operating expense line
+
+`cre.property_opex` emits `cre.property.opex` with no `{{contract.dot_suffix}}`,
+so a model may declare exactly one. Every real pro forma splits management,
+maintenance, utilities and taxes/insurance, and reports them separately because
+that is how they are underwritten and covenanted.
+
+Found building `benchmarks/cre/hud_home_multifamily`, whose source publishes all
+four lines and which therefore has to carry them as one aggregate native stream.
+
+Shape: add the suffix to the rule, and widen `domain.cre.noi`'s exact-name
+selector to the `.*` prefix match it already uses for the rent families. Small,
+and it is the difference between a toy pro forma and a real one.
+
+### 1.6 Vacancy cannot track a growing rent roll
+
+`cre.vacancy_loss` takes a constant `potential_gross_year` and multiplies it by
+a rate. But potential gross rent grows — with escalation, with rollover, with
+the end of a rent restriction — and the rule cannot see any of it, so vacancy
+loss stays flat while the rent it is a percentage *of* rises.
+
+Found the same way. In that deal vacancy also has to step 46% at the
+affordability cliff, which no constant can do.
+
+Shape: this is really 5.1 in miniature — the rule needs to read another stream.
+Either the term accepts a stream reference, or vacancy becomes a phase-2 rule
+reading the rent families through `series_sum`.
+
+### 1.7 A rent restriction that expires
+
+Affordable housing is rent-capped for an affordability period and reverts to
+market afterwards. It is the defining mechanic of the asset class, and the HUD
+source models it by carrying two rent tracks side by side and switching.
+
+CFDL expresses it today as a hand-written `if(time.t < n, restricted, market)`
+across two geometric series — workable, but it is a pack primitive, not a
+one-off.
+
+Shape: `cre.restricted_rent` with a `restriction_years` term and a market track,
+or a `reverts_after` term on `cre.lease_unit`. Note the HUD template's own
+switch fires a year before its stated period, which is the kind of convention a
+pack rule should settle once rather than leaving to each modeller.
+
 ---
 
 ## 2. Credit pack
@@ -227,7 +289,16 @@ the window. Small in aggregate, up to 1.8% in any single year, and a debt sizing
 struck off one year's coverage will feel it.
 
 The blocker is the language, not the pack: there is no `round_to(x, step)` in
-the expression environment, so the staircase cannot be written. That builtin is
+the expression environment, so the staircase cannot be written.
+
+**A second source now asks for the same builtin, and for more.** The HUD
+multifamily template escalates expenses as a *recurrence* — each year is last
+year's already-rounded figure times the trend — and two of its four expense
+lines reproduce exactly under that rule and under no closed form. Expressing it
+needs `round_to` **and** a backward period reference (5.1), because the input to
+each year's rounding is the previous year's output. That combination is the
+general case; the production credit above is the special case where the
+recurrence happens to have a closed form. That builtin is
 the item; the rule change is one call once it exists. It would also serve
 tariff blocks, tranche denominations and any other quantity quoted to a tick.
 
@@ -363,7 +434,12 @@ disposal discounting.
 
 ## Where these came from
 
-Section 1 and item 5.1 were found building `benchmarks/cre/mit_rentleg_plaza`
+Items 1.4 through 1.7 were found building `benchmarks/cre/hud_home_multifamily`
+against HUD's own populated underwriting Sample — the only source in the
+programme that may be redistributed, and so the only one whose reference
+workbook is committed beside the model.
+
+Section 1's first three items and item 5.1 were found building `benchmarks/cre/mit_rentleg_plaza`
 against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
 checked against a published third-party figure rather than an in-house
 reference. Section 2 came the same way, from `benchmarks/credit/mbs_pool_conventions`
