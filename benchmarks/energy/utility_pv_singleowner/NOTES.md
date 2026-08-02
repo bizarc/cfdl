@@ -65,7 +65,7 @@ longer chain rather than decimal-versus-float64.
 Closer is not more correct: decimal is the exact answer, and float64 agrees
 better because it reproduces the reference's rounding as well as its arithmetic.
 At 5e-7 on 2e6 that is 2e-13 relative. It would matter for a parity *claim*,
-which is what `docs/13_feature_backlog.md` 5.2 is about, and for nothing else
+which is what `docs/13_feature_backlog.md` 6.2 is about, and for nothing else
 here.
 
 It matched on the first attempt, which is worth stating plainly — nothing was
