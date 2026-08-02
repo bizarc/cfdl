@@ -98,7 +98,7 @@ Inside `next`, the environment contains:
 
 - `prev` — this state's previous value
 - `time.*`, `inputs.*`, curves — the ordinary expression environment
-- other states' **previous** values — see the open question below
+- other states' **previous** values, as `prev.<name>` (§3.1.1)
 - stream series **up to and including `t-1`**
 
 It does **not** contain any stream value at period `t`, and it does not contain
@@ -114,13 +114,49 @@ cycle can close.** The guarantee survives, and survives for a better reason than
 before: not because streams are forbidden to see each other, but because
 everything a state can see is already finished.
 
-**Open question — reading another state.** The rule above permits another
-state's *previous* value, but no syntax is proposed for it. `state.<name>` reads
-the **current** period and so must be rejected inside `next`; a distinct
-spelling would be needed. The v1 build should therefore either omit cross-state
-reads entirely or settle the spelling first — silently allowing `state.<name>`
-in `next` would create exactly the same-period edge this section exists to
-prevent. None of the motivating recurrences need it.
+### 3.1.1 Reading another state: `prev.<name>`
+
+`prev` is a **namespace**, not just a binding. Bare `prev` is shorthand for this
+state's own previous value; `prev.<name>` reads another state's.
+
+```cfdl
+state high_water {
+  init 0
+  next max(prev, prev.distributions)      // prev == prev.high_water
+}
+```
+
+Two prefixes, two meanings, no overlap — and each is available in exactly one
+place:
+
+| prefix | resolves to | present in |
+|---|---|---|
+| `state.<name>` | that state at the **current** period | stream expressions |
+| `prev.<name>` | that state at the **previous** period | `next` expressions |
+
+Enforced by absence, as everything else here is. `next` gets a `prev` map and no
+`state` map; a stream gets a `state` map and no `prev` map. Neither is a check
+that can fail — the entry is not there to be found. Same mechanism as `series`
+being `None` when a phase-1 stream evaluates.
+
+Implementation cost is nil: another `BTreeMap` in `ExprEnv`, resolved by the
+existing `lookup(path)`, exactly like `inputs.<name>` and `time.<field>`.
+
+**States may reference each other freely, including mutually.** Because every
+state at period `t` is computed from the *completed* `t-1` column, this is
+well-founded:
+
+```cfdl
+state a { init 1  next prev + prev.b }
+state b { init 1  next prev + prev.a }
+```
+
+No cycle, no ordering requirement, declaration order irrelevant. It is ordinary
+double-buffering — read the previous column, write the current one — so the
+engine needs no dependency analysis among states at all.
+
+`prev` has no meaning in `init`, bare or namespaced, since there is no period
+-1.
 
 ### 3.2 Evaluation
 
@@ -133,9 +169,9 @@ for t in 0..n:
 ```
 
 O(1) per state per period; O(n) overall. States are computed before streams
-within a period, and read only completed data, so no ordering among states is
-needed beyond declaration order — and even that is unnecessary, since a state
-may only see *other* states' previous values.
+within a period, and read only completed data, so **no ordering among states is
+needed at all** — a state sees only the completed `t-1` column, so declaration
+order is irrelevant and mutual reference between states is well-founded.
 
 The projection tail is included: states run to `periods + projection`, so a
 phase-2 stream reading forward finds them populated.
