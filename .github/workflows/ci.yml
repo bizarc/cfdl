@@ -70,6 +70,22 @@ jobs:
           cargo build -p cfdl-cli
           python3 tools/check-doc-examples.py
 
+      # `make ci` ran five gates that this workflow did not, so every one of
+      # them only fired when someone remembered to run it locally. That is how
+      # a 23% error in weighted average life survived: the identity that
+      # catches it is in analytic-checks, which CI never executed.
+      - name: Benchmarks, identities, cadence parity and the published schemas
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+          cargo build -p cfdl-cli
+          python3 tools/benchmark-runner.py
+          python3 tools/analytic-checks.py
+          python3 tools/cadence-parity.py
+          python3 tools/check-ir-schema.py
+          python3 tools/check-results-schema.py
+
       - name: Install Python test tooling
         run: python -m pip install --upgrade pip
 

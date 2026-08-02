@@ -73,3 +73,7 @@ site/.next/
 site/out/
 site/.vercel/
 .claude/launch.json
+
+# Local stamp for the compiled cfdl_sdk extension (see tools/py-stamp.py).
+# It describes one machine's build, so a fresh clone should have none.
+python/cfdl_sdk/.build-stamp

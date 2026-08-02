@@ -16,7 +16,8 @@
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.1"
+      "const": "0.2",
+      "description": "Version of this results document's shape. 0.2 added `deterministic.annual_rollup`, the optional root-level `domain_metrics`, and `Series.offset`."
     },
     "model_hash": {
       "type": "string",
@@ -58,6 +59,9 @@
     },
     "monte_carlo": {
       "$ref": "#/$defs/MonteCarloSection"
+    },
+    "domain_metrics": {
+      "$ref": "#/$defs/DomainMetrics"
     }
   },
   "$defs": {
@@ -212,6 +216,9 @@
           "items": {
             "$ref": "#/$defs/RuntimeError"
           }
+        },
+        "annual_rollup": {
+          "$ref": "#/$defs/AnnualRollupSection"
         }
       }
     },
@@ -444,6 +451,70 @@
         },
         "hint": {
           "type": "string"
+        }
+      }
+    },
+    "MetricLineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "numerator_streams",
+        "denominator_streams",
+        "formula"
+      ],
+      "description": "Where a domain metric's value came from: the stream selectors it summed and the human-readable formula the pack declared. Emitted so a metric can be audited without reading the pack.",
+      "properties": {
+        "numerator_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "denominator_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "formula": {
+          "type": "string"
+        }
+      }
+    },
+    "DomainMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack",
+        "metrics",
+        "lineage"
+      ],
+      "description": "Pack-defined metrics, present only when the run named a pack (`--pack <name>`). Engine-universal metrics live in `deterministic.metrics`; these are the domain's own, declared in the pack's metrics.toml.",
+      "properties": {
+        "pack": {
+          "type": "string"
+        },
+        "metrics": {
+          "$ref": "#/$defs/MetricMap"
+        },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/MetricLineage"
+          }
+        }
+      }
+    },
+    "AnnualRollupSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "series"
+      ],
+      "description": "The deterministic series aggregated to annual buckets, for reporting a sub-annual model on a yearly grid. Present whenever the deterministic run succeeded. Carries no `offset`: an annual bucket sums periods whose placements differ.",
+      "properties": {
+        "series": {
+          "$ref": "#/$defs/SeriesMap"
         }
       }
     }

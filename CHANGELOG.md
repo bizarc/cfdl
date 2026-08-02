@@ -60,6 +60,51 @@ because period 0's collections were being annihilated by the purchase and now
 re-enter the denominator at 1/12 year. 56 goldens move `model.wal_years` and 16
 move `model.payback_years`; no golden gains or loses a metric key.
 
+### The published results schema is a gate, and was wrong
+
+Every one of the 67 committed results goldens violated
+`docs/schemas/results.schema.json`, and had since 0.3.0 — four releases:
+
+- `results_version` declared `const "0.1"` while the engine has emitted `"0.2"`
+  since 0.3.0. The one field whose entire job is to say which shape a document
+  has was itself wrong in every document;
+- `deterministic.annual_rollup` was emitted by 62 goldens and undeclared;
+- the root-level `domain_metrics` was emitted by 8 and undeclared.
+
+Fixed, and gated: `tools/check-results-schema.py` joins `make ci`, the sibling
+`check-ir-schema.py` has had since the IR schema drifted the same way.
+
+`docs/06_results_schema.md` was an independently maintained copy of the same
+JSON and had drifted further. It is now generated from the schema, and the gate
+checks all three copies agree — the site mirror, the doc page, and the source of
+truth. Three copies of one contract, only ever one of them read, is how this
+happened in the first place.
+
+### CI ran five fewer gates than `make ci`
+
+`bench`, `analytic`, `cadence-parity`, `ir-schema` and `results-schema` existed
+only locally, so they fired when someone remembered. That is how the weighted
+average life defect above survived — the identity that catches it lives in
+`analytic-checks`, which the workflow never executed. All five now run in CI.
+
+### The compiled Python extension has a freshness gate
+
+`cfdl_sdk` is half editable Python and half a compiled Rust extension. The
+Python half tracked the working tree; the compiled half was rebuilt only on
+`make py-develop` and nothing said when it had gone stale. It went stale, and
+`make notebooks-render` failed with
+
+    E4004_MISSING_PACK: unknown variant `terms_mutually_exclusive`
+
+which reads like a broken pack and was nothing of the sort — the extension
+predated the commit that added that validation kind. `tools/py-stamp.py` hashes
+the sources the extension is built from, `make py-develop` stamps it, and
+`notebooks-render` / `notebooks-check` check it first and name the remedy.
+
+A source hash rather than a version check, for the same reason the wasm bundle
+uses one: the commit that broke this shipped no version bump, and it changed a
+pack TOML rather than any Rust source.
+
 ### Added
 
 - `MoneySeries.offset` in the results document — a series' placement in its

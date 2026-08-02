@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity
+.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -50,7 +50,7 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench analytic cadence-parity ir-schema doc-examples wasm-check
+ci: fmt lint test gold bench analytic cadence-parity ir-schema results-schema doc-examples wasm-check
 
 # The wasm bundle is committed (Vercel has no Rust toolchain), so it can drift
 # from the engine silently. `make ci` never covered it, and a five-day-old
@@ -72,6 +72,12 @@ cadence-parity:
 ir-schema:
 	python3 tools/check-ir-schema.py
 
+# Same, for the results document. Added after all 67 goldens turned out to
+# violate it: the version const said 0.1 while the engine emitted 0.2, and two
+# whole sections were undeclared. Documentation drifts; a gate does not.
+results-schema:
+	python3 tools/check-results-schema.py
+
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot
 # catch a convention both sides share; these identities can.
@@ -86,6 +92,13 @@ doc-examples:
 
 py-develop:
 	pip install -e "python/[dev,viz]"
+	python3 tools/py-stamp.py --write
+
+# The compiled half of cfdl_sdk is a local build artifact that nothing tracked,
+# so it drifted from the working tree silently and surfaced as a bogus pack
+# error. Same source-hash gate as the wasm bundle, for the same reason.
+py-check:
+	python3 tools/py-stamp.py --check
 
 py-test:
 	python3 -m pytest -q python/tests
@@ -96,8 +109,8 @@ py-wheel:
 # Execute the example notebooks and publish them as docs pages. Needed because
 # neither the site CI runner nor Vercel has Python or Rust, so the rendered
 # output is committed; check-notebooks-fresh.mjs guards it against going stale.
-notebooks-render:
+notebooks-render: py-check
 	python3 tools/render-notebooks.py
 
-notebooks-check:
+notebooks-check: py-check
 	python3 tools/render-notebooks.py --check
