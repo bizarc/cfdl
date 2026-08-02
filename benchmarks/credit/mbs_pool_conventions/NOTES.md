@@ -107,14 +107,18 @@ checks flag the same window, where the implied default rate stops matching a fla
 of the last payoff is the likely cause. Not worth chasing tens of dollars; worth
 recording that it was noticed.
 
-## What the ramped variant would need
+## The ramped variant — DONE
 
-150% PSA and 100% SDA. The hazard itself is closed-form —
-`CPR = min(speed × 0.2 × max(1, min(MONTH, 30)), 100)`, expressible with
-`min`/`clamp` today. The blocker is the balance: every pool factor here is
-`pow(k, p)`, valid only for constant `k`. Under a ramp the survival factor is a
-cumulative product with no elementary closed form, and the expression language
-has no `exp`/`ln` to sum logs instead.
+150% PSA and 100% SDA on this same pool is now
+`benchmarks/credit/mbs_pool_ramped`, asserting the same four streams at the same
+25 anchors within the same 0.51 tolerance.
 
-The natural fix is a calc builtin holding the schedule, the same pattern as
-`macrs_rate` — not per-period state, which would over-scope it. Backlog.
+The blocker recorded here was the balance: under a ramp the survival factor is a
+cumulative product with no elementary closed form, and every pool factor was
+`pow(k, p)`. Declared state variables closed it
+(`docs/13_feature_backlog.md` 2.1). The calc builtin this section proposed was
+not needed.
+
+Building it found that the lagged pool factor the recoveries rules read was
+consuming the hazard one lag too late — invisible under a flat hazard, 7.6% on
+recoveries by month 60 under a ramp. See that case's NOTES.

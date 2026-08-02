@@ -853,10 +853,13 @@ def credit_abs_prepayment_model() -> tuple[float, float]:
 
 @check("credit: the recoveries pool factor is the plain one lagged", tol=FACTOR_TOL)
 def credit_recovery_lag_shift() -> tuple[float, float]:
-    # A GUARD for the off-by-one in the lagged state: F_lag(p) must be F(p-lag)
-    # exactly, for every p, not merely on average.
+    # RAMPED DELIBERATELY. Under a constant hazard this identity holds even when
+    # the lagged state reads the wrong point of the curve, because every point
+    # is the same — which is why an earlier, flat version of this check passed
+    # while the recoveries were systematically wrong against a ramped reference.
+    # F_lag(p) must be F(p-lag) exactly, for every p, not merely on average.
     lag = 9
-    src = _pool(f"cpr = 0.08  cdr = 0.02  severity = 0.4  recovery_lag_months = {lag}", periods=75)
+    src = _pool(f"psa_speed = 1.5  sda_speed = 1.0  severity = 0.4  recovery_lag_months = {lag}", periods=75)
     plain = _pack_state(src, "credit_io_bullet_survival_p")
     lagged = _pack_state(src, "credit_io_bullet_survival_lag_p")
     worst = max(abs(lagged[p] - plain[p - lag]) for p in range(lag, 60))

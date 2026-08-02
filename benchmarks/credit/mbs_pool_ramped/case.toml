@@ -1,0 +1,16 @@
+# Benchmark case: the same 30-year agency-MBS pool as mbs_pool_conventions, at
+# the published reference's RAMPED conventions — 150% PSA prepayments with
+# 100% SDA defaults.
+#
+# The reference works this pool twice, once flat and once ramped.
+# mbs_pool_conventions takes the flat run; this takes the ramped one, which was
+# unreachable until the pool factor became a per-period state.
+#
+# Every number asserted here is external, not ours. There is deliberately no
+# reference_gen.py: a second implementation of our own is exactly what this
+# case exists to replace. See NOTES.md.
+#
+# period_tolerance = 0.51 — the reference figures are rounded to whole dollars,
+# so half a dollar is the tightest bound they can support.
+pack = "credit"
+period_tolerance = 0.51

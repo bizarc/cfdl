@@ -61,6 +61,7 @@ SPEEDS = ("psa_speed", "sda_speed", "abs_speed")
 # every copy computes the SAME FUNCTION of age, not that every copy asks about
 # the same age.
 AGES = (
+    "{{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1",
     "{{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}",
     "{{time.elapsed_periods}} - 1",
     "{{time.elapsed_periods}}",
