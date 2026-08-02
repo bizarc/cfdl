@@ -27,12 +27,16 @@ Usage: python3 tools/analytic-checks.py
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import subprocess
 import tempfile
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-CLI = REPO_ROOT / "target" / "debug" / "cfdl"
+# Windows names the binary cfdl.exe; everywhere else it is bare `cfdl`.
+# The `.exists()` guard below is what makes this matter: subprocess would
+# find cfdl.exe on its own, but the preflight check would not.
+CLI = REPO_ROOT / "target" / "debug" / ("cfdl.exe" if os.name == "nt" else "cfdl")
 TOL = 0.01  # dollars
 
 

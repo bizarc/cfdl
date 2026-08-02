@@ -19,6 +19,7 @@ Usage: python3 tools/check-ir-schema.py
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import sys
 
@@ -31,6 +32,16 @@ def main() -> int:
     try:
         from jsonschema import Draft202012Validator
     except ImportError:
+        # Skipping keeps a local run working without the dependency, but a gate
+        # that can pass without running is not a gate. CI sets
+        # CFDL_REQUIRE_SCHEMA_GATE=1 so the skip is a failure there.
+        if os.environ.get("CFDL_REQUIRE_SCHEMA_GATE"):
+            print(
+                "check-ir-schema: jsonschema is not installed and CFDL_REQUIRE_SCHEMA_GATE\n"
+                "                 is set, so this gate cannot be skipped. `pip install jsonschema`.",
+                file=sys.stderr,
+            )
+            return 1
         print(
             "check-ir-schema: jsonschema not installed; skipping.\n"
             "                 install it with `pip install jsonschema` to run this gate.",

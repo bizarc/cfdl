@@ -34,7 +34,11 @@ except ImportError:  # pragma: no cover
     sys.exit(2)
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-CFDL = os.environ.get("CFDL_BIN", str(ROOT / "target/debug/cfdl"))
+# Windows names the binary cfdl.exe. subprocess resolves that on its own, so
+# this ran green for as long as it never checked the path itself — which is
+# exactly the trap analytic-checks fell into. Be explicit.
+_CLI_NAME = "cfdl.exe" if os.name == "nt" else "cfdl"
+CFDL = os.environ.get("CFDL_BIN", str(ROOT / "target" / "debug" / _CLI_NAME))
 
 
 def scalar(value):

@@ -26,6 +26,7 @@ Usage: python3 tools/check-results-schema.py
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import sys
 
@@ -40,6 +41,16 @@ def main() -> int:
     try:
         from jsonschema import Draft202012Validator
     except ImportError:
+        # Skipping keeps a local run working without the dependency, but a gate
+        # that can pass without running is not a gate — which is the whole
+        # reason this file exists. CI sets CFDL_REQUIRE_SCHEMA_GATE=1.
+        if os.environ.get("CFDL_REQUIRE_SCHEMA_GATE"):
+            print(
+                "check-results-schema: jsonschema is not installed and CFDL_REQUIRE_SCHEMA_GATE\n"
+                "                      is set, so this gate cannot be skipped. `pip install jsonschema`.",
+                file=sys.stderr,
+            )
+            return 1
         print(
             "check-results-schema: jsonschema not installed; skipping.\n"
             "                      install it with `pip install jsonschema` to run this gate.",
