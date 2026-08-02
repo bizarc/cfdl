@@ -277,6 +277,15 @@ Warnings:
 - `E5009_LOWERED_EXPR_INVALID` — a pack lowering rule expanded to an amount
   expression the parser rejects. Without this the engine evaluates the failed
   expression as zero and continues with only a warning.
+- `E5020_LOWERED_STATE_INVALID` — a pack lowering rule expanded to a `state`
+  `init` or `next` the parser rejects. Same reasoning as `E5009`: the engine's
+  fallback for a failed state is zero, which would flatten every stream reading
+  it rather than fail loudly.
+- `E5021_DUPLICATE_LOWERED_STATE` — two contracts lower to one state name with
+  *different* recurrences, so one would silently win. Give the rule's
+  `state_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
+  Identical definitions collapse instead, which is what several contracts
+  sharing one curve should do.
 - `E5010_TERM_UNKNOWN_INPUT` — a contract term references `inputs.<name>` for
   an input that is not declared. Declare it with `assume <name> = …` or
   `assume <name> ~ <Dist>(…)`.

@@ -11,24 +11,22 @@
 # specifications." So the workbook is committed under reference/, as with HUD —
 # a reader can open it and check every figure here directly.
 #
-# WHAT IS ASSERTED, AND THE BLANKS ARE THE POINT.
+# WHAT IS ASSERTED.
 #
-#   revenue / opex / taxes    years 1-5   exact
-#   reinvestment              years 1-4   exact
-#   years 6-10                nothing     see below
+#   revenue / opex / taxes    years 1-10   exact
+#   reinvestment              years 1-4    exact
 #
-# The growth and tax curves carry a PER-PERIOD rate — the interface a modeller
-# would write, and the one that is correct once a stream can read its own prior
-# period (backlog 5.1). Until then the rules compound with pow(1 + g, t), which
-# applies one period's rate as though it had held from the start: exact while a
-# rate is flat, drifting once it moves. Both drivers are flat through year 5.
+# The growth and tax curves carry a PER-PERIOD rate. The rules compound it
+# through a declared state (docs/14_state_and_recurrence.md), so the factor is
+# the running product of each period's rate rather than pow(1 + g, t) — which
+# applies one period's rate as though it had held from the start and drifted
+# -2.4% on revenue by year 10. That drift is now zero and the blanks are gone.
 #
-# Reinvestment funds NEXT year's growth, so its exact window closes a year
-# earlier than revenue's — year 5 already feels year 6's decay.
-#
-# The drift is measured rather than assumed and is tabulated in NOTES.md
-# (revenue -2.4% by year 10). It is the delta 5.1 is expected to close, and
-# asserting years 6-10 at a loosened tolerance would bury exactly that.
+# REINVESTMENT STILL STOPS AT YEAR 4, for an unrelated reason. It is a derived
+# line — revenue(t) * g(t+1) / sales_to_capital — so it grows at
+# (1 + g_t) * g_{t+1}/g_t, leading the growth path by a year. opco.capex_line is
+# a self-growing line and cannot express a quantity defined by another line's
+# growth. A contract shape gap, not a compounding one; see NOTES.md.
 #
 # NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
 # converges 7.055% -> 8.81% and the engine takes a single scalar discount rate.

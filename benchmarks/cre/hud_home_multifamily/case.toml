@@ -14,22 +14,31 @@
 # year. Those four are the point of the case — a model with the right trend and
 # the wrong switch looks correct for thirteen years.
 #
-# period_tolerance = 13 — and it is worth saying exactly what sets it, because
-# it is looser than this repo's norm and only one line needs it.
+# period_tolerance = 0.5 — the theoretical floor, and every line now sits under
+# it. The workbook publishes whole dollars, so half a dollar is the most an
+# exact figure can differ from its rounded print; nothing here needs more.
 #
-#   cre.unit.base_rent.home       worst 0.48   whole-dollar rounding
+#   cre.unit.base_rent.home       worst 0.45   whole-dollar rounding
 #   cre.vacancy.loss              worst 0.48   whole-dollar rounding
-#   cre.ops.revenue               worst 0.47   whole-dollar rounding
+#   cre.ops.revenue               worst 0.42   whole-dollar rounding
+#   cre.property.opex             worst 0.00   exact
+#   cre.ops.expense               worst 0.00   exact
 #   loan.permanent_debt_service   worst 0.00   exact
-#   cre.ops.expense               worst 4.35   see below
-#   cre.property.opex             worst 12.26  see below   <- sets the tolerance
 #
-# The two expense lines drift because the workbook escalates them as a
-# RECURRENCE — each year is last year's ROUNDED figure times the trend — while
-# we carry exact decimals from a base. Verified: two of its four expense
-# sub-lines reproduce exactly under that recurrence and not under a closed form.
-# Expressing it needs a backward period reference (backlog 5.1) and a rounding
-# builtin (4.1); we have neither, so the residual is structural, monotone in
-# years compounded, and 0.006% at year 29. See NOTES.md.
+# THE TWO EXPENSE LINES WERE THE REASON THIS CASE CARRIED A TOLERANCE OF 13.
+# The workbook escalates them as a RECURRENCE — each year is last year's
+# already-rounded figure times the trend — and `pow(1 + trend, t)` compounds
+# exact decimals from the base instead, so the paths separated a little more
+# every year and reached 12.26 on 204,655 at year 29.
+#
+# Declared states express the recurrence directly, and both lines now reproduce
+# the published figures EXACTLY over 29 years. Note the total expense line needs
+# FOUR states, one per published sub-line: the workbook rounds each sub-line
+# before summing, and rounding the sum is different arithmetic. Modelling the
+# total as one rounded line still left 11.00.
+#
+# This is one half of the acceptance test for docs/14_state_and_recurrence.md.
+# The other is benchmarks/opco/damodaran_fcff, an unrelated source in an
+# unrelated pack. Two independent published sources confirming one mechanism.
 pack = "cre"
-period_tolerance = 13.0
+period_tolerance = 0.5

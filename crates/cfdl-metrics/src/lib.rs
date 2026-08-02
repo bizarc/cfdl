@@ -8,7 +8,7 @@
 //! Engine-universal metrics (NPV, IRR, MOIC, payback, WAL) live in
 //! `cfdl-engine`, not here.
 
-use cfdl_engine::{DomainMetrics, MetricLineage, Money, Series, Results, Scalar};
+use cfdl_engine::{DomainMetrics, MetricLineage, Money, Results, Scalar, Series};
 use cfdl_pack::MetricSpec;
 use std::collections::BTreeMap;
 
@@ -384,7 +384,7 @@ mod tests {
 
     #[test]
     fn wal_years_weights_positive_amounts_by_period() {
-        use cfdl_engine::{Series, SeriesIndex};
+        use cfdl_engine::{Series, SeriesIndex, SeriesValue};
         let mut results = make_results_with_metrics(vec![]);
         results
             .deterministic
@@ -399,9 +399,11 @@ mod tests {
             offset,
             values: values
                 .iter()
-                .map(|v| Money {
-                    amount: *v,
-                    currency: "USD".to_string(),
+                .map(|v| {
+                    SeriesValue::Money(Money {
+                        amount: *v,
+                        currency: "USD".to_string(),
+                    })
                 })
                 .collect(),
         };

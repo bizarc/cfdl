@@ -8,6 +8,72 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: declared state variables
+
+A `state` is a named number per period defined by a recurrence — the one shape
+`pow(1 + r, t)` cannot express, since that applies a single period's rate as
+though it had held from the start:
+
+    state revenue_index {
+      init  1.0
+      next  prev * (1 + curve_value("growth", time.date))
+    }
+
+    stream firm.revenue on entity legal.firm inflow currency USD {
+      schedule every year from 2026-01 to 2035-01
+      amount = 21765.4 * state.revenue_index
+    }
+
+Language-level, not pack-level: a state has no entity, direction, currency or
+schedule, and any model may declare one regardless of which pack it uses (or
+none). Inside `next`, bare `prev` is this state's previous value and
+`prev.<name>` is another's.
+
+`init` is mandatory. An unstated base case would evaluate as a silent zero for
+every period, since an unmatched lookup returns 0.
+
+The safety property is preserved by ABSENCE rather than by a check: a `next`
+environment carries no `state` map and a stream environment carries no `prev`
+map, so a same-period read is not there to be found. Everything a state can see
+is already finished, so no reference can close a cycle — "cycles are impossible
+by construction" is intact, and states may reference each other mutually with
+declaration order carrying no meaning.
+
+Six diagnostics, `E1120`–`E1125`, each probed against a fixture that violates it.
+
+States are published in `results.deterministic.series` as `state.<name>`, as
+bare numbers with no currency and no offset. They are **not cash**: excluded
+from `model_series`, `model.total`, `model.npv`, the annual rollup and every
+domain metric, with an analytic identity asserting it.
+
+Pack lowering rules may declare a state too (`state_name`, `state_init`,
+`state_next`, plus a `{{contract.suffix_ident}}` placeholder), with
+`E5020_LOWERED_STATE_INVALID` and `E5021_DUPLICATE_LOWERED_STATE`. The three
+opco growth rules now compound through a running product; no model needed
+editing.
+
+Verified against two independent published sources:
+
+  - the FCFF forecast: revenue drifted -2.4% by year 10 and years 6-10 were
+    unasserted; now all ten years agree to floating-point noise
+  - the HUD multifamily pro forma: a 12.26 residual under `period_tolerance = 13`
+    is now exact, with the tolerance at 0.5 — the whole-dollar rounding floor
+
+Across all 110 goldens the only movement from the pack change is
+`7365967.000481 -> 7365967.00048` (1.4e-13 relative) and a `-0.0 -> 0.0`.
+
+Closes backlog 5.1 and 7.2; supersedes most of 7.8. See
+`docs/14_state_and_recurrence.md`.
+
+### Changed: `Series.values` may hold a bare number
+
+`MoneySeries` is renamed `Series`, and its `values` becomes
+`Money | number` — cash carries a currency, a state does not. The results
+schema always permitted a number here, so no published shape changed.
+
+Consumers that weight or sum cash take `SeriesValue::money_amount()`, which
+returns `None` for a non-money series.
+
 ### Added: `ln` and `exp`
 
 Two builtins that turn a cumulative **product** into a cumulative **sum**:

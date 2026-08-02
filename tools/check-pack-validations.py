@@ -41,6 +41,22 @@ Defaulting is the trap, so this requires the choice to be WRITTEN — either
 `instance` or `exact`. An author who wants exact matching may still have it;
 they just have to say so.
 
+## 3. Documented diagnostic codes must be unique too.
+
+Check 1 reads `packs/*/validations.toml`, which is where authors add codes by
+hand — and where all four original collisions were. It does not see codes the
+ENGINE emits, which live in Rust string literals.
+
+That gap bit: adding two lowering diagnostics, `E5010` and `E5011` were picked
+by eye and both were already taken (`E5010_TERM_UNKNOWN_INPUT`,
+`E5011_TERM_CLIP_OUT_OF_BOUNDS`). Same failure as before, one layer over.
+
+Extracting from Rust would need to exclude deliberately corrupted codes inside
+parser tests. `docs/08_diagnostics.md` is the published register and every
+engine code is listed there, so checking uniqueness across that page catches the
+collision at the point an author is most likely to make it, without the false
+positives.
+
 Usage: python3 tools/check-pack-validations.py
 """
 
@@ -53,6 +69,8 @@ import sys
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKS = REPO_ROOT / "packs"
+DIAGNOSTICS_DOC = REPO_ROOT / "docs" / "08_diagnostics.md"
+DOC_CODE_RE = re.compile(r"`(E\d+)_([A-Z0-9_]+)`")
 
 CODE_RE = re.compile(r'code = "(E\d+)_([A-Z0-9_]+)"')
 MATCH_RE = re.compile(r'^match = ', re.M)
@@ -113,8 +131,32 @@ def main() -> int:
         )
         return 1
 
+    # --- 3. documented codes are unique ------------------------------------
+    documented: dict[str, list[str]] = collections.defaultdict(list)
+    if DIAGNOSTICS_DOC.exists():
+        for match in DOC_CODE_RE.finditer(DIAGNOSTICS_DOC.read_text()):
+            if match.group(2) not in documented[match.group(1)]:
+                documented[match.group(1)].append(match.group(2))
+    doc_failures = 0
+    for number, suffixes in sorted(documented.items()):
+        if len(suffixes) > 1:
+            doc_failures += 1
+            print(f"  {number} names {len(suffixes)} different checks in", file=sys.stderr)
+            print(f"      {DIAGNOSTICS_DOC.relative_to(REPO_ROOT)}:", file=sys.stderr)
+            for suffix in suffixes:
+                print(f"      {number}_{suffix}", file=sys.stderr)
+    if doc_failures:
+        print(
+            f"\ncheck-pack-validations: {doc_failures} documented code(s) name more than one\n"
+            "                        check. Pick a free number — reading the file to find one\n"
+            "                        is exactly what produced the last two collisions.",
+            file=sys.stderr,
+        )
+        return 1
+
     print(
-        f"check-pack-validations: OK ({len(seen)} codes across {len(files)} packs, "
+        f"check-pack-validations: OK ({len(seen)} pack codes across {len(files)} packs, "
+        f"{len(documented)} documented codes, "
         f"each naming one check; every validation states its match mode)"
     )
     return 0

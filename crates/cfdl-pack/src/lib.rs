@@ -351,6 +351,26 @@ pub struct LoweringRule {
     pub schedule_from: String,
     /// May contain `{{contract.term_end}}` / `{{contract.<key>}}` placeholders.
     pub schedule_to: String,
+    /// Name of a `state` this rule declares alongside its stream. Empty for
+    /// the great majority of rules, which need no recurrence.
+    ///
+    /// A state is how a rule compounds a rate that MOVES. `pow(1 + g, t)`
+    /// applies one period's rate as though it had held from the start — exact
+    /// while the rate is flat, wrong the moment it varies, which is precisely
+    /// what a decaying growth path or an escalating expense does.
+    ///
+    /// Must expand to a single identifier, since `state.<name>` resolves one
+    /// segment: use `{{contract.suffix_ident}}`, not `{{contract.dot_suffix}}`,
+    /// to keep each contract instance's state distinct.
+    #[serde(default)]
+    pub state_name: String,
+    /// The state's value at period 0. Templated.
+    #[serde(default)]
+    pub state_init: String,
+    /// The state's value at every later period, with `prev` bound to its own
+    /// previous value. Templated.
+    #[serde(default)]
+    pub state_next: String,
     /// Default values for template placeholders when the contract does not
     /// declare the term. Keys are the bare placeholder names (no `contract.`
     /// prefix), e.g. `"lease_up.months" = "18"`.

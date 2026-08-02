@@ -7,7 +7,7 @@ source: benchmarks/cre/hud_home_multifamily
 
 # cre: hud home multifamily
 
-HUD HOME Multifamily Underwriting Template, populated Sample. THE ONE SOURCE WE CAN SHIP. A US federal work dedicated to the public domain, so the reference workbook itself is committed under reference/ — the first and only external case in this repo where a reader can open the source and check us, rather than take the reconciliation on trust. Every figure in expected.csv and expected_metrics.json is read out of that workbook's Operating Pro Forma. There is deliberately no reference_gen.py. Anchors: years 1-3 and 5 pin the trends, 10 pins the compounding, and 14/15/16/17 bracket BOTH the first mortgage maturing and the affordability cliff, where restricted rents revert to market and gross rent steps 46% in one year. Those four are the point of the case — a model with the right trend and the wrong switch looks correct for thirteen years. period_tolerance = 13 — and it is worth saying exactly what sets it, because it is looser than this repo's norm and only one line needs it.   cre.unit.base_rent.home       worst 0.48   whole-dollar rounding   cre.vacancy.loss              worst 0.48   whole-dollar rounding   cre.ops.revenue               worst 0.47   whole-dollar rounding   loan.permanent_debt_service   worst 0.00   exact   cre.ops.expense               worst 4.35   see below   cre.property.opex             worst 12.26  see below   <- sets the tolerance The two expense lines drift because the workbook escalates them as a RECURRENCE — each year is last year's ROUNDED figure times the trend — while we carry exact decimals from a base. Verified: two of its four expense sub-lines reproduce exactly under that recurrence and not under a closed form. Expressing it needs a backward period reference (backlog 5.1) and a rounding builtin (4.1); we have neither, so the residual is structural, monotone in years compounded, and 0.006% at year 29. See NOTES.md.
+HUD HOME Multifamily Underwriting Template, populated Sample. THE ONE SOURCE WE CAN SHIP. A US federal work dedicated to the public domain, so the reference workbook itself is committed under reference/ — the first and only external case in this repo where a reader can open the source and check us, rather than take the reconciliation on trust. Every figure in expected.csv and expected_metrics.json is read out of that workbook's Operating Pro Forma. There is deliberately no reference_gen.py. Anchors: years 1-3 and 5 pin the trends, 10 pins the compounding, and 14/15/16/17 bracket BOTH the first mortgage maturing and the affordability cliff, where restricted rents revert to market and gross rent steps 46% in one year. Those four are the point of the case — a model with the right trend and the wrong switch looks correct for thirteen years. period_tolerance = 0.5 — the theoretical floor, and every line now sits under it. The workbook publishes whole dollars, so half a dollar is the most an exact figure can differ from its rounded print; nothing here needs more.   cre.unit.base_rent.home       worst 0.45   whole-dollar rounding   cre.vacancy.loss              worst 0.48   whole-dollar rounding   cre.ops.revenue               worst 0.42   whole-dollar rounding   cre.property.opex             worst 0.00   exact   cre.ops.expense               worst 0.00   exact   loan.permanent_debt_service   worst 0.00   exact THE TWO EXPENSE LINES WERE THE REASON THIS CASE CARRIED A TOLERANCE OF 13. The workbook escalates them as a RECURRENCE — each year is last year's already-rounded figure times the trend — and `pow(1 + trend, t)` compounds exact decimals from the base instead, so the paths separated a little more every year and reached 12.26 on 204,655 at year 29. Declared states express the recurrence directly, and both lines now reproduce the published figures EXACTLY over 29 years. Note the total expense line needs FOUR states, one per published sub-line: the workbook rounds each sub-line before summing, and rounding the sum is different arithmetic. Modelling the total as one rounded line still left 11.00. This is one half of the acceptance test for docs/14_state_and_recurrence.md. The other is benchmarks/opco/damodaran_fcff, an unrelated source in an unrelated pack. Two independent published sources confirming one mechanism.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -62,7 +62,13 @@ assume rent_trend         = 0.02
 assume other_income_y1    = 2448.00
 assume other_trend        = 0.02
 assume vacancy_rate       = 0.07
-assume opex_y1            = 102501.00   // management + O&M + utilities + taxes/ins
+// The four published expense sub-lines, not their total. The workbook
+// escalates and ROUNDS each one independently and then sums, so rounding the
+// total is not the same arithmetic — 102,501 is the sum, never an input.
+assume opex_management    = 37413.00
+assume opex_maintenance   = 37925.00
+assume opex_utilities     = 12300.00
+assume opex_taxes_ins     = 14863.00
 assume opex_trend         = 0.025
 assume reserve_y1         = 21013.00    // replacement reserve deposit
 assume debt_service_year  = 13989.00    // first mortgage, level annual payment
@@ -102,14 +108,51 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 // published lines, and both feed the NOI metric's denominator.
 // ---------------------------------------------------------------------------
 
+// THE WORKBOOK ESCALATES BY A RECURRENCE, not by a closed form. Year n is last
+// year's ALREADY-ROUNDED figure times the trend, rounded again to whole
+// dollars — verified directly against two of its four expense sub-lines, which
+// reproduce exactly under the recurrence and under no closed form.
+//
+// `pow(1 + trend, t)` cannot express that: it compounds exact decimals from the
+// base, and rounding does not commute with exponentiation, so the two paths
+// separate a little more every year. That left a 12.26 residual at year 29 and
+// was the sole reason this case carried period_tolerance = 13.
+//
+// A state says it directly. See docs/14_state_and_recurrence.md.
+// One state per sub-line, because each is rounded on its own before the sum.
+state opex_management {
+  init inputs.opex_management
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_maintenance {
+  init inputs.opex_maintenance
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_utilities {
+  init inputs.opex_utilities
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_taxes_ins {
+  init inputs.opex_taxes_ins
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state reserve_line {
+  init inputs.reserve_y1
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
 stream cre.property.opex on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
-  amount = inputs.opex_y1 * pow(1 + inputs.opex_trend, time.t)
+  amount = state.opex_management + state.opex_maintenance + state.opex_utilities + state.opex_taxes_ins
 }
 
 stream cre.ops.expense on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
-  amount = inputs.reserve_y1 * pow(1 + inputs.opex_trend, time.t)
+  amount = state.reserve_line
 }
 
 // ---------------------------------------------------------------------------

@@ -1268,7 +1268,8 @@ fn evaluate_stream(
                     continue;
                 }
             }
-            let mut env = build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
+            let mut env =
+                build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
             apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
             // `state.<name>` at THIS period. `prev_states`/`prev_self` are left
             // empty, so `prev` is not merely rejected in a stream — it is not
@@ -1276,7 +1277,9 @@ fn evaluate_stream(
             env.states = states
                 .iter()
                 .filter_map(|(name, values)| {
-                    values.get(idx).map(|v| (name.clone(), ExprValue::Decimal(*v)))
+                    values
+                        .get(idx)
+                        .map(|v| (name.clone(), ExprValue::Decimal(*v)))
                 })
                 .collect();
             if let Some(series) = series {
@@ -1630,15 +1633,11 @@ fn build_expr_env(
 
     env.entity.insert(
         "id".to_string(),
-        ExprValue::String(
-            stream.map_or_else(String::new, |s| s.owner.symbol.clone()),
-        ),
+        ExprValue::String(stream.map_or_else(String::new, |s| s.owner.symbol.clone())),
     );
     env.entity.insert(
         "name".to_string(),
-        ExprValue::String(
-            stream.map_or_else(String::new, |s| s.owner.symbol.clone()),
-        ),
+        ExprValue::String(stream.map_or_else(String::new, |s| s.owner.symbol.clone())),
     );
     env.entity
         .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
@@ -3188,6 +3187,13 @@ mod tests {
         )
         .expect("aggregation run");
 
+        // A published series entry is Money or a bare number; these keys are all
+        // cash, so unwrapping here asserts the denomination as well as the value.
+        // A `state.` series would fail this, which is the point.
+        fn cash(value: &super::SeriesValue) -> f64 {
+            value.money_amount().expect("cash series entry")
+        }
+
         let m = &results.deterministic.metrics;
         let s = &results.deterministic.series;
 
@@ -3201,31 +3207,31 @@ mod tests {
         // Revenue: active periods 0 and 1, zero at period 2
         let rev = &s["stream.ops.revenue"].values;
         assert_eq!(rev.len(), 3);
-        assert!((rev[0].amount - 3000.0).abs() < 1e-9, "revenue[0]");
-        assert!((rev[1].amount - 3000.0).abs() < 1e-9, "revenue[1]");
-        assert!((rev[2].amount).abs() < 1e-9, "revenue[2] should be 0");
+        assert!((cash(&rev[0]) - 3000.0).abs() < 1e-9, "revenue[0]");
+        assert!((cash(&rev[1]) - 3000.0).abs() < 1e-9, "revenue[1]");
+        assert!((cash(&rev[2])).abs() < 1e-9, "revenue[2] should be 0");
 
         // Expense: outflow sign, active periods 0 and 1, zero at period 2
         let exp = &s["stream.ops.expense"].values;
         assert_eq!(exp.len(), 3);
-        assert!((exp[0].amount - (-1000.0)).abs() < 1e-9, "expense[0]");
-        assert!((exp[1].amount - (-1000.0)).abs() < 1e-9, "expense[1]");
-        assert!((exp[2].amount).abs() < 1e-9, "expense[2] should be 0");
+        assert!((cash(&exp[0]) - (-1000.0)).abs() < 1e-9, "expense[0]");
+        assert!((cash(&exp[1]) - (-1000.0)).abs() < 1e-9, "expense[1]");
+        assert!((cash(&exp[2])).abs() < 1e-9, "expense[2] should be 0");
 
         // Exit: zero for first two periods, fires only at period 2
         let exit = &s["stream.exit.proceeds"].values;
         assert_eq!(exit.len(), 3);
-        assert!((exit[0].amount).abs() < 1e-9, "exit[0] should be 0");
-        assert!((exit[1].amount).abs() < 1e-9, "exit[1] should be 0");
-        assert!((exit[2].amount - 50000.0).abs() < 1e-9, "exit[2]");
+        assert!((cash(&exit[0])).abs() < 1e-9, "exit[0] should be 0");
+        assert!((cash(&exit[1])).abs() < 1e-9, "exit[1] should be 0");
+        assert!((cash(&exit[2]) - 50000.0).abs() < 1e-9, "exit[2]");
 
         // --- Aggregate net cash flow series ---
         // Period 0: 3000 - 1000 = 2000; Period 1: same; Period 2: 50000 (exit only)
         let net = &s["model.net_cash_flow"].values;
         assert_eq!(net.len(), 3);
-        assert!((net[0].amount - 2000.0).abs() < 1e-9, "net[0]");
-        assert!((net[1].amount - 2000.0).abs() < 1e-9, "net[1]");
-        assert!((net[2].amount - 50000.0).abs() < 1e-9, "net[2]");
+        assert!((cash(&net[0]) - 2000.0).abs() < 1e-9, "net[0]");
+        assert!((cash(&net[1]) - 2000.0).abs() < 1e-9, "net[1]");
+        assert!((cash(&net[2]) - 50000.0).abs() < 1e-9, "net[2]");
     }
 
     #[test]

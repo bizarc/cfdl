@@ -97,17 +97,25 @@ cf.head()
 ```
 
 ```
-shape: (60, 11)
+shape: (60, 14)
 ```
 
 ```
-         model.net_cash_flow  stream.opco.acquisition.price  \
-period                                                        
-2026-01        -1.349413e+07                    -33600000.0   
-2026-02         1.540042e+05                            0.0   
-2026-03         1.558667e+05                            0.0   
-2026-04         1.577407e+05                            0.0   
-2026-05         1.596264e+05                            0.0   
+         model.net_cash_flow  state.opco_capex_growth  state.opco_opex_growth  \
+period                                                                          
+2026-01        -1.349413e+07                      1.0                1.000000   
+2026-02         1.540042e+05                      1.0                1.003274   
+2026-03         1.558667e+05                      1.0                1.006558   
+2026-04         1.577407e+05                      1.0                1.009853   
+2026-05         1.596264e+05                      1.0                1.013159   
+
+         state.opco_revenue_growth  stream.opco.acquisition.price  \
+period                                                              
+2026-01                   1.000000                    -33600000.0   
+2026-02                   1.004868                            0.0   
+2026-03                   1.009759                            0.0   
+2026-04                   1.014674                            0.0   
+2026-05                   1.019613                            0.0   
 
          stream.opco.capex  stream.opco.debt.interest  \
 period                                                  

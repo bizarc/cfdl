@@ -328,9 +328,40 @@ Found the same way. Documented in `packs/energy/README.md` in the meantime.
 
 ## 5. Language and engine
 
-### 5.1 A stream may not read another period's value
+### 5.1 A stream may not read another period's value — RESOLVED
 
-**A design now exists: `docs/14_state_and_recurrence.md`.** It proposes a
+**Declared state variables shipped.** `docs/14_state_and_recurrence.md` is the
+design; the construct is language-level and needs no pack:
+
+```cfdl
+state opex_index { init 1.0  next round_to(prev * 1.025, 1) }
+```
+
+`init` is mandatory, `next` sees only `prev`, `prev.<name>`, `time.*`,
+`inputs.*` and curves — never a same-period value — so "cycles are impossible by
+construction" survives rather than being traded for cycle detection. States are
+published as `state.<name>` in results and never enter cash.
+
+Two independent published sources confirm it, which is why this is marked
+resolved rather than merely built:
+
+| case | before | after |
+|---|---|---|
+| `benchmarks/opco/damodaran_fcff` | revenue −2.4% at year 10, years 6–10 unasserted | **all ten years exact** |
+| `benchmarks/cre/hud_home_multifamily` | 12.26 residual, `period_tolerance = 13` | **exact, tolerance 0.5** |
+
+Pack rules may declare a state too (`state_name`/`state_init`/`state_next`), so
+the three opco growth rules compound through a running product without any model
+being edited. Blast radius across 110 goldens: one 1.4e-13 relative shift and a
+signed zero.
+
+What it does NOT solve is unchanged and is 5.2: same-period cross-stream
+dependency — a cash sweep needs cash remaining *after* this period's debt
+service, and no backward-only construct reaches that.
+
+The original statement of the problem follows, kept for provenance.
+
+**Original design note.** It proposes a
 declared state variable — named, mandatorily seeded, updated once per period,
 readable by streams — whose update expression evaluates in an environment that
 *excludes* same-period values. That keeps "cycles are impossible by
@@ -547,22 +578,29 @@ order of cost:
 True hourly dispatch optimisation is out of scope and should stay there — that
 is an optimiser, not a declarative cash-flow model.
 
-### 7.2 `round_to` is half of the recurrence problem
+### 7.2 `round_to` is half of the recurrence problem — RESOLVED
 
 *Belongs with the energy pack (section 4), and closes the first half of 4.1.*
 
 `round_to(x, step)` now exists and the production tax credit's statutory
 staircase is expressed and asserted, so **4.1 is done for the ramp case**.
 
-What remains is the general case, and it is a different item. The HUD
-multifamily workbook escalates expenses as a **recurrence** — each year is last
-year's already-rounded figure times the trend — which needs a stream to read its
-own prior period. That is 5.1, and until it exists the recurrence is
-inexpressible no matter how good the rounding builtin is.
+**RESOLVED.** The other half was 5.1, and it has landed. The HUD multifamily
+workbook escalates expenses as a **recurrence** — each year is last year's
+already-rounded figure times the trend — which is now written directly:
 
-Recorded so nobody reads 4.1 as fully closed. Found in
-`benchmarks/cre/hud_home_multifamily`, where two of four expense sub-lines
-reproduce exactly under the recurrence and under no closed form.
+```cfdl
+state opex_management { init inputs.opex_management  next round_to(prev * (1 + inputs.opex_trend), 1) }
+```
+
+Both expense lines in `benchmarks/cre/hud_home_multifamily` reproduce the
+published figures exactly over 29 years, and the case's `period_tolerance` drops
+13 → 0.5. So 4.1 is now closed for both the ramp case and the general one.
+
+One thing that surfaced only by building it: the total expense line needs **four
+states, one per published sub-line**. The workbook rounds each sub-line before
+summing, and rounding the sum is different arithmetic — modelling the total as a
+single rounded line still left 11.00 of the original 12.26.
 
 ### 7.3 The external cases route around the packs they should be validating
 
@@ -788,3 +826,89 @@ was: it solves the general case rather than the instance in front of us. It is
 also a genuine language surface addition, so it wants deciding rather than
 assuming — note that a non-cash stream has knock-on questions for the results
 schema, the domain metrics, and whether it appears in `series` at all.
+
+**Update — largely superseded, and the knock-on questions are answered.** The
+log-sum technique existed to reach a recurrence, and 5.1 now reaches it directly
+and decimal-exactly, without escaping to `f64` and without a helper stream. Both
+cases named above are closed: the opco growth path by rule-declared states, the
+credit ramps expressible the same way.
+
+A declared `state` also happens to be the non-cash quantity this item asked for,
+and shipping it settled every question listed: it appears in `series` under a
+`state.` prefix, as bare numbers rather than Money, and it is excluded from
+`model_series`, totals, NPV, the annual rollup and every domain metric — with an
+identity asserting exactly that.
+
+What survives is narrower: a non-cash quantity that must aggregate a *stream's*
+values over a window (`series_sum` over something that is not cash). A state
+cannot do that, because `next` has no series access. Nothing currently needs it.
+
+### 7.9 `opco.capex_line` cannot express a derived line
+
+Found closing 5.1 against `benchmarks/opco/damodaran_fcff`, and worth separating
+because the old drift table made it look like the same defect it is not.
+
+Reinvestment is **derived** from another line: `revenue(t) * g(t+1) /
+sales_to_capital`. It funds *next* year's growth, so its own growth factor is
+`(1 + g_t) * g_{t+1} / g_t`, which leads the revenue growth path by one year:
+
+| | yr 5 | yr 6 | yr 7 | yr 8 | yr 9 | yr 10 |
+|---|---|---|---|---|---|---|
+| reinvestment grows | 3.24% | 3.12% | 3.01% | 2.89% | 2.78% | 4.58% |
+| revenue grows | 5.00% | 4.92% | 4.83% | 4.75% | 4.66% | 4.58% |
+
+`opco.capex_line` is a self-growing line — a base times a rate path — so it
+cannot express a quantity defined by another line's growth. No recurrence fixes
+this; it is a contract shape gap. The benchmark therefore asserts reinvestment
+for years 1–4 only, which is honest rather than fitted: deriving a
+reinvestment-ratio curve by hand would pass and would hide the gap, exactly as a
+cumulative-index curve would have hidden 5.1.
+
+Shape: a reinvestment contract taking a revenue reference, a growth curve and a
+sales-to-capital ratio, reading revenue through `series_sum` as
+`opco.working_capital_policy` already does. That also makes the FCFF identity
+(`EBIT(1-t) − reinvestment`) expressible from drivers rather than from a
+hand-computed base.
+
+### 7.10 A state's `next` cannot read a stream's history
+
+Deliberate in v1 of `docs/14_state_and_recurrence.md` §3.1, and recorded so it is
+a stated boundary rather than a silent gap.
+
+`next` sees `prev`, `prev.<name>`, `time.*`, `inputs.*`, `cfg`, `obs` and curves.
+It does **not** see stream series. The design permits series up to `t-1`, but
+enforcing "up to `t-1`" would mean truncating the series map per period — an
+O(n) copy per period, O(n²) overall — and, worse, would make the restriction a
+runtime *check* rather than an *absence*, which is the property the whole design
+exists to preserve.
+
+Nothing currently needs it: every shape the backlog asks for is multiplicative
+(survival factors, escalation indices, degradation, discount factors), additive
+(accumulators) or a running maximum (high-water marks). What it would unlock is a
+state that accumulates a stream — a reserve balance fed by actual collections, a
+carryforward of realised losses.
+
+Shape when needed: a borrowed truncated view rather than a copy, so the cost is a
+slice and the restriction stays structural.
+
+### 7.11 Engine diagnostic codes have no uniqueness gate
+
+`tools/check-pack-validations.py` gates `packs/*/validations.toml`, where authors
+add codes by hand and where four collisions occurred. It does not see codes the
+**engine** emits, which live in Rust string literals.
+
+That gap bit while adding the lowering diagnostics for 5.1: `E5010` and `E5011`
+were picked by reading the file and both were already taken
+(`E5010_TERM_UNKNOWN_INPUT`, `E5011_TERM_CLIP_OUT_OF_BOUNDS`). The same failure
+as 7.6, one layer over, and by the same method — picking a free code by eye is
+not reliable.
+
+Mitigated: the gate now also checks numeric-prefix uniqueness across
+`docs/08_diagnostics.md`, the published register where every engine code is
+listed. Confirmed to bite.
+
+What is still missing is the other half of the pair — a check that every code
+emitted in non-test Rust actually appears in that register. Without it the doc
+gate only fires for codes someone remembered to document. Extracting from Rust
+needs to exclude the deliberately corrupted codes inside parser tests
+(`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.

@@ -106,11 +106,21 @@ def indent(text: str) -> str:
 
 
 def stream_totals(results: dict) -> dict[str, float]:
+    """Total per CASH series.
+
+    A series entry is either a Money object or a bare number. Only the first is
+    cash: a `state.` series publishes a dimensionless index, factor or counter,
+    which has no currency and must not be summed as though it did. This check
+    exists to prove every documented stream carries flow, so a state has nothing
+    to say to it.
+    """
     series = results["deterministic"]["series"]
     return {
-        name: sum(point["amount"] for point in block["values"])
+        name: sum(
+            point["amount"] for point in block["values"] if isinstance(point, dict)
+        )
         for name, block in series.items()
-        if name != "model.net_cash_flow"
+        if name != "model.net_cash_flow" and not name.startswith("state.")
     }
 
 
@@ -163,11 +173,17 @@ def schedules(ir: dict) -> dict[str, dict]:
 
 
 def nonzero_period_counts(results: dict) -> dict[str, int]:
+    """Periods carrying cash, per CASH series. See `stream_totals` on why
+    `state.` series are excluded rather than counted as zero-flow streams."""
     series = results["deterministic"]["series"]
     return {
-        name: sum(1 for point in block["values"] if abs(point["amount"]) > 0.005)
+        name: sum(
+            1
+            for point in block["values"]
+            if isinstance(point, dict) and abs(point["amount"]) > 0.005
+        )
         for name, block in series.items()
-        if name != "model.net_cash_flow"
+        if name != "model.net_cash_flow" and not name.startswith("state.")
     }
 
 

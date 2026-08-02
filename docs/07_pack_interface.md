@@ -643,6 +643,33 @@ Use it for operating flows. Do not use it for a **price**: a disposal, a
 terminal value or an acquisition is struck at a point in time and discounts
 whole, which is what `schedule_at_period_end` is for.
 
+### A rule may declare a state
+
+A rule that compounds a rate which MOVES cannot use `pow(1 + g, t)` — that
+applies one period's rate as though it had held from the start, which is exact
+while the rate is flat and wrong the moment it varies. Three optional fields let
+the rule declare a recurrence instead:
+
+```toml
+amount_expr = "{{contract.amount}} * state.opco_revenue_growth{{contract.suffix_ident}}"
+state_name  = "opco_revenue_growth{{contract.suffix_ident}}"
+state_init  = "1"
+state_next  = "prev * pow(1 + curve_value(\"{{contract.growth_curve}}\", time.date), 1 / {{model.periods_per_year}})"
+```
+
+All three are templated. `state_name` must expand to a **single identifier** —
+`state.<name>` resolves one segment, so `{{contract.dot_suffix}}` would produce
+an unreachable path; use `{{contract.suffix_ident}}`.
+
+States are deduplicated by name across contracts. Identical definitions collapse,
+which is what several contracts sharing one curve should do; differing ones are
+`E5021_DUPLICATE_LOWERED_STATE` rather than one silently winning. A state the
+*model* declares under the same name wins over the rule's — a pack should never
+invisibly override what a modeller wrote.
+
+The construct itself is language-level and needs no pack: see
+`docs/14_state_and_recurrence.md` and §3.1 of `docs/03_expression_environment.md`.
+
 ### Cadence placeholders
 
 A rule must not assume how long a period is. These placeholders carry that,
@@ -661,6 +688,8 @@ reserved prefixes `model.`, `time.`, `periods.` or `whole_periods.` is
 | `{{time.elapsed_periods}}` | whole periods since `term_start` |
 | `{{time.elapsed_years}}` | whole years since `term_start` |
 | `{{time.periods_to_term_end}}` | whole periods from now to `term_end` |
+| `{{contract.dot_suffix}}` | the contract instance's suffix, `.core` |
+| `{{contract.suffix_ident}}` | the same without the dot, `_core` — for state names |
 
 **Periods-per-year comes from the rule's payment interval, not the model's
 calendar.** A rule that declares `schedule_every` accrues on that rhythm, so a

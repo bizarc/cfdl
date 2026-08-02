@@ -27,8 +27,8 @@ years of each line:
 | Rent loss (vacancy) | 0.48 | same |
 | Other revenue | 0.47 | same |
 | Debt service | **0.00** | exact |
-| Replacement reserve | 4.35 | escalation recurrence, below |
-| Total operating expenses | 12.26 | escalation recurrence, below |
+| Replacement reserve | **0.00** | exact — was 4.35, see below |
+| Total operating expenses | **0.00** | exact — was 12.26, see below |
 
 And the metric that matters to a lender — debt service coverage, which HUD
 publishes at four points to sixteen significant figures:
@@ -36,9 +36,9 @@ publishes at four points to sixteen significant figures:
 | | CFDL | published | difference |
 |---|---|---|---|
 | year 2 | 1.5757802845092563 | 1.5757380799199372 | +4.2e-05 |
-| year 5 | 1.5337630092930168 | 1.5337765387089857 | −1.4e-05 |
-| year 10 | 1.4335621406819647 | 1.4334834512831511 | +7.9e-05 |
-| year 15 | 1.2887876803917375 | 1.2887268568160697 | +6.1e-05 |
+| year 5 | 1.5337679171491894 | 1.5337765387089857 | −8.6e-06 |
+| year 10 | 1.4335489505325618 | 1.4334834512831511 | +6.6e-05 |
+| year 15 | 1.2886742479090734 | 1.2887268568160697 | −5.3e-05 |
 
 Agreement to five decimal places on a ratio built from lines the workbook has
 already rounded to whole dollars. The residual is entirely that rounding.
@@ -64,35 +64,54 @@ tracks at every year. We follow the data, not the label, and `restricted_years`
 is 14 in the model. This is the source's own convention and not a discrepancy
 to chase.
 
-## Finding — the workbook escalates by a recurrence, and we cannot
+## Finding — the workbook escalates by a RECURRENCE, and now we can
 
-The two expense lines are the only ones that miss by more than rounding, and
-they miss for a structural reason worth recording.
+The two expense lines were the only ones that missed by more than rounding, and
+they missed for a structural reason.
 
 The workbook does not compute year *n* as `base × trend^n`. It computes it as
 **last year's already-rounded figure times the trend**, rounding again. Verified
 directly: of its four expense sub-lines, `Operations and Maintenance` and
-`Taxes/Insurance/Reserves` reproduce **exactly** — worst 0.00 over 29 years —
-under that recurrence, and not under any closed form. The replacement reserve
-likewise: 21,013 → 21,538 → … → 41,948 matches the recurrence exactly and the
-closed form drifts to 41,952.
+`Taxes/Insurance/Reserves` reproduce exactly under that recurrence and under no
+closed form.
 
-We carry exact decimals from a base, so the two paths separate slowly. The
-residual is monotone in the number of years compounded and reaches 12.26 on
-204,655 at year 29 — 0.006%.
+`pow(1 + trend, t)` compounds exact decimals from the base instead, and rounding
+does not commute with exponentiation, so the two paths separated a little more
+every year — 12.26 on 204,655 at year 29, monotone in years compounded. That
+residual, on one line, was the sole reason this case carried
+`period_tolerance = 13`.
 
-Expressing the recurrence needs two things CFDL does not have: a **backward
-period reference**, so a stream can read its own prior period
-(`docs/13_feature_backlog.md` §5.1), and a **rounding builtin** (§4.1). Neither
-is worth building for this, but it is the second independent source to demand
-the rounding builtin — the production tax credit needed it too — and the first
-to demand it *combined* with a period reference. That combination is now
-recorded.
+**Declared states express the recurrence directly** and both lines now reproduce
+the published figures exactly over 29 years:
 
-Note the direction of the error: rounding at each step, then compounding, makes
-the workbook's own figures drift from the exact arithmetic. Ours is the precise
-answer. Agreeing to 0.006% with a spreadsheet that rounds every intermediate is
-the right outcome.
+```cfdl
+state opex_management {
+  init inputs.opex_management
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+```
+
+The tolerance drops 13 → **0.5**, which is the theoretical floor: the workbook
+publishes whole dollars, so half a dollar is the most an exact figure can differ
+from its rounded print. Confirmed binding — at 0.4 the case fails.
+
+### One state per sub-line, not one for the total
+
+Modelling the total as a single rounded line closed most of the gap and left
+**11.00**. The workbook rounds each of its four sub-lines *before* summing them,
+and rounding the sum is different arithmetic — 12,607.5 rounds up on its own and
+disappears inside a total.
+
+So the model carries four states, seeded from the four published sub-lines
+(37,413 / 37,925 / 12,300 / 14,863), and their sum is the expense stream. The
+102,501 total is now only ever an output. That is what took the line from 11.00
+to 0.00, and it is the sort of thing that reads as noise unless the mechanism is
+exactly right.
+
+This is one half of the acceptance test for `docs/14_state_and_recurrence.md`.
+The other is `benchmarks/opco/damodaran_fcff` — an unrelated source, an
+unrelated pack, a multiplicative growth path rather than a rounded escalation.
+Two independent published sources confirming one mechanism.
 
 ## Two pack gaps this case walked into
 

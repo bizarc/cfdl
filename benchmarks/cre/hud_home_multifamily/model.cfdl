@@ -44,7 +44,13 @@ assume rent_trend         = 0.02
 assume other_income_y1    = 2448.00
 assume other_trend        = 0.02
 assume vacancy_rate       = 0.07
-assume opex_y1            = 102501.00   // management + O&M + utilities + taxes/ins
+// The four published expense sub-lines, not their total. The workbook
+// escalates and ROUNDS each one independently and then sums, so rounding the
+// total is not the same arithmetic — 102,501 is the sum, never an input.
+assume opex_management    = 37413.00
+assume opex_maintenance   = 37925.00
+assume opex_utilities     = 12300.00
+assume opex_taxes_ins     = 14863.00
 assume opex_trend         = 0.025
 assume reserve_y1         = 21013.00    // replacement reserve deposit
 assume debt_service_year  = 13989.00    // first mortgage, level annual payment
@@ -84,14 +90,51 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 // published lines, and both feed the NOI metric's denominator.
 // ---------------------------------------------------------------------------
 
+// THE WORKBOOK ESCALATES BY A RECURRENCE, not by a closed form. Year n is last
+// year's ALREADY-ROUNDED figure times the trend, rounded again to whole
+// dollars — verified directly against two of its four expense sub-lines, which
+// reproduce exactly under the recurrence and under no closed form.
+//
+// `pow(1 + trend, t)` cannot express that: it compounds exact decimals from the
+// base, and rounding does not commute with exponentiation, so the two paths
+// separate a little more every year. That left a 12.26 residual at year 29 and
+// was the sole reason this case carried period_tolerance = 13.
+//
+// A state says it directly. See docs/14_state_and_recurrence.md.
+// One state per sub-line, because each is rounded on its own before the sum.
+state opex_management {
+  init inputs.opex_management
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_maintenance {
+  init inputs.opex_maintenance
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_utilities {
+  init inputs.opex_utilities
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state opex_taxes_ins {
+  init inputs.opex_taxes_ins
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
+state reserve_line {
+  init inputs.reserve_y1
+  next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+
 stream cre.property.opex on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
-  amount = inputs.opex_y1 * pow(1 + inputs.opex_trend, time.t)
+  amount = state.opex_management + state.opex_maintenance + state.opex_utilities + state.opex_taxes_ins
 }
 
 stream cre.ops.expense on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
-  amount = inputs.reserve_y1 * pow(1 + inputs.opex_trend, time.t)
+  amount = state.reserve_line
 }
 
 // ---------------------------------------------------------------------------

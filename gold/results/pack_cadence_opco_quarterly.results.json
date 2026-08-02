@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "4513b75b96c8b2183f0f913b833edd26e224e3547ad2b6990be8a3def07442f8",
+  "model_hash": "3bd69052e72913294aab7d0f426cdd41747c7a3022561754df917414a5239990",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -97,6 +97,69 @@
             "amount": 97800.0,
             "currency": "USD"
           }
+        ]
+      },
+      "state.opco_capex_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "state.opco_opex_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "state.opco_revenue_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
         ]
       },
       "stream.opco.capex": {

@@ -186,10 +186,11 @@ against it by `make results-schema`.
                 "type": "null"
               }
             ]
-          }
+          },
+          "description": "One entry per period. Money for a cash series; a bare number for a dimensionless one such as a declared `state`, which has no denomination."
         },
         "offset": {
-          "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on \u2014 so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md.",
+          "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on — so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md. Absent on `state.` series, which are not paid and so sit nowhere in their period.",
           "type": "number"
         }
       }
@@ -203,7 +204,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs (e.g., streams, aggregates)",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }

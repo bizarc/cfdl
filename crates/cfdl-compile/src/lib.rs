@@ -316,6 +316,8 @@ struct ActivePackContext {
 
 struct PackLoweringOutput {
     streams: Vec<((String, String), IrStream)>,
+    /// States declared by lowering rules, deduplicated by name.
+    states: Vec<IrState>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -817,6 +819,7 @@ fn build_ir(
             }
         }
     }
+    let lowered_states = lowered.states;
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -863,7 +866,7 @@ fn build_ir(
             random: assume_random,
         },
         curves: ir_curves,
-        states: lower_states(resolve_output),
+        states: merge_states(lower_states(resolve_output), lowered_states),
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -1094,6 +1097,7 @@ fn lower_contract_streams(
     let Some(pack) = active_pack else {
         return PackLoweringOutput {
             streams: vec![],
+            states: vec![],
             diagnostics: vec![],
         };
     };
@@ -1145,6 +1149,7 @@ fn lower_contract_streams(
     }
 
     let mut lowered = Vec::new();
+    let mut lowered_states: BTreeMap<String, IrState> = BTreeMap::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Contract(contract) = &source_stmt.statement else {
@@ -1419,6 +1424,16 @@ fn lower_contract_streams(
                             .unwrap_or_default()
                             .to_string(),
                     ),
+                    // The same discriminator as `dot_suffix`, but spelled so it
+                    // can sit inside an identifier: `state.<name>` resolves a
+                    // single segment, so a dotted state name is unreachable.
+                    "suffix_ident" => Some(
+                        contract
+                            .name
+                            .strip_prefix(&rule.contract_name)
+                            .unwrap_or_default()
+                            .replace('.', "_"),
+                    ),
                     _ => contract.terms.get(key).map(|term| term.value.clone()),
                 };
                 from_contract.or_else(|| rule.defaults.get(key).cloned())
@@ -1444,6 +1459,9 @@ fn lower_contract_streams(
                 // instrument. Already expanded above to derive ppy; expanding
                 // it again here is what puts the result on the rule.
                 (&rule.schedule_every, &mut expanded_rule.schedule_every),
+                (&rule.state_name, &mut expanded_rule.state_name),
+                (&rule.state_init, &mut expanded_rule.state_init),
+                (&rule.state_next, &mut expanded_rule.state_next),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -1638,6 +1656,70 @@ fn lower_contract_streams(
                 continue;
             }
 
+            if !rule.state_name.is_empty() {
+                // Same treatment as the amount: a textual splice can produce an
+                // expression the parser rejects, and the engine's fallback for
+                // a failed state is zero — which would silently flatten every
+                // stream that reads it.
+                let mut bad = None;
+                for (clause, src) in [("init", &rule.state_init), ("next", &rule.state_next)] {
+                    if let Err(err) = cfdl_expr::compile_expr(src) {
+                        bad = Some((clause, err, src.clone()));
+                        break;
+                    }
+                }
+                if let Some((clause, err, src)) = bad {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5020_LOWERED_STATE_INVALID",
+                        &format!(
+                            "Pack lowering rule '{}' produced an invalid state '{}' clause for contract '{}' [{}]: {}. Expanded to: {}",
+                            rule.id, clause, contract.name, err.code, err.message, src
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                    continue;
+                }
+                // Two rules naming one state with DIFFERENT recurrences would
+                // silently keep whichever lowered first. Identical definitions
+                // collapse, which is what several contracts sharing one curve
+                // should do.
+                match lowered_states.get(&rule.state_name) {
+                    Some(existing)
+                        if existing.init.src != rule.state_init
+                            || existing.next.src != rule.state_next =>
+                    {
+                        diagnostics.push(lowering_rule_diag(
+                            "E5021_DUPLICATE_LOWERED_STATE",
+                            &format!(
+                                "Contract '{}' lowers to state '{}', which another contract already defines differently. Give the rule's state_name a per-contract discriminator ({{{{contract.suffix_ident}}}}).",
+                                contract.name, rule.state_name
+                            ),
+                            source_stmt,
+                            contract.span,
+                        ));
+                        continue;
+                    }
+                    Some(_) => {}
+                    None => {
+                        lowered_states.insert(
+                            rule.state_name.clone(),
+                            IrState {
+                                name: rule.state_name.clone(),
+                                init: IrExpr {
+                                    lang: "cfdl".to_string(),
+                                    src: rule.state_init.clone(),
+                                },
+                                next: IrExpr {
+                                    lang: "cfdl".to_string(),
+                                    src: rule.state_next.clone(),
+                                },
+                            },
+                        );
+                    }
+                }
+            }
+
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
                 IrStream {
@@ -1678,6 +1760,7 @@ fn lower_contract_streams(
     }
     PackLoweringOutput {
         streams: lowered,
+        states: lowered_states.into_values().collect(),
         diagnostics,
     }
 }
@@ -2245,6 +2328,20 @@ type AssumeMaps = (
 /// validation, so a statement that reaches here without both clauses is
 /// skipped rather than re-reported — compilation has already failed and a
 /// second diagnostic for one mistake is noise.
+/// Model-declared states first, then any a pack rule added.
+///
+/// A model-declared name wins: a modeller who writes `state x` has said what
+/// they mean, and silently substituting the pack's version would be the kind
+/// of invisible override a pack should never perform.
+fn merge_states(mut declared: Vec<IrState>, lowered: Vec<IrState>) -> Vec<IrState> {
+    for state in lowered {
+        if !declared.iter().any(|s| s.name == state.name) {
+            declared.push(state);
+        }
+    }
+    declared
+}
+
 fn lower_states(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<IrState> {
     let mut states: Vec<IrState> = Vec::new();
     for source_stmt in &resolve_output.source_statements {
