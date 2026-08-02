@@ -172,6 +172,25 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1108_USE_PACK_NOT_IN_MODEL_FILE`
 - `E1109_MISSING_ENTITY`
 
+
+State declarations (`docs/14_state_and_recurrence.md`):
+
+- `E1120_STATE_MISSING_INIT` — a `state` has no `init`. The value at period 0 is
+  required, not defaulted: a recurrence with an unstated base case would
+  evaluate to zero for every period, and an out-of-range read returns zero
+  silently, so the error would never surface.
+- `E1121_STATE_MISSING_NEXT` — a `state` has no `next`. It would hold its
+  initial value forever, which an `assume` expresses more clearly.
+- `E1122_STATE_DUPLICATE_NAME` — two states share a name.
+- `E1123_STATE_PREV_OUTSIDE_NEXT` — `prev` appears in `init`. There is no period
+  before the first, so the initial value cannot depend on a previous one.
+- `E1124_STATE_SAME_PERIOD_READ` — `state.<name>` appears inside a `next`.
+  That path reads the **current** period, which is the same-period edge the
+  design exists to prevent; `prev.<name>` reads another state's previous value.
+- `E1125_STATE_UNKNOWN_REFERENCE` — a `state.<name>` or `prev.<name>` names a
+  state that is not declared. Without this the reference reaches the engine,
+  which warns and substitutes zero — so an entire series evaluates to nothing
+  while the run still reports `status: ok`.
 ### 7.4 Symbols and references (E13xx)
 - `E1001_DUPLICATE_ENTITY`
 - `E1002_DUPLICATE_CONTRACT`

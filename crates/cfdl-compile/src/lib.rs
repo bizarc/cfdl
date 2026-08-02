@@ -341,6 +341,8 @@ struct Ir {
     assumptions: IrAssumptions,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     curves: Vec<IrCurve>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    states: Vec<IrState>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     events: Vec<serde_json::Value>,
@@ -384,6 +386,16 @@ struct IrCurve {
     interpolation: String,
     /// Points sorted ascending by date.
     points: Vec<IrCurvePoint>,
+}
+
+/// A named value per period, defined by a recurrence. `init` and `next` are
+/// both required by validation (E1120/E1121) before lowering runs, so they are
+/// plain fields rather than options here.
+#[derive(Debug, Serialize)]
+struct IrState {
+    name: String,
+    init: IrExpr,
+    next: IrExpr,
 }
 
 #[derive(Debug, Serialize)]
@@ -851,6 +863,7 @@ fn build_ir(
             random: assume_random,
         },
         curves: ir_curves,
+        states: lower_states(resolve_output),
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -2226,6 +2239,39 @@ type AssumeMaps = (
 
 /// Lower `assume` statements into IR assumptions (constants + random), per
 /// docs/schemas/ir.schema.json $defs AssumeConstant / AssumeRandom.
+/// Lower `state` statements into IR states, in declaration order.
+///
+/// Missing clauses and duplicate names are already E1120/E1121/E1122 from
+/// validation, so a statement that reaches here without both clauses is
+/// skipped rather than re-reported — compilation has already failed and a
+/// second diagnostic for one mistake is noise.
+fn lower_states(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<IrState> {
+    let mut states: Vec<IrState> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::State(state) = &source_stmt.statement else {
+            continue;
+        };
+        let (Some(init), Some(next)) = (&state.init, &state.next) else {
+            continue;
+        };
+        if states.iter().any(|s| s.name == state.name) {
+            continue;
+        }
+        states.push(IrState {
+            name: state.name.clone(),
+            init: IrExpr {
+                lang: init.lang.clone(),
+                src: init.src.clone(),
+            },
+            next: IrExpr {
+                lang: next.lang.clone(),
+                src: next.src.clone(),
+            },
+        });
+    }
+    states
+}
+
 /// Lower `curve` statements into IR curves: dedupe names, sort points by
 /// date, reject duplicate point dates.
 fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>, Vec<Diagnostic>) {

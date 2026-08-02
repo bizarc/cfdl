@@ -172,6 +172,7 @@ pub enum Keyword {
     Trials,
     Seed,
     Curve,
+    State,
 
     True,
     False,
@@ -691,6 +692,7 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "payoff" => Keyword::Payoff,
         "run" => Keyword::Run,
         "curve" => Keyword::Curve,
+        "state" => Keyword::State,
         "deterministic" => Keyword::Deterministic,
         "monte_carlo" => Keyword::MonteCarlo,
         "trials" => Keyword::Trials,

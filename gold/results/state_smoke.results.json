@@ -1,0 +1,105 @@
+{
+  "results_version": "0.2",
+  "model_hash": "43e46c2bb402524433977ef08fb4eb706465a8e2444fbc3bfb6bd37c956155fc",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.co.total": {
+        "amount": 5415.25023,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 4672.257036,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 5415.25023,
+        "currency": "USD"
+      },
+      "model.wal_years": 3.073316,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.co.revenue.total": {
+        "amount": 5415.25023,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1045.003422,
+            "currency": "USD"
+          },
+          {
+            "amount": 1086.810712,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.845367,
+            "currency": "USD"
+          },
+          {
+            "amount": 1158.590728,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.co.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1045.003422,
+            "currency": "USD"
+          },
+          {
+            "amount": 1086.810712,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.845367,
+            "currency": "USD"
+          },
+          {
+            "amount": 1158.590728,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

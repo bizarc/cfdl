@@ -59,7 +59,7 @@ banker's rounding. `round_down`/`round_up` truncate toward/away from zero.
 
 ## 3. Namespaces
 
-The host (compiler or engine) provides values under five roots:
+The host (compiler or engine) provides values under these roots:
 
 | Root | Contents |
 |---|---|
@@ -68,6 +68,9 @@ The host (compiler or engine) provides values under five roots:
 | `entity` | attributes of the stream's owning entity |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
+| `inputs` | assumption values (`assume` statements) |
+| `state` | declared `state` values **at the current period** — present in stream expressions only |
+| `prev` | declared `state` values **at the previous period** — present inside a state's `next` only |
 
 Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
 
@@ -89,6 +92,67 @@ the compiler can see that. `time.ppy` reads the calendar and would say 365.
 31 in January, 28 in a non-leap February, 1 on a daily grid. It is what makes
 an Actual/360 or Actual/365 accrual expressible: `rate * time.days_in_period /
 360`. Packs reach it through `{{model.accrual_divisor}}` rather than directly.
+
+### 3.1 States: `state.<name>` and `prev`
+
+A `state` is a named number per period defined by a recurrence — the one shape
+`pow(1 + r, t)` cannot express, since that applies a single period's rate as
+though it had held from the start.
+
+```cfdl
+state revenue_index {
+  init  1.0
+  next  prev * (1 + curve_value("growth", time.date))
+}
+
+stream firm.revenue on entity legal.firm inflow currency USD {
+  schedule every year from 2026-01 to 2035-01
+  amount = 21765.4 * state.revenue_index
+}
+```
+
+`init` is the value at period 0 and is **mandatory** — an unstated base case
+would otherwise evaluate as a silent zero for every period, since an unmatched
+lookup returns 0. `next` is the value at every later period.
+
+Inside `next`, bare `prev` is this state's own previous value and `prev.<name>`
+is another state's. The two prefixes never overlap, and each exists in exactly
+one place:
+
+| prefix | resolves to | present in |
+|---|---|---|
+| `state.<name>` | that state at the **current** period | stream expressions |
+| `prev.<name>` | that state at the **previous** period | `next` expressions |
+
+This is separation **by absence**, not by check — a `next` environment carries
+no `state` map and a stream environment carries no `prev` map, so the entry is
+not there to be found. The same mechanism as `series` being empty when a
+phase-1 stream evaluates.
+
+Because everything a state can read is already finished, no reference can close
+a cycle. States may therefore reference each other freely, including mutually,
+and **declaration order carries no meaning**:
+
+```cfdl
+state a { init 1  next prev + prev.b }
+state b { init 1  next prev + prev.a }
+```
+
+Three further properties, each the opposite of a defensible alternative:
+
+- **A state has no schedule**, so `active when` does not apply and it updates
+  in every period, including the projection tail. A stream that is inactive
+  yields 0; a state does not.
+- **A state is not cash.** It has no entity, direction or currency. It is
+  published in results as `state.<name>` with bare numbers, and never enters
+  `model.total`, `model.npv`, the annual rollup or any domain metric.
+- **`next` has no series access** in v0.1. It sees `prev`, `prev.<name>`,
+  `time.*`, `inputs.*`, `cfg`, `obs` and curves. Reading another *stream's*
+  history from a recurrence is not expressible yet; `series_sum` remains the
+  route to a stream's window, from a stream.
+
+See `docs/14_state_and_recurrence.md` for the design and the prior art it
+follows.
 
 ## 4. Builtin functions
 

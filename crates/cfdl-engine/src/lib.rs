@@ -5,6 +5,7 @@ use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum EngineError {
@@ -799,6 +800,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
     let event_sim = simulate_events(ir, config, &timeline, &base_inputs, &mut warnings);
+    // States are recurrences: every period is computed from the completed
+    // previous one, so the whole column exists before any stream is evaluated.
+    let state_values = compute_states(ir, config, &timeline, &base_inputs, &mut warnings);
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     // Each stream's placement in its period, published on the series so a
     // consumer holding results.json can recompute the time-weighted metrics
@@ -830,6 +834,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &timeline,
             &base_inputs,
             &event_sim,
+            &state_values,
             None,
             &mut warnings,
         )?;
@@ -849,6 +854,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         full_series.insert(stream.name.clone(), values);
     }
 
+    // Wrapped once, not per accrual: every phase-2 env shares this one map.
+    let shared_series = Arc::new(full_series);
+
     // Phase 2: streams calling series_sum/series_avg read phase-1 series
     // (and only those — no phase-2 -> phase-2 references, so no cycles).
     for stream in phase2 {
@@ -859,7 +867,8 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &timeline,
             &base_inputs,
             &event_sim,
-            Some(&full_series),
+            &state_values,
+            Some(&shared_series),
             &mut warnings,
         )?;
         warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
@@ -1182,7 +1191,8 @@ fn evaluate_stream(
     timeline: &[Date],
     base_inputs: &BTreeMap<String, f64>,
     event_sim: &EventSim,
-    series: Option<&BTreeMap<String, Vec<f64>>>,
+    states: &BTreeMap<String, Vec<f64>>,
+    series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
     warnings: &mut Vec<String>,
 ) -> Result<Vec<f64>, EngineError> {
     if let Some(lang) = &stream.amount.lang {
@@ -1242,10 +1252,19 @@ fn evaluate_stream(
                     continue;
                 }
             }
-            let mut env = build_expr_env(ir, stream, config, idx, &timeline[idx], base_inputs);
+            let mut env = build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
             apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
+            // `state.<name>` at THIS period. `prev_states`/`prev_self` are left
+            // empty, so `prev` is not merely rejected in a stream — it is not
+            // there to be found. See docs/14_state_and_recurrence.md.
+            env.states = states
+                .iter()
+                .filter_map(|(name, values)| {
+                    values.get(idx).map(|v| (name.clone(), ExprValue::Decimal(*v)))
+                })
+                .collect();
             if let Some(series) = series {
-                env.series = series.clone();
+                env.series = Arc::clone(series);
             }
             let active_value =
                 eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
@@ -1471,9 +1490,83 @@ fn apply_entity_state(
         .insert("state".to_string(), ExprValue::Map(state.clone()));
 }
 
+/// Evaluate every declared state over the whole evaluation window.
+///
+/// One pass per period, all states together, before any stream is touched.
+/// Period 0 takes `init`; every later period takes `next` with `prev` bound to
+/// the state's own previous value and `prev.<name>` to another state's.
+///
+/// THE INVARIANT LIVES HERE. The env handed to `next` carries `prev_states`
+/// and `prev_self` and leaves `states` EMPTY, so a `state.<name>` read inside a
+/// recurrence finds nothing rather than being rejected by a check. Every value
+/// a state can see comes from the completed `t-1` column, so no reference can
+/// close a cycle and declaration order carries no meaning — states may even
+/// reference each other mutually. See docs/14_state_and_recurrence.md.
+///
+/// The window includes the projection tail so a stream reading forward finds
+/// states populated.
+fn compute_states(
+    ir: &Ir,
+    config: &RunConfig,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    warnings: &mut Vec<String>,
+) -> BTreeMap<String, Vec<f64>> {
+    let mut values: BTreeMap<String, Vec<f64>> = ir
+        .states
+        .iter()
+        .map(|st| (st.name.clone(), vec![0.0; timeline.len()]))
+        .collect();
+    if ir.states.is_empty() {
+        return values;
+    }
+
+    for (t, date) in timeline.iter().enumerate() {
+        // Snapshot the previous column before writing this one, so every state
+        // in this period sees the same completed history regardless of order.
+        let previous: BTreeMap<String, ExprValue> = if t == 0 {
+            BTreeMap::new()
+        } else {
+            values
+                .iter()
+                .map(|(name, v)| (name.clone(), ExprValue::Decimal(v[t - 1])))
+                .collect()
+        };
+
+        for state in &ir.states {
+            let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
+            let (src, span_label) = if t == 0 {
+                (&state.init.src, "init")
+            } else {
+                env.prev_states = previous.clone();
+                env.prev_self = previous.get(&state.name).cloned();
+                (&state.next.src, "next")
+            };
+            match cfdl_expr::compile_expr(src)
+                .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
+            {
+                Ok(ExprValue::Decimal(d)) => {
+                    if let Some(slot) = values.get_mut(&state.name) {
+                        slot[t] = d;
+                    }
+                }
+                Ok(other) => warnings.push(format!(
+                    "State '{}' {span_label} evaluated to {other:?}, which is not a number; using 0.",
+                    state.name
+                )),
+                Err(err) => warnings.push(format!(
+                    "State '{}' {span_label} evaluation failed: {err}; using 0.",
+                    state.name
+                )),
+            }
+        }
+    }
+    values
+}
+
 fn build_expr_env(
     ir: &Ir,
-    stream: &IrStream,
+    stream: Option<&IrStream>,
     config: &RunConfig,
     t: usize,
     date: &Date,
@@ -1521,11 +1614,15 @@ fn build_expr_env(
 
     env.entity.insert(
         "id".to_string(),
-        ExprValue::String(stream.owner.symbol.clone()),
+        ExprValue::String(
+            stream.map_or_else(String::new, |s| s.owner.symbol.clone()),
+        ),
     );
     env.entity.insert(
         "name".to_string(),
-        ExprValue::String(stream.owner.symbol.clone()),
+        ExprValue::String(
+            stream.map_or_else(String::new, |s| s.owner.symbol.clone()),
+        ),
     );
     env.entity
         .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
@@ -2260,11 +2357,20 @@ struct Ir {
     phases: Vec<IrPhase>,
     #[serde(default)]
     curves: Vec<IrCurve>,
+    #[serde(default)]
+    states: Vec<IrState>,
     /// Run modes the model declares for itself. A `run monte_carlo trials N
     /// seed S` in source used to be parsed, lowered, and then dropped here, so
     /// the model asked for trials and got a single deterministic pass.
     #[serde(default)]
     runs: Vec<IrRun>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrState {
+    name: String,
+    init: IrExpr,
+    next: IrExpr,
 }
 
 #[derive(Debug, Deserialize)]

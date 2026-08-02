@@ -111,6 +111,125 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         return diagnostics;
     };
 
+    // --- state declarations -------------------------------------------------
+    //
+    // A recurrence with an unstated base case would evaluate to zero for every
+    // period, so `init` is required rather than defaulted (see
+    // docs/14_state_and_recurrence.md). `prev` outside `next` has no referent —
+    // there is no period -1 — and `state.<name>` inside `next` would name the
+    // CURRENT period, which is the same-period edge the whole design prevents.
+    let mut state_names: Vec<&str> = Vec::new();
+    for source_stmt in &output.source_statements {
+        let Stmt::State(state) = &source_stmt.statement else {
+            continue;
+        };
+        if state.init.is_none() {
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1120_STATE_MISSING_INIT",
+                message: format!(
+                    "State '{}' is missing required 'init'. A recurrence needs its value at period 0 stated; without it every period would evaluate to zero.",
+                    state.name
+                ),
+                file: source_stmt.file.clone(),
+                span: state.span,
+            });
+        }
+        if state.next.is_none() {
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1121_STATE_MISSING_NEXT",
+                message: format!(
+                    "State '{}' is missing required 'next'. Without it the state would hold its initial value forever, which a plain input expresses more clearly.",
+                    state.name
+                ),
+                file: source_stmt.file.clone(),
+                span: state.span,
+            });
+        }
+        if state_names.contains(&state.name.as_str()) {
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1122_STATE_DUPLICATE_NAME",
+                message: format!("State '{}' is declared more than once.", state.name),
+                file: source_stmt.file.clone(),
+                span: state.span,
+            });
+        } else {
+            state_names.push(state.name.as_str());
+        }
+        if let Some(init) = &state.init {
+            if references_prev(&init.src) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1123_STATE_PREV_OUTSIDE_NEXT",
+                    message: format!(
+                        "State '{}' uses 'prev' in 'init'. There is no period before the first, so 'init' must not depend on a previous value.",
+                        state.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: init.span,
+                });
+            }
+        }
+        if let Some(next) = &state.next {
+            if references_state_path(&next.src) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1124_STATE_SAME_PERIOD_READ",
+                    message: format!(
+                        "State '{}' reads 'state.<name>' inside 'next', which is the CURRENT period. Use 'prev.<name>' for another state's previous value.",
+                        state.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: next.span,
+                });
+            }
+        }
+    }
+
+    // Every `state.<name>` and `prev.<name>` must name a declared state.
+    // Without this an undeclared reference reaches the engine, which warns and
+    // substitutes zero — so a whole series silently evaluates to nothing while
+    // the run still reports `status: ok`. Demonstrated before this check
+    // existed; see docs/14_state_and_recurrence.md.
+    for source_stmt in &output.source_statements {
+        let referenced: Vec<(&str, Span)> = match &source_stmt.statement {
+            Stmt::State(state) => state
+                .next
+                .iter()
+                .flat_map(|slot| {
+                    referenced_names(&slot.src, "prev.")
+                        .into_iter()
+                        .map(move |n| (n, slot.span))
+                })
+                .collect(),
+            Stmt::Stream(stream) => stream
+                .amount
+                .iter()
+                .chain(stream.active_when.iter())
+                .flat_map(|slot| {
+                    referenced_names(&slot.src, "state.")
+                        .into_iter()
+                        .map(move |n| (n, slot.span))
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+        for (name, span) in referenced {
+            if !state_names.contains(&name) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1125_STATE_UNKNOWN_REFERENCE",
+                    message: format!(
+                        "Reference to state '{name}', which is not declared. Declared states: {}.",
+                        if state_names.is_empty() {
+                            "none".to_string()
+                        } else {
+                            state_names.join(", ")
+                        }
+                    ),
+                    file: source_stmt.file.clone(),
+                    span,
+                });
+            }
+        }
+    }
+
     for source_stmt in &output.source_statements {
         match &source_stmt.statement {
             Stmt::Contract(contract) => {
@@ -537,6 +656,61 @@ fn fmt_date(date: Date) -> String {
     format!("{:04}-{:02}-{:02}", date.year, date.month, date.day)
 }
 
+/// Whether an expression source mentions `prev`, bare or namespaced.
+///
+/// Source-text matching rather than an AST walk, deliberately: validation runs
+/// before expressions are compiled, and every other check at this layer works
+/// the same way. Word-bounded so `prev_year` and `inputs.prevailing` do not
+/// match.
+fn references_prev(src: &str) -> bool {
+    mentions_word(src, "prev")
+}
+
+/// Whether an expression source reads `state.<name>` — the CURRENT period.
+fn references_state_path(src: &str) -> bool {
+    src.match_indices("state.").any(|(idx, _)| {
+        let before_ok = idx == 0
+            || !src[..idx]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+        before_ok
+    })
+}
+
+/// The `<name>` of every `<prefix><name>` in an expression source.
+fn referenced_names<'a>(src: &'a str, prefix: &str) -> Vec<&'a str> {
+    let mut out = Vec::new();
+    for (idx, _) in src.match_indices(prefix) {
+        let preceded_by_word = src[..idx]
+            .chars()
+            .next_back()
+            .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+        if preceded_by_word {
+            continue;
+        }
+        let rest = &src[idx + prefix.len()..];
+        let end = rest
+            .find(|c: char| !(c.is_alphanumeric() || c == '_'))
+            .unwrap_or(rest.len());
+        if end > 0 {
+            out.push(&rest[..end]);
+        }
+    }
+    out
+}
+
+fn mentions_word(src: &str, word: &str) -> bool {
+    src.match_indices(word).any(|(idx, _)| {
+        let before = src[..idx].chars().next_back();
+        let after = src[idx + word.len()..].chars().next();
+        let starts = before.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
+        // `prev.foo` is still a `prev` mention; `prev_year` is not.
+        let ends = after.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
+        starts && ends
+    })
+}
+
 fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
@@ -548,6 +722,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
+        Stmt::State(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,

@@ -25,6 +25,8 @@ import sys
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCHEMA_PATH = REPO_ROOT / "docs" / "schemas" / "ir.schema.json"
+MIRROR_PATH = REPO_ROOT / "site" / "public" / "schemas" / "CFDL_v0_1_IR.schema.json"
+DOC_PATH = REPO_ROOT / "docs" / "05_ir_schema.md"
 GOLD_IR = REPO_ROOT / "gold" / "ir"
 
 
@@ -52,6 +54,36 @@ def main() -> int:
     schema = json.loads(SCHEMA_PATH.read_text())
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
+
+    # Three copies of one contract, only ever one of which gets read. The
+    # results schema drifted four releases because nothing compared them; do
+    # not repeat it here.
+    if MIRROR_PATH.exists() and json.loads(MIRROR_PATH.read_text()) != schema:
+        print(
+            f"check-ir-schema: {MIRROR_PATH.relative_to(REPO_ROOT)} differs from\n"
+            f"                 {SCHEMA_PATH.relative_to(REPO_ROOT)}. The site serves the\n"
+            "                 mirror, so they must agree.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if DOC_PATH.exists():
+        text = DOC_PATH.read_text()
+        embedded = None
+        fenced = text.split("```json", 1)
+        if len(fenced) == 2:
+            try:
+                embedded = json.loads(fenced[1].rsplit("```", 1)[0])
+            except json.JSONDecodeError:
+                embedded = None
+        if embedded != schema:
+            print(
+                f"check-ir-schema: {DOC_PATH.relative_to(REPO_ROOT)} does not embed the\n"
+                f"                 current {SCHEMA_PATH.relative_to(REPO_ROOT)}. That page is\n"
+                "                 generated; regenerate it rather than editing it.",
+                file=sys.stderr,
+            )
+            return 1
 
     goldens = sorted(GOLD_IR.glob("*.json"))
     if not goldens:

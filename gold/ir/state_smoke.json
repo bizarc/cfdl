@@ -1,0 +1,131 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "state-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
+      "symbol": "legal.co",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "curves": [
+    {
+      "name": "growth",
+      "interpolation": "linear",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 0.05
+        },
+        {
+          "date": "2030-01-01",
+          "value": 0.03
+        }
+      ]
+    }
+  ],
+  "states": [
+    {
+      "name": "revenue_index",
+      "init": {
+        "lang": "cfdl",
+        "src": "1.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev * (1 + curve_value(\"growth\", time.date))"
+      }
+    },
+    {
+      "name": "cum_capex",
+      "init": {
+        "lang": "cfdl",
+        "src": "0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev + 100"
+      }
+    },
+    {
+      "name": "lagged_index",
+      "init": {
+        "lang": "cfdl",
+        "src": "0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev.revenue_index"
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "524d75cafbfdc6f5447733004926a4aa",
+      "name": "co.revenue",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0 * state.revenue_index"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

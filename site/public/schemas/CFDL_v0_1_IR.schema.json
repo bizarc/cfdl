@@ -91,6 +91,13 @@
         "$ref": "#/$defs/Curve"
       }
     },
+    "states": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/State"
+      }
+    },
     "contracts": {
       "type": "array",
       "minItems": 0,
@@ -717,7 +724,7 @@
           "type": "boolean"
         },
         "mid": {
-          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar — which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
+          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar \u2014 which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
           "type": "boolean"
         },
         "net_days": {
@@ -1237,6 +1244,53 @@
         "version": {
           "type": "string",
           "minLength": 1
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "required": [
+        "name",
+        "init",
+        "next"
+      ],
+      "additionalProperties": false,
+      "description": "A named value per period defined by a recurrence. `init` is the value at period 0 and is mandatory \u2014 a recurrence with an unstated base case would evaluate to zero for every period. `next` gives every later period, with `prev` bound to this state's previous value and `prev.<name>` to another state's; neither may see the current period, which is what keeps cycles impossible by construction. Streams read the current period as `state.<name>`. See 14_state_and_recurrence.md.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "init": {
+          "type": "object",
+          "required": [
+            "lang",
+            "src"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "lang": {
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
+        },
+        "next": {
+          "type": "object",
+          "required": [
+            "lang",
+            "src"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "lang": {
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
         }
       }
     }

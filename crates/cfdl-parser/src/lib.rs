@@ -30,6 +30,7 @@ pub enum Stmt {
     Entity(EntityStmt),
     Assume(AssumeStmt),
     Curve(CurveStmt),
+    State(StateStmt),
     Contract(ContractStmt),
     Stream(StreamStmt),
     Event(EventStmt),
@@ -145,6 +146,18 @@ pub struct AssumeStmt {
 /// `curve <name> [step|linear] { <date>: <number>, ... }` — a named
 /// date-indexed value curve (e.g. a forward rate curve), looked up in
 /// expressions with `curve_value("<name>", <date>)`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StateStmt {
+    pub name: String,
+    /// Value at period 0. Mandatory — a recurrence with an unstated base case
+    /// would otherwise read as a silent zero for every period.
+    pub init: Option<ExprSlot>,
+    /// Value at every later period. `prev` is bound to this state's value at
+    /// t-1; `prev.<other>` reads another state's.
+    pub next: Option<ExprSlot>,
+    pub span: Span,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CurveStmt {
     pub name: String,
@@ -435,6 +448,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
+            TokenKind::Keyword(Keyword::State) => self.parse_state_stmt().map(Stmt::State),
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
             TokenKind::Keyword(Keyword::Run) => self.parse_run_stmt().map(Stmt::Run),
@@ -1164,6 +1178,72 @@ impl<'a> Parser<'a> {
         (schedule, amount, active_when, end_span)
     }
 
+    /// `state <name> { init <expr>  next <expr> }`
+    ///
+    /// Both clauses are required. `init` is the value at period 0 and `next`
+    /// the value at every later period, with `prev` bound to this state's
+    /// previous value. Missingness is reported by validation rather than here,
+    /// so the diagnostic carries the whole statement's span and both problems
+    /// surface at once.
+    fn parse_state_stmt(&mut self) -> Option<StateStmt> {
+        let start = self.expect_keyword(Keyword::State, "'state'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'state'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let (mut init, mut next) = (None, None);
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected 'init', 'next' or '}' in state block.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Ident(ref ident) if ident == "init" || ident == "next" => {
+                    let is_init = ident == "init";
+                    let clause_tok = self.bump();
+                    // `init <expr>` — no '=', matching the clause style of
+                    // `schedule` and `active when` rather than `amount =`.
+                    let slot = self.parse_expr_slot(clause_tok.span)?;
+                    if is_init {
+                        init = Some(slot);
+                    } else {
+                        next = Some(slot);
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Unexpected token in a state block. Expected 'init', 'next' or '}'."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(StateStmt {
+            name,
+            init,
+            next,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn parse_amount_stmt(&mut self) -> Option<ExprSlot> {
         let amount_tok = self.bump();
         match amount_tok.kind {
@@ -1210,15 +1290,25 @@ impl<'a> Parser<'a> {
     fn parse_expr_slot(&mut self, start_span: Span) -> Option<ExprSlot> {
         let mut first: Option<Span> = None;
         let mut last: Option<Span> = None;
+        // Clause names end an expression, but only when they START one — a
+        // dotted path like `inputs.amount` or `prev.next_year` must not be
+        // truncated by its own final segment. Tracking whether the previous
+        // token was a dot is what separates the two.
+        let mut after_dot = false;
         loop {
             match self.peek().kind {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
                 | TokenKind::Keyword(Keyword::Schedule)
                 | TokenKind::Keyword(Keyword::Active) => break,
-                TokenKind::Ident(ref ident) if ident == "amount" => break,
+                TokenKind::Ident(ref ident)
+                    if !after_dot && matches!(ident.as_str(), "amount" | "init" | "next") =>
+                {
+                    break
+                }
                 _ => {
                     let tok = self.bump();
+                    after_dot = matches!(tok.kind, TokenKind::Punct(Punct::Dot));
                     if first.is_none() {
                         first = Some(tok.span);
                     }
@@ -1925,6 +2015,7 @@ impl<'a> Parser<'a> {
                         | TokenKind::Keyword(Keyword::Entity)
                         | TokenKind::Keyword(Keyword::Assume)
                         | TokenKind::Keyword(Keyword::Curve)
+                        | TokenKind::Keyword(Keyword::State)
                         | TokenKind::Keyword(Keyword::Contract)
                         | TokenKind::Keyword(Keyword::Stream)
                         | TokenKind::Keyword(Keyword::Event)
@@ -2260,6 +2351,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Curve)
+                | TokenKind::Keyword(Keyword::State)
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Event)
                 | TokenKind::Keyword(Keyword::Option)
@@ -2407,6 +2499,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
+        Stmt::State(s) => s.span,
         Stmt::Run(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
@@ -2524,6 +2617,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Trials => "trials",
         Keyword::Seed => "seed",
         Keyword::Curve => "curve",
+        Keyword::State => "state",
 
         Keyword::True => "true",
         Keyword::False => "false",
@@ -2608,6 +2702,60 @@ phase p from 2026-01 to 2026-02
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
         assert!(matches!(ast.statements[2], Stmt::Phase(_)));
+    }
+
+    #[test]
+    fn parses_state_statement() {
+        let src = r#"version 0.1
+model "demo"
+state revenue_index {
+  init 1.0
+  next prev * (1 + curve_value("growth", time.date))
+}
+state cum_capex { next prev + prev.revenue_index  init 0 }
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", src, &tokens);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let ast = result.ast.expect("AST expected");
+
+        let Stmt::State(idx) = &ast.statements[2] else {
+            panic!("expected state statement");
+        };
+        assert_eq!(idx.name, "revenue_index");
+        assert_eq!(idx.init.as_ref().expect("init").src, "1.0");
+        assert_eq!(
+            idx.next.as_ref().expect("next").src,
+            "prev * (1 + curve_value(\"growth\", time.date))"
+        );
+
+        // Clause order is not significant, like schedule options.
+        let Stmt::State(cum) = &ast.statements[3] else {
+            panic!("expected state statement");
+        };
+        assert_eq!(cum.name, "cum_capex");
+        assert_eq!(cum.init.as_ref().expect("init").src, "0");
+        assert_eq!(
+            cum.next.as_ref().expect("next").src,
+            "prev + prev.revenue_index"
+        );
+    }
+
+    #[test]
+    fn state_missing_a_clause_still_parses_for_validation_to_report() {
+        // Missingness is a validation diagnostic, not a parse error, so both
+        // problems surface at once with the statement's span.
+        let src = "version 0.1\nmodel \"demo\"\nstate bare { init 1 }\n";
+        let (tokens, _) = lex(src);
+        let result = parse("model.cfdl", src, &tokens);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let ast = result.ast.expect("AST expected");
+        let Stmt::State(bare) = &ast.statements[2] else {
+            panic!("expected state statement");
+        };
+        assert!(bare.init.is_some());
+        assert!(bare.next.is_none());
     }
 
     #[test]

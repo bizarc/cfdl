@@ -1,0 +1,33 @@
+version 0.1
+model "state-missing-init"
+time calendar annual from 2026-01 for 3
+entity legal co
+
+// Every way a state declaration can be wrong, in one fixture.
+//
+// The seed is the important one. A recurrence with no stated period 0 would
+// evaluate to zero for every period, and an out-of-range read returns zero
+// silently — so without E1120 the model would compile, run, report status
+// "ok", and be entirely wrong. See docs/14_state_and_recurrence.md.
+
+state no_init { next prev * 1.05 }
+
+state no_next { init 1.0 }
+
+state dup { init 1  next prev }
+state dup { init 2  next prev }
+
+// `prev` has no referent at period 0.
+state seed_uses_prev { init prev * 2  next prev }
+
+// `state.<name>` is the CURRENT period — the same-period edge the design
+// prevents. `prev.<name>` is the intended spelling.
+state reads_now { init 1  next state.dup + prev }
+
+// Neither name is declared.
+state unknown_ref { init 1  next prev + prev.nowhere }
+
+stream co.x on entity legal.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = state.also_nowhere
+}

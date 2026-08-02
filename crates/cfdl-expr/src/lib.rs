@@ -59,11 +59,25 @@ pub struct ExprEnv {
     /// Per-period stream series (signed amounts) available to `series_sum` /
     /// `series_avg`. Populated by the engine for phase-2 stream evaluation;
     /// empty elsewhere.
-    pub series: BTreeMap<String, Vec<f64>>,
+    ///
+    /// Shared rather than owned: an env is built per accrual, and copying every
+    /// stream's full series into each one made this the hot spot of a run.
+    /// `Arc` makes handing it over a refcount bump. Nothing mutates it.
+    pub series: Arc<BTreeMap<String, Vec<f64>>>,
     /// Named date-indexed value curves (`curve` statements) available to
     /// `curve_value(name, date)`. Populated by the engine from IR; empty
     /// elsewhere.
     pub curves: BTreeMap<String, CurveDef>,
+    /// Declared states at the CURRENT period, read as `state.<name>`.
+    /// Populated when evaluating a stream; empty when evaluating a state's
+    /// own `next`, which is what makes a same-period read unreachable rather
+    /// than merely rejected. See docs/14_state_and_recurrence.md.
+    pub states: BTreeMap<String, Value>,
+    /// Declared states at the PREVIOUS period, read as `prev.<name>`.
+    /// The mirror of the above: populated for `next`, empty for a stream.
+    pub prev_states: BTreeMap<String, Value>,
+    /// The state being evaluated, at the previous period — bare `prev`.
+    pub prev_self: Option<Value>,
 }
 
 /// A named curve: date/value points plus interpolation policy.
@@ -86,7 +100,10 @@ impl ExprEnv {
             cfg: BTreeMap::new(),
             obs: BTreeMap::new(),
             inputs: BTreeMap::new(),
-            series: BTreeMap::new(),
+            states: BTreeMap::new(),
+            prev_states: BTreeMap::new(),
+            prev_self: None,
+            series: Arc::default(),
             curves: BTreeMap::new(),
         }
     }
@@ -182,6 +199,20 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
     fn lookup(&self, path: &str) -> Option<cfdl_calc::Value> {
         let mut parts = path.split('.');
         let root = parts.next()?;
+        // `state.<name>` is the current period; `prev` and `prev.<name>` are the
+        // previous one. Each pair of maps is populated in exactly one context —
+        // states for a stream, prev for a `next` — so the same-period edge a
+        // recurrence could otherwise create is absent rather than rejected.
+        if root == "state" {
+            let name = parts.next()?;
+            return self.env.states.get(name).and_then(domain_to_calc);
+        }
+        if root == "prev" {
+            return match parts.next() {
+                None => self.env.prev_self.as_ref().and_then(domain_to_calc),
+                Some(name) => self.env.prev_states.get(name).and_then(domain_to_calc),
+            };
+        }
         let map = match root {
             "model" => &self.env.model,
             "time" => &self.env.time,
