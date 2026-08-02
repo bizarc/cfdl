@@ -24,12 +24,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 29.0,
-      "model.payback_years": 2.416667,
+      "model.payback_years": 2.5,
       "model.total": {
         "amount": 243452.523125,
         "currency": "USD"
       },
-      "model.wal_years": 1.848609,
+      "model.wal_years": 1.931942,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.ops.seed_investment.total": {
@@ -209,6 +209,7 @@
           "start": "2026-01-01",
           "periods": 36
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -500000.0,
@@ -362,6 +363,7 @@
           "start": "2026-01-01",
           "periods": 36
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -30000.0,
@@ -515,6 +517,7 @@
           "start": "2026-01-01",
           "periods": 36
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -668,6 +671,7 @@
           "start": "2026-01-01",
           "periods": 36
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

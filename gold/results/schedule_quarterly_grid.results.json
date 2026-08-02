@@ -21,7 +21,7 @@
         "amount": 230000.0,
         "currency": "USD"
       },
-      "model.wal_years": 0.858696,
+      "model.wal_years": 1.108696,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 4.0,
       "stream.co.rent.total": {
@@ -81,6 +81,7 @@
           "start": "2026-01-01",
           "periods": 8
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 30000.0,
@@ -122,6 +123,7 @@
           "start": "2026-01-01",
           "periods": 8
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

@@ -21,7 +21,7 @@
         "amount": 347199.999996,
         "currency": "USD"
       },
-      "model.wal_years": 1.21659,
+      "model.wal_years": 2.21659,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.testpack.cadence_probe.total": {
@@ -57,6 +57,7 @@
           "start": "2026-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 69999.999996,

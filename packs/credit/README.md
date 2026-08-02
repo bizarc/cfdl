@@ -170,6 +170,21 @@ benchmark purchases at a 1-point discount.
 `.wal_years` — principal-weighted average life over principal returned
 (scheduled + prepay + bullet + recoveries; interest/penalties excluded).
 
+> **The WAL time axis.** A collection at the close of period `t` sits at
+> `(t + 1)/ppy` years, not `t/ppy` — so a monthly pool's first collection is at
+> one twelfth of a year. That matches the market definition, the one a
+> prospectus states as "the number of years from the closing date to the
+> related distribution date", and it is the same axis the pack's cash is
+> discounted on. Reconstructed from an issuer-published schedule, the
+> difference is not academic: on a short auto class with a published WAL of
+> 0.37 years, measuring from period zero gives 0.286.
+>
+> Two limits worth knowing. The origin is the **model start**, not a separate
+> settlement date — identical whenever the deal closes at t = 0, which every
+> credit model here does. And precision is period fractions rather than actual
+> days, the same convention as discounting, so this will not tie to a published
+> Act/360 figure in the fourth decimal.
+
 ## Not in v0.1
 
 - **Floating-rate loans** — needs the `curve` input concept and

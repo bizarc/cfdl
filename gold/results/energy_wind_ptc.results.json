@@ -19,12 +19,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 118.0,
-      "model.payback_years": 9.833333,
+      "model.payback_years": 9.916667,
       "model.total": {
         "amount": 17921443.843012,
         "currency": "USD"
       },
-      "model.wal_years": 8.08753,
+      "model.wal_years": 8.115241,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.energy.capex.outlay.total": {
@@ -1028,6 +1028,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -42000000.0,
@@ -1997,6 +1998,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -204270.863655,
@@ -2966,6 +2968,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 147000.0,
@@ -3935,6 +3938,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 349125.0,
@@ -4904,6 +4908,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -108333.333333,
@@ -5873,6 +5878,7 @@
           "start": "2027-01-01",
           "periods": 240
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 228593.75,

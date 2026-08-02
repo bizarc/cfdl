@@ -131,9 +131,16 @@ fn sum_stream_totals(metrics: &BTreeMap<String, Scalar>, streams: &[String]) -> 
 }
 
 /// Weighted average life in years of the matched streams' positive
-/// per-period amounts: sum(t/ppy * v) / sum(v). Periods-per-year comes from
-/// the engine's `run.periods_per_year` metric (default 12). Omitted when the
-/// matched streams have no positive amounts.
+/// per-period amounts: `sum(((t + offset)/ppy) * v) / sum(v)`.
+///
+/// `offset` is the stream's placement in its period, the same axis discounting
+/// uses (docs/12_payment_timing.md). An ordinary annuity's first monthly
+/// collection is therefore at 1/12 of a year, not 0 — which is what a
+/// prospectus means by "the number of years from the closing date to the
+/// related distribution date".
+///
+/// Periods-per-year comes from the engine's `run.periods_per_year` metric
+/// (default 12). Omitted when the matched streams have no positive amounts.
 fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
     let series = &results.deterministic.series;
     let ppy = match results.deterministic.metrics.get("run.periods_per_year") {
@@ -154,9 +161,14 @@ fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
             series.get(&format!("stream.{name}")).into_iter().collect()
         };
         for s in matched {
+            // Default 1.0, not 0.0: a series that somehow arrived without its
+            // placement is far likelier to be an ordinary annuity than an
+            // annuity due, and 0.0 would silently restore the off-by-one this
+            // offset exists to remove. 1.0 is `discount_offset`'s own default.
+            let offset = s.offset.unwrap_or(1.0);
             for (t, money) in s.values.iter().enumerate() {
                 if money.amount > 0.0 {
-                    weighted += (t as f64 / ppy) * money.amount;
+                    weighted += ((t as f64 + offset) / ppy) * money.amount;
                     total += money.amount;
                 }
             }
@@ -372,12 +384,13 @@ mod tests {
             .deterministic
             .metrics
             .insert("run.periods_per_year".to_string(), Scalar::Number(12.0));
-        let series = |values: &[f64]| MoneySeries {
+        let series = |offset: Option<f64>, values: &[f64]| MoneySeries {
             index: SeriesIndex {
                 calendar: "monthly".to_string(),
                 start: "2026-01-01".to_string(),
                 periods: values.len() as u32,
             },
+            offset,
             values: values
                 .iter()
                 .map(|v| Money {
@@ -386,22 +399,26 @@ mod tests {
                 })
                 .collect(),
         };
-        // 100 at t=0 and 100 at t=24 -> WAL = 12 months = 1.0 years.
+        // Both are ordinary annuities (offset 1.0), so 100 in period 0 falls at
+        // 1/12 of a year and 100 in period 24 at 25/12. WAL is the mean of the
+        // two instants: 13/12 years. Under the old index-only convention this
+        // was 1.0, which put the first collection at time zero — the
+        // off-by-one the offset exists to remove.
         results.deterministic.series.insert(
             "stream.credit.pool.prepay.a".to_string(),
-            series(&[100.0, 0.0, 0.0, 0.0]),
+            series(Some(1.0), &[100.0, 0.0, 0.0, 0.0]),
         );
         let mut tail = vec![0.0; 25];
         tail[24] = 100.0;
-        results
-            .deterministic
-            .series
-            .insert("stream.credit.pool.bullet.a".to_string(), series(&tail));
+        results.deterministic.series.insert(
+            "stream.credit.pool.bullet.a".to_string(),
+            series(Some(1.0), &tail),
+        );
         // Negative amounts are excluded from the weighting.
-        results
-            .deterministic
-            .series
-            .insert("stream.credit.pool.other".to_string(), series(&[-50.0]));
+        results.deterministic.series.insert(
+            "stream.credit.pool.other".to_string(),
+            series(Some(1.0), &[-50.0]),
+        );
         let specs = vec![spec(
             "domain.credit.wal_years",
             "number",
@@ -422,14 +439,51 @@ mod tests {
             Scalar::Number(v) => *v,
             other => panic!("expected number, got {other:?}"),
         };
-        assert!((wal - 1.0).abs() < 1e-9, "wal = {wal}");
+        // 1e-6, not tighter: metrics are published rounded to six decimals and
+        // 13/12 does not terminate. The error this pins is a whole period.
+        assert!((wal - 13.0 / 12.0).abs() < 1e-6, "wal = {wal}");
+
+        // Two series matched by one spec, at different placements: each must be
+        // weighted with its own offset, not with a single shared one. 100 due
+        // (offset 0.0) in period 0 sits at time 0; 100 ordinary (offset 1.0) in
+        // period 0 sits at 1/12. Their mean is 1/24.
+        let mut mixed = make_results_with_metrics(vec![]);
+        mixed
+            .deterministic
+            .metrics
+            .insert("run.periods_per_year".to_string(), Scalar::Number(12.0));
+        mixed.deterministic.series.insert(
+            "stream.credit.pool.prepay.due".to_string(),
+            series(Some(0.0), &[100.0]),
+        );
+        mixed.deterministic.series.insert(
+            "stream.credit.pool.prepay.ordinary".to_string(),
+            series(Some(1.0), &[100.0]),
+        );
+        let mixed_specs = vec![spec(
+            "domain.credit.wal_years",
+            "number",
+            "wal_years",
+            &["credit.pool.prepay.*"],
+            &[],
+            None,
+            None,
+            "wal_years(numerator_streams)",
+            false,
+        )];
+        let dm = compute("credit", &mixed_specs, &mixed).expect("metrics");
+        let wal = match dm.metrics.get("domain.credit.wal_years").expect("wal") {
+            Scalar::Number(v) => *v,
+            other => panic!("expected number, got {other:?}"),
+        };
+        assert!((wal - 1.0 / 24.0).abs() < 1e-6, "wal = {wal}");
 
         // No positive amounts anywhere -> metric omitted.
         let mut empty = make_results_with_metrics(vec![]);
-        empty
-            .deterministic
-            .series
-            .insert("stream.credit.pool.other".to_string(), series(&[-1.0]));
+        empty.deterministic.series.insert(
+            "stream.credit.pool.other".to_string(),
+            series(Some(1.0), &[-1.0]),
+        );
         let dm = compute(
             "credit",
             &[spec(

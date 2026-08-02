@@ -19,12 +19,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 1.0,
-      "model.payback_years": 1.0,
+      "model.payback_years": 2.0,
       "model.total": {
         "amount": 3546254.493061,
         "currency": "USD"
       },
-      "model.wal_years": 1.946751,
+      "model.wal_years": 2.946751,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.cre.exit.proceeds.total": {
@@ -76,6 +76,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -97,6 +98,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -300000.0,
@@ -118,6 +120,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 279999.999984,
@@ -139,6 +142,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -160,6 +164,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 0.0,

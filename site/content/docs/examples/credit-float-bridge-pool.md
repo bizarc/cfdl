@@ -77,11 +77,11 @@ contract credit.purchase.bridge_f on entity fund.buyer {
 |---|---:|---:|
 | `model.npv` | -433,719.03 | ±1 |
 | `model.moic` | 1.151953 | ±0.0001 |
-| `model.wal_years` | 2.313942 | ±0.0001 |
+| `model.wal_years` | 2.367044 | ±0.0001 |
 | `domain.credit.interest` | 2,670,923.28 | ±1 |
 | `domain.credit.principal` | 14,053,633.59 | ±1 |
 | `domain.credit.recoveries` | 520,501.53 | ±1 |
-| `domain.credit.wal_years` | 2.456847 | ±0.0001 |
+| `domain.credit.wal_years` | 2.54018 | ±0.0001 |
 | `domain.credit.collections` | 17,245,058.4 | ±1 |
 | `domain.credit.purchase` | 15,000,000 | ±1 |
 | `domain.credit.collections_multiple` | 1.149671 | ±0.0001 |

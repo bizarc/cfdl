@@ -21,7 +21,7 @@
         "amount": 237500.0,
         "currency": "USD"
       },
-      "model.wal_years": 1.444444,
+      "model.wal_years": 1.527778,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.cre.lease.base_rent.total": {
@@ -141,6 +141,7 @@
           "start": "2026-01-01",
           "periods": 24
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

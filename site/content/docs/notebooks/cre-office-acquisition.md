@@ -201,11 +201,11 @@ results.metrics_frame()
 3                              domain.cre.noi  4.718934e+06      USD   
 4                    entity.asset.tower.total  3.009647e+06      USD   
 5                                  model.moic  3.234175e+00     None   
-6                                   model.npv  1.433678e+06      USD   
+6                                   model.npv  1.424274e+06      USD   
 7                       model.payback_periods  5.300000e+01     None   
-8                         model.payback_years  4.416667e+00     None   
+8                         model.payback_years  4.500000e+00     None   
 9                                 model.total  3.009647e+06      USD   
-10                            model.wal_years  8.442742e+00     None   
+10                            model.wal_years  8.508512e+00     None   
 11                   run.annual_discount_rate  7.250000e-02     None   
 12                       run.periods_per_year  1.200000e+01     None   
 13             stream.cre.exit.proceeds.total  3.237143e+06      USD   

@@ -6,6 +6,69 @@ This project follows Semantic Versioning: https://semver.org/
 
 ---
 
+## [Unreleased]
+
+### Breaking: WAL and payback are measured on the discounting time axis
+
+`model.wal_years`, `domain.credit.wal_years` and `model.payback_years` weighted
+a period-0 cash flow at **t = 0**. The market convention — the one a prospectus
+states as "the number of years from the closing date to the related
+distribution date" — puts an ordinary annuity's first monthly collection at
+1/12 of a year. Credit models put their first collection in period 0, so every
+WAL this engine has ever reported was one period short.
+
+Reconstructed from an issuer-published auto-ABS schedule, the effect is not
+academic: a class with a published WAL of 0.37 years came out at 0.286, a 23%
+understatement. Short amortising deals are hit hardest, because one period is a
+larger share of a shorter life.
+
+A flow's time is now `(period + offset) / ppy`, where `offset` is the same
+placement `npv_with_offsets` discounts on (`docs/12_payment_timing.md`). So NPV,
+IRR, WAL and payback now agree about when a dollar arrived. Consequences:
+
+- a bullet's WAL is exactly its term (it reported term − 1 period);
+- an annuity due's WAL is exactly one period shorter than the equivalent
+  ordinary annuity's (they were identical);
+- `mid` sits exactly halfway between the two (it was indistinguishable);
+- the same deal has the same WAL on any calendar (an annual grid was a full
+  year out).
+
+All four, plus a payback identity, are now asserted in
+`tools/analytic-checks.py` — they fail on the previous engine and pass on this
+one. Nothing else could have caught this: the three credit benchmarks asserted
+WAL against reference generators that restated the same off-by-one, so both
+sides agreed for as long as they existed. The generators are fixed here
+independently of the engine, and their agreement afterwards is the check.
+
+Time-weighted metrics now net **within** an offset rather than across one: two
+flows in one period at different points in it are not the same cash at the same
+moment, so a purchase settling on its date no longer cancels that period's
+collections. Where every stream shares a placement this is exactly the previous
+behaviour. `model.moic` is deliberately unchanged — it is a ratio of cash in to
+cash out and does not depend on when the cash moved.
+
+Numbers that move:
+
+| benchmark | `model.wal_years` | `domain.credit.wal_years` |
+|---|---|---|
+| `credit/level_pay_pool` | 3.817027 → 3.843940 | 3.973633 → 4.056967 |
+| `credit/io_bullet_loan` | 3.812188 → 3.864922 | 4.244941 → 4.328274 |
+| `credit/float_bridge_pool` | 2.313942 → 2.367044 | 2.456847 → 2.540180 |
+
+The domain metric moves by exactly 1/12; `model.wal_years` moves by less,
+because period 0's collections were being annihilated by the purchase and now
+re-enter the denominator at 1/12 year. 56 goldens move `model.wal_years` and 16
+move `model.payback_years`; no golden gains or loses a metric key.
+
+### Added
+
+- `MoneySeries.offset` in the results document — a series' placement in its
+  period, published so a consumer holding `results.json` can recompute the
+  time-weighted metrics the engine reported. Optional and additive; absent on
+  aggregates, which sum streams whose placements differ.
+
+---
+
 ## [0.7.0] - 2026-07-28
 
 Schedules, contract terms and the published surface. Breaking: see below.

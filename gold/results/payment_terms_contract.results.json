@@ -21,7 +21,7 @@
         "amount": 18000000.0,
         "currency": "USD"
       },
-      "model.wal_years": 0.625,
+      "model.wal_years": 0.708333,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.energy.ppa.revenue.plant_a.total": {
@@ -141,6 +141,7 @@
           "start": "2026-01-01",
           "periods": 24
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

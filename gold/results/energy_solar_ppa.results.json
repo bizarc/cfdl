@@ -19,12 +19,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 85.0,
-      "model.payback_years": 7.083333,
+      "model.payback_years": 7.166667,
       "model.total": {
         "amount": 5771865.782968,
         "currency": "USD"
       },
-      "model.wal_years": 12.945879,
+      "model.wal_years": 12.99224,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.energy.capacity.revenue.total": {
@@ -1272,6 +1272,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 5000.0,
@@ -2481,6 +2482,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -2400000.0,
@@ -3690,6 +3692,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -11462.896936,
@@ -4899,6 +4902,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 0.0,
@@ -6108,6 +6112,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -5833.333333,
@@ -7317,6 +7322,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 29750.0,
@@ -8526,6 +8532,7 @@
           "start": "2026-01-01",
           "periods": 300
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 1250.0,

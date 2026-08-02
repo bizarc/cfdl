@@ -21,7 +21,7 @@
         "amount": 1241057.556571,
         "currency": "USD"
       },
-      "model.wal_years": 1.03973,
+      "model.wal_years": 1.123063,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.opco.opex.recurring.total": {
@@ -145,6 +145,7 @@
           "start": "2026-01-01",
           "periods": 24
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -60000.0,
@@ -250,6 +251,7 @@
           "start": "2026-01-01",
           "periods": 24
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 100000.0,

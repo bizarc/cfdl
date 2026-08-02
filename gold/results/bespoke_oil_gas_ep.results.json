@@ -30,7 +30,7 @@
         "amount": -4919549.395645,
         "currency": "USD"
       },
-      "model.wal_years": 1.483757,
+      "model.wal_years": 1.56709,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.capital.drilling_costs.total": {
@@ -314,6 +314,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -250000.0,
@@ -563,6 +564,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -3500000.0,
@@ -812,6 +814,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -12000.0,
@@ -1061,6 +1064,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1310,6 +1314,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1559,6 +1564,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

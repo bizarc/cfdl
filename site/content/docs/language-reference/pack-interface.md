@@ -796,7 +796,7 @@ id = "domain.credit.wal_years"
 kind = "number"                  # wal_years requires kind = "number"
 op = "wal_years"
 numerator_streams = ["credit.pool.sched_principal.*", "credit.pool.prepay.*"]
-formula = "wal_years(numerator_streams)"
+formula = "wal_years(numerator_streams)"   # sum(((t + offset)/ppy) * v) / sum(v)
 # weighted average life in years of the matched streams' positive per-period
 # amounts: sum(t/ppy * v) / sum(v), using the engine's run.periods_per_year;
 # omitted when the matched streams have no positive amounts
@@ -804,6 +804,18 @@ formula = "wal_years(numerator_streams)"
 
 Engine-universal metrics are computed for every model regardless of pack:
 `model.npv`, `model.irr`, `model.moic`, `model.payback_periods` /
-`model.payback_years` (first period cumulative net cash turns non-negative,
-when the model starts cash-negative), and `model.wal_years` (inflow-weighted
-average life). All operate on the net cash-flow series.
+`model.payback_years` (when cumulative net cash turns non-negative, given the
+model starts cash-negative), and `model.wal_years` (inflow-weighted average
+life).
+
+`npv`, `irr`, `wal_years` and `payback_years` are all measured on the **same
+time axis**: a flow sits at `(period + offset)`, where `offset` is its
+placement in the period (`docs/12_payment_timing.md`). `moic` is a ratio of
+cash in to cash out and does not care when the cash moved, so it uses the plain
+net series.
+
+The time-weighted ones net **within an offset, not across one**: two flows in
+the same period at different points in it are not the same cash at the same
+moment, so a purchase settling on its date does not cancel that period's
+collections. When every stream shares a placement this reduces exactly to the
+net cash-flow series.

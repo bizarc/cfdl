@@ -21,7 +21,7 @@
         "amount": 1267589.993121,
         "currency": "USD"
       },
-      "model.wal_years": 1.369208,
+      "model.wal_years": 1.371948,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 365.0,
       "stream.credit.pool.interest.book.total": {
@@ -4809,6 +4809,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -9562,6 +9563,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -14315,6 +14317,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -19068,6 +19071,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -23821,6 +23825,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -28574,6 +28579,7 @@
           "start": "2025-01-01",
           "periods": 1186
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

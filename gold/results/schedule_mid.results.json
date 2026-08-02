@@ -21,7 +21,7 @@
         "amount": 2200.0,
         "currency": "USD"
       },
-      "model.wal_years": 1.727273,
+      "model.wal_years": 2.227273,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.co.flow_due.total": {
@@ -73,6 +73,7 @@
           "start": "2026-01-01",
           "periods": 4
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 100.0,
@@ -98,6 +99,7 @@
           "start": "2026-01-01",
           "periods": 4
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 100.0,
@@ -123,6 +125,7 @@
           "start": "2026-01-01",
           "periods": 4
         },
+        "offset": 0.5,
         "values": [
           {
             "amount": 100.0,
@@ -148,6 +151,7 @@
           "start": "2026-01-01",
           "periods": 4
         },
+        "offset": 0.5,
         "values": [
           {
             "amount": 0.0,

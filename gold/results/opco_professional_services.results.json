@@ -25,7 +25,7 @@
         "amount": 48789395.718323,
         "currency": "USD"
       },
-      "model.wal_years": 4.420183,
+      "model.wal_years": 4.441515,
       "run.annual_discount_rate": 0.12,
       "run.periods_per_year": 12.0,
       "stream.exit.pe_sale.total": {
@@ -321,6 +321,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 0.0,
@@ -570,6 +571,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -230000.0,
@@ -819,6 +821,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -22000.0,
@@ -1068,6 +1071,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -45000.0,
@@ -1317,6 +1321,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -18000.0,
@@ -1566,6 +1571,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -14000.0,
@@ -1815,6 +1821,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 45000.0,
@@ -2064,6 +2071,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 95000.0,
@@ -2313,6 +2321,7 @@
           "start": "2026-01-01",
           "periods": 60
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 280000.0,

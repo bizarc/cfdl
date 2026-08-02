@@ -8,7 +8,7 @@
     "tolerance": 0.0001
   },
   "model.wal_years": {
-    "value": 3.817027,
+    "value": 3.84394,
     "tolerance": 0.0001
   },
   "domain.credit.interest": {
@@ -32,7 +32,7 @@
     "tolerance": 1.0
   },
   "domain.credit.wal_years": {
-    "value": 3.973633,
+    "value": 4.056967,
     "tolerance": 0.0001
   },
   "domain.credit.collections": {

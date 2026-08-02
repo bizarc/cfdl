@@ -181,24 +181,25 @@ results.metrics_frame()
 7                              domain.opco.taxes  2.648405e+06      USD   
 8                    domain.opco.working_capital -0.000000e+00      USD   
 9                  entity.operating.target.total  3.335678e+07      USD   
-10                                    model.moic  3.467004e+00     None   
-11                                     model.npv  1.416583e+07      USD   
-12                         model.payback_periods  5.900000e+01     None   
-13                           model.payback_years  4.916667e+00     None   
-14                                   model.total  3.335678e+07      USD   
-15                               model.wal_years  4.708338e+00     None   
-16                      run.annual_discount_rate  1.200000e-01     None   
-17                          run.periods_per_year  1.200000e+01     None   
-18           stream.opco.acquisition.price.total -3.360000e+07      USD   
-19                       stream.opco.capex.total -2.084574e+06      USD   
-20               stream.opco.debt.interest.total -7.283247e+06      USD   
-21              stream.opco.debt.principal.total -2.100000e+07      USD   
-22               stream.opco.debt.proceeds.total  2.100000e+07      USD   
-23                  stream.opco.exit.value.total  5.250358e+07      USD   
-24              stream.opco.opex.recurring.total -4.301637e+07      USD   
-25           stream.opco.revenue.recurring.total  6.948579e+07      USD   
-26                       stream.opco.taxes.total -2.648405e+06      USD   
-27  stream.opco.working_capital.adjustment.total  0.000000e+00      USD   
+10                                     model.irr  3.076380e-01     None   
+11                                    model.moic  3.467004e+00     None   
+12                                     model.npv  1.388314e+07      USD   
+13                         model.payback_periods  5.900000e+01     None   
+14                           model.payback_years  5.000000e+00     None   
+15                                   model.total  3.335678e+07      USD   
+16                               model.wal_years  4.791671e+00     None   
+17                      run.annual_discount_rate  1.200000e-01     None   
+18                          run.periods_per_year  1.200000e+01     None   
+19           stream.opco.acquisition.price.total -3.360000e+07      USD   
+20                       stream.opco.capex.total -2.084574e+06      USD   
+21               stream.opco.debt.interest.total -7.283247e+06      USD   
+22              stream.opco.debt.principal.total -2.100000e+07      USD   
+23               stream.opco.debt.proceeds.total  2.100000e+07      USD   
+24                  stream.opco.exit.value.total  5.250358e+07      USD   
+25              stream.opco.opex.recurring.total -4.301637e+07      USD   
+26           stream.opco.revenue.recurring.total  6.948579e+07      USD   
+27                       stream.opco.taxes.total -2.648405e+06      USD   
+28  stream.opco.working_capital.adjustment.total  0.000000e+00      USD   
 
          source  
 0   domain:opco  
@@ -229,6 +230,7 @@ results.metrics_frame()
 25         core  
 26         core  
 27         core  
+28         core  
 ```
 
 ## What-if

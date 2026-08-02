@@ -21,7 +21,7 @@
         "amount": 15000000.0,
         "currency": "INR"
       },
-      "model.wal_years": 0.458333,
+      "model.wal_years": 0.541667,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.energy.ppa.revenue.plant_a.total": {
@@ -93,6 +93,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 1250000.0,

@@ -21,7 +21,7 @@
         "amount": 2000000.0,
         "currency": "USD"
       },
-      "model.wal_years": 0.916667,
+      "model.wal_years": 1.0,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.cre.exit.sale.total": {
@@ -93,6 +93,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

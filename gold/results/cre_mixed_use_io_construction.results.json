@@ -27,12 +27,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 86.0,
-      "model.payback_years": 7.166667,
+      "model.payback_years": 7.25,
       "model.total": {
         "amount": 32373863.636364,
         "currency": "USD"
       },
-      "model.wal_years": 7.709985,
+      "model.wal_years": 7.793318,
       "run.annual_discount_rate": 0.09,
       "run.periods_per_year": 12.0,
       "stream.cre.exit.sale.total": {
@@ -464,6 +464,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -857,6 +858,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1250,6 +1252,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -75000.0,
@@ -1643,6 +1646,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -2036,6 +2040,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -2429,6 +2434,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -2822,6 +2828,7 @@
           "start": "2026-01-01",
           "periods": 96
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

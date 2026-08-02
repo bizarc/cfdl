@@ -94,14 +94,23 @@ def main():
     npv = -PRICE + sum(
         v / ((1.0 + monthly_rate) ** (t + 1)) for t, v in enumerate(net)
     )
+    # WAL is measured on the same time axis as the discounting above, and for
+    # the same reason: a collection at the close of period t sits at (t+1)/12
+    # of a year, which is what the market means by "years from the closing
+    # date to the distribution date". The purchase is excluded rather than
+    # netted — it settles on its own date, a full period before that period's
+    # collections, so the two are not the same cash at the same moment and
+    # cannot cancel. Hence WAL is computed BEFORE the price is subtracted.
+    wal_years = sum(
+        ((t + 1) / 12.0) * v for t, v in enumerate(net) if v > 0.0
+    ) / sum(v for v in net if v > 0.0)
+    principal_wal = sum(
+        ((t + 1) / 12.0) * v for t, v in enumerate(principal_flows) if v > 0.0
+    ) / sum(v for v in principal_flows if v > 0.0)
     net[0] -= PRICE
     inflows = sum(v for v in net if v > 0.0)
     outflows = -sum(v for v in net if v < 0.0)
     moic = inflows / outflows
-    wal_years = sum((t / 12.0) * v for t, v in enumerate(net) if v > 0.0) / inflows
-    principal_wal = sum(
-        (t / 12.0) * v for t, v in enumerate(principal_flows) if v > 0.0
-    ) / sum(v for v in principal_flows if v > 0.0)
     collections = interest_total + principal_total + recovery_total
 
     with open("expected.csv", "w", newline="") as fh:

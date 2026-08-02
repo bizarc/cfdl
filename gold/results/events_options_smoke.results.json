@@ -101,6 +101,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -500.0,
@@ -158,6 +159,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 0.0,

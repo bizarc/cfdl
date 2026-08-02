@@ -67,13 +67,13 @@ contract credit.purchase.auto_a on entity fund.buyer {
 |---|---:|---:|
 | `model.npv` | -295,975.22 | ±1 |
 | `model.moic` | 1.225381 | ±0.0001 |
-| `model.wal_years` | 3.817027 | ±0.0001 |
+| `model.wal_years` | 3.84394 | ±0.0001 |
 | `domain.credit.interest` | 6,499,894.55 | ±1 |
 | `domain.credit.principal` | 22,978,060.49 | ±1 |
 | `domain.credit.recoveries` | 1,167,319.89 | ±1 |
 | `domain.credit.servicing` | 499,991.89 | ±1 |
 | `domain.credit.penalties` | 82,207.68 | ±1 |
-| `domain.credit.wal_years` | 3.973633 | ±0.0001 |
+| `domain.credit.wal_years` | 4.056967 | ±0.0001 |
 | `domain.credit.collections` | 30,727,482.61 | ±1 |
 | `domain.credit.purchase` | 24,750,000 | ±1 |
 | `domain.credit.collections_multiple` | 1.241514 | ±0.0001 |

@@ -524,6 +524,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,

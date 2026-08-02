@@ -60,6 +60,7 @@
           "start": "2026-01-01",
           "periods": 4
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -100.0,

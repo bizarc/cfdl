@@ -19,12 +19,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 53.0,
-      "model.payback_years": 4.416667,
+      "model.payback_years": 4.5,
       "model.total": {
         "amount": 3009646.651045,
         "currency": "USD"
       },
-      "model.wal_years": 8.442742,
+      "model.wal_years": 8.508512,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.cre.exit.proceeds.total": {
@@ -572,6 +572,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1061,6 +1062,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -25000.0,
@@ -1550,6 +1552,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -2039,6 +2042,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -2528,6 +2532,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -3017,6 +3022,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -3506,6 +3512,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -3995,6 +4002,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -4484,6 +4492,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -200000.0,
@@ -4973,6 +4982,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 0.0,
@@ -5462,6 +5472,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -1500.0,
@@ -5951,6 +5962,7 @@
           "start": "2026-01-01",
           "periods": 120
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -36845.249537,

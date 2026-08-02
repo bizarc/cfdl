@@ -57,6 +57,14 @@ def npv(block: dict) -> float:
     return value["amount"] if isinstance(value, dict) else value
 
 
+def wal(block: dict) -> float:
+    return block["metrics"]["model.wal_years"]
+
+
+def payback(block: dict) -> float:
+    return block["metrics"]["model.payback_years"]
+
+
 def monthly_rate(annual: float) -> float:
     return periodic_rate(annual, 12)
 
@@ -92,12 +100,18 @@ stream e.v on entity legal.e inflow currency USD {{
     return npv(run_model(src, 0.0))
 
 
-CHECKS: list[tuple[str, callable]] = []
+CHECKS: list[tuple[str, callable, float]] = []
 
 
-def check(name):
+def check(name, tol=TOL):
+    """Register an identity. `tol` defaults to the dollar tolerance.
+
+    WAL and payback identities are in YEARS, where the dollar tolerance is
+    meaningless — a one-period slip is 0.0833 on a monthly grid. Those pass
+    WAL_TOL instead, which is set by the metric's own rounding.
+    """
     def wrap(fn):
-        CHECKS.append((name, fn))
+        CHECKS.append((name, fn, tol))
         return fn
     return wrap
 
@@ -369,15 +383,142 @@ def mbs_standard_prepayment_curve() -> tuple[float, float]:
             worst = (got, want)
     return worst
 
+# ---------------------------------------------------------------------------
+# Weighted average life and payback: the TIME AXIS.
+#
+# These are here rather than in a benchmark for the reason the file exists. A
+# reference generator written alongside the engine shares its conventions, so
+# the three credit benchmarks asserted WAL against their own restatement of the
+# same off-by-one for as long as they existed. An identity does not care what
+# the engine thinks: a bullet's weighted average life IS its term, by the
+# definition of the words.
+#
+# The convention being pinned: a flow's time is (period + offset) / ppy, the
+# same axis discounting uses (docs/12_payment_timing.md). An ordinary annuity's
+# first monthly payment is therefore at 1/12 year, not 0.
+# ---------------------------------------------------------------------------
+
+# Years. Set by round_amount's 6-decimal output, not by slack: 1/12 is
+# published as 0.083333, so a difference of two rounded metrics can be off by
+# 1e-6 with nothing wrong. The error being hunted is a full period — 0.0833 on
+# a monthly grid, 1.0 on an annual one — so this is still five orders of
+# magnitude clear of it.
+WAL_TOL = 1e-6
+
+
+def _single_flow(calendar: str, periods: int, schedule: str) -> str:
+    return f"""version 0.1
+model "wal-probe"
+time calendar {calendar} from 2026-01 for {periods}
+entity legal investor
+stream investor.bullet on entity legal.investor inflow currency USD {{
+  schedule {schedule}
+  amount = 1000000
+}}
+"""
+
+
+@check("WAL: a bullet's weighted average life is its term", WAL_TOL)
+def wal_bullet_equals_term() -> tuple[float, float]:
+    # One payment, at the end of month 60. Its average life is 5 years by the
+    # definition of an average over a single point. This is the check that
+    # fails on the pre-fix engine, which reports 4.9167 — the whole defect,
+    # in one line.
+    src = _single_flow("monthly", 61, "every month from 2030-12 to 2030-12")
+    return wal(run_model(src, 0.08)), 5.0
+
+
+@check("WAL: an ordinary annuity is exactly one period later than an annuity due", WAL_TOL)
+def wal_due_vs_ordinary() -> tuple[float, float]:
+    # Same cash, same periods, different placement in each period. The whole
+    # difference between them is one period, so the WALs differ by 1/ppy and
+    # by nothing else.
+    ordinary = wal(run_model(_single_flow(
+        "monthly", 24, "every month from 2026-01 to 2027-12"), 0.08))
+    due = wal(run_model(_single_flow(
+        "monthly", 24, "every month due from 2026-01 to 2027-12"), 0.08))
+    return ordinary - due, 1.0 / 12.0
+
+
+@check("WAL: `mid` sits exactly halfway between due and ordinary", WAL_TOL)
+def wal_mid_is_halfway() -> tuple[float, float]:
+    # Pins discount_offset's 0.5 branch through the WAL path. Annual grid, so
+    # a half period is half a year and the assertion has room to be wrong.
+    mid = wal(run_model(_single_flow(
+        "annual", 5, "every year mid from 2026-01 to 2030-01"), 0.08))
+    due = wal(run_model(_single_flow(
+        "annual", 5, "every year due from 2026-01 to 2030-01"), 0.08))
+    return mid - due, 0.5
+
+
+@check("WAL: the same deal has the same average life on any calendar", WAL_TOL)
+def wal_calendar_invariant() -> tuple[float, float]:
+    # One payment five years out, expressed three ways. WAL is a real duration,
+    # so the grid it is measured on cannot change it. Catches any ppy slip in
+    # the (idx + offset) / ppy conversion — the class of error the cadence work
+    # found in discount_offset's own day rule.
+    monthly = wal(run_model(_single_flow(
+        "monthly", 61, "every month from 2030-12 to 2030-12"), 0.08))
+    quarterly = wal(run_model(_single_flow(
+        "quarterly", 21, "every quarter from 2030-10 to 2030-10"), 0.08))
+    annual = wal(run_model(_single_flow(
+        "annual", 6, "every year from 2030-01 to 2030-01"), 0.08))
+    return max(abs(monthly - 5.0), abs(quarterly - 5.0), abs(annual - 5.0)), 0.0
+
+
+@check("WAL: lies between the first and last inflow instants", WAL_TOL)
+def wal_is_bounded() -> tuple[float, float]:
+    # Cheap, and it catches sign and denominator slips that the exact
+    # identities above could in principle both miss.
+    src = """version 0.1
+model "wal-bounds"
+time calendar monthly from 2026-01 for 37
+entity legal investor
+stream investor.early on entity legal.investor inflow currency USD {
+  schedule every month from 2026-01 to 2026-01
+  amount = 400000
+}
+stream investor.late on entity legal.investor inflow currency USD {
+  schedule every month from 2028-12 to 2028-12
+  amount = 600000
+}
+"""
+    got = wal(run_model(src, 0.08))
+    # First inflow at the end of period 0 = 1/12; last at the end of period 35.
+    inside = (1.0 / 12.0) <= got <= (36.0 / 12.0)
+    return 1.0 if inside else 0.0, 1.0
+
+
+@check("payback: a single inflow repays on its own date, not a period early", WAL_TOL)
+def payback_uses_the_same_axis() -> tuple[float, float]:
+    # An outflow at t=0 and one inflow at the end of month 12. The model turns
+    # cash-positive when that inflow lands, which is 1 year out. Reporting
+    # 0.9167 would be the same off-by-one as WAL, from the same raw index.
+    src = """version 0.1
+model "payback-probe"
+time calendar monthly from 2026-01 for 13
+entity legal investor
+stream investor.outlay on entity legal.investor outflow currency USD {
+  schedule on 2026-01
+  amount = 1000000
+}
+stream investor.repay on entity legal.investor inflow currency USD {
+  schedule every month from 2026-12 to 2026-12
+  amount = 1000000
+}
+"""
+    return payback(run_model(src, 0.08)), 1.0
+
+
 def main() -> int:
     if not CLI.exists():
         print(f"analytic-checks: {CLI} not found — run `cargo build -p cfdl-cli`")
         return 1
 
     failures = 0
-    for name, fn in CHECKS:
+    for name, fn, tol in CHECKS:
         got, expected = fn()
-        ok = abs(got - expected) <= TOL
+        ok = abs(got - expected) <= tol
         print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
         if not ok:
             print(f"         got {got:,.4f}, expected {expected:,.4f}, "

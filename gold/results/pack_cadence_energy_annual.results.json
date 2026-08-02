@@ -21,7 +21,7 @@
         "amount": 1119407.15757,
         "currency": "USD"
       },
-      "model.wal_years": 1.007404,
+      "model.wal_years": 2.007404,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.energy.capacity.revenue.total": {
@@ -65,6 +65,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 60000.0,
@@ -86,6 +87,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -48000.0,
@@ -107,6 +109,7 @@
           "start": "2025-01-01",
           "periods": 3
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 357000.0,

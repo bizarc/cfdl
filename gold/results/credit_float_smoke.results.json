@@ -20,12 +20,12 @@
         "currency": "USD"
       },
       "model.payback_periods": 11.0,
-      "model.payback_years": 0.916667,
+      "model.payback_years": 1.0,
       "model.total": {
         "amount": 67570.997345,
         "currency": "USD"
       },
-      "model.wal_years": 0.850183,
+      "model.wal_years": 0.921129,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.credit.pool.bullet.smoke.total": {
@@ -133,6 +133,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -202,6 +203,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 7979.719611,
@@ -271,6 +273,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -340,6 +343,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 10489.933146,
@@ -409,6 +413,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -478,6 +483,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -547,6 +553,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": -1200000.0,
@@ -791,7 +798,7 @@
         "amount": 17161.801253,
         "currency": "USD"
       },
-      "domain.credit.wal_years": 0.866492
+      "domain.credit.wal_years": 0.949825
     },
     "lineage": {
       "domain.credit.collections": {

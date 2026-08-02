@@ -2,6 +2,7 @@ use cfdl_expr::{CompiledExpr, ExprEnv, Value as ExprValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -799,6 +800,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
     let event_sim = simulate_events(ir, config, &timeline, &base_inputs, &mut warnings);
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    // Each stream's placement in its period, published on the series so a
+    // consumer holding results.json can recompute the time-weighted metrics
+    // the engine reported. `stream_series` is keyed by bare name; so is this.
+    let mut stream_offsets: BTreeMap<String, f64> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut model_series = vec![0.0_f64; cash_periods];
@@ -829,10 +834,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &mut warnings,
         )?;
         warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
-        valued_streams.push((
-            values[..cash_periods.min(values.len())].to_vec(),
-            discount_offset(&stream.schedule, &ir.time.calendar),
-        ));
+        let offset = discount_offset(&stream.schedule, &ir.time.calendar);
+        stream_offsets.insert(stream.name.clone(), offset);
+        valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
         record_stream(
             stream,
             &values,
@@ -859,10 +863,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &mut warnings,
         )?;
         warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
-        valued_streams.push((
-            values[..cash_periods.min(values.len())].to_vec(),
-            discount_offset(&stream.schedule, &ir.time.calendar),
-        ));
+        let offset = discount_offset(&stream.schedule, &ir.time.calendar);
+        stream_offsets.insert(stream.name.clone(), offset);
+        valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
         record_stream(
             stream,
             &values,
@@ -883,6 +886,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         let total = cash.iter().sum::<f64>();
         stream_totals.insert(format!("option.{name}"), total);
         stream_series.insert(format!("option.{name}"), cash.to_vec());
+        // Option exercise cash settles on its exercise date, so it sits at the
+        // period's open — matching the 0.0 pushed into valued_streams above.
+        stream_offsets.insert(format!("option.{name}"), 0.0);
     }
 
     let mut series_map = BTreeMap::new();
@@ -894,6 +900,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 &ir.time.start,
                 periods as u32,
                 &ir.model.currency,
+                stream_offsets.get(name).copied(),
                 values,
             ),
         );
@@ -905,6 +912,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &ir.time.start,
             periods as u32,
             &ir.model.currency,
+            None,
             &model_series,
         ),
     );
@@ -956,6 +964,36 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     }
     // Engine-universal return metrics: MOIC, payback
     // period, WAL. Domain metrics live in pack metrics.toml files.
+    //
+    // WAL and payback are measured on the SAME TIME AXIS as discounting: a
+    // flow's position is (period + offset), the exponent npv_with_offsets
+    // uses. See docs/12_payment_timing.md. So an ordinary annuity's first
+    // monthly collection is at 1/12 of a year, not 0 — which is the market
+    // definition, and what a prospectus means by "the number of years from
+    // the closing date to the related distribution date".
+    //
+    // Streams net only WITHIN an offset. Two flows in the same period at
+    // different points in it are not the same cash at the same moment, so a
+    // purchase settling on its date cannot cancel that period's collections.
+    // Bucketing by offset and summing inside each bucket reduces exactly to
+    // the old net-series computation whenever every stream shares an offset.
+    let mut by_offset: BTreeMap<i64, Vec<f64>> = BTreeMap::new();
+    for (values, offset) in &valued_streams {
+        // f64 is not Ord and these are exact fractions, so quantise to key.
+        let key = (offset * 1e9).round() as i64;
+        let bucket = by_offset
+            .entry(key)
+            .or_insert_with(|| vec![0.0; cash_periods]);
+        for (idx, value) in values.iter().enumerate() {
+            if idx < bucket.len() {
+                bucket[idx] += *value;
+            }
+        }
+    }
+    // MOIC keeps the whole-model net series: it is a ratio of cash in to cash
+    // out over the life, and where inside a period the cash sits does not
+    // change how much of it there is. Only the time-weighted metrics below
+    // need the offset, so they compute their own totals.
     let total_inflows: f64 = model_series.iter().filter(|v| **v > 0.0).sum();
     let total_outflows: f64 = -model_series.iter().filter(|v| **v < 0.0).sum::<f64>();
     if total_outflows > 0.0 && total_inflows > 0.0 {
@@ -964,40 +1002,60 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             Scalar::Number(round_amount(total_inflows / total_outflows)),
         );
     }
-    // Payback: first period at which cumulative net cash flow becomes
+    // Payback: the first INSTANT at which cumulative net cash flow becomes
     // non-negative, given the model starts cash-negative. Omitted otherwise.
+    //
+    // Instants, not periods: cash is ordered by (period + offset), so an
+    // outlay settling on its date at period 0 precedes collections that fall
+    // at the end of that same period. `payback_periods` stays a whole period
+    // index, because that is what it names.
     if model_series.first().copied().unwrap_or(0.0) < 0.0 {
+        let mut instants: Vec<(f64, usize, f64)> = Vec::new();
+        for (key, values) in &by_offset {
+            let offset = *key as f64 / 1e9;
+            for (idx, value) in values.iter().enumerate() {
+                if *value != 0.0 {
+                    instants.push((idx as f64 + offset, idx, *value));
+                }
+            }
+        }
+        instants.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Ordering::Equal));
         let mut cumulative = 0.0_f64;
-        let mut payback: Option<usize> = None;
-        for (idx, value) in model_series.iter().enumerate() {
+        let mut payback: Option<(f64, usize)> = None;
+        for (position, idx, value) in &instants {
             cumulative += *value;
             if cumulative >= 0.0 {
-                payback = Some(idx);
+                payback = Some((*position, *idx));
                 break;
             }
         }
-        if let Some(period) = payback {
+        if let Some((position, period)) = payback {
             metrics.insert(
                 "model.payback_periods".to_string(),
                 Scalar::Number(period as f64),
             );
             metrics.insert(
                 "model.payback_years".to_string(),
-                Scalar::Number(round_amount(period as f64 / ppy)),
+                Scalar::Number(round_amount(position / ppy)),
             );
         }
     }
-    // WAL: inflow-weighted average life in years.
-    if total_inflows > 0.0 {
-        let weighted: f64 = model_series
-            .iter()
-            .enumerate()
-            .filter(|(_, v)| **v > 0.0)
-            .map(|(idx, v)| (idx as f64 / ppy) * *v)
-            .sum();
+    // WAL: net-inflow-weighted average life in years, on the discounting axis.
+    let mut wal_weighted = 0.0_f64;
+    let mut wal_inflows = 0.0_f64;
+    for (key, values) in &by_offset {
+        let offset = *key as f64 / 1e9;
+        for (idx, value) in values.iter().enumerate() {
+            if *value > 0.0 {
+                wal_weighted += ((idx as f64 + offset) / ppy) * *value;
+                wal_inflows += *value;
+            }
+        }
+    }
+    if wal_inflows > 0.0 {
         metrics.insert(
             "model.wal_years".to_string(),
-            Scalar::Number(round_amount(weighted / total_inflows)),
+            Scalar::Number(round_amount(wal_weighted / wal_inflows)),
         );
     }
     metrics.insert(
@@ -1078,6 +1136,7 @@ fn build_annual_rollup(
             &start,
             n_years,
             currency,
+            None,
             &aggregate(model_series),
         ),
     );
@@ -1085,7 +1144,14 @@ fn build_annual_rollup(
     for (name, values) in stream_series {
         rollup.insert(
             format!("stream.{name}"),
-            MoneySeries::from_values("annual", &start, n_years, currency, &aggregate(values)),
+            MoneySeries::from_values(
+                "annual",
+                &start,
+                n_years,
+                currency,
+                None,
+                &aggregate(values),
+            ),
         );
     }
 
@@ -2503,6 +2569,13 @@ pub enum Scalar {
 #[derive(Debug, Clone, Serialize)]
 pub struct MoneySeries {
     pub index: SeriesIndex,
+    /// Where in each period this series' cash falls, per
+    /// docs/12_payment_timing.md — the same offset used to discount it, and
+    /// the axis `model.wal_years` is measured on. Absent on aggregates
+    /// (`model.net_cash_flow`, the annual rollup), which sum streams whose
+    /// placements differ and so have no single position.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<f64>,
     pub values: Vec<Money>,
 }
 
@@ -2512,6 +2585,7 @@ impl MoneySeries {
         start: &str,
         periods: u32,
         currency: &str,
+        offset: Option<f64>,
         values: &[f64],
     ) -> Self {
         Self {
@@ -2520,6 +2594,7 @@ impl MoneySeries {
                 start: start.to_string(),
                 periods,
             },
+            offset,
             values: values
                 .iter()
                 .map(|amount| Money {
@@ -2745,6 +2820,48 @@ fn probability_negative(values: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn wal_nets_within_an_offset_but_not_across_one() {
+        use super::*;
+        // Two flows in the SAME period at DIFFERENT points in it are not the
+        // same cash at the same moment, so they must not cancel. This is what
+        // separates the bucketed WAL from summing the net series first: a
+        // purchase settling on its date (offset 0) does not annihilate that
+        // period's collections (offset 1), which are a full period later.
+        let ppy = 12.0;
+        let wal = |streams: &[(Vec<f64>, f64)]| -> Option<f64> {
+            let mut by_offset: BTreeMap<i64, Vec<f64>> = BTreeMap::new();
+            for (values, offset) in streams {
+                let bucket = by_offset
+                    .entry((offset * 1e9).round() as i64)
+                    .or_insert_with(|| vec![0.0; values.len()]);
+                for (idx, value) in values.iter().enumerate() {
+                    bucket[idx] += *value;
+                }
+            }
+            let (mut w, mut t) = (0.0_f64, 0.0_f64);
+            for (key, values) in &by_offset {
+                let offset = *key as f64 / 1e9;
+                for (idx, value) in values.iter().enumerate() {
+                    if *value > 0.0 {
+                        w += ((idx as f64 + offset) / ppy) * *value;
+                        t += *value;
+                    }
+                }
+            }
+            (t > 0.0).then(|| w / t)
+        };
+
+        // Different offsets: the inflow survives at its own instant, 1/12.
+        let across = wal(&[(vec![-100.0], 0.0), (vec![100.0], 1.0)]).expect("survives");
+        assert!((across - 1.0 / 12.0).abs() < 1e-12, "across = {across}");
+
+        // Same offset: they are the same cash at the same moment and cancel,
+        // leaving nothing positive at all.
+        let within = wal(&[(vec![-100.0], 1.0), (vec![100.0], 1.0)]);
+        assert_eq!(within, None);
+    }
+
     use super::{run_from_json_str, RunConfig};
     use std::collections::BTreeMap;
 

@@ -21,7 +21,7 @@
         "amount": 8584000.0,
         "currency": "USD"
       },
-      "model.wal_years": 4.750427,
+      "model.wal_years": 4.83376,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.opco.exit.value.total": {
@@ -345,6 +345,7 @@
           "start": "2026-01-01",
           "periods": 72
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -642,6 +643,7 @@
           "start": "2026-01-01",
           "periods": 72
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -70000.0,
@@ -939,6 +941,7 @@
           "start": "2026-01-01",
           "periods": 72
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 120000.0,
@@ -1236,6 +1239,7 @@
           "start": "2026-01-01",
           "periods": 72
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": -3000.0,

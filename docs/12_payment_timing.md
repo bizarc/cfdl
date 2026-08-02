@@ -107,6 +107,37 @@ cash had arrived halfway through it. Composing them properly means billing from
 the midpoint and carrying the lag's sub-period residual into the offset — a
 real design question, not a default to pick quietly.
 
+### The same axis carries WAL and payback
+
+Discounting is not the only thing that needs to know when cash moved.
+`model.wal_years` and `model.payback_years` use the identical position — a
+flow's time in years is `(period + offset) / ppy` — so all four of NPV, IRR,
+WAL and payback agree about when a given dollar arrived.
+
+That makes an ordinary annuity's first monthly collection fall at 1/12 of a
+year rather than at zero, which is the market definition of weighted average
+life: a prospectus states it as *the number of years from the closing date to
+the related distribution date*. It also means a bullet's WAL is exactly its
+term, an annuity due's WAL is one period shorter than the equivalent ordinary
+annuity's, and `mid` sits precisely halfway between — all four asserted in
+`tools/analytic-checks.py`.
+
+**Time-weighted metrics net within an offset, not across one.** Two flows in
+the same period at different points in it are not the same cash at the same
+moment. A purchase settling on its date at period 0 is a full period earlier
+than that period's collections, so it cannot cancel them; it simply is not an
+inflow and does not enter WAL at all. Where every stream shares a placement
+this reduces exactly to the net cash-flow series, which is what it was before.
+
+`model.moic` deliberately does not use the axis — it is a ratio of cash in to
+cash out over the life, and where inside a period the cash sits does not change
+how much of it there is.
+
+Two limits, both shared with discounting. The origin is the **model start**,
+not a separately stated settlement date; and precision is period fractions
+rather than actual days, so a WAL computed here will not tie to a published
+Act/360 figure in the fourth decimal.
+
 ### Worked example
 
 Five-year annual bond, 5% coupon on 1,000,000, bought at par at the start of
