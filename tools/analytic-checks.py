@@ -889,6 +889,52 @@ contract credit.pool_level_pay.book on entity fund.buyer {{
     return abs(daily[-1] - monthly[-1]), 0.0
 
 
+# ---------------------------------------------------------------------------
+# Terminal value as a growing perpetuity (opco.exit_perpetuity).
+#
+# The Gordon form is one of the few places in finance with a genuine closed
+# form, so the reference is arithmetic rather than a second implementation.
+# Both checks go through the PACK, so they assert what a modeller gets.
+# ---------------------------------------------------------------------------
+
+
+def _perpetuity(base: float, g: float, r: float, suffix: str = "p") -> float:
+    src = f"""version 0.1
+model "perpetuity-identity"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 3
+entity legal firm
+contract opco.exit_perpetuity.{suffix} on entity legal.firm {{
+  term 2026-01..2026-01
+  terms {{ base_value = {base}  growth_rate = {g}  discount_rate = {r} }}
+}}
+"""
+    block = run_pack_model(src, 0.0, "opco")
+    return block["metrics"][f"stream.opco.exit.value.{suffix}.total"]["amount"]
+
+
+@check("a flat perpetuity is base / r", tol=1e-6)
+def perpetuity_flat_is_base_over_rate() -> tuple[float, float]:
+    # g = 0 collapses the Gordon form to the simple capitalisation every
+    # practitioner checks by eye: a $100 flow at 8% is worth $1,250.
+    return _perpetuity(100.0, 0.0, 0.08, "flat"), 100.0 / 0.08
+
+
+@check("a growing perpetuity is base * (1+g) / (r-g), across a published grid", tol=1e-6)
+def perpetuity_matches_gordon_form() -> tuple[float, float]:
+    # The nine growth rates a published stable-growth model tabulates, so the
+    # identity covers the same span the external case does — including the
+    # negative-growth tail, where a sign error would still look plausible.
+    base, r = 2.32, 0.077
+    worst = 0.0
+    for i, g in enumerate((0.041, 0.031, 0.021, 0.011, 0.001,
+                           -0.009, -0.019, -0.029, -0.039)):
+        got = _perpetuity(base, g, r, f"g{i}")
+        want = base * (1 + g) / (r - g)
+        worst = max(worst, abs(got - want))
+    return worst, 0.0
+
+
 def main() -> int:
     if not CLI.exists():
         print(f"analytic-checks: {CLI} not found — run `cargo build -p cfdl-cli`")

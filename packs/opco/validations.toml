@@ -169,3 +169,62 @@ terms = ["tax_rate", "tax_rate_curve"]
 when = "always"
 on_invalid = "report"
 
+
+# --- opco.exit_perpetuity ---------------------------------------------------
+
+# The one check that cannot be expressed as a range. A perpetuity with r <= g
+# is not a large number, it is a meaningless one: the denominator goes to zero
+# and then negative, so the contract would return a huge positive value and
+# then a negative one, with nothing to say the model had stopped meaning
+# anything. Guarded first because the other checks would still pass.
+[[validations]]
+contract = "opco.exit_perpetuity"
+match = "instance"
+code = "E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH"
+message = "OpCo exit perpetuity needs 'discount_rate' strictly greater than 'growth_rate'. A perpetuity growing at or above its discount rate has no finite value."
+check = "term_compare"
+left = "discount_rate"
+op = "gt"
+right = "growth_rate"
+
+[[validations]]
+contract = "opco.exit_perpetuity"
+match = "instance"
+code = "E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE"
+message = "OpCo exit perpetuity is missing required term 'base_value' — the terminal-period flow the perpetuity is struck on."
+check = "term_number"
+term = "base_value"
+when = "always"
+on_invalid = "report"
+
+[[validations]]
+contract = "opco.exit_perpetuity"
+match = "instance"
+code = "E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE"
+message = "OpCo exit perpetuity is missing required term 'discount_rate'. This is the terminal capitalisation rate and is stated on the contract, not taken from the run's discount rate."
+check = "term_number"
+term = "discount_rate"
+when = "always"
+on_invalid = "report"
+
+[[validations]]
+contract = "opco.exit_perpetuity"
+match = "instance"
+code = "E7028_OPCO_PERPETUITY_MISSING_GROWTH"
+message = "OpCo exit perpetuity is missing required term 'growth_rate'. State 0 for a flat perpetuity."
+check = "term_number"
+term = "growth_rate"
+when = "always"
+on_invalid = "report"
+
+[[validations]]
+contract = "opco.exit_perpetuity"
+match = "instance"
+code = "E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS"
+message = "OpCo exit perpetuity 'selling_costs' is a fraction between 0 and 1."
+check = "term_number"
+term = "selling_costs"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0

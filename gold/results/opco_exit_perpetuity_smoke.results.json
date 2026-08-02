@@ -1,0 +1,139 @@
+{
+  "results_version": "0.2",
+  "model_hash": "aaa6e0301bf2d5cb3a43ffc4cf0f99b16ade07a2a4e738ee961c906c82da7c2b",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.legal.firm.total": {
+        "amount": 25401.406293,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 17174.115026,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 25401.406293,
+        "currency": "USD"
+      },
+      "model.wal_years": 4.590256,
+      "run.annual_discount_rate": 0.09,
+      "run.periods_per_year": 1.0,
+      "stream.firm.fcff.total": {
+        "amount": 5416.32256,
+        "currency": "USD"
+      },
+      "stream.opco.exit.value.total": {
+        "amount": 19985.083733,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1040.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1081.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.864,
+            "currency": "USD"
+          },
+          {
+            "amount": 21154.942293,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.firm.fcff": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1040.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1081.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.864,
+            "currency": "USD"
+          },
+          {
+            "amount": 1169.85856,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.exit.value": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 19985.083733,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

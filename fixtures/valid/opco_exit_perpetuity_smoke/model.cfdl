@@ -1,0 +1,30 @@
+version 0.1
+model "opco-exit-perpetuity-smoke"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 5
+
+entity legal firm
+
+// A five-year forecast ending in a growing perpetuity — the shape every
+// intrinsic valuation takes, and one the pack could not express before:
+// exit_multiple and exit_ebitda both apply a MULTIPLE to something.
+stream firm.fcff on entity legal.firm inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  amount = 1000 * pow(1.04, time.t)
+}
+
+// Struck on the terminal year's flow, at a terminal cost of capital that is
+// deliberately NOT the run's discount rate: a business in steady state is
+// capitalised at a steady-state rate. The contract applies the (1 + g) step,
+// so base_value is the terminal flow itself.
+//
+// The exit settles at the END of its period, so it discounts the full five
+// years. `on_date` alone would place it a year early on an annual model.
+contract opco.exit_perpetuity on entity legal.firm {
+  term 2030-01..2030-01
+  terms {
+    base_value = 1169.858560
+    growth_rate = 0.025
+    discount_rate = 0.085
+  }
+}

@@ -302,3 +302,53 @@ amount_expr = "{{contract.price}}"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
+
+# ---------------------------------------------------------------------------
+# opco.exit_perpetuity — terminal value as a growing perpetuity:
+#
+#   TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate)
+#
+# The Gordon form, and the terminal every intrinsic valuation ends with. The
+# pack could previously only express a MULTIPLE of something (exit_multiple on
+# a stated base, exit_ebitda on trailing EBITDA), so the largest single
+# component of value in a DCF had no contract at all.
+#
+# `base_value` is the flow the perpetuity is struck on, ALREADY at the terminal
+# period and BEFORE the (1 + g) step — the contract applies that step, because
+# the convention is to value the next period's flow. What the flow is —
+# dividends, free cash flow to firm, free cash flow to equity — is deliberately
+# not the contract's business, and `discount_rate` must be the matching rate:
+# a cost of equity against a dividend, a cost of capital against FCFF. Mixing
+# them is a real modelling error the pack cannot detect.
+#
+# `discount_rate` IS A TERM, not the run's NPV rate. That is deliberate rather
+# than a limitation: a terminal cost of capital legitimately differs from the
+# near-term rate — it is the rate for a business that has reached steady state
+# — and the sources that publish these models state it explicitly, usually
+# built from their own CAPM inputs. The run's `annual_discount_rate` discounts
+# the resulting cash flow; this rate capitalises it. They are different numbers
+# doing different jobs, and E7025 guards the one that must hold: r > g.
+#
+# NO `mid`. benchmarks/opco/banker_dcf_conventions Finding 6 established that
+# the mid-period convention applies to FLOWS and not to a terminal value: a
+# terminal value is a price struck at a point in time, so it discounts whole.
+# Applying mid to it as well overstates every cell by about 5%.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_exit_perpetuity"
+contract_name = "opco.exit_perpetuity"
+stream_name = "opco.exit.value{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * (1 - {{contract.selling_costs}})"
+# A disposal is taken at the END of the holding period, so it discounts
+# the full n periods. `on_date` alone would settle it at the period's
+# open — one month early on a monthly model, a whole year on an annual.
+schedule_kind = "on_date"
+schedule_at_period_end = true
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"

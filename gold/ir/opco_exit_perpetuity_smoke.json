@@ -1,0 +1,148 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "opco-exit-perpetuity-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8141b5577a9401ac6a28823336d272e8",
+      "symbol": "legal.firm",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "7587f66002959e0d8a8231a007aa7f36",
+      "name": "opco.exit_perpetuity",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "legal.firm"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2030-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "e7addc37ccdb22285de09905779e3a87",
+      "name": "firm.fcff",
+      "owner": {
+        "symbol": "legal.firm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0 * pow(1.04, time.t)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 11,
+          "start_col": 1,
+          "end_line": 14,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "68a053c286d318f630a8a75344c37aa2",
+      "name": "opco.exit.value",
+      "owner": {
+        "symbol": "legal.firm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2030-01-01",
+        "at_period_end": true
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1169.858560 * (1.0 + 0.025) / (0.085 - 0.025) * (1.0 - 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_exit_perpetuity"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e34c911fc30e425c340680e8ce0ae3cc",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

@@ -382,6 +382,17 @@ OpCo pack codes:
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
 - `E7002_OPCO_LINE_INVALID_SCHEDULE`
 - `E7003_OPCO_LINE_INVALID_GROWTH`
+- `E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH` — a growing perpetuity needs
+  `discount_rate` strictly above `growth_rate`. At or below it the denominator
+  reaches zero and then goes negative, so the contract would return a huge
+  value and then a negative one with nothing to say the model had stopped
+  meaning anything.
+- `E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE` — the terminal-period flow the
+  perpetuity is struck on.
+- `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` — the terminal capitalisation
+  rate, stated on the contract rather than taken from the run's discount rate.
+- `E7028_OPCO_PERPETUITY_MISSING_GROWTH` — state 0 for a flat perpetuity.
+- `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` — a fraction between 0 and 1.
 - `E7012_OPCO_TAXES_MISSING_RATE` — a cash-taxes contract states neither
   `tax_rate` nor `tax_rate_curve`. `tax_rate` carries a default of 0 so a curve
   may stand alone; without this check, stating neither would silently model a
