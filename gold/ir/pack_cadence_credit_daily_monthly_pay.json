@@ -23,6 +23,42 @@
     "constants": {},
     "random": {}
   },
+  "states": [
+    {
+      "name": "credit_level_pay_survival_book",
+      "init": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) <= 0, 1, pow(((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), months_between(parse_date(\"2025-01-01\"), time.date)))"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev * ((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12))"
+      },
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-01"
+      }
+    },
+    {
+      "name": "credit_level_pay_survival_lag_book",
+      "init": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) - 3 <= 0, 1, pow(((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), months_between(parse_date(\"2025-01-01\"), time.date) - 3))"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) > 3 and months_between(parse_date(\"2025-01-01\"), time.date) - 3 < 36, prev * ((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), prev)"
+      },
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2025-01-01",
+        "to": "2028-03-31"
+      }
+    }
+  ],
   "contracts": [
     {
       "id": "a4835fbae4b45ef98841555fae108bcd",
@@ -68,7 +104,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_book) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -107,7 +143,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_book) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -146,7 +182,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_book) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -185,7 +221,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) * cpr_to_periodic(0.03, 12.0) * max(0.0, (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_lag_book) * cpr_to_periodic(0.03, 12.0) * max(0.0, (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -224,7 +260,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_book) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -263,7 +299,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * state.credit_level_pay_survival_book) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

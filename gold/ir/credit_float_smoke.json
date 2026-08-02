@@ -39,6 +39,42 @@
       ]
     }
   ],
+  "states": [
+    {
+      "name": "credit_float_io_survival_lag_smoke",
+      "init": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) - 3 <= 0, 1, pow(((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), months_between(parse_date(\"2026-01-01\"), time.date) - 3))"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), prev)"
+      },
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      }
+    },
+    {
+      "name": "credit_float_io_survival_smoke",
+      "init": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) <= 0, 1, pow(((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12)), months_between(parse_date(\"2026-01-01\"), time.date)))"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev * ((1 - cpr_to_periodic(0.03, 12)) - cpr_to_periodic(0.10, 12))"
+      },
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      }
+    }
+  ],
   "contracts": [
     {
       "id": "b671f3b003dd017ab1f51a4b23c92d32",
@@ -110,7 +146,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.03, 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(0.03, 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -149,7 +185,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.03, 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(0.03, 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -188,7 +224,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date)) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -227,7 +263,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date)) * cpr_to_periodic(0.10, 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * cpr_to_periodic(0.10, 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -266,7 +302,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date) - 3.0) * cpr_to_periodic(0.03, 12.0) * (1.0 - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, 1200000.0 * state.credit_float_io_survival_lag_smoke * cpr_to_periodic(0.03, 12.0) * (1.0 - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -305,7 +341,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date)) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

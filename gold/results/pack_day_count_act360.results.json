@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "a30717a56962d33145bbb733df88b518a40394e9e63fcbeb539407dd66a6e983",
+  "model_hash": "3fd68854fdaa4b5e5ede5f2108a63347bf1dfad3d36dcf5258ac532ce4f6d54a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -109,6 +109,50 @@
             "amount": 0.0,
             "currency": "USD"
           }
+        ]
+      },
+      "state.credit_io_bullet_survival_lag_p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "state.credit_io_bullet_survival_p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
         ]
       },
       "stream.credit.pool.bullet.p": {

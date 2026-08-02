@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "50ca3a61e83c74e7e955a6ab99e99313ec9d59ae93b04fc326c1ae5c33bea209",
+  "model_hash": "e2cbbd08b102b823e63077b83c859ff3557b311c28ba450af25bc3a302daf454",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -105,6 +105,48 @@
             "amount": 100000.0,
             "currency": "USD"
           }
+        ]
+      },
+      "state.credit_level_pay_survival": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "state.credit_level_pay_survival_lag": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
         ]
       },
       "stream.credit.pool.interest": {
