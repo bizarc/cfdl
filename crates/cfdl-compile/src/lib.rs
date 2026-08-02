@@ -398,6 +398,12 @@ struct IrState {
     name: String,
     init: IrExpr,
     next: IrExpr,
+    /// When the recurrence steps, and over what window. Absent means every
+    /// model period over the whole timeline — the behaviour of every state
+    /// written before states had a clock of their own, so omitting it keeps
+    /// existing IR byte-identical.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Serialize)]
@@ -847,6 +853,17 @@ fn build_ir(
     let mut sources = resolve_output.module_order.clone();
     sources.sort();
 
+    let ir_states = merge_states(
+        lower_states(
+            resolve_output,
+            &time_calendar,
+            &time_start,
+            &timeline_end,
+            &phase_map,
+        ),
+        lowered_states,
+    );
+
     Ok(Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
@@ -866,7 +883,7 @@ fn build_ir(
             random: assume_random,
         },
         curves: ir_curves,
-        states: merge_states(lower_states(resolve_output), lowered_states),
+        states: ir_states,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -1462,6 +1479,9 @@ fn lower_contract_streams(
                 (&rule.state_name, &mut expanded_rule.state_name),
                 (&rule.state_init, &mut expanded_rule.state_init),
                 (&rule.state_next, &mut expanded_rule.state_next),
+                (&rule.state_every, &mut expanded_rule.state_every),
+                (&rule.state_from, &mut expanded_rule.state_from),
+                (&rule.state_to, &mut expanded_rule.state_to),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -1706,6 +1726,12 @@ fn lower_contract_streams(
                             rule.state_name.clone(),
                             IrState {
                                 name: rule.state_name.clone(),
+                                schedule: lower_rule_state_schedule(
+                                    rule,
+                                    ctx.time_calendar,
+                                    ctx.time_start,
+                                    ctx.timeline_end,
+                                ),
                                 init: IrExpr {
                                     lang: "cfdl".to_string(),
                                     src: rule.state_init.clone(),
@@ -2095,6 +2121,57 @@ fn periods_to_expr(frequency: &str, anchor: &str) -> String {
 /// unreachable, so declaring one is `E5016_RESERVED_TERM_PREFIX`.
 const RESERVED_TERM_PREFIXES: [&str; 4] = ["model.", "time.", "periods.", "whole_periods."];
 
+/// The clock a lowering rule gives its state, or `None` for every model period.
+///
+/// A state is not paid, so this carries cadence and window and nothing else —
+/// no `due`, no `mid`, no settlement lag. Those place CASH within a period,
+/// and a recurrence has no cash to place.
+fn lower_rule_state_schedule(
+    rule: &cfdl_pack::LoweringRule,
+    time_calendar: &str,
+    time_start: &str,
+    timeline_end: &str,
+) -> Option<IrSchedule> {
+    if rule.state_name.is_empty() {
+        return None;
+    }
+    // Absent means every model period — the behaviour of every state written
+    // before states had a clock, so an unset field changes nothing.
+    if rule.state_every.is_empty() && rule.state_from.is_empty() && rule.state_to.is_empty() {
+        return None;
+    }
+    Some(IrSchedule {
+        kind: "Every".to_string(),
+        due: false,
+        at_period_end: false,
+        mid: false,
+        net_days: None,
+        net_months: None,
+        on: None,
+        every: Some(if rule.state_every.is_empty() {
+            time_calendar.to_string()
+        } else {
+            interval_to_frequency(&rule.state_every).to_string()
+        }),
+        from: Some(normalize_date(if rule.state_from.is_empty() {
+            time_start
+        } else {
+            &rule.state_from
+        })),
+        to: Some(normalize_date(if rule.state_to.is_empty() {
+            timeline_end
+        } else {
+            &rule.state_to
+        })),
+        on_rule: None,
+        phase: None,
+        convention: None,
+        calendar: None,
+        except_dates: Vec::new(),
+        also_dates: Vec::new(),
+    })
+}
+
 fn lower_pack_rule_schedule(
     rule: &cfdl_pack::LoweringRule,
     time_calendar: &str,
@@ -2342,7 +2419,13 @@ fn merge_states(mut declared: Vec<IrState>, lowered: Vec<IrState>) -> Vec<IrStat
     declared
 }
 
-fn lower_states(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<IrState> {
+fn lower_states(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    time_calendar: &str,
+    time_start: &str,
+    timeline_end: &str,
+    phase_map: &BTreeMap<String, (String, String)>,
+) -> Vec<IrState> {
     let mut states: Vec<IrState> = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::State(state) = &source_stmt.statement else {
@@ -2354,8 +2437,18 @@ fn lower_states(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<IrState> {
         if states.iter().any(|s| s.name == state.name) {
             continue;
         }
+        // The same lowering a stream's schedule goes through, so a state's
+        // cadence cannot drift from a stream's. `None` stays `None`: an absent
+        // clause means every period, which `lower_schedule` would instead turn
+        // into a one-shot at the model start.
+        let schedule = state.schedule.as_ref().and_then(|spec| {
+            // Phase resolution is the only failure mode, and it is already
+            // reported against the phase statement itself.
+            lower_schedule(Some(spec), time_calendar, time_start, timeline_end, phase_map).ok()
+        });
         states.push(IrState {
             name: state.name.clone(),
+            schedule,
             init: IrExpr {
                 lang: init.lang.clone(),
                 src: init.src.clone(),

@@ -155,6 +155,19 @@ pub struct StateStmt {
     /// Value at every later period. `prev` is bound to this state's value at
     /// t-1; `prev.<other>` reads another state's.
     pub next: Option<ExprSlot>,
+    /// When the recurrence STEPS, and over what window.
+    ///
+    /// A state's clock is its own, exactly as a stream's is: a pool carried on
+    /// a daily book but paying monthly must advance twelve times a year, not
+    /// three hundred and sixty-five. Absent means every model period over the
+    /// whole timeline, which is what every state written before this existed
+    /// assumes.
+    ///
+    /// Outside the window, and between ticks, the state HOLDS. It does not go
+    /// to zero — that is the difference between a schedule and `active when`,
+    /// and the reason `active when` is deliberately absent here. See
+    /// docs/14_state_and_recurrence.md.
+    pub schedule: Option<ScheduleSpec>,
     pub span: Span,
 }
 
@@ -1200,6 +1213,7 @@ impl<'a> Parser<'a> {
         };
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let (mut init, mut next) = (None, None);
+        let mut schedule = None;
         let end;
         loop {
             match self.peek().kind {
@@ -1210,9 +1224,18 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'init', 'next' or '}' in state block.".to_string(),
+                        "Expected 'schedule', 'init', 'next' or '}' in state block."
+                            .to_string(),
                     );
                     return None;
+                }
+                // The same clause, the same parser as a stream's. A state's
+                // cadence is not a new concept and should not read like one.
+                TokenKind::Keyword(Keyword::Schedule) => {
+                    let _ = self.bump();
+                    if let Some(spec) = self.parse_schedule_expr() {
+                        schedule = Some(spec);
+                    }
                 }
                 TokenKind::Ident(ref ident) if ident == "init" || ident == "next" => {
                     let is_init = ident == "init";
@@ -1229,7 +1252,7 @@ impl<'a> Parser<'a> {
                 _ => {
                     self.push_expected(
                         self.current_span(),
-                        "Unexpected token in a state block. Expected 'init', 'next' or '}'."
+                        "Unexpected token in a state block. Expected 'schedule', 'init', 'next' or '}'."
                             .to_string(),
                     );
                     return None;
@@ -1240,6 +1263,7 @@ impl<'a> Parser<'a> {
             name,
             init,
             next,
+            schedule,
             span: merge_spans(start.span, end.span),
         })
     }
@@ -2702,6 +2726,44 @@ phase p from 2026-01 to 2026-02
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
         assert!(matches!(ast.statements[2], Stmt::Phase(_)));
+    }
+
+    #[test]
+    fn parses_state_schedule_clause() {
+        // A state's clock is its own. The clause is the stream's, parsed by the
+        // stream's parser, so the two cannot drift apart.
+        let src = r#"version 0.1
+model "demo"
+state survival {
+  schedule every quarter from 2026-01 to 2031-01
+  init 1.0
+  next prev * 0.99
+}
+state plain { init 1  next prev }
+"#;
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty());
+        let result = parse("model.cfdl", src, &tokens);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let ast = result.ast.expect("AST expected");
+
+        let Stmt::State(scheduled) = &ast.statements[2] else {
+            panic!("expected state statement");
+        };
+        let schedule = scheduled.schedule.as_ref().expect("schedule");
+        assert_eq!(schedule.every.as_deref(), Some("quarter"));
+        assert_eq!(schedule.from.as_deref(), Some("2026-01"));
+        assert_eq!(schedule.to.as_deref(), Some("2031-01"));
+        // The clause must not swallow the clauses after it.
+        assert_eq!(scheduled.init.as_ref().expect("init").src, "1.0");
+        assert_eq!(scheduled.next.as_ref().expect("next").src, "prev * 0.99");
+
+        // Absent means every model period, which is what every state written
+        // before states had a clock assumes.
+        let Stmt::State(plain) = &ast.statements[3] else {
+            panic!("expected state statement");
+        };
+        assert!(plain.schedule.is_none());
     }
 
     #[test]

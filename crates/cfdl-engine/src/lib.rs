@@ -1540,6 +1540,90 @@ fn compute_states(
         return values;
     }
 
+    // Compiled once per state, not once per state per period. This loop is the
+    // only place a state's source is evaluated and it runs `states x periods`
+    // times — `x trials` under Monte Carlo.
+    struct Prepared<'a> {
+        state: &'a IrState,
+        init: CompiledExpr,
+        next: CompiledExpr,
+        /// Model periods on which the recurrence STEPS. `None` means every
+        /// period, which is what a state with no `schedule` clause means.
+        ticks: Option<Vec<bool>>,
+        /// The first tick. `init` is the value AT the first tick, not at model
+        /// period 0 — the base case belongs to the recurrence's own clock.
+        ///
+        /// A quarterly schedule on a monthly book accrues at periods 2, 5, 8,
+        /// where the payment index is 0, 1, 2. Stepping on the first accrual
+        /// would put F(1) where the first payment reads F(0) — an off-by-one
+        /// against every published schedule. With no `schedule` this is 0, so
+        /// an unscheduled state behaves exactly as it always has.
+        first_tick: usize,
+    }
+
+    let zero = cfdl_expr::compile_expr("0").expect("constant expression compiles");
+    let mut prepared: Vec<Prepared> = Vec::with_capacity(ir.states.len());
+    for state in &ir.states {
+        let mut compile = |src: &str, clause: &str| match cfdl_expr::compile_expr(src) {
+            Ok(compiled) => compiled,
+            Err(err) => {
+                warnings.push(format!(
+                    "State '{}' {clause} expression compile failed [{}]: {}; using 0.",
+                    state.name, err.code, err.message
+                ));
+                zero.clone()
+            }
+        };
+        let init = compile(&state.init.src, "init");
+        let next = compile(&state.next.src, "next");
+
+        // A state's clock is its own, exactly as a stream's is. Without this a
+        // pool carried on a daily book but paying monthly would compound its
+        // hazard 365 times a year instead of 12.
+        let ticks = match &state.schedule {
+            None => None,
+            Some(schedule) => {
+                let mut slots = vec![Vec::new(); timeline.len()];
+                match apply_schedule_indices(schedule, timeline, &mut slots) {
+                    // The ACCRUAL periods, not the settlement periods.
+                    // `apply_schedule_indices` files each accrual under the
+                    // period its cash settles in, and a stream's amount is
+                    // evaluated at the accrual — which is also where
+                    // `{{time.elapsed_periods}}` is counted. Ticking on
+                    // settlement instead puts the recurrence a whole payment
+                    // interval away from the index that reads it.
+                    Ok(()) => {
+                        let mut ticks = vec![false; timeline.len()];
+                        for accruals in &slots {
+                            for &idx in accruals {
+                                ticks[idx] = true;
+                            }
+                        }
+                        Some(ticks)
+                    }
+                    Err(err) => {
+                        warnings.push(format!(
+                            "State '{}' schedule could not be resolved: {err}; stepping every period.",
+                            state.name
+                        ));
+                        None
+                    }
+                }
+            }
+        };
+        let first_tick = ticks
+            .as_ref()
+            .and_then(|t: &Vec<bool>| t.iter().position(|on| *on))
+            .unwrap_or(0);
+        prepared.push(Prepared {
+            state,
+            init,
+            next,
+            ticks,
+            first_tick,
+        });
+    }
+
     for (t, date) in timeline.iter().enumerate() {
         // Snapshot the previous column before writing this one, so every state
         // in this period sees the same completed history regardless of order.
@@ -1552,30 +1636,40 @@ fn compute_states(
                 .collect()
         };
 
-        for state in &ir.states {
+        for entry in &prepared {
+            let name = &entry.state.name;
+            // Between ticks, and outside the schedule's window, a state HOLDS.
+            // It does not fall to zero — that is what separates a schedule from
+            // `active when`, and why `active when` is deliberately absent here.
+            // See docs/14_state_and_recurrence.md.
+            let steps = t > entry.first_tick
+                && entry.ticks.as_ref().is_none_or(|ticks| ticks[t]);
+            if t > 0 && !steps {
+                if let Some(slot) = values.get_mut(name) {
+                    slot[t] = slot[t - 1];
+                }
+                continue;
+            }
+
             let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
-            let (src, span_label) = if t == 0 {
-                (&state.init.src, "init")
+            let (compiled, clause) = if t == 0 {
+                (&entry.init, "init")
             } else {
                 env.prev_states = previous.clone();
-                env.prev_self = previous.get(&state.name).cloned();
-                (&state.next.src, "next")
+                env.prev_self = previous.get(name).cloned();
+                (&entry.next, "next")
             };
-            match cfdl_expr::compile_expr(src)
-                .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
-            {
+            match cfdl_expr::eval(compiled, &env) {
                 Ok(ExprValue::Decimal(d)) => {
-                    if let Some(slot) = values.get_mut(&state.name) {
+                    if let Some(slot) = values.get_mut(name) {
                         slot[t] = d;
                     }
                 }
                 Ok(other) => warnings.push(format!(
-                    "State '{}' {span_label} evaluated to {other:?}, which is not a number; using 0.",
-                    state.name
+                    "State '{name}' {clause} evaluated to {other:?}, which is not a number; using 0."
                 )),
                 Err(err) => warnings.push(format!(
-                    "State '{}' {span_label} evaluation failed: {err}; using 0.",
-                    state.name
+                    "State '{name}' {clause} evaluation failed: {err}; using 0."
                 )),
             }
         }
@@ -2386,6 +2480,9 @@ struct IrState {
     name: String,
     init: IrExpr,
     next: IrExpr,
+    /// When the recurrence steps. Absent means every model period.
+    #[serde(default)]
+    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Deserialize)]

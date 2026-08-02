@@ -52,9 +52,19 @@ assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
    unstated base case would otherwise read as zero for every period. `next`
    gives every later period, with `prev` bound to this state's previous value
    and `prev.<name>` to another state's. Streams read the current period as
-   `state.<name>`. See docs/14_state_and_recurrence.md. --- *)
+   `state.<name>`.
+
+   A state may carry its own `schedule`, the same clause a stream has: the
+   recurrence STEPS on that cadence and HOLDS between ticks. A pool carried on
+   a daily calendar but paying monthly must compound twelve times a year, not
+   three hundred and sixty-five. Absent means every model period.
+
+   Holding, not zeroing, is what separates a schedule from `active when` — and
+   is why `active when` is deliberately absent here.
+   See docs/14_state_and_recurrence.md. --- *)
 state_stmt      = "state" IDENT "{" state_clause { state_clause } "}" ;
-state_clause    = ( "init" | "next" ) expr ;
+state_clause    = ( "init" | "next" ) expr
+                | "schedule" schedule_expr ;
 
 (* --- curves: named date-indexed values, looked up via curve_value() --- *)
 curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;

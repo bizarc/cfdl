@@ -1,0 +1,142 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "state-cadence",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
+      "symbol": "legal.co",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "states": [
+    {
+      "name": "quarterly_idx",
+      "init": {
+        "lang": "cfdl",
+        "src": "1.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev * 2"
+      },
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      }
+    },
+    {
+      "name": "monthly_idx",
+      "init": {
+        "lang": "cfdl",
+        "src": "1.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev * 2"
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "8fa6f2aa1f9548db290deba2a1566423",
+      "name": "co.monthly",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "state.monthly_idx"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 49,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "38b0056d28ca1cd0ac54588e8d50941e",
+      "name": "co.quarterly",
+      "owner": {
+        "symbol": "legal.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "state.quarterly_idx"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 41,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

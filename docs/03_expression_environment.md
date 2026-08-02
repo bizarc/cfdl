@@ -138,11 +138,45 @@ state a { init 1  next prev + prev.b }
 state b { init 1  next prev + prev.a }
 ```
 
+### A state has its own clock
+
+A state may carry the same `schedule` clause a stream does:
+
+```cfdl
+state pool_survival {
+  schedule every quarter from 2026-01 to 2031-01
+  init 1.0
+  next prev * (1 - hazard)
+}
+```
+
+The recurrence **steps** on that cadence and **holds** between ticks. Absent, it
+steps every model period, which is what a state without the clause has always
+meant.
+
+This matters because the model's clock is not the instrument's. A pool carried
+on a daily calendar but paying monthly must compound its hazard twelve times a
+year, not three hundred and sixty-five — the same separation a stream's
+`schedule every quarter` already expresses on a monthly book.
+
+Two details that are off-by-one traps, both found by building the fixture:
+
+- The recurrence steps on **accrual** periods, not settlement periods. A
+  quarterly schedule accrues at periods 0, 3, 6 and settles at 2, 5, 8; a
+  stream's amount is evaluated at the accrual, so that is where the state must
+  align.
+- `init` is the value **at the first tick**, not at model period 0. Otherwise
+  the first payment would read the second value of the recurrence.
+
+An interval finer than the model calendar is
+`E2108_SCHEDULE_FINER_THAN_CALENDAR`, exactly as for a stream.
+
 Three further properties, each the opposite of a defensible alternative:
 
-- **A state has no schedule**, so `active when` does not apply and it updates
-  in every period, including the projection tail. A stream that is inactive
-  yields 0; a state does not.
+- **Holding is not being inactive.** Outside its window, and between ticks, a
+  state keeps its value. An inactive *stream* yields 0; a state does not, which
+  is why `active when` is deliberately absent — a schedule says *when the
+  recurrence advances*, not *whether the quantity exists*.
 - **A state is not cash.** It has no entity, direction or currency. It is
   published in results as `state.<name>` with bare numbers, and never enters
   `model.total`, `model.npv`, the annual rollup or any domain metric.

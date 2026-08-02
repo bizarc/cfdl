@@ -240,7 +240,7 @@ never a silent checkbox.
 | **IR / results** | States need representing in the IR and probably reporting in `results.series`. Both are versioned contracts with gates (`check-ir-schema`, `check-results-schema`), so the change is visible and tested. |
 | **Performance** | O(n), against O(n²) for the fold. The existing `env.series = series.clone()` per accrual is already the hot spot and should move to a borrowed view as part of this. |
 | **Monte Carlo** | States recompute per trial. A recurrence propagates a per-period error forward rather than keeping it local — worth a note in the docs. |
-| **`active when`** | A stream inactive at `t` yields 0. A *state* has no schedule and always updates; say so explicitly, because the alternative reading is defensible and the two differ. |
+| **`active when`** | A stream inactive at `t` yields 0. A state HOLDS instead — see §8, which corrects what this row originally said. |
 
 ## 7. Verification
 
@@ -257,3 +257,64 @@ never a silent checkbox.
   −2.4% drift must go to zero. `benchmarks/cre/hud_home_multifamily`'s rounded
   escalation must close its 12.26 residual. Two independent published sources
   confirming one mechanism is the strongest evidence available.
+
+---
+
+## 8. Correction — a state does have a clock
+
+**This document originally said "a state has no schedule."** That was wrong, and
+wrong in a way worth recording rather than quietly editing out, because the
+error was a conflation rather than an oversight.
+
+A stream's `schedule` carries two independent things:
+
+| axis | question it answers |
+|---|---|
+| **cadence** | how often does this advance? |
+| **activity** | does this contribute anything in period `t`? |
+
+§6 reasoned about the *activity* axis — "a stream inactive at `t` yields 0, and
+a state should not" — concluded correctly that `active when` does not belong on
+a state, and then dropped **both** axes. So every state stepped once per *model*
+period.
+
+That is not a stylistic gap. `{{time.elapsed_periods}}` counts a lowering rule's
+**payment** periods, and the credit pack lets a contract set its own
+`payment_frequency`. On a daily calendar with monthly payments — a shipped,
+tested configuration — a hazard recurrence would compound 365 times a year
+instead of 12: `k^1096` rather than `k^36` at month 36. Not a rounding
+regression; a total loss of the number.
+
+**The fix is the cadence axis, and only that.** A state takes the same
+`schedule` clause a stream does, steps on its accrual periods, and **holds**
+between ticks and outside its window:
+
+```cfdl
+state pool_survival {
+  schedule every quarter from 2026-01 to 2031-01
+  init 1.0
+  next prev * (1 - hazard)
+}
+```
+
+Holding rather than zeroing is precisely the distinction §6 was reaching for,
+now placed on the axis where it belongs. `active when` stays out.
+
+Two off-by-ones, both found by building the fixture rather than by reasoning:
+
+1. **Step on accruals, not settlements.** A quarterly schedule accrues at
+   periods 0, 3, 6 and settles at 2, 5, 8. A stream's amount is evaluated at the
+   accrual, which is also where the payment index is counted. Ticking on
+   settlements puts the recurrence a whole interval from the index that reads it.
+2. **`init` belongs to the first tick, not to model period 0.** Otherwise the
+   first payment reads `F(1)` where it should read `F(0)` — an off-by-one
+   against every published amortisation schedule.
+
+`fixtures/valid/state_cadence` pins both. It uses `next prev * 2` so the step
+count is readable straight off the value: a wrong cadence is unmissable rather
+than subtle.
+
+The general lesson is the one this design already relies on elsewhere: when a
+construct borrows a concept from another, borrow the *mechanism* too. A state's
+cadence goes through the same `apply_schedule_indices` a stream's does, so the
+two cannot drift.
