@@ -1224,8 +1224,7 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'schedule', 'init', 'next' or '}' in state block."
-                            .to_string(),
+                        "Expected 'schedule', 'init', 'next' or '}' in state block.".to_string(),
                     );
                     return None;
                 }

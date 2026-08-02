@@ -416,6 +416,19 @@ Credit pack codes:
 - `E9013_CREDIT_INVALID_RECOVERY_LAG`
 - `E9014_CREDIT_INVALID_SERVICING_FEE`
 - `E9015_CREDIT_INVALID_PREPAY_PENALTY`
+- `E9016_CREDIT_INVALID_PSA_SPEED` — `psa_speed` is a MULTIPLE of the standard
+  prepayment curve, so 1.5 means 150% PSA. Must be 0..10; 0 selects the flat
+  `cpr` path.
+- `E9017_CREDIT_INVALID_SDA_SPEED` — `sda_speed` is a multiple of the standard
+  default assumption. Must be 0..10; 0 selects the flat `cdr` path.
+- `E9018_CREDIT_INVALID_ABS_SPEED` — `abs_speed` is the Absolute Prepayment
+  Model speed: the fraction of ORIGINAL balance prepaying each month. Already
+  monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1.
+- `E9019_CREDIT_INVALID_AGE_MONTHS` — `age_months` is the pool's weighted
+  average age at closing. PSA, SDA and the ABS model are all indexed from
+  ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at
+  the default 0 on a seasoned pool understates prepayment. Non-negative
+  integer.
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
 
 ---

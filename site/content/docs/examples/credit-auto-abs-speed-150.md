@@ -1,13 +1,13 @@
 ---
-id: benchmark-credit-auto-abs-wal
-title: "credit: auto abs wal"
-slug: "/docs/examples/credit-auto-abs-wal"
-source: benchmarks/credit/auto_abs_wal
+id: benchmark-credit-auto-abs-speed-150
+title: "credit: auto abs speed 150"
+slug: "/docs/examples/credit-auto-abs-speed-150"
+source: benchmarks/credit/auto_abs_speed_150
 ---
 
-# credit: auto abs wal
+# credit: auto abs speed 150
 
-auto-receivables collateral at zero prepayment speed, reconciled against an issuer-published weighted-average-life exhibit. TWO KINDS OF FIGURE HERE, and the difference matters. EXTERNAL — expected_metrics.json. `domain.credit.principal` is the exhibit's own stated aggregate pool balance, 537,640,787.96. Reproducing it to the cent means 43 level-pay sub-pools, at 43 different rates and terms and four of them at a 0% promotional APR, each returned exactly the balance the issuer stated. Tolerance 0.01 — one cent, on half a billion. Two of the exhibit's six non-zero prepayment-speed columns are now their own cases (auto_abs_speed_050, auto_abs_speed_150); this one remains the zero-speed column. The headline reconciliation is not assertable through this harness and lives in NOTES.md: the exhibit publishes percent-outstanding per NOTE CLASS, and this pack models collateral, not a liability stack. The pool's principal path reproduces the published Class A-2 pay-down to within 0.004 percentage points at every one of its eight distribution dates, against a source that rounds to 0.01 — so it sits on the rounding floor — and its weighted average life comes to 0.3695 years against a published 0.37. REGRESSION — expected.csv. `net_cash_flow` is the engine's own output, kept as a guard so a change to the level-pay rules cannot move this 43-contract model silently. It is NOT an external figure and is not evidence of anything; the external evidence is above and in NOTES.md.
+auto-receivables collateral at 1.50% ABS. One of the seven prepayment-speed columns of the same issuer exhibit as benchmarks/credit/auto_abs_wal, which takes the zero-speed column. The non-zero columns were unreachable until the pool factor became a per-period state: under a ramp the balance is a running product, and every pool factor in the pack was pow(k, p), valid only for a constant hazard. EXTERNAL — NOTES.md. The pool's principal collections reproduce the exhibit's published Class A-2 percent-outstanding column at every distribution date, worst 0.0036 percentage points against a source that rounds to 0.01. That reconciliation is not expressible through this harness: the published figure is a percentage of a note class, and this pack models collateral, not a liability stack. EXTERNAL — expected_metrics.json. domain.credit.principal is the pool's aggregate balance, 537,640,787.96, which is the sum of the 43 sub-pool balances the exhibit states. With no defaults every dollar advanced is eventually collected, so this asserts that all 43 sub-pools fully amortise under the ramp. REGRESSION — expected.csv. net_cash_flow is the engine's own output, kept so a change to the level-pay rules cannot move this 43-contract model silently. It is not an external figure.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -16,38 +16,31 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 ## The model
 
 ```cfdl
-// Auto-receivables collateral, reconciled against an issuer-published
-// weighted-average-life exhibit filed with the securities regulator.
+// Auto-receivables collateral at 1.50% ABS, reconciled against the same
+// issuer exhibit as benchmarks/credit/auto_abs_wal — one of its seven
+// prepayment-speed columns rather than the zero-speed one.
 //
-// The exhibit disaggregates the pool into 50 hypothetical sub-pools and states
-// each one's balance, APR and remaining term, then publishes — for every note
-// class, at seven prepayment speeds, for every distribution date — the percent
-// of the class still outstanding, and its weighted average life. That is an
-// unusually complete thing to publish, and it is what makes this checkable.
+// THE ABSOLUTE PREPAYMENT MODEL IS INDEXED FROM ORIGINATION. ABS states a
+// constant fraction of the ORIGINAL number of receivables prepaying each
+// month, so the implied SMM rises as the pool shrinks:
 //
-// WHAT IS REACHABLE HERE. The zero-speed column only. The other speeds use the
-// Absolute Prepayment Model — a constant number of ORIGINAL units prepaying
-// each month, so the implied SMM RISES over the life — and every pool factor
-// in this pack is pow(k, p), valid only for constant k. Same blocker as the
-// ramped-curve item in docs/13_feature_backlog.md. The per-class columns need
-// a sequential-pay liability waterfall, which this pack does not model at all.
+//     SMM(t) = ABS / (1 - ABS * (t - 1)),  t counted from ORIGINATION
 //
-// At zero speed the exhibit's stated assumptions are exactly this pack's
-// defaults: prepay at a constant zero rate, no defaults, no losses. So
-// cpr = cdr = 0 and each sub-pool simply amortises on schedule.
+// This pool is seasoned — weighted average ages run 11 to 42 months — so `t`
+// is the loan's age, not the months since closing. `age_months` carries that.
+// Measured against this exhibit, using months-since-closing instead is out by
+// 20 percentage points of note balance by the fourth distribution at 1.50% ABS.
 //
-// 43 funded sub-pools; the exhibit lists 50, of which 7 carry no balance.
-// Aggregate balance 537,640,787.96, terms to 64 months, APRs 0% and 0.905%-9.923%.
-// Four sub-pools are 0% APR promotional financing — see NOTES.md, they are the
-// reason the pack learned to amortise at a zero rate.
+// The exhibit's own stated assumptions: no defaults, losses or repurchases
+// (hence cpr = cdr = 0 alongside the ABS speed), payments on the last day of
+// each month with 30-day months, and the clean-up call not exercised.
 
 version 0.1
-model "auto-abs-wal"
+model "auto-abs-speed-150"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2018-10 for 64
 
 entity legal trust
-
 
 contract credit.pool_level_pay.p01 on entity legal.trust {
   term 2018-10..2020-03
@@ -57,6 +50,8 @@ contract credit.pool_level_pay.p01 on entity legal.trust {
     term_months = 18
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 42
   }
 }
 
@@ -68,6 +63,8 @@ contract credit.pool_level_pay.p02 on entity legal.trust {
     term_months = 28
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 35
   }
 }
 
@@ -79,6 +76,8 @@ contract credit.pool_level_pay.p03 on entity legal.trust {
     term_months = 45
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 27
   }
 }
 
@@ -90,6 +89,8 @@ contract credit.pool_level_pay.p04 on entity legal.trust {
     term_months = 51
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 21
   }
 }
 
@@ -101,6 +102,8 @@ contract credit.pool_level_pay.p06 on entity legal.trust {
     term_months = 14
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 40
   }
 }
 
@@ -112,6 +115,8 @@ contract credit.pool_level_pay.p07 on entity legal.trust {
     term_months = 30
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 41
   }
 }
 
@@ -123,6 +128,8 @@ contract credit.pool_level_pay.p08 on entity legal.trust {
     term_months = 46
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 26
   }
 }
 
@@ -134,6 +141,8 @@ contract credit.pool_level_pay.p09 on entity legal.trust {
     term_months = 51
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 21
   }
 }
 
@@ -145,6 +154,8 @@ contract credit.pool_level_pay.p11 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 41
   }
 }
 
@@ -156,6 +167,8 @@ contract credit.pool_level_pay.p12 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 32
   }
 }
 
@@ -167,6 +180,8 @@ contract credit.pool_level_pay.p13 on entity legal.trust {
     term_months = 41
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 23
   }
 }
 
@@ -178,6 +193,8 @@ contract credit.pool_level_pay.p14 on entity legal.trust {
     term_months = 51
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 21
   }
 }
 
@@ -189,6 +206,8 @@ contract credit.pool_level_pay.p16 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 40
   }
 }
 
@@ -200,6 +219,8 @@ contract credit.pool_level_pay.p17 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 31
   }
 }
 
@@ -211,6 +232,8 @@ contract credit.pool_level_pay.p18 on entity legal.trust {
     term_months = 41
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 24
   }
 }
 
@@ -222,6 +245,8 @@ contract credit.pool_level_pay.p19 on entity legal.trust {
     term_months = 51
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 21
   }
 }
 
@@ -233,6 +258,8 @@ contract credit.pool_level_pay.p21 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 40
   }
 }
 
@@ -244,6 +271,8 @@ contract credit.pool_level_pay.p22 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 32
   }
 }
 
@@ -255,6 +284,8 @@ contract credit.pool_level_pay.p23 on entity legal.trust {
     term_months = 42
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 26
   }
 }
 
@@ -266,6 +297,8 @@ contract credit.pool_level_pay.p24 on entity legal.trust {
     term_months = 52
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 20
   }
 }
 
@@ -277,6 +310,8 @@ contract credit.pool_level_pay.p26 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 42
   }
 }
 
@@ -288,6 +323,8 @@ contract credit.pool_level_pay.p27 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 33
   }
 }
 
@@ -299,6 +336,8 @@ contract credit.pool_level_pay.p28 on entity legal.trust {
     term_months = 42
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 27
   }
 }
 
@@ -310,6 +349,8 @@ contract credit.pool_level_pay.p29 on entity legal.trust {
     term_months = 52
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 20
   }
 }
 
@@ -321,6 +362,8 @@ contract credit.pool_level_pay.p31 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 43
   }
 }
 
@@ -332,6 +375,8 @@ contract credit.pool_level_pay.p32 on entity legal.trust {
     term_months = 32
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 35
   }
 }
 
@@ -343,6 +388,8 @@ contract credit.pool_level_pay.p33 on entity legal.trust {
     term_months = 43
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 28
   }
 }
 
@@ -354,6 +401,8 @@ contract credit.pool_level_pay.p34 on entity legal.trust {
     term_months = 52
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 20
   }
 }
 
@@ -365,6 +414,8 @@ contract credit.pool_level_pay.p36 on entity legal.trust {
     term_months = 18
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 44
   }
 }
 
@@ -376,6 +427,8 @@ contract credit.pool_level_pay.p37 on entity legal.trust {
     term_months = 32
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 35
   }
 }
 
@@ -387,6 +440,8 @@ contract credit.pool_level_pay.p38 on entity legal.trust {
     term_months = 43
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 28
   }
 }
 
@@ -398,6 +453,8 @@ contract credit.pool_level_pay.p39 on entity legal.trust {
     term_months = 52
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 21
   }
 }
 
@@ -409,6 +466,8 @@ contract credit.pool_level_pay.p40 on entity legal.trust {
     term_months = 64
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 9
   }
 }
 
@@ -420,6 +479,8 @@ contract credit.pool_level_pay.p41 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 45
   }
 }
 
@@ -431,6 +492,8 @@ contract credit.pool_level_pay.p42 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 35
   }
 }
 
@@ -442,6 +505,8 @@ contract credit.pool_level_pay.p43 on entity legal.trust {
     term_months = 43
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 28
   }
 }
 
@@ -453,6 +518,8 @@ contract credit.pool_level_pay.p44 on entity legal.trust {
     term_months = 53
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 20
   }
 }
 
@@ -464,6 +531,8 @@ contract credit.pool_level_pay.p45 on entity legal.trust {
     term_months = 64
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 8
   }
 }
 
@@ -475,6 +544,8 @@ contract credit.pool_level_pay.p46 on entity legal.trust {
     term_months = 17
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 43
   }
 }
 
@@ -486,6 +557,8 @@ contract credit.pool_level_pay.p47 on entity legal.trust {
     term_months = 31
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 35
   }
 }
 
@@ -497,6 +570,8 @@ contract credit.pool_level_pay.p48 on entity legal.trust {
     term_months = 44
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 26
   }
 }
 
@@ -508,6 +583,8 @@ contract credit.pool_level_pay.p49 on entity legal.trust {
     term_months = 53
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 20
   }
 }
 
@@ -519,6 +596,8 @@ contract credit.pool_level_pay.p50 on entity legal.trust {
     term_months = 62
     cpr = 0
     cdr = 0
+    abs_speed = 0.015
+    age_months = 11
   }
 }
 ```

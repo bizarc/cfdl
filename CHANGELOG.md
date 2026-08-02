@@ -8,6 +8,71 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a state has its own schedule
+
+A `state` now takes the same `schedule` clause a stream does:
+
+    state pool_survival {
+      schedule every quarter from 2026-01 to 2031-01
+      init 1.0
+      next prev * (1 - hazard)
+    }
+
+The recurrence STEPS on that cadence and HOLDS between ticks and outside its
+window. It does not fall to zero — that is what separates a schedule from
+`active when`, which a state deliberately does not have.
+
+This corrects the original design. `docs/14_state_and_recurrence.md` said "a
+state has no schedule", conflating cadence with activity and dropping both, so
+every state advanced once per MODEL period. Since a lowering rule's
+`{{time.elapsed_periods}}` counts its own PAYMENT periods, a pool on a daily
+book paying monthly would have compounded 365 times a year instead of 12. §8 of
+that document records the correction.
+
+Absent, a state steps every model period over the whole timeline, so nothing
+already written changes. Pack rules gain `state_every` / `state_from` /
+`state_to`.
+
+### Added: PSA, SDA and the ABS prepayment model in the credit pack
+
+`psa_speed`, `sda_speed` and `abs_speed`, each a MULTIPLE of the published
+curve, plus `age_months` for a pool's seasoning at closing. All default to `0`,
+selecting the existing flat `cpr`/`cdr` path.
+
+The pool factor is now a per-period state rather than `pow(k, p)` — the closed
+form of the running product only while the hazard is constant. Three externally
+reconciled cases were blocked on this and now land:
+
+  - `benchmarks/credit/auto_abs_speed_050`   0.0048 percentage points
+  - `benchmarks/credit/auto_abs_speed_150`   0.0036 percentage points
+  - `benchmarks/credit/mbs_pool_ramped`      within the source's rounding floor
+
+New diagnostics `E9016`–`E9019`. Closes backlog 2.1.
+
+Two convention defects were found by those external references after every
+in-house identity already passed: all three ramps index from loan ORIGINATION
+rather than the deal's closing (20 percentage points on a seasoned pool at
+1.50% ABS), and the lagged pool factor the recoveries rules read was consuming
+the hazard one lag too late (7.6% on recoveries by month 60). Both are recorded
+in the cases' NOTES.
+
+### Added: `make rule-fragments`
+
+`tools/check-rule-fragments.py` asserts that repeated expression fragments in a
+pack's lowering rules are byte-identical, normalising the age argument. Every
+committed golden runs at a constant hazard, so nothing in the suite evaluates a
+ramp branch; a typo in one of eighteen copies is invisible to it. Measured: a
+10x typo in a shared `state_next` is caught by `E5021`, but the same typo in one
+rule's `amount_expr` passes gold, benchmarks and analytic checks.
+
+### Changed: pool factors are no longer decimal-exact
+
+`pow(k, p)` was one decimal exponentiation; a state is `p` sequential
+multiplications stored as `f64`. Measured at 4.6e-16 relative over 360 periods,
+which publication rounding at six decimals absorbs — no committed golden moved.
+Recorded because it is a real, if tiny, loss of exactness.
+
+
 ### Added: declared state variables
 
 A `state` is a named number per period defined by a recurrence — the one shape

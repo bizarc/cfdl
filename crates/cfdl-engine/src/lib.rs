@@ -1642,8 +1642,7 @@ fn compute_states(
             // It does not fall to zero — that is what separates a schedule from
             // `active when`, and why `active when` is deliberately absent here.
             // See docs/14_state_and_recurrence.md.
-            let steps = t > entry.first_tick
-                && entry.ticks.as_ref().is_none_or(|ticks| ticks[t]);
+            let steps = t > entry.first_tick && entry.ticks.as_ref().is_none_or(|ticks| ticks[t]);
             if t > 0 && !steps {
                 if let Some(slot) = values.get_mut(name) {
                     slot[t] = slot[t - 1];

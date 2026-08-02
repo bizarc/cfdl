@@ -97,17 +97,33 @@ cf.head()
 ```
 
 ```
-shape: (126, 8)
+shape: (126, 10)
 ```
 
 ```
-         model.net_cash_flow  stream.credit.pool.interest.auto_a  \
-period                                                             
-2026-01        -2.430320e+07                       135188.876529   
-2026-02         4.419767e+05                       133229.509847   
-2026-03         4.372023e+05                       131289.582287   
-2026-04         4.324722e+05                       129368.918209   
-2026-05         4.277859e+05                       127467.343513   
+         model.net_cash_flow  state.credit_level_pay_survival_auto_a  \
+period                                                                 
+2026-01        -2.430320e+07                                1.000000   
+2026-02         4.419767e+05                                0.991393   
+2026-03         4.372023e+05                                0.982861   
+2026-04         4.324722e+05                                0.974402   
+2026-05         4.277859e+05                                0.966016   
+
+         state.credit_level_pay_survival_lag_auto_a  \
+period                                                
+2026-01                                         1.0   
+2026-02                                         1.0   
+2026-03                                         1.0   
+2026-04                                         1.0   
+2026-05                                         1.0   
+
+         stream.credit.pool.interest.auto_a  \
+period                                        
+2026-01                       135188.876529   
+2026-02                       133229.509847   
+2026-03                       131289.582287   
+2026-04                       129368.918209   
+2026-05                       127467.343513   
 
          stream.credit.pool.penalty.auto_a  stream.credit.pool.prepay.auto_a  \
 period                                                                         

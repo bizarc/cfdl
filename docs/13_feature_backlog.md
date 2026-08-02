@@ -127,7 +127,7 @@ pack rule should settle once rather than leaving to each modeller.
 
 ## 2. Credit pack
 
-### 2.1 Age-varying prepayment and default curves — UNBLOCKED
+### 2.1 Age-varying prepayment and default curves — RESOLVED
 
 `cpr` and `cdr` are single constants per contract. A hazard that varies with
 loan age cannot be expressed, so the standard prepayment model — 0.2% CPR in
@@ -141,28 +141,46 @@ min(month, 30)), 100)` is closed-form and is already asserted in
 factor is a cumulative product with no elementary closed form, and the
 expression language has no `exp`/`ln` to sum logs instead.
 
-**UPDATE — the blocker is gone, and the builtin is not needed.** The paragraph
-below proposed a calc builtin holding a survival schedule. 5.1 shipped instead,
-and a declared state *is* the cumulative product:
+**RESOLVED.** Declared state variables made the balance a running product, and
+three contract terms select the published curves:
 
-```cfdl
-state survival {
-  init 1.0
-  next prev * (1 - smm_at(time.t))
-}
-```
+| term | curve |
+|---|---|
+| `psa_speed` | CPR rises 0.2%/month to 6.0% at month 30, flat after |
+| `sda_speed` | CDR rises 0.02%/month to 0.60% at 30, flat to 60, to 0.03% at 120 |
+| `abs_speed` | a constant fraction of ORIGINAL balance each month |
 
-Verified against an independent running product at 150% PSA over 60 months:
-agreement to **7.0e-15**. Nothing in the engine is missing.
+All default to `0`, which selects the flat `cpr`/`cdr` path, so no existing
+model moved. The proposed calc builtin was not needed — the hazard shapes are
+one-liners; only the balance was ever the problem.
 
-What remains is a pack change, not a language one. The credit rules still carry
-`pow(k, p)`; they need `state_name` / `state_init` / `state_next`, the same
-mechanism the three opco growth rules already use (see
-`packs/opco/lowering/rules.toml` and `docs/07_pack_interface.md`). That is
-materially smaller than a new builtin, and — as this item predicted of one fix —
-it serves PSA, SDA and the Absolute Prepayment Model alike, since all three
-differ only in what the per-period hazard is, never in the fact that the balance
-is a running product.
+Three external cases, all previously blocked on this:
+
+| case | result |
+|---|---|
+| `benchmarks/credit/auto_abs_speed_050` | 0.0048 pp |
+| `benchmarks/credit/auto_abs_speed_150` | 0.0036 pp |
+| `benchmarks/credit/mbs_pool_ramped` | within 0.51, the source's rounding floor |
+
+**Correction to what this item said while unblocked:** it claimed the remaining
+work was "a pack change, not a language one". That was wrong twice.
+
+1. A state advanced once per MODEL period while `{{time.elapsed_periods}}`
+   counts a rule's PAYMENT periods. On a daily book paying monthly that is 365
+   steps a year against 12. Fixed by giving states their own `schedule`
+   (`docs/14_state_and_recurrence.md` §8) — a language change.
+2. Two convention defects were found only by the external references, after
+   every identity already passed:
+   - all three ramps are indexed from loan ORIGINATION, not from the deal's
+     closing, so a seasoned pool starts part-way up the curve. `age_months`
+     carries it. Worth 20 percentage points of note balance at 1.50% ABS.
+   - the lagged pool factor the recoveries rules read was consuming the hazard
+     one lag too late. Invisible under a flat hazard; 7.6% on recoveries by
+     month 60 under a ramp.
+
+Both are the same shape: the ramp's form and the running product were correct,
+and where each read lands on the curve was not. No in-house reference would have
+caught either.
 
 The original proposal follows, kept for provenance.
 
@@ -203,6 +221,10 @@ Found closing the recovery gap in `benchmarks/credit/mbs_pool_conventions`; the
 recovery basis itself is fixed and asserted there.
 
 ### 2.3 SMM and MDR as direct terms
+
+*Partly relieved by 2.1: a pool at a published ramp now states `psa_speed` /
+`sda_speed` / `abs_speed` directly and never touches `cpr`/`cdr`. What remains
+is the flat case, where a hand-computed annual equivalent is still required.*
 
 The pack accepts only annual `cpr`/`cdr`. Practitioners quote monthly SMM and
 MDR — the published reference schedules are specified that way — so a 1% SMM pool
@@ -937,3 +959,59 @@ emitted in non-test Rust actually appears in that register. Without it the doc
 gate only fires for codes someone remembered to document. Extracting from Rust
 needs to exclude the deliberately corrupted codes inside parser tests
 (`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.
+
+### 7.12 A pool's amortisation state is not exposed
+
+Found building `benchmarks/credit/auto_abs_speed_050` and `_150`. The published
+figure in an ABS exhibit is *percent of a note class outstanding*, which is
+derived from cumulative pool principal. There is no single stream carrying that,
+and `tools/benchmark-runner.py` checks per-stream series and scalar metrics only,
+so the reconciliation lives in `NOTES.md` and is not machine-checked. Both new
+cases fall back to a `net_cash_flow` regression guard plus
+`domain.credit.principal`.
+
+The same limitation applies to `benchmarks/credit/auto_abs_wal`, and it is why
+that case's external evidence has always been prose.
+
+Shape: either a `domain.credit.pool_factor` per-period metric, or letting a
+benchmark case assert a named expression over streams. The second is more
+general and would serve the CRE debt-service-coverage case too.
+
+### 7.13 District energy has no usable reference model
+
+Scoped, not built. `research/CFDL_pack_roadmap_and_model_catalogue.xlsx` ranks
+District Energy / Waste-to-Energy as a Tier 1 pack candidate with the gate
+"None new — Energy pack extension (~65% reuse)", and names the Ed Bodmer project
+finance collection as the first reference to build against.
+
+That collection does not contain one. Measured across its thermal and
+biomass/biogas pages:
+
+| term | thermal page | biomass page |
+|---|---|---|
+| "district" | 0 | 0 |
+| "cogeneration" | 0 | 0 |
+| "combined heat" | 0 | 0 |
+| "waste" | 0 | 3 (prose) |
+
+The four downloadable thermal models are gas-fired IPPs (`IPP-Model.xlsm`,
+`Gas-Plant-Example`, `Indonesia-Gas-Plant`, `NGCC-with-Merchant`). Their
+structure — PPA and merchant revenue, O&M, senior debt, tax depreciation — is
+what `benchmarks/energy/utility_pv_singleowner` and
+`benchmarks/energy/merchant_capacity` already reconcile against a national
+laboratory model, so they would add a second source for mechanics already
+covered rather than the new ones the candidate needs (thermal load, fuel cost,
+heat offtake).
+
+They also lean on two things that are not expressible: debt sized to a target
+coverage ratio ("sculpt" appears 41 times on the thermal page) and capitalised
+construction interest resolved circularly ("circular", 28 times). Both are
+solves. `docs/14_state_and_recurrence.md` §5 covers why an iterative construct
+would need to be explicit, bounded and convergence-checked rather than implied.
+
+What a district energy case actually needs is a source publishing a thermal
+plant's drivers and the lines they produce — heat and power sold separately,
+fuel cost as a driver, and a heat offtake contract. The catalogue's remaining
+Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
+and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
+registration to download.

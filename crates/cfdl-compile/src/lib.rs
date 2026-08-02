@@ -2444,7 +2444,14 @@ fn lower_states(
         let schedule = state.schedule.as_ref().and_then(|spec| {
             // Phase resolution is the only failure mode, and it is already
             // reported against the phase statement itself.
-            lower_schedule(Some(spec), time_calendar, time_start, timeline_end, phase_map).ok()
+            lower_schedule(
+                Some(spec),
+                time_calendar,
+                time_start,
+                timeline_end,
+                phase_map,
+            )
+            .ok()
         });
         states.push(IrState {
             name: state.name.clone(),

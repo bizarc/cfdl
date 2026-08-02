@@ -57,6 +57,20 @@
 #   recurrence, holding until the lag has elapsed and freezing once the pool
 #   has retired. It has no `state_to` because recoveries settle a lag beyond
 #   term end, and `term_end + lag` is not expressible as a template date.
+#
+#   ITS HAZARD AGE IS `elapsed - lag - 1`, NOT `elapsed - 1`. Step j of the
+#   lagged state consumes the hazard of age j-1, and j = elapsed - lag. Under a
+#   flat hazard the two are identical, so this was wrong for three commits with
+#   111 goldens, 19 benchmarks and a lag identity all passing. A ramped
+#   reference put it at 7.6% on recoveries by month 60. See
+#   benchmarks/credit/mbs_pool_ramped.
+#
+#   ALL THREE RAMPS ARE INDEXED FROM ORIGINATION, not from the deal's closing.
+#   `age_months` is the pool's weighted average age at closing and enters every
+#   hazard's age argument; a seasoned pool is already part-way up the curve on
+#   its first distribution. Default 0, so a new pool is unaffected. Measured at
+#   20 percentage points of note balance on a seasoned pool at 1.50% ABS — see
+#   benchmarks/credit/auto_abs_speed_150.
 #   Each period: defaults leave at the start of the period (no interest on
 #   defaulted balance); interest and scheduled principal accrue on the
 #   performing balance.

@@ -355,7 +355,7 @@ against it by `make ir-schema`.
       }
     },
     "TypedValue": {
-      "description": "Strongly-typed value union used for attrs/terms/state. anyOf, not oneOf: the members overlap structurally \u2014 an Expr {lang, src} is also a valid Map of strings \u2014 so requiring exactly one match can never hold for an untagged union.",
+      "description": "Strongly-typed value union used for attrs/terms/state. anyOf, not oneOf: the members overlap structurally — an Expr {lang, src} is also a valid Map of strings — so requiring exactly one match can never hold for an untagged union.",
       "anyOf": [
         {
           "type": "string"
@@ -735,7 +735,7 @@ against it by `make ir-schema`.
           }
         },
         "due": {
-          "description": "Annuity due: payment falls at the start of each interval, as for rent. Omitted for an ordinary annuity, which pays at the interval's end and is the default. Determines how far a payment is discounted, not which period holds it \u2014 see 12_payment_timing.md.",
+          "description": "Annuity due: payment falls at the start of each interval, as for rent. Omitted for an ordinary annuity, which pays at the interval's end and is the default. Determines how far a payment is discounted, not which period holds it — see 12_payment_timing.md.",
           "type": "boolean"
         },
         "at_period_end": {
@@ -743,7 +743,7 @@ against it by `make ir-schema`.
           "type": "boolean"
         },
         "mid": {
-          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar \u2014 which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
+          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar — which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
           "type": "boolean"
         },
         "net_days": {
@@ -1274,7 +1274,7 @@ against it by `make ir-schema`.
         "next"
       ],
       "additionalProperties": false,
-      "description": "A named value per period defined by a recurrence. `init` is the value at period 0 and is mandatory \u2014 a recurrence with an unstated base case would evaluate to zero for every period. `next` gives every later period, with `prev` bound to this state's previous value and `prev.<name>` to another state's; neither may see the current period, which is what keeps cycles impossible by construction. Streams read the current period as `state.<name>`. See 14_state_and_recurrence.md.",
+      "description": "A named value per period defined by a recurrence. `init` is the value at period 0 and is mandatory — a recurrence with an unstated base case would evaluate to zero for every period. `next` gives every later period, with `prev` bound to this state's previous value and `prev.<name>` to another state's; neither may see the current period, which is what keeps cycles impossible by construction. Streams read the current period as `state.<name>`. See 14_state_and_recurrence.md. A state may carry its own `schedule` — the recurrence steps on that cadence and holds between ticks, so a pool carried on a daily calendar but paying monthly compounds twelve times a year rather than three hundred and sixty-five. Absent means every model period. Unlike a stream, an inactive state HOLDS rather than yielding zero, which is why there is no `active_when` here.",
       "properties": {
         "name": {
           "type": "string"
@@ -1310,6 +1310,9 @@ against it by `make ir-schema`.
               "type": "string"
             }
           }
+        },
+        "schedule": {
+          "$ref": "#/$defs/Schedule"
         }
       }
     }

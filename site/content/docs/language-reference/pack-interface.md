@@ -662,7 +662,29 @@ state_init  = "1"
 state_next  = "prev * pow(1 + curve_value(\"{{contract.growth_curve}}\", time.date), 1 / {{model.periods_per_year}})"
 ```
 
-All three are templated. `state_name` must expand to a **single identifier** —
+A state may also carry its own clock:
+
+```toml
+state_every = "{{contract.payment_frequency}}"
+state_from  = "{{contract.term_start}}"
+state_to    = "{{contract.term_end}}"
+```
+
+`state_every` is the recurrence's cadence — `day`, `week`, `month`, `quarter`,
+`year`. Empty means every model period. **Set it whenever the recurrence belongs
+to the instrument's rhythm rather than the book's.** A pool carried on a daily
+calendar but paying monthly must compound twelve times a year, not three hundred
+and sixty-five, and `{{time.elapsed_periods}}` counts the rule's *payment*
+periods — so a rule whose `schedule_every` is templated almost certainly wants
+`state_every` templated the same way.
+
+The state steps on its **accrual** periods and **holds** between ticks and
+outside `state_from`/`state_to`. It does not fall to zero: that is what
+separates a schedule from `active when`, which a state deliberately does not
+have. An interval finer than the model calendar is
+`E2108_SCHEDULE_FINER_THAN_CALENDAR`, the same rule a stream obeys.
+
+All templated. `state_name` must expand to a **single identifier** —
 `state.<name>` resolves one segment, so `{{contract.dot_suffix}}` would produce
 an unreachable path; use `{{contract.suffix_ident}}`.
 

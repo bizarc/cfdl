@@ -58,6 +58,36 @@ implementations.
 
 ## Conventions, and where they come from
 
+### Ramped hazards
+
+`cpr` and `cdr` are flat for the pool's life. Real conventions are not: a loan
+prepays slowly when new and faster as it seasons. Three terms select a published
+ramp instead, and each is a **multiple**, not a percent:
+
+| term | curve |
+|---|---|
+| `psa_speed` | CPR rises 0.2%/month from month 1 to 6.0% at month 30, flat after |
+| `sda_speed` | CDR rises 0.02%/month to 0.60% at month 30, flat to 60, declining to 0.03% at month 120, flat after |
+| `abs_speed` | a constant fraction of ORIGINAL balance each month |
+
+All three default to `0`, which selects the flat `cpr`/`cdr` path — so a model
+written before they existed is byte-identical.
+
+**All three ramps are indexed from ORIGINATION, not from closing.** A pool
+bought at 24 months' seasoning is already two years up the curve on its first
+distribution. `age_months` carries that; leaving it at `0` on a seasoned pool
+understates prepayment — measured at **20 percentage points** of note balance by
+month 4 against a published exhibit at 1.50% ABS.
+
+**`abs_speed` is already a monthly rate.** `cpr`/`cdr` are effective *annual*
+rates and take a root through `cpr_to_periodic`; the Absolute Prepayment Model
+quotes a monthly figure directly, so it must not be converted. Conflating the
+two is a factor-level error that no unit test would notice.
+
+The ramp is what makes the balance a running product rather than `pow(k, p)` —
+see the header of `lowering/rules.toml` and
+`docs/14_state_and_recurrence.md`.
+
 Prepayment and default follow the market-standard MBS conventions for CPR,
 SMM and the standard prepayment and default curves; the pack is checked for
 parity against the published industry reference schedule.
@@ -94,6 +124,10 @@ Terms:
 | `term_months` | amortization term in months | required |
 | `cpr` | annual conditional prepayment rate | `0` |
 | `cdr` | annual conditional default rate | `0` |
+| `psa_speed` | multiple of the standard prepayment curve — `1.5` is 150% PSA | `0` |
+| `sda_speed` | multiple of the standard default assumption — `1.0` is 100% SDA | `0` |
+| `abs_speed` | Absolute Prepayment Model speed, already monthly | `0` |
+| `age_months` | pool's weighted average age at closing, in months | `0` |
 | `severity` | loss severity on defaulted balance | `0` |
 | `recovery_lag_months` | months from default to recovery cash | `0` |
 | `servicing_fee` | annual servicing strip on performing balance | `0` |
@@ -321,14 +355,21 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E9014_CREDIT_INVALID_SERVICING_FEE` | Credit 'servicing_fee' must be an annual rate between 0 and 1. |
 | `E9015_CREDIT_INVALID_PREPAY_PENALTY` | Credit 'prepay_penalty_rate' must be a rate between 0 and 1. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Credit 'rate_floor' must be less than or equal to 'rate_cap'. |
+| `E9016_CREDIT_INVALID_PSA_SPEED` | Credit 'psa_speed' is a multiple of the standard prepayment curve, so 1.5 means 150% PSA. It must be between 0 and 10. |
+| `E9017_CREDIT_INVALID_SDA_SPEED` | Credit 'sda_speed' is a multiple of the standard default assumption, so 1.0 means 100% SDA. It must be between 0 and 10. |
+| `E9018_CREDIT_INVALID_ABS_SPEED` | Credit 'abs_speed' is the Absolute Prepayment Model speed: the fraction of ORIGINAL balance prepaying each month, already monthly. It must be between 0 and 1. |
+| `E9019_CREDIT_INVALID_AGE_MONTHS` | Credit 'age_months' is the pool's weighted average age at closing, in months. It must be a non-negative integer. |
 
 ## Worked example models
 
 Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
+- [credit: auto abs speed 050](/docs/examples/credit-auto-abs-speed-050)
+- [credit: auto abs speed 150](/docs/examples/credit-auto-abs-speed-150)
 - [credit: auto abs wal](/docs/examples/credit-auto-abs-wal)
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
 - [credit: mbs pool conventions](/docs/examples/credit-mbs-pool-conventions)
+- [credit: mbs pool ramped](/docs/examples/credit-mbs-pool-ramped)
