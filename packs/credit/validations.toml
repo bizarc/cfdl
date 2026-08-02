@@ -171,3 +171,62 @@ check = "term_compare"
 left = "rate_floor"
 op = "le"
 right = "rate_cap"
+
+# --- ramped hazard speeds ----------------------------------------------------
+#
+# Each names a published convention and is a MULTIPLE, not a percent:
+# psa_speed = 1.5 is 150% PSA. Zero selects the flat cpr/cdr path, which is why
+# these default to "0" and every model written before them is unchanged.
+#
+# Upper bounds are deliberately generous rather than tight — 500% PSA is a real
+# quote — but not unbounded: the survival factor is additive,
+# k = (1 - mdr) - smm, so a large enough speed drives k negative and the pool
+# factor flips sign at a specific month with nothing to notice it.
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9016_CREDIT_INVALID_PSA_SPEED"
+message = "Credit 'psa_speed' is a multiple of the standard prepayment curve, so 1.5 means 150% PSA. It must be between 0 and 10."
+check = "term_number"
+term = "psa_speed"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 10.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9017_CREDIT_INVALID_SDA_SPEED"
+message = "Credit 'sda_speed' is a multiple of the standard default assumption, so 1.0 means 100% SDA. It must be between 0 and 10."
+check = "term_number"
+term = "sda_speed"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 10.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9018_CREDIT_INVALID_ABS_SPEED"
+message = "Credit 'abs_speed' is the Absolute Prepayment Model speed: the fraction of ORIGINAL balance prepaying each month, already monthly. It must be between 0 and 1."
+check = "term_number"
+term = "abs_speed"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0

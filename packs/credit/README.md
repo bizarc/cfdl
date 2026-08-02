@@ -53,6 +53,30 @@ implementations.
 
 ## Conventions, and where they come from
 
+### Ramped hazards
+
+`cpr` and `cdr` are flat for the pool's life. Real conventions are not: a loan
+prepays slowly when new and faster as it seasons. Three terms select a published
+ramp instead, and each is a **multiple**, not a percent:
+
+| term | curve |
+|---|---|
+| `psa_speed` | CPR rises 0.2%/month from month 1 to 6.0% at month 30, flat after |
+| `sda_speed` | CDR rises 0.02%/month to 0.60% at month 30, flat to 60, declining to 0.03% at month 120, flat after |
+| `abs_speed` | a constant fraction of ORIGINAL balance each month |
+
+All three default to `0`, which selects the flat `cpr`/`cdr` path — so a model
+written before they existed is byte-identical.
+
+**`abs_speed` is already a monthly rate.** `cpr`/`cdr` are effective *annual*
+rates and take a root through `cpr_to_periodic`; the Absolute Prepayment Model
+quotes a monthly figure directly, so it must not be converted. Conflating the
+two is a factor-level error that no unit test would notice.
+
+The ramp is what makes the balance a running product rather than `pow(k, p)` —
+see the header of `lowering/rules.toml` and
+`docs/14_state_and_recurrence.md`.
+
 Prepayment and default follow the market-standard MBS conventions for CPR,
 SMM and the standard prepayment and default curves; the pack is checked for
 parity against the published industry reference schedule.
@@ -89,6 +113,9 @@ Terms:
 | `term_months` | amortization term in months | required |
 | `cpr` | annual conditional prepayment rate | `0` |
 | `cdr` | annual conditional default rate | `0` |
+| `psa_speed` | multiple of the standard prepayment curve — `1.5` is 150% PSA | `0` |
+| `sda_speed` | multiple of the standard default assumption — `1.0` is 100% SDA | `0` |
+| `abs_speed` | Absolute Prepayment Model speed, already monthly | `0` |
 | `severity` | loss severity on defaulted balance | `0` |
 | `recovery_lag_months` | months from default to recovery cash | `0` |
 | `servicing_fee` | annual servicing strip on performing balance | `0` |

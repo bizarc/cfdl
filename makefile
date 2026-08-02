@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations py-stamp py-check
+.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -50,7 +50,7 @@ bench:
 	cargo build -p cfdl-cli
 	python3 tools/benchmark-runner.py
 
-ci: fmt lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations doc-examples wasm-check
+ci: fmt lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples wasm-check
 
 # The wasm bundle is committed (Vercel has no Rust toolchain), so it can drift
 # from the engine silently. `make ci` never covered it, and a five-day-old
@@ -83,6 +83,9 @@ results-schema:
 # renumbering them — picking a free number by reading the file is not reliable.
 pack-validations:
 	python3 tools/check-pack-validations.py
+
+rule-fragments:
+	python3 tools/check-rule-fragments.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot
