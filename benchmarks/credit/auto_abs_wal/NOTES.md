@@ -65,18 +65,17 @@ the pool's principal collections, scaled.
 The exhibit is a 7-speed × 6-class grid. Two of those axes are out of reach and
 this case deliberately takes only the third.
 
-**The prepayment speeds.** They use the Absolute Prepayment Model: a constant
-number of *original* units prepaying each month. Because the denominator stays
-at the original count while the pool shrinks, the implied SMM *rises* over the
-life. Every pool factor in this pack is `pow(k, p)`, valid only for constant
-`k`. That is the same blocker as the ramped-curve item already in the backlog,
-and the same fix would serve both — a calc builtin holding the schedule, the
-`macrs_rate` pattern.
+**The prepayment speeds — NO LONGER OUT OF REACH.** They use the Absolute
+Prepayment Model: a constant number of *original* units prepaying each month, so
+the implied SMM rises over the life and `k` is not constant. Every pool factor
+in this pack was `pow(k, p)`, valid only when it is.
 
-The zero-speed column is exempt because zero is constant. The exhibit's stated
-assumptions there — constant zero prepayment, no defaults, no losses — are
-exactly this pack's defaults, which is why `cpr = cdr = 0` is the whole of the
-modelling.
+Declared state variables closed that (`docs/13_feature_backlog.md` 2.1). Two of
+the six non-zero columns are now their own cases,
+`benchmarks/credit/auto_abs_speed_050` and `_150`, reconciling to 0.0048 and
+0.0036 percentage points. Building them found that ABS is indexed from loan
+ORIGINATION rather than from closing — worth 20 percentage points on this
+seasoned pool at 1.50% ABS — which is recorded in those cases' NOTES.
 
 **The note classes.** Percent-outstanding per class needs a sequential-pay
 waterfall with overcollateralisation and a reserve account. This pack models the

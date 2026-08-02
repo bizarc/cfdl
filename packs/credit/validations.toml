@@ -230,3 +230,19 @@ when = "present"
 on_invalid = "report"
 min = 0.0
 max = 1.0
+
+[[validations]]
+contracts = [
+  "credit.pool_level_pay",
+  "credit.pool_io_bullet",
+  "credit.pool_float_io_bullet",
+]
+match = "instance"
+code = "E9019_CREDIT_INVALID_AGE_MONTHS"
+message = "Credit 'age_months' is the pool's weighted average age at closing, in months. It must be a non-negative integer."
+check = "term_number"
+term = "age_months"
+number = "integer"
+when = "present"
+on_invalid = "report"
+min = 0.0

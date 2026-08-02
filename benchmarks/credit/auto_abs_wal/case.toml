@@ -9,6 +9,10 @@
 # at a 0% promotional APR, each returned exactly the balance the issuer stated.
 # Tolerance 0.01 — one cent, on half a billion.
 #
+# Two of the exhibit's six non-zero prepayment-speed columns are now their own
+# cases (auto_abs_speed_050, auto_abs_speed_150); this one remains the
+# zero-speed column.
+#
 # The headline reconciliation is not assertable through this harness and lives
 # in NOTES.md: the exhibit publishes percent-outstanding per NOTE CLASS, and
 # this pack models collateral, not a liability stack. The pool's principal path

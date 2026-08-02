@@ -68,6 +68,12 @@ ramp instead, and each is a **multiple**, not a percent:
 All three default to `0`, which selects the flat `cpr`/`cdr` path — so a model
 written before they existed is byte-identical.
 
+**All three ramps are indexed from ORIGINATION, not from closing.** A pool
+bought at 24 months' seasoning is already two years up the curve on its first
+distribution. `age_months` carries that; leaving it at `0` on a seasoned pool
+understates prepayment — measured at **20 percentage points** of note balance by
+month 4 against a published exhibit at 1.50% ABS.
+
 **`abs_speed` is already a monthly rate.** `cpr`/`cdr` are effective *annual*
 rates and take a root through `cpr_to_periodic`; the Absolute Prepayment Model
 quotes a monthly figure directly, so it must not be converted. Conflating the
@@ -116,6 +122,7 @@ Terms:
 | `psa_speed` | multiple of the standard prepayment curve — `1.5` is 150% PSA | `0` |
 | `sda_speed` | multiple of the standard default assumption — `1.0` is 100% SDA | `0` |
 | `abs_speed` | Absolute Prepayment Model speed, already monthly | `0` |
+| `age_months` | pool's weighted average age at closing, in months | `0` |
 | `severity` | loss severity on defaulted balance | `0` |
 | `recovery_lag_months` | months from default to recovery cash | `0` |
 | `servicing_fee` | annual servicing strip on performing balance | `0` |

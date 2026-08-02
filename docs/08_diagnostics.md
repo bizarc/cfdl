@@ -419,6 +419,11 @@ Credit pack codes:
 - `E9018_CREDIT_INVALID_ABS_SPEED` — `abs_speed` is the Absolute Prepayment
   Model speed: the fraction of ORIGINAL balance prepaying each month. Already
   monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1.
+- `E9019_CREDIT_INVALID_AGE_MONTHS` — `age_months` is the pool's weighted
+  average age at closing. PSA, SDA and the ABS model are all indexed from
+  ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at
+  the default 0 on a seasoned pool understates prepayment. Non-negative
+  integer.
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
 
 ---

@@ -32,7 +32,7 @@
       },
       "next": {
         "lang": "cfdl",
-        "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (months_between(parse_date(\"2026-01-01\"), time.date) - 1), 0.000001), 1)))"
+        "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
       },
       "schedule": {
         "kind": "Every",
@@ -49,7 +49,7 @@
       },
       "next": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 0 and months_between(parse_date(\"2026-01-01\"), time.date) - 0 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((months_between(parse_date(\"2026-01-01\"), time.date) - 1) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (months_between(parse_date(\"2026-01-01\"), time.date) - 1), 0.000001), 1))), prev)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 0 and months_between(parse_date(\"2026-01-01\"), time.date) - 0 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1))), prev)"
       },
       "schedule": {
         "kind": "Every",
@@ -104,7 +104,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -143,7 +143,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (months_between(parse_date(\"2026-01-01\"), time.date)), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -182,7 +182,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (months_between(parse_date(\"2026-01-01\"), time.date)), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -221,7 +221,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 0.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival_lag) * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 0.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival_lag) * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -260,7 +260,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -299,7 +299,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (months_between(parse_date(\"2026-01-01\"), time.date)) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * state.credit_level_pay_survival) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
