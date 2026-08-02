@@ -54,6 +54,35 @@ state revenue_index {
 - `next` — the value at every later period. `prev` is bound to this state's
   value at `t-1`.
 
+### 3.0 It is a general construct, not a revenue one
+
+A state has **no entity, no direction, no currency and no schedule**. It is a
+named number per period. It sits at the language level alongside `curve` and
+`assume` — not in any pack — so every model can declare one regardless of which
+pack it uses.
+
+The recurrence shape is whatever the `next` expression says, and the operator
+matters as much as the construct:
+
+```cfdl
+state survival        { init 1.0  next prev * (1 - hazard(time.t)) }
+state opex_index      { init 1.0  next round_to(prev * 1.025, 1) }
+state degradation     { init 1.0  next prev * (1 - 0.005) }
+state discount_factor { init 1.0  next prev / (1 + curve_value("wacc", time.date)) }
+state cum_capex       { init 0    next prev + inputs.capex_per_period }
+state high_water      { init 0    next max(prev, state.distributions) }
+```
+
+Multiplication gives a compounding factor — a pool's survival under a ramp
+(credit), an escalating expense index (CRE), module decay (energy), a discount
+factor under a varying cost of capital. Addition gives an accumulator. `max`
+gives a running high-water mark, which is what a GP catch-up or a preferred
+return tests against.
+
+The worked example below happens to be a revenue index because that is the case
+`benchmarks/opco/damodaran_fcff` needs. Nothing about the construct is specific
+to revenue, to opco, or to a pack.
+
 Streams read it as an ordinary environment path:
 
 ```cfdl
