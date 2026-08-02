@@ -1,0 +1,137 @@
+---
+id: benchmark-opco-damodaran-fcff
+title: "opco: damodaran fcff"
+slug: "/docs/examples/opco-damodaran-fcff"
+source: benchmarks/opco/damodaran_fcff
+---
+
+# opco: damodaran fcff
+
+Damodaran's FCFF Simple Ginzu — textbook intrinsic valuation. THE FIRST OPCO CASE BUILT FROM PACK CONTRACTS. The other opco case reconciles a banker's DCF, but that filing publishes the RESULT — per-year unlevered cash flow — so it had to hand-write six native streams and validated the engine rather than the pack. This source publishes the DRIVERS, which is what a pack rule consumes. It takes opco off 0-of-10 contract types externally validated. Licence is explicit: "These spreadsheet programs are in Excel and are not copy protected. Download them and feel free to modify them to your own specifications." So the workbook is committed under reference/, as with HUD — a reader can open it and check every figure here directly. WHAT IS ASSERTED, AND THE BLANKS ARE THE POINT.   revenue / opex / taxes    years 1-5   exact   reinvestment              years 1-4   exact   years 6-10                nothing     see below The growth and tax curves carry a PER-PERIOD rate — the interface a modeller would write, and the one that is correct once a stream can read its own prior period (backlog 5.1). Until then the rules compound with pow(1 + g, t), which applies one period's rate as though it had held from the start: exact while a rate is flat, drifting once it moves. Both drivers are flat through year 5. Reinvestment funds NEXT year's growth, so its exact window closes a year earlier than revenue's — year 5 already feels year 6's decay. The drift is measured rather than assumed and is tabulated in NOTES.md (revenue -2.4% by year 10). It is the delta 5.1 is expected to close, and asserting years 6-10 at a loosened tolerance would bury exactly that. NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital converges 7.055% -> 8.81% and the engine takes a single scalar discount rate. period_tolerance = 0.001 — the published figures carry four decimals and the engine agrees to 1e-6 everywhere it is asserted.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+// Damodaran's FCFF Simple Ginzu — the reference implementation of textbook
+// intrinsic valuation, and the first opco case built from PACK CONTRACTS.
+//
+// WHY THIS SOURCE. benchmarks/opco/banker_dcf_conventions reconciles a banker's
+// DCF, but that filing publishes the RESULT — per-year unlevered cash flow — so
+// the model had to hand-write six native streams and validated the engine's
+// discounting rather than the pack. This source publishes the DRIVERS: revenue
+// growth, operating margin, tax rate and a sales-to-capital ratio, and every
+// line they produce. That is what a pack rule consumes, so this case is built
+// entirely from opco contracts and takes the pack off 0-of-10.
+//
+// THE DRIVERS CONVERGE, which is the whole character of intrinsic valuation:
+// growth decays toward the riskfree rate and the effective tax rate climbs
+// toward the marginal one as the firm matures. Both paths below are DERIVED
+// from the stated inputs (5% -> 4.58%, 17.5% -> 25%, linearly over years 6-10),
+// not read off the output — verified to reproduce the published growth and tax
+// rows exactly.
+//
+// WHAT IS ASSERTED, AND WHY NOT ALL TEN YEARS. The curves carry a PER-PERIOD
+// rate, which is the right interface and the one that will be correct once a
+// stream can read its own prior period (backlog 5.1). Until then the rules
+// compound with pow(1 + g, t), which applies one period's rate as though it had
+// held throughout — exact while the rate is flat, drifting once it moves. So
+// years 1-5 are asserted and years 6-10 are not; NOTES.md carries the measured
+// drift, which is the delta 5.1 is expected to close.
+//
+// Reinvestment funds NEXT year's growth, so its exact window closes a year
+// earlier than revenue's. Also asserted only where it is exact.
+//
+// NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
+// converges 7.055% -> 8.81% and the engine takes a single scalar discount rate,
+// so a term structure is inexpressible. Discounting at a flat rate and calling
+// the result agreement would be worse than saying so.
+
+version 0.1
+model "damodaran-fcff"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 10
+
+entity legal firm
+
+// Revenue growth: 5% while the firm is growing, decaying to the riskfree rate
+// by the terminal year.
+curve revenue_growth linear {
+  2026-01: 0.0500000000
+  2027-01: 0.0500000000
+  2028-01: 0.0500000000
+  2029-01: 0.0500000000
+  2030-01: 0.0500000000
+  2031-01: 0.0491600000
+  2032-01: 0.0483200000
+  2033-01: 0.0474800000
+  2034-01: 0.0466400000
+  2035-01: 0.0458000000
+}
+
+// Effective tax rate climbing to the marginal rate over the same window.
+curve tax_rate linear {
+  2026-01: 0.1750000000
+  2027-01: 0.1750000000
+  2028-01: 0.1750000000
+  2029-01: 0.1750000000
+  2030-01: 0.1750000000
+  2031-01: 0.1900000000
+  2032-01: 0.2050000000
+  2033-01: 0.2200000000
+  2034-01: 0.2350000000
+  2035-01: 0.2500000000
+}
+
+contract opco.revenue_line.core on entity legal.firm {
+  term 2026-01..2035-01
+  terms {
+    amount = 22853.6700000000
+    growth_curve = "revenue_growth"
+  }
+}
+
+// Operating margin is flat at 14.063%, so operating cost is the complement of
+// revenue and follows the same path.
+contract opco.opex_line.operating on entity legal.firm {
+  term 2026-01..2035-01
+  terms {
+    amount = 19639.7250000000
+    growth_curve = "revenue_growth"
+  }
+}
+
+// Cash taxes on EBIT. The rule reads revenue and opex from phase-1 streams and
+// opex is signed negative, so their sum is EBIT; no debt and no D&A here.
+contract opco.cash_taxes.federal on entity legal.firm {
+  term 2026-01..2035-01
+  terms {
+    tax_rate_curve = "tax_rate"
+  }
+}
+
+// Reinvestment = revenue * growth / sales-to-capital, which funds NEXT year's
+// growth. With a flat growth rate it is itself a geometric series on the same
+// curve.
+contract opco.capex_line.reinvestment on entity legal.firm {
+  term 2026-01..2035-01
+  terms {
+    amount = 668.8079047797
+    growth_curve = "revenue_growth"
+  }
+}
+```
+
+## Run configuration
+
+```json
+{"deterministic":{"annual_discount_rate":0.0705501574064654}}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|

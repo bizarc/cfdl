@@ -287,7 +287,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(5000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, time.t / 12.0) + 0.02 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+        "src": "(5000.0 + 0.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.0, curve_value(\"\", time.date)), time.t / 12.0) + 0.02 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -479,7 +479,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(120000.0 + 0.0 / 12.0) * pow(1.0 + 0.03, time.t / 12.0)"
+        "src": "(120000.0 + 0.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.03, curve_value(\"\", time.date)), time.t / 12.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -518,7 +518,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(200000.0 + 0.0 / 12.0) * pow(1.0 + 0.05, time.t / 12.0)"
+        "src": "(200000.0 + 0.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.05, curve_value(\"\", time.date)), time.t / 12.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -557,7 +557,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "max(0.0, 0.25 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - (20000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, time.t / 12.0)))"
+        "src": "max(0.0, if(\"\" == \"\", 0.25, curve_value(\"\", time.date)) * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - (20000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, time.t / 12.0)))"
       },
       "active_when": {
         "lang": "cfdl",

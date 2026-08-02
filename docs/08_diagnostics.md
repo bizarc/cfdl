@@ -346,6 +346,10 @@ OpCo pack codes:
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
 - `E7002_OPCO_LINE_INVALID_SCHEDULE`
 - `E7003_OPCO_LINE_INVALID_GROWTH`
+- `E7012_OPCO_TAXES_MISSING_RATE` — a cash-taxes contract states neither
+  `tax_rate` nor `tax_rate_curve`. `tax_rate` carries a default of 0 so a curve
+  may stand alone; without this check, stating neither would silently model a
+  business that pays no tax.
 - `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE`
 - `E7011_OPCO_WC_INVALID_SCHEDULE`
 - `E7020_OPCO_EXIT_MISSING_MULTIPLE`

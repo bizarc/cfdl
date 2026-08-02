@@ -38,4 +38,5 @@ Complete models for every pack, each checked period-by-period against an indepen
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
 - [credit: mbs pool conventions](/docs/examples/credit-mbs-pool-conventions)
 - [opco: banker dcf conventions](/docs/examples/opco-banker-dcf-conventions)
+- [opco: damodaran fcff](/docs/examples/opco-damodaran-fcff)
 - [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)

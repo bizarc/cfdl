@@ -52,6 +52,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | energy | `utility_pv_singleowner` |
 | energy | `wind_ptc_macrs` |
 | opco | `banker_dcf_conventions` |
+| opco | `damodaran_fcff` |
 | opco | `lbo_buyout` |
 
 > Each case says in its `case.toml` where its figures came from, and which

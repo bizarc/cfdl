@@ -494,6 +494,27 @@ So this rule has **no external validation**, and
 `benchmarks/energy/merchant_capacity` says so rather than quietly including it.
 Energy is at 9 of 10 rules.
 
+**Attempted, and this is what it showed.** A dispatch run was tried rather than
+assumed: SAM's `Battwatts` model, 20 MW / 80 MWh behind a 100 MW PV plant,
+diurnal generation and an evening-peak load.
+
+- Behind the meter, it discharged **27.9 MWh across a whole year** from an
+  80 MWh battery, and charged nothing. Not a bug — dispatch is driven entirely
+  by the load and price context, and with 100 MW of PV against a 55 MW peak
+  there was nothing for the battery to do.
+- Reconfigured front-of-meter for merchant arbitrage, the native library
+  **segfaulted** (exit 139).
+
+The first result is the important one, and it sharpens the item: `mwh_cycled_year`
+is an **input** to our rule and the primary **output** of a dispatch model. The
+quantity we ask the modeller to state is the thing the reference exists to
+compute. So the two cannot be compared without first deciding the answer — which
+is why "fit `spread` until they agree" is calibration and not validation.
+
+A real comparison needs the full `Battery` module with a price-signal dispatch
+choice and a generation chain, not `Battwatts`. Worth doing, but it is a
+scoping exercise of its own rather than a benchmark.
+
 The reduced form is not wrong; practitioners use exactly this shape at the
 financing stage. What is missing is a bound on its error. Two ways forward, in
 order of cost:
@@ -524,3 +545,174 @@ Recorded so nobody reads 4.1 as fully closed. Found in
 `benchmarks/cre/hud_home_multifamily`, where two of four expense sub-lines
 reproduce exactly under the recurrence and under no closed form.
 
+### 7.3 The external cases route around the packs they should be validating
+
+*Belongs with no single pack — it is about the validation programme.*
+
+Measured across the six externally-reconciled benchmarks, counting pack contract
+types exercised by at least one of them:
+
+| pack | externally validated | not covered |
+|---|---|---|
+| energy | **9 / 10** | `storage_arbitrage` |
+| credit | 1 / 4 | `pool_io_bullet`, `pool_float_io_bullet`, `purchase` |
+| cre | 1 / 12 | everything but `exit_forward` |
+| opco | **0 / 10** | everything |
+
+And by construction: `hud_home_multifamily` is 0 pack contracts and 6 native
+streams, `banker_dcf_conventions` 0 and 6, `mit_rentleg_plaza` 1 and 10. The
+credit and energy cases are the opposite — `auto_abs_wal` is 43 contracts and
+no native streams.
+
+Each case documents why its pack rules did not fit — single-instance opex,
+non-escalating vacancy, sources that publish per-year figures rather than
+drivers. But the aggregate is circular: **the two packs with the weakest rule
+coverage are exactly the ones whose benchmarks bypass the pack**, so for cre and
+opco we are validating the engine, not the domain logic.
+
+Two things follow, and they are separable:
+
+- **Fix the rules the cases tripped over** (1.5, 1.6, 1.7) so a CRE deal can be
+  expressed in pack contracts at all. That converts an existing case rather than
+  needing a new source.
+- **Choose sources that disclose drivers, not outputs.** A fairness opinion
+  publishes the unlevered cash flow; a sponsor model publishes the growth rate,
+  margin path and working-capital policy that produce it. Only the second can
+  validate `opco.revenue_line`.
+
+Recorded because the headline "four domains externally validated" is true and
+does not mean what it sounds like.
+
+### 7.4 A discount rate cannot vary over time
+
+*Belongs with the language and engine (section 5).*
+
+`RunConfig.discount_rate` is a single `f64`, turned into one `per_period_rate`
+and handed to `npv_with_offsets`. Every discounted figure in a model uses it.
+
+Intrinsic valuation converges the cost of capital as a firm matures —
+Damodaran's model runs 7.055% for five years and 8.81% thereafter. Project
+finance uses one rate through construction and another in operation. Neither is
+exotic and neither is expressible.
+
+The consequence is not cosmetic: `benchmarks/opco/damodaran_fcff` asserts the
+entire cash-flow build and **no discounted figure at all** — not NPV, not
+enterprise value, not the per-share price the source exists to produce.
+Discounting at a flat rate would have produced a number and not a check.
+
+Shape: a discount *curve* alongside the scalar, read per period. Note the offset
+machinery in `npv_with_offsets` already handles per-STREAM variation; this is
+per-PERIOD variation, a different axis, and it touches IRR too — `irr_with_offsets`
+solves for a single rate by construction.
+
+### 7.5 Candidate contracts, and the packs that need them
+
+*Belongs with the CRE and OpCo packs (sections 1 and 3).*
+
+Every entry below was forced by a source, not proposed from taste. Listed
+together because the shape of the gap is the same in both packs: the contracts
+that exist model an operating business well and stop at the point where a deal
+gets financed or valued.
+
+**CRE — the pack cannot borrow money.**
+
+| candidate | forced by |
+|---|---|
+| `cre.permanent_debt` | The largest single gap in any pack. There is no debt contract at all, so every CRE benchmark hand-writes a mortgage, and `domain.cre.dscr` works only because it reads the native stream *names* `loan.permanent_debt_service` and `loan.construction_interest` by convention. Debt service coverage is the headline CRE metric and the thing producing it is not a primitive. Wants an interest-only period and DSCR-based sizing. |
+| `cre.construction_loan` | The same gap on the construction side. |
+| `cre.restricted_rent` | HUD — rent capped for an affordability period and reverting to a market track. The defining mechanic of affordable housing, currently a hand-written conditional. |
+| `cre.abatement` | MIT — free rent as its own deduction from potential gross revenue. Today it can be reported as a line or counted in NOI, not both (1.3). |
+| `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. |
+
+With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
+pack contracts instead of native streams — which is the actual fix for 7.3 on
+the CRE side, and needs no new source.
+
+**OpCo — no terminal value a valuation practitioner would recognise.**
+
+| candidate | forced by |
+|---|---|
+| `opco.exit_perpetuity` | Damodaran — a growing perpetuity is *the* intrinsic-valuation terminal. `opco.exit_multiple` is a run-rate multiple and `opco.exit_ebitda` is TTM; neither is this, so the largest component of value in a DCF cannot be expressed. |
+| `opco.exit_forward_multiple` | The banker DCF — a forward (NTM) multiple struck at a point before model end. |
+| `opco.depreciation` | No D&A contract exists, yet `opco_cash_taxes` consumes `da_monthly` as a bare term with no rule producing it. |
+| `opco.equity_bridge` | Both opco sources — debt, cash, minority interests and non-operating assets between enterprise and equity value. Done outside the model today. |
+| `opco.share_count` | Both — a share count that dilutes over time, so per-share value is expressible at all. |
+| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | Every LBO source. All three need per-period state (5.2) and should be designed with it rather than before it. |
+
+**Elsewhere.** `energy.storage_dispatch`, a curve-integrated storage rule so
+arbitrage is priced against a duration curve rather than a scalar spread (7.1).
+Credit's three uncovered contract types need a source, not a new contract.
+
+### 7.6 Diagnostic codes are not unique
+
+*Belongs with the language and engine (section 5).*
+
+`packs/opco/validations.toml` uses `E7010` for **two** different checks
+(`OPCO_LINE_AMBIGUOUS_AMOUNT` and `OPCO_WC_MISSING_AMOUNT_OR_RULE`) and `E7011`
+for two more (`OPCO_TAXES_AMBIGUOUS_DA` and `OPCO_WC_INVALID_SCHEDULE`).
+`docs/08_diagnostics.md` documents both meanings of both codes, in different
+sections.
+
+The numeric prefix is the stable identifier — it is what a user greps for, what
+a support conversation quotes, and what a downstream tool would match on. Three
+unrelated failures answering to one code makes all three unsearchable.
+
+Found while adding a check and colliding with `E7010` a third time. The new one
+was moved to `E7012`; the existing pair was left alone deliberately, because
+renumbering a shipped diagnostic is a breaking change for anyone matching on it
+and should be a decision rather than a side effect.
+
+Shape: a uniqueness check over every pack's `validations.toml` and the engine's
+own codes, wired into `make ci` — the same move that turned the IR and results
+schemas from documentation into gates. Then renumber the duplicates in one
+deliberate change with a note in the changelog.
+
+### 7.7 Two thirds of pack validations never run
+
+*Belongs with the language and engine (section 5). Highest-severity item on this
+list — everything else here is a missing capability; this is a safety net with a
+hole in it.*
+
+A pack validation matches a contract by exact name unless it declares
+`match = "instance"`. Contracts are routinely written in the suffixed form —
+`credit.pool_level_pay.auto_a`, `cre.lease_unit.anchor`, `opco.revenue_line.core`
+— and for those, a validation without that flag is **silently skipped**.
+
+Measured across the shipped packs:
+
+| pack | validations | declare `match = "instance"` | skipped on suffixed contracts |
+|---|---|---|---|
+| credit | 10 | 10 | 0 |
+| cre | 14 | 5 | **9** |
+| energy | 9 | 0 | **9** |
+| opco | 15 | 1 | **14** |
+
+**33 of 48.** Credit was done correctly and the other three packs were not, which
+is why this has never been noticed: the pack with the most validation coverage is
+also the only one where the validations fire.
+
+Demonstrated, not inferred. `opco.revenue_line` stating no amount at all is
+rejected with `E7001_OPCO_LINE_MISSING_AMOUNT`; `opco.revenue_line.core` stating
+no amount compiles clean. Same model, same defect, one character of difference.
+The same holds for the CRE and energy checks without the flag — including
+`E5019` day-count validation and the CRE lease and exit-cap bounds.
+
+Found while adding `E7012_OPCO_TAXES_MISSING_RATE` and testing that it actually
+fires, which it did not until the flag was added. Writing a validation and never
+confirming it rejects anything is how thirty-three of these got here.
+
+**Not fixed in that change, deliberately.** Adding the flag everywhere is a
+one-line edit per validation, but it turns thirty-three dormant checks live at
+once, and any existing model that violates one would start failing. That needs
+to be a change of its own where each newly-firing check is reviewed. A first
+attempt at the blanket edit broke TOML parsing in nine places (the flag has to
+follow the *close* of a multi-line `contracts` array), which is a fair warning
+about doing it quickly.
+
+Shape, in order:
+1. a gate that fails CI when a validation names a contract that any shipped
+   model uses in suffixed form without `match = "instance"` — same move as the
+   schema gates;
+2. fix the thirty-three, reviewing what each one starts rejecting;
+3. consider whether `instance` should be the *default*, since exact-only is
+   almost never what an author means, and make `exact` the opt-in.

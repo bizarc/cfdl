@@ -1,0 +1,39 @@
+# Benchmark case: Damodaran's FCFF Simple Ginzu — textbook intrinsic valuation.
+#
+# THE FIRST OPCO CASE BUILT FROM PACK CONTRACTS. The other opco case reconciles
+# a banker's DCF, but that filing publishes the RESULT — per-year unlevered cash
+# flow — so it had to hand-write six native streams and validated the engine
+# rather than the pack. This source publishes the DRIVERS, which is what a pack
+# rule consumes. It takes opco off 0-of-10 contract types externally validated.
+#
+# Licence is explicit: "These spreadsheet programs are in Excel and are not copy
+# protected. Download them and feel free to modify them to your own
+# specifications." So the workbook is committed under reference/, as with HUD —
+# a reader can open it and check every figure here directly.
+#
+# WHAT IS ASSERTED, AND THE BLANKS ARE THE POINT.
+#
+#   revenue / opex / taxes    years 1-5   exact
+#   reinvestment              years 1-4   exact
+#   years 6-10                nothing     see below
+#
+# The growth and tax curves carry a PER-PERIOD rate — the interface a modeller
+# would write, and the one that is correct once a stream can read its own prior
+# period (backlog 5.1). Until then the rules compound with pow(1 + g, t), which
+# applies one period's rate as though it had held from the start: exact while a
+# rate is flat, drifting once it moves. Both drivers are flat through year 5.
+#
+# Reinvestment funds NEXT year's growth, so its exact window closes a year
+# earlier than revenue's — year 5 already feels year 6's decay.
+#
+# The drift is measured rather than assumed and is tabulated in NOTES.md
+# (revenue -2.4% by year 10). It is the delta 5.1 is expected to close, and
+# asserting years 6-10 at a loosened tolerance would bury exactly that.
+#
+# NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
+# converges 7.055% -> 8.81% and the engine takes a single scalar discount rate.
+#
+# period_tolerance = 0.001 — the published figures carry four decimals and the
+# engine agrees to 1e-6 everywhere it is asserted.
+pack = "opco"
+period_tolerance = 0.001

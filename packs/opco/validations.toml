@@ -141,3 +141,17 @@ code = "E7011_OPCO_TAXES_AMBIGUOUS_DA"
 message = "OpCo cash taxes state both 'da_monthly' (per period) and 'da_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"
 terms = ["da_monthly", "da_year"]
+
+# A tax rate may be a scalar or a curve, but a cash-taxes contract that states
+# neither would silently model a business that pays no tax. The default on
+# `tax_rate` exists so the curve can stand alone, not so it can be omitted.
+[[validations]]
+contracts = ["opco.cash_taxes"]
+match = "instance"
+code = "E7012_OPCO_TAXES_MISSING_RATE"
+message = "OpCo cash taxes must state a rate: 'tax_rate' (scalar) or 'tax_rate_curve' (a model curve name)."
+check = "any_term_present"
+terms = ["tax_rate", "tax_rate_curve"]
+when = "always"
+on_invalid = "report"
+

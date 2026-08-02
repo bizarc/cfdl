@@ -41,9 +41,33 @@ All contracts accept instance suffixes (`opco.revenue_line.saas`,
 Growth is annual-compound stepped continuously on the model clock:
 `value(t) = amount * (1 + growth_rate)^(time.t / 12)`.
 
+> **A driver may vary over time.** `growth_rate` and `tax_rate` are scalars,
+> which is right for a stable business and wrong for what intrinsic valuation
+> actually does: growth decays toward the riskfree rate and the effective tax
+> rate climbs toward the marginal one as a firm matures.
+>
+> `growth_curve` (on `revenue_line`, `opex_line`, `capex_line`) and
+> `tax_rate_curve` (on `cash_taxes`) name a model `curve` instead, read at each
+> period's date — the same mechanism `credit.pool_float_io_bullet` uses for a
+> floating index. Empty by default, so a model stating only the scalar is
+> unchanged.
+>
+> **The curve carries a per-period rate, and compounding is still `pow(1+g, t)`.**
+> That applies one period's rate as though it had held from the start: exact
+> while the rate is flat, drifting once it moves, because the true factor is the
+> running product and computing it needs a stream to read its own prior period
+> (`docs/13_feature_backlog.md` 5.1). A cumulative-index curve would be exact
+> today and was deliberately not chosen — it would hide the gap in every model
+> that used it. The drift is measured year by year in
+> `benchmarks/opco/damodaran_fcff/NOTES.md`.
+>
+> `tax_rate` defaults to 0 so a curve can stand alone; stating neither it nor
+> the curve is `E7012_OPCO_TAXES_MISSING_RATE`, not a silent zero-tax model.
+
 ### Operating lines
 
-- `opco.revenue_line` — `amount` (monthly), optional `growth_rate`.
+- `opco.revenue_line` — `amount` (monthly), optional `growth_rate` or
+  `growth_curve`.
   Stream `opco.revenue.recurring`.
 - `opco.opex_line` — same terms. Stream `opco.opex.recurring` (outflow).
 - `opco.working_capital` — fixed monthly WC outflow (`amount`).
@@ -53,7 +77,7 @@ Growth is annual-compound stepped continuously on the model clock:
   WC in the first period, the period-over-period change afterwards, and
   releases the ending balance in the final period when `release_at_end = 1`.
   Terms: `ar_days`, `ap_days`, `inv_days` (all default 0), `release_at_end`.
-- `opco.capex_line` — fixed `amount` (+ `growth_rate`) plus
+- `opco.capex_line` — fixed `amount` (+ `growth_rate` or `growth_curve`) plus
   `pct_of_revenue` of the modeled revenue streams. Stream `opco.capex`.
 
 ### Financing
@@ -71,7 +95,7 @@ Growth is annual-compound stepped continuously on the model clock:
 
 ### Taxes
 
-- `opco.cash_taxes` — `tax_rate` on `max(0, EBITDA - D&A - interest)` per
+- `opco.cash_taxes` — `tax_rate` or `tax_rate_curve` on `max(0, EBITDA - D&A - interest)` per
   period. EBITDA and interest come from the modeled streams; D&A is a
   declared deduction (`da_monthly`, optional `da_growth`), not a cash
   stream. **No NOL carryforwards** (losses floor at zero tax per period;
