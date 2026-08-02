@@ -127,7 +127,7 @@ pack rule should settle once rather than leaving to each modeller.
 
 ## 2. Credit pack
 
-### 2.1 Age-varying prepayment and default curves
+### 2.1 Age-varying prepayment and default curves — UNBLOCKED
 
 `cpr` and `cdr` are single constants per contract. A hazard that varies with
 loan age cannot be expressed, so the standard prepayment model — 0.2% CPR in
@@ -141,11 +141,36 @@ min(month, 30)), 100)` is closed-form and is already asserted in
 factor is a cumulative product with no elementary closed form, and the
 expression language has no `exp`/`ln` to sum logs instead.
 
-**This is not item 5.2 (per-period state) and should not be bundled with it.** A
-PSA ramp is deterministic in loan age — nothing accumulates — so the natural
-fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
-a published table behind a function. Substituting one call for `pow(k, p)`
-would make every existing pool rule work under a ramp.
+**UPDATE — the blocker is gone, and the builtin is not needed.** The paragraph
+below proposed a calc builtin holding a survival schedule. 5.1 shipped instead,
+and a declared state *is* the cumulative product:
+
+```cfdl
+state survival {
+  init 1.0
+  next prev * (1 - smm_at(time.t))
+}
+```
+
+Verified against an independent running product at 150% PSA over 60 months:
+agreement to **7.0e-15**. Nothing in the engine is missing.
+
+What remains is a pack change, not a language one. The credit rules still carry
+`pow(k, p)`; they need `state_name` / `state_init` / `state_next`, the same
+mechanism the three opco growth rules already use (see
+`packs/opco/lowering/rules.toml` and `docs/07_pack_interface.md`). That is
+materially smaller than a new builtin, and — as this item predicted of one fix —
+it serves PSA, SDA and the Absolute Prepayment Model alike, since all three
+differ only in what the per-period hazard is, never in the fact that the balance
+is a running product.
+
+The original proposal follows, kept for provenance.
+
+**Original note.** This is not item 5.2 (per-period state) and should not be
+bundled with it. A PSA ramp is deterministic in loan age — nothing accumulates —
+so the natural fix is a calc builtin holding the schedule, exactly the
+`macrs_rate` pattern: a published table behind a function. Substituting one call
+for `pow(k, p)` would make every existing pool rule work under a ramp.
 
 **The Absolute Prepayment Model is the same item.** ABS speed is a constant
 number of ORIGINAL units prepaying each month, so with the denominator fixed at
