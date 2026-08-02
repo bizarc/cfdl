@@ -729,3 +729,43 @@ Still open, as a deliberate follow-on: whether `Instance` should be the *default
 in `crates/cfdl-pack/src/lib.rs:119-124`, which would make all 48 declarations
 redundant. Left alone for now because the explicit-declaration gate achieves the
 same safety and makes the choice visible at each call site.
+
+### 7.8 A stream cannot be non-cash, which blocks the log-sum technique
+
+*Belongs with the language and engine (section 5). Small surface, and it is the
+only thing standing between `exp`/`ln` and closing 2.1.*
+
+`ln` and `exp` now exist so a cumulative **product** can be computed as a
+cumulative **sum**:
+
+    PROD(1 + r_i)  ==  exp(series_sum("ln_one_plus_r", 0, t))
+
+with a helper stream carrying `ln(1 + r_t)`. **Verified end to end**: a probe
+reproduces all ten years of a published forecast whose growth rate decays,
+exactly, where `pow(1 + g, t)` drifts to −2.4% by year 10.
+
+The blocker is that **every stream is a cash stream**. `record_stream`
+(`crates/cfdl-engine/src/lib.rs`) adds each one to `model_series`, so the helper
+lands in net cash flow and NPV. In the probe, year-1 net cash flow came to
+22,853.7188 against a true 22,853.6700 — the extra 0.0488 is a dimensionless
+logarithm being added to dollars.
+
+So the technique cannot be used from a pack rule, which is where it is needed:
+`credit` for the PSA/SDA/ABS ramps (2.1) and `opco` for a decaying growth path.
+
+Shape, and the choice matters:
+
+- **A non-cash stream kind** — `stream ... informational` or similar, computed
+  and readable by `series_sum` but excluded from `model_series`, totals and NPV.
+  General, and it also gives packs somewhere to put intermediate quantities that
+  are not money, which several rules currently inline and recompute.
+- **A `curve_sum` builtin** — aggregate a *curve* over a period window without a
+  stream at all. Narrower: it serves rates that are already curves (the opco
+  growth path) but not rates that are a formula of loan age (PSA, SDA), which
+  is most of 2.1.
+
+The first is the better answer for the same reason the delayed-reference design
+was: it solves the general case rather than the instance in front of us. It is
+also a genuine language surface addition, so it wants deciding rather than
+assuming — note that a non-cash stream has knock-on questions for the results
+schema, the domain metrics, and whether it appears in `series` at all.

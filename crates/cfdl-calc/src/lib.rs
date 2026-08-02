@@ -347,6 +347,50 @@ mod tests {
     }
 
     #[test]
+    fn ln_exp_turn_a_product_into_a_sum() {
+        // The identity these exist for. A cumulative product of varying rates
+        // has no closed form; under logs it becomes a sum, which series_sum
+        // can already aggregate.
+        let rates = ["0.05", "0.0492", "0.0483", "0.0475", "0.0466"];
+        let product: f64 = rates
+            .iter()
+            .map(|r| 1.0 + r.parse::<f64>().unwrap())
+            .product();
+        let sum_of_logs: String = rates
+            .iter()
+            .map(|r| format!("ln(1 + {r})"))
+            .collect::<Vec<_>>()
+            .join(" + ");
+        let via_logs = n(&format!("exp({sum_of_logs})"));
+        let direct = dec(&format!("{product}"));
+        // f64-backed, so this is a tolerance rather than an equality.
+        assert!(
+            (via_logs - direct).abs() < dec("0.0000000001"),
+            "exp(sum of logs) = {via_logs}, product = {direct}"
+        );
+    }
+
+    #[test]
+    fn ln_and_exp_invert_each_other() {
+        for x in ["1", "2.5", "100", "0.001"] {
+            let round_trip = n(&format!("exp(ln({x}))"));
+            assert!(
+                (round_trip - dec(x)).abs() < dec("0.000000001"),
+                "exp(ln({x})) = {round_trip}"
+            );
+        }
+        assert_eq!(n("ln(1)"), dec("0"));
+    }
+
+    #[test]
+    fn ln_rejects_a_non_positive_argument() {
+        // Undefined, and returning NaN would poison a whole series silently.
+        let env = MapEnv::new();
+        assert!(eval_str("ln(0)", &env, Mode::Decimal).is_err());
+        assert!(eval_str("ln(-1)", &env, Mode::Decimal).is_err());
+    }
+
+    #[test]
     fn round_to_rounds_halves_away_from_zero() {
         // The statutory case this was built for: an inflation-adjusted credit
         // published to the nearest 0.1 cent per kWh, stated here per MWh.

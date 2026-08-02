@@ -139,6 +139,16 @@ impossible by construction. Windows may extend into the projection tail
 (`time ... project <n>`), which is computed for valuation lookups but
 excluded from cash results and NPV.
 
+Logs: `ln(x)` (natural logarithm, `x > 0`) and `exp(x)`. These exist to turn a
+cumulative **product** into a cumulative **sum**: a survival factor or growth
+path under a *varying* rate is `PROD(1 + r_i)`, which has no closed form and is
+not `pow(1 + r, t)` — that applies one period's rate as though it had held
+throughout. Since `series_sum` aggregates a stream over a window,
+`exp(series_sum(helper, 0, t))` recovers the product from a stream carrying
+`ln(1 + r_t)`. Both escape to float64, as `pow` already does for fractional
+exponents, so they are **not decimal-exact**; prefer a closed form where one
+exists.
+
 Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `edate(d, months)`, `eomonth(d, months)`, `months_between(d1, d2)`,
 `days_between(d1, d2)`, `year_frac(d1, d2, basis)`. Date arithmetic: `d2 - d1` yields days;

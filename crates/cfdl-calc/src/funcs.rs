@@ -123,6 +123,40 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             };
             Ok(Value::Number(rate))
         }
+        // ln(x) / exp(x): natural logarithm and its inverse.
+        //
+        // THESE EXIST TO TURN A CUMULATIVE PRODUCT INTO A CUMULATIVE SUM.
+        // A survival factor under a varying hazard, or revenue under a growth
+        // path that decays, is PROD(1 + r_i) — which has no closed form and
+        // cannot be built by pow(1 + r, t), since that applies one period's
+        // rate as though it had held throughout. But `series_sum` already
+        // aggregates a stream over a period window, so
+        //
+        //     PROD(1 + r_i)  ==  exp(series_sum("ln_one_plus_r", 0, t))
+        //
+        // with a helper stream carrying ln(1 + r_t). That is a phase-2 stream
+        // reading a phase-1 stream, which the engine already supports — no
+        // per-period state and no backward reference required.
+        //
+        // PRECISION. Both escape to f64, as `pow` already does for fractional
+        // exponents and `cpr_to_smm` does for its root. They are NOT
+        // decimal-exact. Prefer a closed form wherever one exists; reach for
+        // these when the alternative is not being able to express the quantity
+        // at all. docs/03_expression_environment.md says the same.
+        "ln" => {
+            let x = num(one(name, args, span)?)?;
+            if x <= Decimal::ZERO {
+                return Err(CalcError::new(
+                    format!("ln: argument must be greater than zero, got {x}"),
+                    Some(span),
+                ));
+            }
+            from_f64(to_f64(x, span)?.ln(), span).map(Value::Number)
+        }
+        "exp" => {
+            let x = num(one(name, args, span)?)?;
+            from_f64(to_f64(x, span)?.exp(), span).map(Value::Number)
+        }
         // round_to(x, step): round x to the nearest multiple of step.
         //
         // HALF AWAY FROM ZERO, deliberately, and not the banker's rounding that

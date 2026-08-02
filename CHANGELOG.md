@@ -8,6 +8,25 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: `ln` and `exp`
+
+Two builtins that turn a cumulative **product** into a cumulative **sum**:
+
+    PROD(1 + r_i)  ==  exp(series_sum("ln_one_plus_r", 0, t))
+
+A survival factor or growth path under a *varying* rate has no closed form, and
+`pow(1 + r, t)` is not it — that applies one period's rate as though it had held
+throughout. Verified end to end: the identity reproduces all ten years of a
+published forecast with a decaying growth rate exactly, where `pow` drifts to
+-2.4% by year 10.
+
+Both escape to float64, as `pow` already does for fractional exponents, so they
+are **not decimal-exact**. Prefer a closed form where one exists.
+
+Note the technique is not yet usable from a pack rule: the helper stream
+carrying `ln(1 + r_t)` is counted as cash. See backlog 7.8.
+
+
 ### Breaking: three diagnostic codes renumbered
 
 A diagnostic code is an identifier — what a user greps for and what a tool
