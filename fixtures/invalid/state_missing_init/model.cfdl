@@ -31,3 +31,11 @@ stream co.x on entity legal.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = state.also_nowhere
 }
+
+// `prev` in a stream. A stream reads the current period, and its environment
+// carries no `prev` map at all — so before E1123 covered streams this compiled
+// clean and the engine evaluated the whole stream to zero.
+stream co.y on entity legal.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100 * prev.dup
+}

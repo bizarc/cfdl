@@ -59,6 +59,48 @@
           }
         ]
       },
+      "state.cum_capex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          0.0,
+          100.0,
+          200.0,
+          300.0,
+          400.0
+        ]
+      },
+      "state.lagged_index": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          0.0,
+          1.0,
+          1.045003422313484,
+          1.086810711864629,
+          1.124845367372937
+        ]
+      },
+      "state.revenue_index": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          1.0,
+          1.0450034223134839,
+          1.0868107118646293,
+          1.1248453673729373,
+          1.158590728394125
+        ]
+      },
       "stream.co.revenue": {
         "index": {
           "calendar": "annual",

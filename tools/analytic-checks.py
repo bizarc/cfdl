@@ -658,6 +658,97 @@ entity legal co
     return worst, 0.0
 
 
+# ---------------------------------------------------------------------------
+# States and recurrence (docs/14_state_and_recurrence.md)
+#
+# The point of a state is to express a compounding path under a VARYING rate,
+# which `pow(1 + r, t)` cannot: it applies one period's rate as though it had
+# held from the start. So the identities come in a pair — against the closed
+# form where one exists (proving the new path is not merely different), and
+# against an independently computed running product where none does (the case
+# that motivated the construct).
+# ---------------------------------------------------------------------------
+
+
+def _state_series(src: str, name: str) -> list[float]:
+    """A `state.<name>` series, which carries bare numbers rather than Money."""
+    block = run_model(src, 0.0)
+    entry = block["series"][f"state.{name}"]
+    return [v if isinstance(v, (int, float)) else v["amount"] for v in entry["values"]]
+
+
+@check("a constant-rate state equals the closed form it can already express")
+def state_constant_rate_matches_pow() -> tuple[float, float]:
+    # Where `pow` IS correct, the state must agree with it. Both paths are in
+    # one model so a shared error in the timeline cannot hide a real divergence.
+    src = """version 0.1
+model "state-constant"
+time calendar annual from 2026-01 for 10
+entity legal co
+state idx { init 1.0  next prev * 1.05 }
+stream co.state_path on entity legal.co inflow currency USD {
+  schedule every year from 2026-01 to 2035-01
+  amount = 1000 * state.idx
+}
+stream co.closed_form on entity legal.co inflow currency USD {
+  schedule every year from 2026-01 to 2035-01
+  amount = 1000 * pow(1.05, time.t)
+}
+"""
+    b = run_model(src, 0.0)
+    a, c = series(b, "co.state_path"), series(b, "co.closed_form")
+    return max(abs(x - y) for x, y in zip(a, c)), 0.0
+
+
+@check("a varying-rate state equals the running product, which pow cannot")
+def state_varying_rate_matches_product() -> tuple[float, float]:
+    # The motivating case. The curve moves every period, so there is no closed
+    # form; the reference is computed here in Python, independently.
+    src = """version 0.1
+model "state-varying"
+time calendar annual from 2026-01 for 5
+entity legal co
+curve g step {
+  2026-01: 0.10
+  2027-01: 0.08
+  2028-01: 0.06
+  2029-01: 0.04
+  2030-01: 0.02
+}
+state idx { init 1.0  next prev * (1 + curve_value("g", time.date)) }
+"""
+    rates = [0.10, 0.08, 0.06, 0.04, 0.02]
+    expected, acc = [], 1.0
+    for t in range(5):
+        if t:
+            acc *= 1 + rates[t]
+        expected.append(acc)
+    got = _state_series(src, "idx")
+    return max(abs(x - y) for x, y in zip(got, expected)), 0.0
+
+
+@check("a state is not cash — it never reaches model.total")
+def state_is_not_cash() -> tuple[float, float]:
+    # The trap the exp/ln probe fell into: a helper carrying a dimensionless
+    # quantity landed in net cash flow and corrupted total, NPV and WAL. A
+    # state has no entity, direction or currency, so the accumulator below —
+    # which reaches 4,000 by the last period — must contribute nothing.
+    src = """version 0.1
+model "state-not-cash"
+time calendar annual from 2026-01 for 5
+entity legal co
+state big { init 0  next prev + 1000 }
+stream co.only_cash on entity legal.co inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  amount = 7
+}
+"""
+    b = run_model(src, 0.0)
+    # 4,000 sits on the state series, so a leak of any kind is unmissable.
+    assert max(_state_series(src, "big")) == 4000.0
+    return b["metrics"]["model.total"]["amount"], 35.0
+
+
 def main() -> int:
     if not CLI.exists():
         print(f"analytic-checks: {CLI} not found — run `cargo build -p cfdl-cli`")

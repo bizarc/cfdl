@@ -199,16 +199,35 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                         .map(move |n| (n, slot.span))
                 })
                 .collect(),
-            Stmt::Stream(stream) => stream
-                .amount
-                .iter()
-                .chain(stream.active_when.iter())
-                .flat_map(|slot| {
-                    referenced_names(&slot.src, "state.")
-                        .into_iter()
-                        .map(move |n| (n, slot.span))
-                })
-                .collect(),
+            Stmt::Stream(stream) => {
+                // A stream reads the CURRENT period, so `prev` has no meaning
+                // there. Its env carries no `prev` map, so without this the
+                // reference reaches the engine, warns, and evaluates the whole
+                // stream to zero — cash silently missing, `status: ok`.
+                for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+                    if references_prev(&slot.src) {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: "E1123_STATE_PREV_OUTSIDE_NEXT",
+                            message: format!(
+                                "Stream '{}' uses 'prev', which reads the previous period and exists only inside a state's 'next'. Use 'state.<name>' for a state's value at this period.",
+                                stream.name
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: slot.span,
+                        });
+                    }
+                }
+                stream
+                    .amount
+                    .iter()
+                    .chain(stream.active_when.iter())
+                    .flat_map(|slot| {
+                        referenced_names(&slot.src, "state.")
+                            .into_iter()
+                            .map(move |n| (n, slot.span))
+                    })
+                    .collect()
+            }
             _ => Vec::new(),
         };
         for (name, span) in referenced {
@@ -704,7 +723,9 @@ fn mentions_word(src: &str, word: &str) -> bool {
     src.match_indices(word).any(|(idx, _)| {
         let before = src[..idx].chars().next_back();
         let after = src[idx + word.len()..].chars().next();
-        let starts = before.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
+        // A root, so `inputs.prev` is a different name entirely — the dot
+        // has to disqualify the match as much as an alphanumeric would.
+        let starts = before.is_none_or(|c| !(c.is_alphanumeric() || c == '_' || c == '.'));
         // `prev.foo` is still a `prev` mention; `prev_year` is not.
         let ends = after.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
         starts && ends

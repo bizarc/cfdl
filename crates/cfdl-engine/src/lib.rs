@@ -550,7 +550,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
 struct DeterministicRunOutput {
     warnings: Vec<String>,
     metrics: BTreeMap<String, Scalar>,
-    series: BTreeMap<String, MoneySeries>,
+    series: BTreeMap<String, Series>,
     npv: f64,
     annual_rollup: Option<AnnualRollupSection>,
 }
@@ -904,7 +904,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     for (name, values) in &stream_series {
         series_map.insert(
             format!("stream.{name}"),
-            MoneySeries::from_values(
+            Series::from_values(
                 &ir.time.calendar,
                 &ir.time.start,
                 periods as u32,
@@ -914,9 +914,25 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             ),
         );
     }
+    // States, published for inspection. The `state.` prefix keeps them out of
+    // reach of every cash consumer by construction: the WAL and payback
+    // weightings look up `stream.<name>` keys, the annual rollup iterates
+    // `stream_series`, and `model_series` was summed above from streams alone.
+    // A state never enters model.total, model.npv or any domain metric.
+    for (name, values) in &state_values {
+        series_map.insert(
+            format!("state.{name}"),
+            Series::from_plain(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &values[..periods.min(values.len())],
+            ),
+        );
+    }
     series_map.insert(
         "model.net_cash_flow".to_string(),
-        MoneySeries::from_values(
+        Series::from_values(
             &ir.time.calendar,
             &ir.time.start,
             periods as u32,
@@ -1101,7 +1117,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 /// Aggregate per-period series values by calendar year.
 ///
 /// Each distinct calendar year present in `timeline` becomes one entry in the
-/// output `MoneySeries`.  Values for all periods that fall within a given year
+/// output `Series`.  Values for all periods that fall within a given year
 /// are summed.  The resulting index uses `calendar = "annual"` and `start =
 /// "{first_year}-01-01"`.
 fn build_annual_rollup(
@@ -1140,7 +1156,7 @@ fn build_annual_rollup(
 
     rollup.insert(
         "model.net_cash_flow".to_string(),
-        MoneySeries::from_values(
+        Series::from_values(
             "annual",
             &start,
             n_years,
@@ -1153,7 +1169,7 @@ fn build_annual_rollup(
     for (name, values) in stream_series {
         rollup.insert(
             format!("stream.{name}"),
-            MoneySeries::from_values(
+            Series::from_values(
                 "annual",
                 &start,
                 n_years,
@@ -2604,7 +2620,7 @@ pub struct EngineInfo {
 pub struct DeterministicSection {
     pub status: String,
     pub metrics: BTreeMap<String, Scalar>,
-    pub series: BTreeMap<String, MoneySeries>,
+    pub series: BTreeMap<String, Series>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub annual_rollup: Option<AnnualRollupSection>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2642,7 +2658,7 @@ pub struct ScenarioSummary {
 /// Omitted when the model frequency is already "annual".
 #[derive(Debug, Clone, Serialize)]
 pub struct AnnualRollupSection {
-    pub series: BTreeMap<String, MoneySeries>,
+    pub series: BTreeMap<String, Series>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -2672,8 +2688,32 @@ pub enum Scalar {
     String(String),
 }
 
+/// One period's value on a published series.
+///
+/// Cash carries a currency; a declared `state` does not — it is an index, a
+/// factor, a count. Publishing a state as `Money` would assert a denomination
+/// it does not have, and would make it look summable alongside cash. The
+/// results schema has always permitted a bare number here.
 #[derive(Debug, Clone, Serialize)]
-pub struct MoneySeries {
+#[serde(untagged)]
+pub enum SeriesValue {
+    Money(Money),
+    Number(f64),
+}
+
+impl SeriesValue {
+    /// The cash amount, or `None` for a series that is not money. Callers that
+    /// weight or sum cash use this, so a state cannot silently contribute.
+    pub fn money_amount(&self) -> Option<f64> {
+        match self {
+            SeriesValue::Money(m) => Some(m.amount),
+            SeriesValue::Number(_) => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Series {
     pub index: SeriesIndex,
     /// Where in each period this series' cash falls, per
     /// docs/12_payment_timing.md — the same offset used to discount it, and
@@ -2682,10 +2722,10 @@ pub struct MoneySeries {
     /// placements differ and so have no single position.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub offset: Option<f64>,
-    pub values: Vec<Money>,
+    pub values: Vec<SeriesValue>,
 }
 
-impl MoneySeries {
+impl Series {
     fn from_values(
         calendar: &str,
         start: &str,
@@ -2703,11 +2743,29 @@ impl MoneySeries {
             offset,
             values: values
                 .iter()
-                .map(|amount| Money {
-                    amount: round_amount(*amount),
-                    currency: currency.to_string(),
+                .map(|amount| {
+                    SeriesValue::Money(Money {
+                        amount: round_amount(*amount),
+                        currency: currency.to_string(),
+                    })
                 })
                 .collect(),
+        }
+    }
+
+    /// A dimensionless series: a declared `state`, published so a recurrence
+    /// can be inspected rather than only its effect on cash. No currency and
+    /// no offset — a state is not paid, so it does not sit anywhere in its
+    /// period.
+    fn from_plain(calendar: &str, start: &str, periods: u32, values: &[f64]) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset: None,
+            values: values.iter().map(|v| SeriesValue::Number(*v)).collect(),
         }
     }
 }

@@ -103,5 +103,20 @@
     "path": null,
     "hint": null,
     "notes": []
+  },
+  {
+    "code": "E1123_STATE_PREV_OUTSIDE_NEXT",
+    "severity": "error",
+    "message": "Stream 'co.y' uses 'prev', which reads the previous period and exists only inside a state's 'next'. Use 'state.<name>' for a state's value at this period.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 40,
+      "start_col": 3,
+      "end_line": 40,
+      "end_col": 25
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
   }
 ]

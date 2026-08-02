@@ -8,7 +8,7 @@
 //! Engine-universal metrics (NPV, IRR, MOIC, payback, WAL) live in
 //! `cfdl-engine`, not here.
 
-use cfdl_engine::{DomainMetrics, MetricLineage, Money, MoneySeries, Results, Scalar};
+use cfdl_engine::{DomainMetrics, MetricLineage, Money, Series, Results, Scalar};
 use cfdl_pack::MetricSpec;
 use std::collections::BTreeMap;
 
@@ -150,7 +150,7 @@ fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
     let mut weighted = 0.0_f64;
     let mut total = 0.0_f64;
     for name in streams {
-        let matched: Vec<&MoneySeries> = if let Some(prefix) = name.strip_suffix(".*") {
+        let matched: Vec<&Series> = if let Some(prefix) = name.strip_suffix(".*") {
             let key_prefix = format!("stream.{prefix}.");
             series
                 .iter()
@@ -166,10 +166,16 @@ fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
             // annuity due, and 0.0 would silently restore the off-by-one this
             // offset exists to remove. 1.0 is `discount_offset`'s own default.
             let offset = s.offset.unwrap_or(1.0);
-            for (t, money) in s.values.iter().enumerate() {
-                if money.amount > 0.0 {
-                    weighted += ((t as f64 + offset) / ppy) * money.amount;
-                    total += money.amount;
+            for (t, value) in s.values.iter().enumerate() {
+                // `None` for a non-money series. Only `stream.` keys are
+                // reached here, so this cannot currently see a state — the
+                // filter is the guarantee rather than a hope.
+                let Some(amount) = value.money_amount() else {
+                    continue;
+                };
+                if amount > 0.0 {
+                    weighted += ((t as f64 + offset) / ppy) * amount;
+                    total += amount;
                 }
             }
         }
@@ -378,13 +384,13 @@ mod tests {
 
     #[test]
     fn wal_years_weights_positive_amounts_by_period() {
-        use cfdl_engine::{MoneySeries, SeriesIndex};
+        use cfdl_engine::{Series, SeriesIndex};
         let mut results = make_results_with_metrics(vec![]);
         results
             .deterministic
             .metrics
             .insert("run.periods_per_year".to_string(), Scalar::Number(12.0));
-        let series = |offset: Option<f64>, values: &[f64]| MoneySeries {
+        let series = |offset: Option<f64>, values: &[f64]| Series {
             index: SeriesIndex {
                 calendar: "monthly".to_string(),
                 start: "2026-01-01".to_string(),
