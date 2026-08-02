@@ -1016,36 +1016,47 @@ Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
 
-### 7.14 A CRE mortgage cannot pay monthly on an annual model, and MIP is not debt service
+### 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service
 
 Found converting the CRE benchmarks onto `cre.permanent_debt`.
-`benchmarks/cre/office_two_tenant` converted cleanly and reproduces its debt
-service exactly. `benchmarks/cre/hud_home_multifamily` cannot, for two separate
-reasons.
+`benchmarks/cre/office_two_tenant` converted cleanly.
+`benchmarks/cre/hud_home_multifamily` did not.
 
-**Cadence.** The HUD workbook's first mortgage is $150,000 at 4.00% over 15
-years paid MONTHLY, and its published annual line is the annualised monthly
-payment, 13,314.38. The model runs on an annual calendar, and a rule paying
-monthly there is `E2108_SCHEDULE_FINER_THAN_CALENDAR`. Striking the payment
-annually instead is out by $177 a year.
+**Corrected.** This item originally gave two reasons, and the first was wrong.
+It claimed the payments could not be modelled because they are MONTHLY on an
+ANNUAL calendar. Measured with `E2108` bypassed, `cre.permanent_debt` at
+`payment_frequency = "month"` on HUD's annual model returns **13,314.3827** —
+the workbook's published annual P&I, to the cent. The engine sums the twelve
+monthly accruals into the year; it was the CHECK that blocked it, not the
+arithmetic. That gap is now its own item, 7.16.
 
-This is the mirror of the case that motivated state schedules: there, a rule
-paid *less* often than the calendar and the fix was to give the recurrence its
-own clock. Here the rule pays *more* often than the calendar, and the period
-grid genuinely cannot hold it — several payments would collapse into one. The
-shape, if it is ever wanted, is a sub-period accrual that reports at the
-calendar's grain, which is a larger change than a schedule.
+What actually remains is the second reason.
 
-**Mortgage insurance.** The published line is P+I+MIP; the residual is exactly
-675.00, or 0.450% of the original principal, flat. MIP is not a payment on the
-debt and `cre.permanent_debt` deliberately does not model it. An FHA/HUD-insured
-multifamily loan is common enough that a `cre.mortgage_insurance` contract —
-or a `mip_rate` term on a separate insurance line, not on the debt — would be
-the honest shape. It affects `domain.cre.dscr`, since coverage is measured
-against P+I+MIP.
+**The published line is not debt service.** It is P+I+MIP — the workbook says so
+where it defines coverage. The residual is exact:
 
-Until then this case's debt stays a native stream, which is why CRE's pack-rule
-coverage counts it as unconverted.
+```
+published line     13,989.38
+P&I                13,314.38
+mortgage insurance    675.00   = 0.450% of the original principal, flat
+```
+
+Mortgage insurance is not a payment on the debt, and `cre.permanent_debt` does
+not invent one. Modelling it would mean either a `mip_rate` term on a debt
+contract that has no business carrying it, or fitting principal and rate
+backwards until the total landed on 13,989.38 — the number without the loan.
+
+An FHA/HUD-insured multifamily loan is common enough that a
+`cre.mortgage_insurance` contract, or an insurance line separate from the debt,
+would be the honest shape. It affects `domain.cre.dscr`, since coverage there is
+measured against P+I+MIP.
+
+**Note the interaction with 7.16.** Even once occurrences are distinguishable,
+this case would need care: the contract's balloon fires on
+`{{time.periods_to_term_end}} == 0`, which is true for *every* occurrence in the
+final period — twelve times on an annual model. HUD needs no balloon, so its
+conversion is safe, but the contract is not generally safe at a sub-calendar
+cadence.
 
 ### 7.15 Adding a contract and a source did not move CRE's coverage
 
@@ -1082,3 +1093,66 @@ reason: it publishes the lines, not the leases.
 Every direct-download CRE candidate in the catalogue has now been checked. The
 remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
 registration, which is the actual blocker on CRE coverage — not the pack.
+
+### 7.16 Occurrences inside one model period cannot be told apart
+
+The real limitation behind `E2108_SCHEDULE_FINER_THAN_CALENDAR`, measured after
+the check's own message turned out to be wrong.
+
+**What the message said.** "Several payments would fall in one period and
+collapse into one." That is false for the current engine, and
+`docs/01_language_spec.md` always had it right — *"cannot be distinguished once
+they land in the same bucket"*. The message and two doc pages had drifted; all
+three are now corrected.
+
+**What actually happens.** Measured on an annual model:
+
+```
+100 per month   -> [1200, 1200, 100]   twelve accruals SUMMED per year
+time.t per month -> [   0,   12,   2]   twelve x time.t, not a sum over months
+```
+
+Three different things are being conflated, and only the third is a defect:
+
+1. **Many contributions per period — supported.** `schedule_accruals` returns
+   `Vec<Vec<usize>>`: a payment period holds many accruals and
+   `values[pay_idx] += amount` accumulates them. This is already load-bearing —
+   under net-30, February and March both settle in March.
+2. **Many *reported* values per period — impossible, and correctly so.** A
+   series is one number per model period (`vec![0.0; timeline.len()]`). The
+   period is the reporting grain by definition; wanting twelve separately
+   reported payments means wanting twelve periods.
+3. **Many *distinct* values per period — not possible today.** This is the gap.
+
+**Why.** The accrual list stores a model **period index**, not an occurrence.
+At `crates/cfdl-engine/src/lib.rs:2133` the occurrence's date becomes
+`period_index(timeline, start)` and both the date and the loop ordinal `k` are
+discarded; `out[settled].push(accrual_idx)` pushes an integer. So twelve
+monthly occurrences inside one annual period become twelve copies of the same
+integer, and `build_expr_env(ir, …, idx, &timeline[idx], …)` builds twelve
+identical environments. A constant amount is therefore exact, and anything
+varying with `time.*` or `{{time.elapsed_periods}}` is computed once and
+multiplied.
+
+It has never been fixed because it has never been reachable: `E2108` enforces
+schedule granularity at or coarser than the calendar, which makes the case
+impossible to construct.
+
+**Shape.** Carry the occurrence rather than its period — `Vec<Vec<Accrual>>`
+with `{ period_idx, date, ordinal }` — and build the environment from the
+occurrence's own date and ordinal. Reporting stays one summed value per period,
+which is right. `apply_schedule_indices` already computes both fields and throws
+them away, so the change is bounded.
+
+Two things that must move with it, or the fix is worse than the gap:
+
+- **`{{time.elapsed_periods}}` must count occurrences, not model periods**, or
+  an amortisation schedule would still read the same month twelve times.
+- **Last-period tests break.** `{{time.periods_to_term_end}} == 0` is the
+  balloon idiom in `cre.permanent_debt` and `opco.term_debt`, and it is true for
+  every occurrence in the final period. It needs to become a last-*occurrence*
+  test.
+
+Worth against: HUD's mortgage (7.14), and any instrument whose payment rhythm is
+finer than the book it is carried on — which is most lending on a quarterly or
+annual reporting grid.

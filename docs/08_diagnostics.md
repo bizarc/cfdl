@@ -228,10 +228,14 @@ State declarations (`docs/14_state_and_recurrence.md`):
   two would be added as if they were the same unit. Convert explicitly in the
   amount expression, or declare the model in that currency.
 - `E2108_SCHEDULE_FINER_THAN_CALENDAR` — the schedule's interval is finer than
-  the model's calendar cadence, so several occurrences would fall in one period
-  and collapse into a single payment. A weekly schedule on a monthly grid paid
-  twelve times a year rather than fifty-two. Use a coarser interval, or declare
-  a finer calendar.
+  the model's calendar cadence. The occurrences are not lost: a period holds
+  many accruals and their amounts **sum**, which is the same machinery a
+  settlement lag uses. What cannot be done is telling them apart — an accrual is
+  stored as a model period index, so occurrences inside one period share an
+  environment, and an amount that varies over time is computed once and
+  multiplied rather than summed across the occurrences. A constant amount would
+  be exact; anything else is silently wrong, so both are rejected. Use a coarser
+  interval, or declare a finer calendar. See `docs/13_feature_backlog.md` 7.16.
 
 ### 7.6 Events and actions (E22xx)
 - `E2109_SCHEDULE_CONFLICTING_PLACEMENT` — a schedule combines `mid` with

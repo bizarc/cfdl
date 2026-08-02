@@ -297,9 +297,9 @@ schedule_every = "quarter"
 
 Values are the schedule intervals: `day`, `week`, `month`, `quarter`, `year`.
 An unrecognised value is `E5012_RULE_INVALID_INTERVAL`. An interval finer than
-the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — several
-payments would fall in one period and collapse into one, so a pack cannot
-express what a model may not.
+the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — occurrences
+inside one period share that period's environment and cannot be told apart, so
+a pack cannot express what a model may not.
 
 ### Currency
 

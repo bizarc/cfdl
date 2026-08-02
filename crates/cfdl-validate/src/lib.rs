@@ -416,10 +416,17 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                     ScheduleKind::OnDate => {}
                     ScheduleKind::Every => {
                         // A schedule finer than the grid cannot be
-                        // represented: several occurrences would fall in one
-                        // period and collapse into a single payment. A weekly
-                        // schedule on a monthly grid used to pay twelve times
-                        // a year instead of fifty-two, silently.
+                        // represented — but not because the occurrences are
+                        // lost. They ACCUMULATE: a period holds many accruals
+                        // and their amounts sum, which is what makes a
+                        // settlement lag work. What cannot be done is telling
+                        // them apart. An accrual is stored as a model PERIOD
+                        // INDEX, so occurrences inside one period share an
+                        // environment, and an amount that varies with time is
+                        // computed once and multiplied rather than summed
+                        // across the occurrences. A constant amount is exact;
+                        // anything else is silently wrong. See
+                        // docs/13_feature_backlog.md 7.16.
                         if let Some(interval) = schedule.every.as_deref() {
                             if let (Some(i), Some(c)) =
                                 (interval_grain(interval), cadence_grain(timeline.cadence))
@@ -428,7 +435,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                                     diagnostics.push(ValidationDiagnostic {
                                         code: "E2108_SCHEDULE_FINER_THAN_CALENDAR",
                                         message: format!(
-                                            "Stream '{}' pays every {} but the model's calendar is {}. Several payments would fall in one period and collapse into one. Use an interval of {} or longer, or declare a finer calendar.",
+                                            "Stream '{}' pays every {} but the model's calendar is {}. Occurrences inside one period share that period's environment and cannot be told apart, so an amount that varies over time would be computed once and multiplied. Use an interval of {} or longer, or declare a finer calendar.",
                                             stream.name,
                                             interval,
                                             cadence_name(timeline.cadence),

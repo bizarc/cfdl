@@ -1584,7 +1584,7 @@ fn lower_contract_streams(
                         diagnostics.push(lowering_rule_diag(
                             "E2108_SCHEDULE_FINER_THAN_CALENDAR",
                             &format!(
-                                "Pack lowering rule '{}' pays every {} but the model's calendar is {}. Several payments would fall in one period and collapse into one.",
+                                "Pack lowering rule '{}' pays every {} but the model's calendar is {}. Occurrences inside one period share that period's environment and cannot be told apart, so an amount that varies over time would be computed once and multiplied.",
                                 rule.id, rule.schedule_every, ctx.time_calendar
                             ),
                             source_stmt,
