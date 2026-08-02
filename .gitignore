@@ -77,3 +77,8 @@ site/.vercel/
 # Local stamp for the compiled cfdl_sdk extension (see tools/py-stamp.py).
 # It describes one machine's build, so a fresh clone should have none.
 python/cfdl_sdk/.build-stamp
+
+# Internal validation deck — shared with the team, deliberately not versioned.
+# It was swept in once by `git add -A`; ignoring it is the only reliable guard.
+# Remove this line if the deck should start being tracked.
+VALIDATION_REVIEW.html
