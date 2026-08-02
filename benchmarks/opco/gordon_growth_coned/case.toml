@@ -1,0 +1,24 @@
+# Benchmark case: a stable-growth dividend discount valuation of a regulated
+# utility, reconciled against the source's own nine-point growth sensitivity
+# grid.
+#
+# THE FIRST CASE IN THIS REPO TO ASSERT A VALUE. Every other externally
+# reconciled case asserts cash flows or a coverage ratio; benchmarks/opco/
+# damodaran_fcff explicitly asserts nothing discounted, because its cost of
+# capital converges and a term structure in the discount rate is not
+# expressible. A regulated utility in steady state has one flat rate, so the
+# terminal is the whole valuation.
+#
+# EXTERNAL, ALL OF IT. Nine published values across nine growth rates, each
+# derived by the model from two stated drivers — a current dividend of 2.32 and
+# a cost of equity of 7.7%. Both are themselves derived exactly from the
+# source's own inputs (EPS x payout, and CAPM), verified in NOTES.md.
+#
+# Nine points spanning a sign change, against one contract. A single point
+# could be matched by coincidence; this cannot.
+#
+# period_tolerance = 1e-6 — the engine publishes to six decimals and the source
+# states sixteen significant figures, so the rounding is the engine's, not the
+# source's. Confirmed binding: at 1e-7 the case fails.
+pack = "opco"
+period_tolerance = 1e-6
