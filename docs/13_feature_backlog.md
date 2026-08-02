@@ -643,7 +643,7 @@ the CRE side, and needs no new source.
 arbitrage is priced against a duration curve rather than a scalar spread (7.1).
 Credit's three uncovered contract types need a source, not a new contract.
 
-### 7.6 Diagnostic codes are not unique
+### 7.6 Diagnostic codes are not unique — RESOLVED
 
 *Belongs with the language and engine (section 5).*
 
@@ -662,12 +662,17 @@ was moved to `E7012`; the existing pair was left alone deliberately, because
 renumbering a shipped diagnostic is a breaking change for anyone matching on it
 and should be a decision rather than a side effect.
 
-Shape: a uniqueness check over every pack's `validations.toml` and the engine's
-own codes, wired into `make ci` — the same move that turned the IR and results
-schemas from documentation into gates. Then renumber the duplicates in one
-deliberate change with a note in the changelog.
+**Resolved.** All three renumbered — working capital to `E7013`/`E7014`, the
+lease-unit escalation check to `E6033` — and `tools/check-pack-validations.py`
+now fails CI when a code names two checks.
 
-### 7.7 Two thirds of pack validations never run
+Worth recording how it went, because it justifies the gate more than the
+original defect did: the first replacement code chosen was **also already
+taken** (`E6031` belonged to `CRE_UNIT_INVALID_FREE_RENT`), creating a fourth
+collision in the act of fixing the first three. Picking a free number by reading
+the file is not reliable.
+
+### 7.7 Two thirds of pack validations never run — RESOLVED
 
 *Belongs with the language and engine (section 5). Highest-severity item on this
 list — everything else here is a missing capability; this is a safety net with a
@@ -709,10 +714,18 @@ attempt at the blanket edit broke TOML parsing in nine places (the flag has to
 follow the *close* of a multi-line `contracts` array), which is a fair warning
 about doing it quickly.
 
-Shape, in order:
-1. a gate that fails CI when a validation names a contract that any shipped
-   model uses in suffixed form without `match = "instance"` — same move as the
-   schema gates;
-2. fix the thirty-three, reviewing what each one starts rejecting;
-3. consider whether `instance` should be the *default*, since exact-only is
-   almost never what an author means, and make `exact` the opt-in.
+**Resolved.** All 48 validations across all four packs now declare
+`match = "instance"`, and `tools/check-pack-validations.py` requires every
+validation to state its match mode explicitly — `exact` remains available, it
+just has to be written. Defaulting was the trap.
+
+Blast radius was measured before the change: only 8 of the 33 had any suffixed
+usage in shipped models to trip on, all bounds or ambiguity checks. Prediction
+was that no golden would move. **None did** — 108/108 still pass, so eight
+previously-dormant checks are now live and every shipped model already satisfied
+them.
+
+Still open, as a deliberate follow-on: whether `Instance` should be the *default*
+in `crates/cfdl-pack/src/lib.rs:119-124`, which would make all 48 declarations
+redundant. Left alone for now because the explicit-declaration gate achieves the
+same safety and makes the choice visible at each call site.

@@ -251,8 +251,8 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual). |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | OpCo line term range is missing, invalid, or outside model timeline. |
 | `E7003_OPCO_LINE_INVALID_GROWTH` | OpCo line has invalid 'growth_rate' term. |
-| `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
-| `E7011_OPCO_WC_INVALID_SCHEDULE` | OpCo working capital term range is missing, invalid, or outside model timeline. |
+| `E7013_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
+| `E7014_OPCO_WC_INVALID_SCHEDULE` | OpCo working capital term range is missing, invalid, or outside model timeline. |
 | `E7020_OPCO_EXIT_MISSING_MULTIPLE` | OpCo exit is missing required term 'exit_multiple'. |
 | `E7021_OPCO_EXIT_INVALID_MULTIPLE` | OpCo exit 'exit_multiple' must be greater than 0. |
 | `E7022_OPCO_EXIT_MISSING_BASE_VALUE` | OpCo exit requires numeric term 'base_value'. |

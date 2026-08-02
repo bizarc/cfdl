@@ -13,6 +13,7 @@ code_prefix = "E6"
 
 [[validations]]
 contract = "cre.lease"
+match = "instance"
 code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
 message = "CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual)."
 check = "any_term_present"
@@ -20,6 +21,7 @@ terms = ["base_rent", "base_rent_year"]
 
 [[validations]]
 contract = "cre.lease"
+match = "instance"
 code = "E6002_CRE_LEASE_INVALID_TERM_RANGE"
 message = "CRE lease term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -28,6 +30,7 @@ check = "term_range_within_timeline"
 # silently truncated. Only checked when the term is present.
 [[validations]]
 contract = "cre.lease"
+match = "instance"
 code = "E6003_CRE_LEASE_UP_MISSING_MONTHS"
 message = "CRE lease_up requires term 'lease_up_months' > 0."
 check = "term_number"
@@ -44,6 +47,7 @@ exclusive_min = 0.0
 # when the value could not be parsed at all, so only one fires.
 [[validations]]
 contract = "cre.exit_cap"
+match = "instance"
 code = "E6010_CRE_EXIT_MISSING_EXIT_CAP"
 message = "CRE exit contract is missing required term 'exit_cap'."
 check = "term_number"
@@ -53,6 +57,7 @@ on_invalid = "report"
 
 [[validations]]
 contract = "cre.exit_cap"
+match = "instance"
 code = "E6011_CRE_EXIT_INVALID_EXIT_CAP"
 message = "CRE exit 'exit_cap' must be greater than 0."
 check = "term_number"
@@ -63,6 +68,7 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "cre.exit_cap"
+match = "instance"
 code = "E6012_CRE_EXIT_MISSING_NOI_VALUE"
 message = "CRE exit requires either 'noi_ref' or 'noi_value'."
 check = "any_term_present"
@@ -72,6 +78,7 @@ terms = ["noi_ref", "noi_value", "noi"]
 
 [[validations]]
 contracts = ["cre.ops_revenue", "cre.ops_expense"]
+match = "instance"
 code = "E6020_CRE_OPS_MISSING_AMOUNT"
 message = "CRE ops contract is missing required term 'amount'."
 check = "term_present"
@@ -79,6 +86,7 @@ term = "amount"
 
 [[validations]]
 contracts = ["cre.ops_revenue", "cre.ops_expense"]
+match = "instance"
 code = "E6021_CRE_OPS_INVALID_SCHEDULE"
 message = "CRE ops term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -92,7 +100,7 @@ check = "term_range_within_timeline"
 [[validations]]
 contract = "cre.lease_unit"
 match = "instance"
-code = "E6030_CRE_UNIT_INVALID_ESCALATION"
+code = "E6033_CRE_UNIT_INVALID_ESCALATION"
 message = "CRE lease unit 'escalation' must be greater than or equal to -1."
 check = "term_number"
 term = "escalation"
@@ -151,6 +159,7 @@ min = 0.0
 # Class C pair: per-period rent versus annual rent. Summed if both are given.
 [[validations]]
 contract = "cre.lease"
+match = "instance"
 code = "E6030_CRE_LEASE_AMBIGUOUS_RENT"
 message = "CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"

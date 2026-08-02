@@ -337,7 +337,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E6012_CRE_EXIT_MISSING_NOI_VALUE` | CRE exit requires either 'noi_ref' or 'noi_value'. |
 | `E6020_CRE_OPS_MISSING_AMOUNT` | CRE ops contract is missing required term 'amount'. |
 | `E6021_CRE_OPS_INVALID_SCHEDULE` | CRE ops term range is missing, invalid, or outside model timeline. |
-| `E6030_CRE_UNIT_INVALID_ESCALATION` | CRE lease unit 'escalation' must be greater than or equal to -1. |
+| `E6033_CRE_UNIT_INVALID_ESCALATION` | CRE lease unit 'escalation' must be greater than or equal to -1. |
 | `E6031_CRE_UNIT_INVALID_FREE_RENT` | CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more. |
 | `E6032_CRE_UNIT_INVALID_PRO_RATA` | CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1. |
 | `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | CRE rollover 'renewal_probability' must be a probability between 0 and 1. |

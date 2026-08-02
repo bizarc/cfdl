@@ -8,6 +8,38 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Breaking: three diagnostic codes renumbered
+
+A diagnostic code is an identifier — what a user greps for and what a tool
+matches on. Three named two different checks each:
+
+| was | is now | check |
+|---|---|---|
+| `E7010` | **`E7013`** | `OPCO_WC_MISSING_AMOUNT_OR_RULE` |
+| `E7011` | **`E7014`** | `OPCO_WC_INVALID_SCHEDULE` |
+| `E6030` | **`E6033`** | `CRE_UNIT_INVALID_ESCALATION` |
+
+The ambiguity checks keep `E7010`, `E7011` and `E6030`; they form a family and
+are documented as such. Anyone matching on the three old codes for the
+working-capital or unit-escalation meanings needs to update.
+
+### Two thirds of pack validations were never running
+
+A validation matches a contract by exact name unless it declares
+`match = "instance"`, and contracts are routinely written suffixed
+(`opco.revenue_line.core`). 33 of 48 shipped validations lacked the flag and
+were silently skipped on the form models actually use — `E7001` rejected
+`opco.revenue_line` with no amount and accepted `opco.revenue_line.core` with no
+amount.
+
+All 48 now declare it. No golden moved: eight previously-dormant checks are live
+and every shipped model already satisfied them.
+
+`tools/check-pack-validations.py` joins `make ci`, enforcing that codes are
+unique **and** that every validation states its match mode explicitly. `exact`
+remains available; it just has to be written, because defaulting was the trap.
+
+
 ### Breaking: WAL and payback are measured on the discounting time axis
 
 `model.wal_years`, `domain.credit.wal_years` and `model.payback_years` weighted
