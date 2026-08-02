@@ -190,6 +190,13 @@ benchmark purchases at a 1-point discount.
 > days, the same convention as discounting, so this will not tie to a published
 > Act/360 figure in the fourth decimal.
 
+> **A 0% note rate works.** Promotional financing is ordinary in auto and
+> retail credit — it is about 3% of the collateral in the published auto-ABS
+> pool this pack is checked against. `credit.pool_level_pay` amortises it
+> straight line with no interest. This was previously accepted-and-NaN rather
+> than supported: the `rate` validation asked only for non-negative, and the
+> closed form is 0/0 at zero.
+
 ## Not in v0.1
 
 - **Floating-rate loans** — needs the `curve` input concept and
@@ -320,6 +327,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
+- [credit: auto abs wal](/docs/examples/credit-auto-abs-wal)
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)

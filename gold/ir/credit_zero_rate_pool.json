@@ -1,19 +1,19 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "pack-cadence-credit-daily_monthly_pay",
+    "name": "credit-zero-rate-pool",
     "currency": "USD"
   },
   "time": {
-    "calendar": "daily",
-    "start": "2025-01-01",
-    "periods": 1186
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
   },
   "phases": [],
   "entities": [
     {
-      "id": "a14d0ee52b2812f4856211fc4d53634a",
-      "symbol": "fund.buyer",
+      "id": "0240759f1637be60afc01d685efc9615",
+      "symbol": "legal.lender",
       "type": "core.Entity",
       "attrs": {},
       "state": {}
@@ -25,15 +25,15 @@
   },
   "contracts": [
     {
-      "id": "a4835fbae4b45ef98841555fae108bcd",
-      "name": "credit.pool_level_pay.book",
+      "id": "5cdcd8259b34b55133f9ee6f3dd78e9c",
+      "name": "credit.pool_level_pay",
       "type": "core.Contract",
       "subject": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "term": {
-        "start": "2025-01-01",
-        "end": "2028-03-31"
+        "start": "2026-01-01",
+        "end": "2026-12-01"
       },
       "currency": "USD",
       "terms": {},
@@ -43,7 +43,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -53,22 +53,22 @@
   ],
   "streams": [
     {
-      "id": "fff18624a7073585b85ba5e58fc35eb4",
-      "name": "credit.pool.interest.book",
+      "id": "c3706987a5762352e57d4fcd7cc09fcc",
+      "name": "credit.pool.interest",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.0, 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -77,7 +77,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -92,22 +92,22 @@
       }
     },
     {
-      "id": "bb535ef15bcdb72c5bfe213d76a51dc4",
-      "name": "credit.pool.penalty.book",
+      "id": "9957c5f8090ca1f250d5500ecae91d16",
+      "name": "credit.pool.penalty",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * cpr_to_periodic(0.0, 12.0) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -116,7 +116,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -131,22 +131,22 @@
       }
     },
     {
-      "id": "1c56514e36da054a62431229c3c7db9a",
-      "name": "credit.pool.prepay.book",
+      "id": "dc12004e55ee826c75e8a9c004cb66af",
+      "name": "credit.pool.prepay",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * cpr_to_periodic(0.0, 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -155,7 +155,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -170,22 +170,22 @@
       }
     },
     {
-      "id": "a6663135fa4e880941385918c1d8e048",
-      "name": "credit.pool.recoveries.book",
+      "id": "4659e7bffe6123da777ea72abd0f8112",
+      "name": "credit.pool.recoveries",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) * cpr_to_periodic(0.03, 12.0) * max(0.0, (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 0.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0)) * cpr_to_periodic(0.0, 12.0) * max(0.0, (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -194,7 +194,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -209,22 +209,22 @@
       }
     },
     {
-      "id": "3121716324013d0f6446e0e3e132d1a2",
-      "name": "credit.pool.sched_principal.book",
+      "id": "dcd15bd9999039660a565a05eaa9445b",
+      "name": "credit.pool.sched_principal",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.0, 12.0)) * ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -233,7 +233,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1
@@ -248,22 +248,22 @@
       }
     },
     {
-      "id": "df682b917942c8e28b69a036fcc9997f",
-      "name": "credit.pool.servicing.book",
+      "id": "060f4e374d455d2a7d0008576074aedb",
+      "name": "credit.pool.servicing",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "legal.lender"
       },
       "direction": "outflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2025-01-01",
-        "to": "2028-03-01"
+        "from": "2026-01-01",
+        "to": "2026-12-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, (1200000.0 * (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2025-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.0 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.0, 12.0)) - cpr_to_periodic(0.0, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.0, 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -272,7 +272,7 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 19,
+          "start_line": 22,
           "start_col": 1,
           "end_line": 31,
           "end_col": 1

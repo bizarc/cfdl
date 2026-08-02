@@ -94,7 +94,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -133,7 +133,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - (0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date)) - 1.0)) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -172,7 +172,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - (0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date)) - 1.0)) * cpr_to_periodic(0.10, 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * cpr_to_periodic(0.10, 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -211,7 +211,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) * cpr_to_periodic(0.03, 12.0) * max(0.0, ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 3.0))) - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) * cpr_to_periodic(0.03, 12.0) * max(0.0, (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -250,7 +250,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((0.06 / 12.0) + (0.06 / 12.0) / (pow(1.0 + 0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date)) - 1.0) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -289,7 +289,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * ((pow(1.0 + 0.06 / 12.0, 12.0) - pow(1.0 + 0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date))) / (pow(1.0 + 0.06 / 12.0, 12.0) - 1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * pow(((1.0 - cpr_to_periodic(0.03, 12.0)) - cpr_to_periodic(0.10, 12.0)), months_between(parse_date(\"2026-01-01\"), time.date))) * (1.0 - cpr_to_periodic(0.03, 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

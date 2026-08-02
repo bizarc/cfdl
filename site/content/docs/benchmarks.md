@@ -41,6 +41,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | cre | `mit_rentleg_plaza` |
 | cre | `office_two_tenant` |
 | cre | `retail_strip` |
+| credit | `auto_abs_wal` |
 | credit | `float_bridge_pool` |
 | credit | `io_bullet_loan` |
 | credit | `level_pay_pool` |

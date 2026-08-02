@@ -1,0 +1,536 @@
+---
+id: benchmark-credit-auto-abs-wal
+title: "credit: auto abs wal"
+slug: "/docs/examples/credit-auto-abs-wal"
+source: benchmarks/credit/auto_abs_wal
+---
+
+# credit: auto abs wal
+
+auto-receivables collateral at zero prepayment speed, reconciled against an issuer-published weighted-average-life exhibit. TWO KINDS OF FIGURE HERE, and the difference matters. EXTERNAL — expected_metrics.json. `domain.credit.principal` is the exhibit's own stated aggregate pool balance, 537,640,787.96. Reproducing it to the cent means 43 level-pay sub-pools, at 43 different rates and terms and four of them at a 0% promotional APR, each returned exactly the balance the issuer stated. Tolerance 0.01 — one cent, on half a billion. The headline reconciliation is not assertable through this harness and lives in NOTES.md: the exhibit publishes percent-outstanding per NOTE CLASS, and this pack models collateral, not a liability stack. The pool's principal path reproduces the published Class A-2 pay-down to within 0.004 percentage points at every one of its eight distribution dates, against a source that rounds to 0.01 — so it sits on the rounding floor — and its weighted average life comes to 0.3695 years against a published 0.37. REGRESSION — expected.csv. `net_cash_flow` is the engine's own output, kept as a guard so a change to the level-pay rules cannot move this 43-contract model silently. It is NOT an external figure and is not evidence of anything; the external evidence is above and in NOTES.md.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+// Auto-receivables collateral, reconciled against an issuer-published
+// weighted-average-life exhibit filed with the securities regulator.
+//
+// The exhibit disaggregates the pool into 50 hypothetical sub-pools and states
+// each one's balance, APR and remaining term, then publishes — for every note
+// class, at seven prepayment speeds, for every distribution date — the percent
+// of the class still outstanding, and its weighted average life. That is an
+// unusually complete thing to publish, and it is what makes this checkable.
+//
+// WHAT IS REACHABLE HERE. The zero-speed column only. The other speeds use the
+// Absolute Prepayment Model — a constant number of ORIGINAL units prepaying
+// each month, so the implied SMM RISES over the life — and every pool factor
+// in this pack is pow(k, p), valid only for constant k. Same blocker as the
+// ramped-curve item in docs/13_feature_backlog.md. The per-class columns need
+// a sequential-pay liability waterfall, which this pack does not model at all.
+//
+// At zero speed the exhibit's stated assumptions are exactly this pack's
+// defaults: prepay at a constant zero rate, no defaults, no losses. So
+// cpr = cdr = 0 and each sub-pool simply amortises on schedule.
+//
+// 43 funded sub-pools; the exhibit lists 50, of which 7 carry no balance.
+// Aggregate balance 537,640,787.96, terms to 64 months, APRs 0% and 0.905%-9.923%.
+// Four sub-pools are 0% APR promotional financing — see NOTES.md, they are the
+// reason the pack learned to amortise at a zero rate.
+
+version 0.1
+model "auto-abs-wal"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2018-10 for 64
+
+entity legal trust
+
+
+contract credit.pool_level_pay.p01 on entity legal.trust {
+  term 2018-10..2020-03
+  terms {
+    balance = 5616021.32
+    rate = 0.00000
+    term_months = 18
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p02 on entity legal.trust {
+  term 2018-10..2021-01
+  terms {
+    balance = 2616054.82
+    rate = 0.00000
+    term_months = 28
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p03 on entity legal.trust {
+  term 2018-10..2022-06
+  terms {
+    balance = 4635948.89
+    rate = 0.00000
+    term_months = 45
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p04 on entity legal.trust {
+  term 2018-10..2022-12
+  terms {
+    balance = 2205909.75
+    rate = 0.00000
+    term_months = 51
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p06 on entity legal.trust {
+  term 2018-10..2019-11
+  terms {
+    balance = 147440.15
+    rate = 0.00915
+    term_months = 14
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p07 on entity legal.trust {
+  term 2018-10..2021-03
+  terms {
+    balance = 216238.15
+    rate = 0.00992
+    term_months = 30
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p08 on entity legal.trust {
+  term 2018-10..2022-07
+  terms {
+    balance = 354043.75
+    rate = 0.00907
+    term_months = 46
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p09 on entity legal.trust {
+  term 2018-10..2022-12
+  terms {
+    balance = 342126.24
+    rate = 0.00905
+    term_months = 51
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p11 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 610459.31
+    rate = 0.01906
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p12 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 1144291.74
+    rate = 0.01951
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p13 on entity legal.trust {
+  term 2018-10..2022-02
+  terms {
+    balance = 699535.89
+    rate = 0.01949
+    term_months = 41
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p14 on entity legal.trust {
+  term 2018-10..2022-12
+  terms {
+    balance = 201897.47
+    rate = 0.01869
+    term_months = 51
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p16 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 13918351.08
+    rate = 0.02594
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p17 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 26181002.53
+    rate = 0.02626
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p18 on entity legal.trust {
+  term 2018-10..2022-02
+  terms {
+    balance = 28740527.64
+    rate = 0.02684
+    term_months = 41
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p19 on entity legal.trust {
+  term 2018-10..2022-12
+  terms {
+    balance = 9735143.46
+    rate = 0.02794
+    term_months = 51
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p21 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 14533243.98
+    rate = 0.03678
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p22 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 26195374.46
+    rate = 0.03667
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p23 on entity legal.trust {
+  term 2018-10..2022-03
+  terms {
+    balance = 37348352.52
+    rate = 0.03671
+    term_months = 42
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p24 on entity legal.trust {
+  term 2018-10..2023-01
+  terms {
+    balance = 19509631.08
+    rate = 0.03673
+    term_months = 52
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p26 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 12183065.19
+    rate = 0.04661
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p27 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 20323443.61
+    rate = 0.04674
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p28 on entity legal.trust {
+  term 2018-10..2022-03
+  terms {
+    balance = 32071657.98
+    rate = 0.04690
+    term_months = 42
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p29 on entity legal.trust {
+  term 2018-10..2023-01
+  terms {
+    balance = 20332473.43
+    rate = 0.04674
+    term_months = 52
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p31 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 6428613.14
+    rate = 0.05572
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p32 on entity legal.trust {
+  term 2018-10..2021-05
+  terms {
+    balance = 16325861.98
+    rate = 0.05566
+    term_months = 32
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p33 on entity legal.trust {
+  term 2018-10..2022-04
+  terms {
+    balance = 34020451.15
+    rate = 0.05608
+    term_months = 43
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p34 on entity legal.trust {
+  term 2018-10..2023-01
+  terms {
+    balance = 22175932.04
+    rate = 0.05615
+    term_months = 52
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p36 on entity legal.trust {
+  term 2018-10..2020-03
+  terms {
+    balance = 4214767.90
+    rate = 0.06583
+    term_months = 18
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p37 on entity legal.trust {
+  term 2018-10..2021-05
+  terms {
+    balance = 10197295.25
+    rate = 0.06567
+    term_months = 32
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p38 on entity legal.trust {
+  term 2018-10..2022-04
+  terms {
+    balance = 28511150.24
+    rate = 0.06580
+    term_months = 43
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p39 on entity legal.trust {
+  term 2018-10..2023-01
+  terms {
+    balance = 21518975.29
+    rate = 0.06583
+    term_months = 52
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p40 on entity legal.trust {
+  term 2018-10..2024-01
+  terms {
+    balance = 210992.57
+    rate = 0.06671
+    term_months = 64
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p41 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 2314366.62
+    rate = 0.07537
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p42 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 6049009.56
+    rate = 0.07527
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p43 on entity legal.trust {
+  term 2018-10..2022-04
+  terms {
+    balance = 17752272.88
+    rate = 0.07538
+    term_months = 43
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p44 on entity legal.trust {
+  term 2018-10..2023-02
+  terms {
+    balance = 17560641.20
+    rate = 0.07526
+    term_months = 53
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p45 on entity legal.trust {
+  term 2018-10..2024-01
+  terms {
+    balance = 133227.13
+    rate = 0.07709
+    term_months = 64
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p46 on entity legal.trust {
+  term 2018-10..2020-02
+  terms {
+    balance = 4089106.53
+    rate = 0.09923
+    term_months = 17
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p47 on entity legal.trust {
+  term 2018-10..2021-04
+  terms {
+    balance = 9761650.69
+    rate = 0.09773
+    term_months = 31
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p48 on entity legal.trust {
+  term 2018-10..2022-05
+  terms {
+    balance = 26285138.49
+    rate = 0.09619
+    term_months = 44
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p49 on entity legal.trust {
+  term 2018-10..2023-02
+  terms {
+    balance = 29949234.04
+    rate = 0.09622
+    term_months = 53
+    cpr = 0
+    cdr = 0
+  }
+}
+
+contract credit.pool_level_pay.p50 on entity legal.trust {
+  term 2018-10..2023-11
+  terms {
+    balance = 279866.82
+    rate = 0.09836
+    term_months = 62
+    cpr = 0
+    cdr = 0
+  }
+}
+```
+
+## Run configuration
+
+```json
+{"deterministic":{"annual_discount_rate":0.03}}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|
+| `domain.credit.principal` | 537,640,787.96 | ±0.01 |

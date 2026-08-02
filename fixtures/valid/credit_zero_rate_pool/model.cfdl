@@ -1,0 +1,31 @@
+version 0.1
+model "credit-zero-rate-pool"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity legal lender
+
+// A 0% APR pool — promotional financing, ordinary in auto and retail credit
+// and about 3% of a real published auto-ABS collateral table.
+//
+// The level-pay closed form is 0/0 at r = 0, so this was unsupported: the
+// balance factor S(p) = ((1+r)^n - (1+r)^p)/((1+r)^n - 1) has no value there.
+// Expressed as a ratio of annuity present values it does — pv() already
+// carries the r = 0 limit — and the whole thing collapses to straight line:
+//
+//   scheduled principal   1,200,000 / 12 = 100,000 every month
+//   interest              0
+//   balance factor S(p)   (12 - p) / 12
+//
+// The `rate` validation only ever required non-negative, so before this a zero
+// rate was accepted and produced NaN rather than an answer or a refusal.
+contract credit.pool_level_pay on entity legal.lender {
+  term 2026-01..2026-12
+  terms {
+    balance = 1200000
+    rate = 0
+    term_months = 12
+    cpr = 0
+    cdr = 0
+  }
+}

@@ -85,9 +85,18 @@ fix is a calc builtin holding the schedule, exactly the `macrs_rate` pattern:
 a published table behind a function. Substituting one call for `pow(k, p)`
 would make every existing pool rule work under a ramp.
 
+**The Absolute Prepayment Model is the same item.** ABS speed is a constant
+number of ORIGINAL units prepaying each month, so with the denominator fixed at
+the original count and the pool shrinking, the implied SMM *rises* over the
+life. Different convention, identical blocker: `k` is not constant, so
+`pow(k, p)` is not the balance. One builtin holding a per-period survival
+schedule would serve PSA, SDA and ABS alike.
+
 Found building `benchmarks/credit/mbs_pool_conventions`. The constant-hazard
 case (1% SMM / 1% MDR) reproduces to the reference figure; the ramped variant on
-the same pool (150% PSA, 100% SDA) needs this.
+the same pool (150% PSA, 100% SDA) needs this. Confirmed again by
+`benchmarks/credit/auto_abs_wal`, which can take only the zero-speed column of a
+published seven-speed grid for exactly this reason.
 
 ### 2.2 Actual-day-count amortisation on a pool
 
@@ -117,6 +126,26 @@ Shape: accept `smm`/`mdr` alongside `cpr`/`cdr`, mutually exclusive with them
 (the `terms_mutually_exclusive` check kind already exists), converting on the
 way in. Note the conversion is cadence-dependent, so it belongs with
 `{{model.periods_per_year}}` rather than a literal 12.
+
+---
+
+### 2.4 Sequential-pay note classes
+
+The credit pack models collateral. It has no liability stack, so it cannot say
+what a Class A-2 or a Class D receives, and every published ABS exhibit states
+its answers per class.
+
+`benchmarks/credit/auto_abs_wal` gets around this because Class A-1 had already
+retired, leaving A-2 taking 100% of pool principal — so its pay-down *is* the
+collateral's, scaled by one constant. That is luck, and it does not extend to
+the other five classes in the same exhibit.
+
+Shape: an ordered waterfall over available funds, with subordination, an
+overcollateralisation target that excess spread turbos toward, and a reserve
+account. This is the pack roadmap's waterfall item rather than a small addition,
+and it is the single thing standing between this pack and mainstream consumer
+ABS. Also wants the optional clean-up call, which every such exhibit reports
+both with and without.
 
 ---
 

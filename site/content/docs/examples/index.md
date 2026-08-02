@@ -30,6 +30,7 @@ Complete models for every pack, each checked period-by-period against an indepen
 - [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
+- [credit: auto abs wal](/docs/examples/credit-auto-abs-wal)
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool)
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan)
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool)
