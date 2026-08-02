@@ -1015,3 +1015,34 @@ fuel cost as a driver, and a heat offtake contract. The catalogue's remaining
 Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
+
+### 7.14 A CRE mortgage cannot pay monthly on an annual model, and MIP is not debt service
+
+Found converting the CRE benchmarks onto `cre.permanent_debt`.
+`benchmarks/cre/office_two_tenant` converted cleanly and reproduces its debt
+service exactly. `benchmarks/cre/hud_home_multifamily` cannot, for two separate
+reasons.
+
+**Cadence.** The HUD workbook's first mortgage is $150,000 at 4.00% over 15
+years paid MONTHLY, and its published annual line is the annualised monthly
+payment, 13,314.38. The model runs on an annual calendar, and a rule paying
+monthly there is `E2108_SCHEDULE_FINER_THAN_CALENDAR`. Striking the payment
+annually instead is out by $177 a year.
+
+This is the mirror of the case that motivated state schedules: there, a rule
+paid *less* often than the calendar and the fix was to give the recurrence its
+own clock. Here the rule pays *more* often than the calendar, and the period
+grid genuinely cannot hold it — several payments would collapse into one. The
+shape, if it is ever wanted, is a sub-period accrual that reports at the
+calendar's grain, which is a larger change than a schedule.
+
+**Mortgage insurance.** The published line is P+I+MIP; the residual is exactly
+675.00, or 0.450% of the original principal, flat. MIP is not a payment on the
+debt and `cre.permanent_debt` deliberately does not model it. An FHA/HUD-insured
+multifamily loan is common enough that a `cre.mortgage_insurance` contract —
+or a `mip_rate` term on a separate insurance line, not on the debt — would be
+the honest shape. It affects `domain.cre.dscr`, since coverage is measured
+against P+I+MIP.
+
+Until then this case's debt stays a native stream, which is why CRE's pack-rule
+coverage counts it as unconverted.

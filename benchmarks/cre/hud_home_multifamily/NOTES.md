@@ -113,6 +113,38 @@ The other is `benchmarks/opco/damodaran_fcff` — an unrelated source, an
 unrelated pack, a multiplicative growth path rather than a rounded escalation.
 Two independent published sources confirming one mechanism.
 
+## Why this case still hand-writes its mortgage
+
+`cre.permanent_debt` now exists and `benchmarks/cre/office_two_tenant` uses it.
+This case cannot, for two independent reasons, both read off the workbook.
+
+**The payments are monthly; the model is annual.** The workbook's First Mortgage
+Sizing tab states $150,000 at 4.00% over a 15-year term, and the payment is
+struck monthly: `pmt(0.04/12, 180, 150000) x 12 = 13,314.38`, which is exactly
+the workbook's own "Annual P+I as % of loan amount" of 8.876255% applied to the
+principal. Striking it annually instead gives `pmt(0.04, 15, 150000) = 13,491.66`
+— out by $177 a year. A rule cannot pay monthly on an annual calendar; that is
+`E2108_SCHEDULE_FINER_THAN_CALENDAR`, and rightly so, since several payments
+collapsing into one period is exactly the error it prevents.
+
+**The published line is not debt service.** It is P+I+MIP — the workbook says so
+where it defines coverage. The residual is exact:
+
+```
+published line     13,989.38
+P&I                13,314.38
+mortgage insurance    675.00   = 0.450% of the original principal, flat
+```
+
+Mortgage insurance is not a payment on the debt, and `cre.permanent_debt` does
+not invent one. Modelling it would mean either a `mip_rate` term on a debt
+contract that has no business carrying it, or fitting the principal and rate
+backwards until the total happened to land on 13,989.38 — which would reproduce
+the number while modelling something that is not the loan.
+
+So the stream stays hand-written and the assertion stays at the workbook's own
+195,846. Recorded as `docs/13_feature_backlog.md` 7.14.
+
 ## Two pack gaps this case walked into
 
 Both operating rules that should have fitted did not, so the streams here are

@@ -365,6 +365,14 @@ CRE pack codes:
 - `E6012_CRE_EXIT_MISSING_NOI_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
+- `E6050_CRE_DEBT_MISSING_PRINCIPAL` / `E6051_CRE_DEBT_INVALID_PRINCIPAL` — a
+  pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
+- `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
+  for the nominal annual rate
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+  normally longer than the loan's term
+- `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
+- `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 
 `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
 occupancy terms that no longer exist. Per §8 the code is never reused.

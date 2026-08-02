@@ -257,3 +257,62 @@ schedule_to = ""
 
 [rules.defaults]
 selling_costs = "0"
+
+# ---------------------------------------------------------------------------
+# cre.permanent_debt — a commercial mortgage on a stabilised property.
+#
+# Emits ONE stream, `loan.permanent_debt_service`, because that is the exact
+# name `domain.cre.debt_service` selects (metrics.toml). Selectors match by
+# exact name unless they end `.*`, so a suffixed or split stream would leave
+# the metric summing nothing — and `require_positive` would then omit both it
+# and `domain.cre.dscr` silently rather than erroring.
+#
+# THE DEFINING FEATURE IS THAT AMORTISATION AND MATURITY DIFFER. A 30-year
+# amortisation on a 10-year term is the normal commercial structure, so
+# `amort_months` strikes the payment while `term_end` sets maturity:
+#
+#   payment index k = p - io_months + 1     (1-based, p = periods elapsed)
+#   balance after k = -fv(r, k, pmt(r, amort_months, principal), principal)
+#
+# THE BALLOON DEFAULTS OFF, and that is a convention rather than an oversight.
+# Debt service coverage is measured on PERIODIC debt service; folding an
+# unamortised balance into the final period would make that period's DSCR
+# meaningless. The standard pro forma carries the payoff against the sale in
+# the reversion, not as a debt service line. `balloon_at_maturity = 1` opts in.
+#
+# ONE COMBINED STREAM MEANS THE TWO-DIVISOR SPLIT DOES NOT CHANGE THIS NUMBER.
+# Interest accrues on `day_count` and the payment is struck on
+# `amortization_day_count`; principal is the plug, so their sum is the constant
+# payment however the two are set. `amortization_day_count` still matters — it
+# is what strikes that payment — but the interest/principal DECOMPOSITION this
+# contract does not publish is the only place the divisors diverge. During an
+# interest-only period there is no plug, so interest accrues on `day_count`
+# directly and the distinction is live.
+#
+# `principal` and `rate` are deliberately NOT defaulted. A mortgage with an
+# unstated balance or an unstated rate is not a modelling shortcut, it is a
+# missing term, and E5006 should say so rather than the pack inventing a zero.
+#
+# Sizing to a target coverage ratio is a solve and is out of scope. So is
+# refinance, which needs the events layer — no pack emits events. Mortgage
+# insurance (FHA/HUD MIP) is not modelled: it is not debt service, and the one
+# committed source that carries it states P+I+MIP as a single published line.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "cre_permanent_debt_service"
+contract_name = "cre.permanent_debt"
+stream_name = "loan.permanent_debt_service"
+owner_entity = "${subject}"
+direction = "outflow"
+# Interest-only while p < io_months, then the level payment; balloon opt-in.
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{contract.balloon_at_maturity}} == 1 and {{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+schedule_kind = "every"
+schedule_every = "{{contract.payment_frequency}}"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+io_months = "0"
+balloon_at_maturity = "0"
+payment_frequency = ""

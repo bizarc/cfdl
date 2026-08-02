@@ -51,6 +51,36 @@ in `lowering/rules.toml`:
 - `cre.exit_cap`
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.property_opex`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
+- `cre.permanent_debt`
+
+### `cre.permanent_debt`
+
+A commercial mortgage on a stabilised property. Emits one stream,
+`loan.permanent_debt_service`, which is the exact name `domain.cre.debt_service`
+selects — and therefore what `domain.cre.dscr` divides by.
+
+| term | meaning | default |
+|---|---|---|
+| `principal` | loan amount | *required* |
+| `rate` | nominal annual rate | *required* |
+| `amort_months` | amortisation term — strikes the payment | *required* |
+| `io_months` | interest-only months before amortisation begins | `0` |
+| `balloon_at_maturity` | `1` pays the unamortised balance as debt service at `term_end` | `0` |
+| `payment_frequency` | `day`/`week`/`month`/`quarter`/`year` | the model calendar |
+| `day_count`, `amortization_day_count` | interest accrual and payment bases | `30/360` |
+
+**`amort_months` is normally longer than the term.** A 30-year amortisation on a
+10-year loan is the standard commercial structure, and it is why a balloon
+exists at all.
+
+**The balloon defaults off.** Coverage is measured on *periodic* debt service, so
+folding an unamortised balance into the final period would make that period's
+DSCR meaningless; the standard pro forma repays it out of the sale. Turn it on
+when the payoff genuinely belongs in the debt service line.
+
+**Not modelled:** sizing to a target coverage ratio (a solve), refinance (needs
+the events layer), and mortgage insurance — MIP is not a payment on the debt.
+See `docs/13_feature_backlog.md` 7.14.
 
 ## Expected terms (authoring contract)
 

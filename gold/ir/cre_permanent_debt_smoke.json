@@ -1,0 +1,117 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-permanent-debt-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 60
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "121876c85ba64d3a28b2875e9e107d71",
+      "symbol": "asset.tower",
+      "type": "core.Entity",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "c74b8c336ed5c49a3b9530a89460cd43",
+      "name": "cre.permanent_debt",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.tower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2030-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "a34c919a01b8b17b5f6841d1c9b1c800",
+      "name": "loan.permanent_debt_service",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2030-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 24.0, 6000000.0 * (0.055 / 12.0), -pmt(0.055 / 12.0, 300.0, 6000000.0)) + if(1.0 == 1.0 and months_between(time.date, parse_date(\"2030-12-01\")) == 0.0, -fv(0.055 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 24.0 + 1.0, pmt(0.055 / 12.0, 300.0, 6000000.0), 6000000.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_permanent_debt_service"
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

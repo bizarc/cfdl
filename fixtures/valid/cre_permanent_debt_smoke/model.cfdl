@@ -1,0 +1,31 @@
+version 0.1
+model "cre-permanent-debt-smoke"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+entity asset tower
+
+// A commercial mortgage in its three phases, all in one contract:
+//
+//   periods  0-23   interest only        6,000,000 * 0.055/12 = 27,500.00
+//   periods 24-58   level payment        pmt(0.055/12, 300, 6,000,000)
+//   period     59   payment + balloon    the unamortised balance falls due
+//
+// The balloon is opted into here precisely because it is OFF by default —
+// a fixture that only exercised the default would never see it. Debt service
+// coverage is measured on periodic debt service, so the standard pro forma
+// repays the balance out of the sale rather than as a debt service line.
+//
+// amort_months (300) is deliberately longer than the term (60). That split is
+// the defining feature of a commercial mortgage and the reason the balloon
+// exists at all.
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    principal = 6000000
+    rate = 0.055
+    amort_months = 300
+    io_months = 24
+    balloon_at_maturity = 1
+  }
+}
