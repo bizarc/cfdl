@@ -389,10 +389,10 @@ def mbs_pool_factor_backout() -> tuple[float, float]:
 
 @check("MBS: the standard prepayment curve, 0.2% CPR/month to 6.0% at month 30")
 def mbs_standard_prepayment_curve() -> tuple[float, float]:
-    # CPR = min(PSA/100 * 0.2 * max(1, min(MONTH, 30)), 100). Closed-form
-    # today; the pack cannot yet USE it, because a ramped hazard makes the pool
-    # factor a cumulative product rather than pow(k, p) — see the backlog. This
-    # pins the shape so the ramp work starts from a checked curve.
+    # CPR = min(PSA/100 * 0.2 * max(1, min(MONTH, 30)), 100). This pins the
+    # SHAPE in the expression language. The pack now uses it — `psa_speed` — and
+    # `credit_psa_pool_factor` below asserts the resulting pool factor, so the
+    # two together cover the curve and the product it drives.
     psa_cpr = lambda speed, month: (
         f"min({speed} / 100 * 0.2 * max(1, min({month}, 30)), 100)"
     )
@@ -431,6 +431,12 @@ def mbs_standard_prepayment_curve() -> tuple[float, float]:
 # a monthly grid, 1.0 on an annual one — so this is still five orders of
 # magnitude clear of it.
 WAL_TOL = 1e-6
+
+# Pool factors are DIMENSIONLESS, so the dollar tolerance is meaningless on
+# them — 0.01 on a survival factor is thirteen orders of magnitude of slack,
+# enough to hide an off-by-one in the hazard's age argument. Observed worst
+# across these checks is 2.3e-15, so this is tight and still has headroom.
+FACTOR_TOL = 1e-12
 
 
 def _single_flow(calendar: str, periods: int, schedule: str) -> str:
@@ -747,6 +753,137 @@ stream co.only_cash on entity legal.co inflow currency USD {
     # 4,000 sits on the state series, so a leak of any kind is unmissable.
     assert max(_state_series(src, "big")) == 4000.0
     return b["metrics"]["model.total"]["amount"], 35.0
+
+
+# ---------------------------------------------------------------------------
+# Ramped hazards through the CREDIT pack (docs/13_feature_backlog.md 2.1).
+#
+# A pool factor under a ramp is a running product with no elementary closed
+# form, so the reference has to be computed independently rather than restated
+# from the engine. Every check below builds its expectation in Python from the
+# published convention and never reads it back off a CFDL run.
+#
+# Note which of these BITE and which merely GUARD. `credit_constant_hazard_*`
+# and `credit_recovery_lag_*` would have passed before the migration too — they
+# exist to prove the state form preserved what `pow(k, p)` already did. The
+# ramp and cadence checks are the ones that could not have passed.
+# ---------------------------------------------------------------------------
+
+
+def _pack_state(source: str, name: str) -> list[float]:
+    """A `state.<name>` series from a pack-lowered model. Bare numbers, not Money."""
+    block = run_pack_model(source, 0.0, "credit")
+    return [
+        v if isinstance(v, (int, float)) else v["amount"]
+        for v in block["series"][f"state.{name}"]["values"]
+    ]
+
+
+def _pool(terms: str, periods: int = 61, months: int = 60) -> str:
+    return f"""version 0.1
+model "hazard-identity"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for {periods}
+entity fund buyer
+contract credit.pool_io_bullet.p on entity fund.buyer {{
+  term 2026-01..{2026 + (months - 1) // 12}-{((months - 1) % 12) + 1:02d}
+  terms {{ balance = 100000000  rate = 0.06  term_months = {months}  {terms} }}
+}}
+"""
+
+
+@check("credit: a constant-hazard pool factor still equals pow(k, p)", tol=FACTOR_TOL)
+def credit_constant_hazard_matches_pow() -> tuple[float, float]:
+    # A GUARD, not a bite: this held before the pool factor became a state.
+    # It exists so the migration cannot have changed what was already right.
+    cpr, cdr, ppy = 0.10, 0.03, 12
+    got = _pack_state(_pool("cpr = 0.10  cdr = 0.03"), "credit_io_bullet_survival_p")
+    smm = 1 - (1 - cpr) ** (1 / ppy)
+    mdr = 1 - (1 - cdr) ** (1 / ppy)
+    k = (1 - mdr) - smm
+    worst = max(abs(got[p] - k**p) for p in range(60))
+    return worst, 0.0
+
+
+@check("credit: a 150% PSA pool factor equals the running product, which pow cannot", tol=FACTOR_TOL)
+def credit_psa_pool_factor() -> tuple[float, float]:
+    # The motivating case. The hazard moves every month, so there is no closed
+    # form; the reference is the product, computed here.
+    got = _pack_state(_pool("psa_speed = 1.5"), "credit_io_bullet_survival_p")
+    acc, want = 1.0, []
+    for month in range(60):
+        if month:
+            cpr = min(1.5 * 0.002 * max(1, min(month, 30)), 1.0)
+            acc *= 1 - (1 - (1 - cpr) ** (1 / 12))
+        want.append(acc)
+    return max(abs(a - b) for a, b in zip(got[:60], want)), 0.0
+
+
+@check("credit: the SDA default curve, 0.02%/mo to 0.60% at 30, decaying to 0.03% at 120", tol=FACTOR_TOL)
+def credit_sda_curve() -> tuple[float, float]:
+    # Isolate CDR by setting prepayment to zero, so k = 1 - mdr exactly and the
+    # per-period ratio inverts straight back to the annual rate.
+    got = _pack_state(
+        _pool("cpr = 0  sda_speed = 1.0", periods=145, months=144),
+        "credit_io_bullet_survival_p",
+    )
+    published = {1: 0.0002, 30: 0.0060, 60: 0.0060, 61: 0.005905, 120: 0.0003, 121: 0.0003}
+    worst = 0.0
+    for month, want in published.items():
+        mdr = 1 - got[month] / got[month - 1]
+        cdr = 1 - (1 - mdr) ** 12
+        worst = max(worst, abs(cdr - want))
+    return worst, 0.0
+
+
+@check("credit: the ABS prepayment model, a constant share of ORIGINAL balance", tol=FACTOR_TOL)
+def credit_abs_prepayment_model() -> tuple[float, float]:
+    # ABM quotes a MONTHLY rate, so unlike cpr/cdr it must not take a root. The
+    # implied SMM rises over the life because the denominator is fixed at the
+    # original balance while the pool shrinks.
+    speed = 0.015
+    got = _pack_state(_pool(f"cdr = 0  abs_speed = {speed}"), "credit_io_bullet_survival_p")
+    worst = 0.0
+    for month in (1, 12, 24, 36):
+        smm = 1 - got[month] / got[month - 1]
+        want = min(speed / max(1 - speed * (month - 1), 1e-6), 1.0)
+        worst = max(worst, abs(smm - want))
+    return worst, 0.0
+
+
+@check("credit: the recoveries pool factor is the plain one lagged", tol=FACTOR_TOL)
+def credit_recovery_lag_shift() -> tuple[float, float]:
+    # A GUARD for the off-by-one in the lagged state: F_lag(p) must be F(p-lag)
+    # exactly, for every p, not merely on average.
+    lag = 9
+    src = _pool(f"cpr = 0.08  cdr = 0.02  severity = 0.4  recovery_lag_months = {lag}", periods=75)
+    plain = _pack_state(src, "credit_io_bullet_survival_p")
+    lagged = _pack_state(src, "credit_io_bullet_survival_lag_p")
+    worst = max(abs(lagged[p] - plain[p - lag]) for p in range(lag, 60))
+    return worst, 0.0
+
+
+@check("a state's clock is its own: monthly payments on a daily book step 12x a year", tol=FACTOR_TOL)
+def state_cadence_is_the_payment_clock() -> tuple[float, float]:
+    # THE BITE TEST for state schedules. Before states had a clock this
+    # compounded once per MODEL period — 365 times a year against 12 — so the
+    # daily book and the monthly book disagreed by orders of magnitude.
+    terms = "balance = 1200000  rate = 0.06  term_months = 36  cpr = 0.10  cdr = 0.03"
+    def pool(calendar: str, periods: int, freq: str) -> str:
+        return f"""version 0.1
+model "cadence-identity"
+use pack "credit" version "0.1.0"
+time calendar {calendar} from 2025-01 for {periods}
+entity fund buyer
+contract credit.pool_level_pay.book on entity fund.buyer {{
+  term 2025-01..2027-12
+  terms {{ {terms}  payment_frequency = "{freq}" }}
+}}
+"""
+    monthly = _pack_state(pool("monthly", 36, "month"), "credit_level_pay_survival_book")
+    daily = _pack_state(pool("daily", 1096, "month"), "credit_level_pay_survival_book")
+    # The same 36 payments, so the final survival factor must be identical.
+    return abs(daily[-1] - monthly[-1]), 0.0
 
 
 def main() -> int:
