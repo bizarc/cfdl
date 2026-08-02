@@ -347,6 +347,34 @@ mod tests {
     }
 
     #[test]
+    fn round_to_rounds_halves_away_from_zero() {
+        // The statutory case this was built for: an inflation-adjusted credit
+        // published to the nearest 0.1 cent per kWh, stated here per MWh.
+        assert_eq!(n("round_to(27.5, 0.1)"), dec("27.5"));
+        assert_eq!(n("round_to(28.1875, 0.1)"), dec("28.2"));
+        assert_eq!(n("round_to(28.89, 0.1)"), dec("28.9"));
+        // Exact halves go AWAY from zero, not to even. 28.05 -> 28.1, and
+        // banker's rounding would give 28.0 — that is the whole point.
+        assert_eq!(n("round_to(28.05, 0.1)"), dec("28.1"));
+        assert_eq!(n("round_to(28.15, 0.1)"), dec("28.2"));
+        assert_eq!(n("round_to(-28.05, 0.1)"), dec("-28.1"));
+        // Ticks that are not powers of ten.
+        assert_eq!(n("round_to(101.3, 0.25)"), dec("101.25"));
+        assert_eq!(n("round_to(1013, 25)"), dec("1025"));
+        // Already on the grid: identity, not drift.
+        assert_eq!(n("round_to(30, 0.1)"), dec("30"));
+    }
+
+    #[test]
+    fn round_to_rejects_a_non_positive_step() {
+        // Zero would divide by zero and a negative step has no meaning; both
+        // must refuse rather than return NaN.
+        let env = MapEnv::new();
+        assert!(eval_str("round_to(1.5, 0)", &env, Mode::Decimal).is_err());
+        assert!(eval_str("round_to(1.5, -0.1)", &env, Mode::Decimal).is_err());
+    }
+
+    #[test]
     fn macrs_rates_match_irs_pub_946() {
         // 5-year GDS half-year convention (Table A-1).
         assert_eq!(n("macrs_rate(0, 5)"), dec("0.20"));

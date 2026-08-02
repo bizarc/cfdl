@@ -460,6 +460,67 @@ first external check of any kind. Five rules reproduced it to within 1e-6
 dollars on the first attempt; the two items above are what the reconciliation
 found *around* the agreement.
 
+**Section 7 is below this one, not above it.** New items are appended to the end
+of the file rather than filed into the section they belong to, because the
+numbers are positional and inserting one renumbers everything below it. Each
+appended item names its home section.
+
 That is the argument for building more of them: an external number finds gaps
 that two of your own implementations agreeing never will. See
 `research/CFDL_pack_roadmap_and_model_sourcing.md` for the catalogue.
+
+---
+
+## 7. Appended after the section numbering settled
+
+New items go here rather than into the section they belong to. Backlog numbers
+are positional, so inserting one renumbers everything below it and silently
+breaks every `NOTES.md` reference and commit-message citation pointing past the
+insertion — which has already happened once. Appending never renumbers. Each
+item says which section it belongs with.
+
+### 7.1 Storage revenue is a reduced form with an unquantified error
+
+*Belongs with the energy pack (section 4).*
+
+`energy.storage_arbitrage` is `mwh_cycled_year * spread * (1 - degradation)^y`.
+The industry reference models a battery with a **dispatch optimiser** over an
+hourly price series, so its revenue emerges from thousands of hourly
+charge/discharge decisions. The two do not reduce to one another and no choice
+of inputs makes them agree — fitting `spread` until they matched would be
+calibration, not validation.
+
+So this rule has **no external validation**, and
+`benchmarks/energy/merchant_capacity` says so rather than quietly including it.
+Energy is at 9 of 10 rules.
+
+The reduced form is not wrong; practitioners use exactly this shape at the
+financing stage. What is missing is a bound on its error. Two ways forward, in
+order of cost:
+
+- **A price-duration curve input.** CFDL already has `curve` declarations (used
+  for floating-rate credit). Integrating a spread against a duration curve is
+  materially more faithful and needs no new engine capability.
+- **State of charge**, which needs per-period persistent state (5.2) and would
+  let cycling be modelled rather than assumed.
+
+True hourly dispatch optimisation is out of scope and should stay there — that
+is an optimiser, not a declarative cash-flow model.
+
+### 7.2 `round_to` is half of the recurrence problem
+
+*Belongs with the energy pack (section 4), and closes the first half of 4.1.*
+
+`round_to(x, step)` now exists and the production tax credit's statutory
+staircase is expressed and asserted, so **4.1 is done for the ramp case**.
+
+What remains is the general case, and it is a different item. The HUD
+multifamily workbook escalates expenses as a **recurrence** — each year is last
+year's already-rounded figure times the trend — which needs a stream to read its
+own prior period. That is 5.1, and until it exists the recurrence is
+inexpressible no matter how good the rounding builtin is.
+
+Recorded so nobody reads 4.1 as fully closed. Found in
+`benchmarks/cre/hud_home_multifamily`, where two of four expense sub-lines
+reproduce exactly under the recurrence and under no closed form.
+

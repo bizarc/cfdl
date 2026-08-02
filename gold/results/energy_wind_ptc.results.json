@@ -1,6 +1,6 @@
 {
   "results_version": "0.2",
-  "model_hash": "c71b418f7f8e26ff5139c037567d763768f2bfb2f8876ac63530a4ae5ae11348",
+  "model_hash": "d63129b9e26e2c7234284d6b472424a43ce4623b06f5afd150d887a48ef7e1de",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,21 +10,21 @@
     "status": "ok",
     "metrics": {
       "entity.project.windfarm.total": {
-        "amount": 17921443.843012,
+        "amount": 18008252.255794,
         "currency": "USD"
       },
-      "model.moic": 1.430929,
+      "model.moic": 1.43306,
       "model.npv": {
-        "amount": -9836828.697094,
+        "amount": -9765891.288176,
         "currency": "USD"
       },
-      "model.payback_periods": 118.0,
-      "model.payback_years": 9.916667,
+      "model.payback_periods": 117.0,
+      "model.payback_years": 9.833333,
       "model.total": {
-        "amount": 17921443.843012,
+        "amount": 18008252.255793,
         "currency": "USD"
       },
-      "model.wal_years": 8.115241,
+      "model.wal_years": 8.107151,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.energy.capex.outlay.total": {
@@ -48,7 +48,7 @@
         "currency": "USD"
       },
       "stream.energy.ptc.credit.total": {
-        "amount": 29074379.523757,
+        "amount": 29161187.936538,
         "currency": "USD"
       }
     },
@@ -61,483 +61,483 @@
         },
         "values": [
           {
-            "amount": -41587885.446989,
+            "amount": -41583729.196989,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 412114.553011,
+            "amount": 416270.803011,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 503843.943845,
+            "amount": 503431.22822,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 413309.567407,
+            "amount": 416498.018476,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 360423.215005,
+            "amount": 358931.958736,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 364000.668224,
+            "amount": 365884.751044,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 325257.698665,
+            "amount": 322350.646463,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 286530.06769,
+            "amount": 286773.401981,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 290153.52615,
+            "amount": 293407.173668,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 293791.814116,
+            "amount": 292058.025798,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
-            "amount": 297444.660595,
+            "amount": 298497.741708,
             "currency": "USD"
           },
           {
@@ -5881,483 +5881,483 @@
         "offset": 1.0,
         "values": [
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 228593.75,
+            "amount": 232750.0,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 231533.465625,
+            "amount": 231120.75,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 234510.985993,
+            "amount": 237699.437063,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 237526.797273,
+            "amount": 236035.541003,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 240581.391886,
+            "amount": 242465.474706,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 243675.268585,
+            "amount": 240768.216383,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 246808.932539,
+            "amount": 247052.266831,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 249982.895412,
+            "amount": 253236.54293,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 253197.675447,
+            "amount": 251463.887129,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
-            "amount": 256453.797553,
+            "amount": 257506.878667,
             "currency": "USD"
           },
           {
@@ -6853,43 +6853,43 @@
           },
           "values": [
             {
-              "amount": -37054625.363863,
+              "amount": -37004750.363863,
               "currency": "USD"
             },
             {
-              "amount": 6046127.326137,
+              "amount": 6041174.738637,
               "currency": "USD"
             },
             {
-              "amount": 4959714.808881,
+              "amount": 4997976.221716,
               "currency": "USD"
             },
             {
-              "amount": 4325078.580065,
+              "amount": 4307183.504828,
               "currency": "USD"
             },
             {
-              "amount": 4368008.018687,
+              "amount": 4390617.012533,
               "currency": "USD"
             },
             {
-              "amount": 3903092.38398,
+              "amount": 3868207.757555,
               "currency": "USD"
             },
             {
-              "amount": 3438360.812277,
+              "amount": 3441280.823775,
               "currency": "USD"
             },
             {
-              "amount": 3481842.313803,
+              "amount": 3520886.084016,
               "currency": "USD"
             },
             {
-              "amount": 3525501.769393,
+              "amount": 3504696.30958,
               "currency": "USD"
             },
             {
-              "amount": 3569335.927139,
+              "amount": 3581972.900502,
               "currency": "USD"
             },
             {
@@ -7387,43 +7387,43 @@
           },
           "values": [
             {
-              "amount": 2743125.0,
+              "amount": 2793000.0,
               "currency": "USD"
             },
             {
-              "amount": 2778401.5875,
+              "amount": 2773449.0,
               "currency": "USD"
             },
             {
-              "amount": 2814131.831915,
+              "amount": 2852393.24475,
               "currency": "USD"
             },
             {
-              "amount": 2850321.567274,
+              "amount": 2832426.492037,
               "currency": "USD"
             },
             {
-              "amount": 2886976.702629,
+              "amount": 2909585.696475,
               "currency": "USD"
             },
             {
-              "amount": 2924103.223025,
+              "amount": 2889218.5966,
               "currency": "USD"
             },
             {
-              "amount": 2961707.190473,
+              "amount": 2964627.201971,
               "currency": "USD"
             },
             {
-              "amount": 2999794.744942,
+              "amount": 3038838.515156,
               "currency": "USD"
             },
             {
-              "amount": 3038372.105362,
+              "amount": 3017566.64555,
               "currency": "USD"
             },
             {
-              "amount": 3077445.570637,
+              "amount": 3090082.544001,
               "currency": "USD"
             },
             {
@@ -7503,7 +7503,7 @@
         "currency": "USD"
       },
       "domain.energy.tax_benefits": {
-        "amount": 37894379.523757,
+        "amount": 37981187.936538,
         "currency": "USD"
       }
     },

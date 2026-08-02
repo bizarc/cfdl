@@ -123,6 +123,35 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             };
             Ok(Value::Number(rate))
         }
+        // round_to(x, step): round x to the nearest multiple of step.
+        //
+        // HALF AWAY FROM ZERO, deliberately, and not the banker's rounding that
+        // round_dp defaults to elsewhere in this file. Every convention this
+        // exists for is statutory or contractual — a production tax credit
+        // published to the nearest 0.1 cent, a tariff block, a tranche
+        // denomination — and those all round halves up. The choice is invisible
+        // at the call site, so it is stated here.
+        //
+        // A STEP rather than a decimal count, because the ticks that matter are
+        // not all powers of ten: an eighth, a quarter-cent, a 25-unit lot.
+        //
+        // Note this rounds ONE value. It does not express a recurrence — "each
+        // year is last year's rounded figure, escalated" needs a stream to read
+        // its own prior period, which the language cannot do. See
+        // docs/13_feature_backlog.md.
+        "round_to" => {
+            let [x, step] = exactly::<2>(name, args, span)?;
+            let (x, step) = (num(x)?, num(step)?);
+            if step <= Decimal::ZERO {
+                return Err(CalcError::new(
+                    format!("round_to: step must be greater than zero, got {step}"),
+                    Some(span),
+                ));
+            }
+            let quotient =
+                (x / step).round_dp_with_strategy(0, RoundingStrategy::MidpointAwayFromZero);
+            Ok(Value::Number(quotient * step))
+        }
         // Excel IPMT/PPMT (ordinary annuity only; due=1 not yet supported).
         "ipmt" => interest_split(name, args, span, mode, Split::Interest),
         "ppmt" => interest_split(name, args, span, mode, Split::Principal),

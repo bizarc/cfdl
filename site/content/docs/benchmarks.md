@@ -47,6 +47,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | credit | `io_bullet_loan` |
 | credit | `level_pay_pool` |
 | credit | `mbs_pool_conventions` |
+| energy | `merchant_capacity` |
 | energy | `solar_ppa_microgrid` |
 | energy | `utility_pv_singleowner` |
 | energy | `wind_ptc_macrs` |

@@ -56,6 +56,29 @@ def run_model(source: str, annual_rate: float) -> dict:
         return json.loads(res.read_text())["deterministic"]
 
 
+def run_pack_model(source: str, annual_rate: float, pack: str) -> dict:
+    """Compile and run a model that uses a domain pack."""
+    with tempfile.TemporaryDirectory() as tmp:
+        d = pathlib.Path(tmp)
+        (d / "model.cfdl").write_text(source)
+        ir, res = d / "ir.json", d / "results.json"
+        packs = str(REPO_ROOT / "packs")
+        for cmd in (
+            [str(CLI), "compile", str(d), "--out", str(ir), "--packs", packs],
+            [str(CLI), "run", str(ir), "--out", str(res), "--rate", str(annual_rate),
+             "--packs", packs, "--pack", pack],
+        ):
+            done = subprocess.run(cmd, capture_output=True, text=True)
+            if done.returncode != 0:
+                raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}\n{source}")
+        return json.loads(res.read_text())["deterministic"]
+
+
+def series(block: dict, name: str) -> list[float]:
+    """A stream's per-period amounts, unsigned by direction as the engine stores them."""
+    return [v["amount"] for v in block["series"][f"stream.{name}"]["values"]]
+
+
 def npv(block: dict) -> float:
     value = block["metrics"]["model.npv"]
     return value["amount"] if isinstance(value, dict) else value
@@ -512,6 +535,127 @@ stream investor.repay on entity legal.investor inflow currency USD {
 }
 """
     return payback(run_model(src, 0.08)), 1.0
+
+
+# ---------------------------------------------------------------------------
+# Cross-cutting identities: things that are true of the FINANCE, whatever the
+# implementation. These exist because a benchmark compares us to a reference we
+# wrote, and two implementations that share an assumption agree forever.
+# ---------------------------------------------------------------------------
+
+EXACT = 1e-6  # published metrics and stream amounts are rounded to six decimals
+
+
+@check("a zero-hazard pool amortises exactly like an ipmt/ppmt loan", EXACT)
+def pool_equals_plain_loan() -> tuple[float, float]:
+    # THE one worth having. credit.pool_level_pay reaches its answer through a
+    # closed-form pool factor built for constant prepayment and default; with
+    # both set to zero it must collapse to an ordinary amortising loan. ipmt and
+    # ppmt compute that from an entirely different code path in cfdl-calc, so a
+    # defect in the pack's lowering OR in the annuity split shows up here and
+    # nowhere else in the suite.
+    src = """version 0.1
+model "pool-vs-loan"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+entity legal lender
+contract credit.pool_level_pay.probe on entity legal.lender {
+  term 2026-01..2027-12
+  terms { balance = 1200000 rate = 0.06 term_months = 24 cpr = 0 cdr = 0 }
+}
+stream loan.interest on entity legal.lender inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = ipmt(0.06 / 12, time.t + 1, 24, 1200000)
+}
+stream loan.principal on entity legal.lender inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = ppmt(0.06 / 12, time.t + 1, 24, 1200000)
+}
+"""
+    b = run_pack_model(src, 0.05, "credit")
+    # ipmt/ppmt return Excel-signed values for a positive pv, so compare magnitudes.
+    worst = 0.0
+    for pack_name, loan_name in (("credit.pool.interest.probe", "loan.interest"),
+                                 ("credit.pool.sched_principal.probe", "loan.principal")):
+        for a, e in zip(series(b, pack_name), series(b, loan_name)):
+            worst = max(worst, abs(abs(a) - abs(e)))
+    return worst, 0.0
+
+
+@check("scheduled principal over a pool's life returns the balance advanced, to the rounding floor", 1.0)
+def principal_sums_to_balance() -> tuple[float, float]:
+    # No prepayment, no default, no loss: what goes out comes back. Asserted on
+    # three calendars because the pool factor is rebuilt per cadence, and a
+    # periods-per-year slip would show up as a shortfall rather than as a
+    # different shape.
+    #
+    # Reported as a MULTIPLE OF THE ROUNDING BUDGET rather than in dollars.
+    # Stream amounts are published rounded to six decimals, so a sum of n terms
+    # can be off by n * 5e-7 with nothing wrong — 1.8e-5 monthly, 1.5e-6
+    # annually. A flat dollar tolerance either fails the long cadence or hides a
+    # real error on the short one; a budget ratio scales correctly with n and
+    # cannot do either. Anything at or below 1.0 is rounding; above it is not.
+    worst = 0.0
+    # term_end must be the START of the final period, which differs per calendar.
+    for calendar, term_end, periods, months in (("monthly", "2028-12", 36, 36),
+                                                ("quarterly", "2028-10", 12, 36),
+                                                ("annual", "2028-01", 3, 36)):
+        src = f"""version 0.1
+model "principal-sums"
+use pack "credit" version "0.1.0"
+time calendar {calendar} from 2026-01 for {periods}
+entity legal lender
+contract credit.pool_level_pay.p on entity legal.lender {{
+  term 2026-01..{term_end}
+  terms {{ balance = 900000 rate = 0.075 term_months = {months} cpr = 0 cdr = 0 }}
+}}
+"""
+        b = run_pack_model(src, 0.05, "credit")
+        v = series(b, "credit.pool.sched_principal.p")
+        worst = max(worst, abs(sum(v) - 900000.0) / (len(v) * 5e-7))
+    return worst, 0.0
+
+
+@check("an IO/bullet pool repays its balance once, at maturity", EXACT)
+def bullet_repays_at_maturity() -> tuple[float, float]:
+    # Interest every period, principal exactly once and only in the final one.
+    src = """version 0.1
+model "bullet-repay"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+entity legal lender
+contract credit.pool_io_bullet.b on entity legal.lender {
+  term 2026-01..2026-12
+  terms { balance = 500000 rate = 0.05 term_months = 12 cpr = 0 cdr = 0 }
+}
+"""
+    b = run_pack_model(src, 0.05, "credit")
+    bullet = series(b, "credit.pool.bullet.b")
+    early = sum(abs(v) for v in bullet[:-1])
+    return abs(abs(bullet[-1]) - 500000.0) + early, 0.0
+
+
+@check("every MACRS recovery table sums to exactly 100%", EXACT)
+def macrs_tables_sum_to_one() -> tuple[float, float]:
+    # A depreciation schedule that does not recover the whole basis is not a
+    # depreciation schedule. Guards four tables transcribed by hand.
+    terms = []
+    for life, years in ((5, 6), (7, 8), (15, 16), (20, 21)):
+        terms.append(" + ".join(f"macrs_rate({y}, {life})" for y in range(years)))
+    src = """version 0.1
+model "macrs-sums"
+time calendar annual from 2026-01 for 4
+entity legal co
+""" + "".join(f"""stream co.life_{life} on entity legal.co inflow currency USD {{
+  schedule every year from 2026-01 to 2026-01
+  amount = {expr}
+}}
+""" for (life, _), expr in zip(((5, 6), (7, 8), (15, 16), (20, 21)), terms))
+    b = run_model(src, 0.0)
+    worst = 0.0
+    for life in (5, 7, 15, 20):
+        worst = max(worst, abs(max(series(b, f"co.life_{life}")) - 1.0))
+    return worst, 0.0
 
 
 def main() -> int:

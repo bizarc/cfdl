@@ -114,9 +114,9 @@ td.num-cell,th.num-cell{font-family:var(--mono);font-size:12.5px;white-space:now
   </p>
   <div class="title-meta">
     <div><b>6</b>external sources matched</div>
-    <div><b>14</b>benchmark cases in CI</div>
-    <div><b>11</b>real defects found</div>
-    <div><b>21</b>open capability items</div>
+    <div><b>15</b>benchmark cases in CI</div>
+    <div><b>12</b>real defects found</div>
+    <div><b>23</b>open capability items</div>
   </div>
   <div class="foot">CFDL engine 0.7.0 · 1 August 2026 · living document, updated as validation proceeds</div>
 </section>
@@ -249,7 +249,7 @@ td.num-cell,th.num-cell{font-family:var(--mono);font-size:12.5px;white-space:now
       </tr>
       <tr>
         <td class="dom"><span class="dot d-energy"></span>NREL SAM</td>
-        <td>PPA revenue, O&amp;M, project debt, tax depreciation and credit — 26 periods, first attempt</td>
+        <td>Two cases: PPA and merchant revenue, O&amp;M, project debt, depreciation, capacity payments, and the tax credit's statutory staircase</td>
         <td class="num-cell" style="color:var(--green-600)">$0.0000009</td>
         <td>Our decimal arithmetic against their floating point. Depreciation matched <em>exactly</em>, every period.</td>
       </tr>
@@ -299,6 +299,10 @@ td.num-cell,th.num-cell{font-family:var(--mono);font-size:12.5px;white-space:now
       <p>Common in auto and retail credit — ~3% of the real ABS pool we tested. Input validation accepted a zero rate, then the maths divided by zero. A wrong answer rather than a refusal.</p>
     </div>
     <div class="card">
+      <h3 style="color:var(--red-500)">A tax credit rounded to the wrong tick</h3>
+      <p>The statutory production credit steps in whole dollars per MWh. We first rounded it ten times too finely — which is indistinguishable from not rounding at all, so every unit test passed. Only the external model caught it.</p>
+    </div>
+    <div class="card">
       <h3 style="color:var(--amber-600)">Our published data contract was wrong</h3>
       <p>Every one of 67 stored outputs violated the schema we publish for consumers — including the field whose only job is to state the format version. Four releases. Now gated.</p>
     </div>
@@ -327,9 +331,12 @@ td.num-cell,th.num-cell{font-family:var(--mono);font-size:12.5px;white-space:now
       <tr style="opacity:.55"><td><strong>HUD multifamily</strong></td><td>Real estate</td>
         <td>Affordable-housing underwriting against the agency's own worked sample. Matched, and the workbook is now committed beside the model.</td>
         <td><span class="pill p-done">Done</span></td></tr>
-      <tr><td><strong>Cross-cutting identities</strong></td><td>All</td>
-        <td>Closed-form truths that hold regardless of implementation. Cheap, licence-free, and they catch what benchmarks miss.</td>
-        <td><span class="pill p-next">Ready to build</span></td></tr>
+      <tr style="opacity:.55"><td><strong>Cross-cutting identities</strong></td><td>All</td>
+        <td>Closed-form truths that hold regardless of implementation. Twenty now run in CI, including a pool checked against an independent annuity implementation.</td>
+        <td><span class="pill p-done">Done</span></td></tr>
+      <tr style="opacity:.55"><td><strong>Energy merchant + capacity</strong></td><td>Energy</td>
+        <td>Completed the energy pack's rule coverage to 9 of 10 and fixed the tax credit's statutory rounding. Storage stays unvalidated — a reduced form with no counterpart in a dispatch model.</td>
+        <td><span class="pill p-done">Done</span></td></tr>
       <tr><td><strong>CalPERS fund returns</strong></td><td>Corporate</td>
         <td>Would give returns a first external check. <em>But</em> the disclosure appears to publish per-fund totals rather than dated cash flows — the multiple is reproducible, the rate of return may not be. Needs scoping before committing.</td>
         <td><span class="pill p-block">Scope first</span></td></tr>
@@ -357,12 +364,12 @@ td.num-cell,th.num-cell{font-family:var(--mono);font-size:12.5px;white-space:now
 <section class="slide">
   <div class="num">07</div>
   <div class="eyebrow">Open items</div>
-  <h2>17 capability gaps, found by trying to model something real</h2>
+  <h2>23 capability gaps, found by trying to model something real</h2>
   <p class="sub">These are not defects — they are things the language cannot yet express. Each was found by hitting a wall against a real source, which is what makes the list trustworthy rather than speculative.</p>
 
   <div class="grid g4" style="margin-bottom:20px">
     <div class="stat"><div class="k">2</div><div class="l">items gate roughly two thirds of all candidate domains</div></div>
-    <div class="stat"><div class="k">5</div><div class="l">found by the validation work this cycle</div></div>
+    <div class="stat"><div class="k">9</div><div class="l">found by the validation work this cycle</div></div>
     <div class="stat"><div class="k">0</div><div class="l">are defects — all are additive capability</div></div>
     <div class="stat"><div class="k">17</div><div class="l">total, each with a named source that forced it</div></div>
   </div>

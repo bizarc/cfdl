@@ -93,9 +93,9 @@ contract energy.debt_service on entity project.windfarm {
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | -5,526,895.09 | ±1 |
+| `model.npv` | -5,452,881.52 | ±1 |
 | `domain.energy.revenue` | 90,382,400.52 | ±1 |
 | `domain.energy.ebitda` | 58,795,819.78 | ±1 |
-| `domain.energy.tax_benefits` | 37,894,379.52 | ±1 |
+| `domain.energy.tax_benefits` | 37,981,187.94 | ±1 |
 | `domain.energy.debt_service` | 36,768,755.46 | ±1 |
 | `domain.energy.dscr` | 1.59907 | ±0.0001 |

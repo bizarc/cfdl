@@ -127,15 +127,34 @@ contract_name = "energy.ptc"
 stream_name = "energy.ptc.credit{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-# Production tax credit on generated MWh; credit rate is typically
-# inflation-adjusted (escalation), production degrades annually. The contract
-# term bounds the credit window (statutorily 10 years).
-amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+# Production tax credit on generated MWh; credit rate is inflation-adjusted
+# (escalation), production degrades annually. The contract term bounds the
+# credit window (statutorily 10 years).
+#
+# THE CREDIT RATE IS A STAIRCASE, NOT A RAMP. The inflation-adjusted credit is
+# published rounded to the nearest 0.1 cent per kWh, so it steps once a year
+# and holds.
+#
+# MIND THE UNIT. This rule's rate is per MWh, and 0.1 c/kWh is $1.00/MWh:
+#   0.1 cent = $0.001 per kWh, x 1000 kWh = $1.00 per MWh.
+# So the published credit moves in whole dollars per MWh — 28, 29, 30 — which
+# is why `round_step` defaults to 1.00 and not 0.10. Getting this wrong rounds
+# to a hundredth of a cent, which is indistinguishable from not rounding at
+# all; the external reference is what caught it. Carrying it continuously was wrong
+# by up to 1.8% in a single year and about -0.3% over a ten-year window, and the
+# error alternates sign rather than drifting, which is why it survived: it looks
+# like noise in aggregate. Found reconciling against a national laboratory's
+# model, which rounds; see benchmarks/energy/.
+#
+# `round_step` defaults to 0.10 for that convention. Set it to 0 to disable
+# rounding for a jurisdiction that does not round, or to another tick.
+amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * if({{contract.round_step}} > 0, round_to({{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}), {{contract.round_step}}), {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+round_step = "1.00"
 escalation = "0"
 degradation = "0"
 availability = "1"

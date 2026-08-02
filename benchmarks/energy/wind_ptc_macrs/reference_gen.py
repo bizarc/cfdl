@@ -5,6 +5,7 @@ PROVENANCE: generated implementation; pending practitioner (Excel) review.
 Regenerate: python3 reference_gen.py
 """
 import csv
+import decimal
 import json
 
 PERIODS = 240
@@ -29,7 +30,16 @@ def main():
         y = t // 12
         production = (MWH / 12.0) * AVAIL * ((1.0 - DEG) ** y)
         merchant = production * PRICE * ((1.0 + PRICE_ESC) ** y)
-        ptc = production * PTC_RATE * ((1.0 + PTC_ESC) ** y) if y < PTC_YEARS else 0.0
+        # The published credit rate is a STAIRCASE: the inflation-adjusted figure
+        # is rounded to the nearest 0.1 cent per kWh, which on this $/MWh basis is
+        # a WHOLE DOLLAR ($0.001/kWh x 1000), and holds
+        # for the year. This reference carried the continuous ramp, the same
+        # omission the engine had, which is exactly why the two agreed. Half
+        # away from zero, matching the statutory convention.
+        rate = decimal.Decimal(str(PTC_RATE)) * (decimal.Decimal("1") + decimal.Decimal(str(PTC_ESC))) ** y
+        rate = float((rate / decimal.Decimal("1.00")).quantize(
+            decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP) * decimal.Decimal("1.00"))
+        ptc = production * rate if y < PTC_YEARS else 0.0
         macrs = BASIS * (MACRS_5[y] if y < len(MACRS_5) else 0.0) / 12.0 * TAX_RATE
         om = (OM_YEAR / 12.0) * ((1.0 + OM_ESC) ** y)
         shot = 0.0

@@ -1,6 +1,6 @@
 {
   "model.npv": {
-    "value": -5526895.09,
+    "value": -5452881.52,
     "tolerance": 1.0
   },
   "domain.energy.revenue": {
@@ -12,7 +12,7 @@
     "tolerance": 1.0
   },
   "domain.energy.tax_benefits": {
-    "value": 37894379.52,
+    "value": 37981187.94,
     "tolerance": 1.0
   },
   "domain.energy.debt_service": {

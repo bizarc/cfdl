@@ -186,6 +186,7 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 Benchmark cases are validated period-by-period against an independent
 reference implementation.
 
+- [energy: merchant capacity](/docs/examples/energy-merchant-capacity)
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
 - [energy: utility pv singleowner](/docs/examples/energy-utility-pv-singleowner)
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs)
