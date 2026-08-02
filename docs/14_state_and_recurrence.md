@@ -70,7 +70,7 @@ state opex_index      { init 1.0  next round_to(prev * 1.025, 1) }
 state degradation     { init 1.0  next prev * (1 - 0.005) }
 state discount_factor { init 1.0  next prev / (1 + curve_value("wacc", time.date)) }
 state cum_capex       { init 0    next prev + inputs.capex_per_period }
-state high_water      { init 0    next max(prev, state.distributions) }
+state high_water      { init 0    next max(prev, curve_value("distributions", time.date)) }
 ```
 
 Multiplication gives a compounding factor — a pool's survival under a ramp
@@ -98,7 +98,7 @@ Inside `next`, the environment contains:
 
 - `prev` — this state's previous value
 - `time.*`, `inputs.*`, curves — the ordinary expression environment
-- other states' **previous** values
+- other states' **previous** values — see the open question below
 - stream series **up to and including `t-1`**
 
 It does **not** contain any stream value at period `t`, and it does not contain
@@ -113,6 +113,14 @@ Because every edge a state can create points strictly backward in time, **no
 cycle can close.** The guarantee survives, and survives for a better reason than
 before: not because streams are forbidden to see each other, but because
 everything a state can see is already finished.
+
+**Open question — reading another state.** The rule above permits another
+state's *previous* value, but no syntax is proposed for it. `state.<name>` reads
+the **current** period and so must be rejected inside `next`; a distinct
+spelling would be needed. The v1 build should therefore either omit cross-state
+reads entirely or settle the spelling first — silently allowing `state.<name>`
+in `next` would create exactly the same-period edge this section exists to
+prevent. None of the motivating recurrences need it.
 
 ### 3.2 Evaluation
 
