@@ -722,11 +722,11 @@ gets financed or valued.
 
 | candidate | forced by |
 |---|---|
-| `cre.permanent_debt` | The largest single gap in any pack. There is no debt contract at all, so every CRE benchmark hand-writes a mortgage, and `domain.cre.dscr` works only because it reads the native stream *names* `loan.permanent_debt_service` and `loan.construction_interest` by convention. Debt service coverage is the headline CRE metric and the thing producing it is not a primitive. Wants an interest-only period and DSCR-based sizing. |
-| `cre.construction_loan` | The same gap on the construction side. |
+| ~~`cre.permanent_debt`~~ | **SHIPPED.** Interest-only period, level payment, balloon opt-in, one combined `loan.permanent_debt_service` stream so `domain.cre.debt_service` needs no change. DSCR-based sizing is a solve and stays out. |
+| `cre.construction_loan` | The same gap on the construction side, and now with a source: `benchmarks/cre/one_lincoln_street` publishes a sixteen-quarter draw schedule against an equity commitment that depletes mid-quarter. `cre.construction_stub` takes a flat draw and cannot express an equity-first waterfall, which is why that case runs on native streams. |
 | `cre.restricted_rent` | HUD — rent capped for an affordability period and reverting to a market track. The defining mechanic of affordable housing, currently a hand-written conditional. |
 | `cre.abatement` | MIT — free rent as its own deduction from potential gross revenue. Today it can be reported as a line or counted in NOI, not both (1.3). |
-| `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. |
+| `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. Also One Lincoln Street, whose operating pro forma carries a Capital Reserve line. |
 
 With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
 pack contracts instead of native streams — which is the actual fix for 7.3 on
@@ -736,7 +736,7 @@ the CRE side, and needs no new source.
 
 | candidate | forced by |
 |---|---|
-| `opco.exit_perpetuity` | Damodaran — a growing perpetuity is *the* intrinsic-valuation terminal. `opco.exit_multiple` is a run-rate multiple and `opco.exit_ebitda` is TTM; neither is this, so the largest component of value in a DCF cannot be expressed. |
+| ~~`opco.exit_perpetuity`~~ | **SHIPPED**, and validated against a published nine-point growth sensitivity grid (`benchmarks/opco/gordon_growth_coned`). `discount_rate` is a contract term, which is faithful to the sources rather than a workaround: a terminal cost of capital is not the near-term one. A stream-derived variant is the follow-on. |
 | `opco.exit_forward_multiple` | The banker DCF — a forward (NTM) multiple struck at a point before model end. |
 | `opco.depreciation` | No D&A contract exists, yet `opco_cash_taxes` consumes `da_monthly` as a bare term with no rule producing it. |
 | `opco.equity_bridge` | Both opco sources — debt, cash, minority interests and non-operating assets between enterprise and equity value. Done outside the model today. |
@@ -1046,3 +1046,39 @@ against P+I+MIP.
 
 Until then this case's debt stays a native stream, which is why CRE's pack-rule
 coverage counts it as unconverted.
+
+### 7.15 Adding a contract and a source did not move CRE's coverage
+
+Measured after shipping `cre.permanent_debt` and
+`benchmarks/cre/one_lincoln_street`. Counting pack contract types exercised by
+at least one **externally reconciled** case:
+
+| pack | before | after |
+|---|---|---|
+| energy | 9/10 | 9/10 |
+| opco | 4/10 | **5/11** |
+| credit | 1/4 | 1/4 |
+| CRE | 1/12 | **1/13** |
+
+CRE went *backwards as a ratio*, and the reason is worth stating rather than
+smoothing over.
+
+**The contract's only user is an in-house case.** `cre.permanent_debt` converted
+`benchmarks/cre/office_two_tenant`, whose `case.toml` says plainly: *"Reference:
+reference_gen.py (independent implementation). Status: pending practitioner
+review."* Its figures are ours. `hud_home_multifamily` — which is external —
+could not convert, for the two reasons in 7.14.
+
+**The new source exercises no contract.** One Lincoln Street's funding waterfall
+is an equity commitment that depletes mid-quarter, and `cre.construction_stub`
+takes a flat draw, so the case runs on native streams and a declared state.
+
+Neither is a defect; both are the same gap seen from two sides. What CRE needs
+is a source that publishes the DRIVERS of an operating pro forma — a rent roll
+with escalations and expense stops — rather than its results. One Lincoln
+Street's Exhibit 5 is exactly that pro forma and was rejected for exactly that
+reason: it publishes the lines, not the leases.
+
+Every direct-download CRE candidate in the catalogue has now been checked. The
+remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
+registration, which is the actual blocker on CRE coverage — not the pack.

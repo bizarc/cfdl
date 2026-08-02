@@ -1,0 +1,155 @@
+---
+id: benchmark-opco-gordon-growth-coned
+title: "opco: gordon growth coned"
+slug: "/docs/examples/opco-gordon-growth-coned"
+source: benchmarks/opco/gordon_growth_coned
+---
+
+# opco: gordon growth coned
+
+a stable-growth dividend discount valuation of a regulated utility, reconciled against the source's own nine-point growth sensitivity grid. THE FIRST CASE IN THIS REPO TO ASSERT A VALUE. Every other externally reconciled case asserts cash flows or a coverage ratio; benchmarks/opco/ damodaran_fcff explicitly asserts nothing discounted, because its cost of capital converges and a term structure in the discount rate is not expressible. A regulated utility in steady state has one flat rate, so the terminal is the whole valuation. EXTERNAL, ALL OF IT. Nine published values across nine growth rates, each derived by the model from two stated drivers — a current dividend of 2.32 and a cost of equity of 7.7%. Both are themselves derived exactly from the source's own inputs (EPS x payout, and CAPM), verified in NOTES.md. Nine points spanning a sign change, against one contract. A single point could be matched by coincidence; this cannot. period_tolerance = 1e-6 — the engine publishes to six decimals and the source states sixteen significant figures, so the rounding is the engine's, not the source's. Confirmed binding: at 1e-7 the case fails.
+
+Every number below is checked against an independent reference
+implementation on every commit — period by period, and on each metric,
+inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The model
+
+```cfdl
+// A stable-growth dividend discount valuation of a regulated utility, and the
+// nine-point growth sensitivity grid the source publishes alongside it.
+//
+// WHY THIS SOURCE. benchmarks/opco/damodaran_fcff validated the pack's DRIVERS
+// — revenue, operating cost, cash taxes — but asserts no value at all, because
+// its cost of capital converges 7.055% -> 8.81% and a term structure in the
+// discount rate is not expressible (docs/13_feature_backlog.md 7.4). This model
+// is a regulated utility in steady state, so its cost of capital is a single
+// flat number, and the terminal IS the valuation. That makes it the first case
+// in this repo to assert a VALUE rather than a cash flow.
+//
+// NINE POINTS, ONE CONTRACT. The source tabulates value against growth across
+// nine rates, from the riskfree rate down through negative growth. One point
+// could be matched by coincidence; nine spanning a sign change cannot. Each is
+// its own contract instance, which is why opco.exit_perpetuity carries a
+// suffix on its stream name where the older exit rules do not.
+//
+// WHAT IS STATED VERSUS DERIVED. A contract term is a literal or a single
+// declared input, so the two derivations below are verified in NOTES.md rather
+// than computed here — the same posture as damodaran_fcff's converging growth
+// and tax paths. Both are exact:
+//
+//   dividends per share = EPS 3.17 x payout 0.7318611987381703 = 2.32
+//   cost of equity      = riskfree 4.1% + beta 0.8 x premium 4.5% = 7.7%
+//
+// The perpetuity applies the (1 + g) step itself, so base_value is the CURRENT
+// dividend, not next year's.
+//
+// NOT ASSERTED: anything discounted. The exit is the whole model, so
+// model.npv would only re-discount a value that is already a present value.
+
+version 0.1
+model "gordon-growth-coned"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+entity legal utility
+
+assume current_dps     = 2.32      // EPS 3.17 x payout ratio 0.7318611987381703
+assume cost_of_equity  = 0.077     // CAPM: 0.041 + 0.8 x 0.045
+
+contract opco.exit_perpetuity.g041 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = 0.041
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.g031 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = 0.031
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.g021 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = 0.021
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.g011 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = 0.011
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.g001 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = 0.001
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.gm009 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = -0.009
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.gm019 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = -0.019
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.gm029 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = -0.029
+    discount_rate = inputs.cost_of_equity
+  }
+}
+
+contract opco.exit_perpetuity.gm039 on entity legal.utility {
+  term 2026-01..2026-01
+  terms {
+    base_value = inputs.current_dps
+    growth_rate = -0.039
+    discount_rate = inputs.cost_of_equity
+  }
+}
+```
+
+## Run configuration
+
+```json
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0
+  }
+}
+```
+
+## Verified results
+
+| Metric | Value | Tolerance |
+|---|---:|---:|

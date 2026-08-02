@@ -41,6 +41,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | cre | `hud_home_multifamily` |
 | cre | `mit_rentleg_plaza` |
 | cre | `office_two_tenant` |
+| cre | `one_lincoln_street` |
 | cre | `retail_strip` |
 | credit | `auto_abs_speed_050` |
 | credit | `auto_abs_speed_150` |
@@ -56,6 +57,7 @@ held decimal-exact; IRR-class iteratives use a bps tolerance.
 | energy | `wind_ptc_macrs` |
 | opco | `banker_dcf_conventions` |
 | opco | `damodaran_fcff` |
+| opco | `gordon_growth_coned` |
 | opco | `lbo_buyout` |
 
 > Each case says in its `case.toml` where its figures came from, and which

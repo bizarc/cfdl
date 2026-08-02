@@ -56,6 +56,36 @@ in `lowering/rules.toml`:
 - `cre.exit_cap`
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.property_opex`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
+- `cre.permanent_debt`
+
+### `cre.permanent_debt`
+
+A commercial mortgage on a stabilised property. Emits one stream,
+`loan.permanent_debt_service`, which is the exact name `domain.cre.debt_service`
+selects — and therefore what `domain.cre.dscr` divides by.
+
+| term | meaning | default |
+|---|---|---|
+| `principal` | loan amount | *required* |
+| `rate` | nominal annual rate | *required* |
+| `amort_months` | amortisation term — strikes the payment | *required* |
+| `io_months` | interest-only months before amortisation begins | `0` |
+| `balloon_at_maturity` | `1` pays the unamortised balance as debt service at `term_end` | `0` |
+| `payment_frequency` | `day`/`week`/`month`/`quarter`/`year` | the model calendar |
+| `day_count`, `amortization_day_count` | interest accrual and payment bases | `30/360` |
+
+**`amort_months` is normally longer than the term.** A 30-year amortisation on a
+10-year loan is the standard commercial structure, and it is why a balloon
+exists at all.
+
+**The balloon defaults off.** Coverage is measured on *periodic* debt service, so
+folding an unamortised balance into the final period would make that period's
+DSCR meaningless; the standard pro forma repays it out of the sale. Turn it on
+when the payoff genuinely belongs in the debt service line.
+
+**Not modelled:** sizing to a target coverage ratio (a solve), refinance (needs
+the events layer), and mortgage insurance — MIP is not a payment on the debt.
+See `docs/13_feature_backlog.md` 7.14.
 
 ## Expected terms (authoring contract)
 
@@ -343,6 +373,13 @@ Checked at compile time. Each is a stable diagnostic code that is never renamed 
 | `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | CRE rollover 'renewal_probability' must be a probability between 0 and 1. |
 | `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | CRE rollover 'downtime_months' must be a whole number of months, 0 or more. |
 | `E6030_CRE_LEASE_AMBIGUOUS_RENT` | CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one. |
+| `E6050_CRE_DEBT_MISSING_PRINCIPAL` | CRE permanent debt is missing required term 'principal'. |
+| `E6051_CRE_DEBT_INVALID_PRINCIPAL` | CRE permanent debt 'principal' must be greater than 0. |
+| `E6052_CRE_DEBT_MISSING_RATE` | CRE permanent debt is missing required term 'rate'. |
+| `E6053_CRE_DEBT_INVALID_RATE` | CRE permanent debt 'rate' is a nominal annual rate and must be 0 or more. |
+| `E6054_CRE_DEBT_INVALID_AMORT` | CRE permanent debt 'amort_months' must be a whole number of months greater than 0. It strikes the payment and is normally longer than the loan's term. |
+| `E6055_CRE_DEBT_INVALID_IO_MONTHS` | CRE permanent debt 'io_months' must be a whole number of months, 0 or more. |
+| `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` | CRE permanent debt 'balloon_at_maturity' is a flag: 0 (the payoff sits in the reversion, the default) or 1 (it is paid as debt service at maturity). |
 
 ## Worked example models
 
@@ -352,6 +389,7 @@ reference implementation.
 - [cre: hud home multifamily](/docs/examples/cre-hud-home-multifamily)
 - [cre: mit rentleg plaza](/docs/examples/cre-mit-rentleg-plaza)
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant)
+- [cre: one lincoln street](/docs/examples/cre-one-lincoln-street)
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip)
 - [CRE examples overview](/docs/examples/cre-examples)
 - [Lease-up](/docs/examples/cre_lease_up)

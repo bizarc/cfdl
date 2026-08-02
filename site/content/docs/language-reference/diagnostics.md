@@ -370,6 +370,14 @@ CRE pack codes:
 - `E6012_CRE_EXIT_MISSING_NOI_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
+- `E6050_CRE_DEBT_MISSING_PRINCIPAL` / `E6051_CRE_DEBT_INVALID_PRINCIPAL` — a
+  pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
+- `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
+  for the nominal annual rate
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+  normally longer than the loan's term
+- `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
+- `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 
 `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
 occupancy terms that no longer exist. Per §8 the code is never reused.
@@ -379,6 +387,17 @@ OpCo pack codes:
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
 - `E7002_OPCO_LINE_INVALID_SCHEDULE`
 - `E7003_OPCO_LINE_INVALID_GROWTH`
+- `E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH` — a growing perpetuity needs
+  `discount_rate` strictly above `growth_rate`. At or below it the denominator
+  reaches zero and then goes negative, so the contract would return a huge
+  value and then a negative one with nothing to say the model had stopped
+  meaning anything.
+- `E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE` — the terminal-period flow the
+  perpetuity is struck on.
+- `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` — the terminal capitalisation
+  rate, stated on the contract rather than taken from the run's discount rate.
+- `E7028_OPCO_PERPETUITY_MISSING_GROWTH` — state 0 for a flat perpetuity.
+- `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` — a fraction between 0 and 1.
 - `E7012_OPCO_TAXES_MISSING_RATE` — a cash-taxes contract states neither
   `tax_rate` nor `tax_rate_curve`. `tax_rate` carries a default of 0 so a curve
   may stand alone; without this check, stating neither would silently model a

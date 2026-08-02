@@ -8,6 +8,67 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: `cre.permanent_debt`
+
+A commercial mortgage on a stabilised property — the CRE pack previously had no
+debt contract at all, so every model hand-wrote its mortgage and
+`domain.cre.dscr` worked only because the metric matched a stream *name* by
+convention.
+
+    contract cre.permanent_debt on entity asset.tower {
+      term 2026-01..2035-12
+      terms { principal = 6000000  rate = 0.055  amort_months = 300 }
+    }
+
+`amort_months` strikes the payment and is normally longer than the term — the
+30-year-amortisation-on-a-10-year-loan structure is what a commercial mortgage
+is. Optional interest-only period; the balloon is opt-in via
+`balloon_at_maturity` and defaults OFF, because coverage is measured on periodic
+debt service and the standard pro forma repays the balance from the sale.
+
+One combined stream, `loan.permanent_debt_service`, matching the exact name the
+metric selects. Diagnostics `E6050`–`E6056`.
+
+### Added: `opco.exit_perpetuity`
+
+Terminal value as a growing perpetuity — the Gordon form. The pack could
+previously express only a *multiple* of something, so the largest single
+component of value in a DCF had no contract.
+
+    TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate)
+
+`base_value` is the terminal-period flow **before** the `(1 + g)` step; the
+contract applies it. `discount_rate` is a contract term, not the run's NPV rate:
+a terminal cost of capital is the rate for a business in steady state, and the
+published models that state these terminals build it from their own CAPM inputs.
+The run's rate discounts the result; this one capitalises it.
+
+Diagnostics `E7025`–`E7029`. `E7025` guards `r > g`, below which the perpetuity
+has no finite value.
+
+### Added: two externally reconciled benchmark cases
+
+- **`benchmarks/cre/one_lincoln_street`** — a real named Boston development.
+  Reconciles the construction period funding and interest schedule across
+  sixteen quarters: equity and loan draws exact to the dollar, interest within
+  the source's own thousand-rounding. The equity commitment depletes mid-quarter,
+  and that split falls out of a declared state rather than being stated.
+- **`benchmarks/opco/gordon_growth_coned`** — nine published values across nine
+  growth rates, spanning a sign change. **The first case in this repo to assert
+  a value** rather than a cash flow or a ratio.
+
+Both sources are redistributable and are committed under `reference/`, bringing
+to four the number of sources a reader can open and check directly.
+
+### Note: adding a CRE contract and a CRE source did not improve CRE coverage
+
+Externally reconciled pack-contract coverage moved opco 4/10 → 5/11 and left CRE
+at 1/13 — worse as a ratio, since the denominator grew. `cre.permanent_debt`'s
+only user is an in-house case, and One Lincoln Street's funding waterfall needs
+a construction-loan contract that does not exist. Recorded as backlog 7.15
+rather than left to be inferred from the numbers.
+
+
 ### Added: a state has its own schedule
 
 A `state` now takes the same `schedule` clause a stream does:
