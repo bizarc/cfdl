@@ -1156,3 +1156,76 @@ Two things that must move with it, or the fix is worse than the gap:
 Worth against: HUD's mortgage (7.14), and any instrument whose payment rhythm is
 finer than the book it is carried on — which is most lending on a quarterly or
 annual reporting grid.
+
+### 7.17 Reporting is a language capability, and it is missing
+
+*Belongs with the language and engine (section 5), and applies to every pack.*
+
+A stated aim is parity with the tools practitioners already use — Argus in CRE,
+and its equivalents elsewhere. Those tools are not valued for their discounting;
+they are valued for the **statement** they produce: every line item, per period,
+grouped, subtotalled, and traceable to the transactions behind it.
+
+**Reporting is distinct from the DCF engine and should be built as such.** NPV
+and IRR consume a netted cash flow; a statement consumes the line items and their
+structure. Conflating them is why the capability has never been built — every
+reporting need to date has been filed as a metric, and metrics answer a different
+question.
+
+#### What exists
+
+Per-stream, per-period values. `benchmarks/cre/office_two_tenant` publishes
+thirteen independent series — base rent per tenant, recoveries per tenant, opex,
+vacancy, TI/LC, debt — each a full array over the grid, aggregating to
+`model.net_cash_flow`. The line items are all there.
+
+#### What is missing
+
+1. **Per-period subtotals.** `domain.cre.noi` is `4,718,933.90` — one number for
+   a ten-year hold, not a series. A statement's middle rows (EGI, NOI,
+   before-tax cash flow) do not exist at any period. This is 1.4, which reports
+   it from the coverage-ratio angle: `hud_home_multifamily` reproduces four
+   published DSCR values by hand and can assert none of them.
+2. **Statement structure.** `metrics.toml` declares flat named scalars. Nothing
+   declares order, grouping, hierarchy, labels, or which lines roll into which
+   subtotal. An Argus report is exactly that declaration.
+3. **Drill-down.** A period total cannot be traced to the payments behind it,
+   because the occurrences are never materialised. See
+   `docs/15_streams_and_the_grid.md`.
+4. **Reporting grain.** The grid, plus an annual rollup, and nothing else. A
+   monthly model cannot publish a quarterly statement. Note the annual rollup
+   does not close (1) either — it carries the line items and the bottom line and
+   no intermediate subtotals, so it has the top and bottom of a statement and
+   none of the middle.
+5. **Counts.** Metric ops are `sum`, `negated_sum`, `ratio`, `wal_years`.
+   Nothing counts occurrences, so "how many payments fell in this period" is
+   unanswerable.
+
+#### Existing items that are really reporting items
+
+Filed separately, each from a case that hit it:
+
+| item | why it is reporting |
+|---|---|
+| **1.3** abatements as a first-class NOI line | *"you can report it as a line OR have it counted in NOI, not both"* — a line's presentation and its arithmetic role are the same thing today |
+| **1.4** coverage ratios are lifetime aggregates | per-period subtotals |
+| **7.12** a pool's amortisation state is not exposed | percent-outstanding is a derived per-period series; the harness can only check streams and scalars |
+
+#### Per-pack standards
+
+This is not one report. CRE wants an Argus-shaped operating statement; credit
+wants a distribution/waterfall report and factor history; opco wants a P&L and a
+cash flow statement in the accounting sense; energy wants generation and revenue
+by source. The structure belongs in the pack, beside `metrics.toml`, and the
+*mechanism* belongs in the language.
+
+#### Sequencing
+
+Independent of the ledger and of each other:
+
+- Per-period metrics (1) can land on their own and immediately let
+  `hud_home_multifamily` assert four published ratios — an external validation
+  win from a self-contained change.
+- Statement structure (2) needs (1) underneath it.
+- Drill-down (3) and counts (5) need the ledger.
+- Grain (4) is additive once flows are dated.
