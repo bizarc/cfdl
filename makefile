@@ -40,6 +40,13 @@ clean:
 	cargo clean
 	rm -f *.ir.json *.results.json *.txt
 
+# PEP 597. Text I/O that relies on the platform default encoding is an error
+# for the gate scripts. Windows decodes as cp1252, so a `read_text()` with no
+# encoding crashes there and nowhere else the moment the file it reads grows a
+# curly quote. Scoped to the gates deliberately: pytest and maturin run
+# third-party code that is not ours to hold to this.
+PYGATE := PYTHONWARNDEFAULTENCODING=1 PYTHONWARNINGS=error::EncodingWarning python3
+
 gold:
 	@./tools/golden-runner run
 
@@ -48,7 +55,7 @@ gold-update:
 
 bench:
 	cargo build -p cfdl-cli
-	python3 tools/benchmark-runner.py
+	$(PYGATE) tools/benchmark-runner.py
 
 ci: fmt lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples wasm-check
 
@@ -66,38 +73,38 @@ wasm-check:
 # so structurally cannot express this; it takes two fixtures.
 cadence-parity:
 	cargo build -p cfdl-cli
-	python3 tools/cadence-parity.py
+	$(PYGATE) tools/cadence-parity.py
 
 # The published IR schema is a contract; check the emitter still satisfies it.
 ir-schema:
-	python3 tools/check-ir-schema.py
+	$(PYGATE) tools/check-ir-schema.py
 
 # Same, for the results document. Added after all 67 goldens turned out to
 # violate it: the version const said 0.1 while the engine emitted 0.2, and two
 # whole sections were undeclared. Documentation drifts; a gate does not.
 results-schema:
-	python3 tools/check-results-schema.py
+	$(PYGATE) tools/check-results-schema.py
 
 # A diagnostic code is an identifier. Three codes each named two different
 # checks before this gate existed, and a fourth collision was created while
 # renumbering them — picking a free number by reading the file is not reliable.
 pack-validations:
-	python3 tools/check-pack-validations.py
+	$(PYGATE) tools/check-pack-validations.py
 
 rule-fragments:
-	python3 tools/check-rule-fragments.py
+	$(PYGATE) tools/check-rule-fragments.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot
 # catch a convention both sides share; these identities can.
 analytic:
 	cargo build -p cfdl-cli
-	python3 tools/analytic-checks.py
+	$(PYGATE) tools/analytic-checks.py
 
 # Documentation examples must compile, run, and exercise what they claim.
 doc-examples:
 	cargo build -p cfdl-cli
-	python3 tools/check-doc-examples.py
+	$(PYGATE) tools/check-doc-examples.py
 
 py-develop:
 	pip install -e "python/[dev,viz]"

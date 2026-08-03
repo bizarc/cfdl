@@ -30,6 +30,11 @@ import os
 import pathlib
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCHEMA_PATH = REPO_ROOT / "docs" / "schemas" / "results.schema.json"
 MIRROR_PATH = REPO_ROOT / "site" / "public" / "schemas" / "CFDL_v0_1_Results.schema.json"
@@ -58,7 +63,7 @@ def main() -> int:
         )
         return 0
 
-    schema = json.loads(SCHEMA_PATH.read_text())
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
 
@@ -66,7 +71,7 @@ def main() -> int:
     # site serves the mirror; docs/06 is what a human opens. Both drifted —
     # docs/06 was four releases behind — so both are checked against the
     # source of truth rather than trusted.
-    if MIRROR_PATH.exists() and json.loads(MIRROR_PATH.read_text()) != schema:
+    if MIRROR_PATH.exists() and json.loads(MIRROR_PATH.read_text(encoding="utf-8")) != schema:
         print(
             f"check-results-schema: {MIRROR_PATH.relative_to(REPO_ROOT)} differs from\n"
             f"                      {SCHEMA_PATH.relative_to(REPO_ROOT)}. The site serves\n"
@@ -76,7 +81,7 @@ def main() -> int:
         return 1
 
     if DOC_PATH.exists():
-        text = DOC_PATH.read_text()
+        text = DOC_PATH.read_text(encoding="utf-8")
         fenced = text.split("```json", 1)
         embedded = None
         if len(fenced) == 2:
@@ -101,7 +106,7 @@ def main() -> int:
     failures = 0
     for path in goldens:
         errors = sorted(
-            validator.iter_errors(json.loads(path.read_text())),
+            validator.iter_errors(json.loads(path.read_text(encoding="utf-8"))),
             key=lambda e: list(e.absolute_path),
         )
         if not errors:

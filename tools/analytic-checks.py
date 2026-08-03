@@ -31,6 +31,12 @@ import os
 import pathlib
 import subprocess
 import tempfile
+import sys
+
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Windows names the binary cfdl.exe; everywhere else it is bare `cfdl`.
@@ -44,23 +50,23 @@ def run_model(source: str, annual_rate: float) -> dict:
     """Compile and run a model, returning its deterministic block."""
     with tempfile.TemporaryDirectory() as tmp:
         d = pathlib.Path(tmp)
-        (d / "model.cfdl").write_text(source)
+        (d / "model.cfdl").write_text(source, encoding="utf-8")
         ir, res = d / "ir.json", d / "results.json"
         for cmd in (
             [str(CLI), "compile", str(d), "--out", str(ir)],
             [str(CLI), "run", str(ir), "--out", str(res), "--rate", str(annual_rate)],
         ):
-            done = subprocess.run(cmd, capture_output=True, text=True)
+            done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
             if done.returncode != 0:
                 raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}\n{source}")
-        return json.loads(res.read_text())["deterministic"]
+        return json.loads(res.read_text(encoding="utf-8"))["deterministic"]
 
 
 def run_pack_model(source: str, annual_rate: float, pack: str) -> dict:
     """Compile and run a model that uses a domain pack."""
     with tempfile.TemporaryDirectory() as tmp:
         d = pathlib.Path(tmp)
-        (d / "model.cfdl").write_text(source)
+        (d / "model.cfdl").write_text(source, encoding="utf-8")
         ir, res = d / "ir.json", d / "results.json"
         packs = str(REPO_ROOT / "packs")
         for cmd in (
@@ -68,10 +74,10 @@ def run_pack_model(source: str, annual_rate: float, pack: str) -> dict:
             [str(CLI), "run", str(ir), "--out", str(res), "--rate", str(annual_rate),
              "--packs", packs, "--pack", pack],
         ):
-            done = subprocess.run(cmd, capture_output=True, text=True)
+            done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
             if done.returncode != 0:
                 raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}\n{source}")
-        return json.loads(res.read_text())["deterministic"]
+        return json.loads(res.read_text(encoding="utf-8"))["deterministic"]
 
 
 def series(block: dict, name: str) -> list[float]:
@@ -247,16 +253,16 @@ run monte_carlo trials 400 seed 20260728
 """
     with tempfile.TemporaryDirectory() as tmp:
         d = pathlib.Path(tmp)
-        (d / "model.cfdl").write_text(src)
+        (d / "model.cfdl").write_text(src, encoding="utf-8")
         ir, res = d / "ir.json", d / "results.json"
         for cmd in (
             [str(CLI), "compile", str(d), "--out", str(ir)],
             [str(CLI), "run", str(ir), "--out", str(res), "--rate", "0.1"],
         ):
-            done = subprocess.run(cmd, capture_output=True, text=True)
+            done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
             if done.returncode != 0:
                 raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}")
-        block = json.loads(res.read_text()).get("monte_carlo") or {}
+        block = json.loads(res.read_text(encoding="utf-8")).get("monte_carlo") or {}
     stdev = ((block.get("metrics") or {}).get("model.npv") or {}).get("stdev")
     stdev = stdev["amount"] if isinstance(stdev, dict) else (stdev or 0.0)
     # Any real spread proves the driver reached the expression; compare against

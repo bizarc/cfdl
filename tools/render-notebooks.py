@@ -29,6 +29,11 @@ import pathlib
 import re
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 NOTEBOOK_DIR = REPO_ROOT / "examples" / "notebooks"
 PAGE_DIR = REPO_ROOT / "site" / "content" / "docs" / "notebooks"
@@ -271,7 +276,7 @@ def write_render_stamp(repo_root: pathlib.Path) -> None:
             digest.update(str(f.relative_to(repo_root)).encode())
             digest.update(f.read_bytes())
     stamp = repo_root / "site" / "content" / "docs" / "notebooks" / ".render-stamp"
-    stamp.write_text(digest.hexdigest() + "\n")
+    stamp.write_text(digest.hexdigest() + "\n", encoding="utf-8")
     print(f"wrote {stamp.relative_to(repo_root)}")
 
 

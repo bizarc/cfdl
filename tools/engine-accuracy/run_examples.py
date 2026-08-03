@@ -70,6 +70,7 @@ def main():
                 cwd=REPO_ROOT,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             if cp.returncode != 0:
                 failures.append({
@@ -88,6 +89,7 @@ def main():
                 cwd=REPO_ROOT,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
             )
             if rp.returncode != 0:
                 failures.append({

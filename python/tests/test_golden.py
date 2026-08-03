@@ -26,7 +26,7 @@ def test_matches_gold(fixture_dir):
     )
     gold_path = GOLD_RESULTS / f"{fixture_dir.name}.results.json"
     assert gold_path.is_file(), f"missing gold for {fixture_dir.name}"
-    gold = json.loads(gold_path.read_text())
+    gold = json.loads(gold_path.read_text(encoding="utf-8"))
 
     assert results.raw["results_version"] == "0.2"
     assert results.model_hash == gold["model_hash"]

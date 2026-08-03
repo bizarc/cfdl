@@ -44,6 +44,11 @@ import sys
 import datetime
 import tempfile
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Windows names the binary cfdl.exe; everywhere else it is bare `cfdl`.
 CLI = REPO_ROOT / "target" / "debug" / ("cfdl.exe" if os.name == "nt" else "cfdl")
@@ -63,7 +68,7 @@ def complete_models(path: pathlib.Path) -> list[tuple[int, str]]:
     A fragment — the single contract a "Recipes" section shows — has no
     `version` line and cannot be compiled on its own.
     """
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     found = []
     for match in FENCE.finditer(text):
         body = match.group(1)
@@ -76,16 +81,17 @@ def complete_models(path: pathlib.Path) -> list[tuple[int, str]]:
 
 def run_model(source: str, workdir: pathlib.Path) -> tuple[dict, dict]:
     """Compile and run one model; returns (ir, results)."""
-    (workdir / "model.cfdl").write_text(source)
+    (workdir / "model.cfdl").write_text(source, encoding="utf-8")
     (workdir / "run.json").write_text(
-        json.dumps({"deterministic": {"annual_discount_rate": 0.08}})
+        json.dumps({"deterministic": {"annual_discount_rate": 0.08}}),
+        encoding="utf-8",
     )
     ir_path = workdir / "ir.json"
     res_path = workdir / "results.json"
 
     compile_cmd = [str(CLI), "compile", str(workdir), "--packs", str(PACKS),
                    "--out", str(ir_path)]
-    done = subprocess.run(compile_cmd, capture_output=True, text=True)
+    done = subprocess.run(compile_cmd, capture_output=True, text=True, encoding="utf-8")
     if done.returncode != 0:
         raise RuntimeError(f"compile failed:\n{indent(done.stderr or done.stdout)}")
 
@@ -94,11 +100,11 @@ def run_model(source: str, workdir: pathlib.Path) -> tuple[dict, dict]:
     pack = USE_PACK.search(source)
     if pack:
         run_cmd += ["--pack", pack.group(1)]
-    done = subprocess.run(run_cmd, capture_output=True, text=True)
+    done = subprocess.run(run_cmd, capture_output=True, text=True, encoding="utf-8")
     if done.returncode != 0:
         raise RuntimeError(f"run failed:\n{indent(done.stderr or done.stdout)}")
 
-    return json.loads(ir_path.read_text()), json.loads(res_path.read_text())
+    return json.loads(ir_path.read_text(encoding="utf-8")), json.loads(res_path.read_text(encoding="utf-8"))
 
 
 def indent(text: str) -> str:

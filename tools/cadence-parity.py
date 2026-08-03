@@ -51,6 +51,11 @@ import subprocess
 import sys
 import tempfile
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 # Windows names the binary cfdl.exe; everywhere else it is bare `cfdl`.
 # The `.exists()` guard below is what makes this matter: subprocess would
@@ -111,7 +116,7 @@ class FixtureError(RuntimeError):
 
 
 def _cfdl(args: list[str], what: str) -> None:
-    done = subprocess.run(args, capture_output=True, text=True)
+    done = subprocess.run(args, capture_output=True, text=True, encoding="utf-8")
     if done.returncode != 0:
         # Surface the compiler's diagnostics. A traceback here says only that
         # a subprocess exited non-zero, which sends the reader to the wrong
@@ -134,7 +139,7 @@ def run_fixture(directory: pathlib.Path, pack: str) -> dict:
              "--out", str(results)],
             f"running {directory.name}",
         )
-        return json.loads(results.read_text())["deterministic"]
+        return json.loads(results.read_text(encoding="utf-8"))["deterministic"]
 
 
 def annual_series(block: dict) -> dict[str, list[float]]:

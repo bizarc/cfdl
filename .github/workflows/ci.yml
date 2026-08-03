@@ -76,6 +76,15 @@ jobs:
       # catches it is in analytic-checks, which CI never executed.
       - name: Benchmarks, identities, cadence parity and the published schemas
         shell: bash
+        # PEP 597: make any text I/O that relies on the platform default
+        # encoding a hard error. Windows decodes as cp1252, so a `read_text()`
+        # with no encoding crashes there and nowhere else the moment the file
+        # it reads grows a curly quote — which is exactly how this step broke
+        # on windows-latest alone. Enforced on Linux so a regression surfaces
+        # in the fast job rather than three platforms later.
+        env:
+          PYTHONWARNDEFAULTENCODING: ${{ runner.os == 'Linux' && '1' || '' }}
+          PYTHONWARNINGS: ${{ runner.os == 'Linux' && 'error::EncodingWarning' || '' }}
         run: |
           python -m pip install --upgrade pip
           python -m pip install jsonschema

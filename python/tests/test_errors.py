@@ -12,7 +12,7 @@ import pytest
 
 @pytest.mark.parametrize("fixture_dir", invalid_fixture_params())
 def test_invalid_raises_compile_error(fixture_dir):
-    gold = json.loads((GOLD_DIAG / f"{fixture_dir.name}.diag.json").read_text())
+    gold = json.loads((GOLD_DIAG / f"{fixture_dir.name}.diag.json").read_text(encoding="utf-8"))
     expected_codes = {d["code"] for d in gold}
     with pytest.raises(CompileError) as excinfo:
         cfdl_sdk.compile(fixture_dir, packs_dir=str(PACKS_DIR))

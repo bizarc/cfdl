@@ -67,6 +67,11 @@ import pathlib
 import re
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKS = REPO_ROOT / "packs"
 DIAGNOSTICS_DOC = REPO_ROOT / "docs" / "08_diagnostics.md"
@@ -85,14 +90,14 @@ def main() -> int:
 
     for path in files:
         pack = path.parent.name
-        for match in CODE_RE.finditer(path.read_text()):
+        for match in CODE_RE.finditer(path.read_text(encoding="utf-8")):
             seen[match.group(1)].append((pack, match.group(2)))
 
     # --- 2. every validation states its match mode -------------------------
     unstated = []
     for path in files:
         pack = path.parent.name
-        for block in path.read_text().split("[[validations]]")[1:]:
+        for block in path.read_text(encoding="utf-8").split("[[validations]]")[1:]:
             if not MATCH_RE.search(block):
                 code = CODE_RE.search(block)
                 unstated.append(f"{pack}: {code.group(0).split(chr(34))[1] if code else '<no code>'}")
@@ -134,7 +139,7 @@ def main() -> int:
     # --- 3. documented codes are unique ------------------------------------
     documented: dict[str, list[str]] = collections.defaultdict(list)
     if DIAGNOSTICS_DOC.exists():
-        for match in DOC_CODE_RE.finditer(DIAGNOSTICS_DOC.read_text()):
+        for match in DOC_CODE_RE.finditer(DIAGNOSTICS_DOC.read_text(encoding="utf-8")):
             if match.group(2) not in documented[match.group(1)]:
                 documented[match.group(1)].append(match.group(2))
     doc_failures = 0

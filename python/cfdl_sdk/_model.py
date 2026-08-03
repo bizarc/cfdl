@@ -32,7 +32,7 @@ def _detect_pack(model_dir: Path) -> str | None:
     """Fixture convention: a ``pack`` file names the active pack."""
     pack_file = model_dir / "pack"
     if pack_file.is_file():
-        return pack_file.read_text().strip() or None
+        return pack_file.read_text(encoding="utf-8").strip() or None
     return None
 
 

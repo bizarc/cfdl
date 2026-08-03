@@ -27,6 +27,11 @@ import subprocess
 import sys
 import tempfile
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 try:
     import tomllib
 except ImportError:  # pragma: no cover
@@ -79,7 +84,7 @@ def resolve_columns(fieldnames, series, failures):
 
 def run_case(case_dir: pathlib.Path) -> list[str]:
     failures = []
-    case = tomllib.loads((case_dir / "case.toml").read_text())
+    case = tomllib.loads((case_dir / "case.toml").read_text(encoding="utf-8"))
     with tempfile.TemporaryDirectory() as tmp:
         ir = pathlib.Path(tmp) / "model.ir.json"
         results_path = pathlib.Path(tmp) / "results.json"
@@ -97,14 +102,14 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
             ],
             check=True,
         )
-        results = json.loads(results_path.read_text())
+        results = json.loads(results_path.read_text(encoding="utf-8"))
 
     if results.get("warnings"):
         failures.append(f"engine warnings: {results['warnings'][:3]}")
 
     series = results["deterministic"]["series"]
     tolerance = float(case.get("period_tolerance", 0.01))
-    with open(case_dir / "expected.csv") as fh:
+    with open(case_dir / "expected.csv", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         resolved = resolve_columns(reader.fieldnames, series, failures)
         if resolved is None:
@@ -138,7 +143,7 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
     metrics = dict(results["deterministic"]["metrics"])
     domain = results.get("domain_metrics") or {}
     metrics.update(domain.get("metrics", {}))
-    expected_metrics = json.loads((case_dir / "expected_metrics.json").read_text())
+    expected_metrics = json.loads((case_dir / "expected_metrics.json").read_text(encoding="utf-8"))
     for key, spec in expected_metrics.items():
         if key not in metrics:
             failures.append(f"metric {key}: missing from results")

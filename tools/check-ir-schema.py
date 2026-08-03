@@ -23,6 +23,11 @@ import os
 import pathlib
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCHEMA_PATH = REPO_ROOT / "docs" / "schemas" / "ir.schema.json"
 MIRROR_PATH = REPO_ROOT / "site" / "public" / "schemas" / "CFDL_v0_1_IR.schema.json"
@@ -51,14 +56,14 @@ def main() -> int:
         )
         return 0
 
-    schema = json.loads(SCHEMA_PATH.read_text())
+    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
 
     # Three copies of one contract, only ever one of which gets read. The
     # results schema drifted four releases because nothing compared them; do
     # not repeat it here.
-    if MIRROR_PATH.exists() and json.loads(MIRROR_PATH.read_text()) != schema:
+    if MIRROR_PATH.exists() and json.loads(MIRROR_PATH.read_text(encoding="utf-8")) != schema:
         print(
             f"check-ir-schema: {MIRROR_PATH.relative_to(REPO_ROOT)} differs from\n"
             f"                 {SCHEMA_PATH.relative_to(REPO_ROOT)}. The site serves the\n"
@@ -68,7 +73,7 @@ def main() -> int:
         return 1
 
     if DOC_PATH.exists():
-        text = DOC_PATH.read_text()
+        text = DOC_PATH.read_text(encoding="utf-8")
         embedded = None
         fenced = text.split("```json", 1)
         if len(fenced) == 2:
@@ -92,7 +97,7 @@ def main() -> int:
 
     failures = 0
     for path in goldens:
-        errors = sorted(validator.iter_errors(json.loads(path.read_text())),
+        errors = sorted(validator.iter_errors(json.loads(path.read_text(encoding="utf-8"))),
                         key=lambda e: list(e.absolute_path))
         if not errors:
             continue

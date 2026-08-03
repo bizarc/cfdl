@@ -44,6 +44,11 @@ import pathlib
 import re
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 RULES = sorted((REPO_ROOT / "packs").glob("*/lowering/rules.toml"))
 
@@ -98,7 +103,7 @@ def main() -> int:
     failures = 0
     checked = 0
     for path in RULES:
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         rel = path.relative_to(REPO_ROOT)
 
         # 1. one state_name prefix, one recurrence

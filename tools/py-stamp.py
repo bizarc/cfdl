@@ -41,6 +41,11 @@ import hashlib
 import pathlib
 import sys
 
+# These tools print prose. A Windows console defaults to cp1252, which
+# cannot encode every character the check names use, so pin stdout to UTF-8.
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 STAMP = REPO_ROOT / "python" / "cfdl_sdk" / ".build-stamp"
 
@@ -100,7 +105,7 @@ def main() -> int:
 
     if mode == "--write":
         STAMP.parent.mkdir(parents=True, exist_ok=True)
-        STAMP.write_text(current + "\n")
+        STAMP.write_text(current + "\n", encoding="utf-8")
         print(f"py-stamp: wrote {STAMP.relative_to(REPO_ROOT)} ({current[:12]}…)")
         return 0
 
@@ -118,7 +123,7 @@ def main() -> int:
         )
         return 1
 
-    stamped = STAMP.read_text().strip()
+    stamped = STAMP.read_text(encoding="utf-8").strip()
     if stamped != current:
         print(
             "py-stamp: engine or pack sources changed since the cfdl_sdk extension\n"

@@ -31,7 +31,7 @@ def canon(obj) -> str:
 def fixture_spec(fixture_dir: Path):
     """(pack, config_path_or_None, fallback_rate) for a valid fixture."""
     pack_file = fixture_dir / "pack"
-    pack = pack_file.read_text().strip() if pack_file.is_file() else None
+    pack = pack_file.read_text(encoding="utf-8").strip() if pack_file.is_file() else None
     run_json = fixture_dir / "run.json"
     if run_json.is_file():
         return pack, str(run_json), 0.0
