@@ -109,14 +109,37 @@ slightly.
 
 ### 2. GitHub: add the secrets
 
-Repository → **Settings** → **Secrets and variables** → **Actions** → *New
-repository secret*, three times:
+Repository → **Settings** → **Secrets and variables** → **Actions** →
+**Repository secrets** → *New repository secret*, three times:
 
 | name | value |
 |---|---|
 | `VERCEL_TOKEN` | the token from step 1 |
-| `VERCEL_ORG_ID` | `orgId` from `.vercel/project.json` |
-| `VERCEL_PROJECT_ID` | `projectId` from `.vercel/project.json` |
+| `VERCEL_ORG_ID` | `projects[0].orgId` (or top-level `orgId` on an older link) |
+| `VERCEL_PROJECT_ID` | `projects[0].id` (or top-level `projectId`) |
+
+**Repository secrets, not Environment secrets.** GitHub will already be showing
+`Preview` and `Production` environments — the Vercel GitHub integration creates
+those to post deployment status, and they are not where these belong. They also
+go vestigial once step 4 disconnects that integration.
+
+There is no production/preview split to make here in any case: the two IDs
+identify the *project* rather than an environment, and one token authenticates
+you rather than a target. The distinction is made inside the workflow, from the
+git ref —
+
+```
+--environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+```
+
+— which is what `vercel pull` uses to fetch the right *application* environment
+variables from Vercel. Those are the ones Vercel scopes by Production/Preview.
+These three are CI credentials, one layer up.
+
+If you later want a human gate on production deploys, that is the one case where
+Environment secrets earn their keep: put `VERCEL_TOKEN` in the `Production`
+environment, add a required reviewer, and declare `environment: Production` on
+the deploy job.
 
 ### 3. Add the deploy workflow, and prove it works BEFORE turning Vercel off
 
