@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "17e6cb623310c5601809795ae89e13e1d938551bf3b461d4f559ba0ab767f225",
+  "model_hash": "12088d2f508f27c370326a11abf28b7096c6da6041f3cd3afb6bea92767b7cff",
   "ledger_hash": "699a3f1a930528d64c117323068dccb1360fb04a58614960c728f7e9f9a9e457",
   "engine": {
     "name": "cfdl-engine",
@@ -116,6 +116,123 @@
       }
     },
     "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 279999.999984,
+            "currency": "USD"
+          },
+          {
+            "amount": 497400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 515307.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -20000.000016,
+            "currency": "USD"
+          },
+          {
+            "amount": 189900.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200119.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -300000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -307500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -315187.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 497400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 515307.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "annual",

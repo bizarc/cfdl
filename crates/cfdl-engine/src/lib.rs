@@ -533,8 +533,17 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     // Hashed over the ledger only — the per-stream, per-period series. Not the
     // metrics: NPV and IRR are folds OF the ledger, so including them would
     // make the hash change for a reason the ledger did not.
+    // `domain.*` is excluded on the same argument that excludes the metrics:
+    // a subtotal is a fold OF the ledger, so a pack changing how it chooses to
+    // subtotal must not make the hash claim the cash moved. What is hashed is
+    // the cash and the states that produced it.
+    let ledger_only: BTreeMap<&String, &Series> = deterministic
+        .series
+        .iter()
+        .filter(|(key, _)| !key.starts_with("domain."))
+        .collect();
     let ledger_hash = canonical_hash(&serde_json::json!({
-        "series": &deterministic.series,
+        "series": ledger_only,
         "annual_rollup": &deterministic.annual_rollup,
     }));
 
@@ -921,6 +930,90 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         stream_offsets.insert(format!("option.{name}"), 0.0);
     }
 
+    // --- Subtotals: the fold layer ------------------------------------------
+    //
+    // Evaluated after every stream and every option, so the ledger is complete,
+    // and in the IR's array order, which is the dependency order the pack
+    // declared. A reference can only reach something already computed, which is
+    // what makes a cycle unexpressible rather than merely rejected.
+    //
+    // These live in their OWN maps and are never merged into `stream_series`.
+    // That is the same construction the `state.` prefix relies on below, and it
+    // is load-bearing: `model_series` was summed from streams alone,
+    // `valued_streams` drives NPV and IRR, and `build_annual_rollup` iterates
+    // `stream_series`. A subtotal is a fold OF the cash, so counting it as cash
+    // would double every number it touches.
+    let stream_category: BTreeMap<&str, &str> = ir
+        .streams
+        .iter()
+        .filter_map(|s| s.category.as_deref().map(|c| (s.name.as_str(), c)))
+        .collect();
+    let mut subtotal_money: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut subtotal_ratio: BTreeMap<String, Vec<Option<f64>>> = BTreeMap::new();
+
+    for spec in &ir.subtotals {
+        match spec.op.as_str() {
+            "sum" | "negated_sum" => {
+                let sign = if spec.op == "negated_sum" { -1.0 } else { 1.0 };
+                let mut acc = vec![0.0_f64; cash_periods];
+                for (name, values) in &stream_series {
+                    // A stream is folded if its CATEGORY is selected, or if it
+                    // is named outright. Category first: it is what the pack
+                    // meant, and it keeps a subtotal correct when the pack
+                    // grows a contract nobody thought to add here.
+                    let by_category = stream_category
+                        .get(name.as_str())
+                        .is_some_and(|c| cfdl_expr::selector_matches_any(&spec.categories, c));
+                    let by_name = cfdl_expr::selector_matches_any(&spec.streams, name);
+                    if !(by_category || by_name) {
+                        continue;
+                    }
+                    for (t, v) in values.iter().take(cash_periods).enumerate() {
+                        acc[t] += sign * v;
+                    }
+                }
+                for referenced in &spec.subtotals {
+                    if let Some(src) = subtotal_money.get(referenced) {
+                        for (t, v) in src.iter().enumerate() {
+                            acc[t] += sign * v;
+                        }
+                    }
+                }
+                subtotal_money.insert(spec.id.clone(), acc);
+            }
+            "ratio" => {
+                let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
+                    continue;
+                };
+                let (Some(num), Some(den)) =
+                    (subtotal_money.get(num_id), subtotal_money.get(den_id))
+                else {
+                    continue;
+                };
+                // A zero denominator publishes `null` and says nothing else.
+                // It is not a warning: a coverage ratio is genuinely undefined
+                // once a loan matures, and HUD's does at year 14 of 29 — that
+                // is the model being right, not a problem. A warning firing on
+                // correct models is noise, and it would fail every benchmark,
+                // since tools/benchmark-runner.py treats any warning as a
+                // failure.
+                //
+                // Nothing is discarded silently either, which is the standard
+                // that would otherwise argue for a warning: the null is IN the
+                // series, per period, so a reader sees exactly which periods
+                // are undefined and a consumer cannot mistake one for zero.
+                let values: Vec<Option<f64>> = (0..cash_periods)
+                    .map(|t| {
+                        let d = den.get(t).copied().unwrap_or(0.0);
+                        (d.abs() > f64::EPSILON).then(|| num.get(t).copied().unwrap_or(0.0) / d)
+                    })
+                    .collect();
+                subtotal_ratio.insert(spec.id.clone(), values);
+            }
+            _ => {}
+        }
+    }
+
     let mut series_map = BTreeMap::new();
     for (name, values) in &stream_series {
         series_map.insert(
@@ -944,6 +1037,34 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         series_map.insert(
             format!("state.{name}"),
             Series::from_plain(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &values[..periods.min(values.len())],
+            ),
+        );
+    }
+    // Subtotals, under their own `domain.` prefix. Money keeps a currency and
+    // no offset — a fold spans streams that may settle at different points, so
+    // there is no single placement to claim. Ratios are plain numbers, and
+    // `null` where the denominator vanishes.
+    for (id, values) in &subtotal_money {
+        series_map.insert(
+            id.clone(),
+            Series::from_values(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &ir.model.currency,
+                None,
+                &values[..periods.min(values.len())],
+            ),
+        );
+    }
+    for (id, values) in &subtotal_ratio {
+        series_map.insert(
+            id.clone(),
+            Series::from_optional(
                 &ir.time.calendar,
                 &ir.time.start,
                 periods as u32,
@@ -2483,6 +2604,11 @@ struct Ir {
     /// crates for no gain.
     #[serde(default)]
     stream_inputs: Vec<serde_json::Value>,
+    /// Per-period subtotals, in dependency order. The compiler has already
+    /// rejected forward references, so a lookup here always finds something
+    /// already computed.
+    #[serde(default)]
+    subtotals: Vec<IrSubtotal>,
     #[serde(default)]
     assumptions: IrAssumptions,
     #[serde(default)]
@@ -2635,10 +2761,35 @@ struct IrStream {
     name: String,
     owner: IrEntityRef,
     direction: String,
+    /// What this stream is, economically. The fold layer aggregates on this
+    /// rather than on the name — the one field of stream metadata the engine
+    /// genuinely needs, read once per stream rather than per period.
+    #[serde(default)]
+    category: Option<String>,
     schedule: IrSchedule,
     amount: IrExpr,
     #[serde(default)]
     active_when: Option<IrExpr>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrSubtotal {
+    id: String,
+    // `kind` is in the IR but not read here: `op` already determines the shape
+    // (a sum is money, a ratio is a number), and the pack loader has rejected
+    // any spec where the two disagree. Deserializing a field only to ignore it
+    // would be the kind of accepted-and-discarded the repo rejects elsewhere.
+    op: String,
+    #[serde(default)]
+    categories: Vec<String>,
+    #[serde(default)]
+    streams: Vec<String>,
+    #[serde(default)]
+    subtotals: Vec<String>,
+    #[serde(default)]
+    numerator: Option<String>,
+    #[serde(default)]
+    denominator: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -2857,6 +3008,14 @@ pub enum Scalar {
 pub enum SeriesValue {
     Money(Money),
     Number(f64),
+    /// A period where the value is genuinely undefined — a coverage ratio in a
+    /// period with no debt service. Published as JSON `null`, which the results
+    /// schema has always permitted.
+    ///
+    /// Not zero: a coverage ratio of "no debt" is not a coverage ratio of zero,
+    /// and a consumer that averaged the series would be badly misled. Not an
+    /// omission either, because a shortened series breaks index alignment.
+    Null,
 }
 
 impl SeriesValue {
@@ -2865,7 +3024,7 @@ impl SeriesValue {
     pub fn money_amount(&self) -> Option<f64> {
         match self {
             SeriesValue::Money(m) => Some(m.amount),
-            SeriesValue::Number(_) => None,
+            SeriesValue::Number(_) | SeriesValue::Null => None,
         }
     }
 }
@@ -2915,6 +3074,26 @@ impl Series {
     /// can be inspected rather than only its effect on cash. No currency and
     /// no offset — a state is not paid, so it does not sit anywhere in its
     /// period.
+    /// A plain-number series where some periods are genuinely undefined.
+    /// `None` publishes as JSON `null`, which the results schema permits.
+    fn from_optional(calendar: &str, start: &str, periods: u32, values: &[Option<f64>]) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset: None,
+            values: values
+                .iter()
+                .map(|v| match v {
+                    Some(x) => SeriesValue::Number(*x),
+                    None => SeriesValue::Null,
+                })
+                .collect(),
+        }
+    }
+
     fn from_plain(calendar: &str, start: &str, periods: u32, values: &[f64]) -> Self {
         Self {
             index: SeriesIndex {

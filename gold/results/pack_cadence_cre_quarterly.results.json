@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "ad18efcb1156dd51fe052b9c0ade478b26beb75d85528b75a059159c651adf1b",
+  "model_hash": "6a929984e164624288d416ff70ddb5374124e50dc93322909a892b065154d2b7",
   "ledger_hash": "8745777e0903c27a9e418aab02305afd00be870ce967a660122147909ee01351",
   "engine": {
     "name": "cfdl-engine",
@@ -117,6 +117,312 @@
       }
     },
     "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39999.999996,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -75000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -35000.000004,
+            "currency": "USD"
+          },
+          {
+            "amount": 45000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 45000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 47475.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 47475.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 47475.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 47475.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50029.875,
+            "currency": "USD"
+          },
+          {
+            "amount": 50029.875,
+            "currency": "USD"
+          },
+          {
+            "amount": 50029.875,
+            "currency": "USD"
+          },
+          {
+            "amount": 50029.875,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -75000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -75000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -75000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -75000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -76875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -76875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -76875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -76875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -78796.875,
+            "currency": "USD"
+          },
+          {
+            "amount": -78796.875,
+            "currency": "USD"
+          },
+          {
+            "amount": -78796.875,
+            "currency": "USD"
+          },
+          {
+            "amount": -78796.875,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 124350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          },
+          {
+            "amount": 128826.75,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "quarterly",

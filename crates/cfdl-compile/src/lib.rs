@@ -313,6 +313,8 @@ struct ActivePackContext {
     /// The closed vocabulary a stream's `category` must name. See
     /// `cfdl_pack::PackManifest::categories`.
     categories: Vec<String>,
+    /// Per-period subtotal declarations, in declaration order.
+    subtotal_specs: Vec<cfdl_pack::SubtotalSpec>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
 }
@@ -350,6 +352,10 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     states: Vec<IrState>,
+    /// Per-period subtotals declared by the active pack. Omitted when the pack
+    /// declares none, so existing IR is byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subtotals: Vec<IrSubtotal>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     /// What each pack-lowered stream consumed, keyed by stream name. Omitted
@@ -584,6 +590,39 @@ struct IrStreamInputs {
     /// different facts, and a reader tracing a number needs to tell them apart.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     defaults_applied: Vec<String>,
+}
+
+/// A per-period subtotal: a named fold over the ledger, lowered from the
+/// active pack's `[[subtotals]]`.
+///
+/// Lowered into the IR rather than evaluated as a post-pass so that the engine
+/// — which is the only thing that has the per-period series — computes it, and
+/// so that every host (`cli`, `wasm`, `py`, `server`) gets it with no plumbing:
+/// it rides in the IR they already load. Same reasoning as `IrState`.
+///
+/// Array order is dependency order. `parse_subtotal_specs` has already rejected
+/// any forward reference, so by here a reference names something earlier.
+#[derive(Debug, Serialize)]
+struct IrSubtotal {
+    id: String,
+    kind: String,
+    op: String,
+    /// Category path prefixes to fold — `operating.*`. The preferred form: it
+    /// names what a stream IS rather than what it is called.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    categories: Vec<String>,
+    /// Stream-name selectors, for what a category cannot express.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    streams: Vec<String>,
+    /// Ids of subtotals declared earlier.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subtotals: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    numerator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    denominator: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    formula: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -922,6 +961,13 @@ fn build_ir(
         return Err(diagnostics);
     }
 
+    let (ir_subtotals, subtotal_diags) = lower_subtotals(active_pack);
+    if !subtotal_diags.is_empty() {
+        let mut diagnostics = subtotal_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let (ir_events, ir_options, event_diags) = lower_events_options(resolve_output, &id_seed);
     if !event_diags.is_empty() {
         let mut diagnostics = event_diags;
@@ -977,6 +1023,7 @@ fn build_ir(
             })
             .collect(),
         stream_inputs,
+        subtotals: ir_subtotals,
         events: ir_events,
         options: ir_options,
         runs: {
@@ -1116,6 +1163,7 @@ fn resolve_active_pack_inner(
         version: active.version.clone(),
         cadences: registry.cadences(&active.name),
         categories: registry.categories(&active.name),
+        subtotal_specs: registry.subtotal_specs(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
     }))
@@ -2619,6 +2667,60 @@ fn lower_states(
 
 /// Lower `curve` statements into IR curves: dedupe names, sort points by
 /// date, reject duplicate point dates.
+/// Lower the active pack's `[[subtotals]]` into IR nodes.
+///
+/// The pack loader has already checked shape and rejected forward references,
+/// so the remaining job is the one thing only the compiler can see: whether a
+/// category a subtotal folds is actually in the pack's declared vocabulary. A
+/// subtotal over `operating.revenu.*` — one letter out — would otherwise fold
+/// nothing, publish a series of zeros, and say so nowhere.
+fn lower_subtotals(active_pack: Option<&ActivePackContext>) -> (Vec<IrSubtotal>, Vec<Diagnostic>) {
+    let Some(pack) = active_pack else {
+        return (vec![], vec![]);
+    };
+    let mut out = Vec::new();
+    let mut diags = Vec::new();
+    for spec in &pack.subtotal_specs {
+        for selector in &spec.categories {
+            let reaches_any = pack
+                .categories
+                .iter()
+                .any(|declared| cfdl_expr::selector_matches(selector, declared));
+            if !reaches_any {
+                diags.push(Diagnostic {
+                    code: "E5023_SUBTOTAL_UNKNOWN_CATEGORY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Subtotal '{}' folds category '{selector}', which matches none of the \
+                         categories pack '{}' declares. It would sum nothing and publish zeros.",
+                        spec.id, pack.name
+                    ),
+                    file: None,
+                    span: None,
+                    path: None,
+                    hint: Some(format!(
+                        "Declared categories: {}.",
+                        pack.categories.join(", ")
+                    )),
+                    notes: vec![],
+                });
+            }
+        }
+        out.push(IrSubtotal {
+            id: spec.id.clone(),
+            kind: spec.kind.clone(),
+            op: spec.op.clone(),
+            categories: spec.categories.clone(),
+            streams: spec.streams.clone(),
+            subtotals: spec.subtotals.clone(),
+            numerator: spec.numerator.clone(),
+            denominator: spec.denominator.clone(),
+            formula: spec.formula.clone(),
+        });
+    }
+    (out, diags)
+}
+
 fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>, Vec<Diagnostic>) {
     let mut curves: Vec<IrCurve> = Vec::new();
     let mut diags = Vec::new();
@@ -3440,6 +3542,7 @@ mod pack_validation_parity_tests {
             version: "0.1.0".to_string(),
             cadences: registry.cadences(pack),
             categories: registry.categories(pack),
+            subtotal_specs: registry.subtotal_specs(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
         }

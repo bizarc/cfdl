@@ -212,7 +212,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric.",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared fold over the ledger. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is a fold OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a fold spans streams that may settle at different points in a period and so has no single placement to claim.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }
