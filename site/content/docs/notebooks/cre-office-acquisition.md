@@ -67,7 +67,7 @@ print("streams:", len(model.ir["streams"]))
 ```
 
 ```
-streams: 12
+streams: 14
 ```
 
 ## Run
@@ -97,7 +97,7 @@ cf.head()
 ```
 
 ```
-shape: (120, 13)
+shape: (120, 15)
 ```
 
 ```
@@ -125,11 +125,27 @@ period
 2026-04                                 0.0   
 2026-05                                 0.0   
 
-         stream.cre.unit.base_rent.tenant_a  \
+         stream.cre.unit.abatement.tenant_a  \
+period                                        
+2026-01                            -40000.0   
+2026-02                            -40000.0   
+2026-03                            -40000.0   
+2026-04                                 0.0   
+2026-05                                 0.0   
+
+         stream.cre.unit.abatement.tenant_b  \
 period                                        
 2026-01                                 0.0   
 2026-02                                 0.0   
 2026-03                                 0.0   
+2026-04                                 0.0   
+2026-05                                 0.0   
+
+         stream.cre.unit.base_rent.tenant_a  \
+period                                        
+2026-01                             40000.0   
+2026-02                             40000.0   
+2026-03                             40000.0   
 2026-04                             40000.0   
 2026-05                             40000.0   
 
@@ -212,14 +228,16 @@ results.metrics_frame()
 14             stream.cre.property.opex.total -3.361015e+06      USD   
 15    stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD   
 16   stream.cre.rollover.ti_lc.tenant_a.total -1.750000e+05      USD   
-17   stream.cre.unit.base_rent.tenant_a.total  2.428385e+06      USD   
-18   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
-19  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
-20  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
-21       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
-22       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
-23              stream.cre.vacancy.loss.total -1.800000e+05      USD   
-24   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
+17   stream.cre.unit.abatement.tenant_a.total -1.200000e+05      USD   
+18   stream.cre.unit.abatement.tenant_b.total  0.000000e+00      USD   
+19   stream.cre.unit.base_rent.tenant_a.total  2.548385e+06      USD   
+20   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
+21  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
+22  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
+23       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
+24       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
+25              stream.cre.vacancy.loss.total -1.800000e+05      USD   
+26   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
 
         source  
 0   domain:cre  
@@ -247,6 +265,8 @@ results.metrics_frame()
 22        core  
 23        core  
 24        core  
+25        core  
+26        core  
 ```
 
 ## What-if
