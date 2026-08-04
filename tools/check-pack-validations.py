@@ -41,6 +41,11 @@ Defaulting is the trap, so this requires the choice to be WRITTEN — either
 `instance` or `exact`. An author who wants exact matching may still have it;
 they just have to say so.
 
+Codes are identified by LETTER plus number (`E5010`, `W3001`), not by the number
+alone, so `E3500` and `W3500` are distinct and may coexist. Both checks below
+originally matched an `E` followed by digits, and so were blind to warnings
+entirely.
+
 ## 3. Documented diagnostic codes must be unique too.
 
 Check 1 reads `packs/*/validations.toml`, which is where authors add codes by
@@ -75,9 +80,15 @@ sys.stderr.reconfigure(encoding="utf-8")
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKS = REPO_ROOT / "packs"
 DIAGNOSTICS_DOC = REPO_ROOT / "docs" / "08_diagnostics.md"
-DOC_CODE_RE = re.compile(r"`(E\d+)_([A-Z0-9_]+)`")
+# The identifier is the LETTER plus the number, not the number alone: `E3500`
+# and `W3500` are different codes and may coexist. Before this was widened both
+# regexes matched only `E`, so warning codes were invisible to both uniqueness
+# checks — a `W3500` could be added twice, or added without ever being
+# documented, and nothing looked. That is the same blind spot check 3 exists to
+# close, one letter over.
+DOC_CODE_RE = re.compile(r"`([EWI]\d+)_([A-Z0-9_]+)`")
 
-CODE_RE = re.compile(r'code = "(E\d+)_([A-Z0-9_]+)"')
+CODE_RE = re.compile(r'code = "([EWI]\d+)_([A-Z0-9_]+)"')
 MATCH_RE = re.compile(r'^match = ', re.M)
 
 

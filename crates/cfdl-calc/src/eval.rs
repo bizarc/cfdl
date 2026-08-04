@@ -5,6 +5,12 @@ use crate::value::Value;
 use crate::CalcError;
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use rust_decimal::Decimal;
+// Exempt from the workspace's BTreeMap-only rule (see clippy.toml). `MapEnv` is
+// a test and embedding helper whose map is only ever inserted into and looked
+// up by key — it is never iterated, so no result can depend on its order. A
+// HashMap here that DID get iterated would still be caught, because the
+// exemption is on this declaration rather than on the module.
+#[allow(clippy::disallowed_types)]
 use std::collections::HashMap;
 
 /// Numeric evaluation mode.
@@ -44,6 +50,7 @@ pub trait Env {
 
 #[derive(Debug, Default, Clone)]
 pub struct MapEnv {
+    #[allow(clippy::disallowed_types)] // insert/lookup only; never iterated
     vars: HashMap<String, Value>,
 }
 

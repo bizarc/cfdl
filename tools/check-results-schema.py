@@ -20,7 +20,14 @@ emitted field fails loudly, which is what caught `Series.offset` here. A field
 that stops being emitted only fails if it is `required`, so keep the required
 lists honest.
 
-Usage: python3 tools/check-results-schema.py
+Usage: python3 tools/check-results-schema.py            # check
+       python3 tools/check-results-schema.py --write    # propagate to the copies
+
+`--write` regenerates the mirror and the embedded doc block from the source
+schema. Until it existed this gate could say the three copies disagreed but not
+make them agree, so the fix was a three-way paste — and `docs/06` was the copy
+that fell four releases behind, because it is the one a paste is most likely to
+miss.
 """
 
 from __future__ import annotations
@@ -29,6 +36,9 @@ import json
 import os
 import pathlib
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import schema_sync  # noqa: E402  (path set above so the tools dir is importable)
 
 # These tools print prose. A Windows console defaults to cp1252, which
 # cannot encode every character the check names use, so pin stdout to UTF-8.
@@ -43,6 +53,18 @@ GOLD_RESULTS = REPO_ROOT / "gold" / "results"
 
 
 def main() -> int:
+    if "--write" in sys.argv[1:]:
+        changed = schema_sync.sync(SCHEMA_PATH, MIRROR_PATH, DOC_PATH, REPO_ROOT)
+        if not changed:
+            print("check-results-schema: already in sync; nothing written")
+        else:
+            print(f"check-results-schema: rewrote {len(changed)} copy/copies from "
+                  f"{SCHEMA_PATH.relative_to(REPO_ROOT)}")
+            for path in changed:
+                print(f"      {path}")
+        # Fall through: writing the copies is not evidence the schema is
+        # satisfiable. The goldens still have to validate against it.
+
     try:
         from jsonschema import Draft202012Validator
     except ImportError:
@@ -75,7 +97,7 @@ def main() -> int:
         print(
             f"check-results-schema: {MIRROR_PATH.relative_to(REPO_ROOT)} differs from\n"
             f"                      {SCHEMA_PATH.relative_to(REPO_ROOT)}. The site serves\n"
-            "                      the mirror, so they must agree.",
+            "                      the mirror, so they must agree. Run with `--write`.",
             file=sys.stderr,
         )
         return 1
@@ -93,7 +115,8 @@ def main() -> int:
             print(
                 f"check-results-schema: {DOC_PATH.relative_to(REPO_ROOT)} does not embed the\n"
                 f"                      current {SCHEMA_PATH.relative_to(REPO_ROOT)}. That page is\n"
-                "                      generated; regenerate it rather than editing it.",
+                "                      generated; regenerate it with `--write` rather than\n"
+                "                      editing it.",
                 file=sys.stderr,
             )
             return 1

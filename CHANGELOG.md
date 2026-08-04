@@ -8,6 +8,28 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: schema `--write`, warning codes in the gates, and a determinism lint
+
+`check-results-schema.py` and `check-ir-schema.py` gained `--write`, which
+regenerates the site mirror and the embedded docs block from the source schema.
+Both gates could previously say the three copies disagreed but not make them
+agree, so keeping them in step was a three-way paste — and `docs/06` is the copy
+that fell four releases behind. The canonical serialisation now lives in one
+place, `tools/schema_sync.py`, rather than being re-derived by hand.
+
+`check-pack-validations.py`'s code-uniqueness checks matched an `E` followed by
+digits, so warning codes were invisible to both of them: a `W3500` could be
+added twice, or added without ever being documented, and nothing looked. Widened
+to `[EWI]`, keyed on letter-plus-number so `E3500` and `W3500` stay distinct.
+
+`clippy.toml` disallows `HashMap`/`HashSet`, making determinism in the numeric
+path a property of the type rather than of anyone remembering. Float sums
+reassociate, so a map with unspecified iteration order there would produce
+results that differ between runs of the same model — and the golden suite would
+report it as a flapping test rather than as the nondeterminism it is. `cfdl-lsp`
+and one never-iterated map in `cfdl-calc` are exempt at the declaration, with
+reasons.
+
 ### Added: `cre.permanent_debt`
 
 A commercial mortgage on a stabilised property — the CRE pack previously had no
