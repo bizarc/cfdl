@@ -979,6 +979,22 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                         }
                     }
                 }
+                // Rounded HERE, not just on the way out, so the ratio below
+                // divides the same numbers that get published. Two reasons.
+                //
+                // A fold of signed cash whose flows cancel leaves a residue —
+                // about 2e-12 — rather than an exact zero. Dividing that by a
+                // real denominator yields ~2.6e-17, whose last bits differ by
+                // platform: that shipped, and Windows disagreed with Linux and
+                // macOS on one golden.
+                //
+                // And it makes the published rows self-consistent: a reader can
+                // divide the published NOI by the published debt service and
+                // get the published coverage ratio, instead of a number that
+                // only reconciles against intermediates nobody can see.
+                for v in acc.iter_mut() {
+                    *v = round_amount(*v);
+                }
                 subtotal_money.insert(spec.id.clone(), acc);
             }
             "ratio" => {
@@ -3076,6 +3092,18 @@ impl Series {
     /// period.
     /// A plain-number series where some periods are genuinely undefined.
     /// `None` publishes as JSON `null`, which the results schema permits.
+    ///
+    /// Rounded like every other published number. That is not cosmetic: a
+    /// ratio's numerator is a fold of signed cash, so a period whose flows
+    /// cancel leaves a residue rather than an exact zero — around 2e-12 in
+    /// practice — and dividing that by a real denominator publishes something
+    /// like 2.655e-17. Whose last bits differ by platform: this shipped, and
+    /// the Windows runner disagreed with Linux and macOS on one golden while
+    /// both of those agreed with each other.
+    ///
+    /// `round_amount` is described at its definition as the single global
+    /// rounding policy for deterministic numeric outputs. Skipping it here was
+    /// the defect; nothing else published bypasses it.
     fn from_optional(calendar: &str, start: &str, periods: u32, values: &[Option<f64>]) -> Self {
         Self {
             index: SeriesIndex {
@@ -3087,7 +3115,7 @@ impl Series {
             values: values
                 .iter()
                 .map(|v| match v {
-                    Some(x) => SeriesValue::Number(*x),
+                    Some(x) => SeriesValue::Number(round_amount(*x)),
                     None => SeriesValue::Null,
                 })
                 .collect(),
