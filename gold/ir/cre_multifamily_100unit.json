@@ -43,9 +43,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 34,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 40,
           "end_col": 1
         }
       }
@@ -69,9 +69,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 25,
           "start_col": 1,
-          "end_line": 29,
+          "end_line": 30,
           "end_col": 1
         }
       }
@@ -112,6 +112,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.other",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -131,7 +132,7 @@
         "source_span": {
           "start_line": 17,
           "start_col": 1,
-          "end_line": 20,
+          "end_line": 21,
           "end_col": 1
         }
       }
@@ -161,9 +162,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 34,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 40,
           "end_col": 1
         },
         "generated_by": {
@@ -201,9 +202,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 25,
           "start_col": 1,
-          "end_line": 29,
+          "end_line": 30,
           "end_col": 1
         },
         "generated_by": {

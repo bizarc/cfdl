@@ -377,6 +377,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -396,7 +397,7 @@
         "source_span": {
           "start_line": 46,
           "start_col": 1,
-          "end_line": 49,
+          "end_line": 50,
           "end_col": 1
         }
       }
@@ -409,6 +410,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -426,9 +428,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 51,
+          "start_line": 52,
           "start_col": 1,
-          "end_line": 54,
+          "end_line": 56,
           "end_col": 1
         }
       }

@@ -182,3 +182,35 @@ than projecting it. Out of scope, deliberately:
   only.
 - **AMI-indexed rent limits and sources & uses.** Regulatory rent caps are
   inputs to the Sample, not derivations within it.
+
+## What this case asserts now that it did not
+
+Two published decompositions became machine-checked assertions when streams
+stopped having to be aggregates.
+
+**The four expense sub-lines.** The workbook publishes Management, Operations
+and Maintenance, Utilities, and Taxes/Insurance/Reserves separately (Operating
+Pro Forma rows 18–21) and this case previously asserted only their total,
+because `cre.property_opex` emitted one un-suffixed stream and a property could
+declare exactly one expense line. Four streams now carry them, and
+`expected.csv` asserts all four at every anchor year. The four states already
+existed — they were split for the rounding reason — so this moved nothing:
+their sum reproduces the total the file asserted before, at every anchor.
+
+**P&I and MIP.** The pro forma's debt line is one number and the workbook
+defines it as P+I+MIP. Both legs are now separate streams, grounded in the
+First Mortgage Sizing tab rather than inferred: MIP is the stated 0.450% of the
+stated $150,000 principal (675.00, flat, exact), and debt service is the
+residual of the published "Calculated Monthly P+I+MIP Payment" of 1,165.7819.
+**And the round is the workbook's.** The pro forma's debt cell is
+`=ROUND(...,0)`, so 13,989 is what it computes rather than what it displays, and
+the DSCR it publishes is that rounded line divided into a rounded NOI. An
+intermediate version of this work used the sizing tab's unrounded 13,989.3828
+and moved the lifetime expectation to 195,851.36; that was more precise and less
+accurate, and it would have left a 0.38 residual on every published debt line.
+
+The model applies the workbook's round through the same `round_to` it already
+uses for the expense recurrence, rather than restating 13,989 as a constant — so
+the derivation is visible and tracks the sizing inputs. P&I is then 13,314 and
+MIP 675, summing to the published line exactly. Nothing about the previous
+expectations changed.

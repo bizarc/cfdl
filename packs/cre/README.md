@@ -259,6 +259,8 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
 }
 
 // A lower stop: this tenant reimburses its share above $180k from day one.
+// examples-allow: cre.unit.abatement.tenant_b — no free rent on this lease, so
+// its abatement line is correctly zero. Tenant A's is not, and shows the split.
 contract cre.lease_unit.tenant_b on entity asset.tower {
   term 2026-07..2033-06
   terms {

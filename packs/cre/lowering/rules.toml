@@ -98,7 +98,31 @@ owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.base_rent"
 # Free rent burns off first; escalation steps on lease anniversaries.
-amount_expr = "({{contract.rent_year}} / {{model.periods_per_year}}) * clamp({{time.elapsed_periods}} + 1 - {{periods.free_rent_months}}, 0, 1) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.rent_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+free_rent_months = "0"
+escalation = "0"
+
+# Free rent as its own deduction from potential gross revenue, which is how an
+# institutional pro forma reports it (MIT OCW 11.431J does). It used to be
+# netted into base rent by a clamp, so a model could show the line OR have it
+# counted in NOI, never both — backlog 1.3.
+#
+# Base rent above is now GROSS and this is the offset, so the two still sum to
+# the rent actually collected. `domain.cre.noi` carries this family in its
+# denominator, which is what keeps NOI unchanged by the split.
+[[rules]]
+id = "cre_lease_unit_abatement"
+contract_name = "cre.lease_unit"
+stream_name = "cre.unit.abatement.{{contract.suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "operating.deduction.abatement"
+amount_expr = "({{contract.rent_year}} / {{model.periods_per_year}}) * (1 - clamp({{time.elapsed_periods}} + 1 - {{periods.free_rent_months}}, 0, 1)) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -202,7 +226,7 @@ schedule_to = "{{contract.term_end}}"
 [[rules]]
 id = "cre_property_opex"
 contract_name = "cre.property_opex"
-stream_name = "cre.property.opex"
+stream_name = "cre.property.opex{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.opex"

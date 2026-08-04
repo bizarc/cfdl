@@ -185,6 +185,46 @@
       }
     },
     {
+      "id": "28b50cb559951825924e94269c976afc",
+      "name": "cre.unit.abatement.tenant_a",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "quarterly",
+        "from": "2025-01-01",
+        "to": "2028-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(480000.0 / 4.0) * (1.0 - clamp(round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 3.0, 0.0) + 1.0 - 1.6666666667, 0.0, 1.0)) * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 15,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
       "id": "b75f0720ade31b99d725ed20032b2993",
       "name": "cre.unit.base_rent.tenant_a",
       "owner": {
@@ -201,7 +241,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(480000.0 / 4.0) * clamp(round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 3.0, 0.0) + 1.0 - 1.6666666667, 0.0, 1.0) * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 12.0, 0.0))"
+        "src": "(480000.0 / 4.0) * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -304,6 +344,14 @@
     }
   ],
   "stream_inputs": [
+    {
+      "stream": "cre.unit.abatement.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "escalation": "0.03",
+        "rent_year": "480000"
+      }
+    },
     {
       "stream": "cre.unit.base_rent.tenant_a",
       "contract": "cre.lease_unit.tenant_a",

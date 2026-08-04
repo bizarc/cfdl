@@ -8,6 +8,54 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: streams are line items — backlog 1.3, 1.5, and the reporting half of 7.14
+
+A stream is the atom a statement reports, so a stream that is secretly an
+aggregate is a row a statement cannot show. Three of them were.
+
+**A property may now have more than one expense line (1.5).**
+`cre.property_opex` takes a suffix and `domain.cre.noi` selects
+`cre.property.opex.*`. `benchmarks/cre/hud_home_multifamily` carries its four
+published sub-lines as four streams and **asserts all four independently**
+against the Sample workbook's Operating Pro Forma rows 18–21, where it
+previously asserted only their total. The four states already existed — split
+for the rounding reason — so this moved nothing: their sum reproduces the
+previously asserted total at every anchor year.
+
+**Free rent is its own deduction (1.3).** `cre.lease_unit` emits
+`cre.unit.abatement.<id>` and publishes base rent GROSS; the abatement family
+sits in `domain.cre.noi`'s denominator, so the two net to the rent collected.
+Previously a model could report the line OR have it counted in NOI, never both.
+Verified as an exact decomposition — gross + abatement equals the previous net
+to 0.00e+00, and NPV, NOI and DSCR are unchanged.
+
+**HUD's mortgage separates P&I from MIP (7.14).** The pro forma's debt line is
+one number and the workbook defines it as P+I+MIP. Both legs are now grounded
+in the First Mortgage Sizing tab rather than inferred: MIP is the stated 0.450%
+of the stated $150,000 principal (675.00, flat, exact), and debt service is the
+residual of the published "Calculated Monthly P+I+MIP Payment" of 1,165.7819 —
+which reconstructs the 13,314.3828 that backlog 7.14 had recorded by hand.
+`domain.cre.debt_service` carries the MIP because coverage there is measured
+against the whole published line, which is what the workbook's own DSCR uses.
+
+**No expectation moved.** An intermediate version of this change used the sizing
+tab's unrounded 13,989.3828 and moved the lifetime figure to 195,851.36, on the
+reasoning that the pro forma's 13,989 was a rounded display. It is not: that
+cell is `=ROUND(...,0)`, so 13,989 is what the workbook COMPUTES, and its
+published DSCR is that rounded line divided into a rounded NOI. Using the
+unrounded payment would have been more precise and less accurate. The model
+applies the workbook's own round — via the `round_to` it already uses for the
+expense recurrence — rather than restating 13,989 as a constant, so the
+derivation stays visible.
+
+Every native stream in every pack-using model is now classified, so the
+completeness gate that Stage 8 turns on starts from zero unclassified streams.
+
+**Invariants hold across all ten changed results goldens**: `model.total`,
+`model.npv`, `model.irr`, `model.moic`, `domain.cre.noi`, `domain.cre.dscr` and
+every `model.net_cash_flow` period are identical. What changed is that
+aggregates became lines.
+
 ### Added: provenance, resolved inputs, and a ledger hash — `results_version` 0.3
 
 A published line item can now be traced back to the term that struck it.

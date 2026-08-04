@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "b63ab90eda17aed4302978f27cfbd2431e5c45e9295e1f0ca5c7f0beb1517f3d",
-  "ledger_hash": "c8fcedb1dbb116fc2d2a3757e901ec851e3d83a67bed21f1006c34dbe0a5ccfc",
+  "model_hash": "1cad1b3e46660ca47b34573fadf106a6c70cf6cdb5318b6ff71cf3fefbba056f",
+  "ledger_hash": "a3de54568e0b0890d89c11637e79f7ef0da9e4ce73a5d6bb438942f7500d0fb1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -9,6 +9,14 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.abatement.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
       {
         "contract": "cre.lease_unit.tenant_a",
         "stream": "cre.unit.base_rent.tenant_a",
@@ -91,8 +99,12 @@
         "amount": -922687.5,
         "currency": "USD"
       },
+      "stream.cre.unit.abatement.tenant_a.total": {
+        "amount": -200000.0,
+        "currency": "USD"
+      },
       "stream.cre.unit.base_rent.tenant_a.total": {
-        "amount": 1283632.0,
+        "amount": 1483632.0,
         "currency": "USD"
       },
       "stream.cre.unit.recoveries.tenant_a.total": {
@@ -566,6 +578,160 @@
           }
         ]
       },
+      "stream.cre.unit.abatement.tenant_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 36
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.cre.unit.base_rent.tenant_a": {
         "index": {
           "calendar": "monthly",
@@ -575,23 +741,23 @@
         "offset": 1.0,
         "values": [
           {
-            "amount": 0.0,
+            "amount": 40000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 40000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 40000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 40000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 40000.0,
             "currency": "USD"
           },
           {
@@ -1094,6 +1260,27 @@
             }
           ]
         },
+        "stream.cre.unit.abatement.tenant_a": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": -200000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.cre.unit.base_rent.tenant_a": {
           "index": {
             "calendar": "annual",
@@ -1102,7 +1289,7 @@
           },
           "values": [
             {
-              "amount": 280000.0,
+              "amount": 480000.0,
               "currency": "USD"
             },
             {

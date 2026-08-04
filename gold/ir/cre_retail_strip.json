@@ -302,6 +302,86 @@
       }
     },
     {
+      "id": "ef385cf9cab4bffc61f4b81f28c0e4b9",
+      "name": "cre.unit.abatement.anchor",
+      "owner": {
+        "symbol": "asset.strip_center"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2032-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(540000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0)) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
+      "id": "d399c6e61282336db5195523296bd0d7",
+      "name": "cre.unit.abatement.shops",
+      "owner": {
+        "symbol": "asset.strip_center"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2031-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(288000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 2.0, 0.0, 1.0)) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 49,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
       "id": "38a05278fdd20a4425d29e32c4ae7c8b",
       "name": "cre.unit.base_rent.anchor",
       "owner": {
@@ -318,7 +398,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(540000.0 / 12.0) * clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+        "src": "(540000.0 / 12.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -358,7 +438,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(288000.0 / 12.0) * clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 2.0, 0.0, 1.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+        "src": "(288000.0 / 12.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -580,6 +660,14 @@
   ],
   "stream_inputs": [
     {
+      "stream": "cre.unit.abatement.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "escalation": "0.02",
+        "rent_year": "540000"
+      }
+    },
+    {
       "stream": "cre.unit.base_rent.anchor",
       "contract": "cre.lease_unit.anchor",
       "terms": {
@@ -614,6 +702,14 @@
         "overage_pct": "0.02",
         "sales_growth": "0.03",
         "sales_year": "11500000"
+      }
+    },
+    {
+      "stream": "cre.unit.abatement.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "escalation": "0.025",
+        "rent_year": "288000"
       }
     },
     {

@@ -568,7 +568,8 @@
       "domain.cre.debt_service": {
         "numerator_streams": [
           "loan.construction_interest",
-          "loan.permanent_debt_service"
+          "loan.permanent_debt_service",
+          "loan.mortgage_insurance"
         ],
         "denominator_streams": [],
         "formula": "-sum(numerator_streams)"
@@ -594,7 +595,8 @@
         "denominator_streams": [
           "cre.ops.expense",
           "cre.vacancy.loss",
-          "cre.property.opex"
+          "cre.property.opex.*",
+          "cre.unit.abatement.*"
         ],
         "formula": "sum(numerator_streams) + sum(denominator_streams)"
       }

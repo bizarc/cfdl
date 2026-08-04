@@ -179,6 +179,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -198,7 +199,7 @@
         "source_span": {
           "start_line": 30,
           "start_col": 1,
-          "end_line": 33,
+          "end_line": 34,
           "end_col": 1
         }
       }
@@ -211,6 +212,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -228,9 +230,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 58,
+          "start_line": 62,
           "start_col": 1,
-          "end_line": 61,
+          "end_line": 66,
           "end_col": 1
         }
       }
@@ -243,6 +245,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -260,9 +263,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 37,
+          "start_line": 38,
           "start_col": 1,
-          "end_line": 40,
+          "end_line": 42,
           "end_col": 1
         }
       }
@@ -275,6 +278,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -292,9 +296,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 51,
+          "start_line": 54,
           "start_col": 1,
-          "end_line": 54,
+          "end_line": 58,
           "end_col": 1
         }
       }
@@ -307,6 +311,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -324,9 +329,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 44,
+          "start_line": 46,
           "start_col": 1,
-          "end_line": 47,
+          "end_line": 50,
           "end_col": 1
         }
       }

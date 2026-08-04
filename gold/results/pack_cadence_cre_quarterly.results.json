@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "021f396cc328b67d9adc95207bb861e23011cbd61f446e57032f707d17b1cf8f",
-  "ledger_hash": "c9df625980f985fbd4474bb43b4dd85a38bb88e445db559c8cab9f448df43bd0",
+  "model_hash": "ad18efcb1156dd51fe052b9c0ade478b26beb75d85528b75a059159c651adf1b",
+  "ledger_hash": "8745777e0903c27a9e418aab02305afd00be870ce967a660122147909ee01351",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -9,6 +9,14 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.abatement.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
       {
         "contract": "cre.lease_unit.tenant_a",
         "stream": "cre.unit.base_rent.tenant_a",
@@ -91,8 +99,12 @@
         "amount": -922687.5,
         "currency": "USD"
       },
+      "stream.cre.unit.abatement.tenant_a.total": {
+        "amount": -200000.000004,
+        "currency": "USD"
+      },
       "stream.cre.unit.base_rent.tenant_a.total": {
-        "amount": 1283631.999996,
+        "amount": 1483632.0,
         "currency": "USD"
       },
       "stream.cre.unit.recoveries.tenant_a.total": {
@@ -278,6 +290,64 @@
           }
         ]
       },
+      "stream.cre.unit.abatement.tenant_a": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -80000.000004,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.cre.unit.base_rent.tenant_a": {
         "index": {
           "calendar": "quarterly",
@@ -287,11 +357,11 @@
         "offset": 1.0,
         "values": [
           {
-            "amount": 0.0,
+            "amount": 120000.0,
             "currency": "USD"
           },
           {
-            "amount": 39999.999996,
+            "amount": 120000.0,
             "currency": "USD"
           },
           {
@@ -518,6 +588,27 @@
             }
           ]
         },
+        "stream.cre.unit.abatement.tenant_a": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": -200000.000004,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.cre.unit.base_rent.tenant_a": {
           "index": {
             "calendar": "annual",
@@ -526,7 +617,7 @@
           },
           "values": [
             {
-              "amount": 279999.999996,
+              "amount": 480000.0,
               "currency": "USD"
             },
             {
