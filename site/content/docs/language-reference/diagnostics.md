@@ -290,6 +290,23 @@ Warnings:
   `state_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
   Identical definitions collapse instead, which is what several contracts
   sharing one curve should do.
+Statement completeness (`crates/cfdl-statement`). These are warnings rather
+than errors: the statement still renders, and the point is that the reader can
+see what is wrong with it.
+
+- `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement
+  claims, usually a hand-written stream carrying no `category`. It is collected
+  into a visible `residual` row rather than dropped, so the bottom line still
+  reconciles and the omission is on the page instead of in the difference.
+  The pack loader checks the same property for declared CATEGORIES statically;
+  this is the half that needs a run, because a stream with no category at all
+  is invisible until one happens.
+- `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` — a stream claimed by more than one
+  row. Worse than an omission: the bottom line is then wrong in a direction
+  that looks entirely plausible.
+- `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
+  `model.total` within half a cent. Asserted, never corrected.
+
 - `E5022_UNKNOWN_STREAM_CATEGORY` — a stream declares `category <path>` that
   the active pack does not list in its manifest `categories`. A category is a
   dotted path into the cash flow statement (`operating.deduction.abatement`)

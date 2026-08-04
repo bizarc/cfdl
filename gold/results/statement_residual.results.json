@@ -1,0 +1,679 @@
+{
+  "results_version": "0.3",
+  "model_hash": "093b32aa6aa62871adaef97cc0c9c013be2e00a80ef9120e892d25f1f57dadd1",
+  "ledger_hash": "6cf6540613ac50c19cbfbb87468af823fb896fef1eb6a23d94f6d1360645d8ec",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.tower.total": {
+        "amount": 3750.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 3108.564989,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 3750.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.cre.unit.base_rent.a.total": {
+        "amount": 3000.0,
+        "currency": "USD"
+      },
+      "stream.misc.windfall.total": {
+        "amount": 750.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.unit.base_rent.a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.misc.windfall": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "domain_metrics": {
+    "pack": "cre",
+    "metrics": {
+      "domain.cre.noi": {
+        "amount": 3000.0,
+        "currency": "USD"
+      }
+    },
+    "lineage": {
+      "domain.cre.noi": {
+        "numerator_streams": [
+          "domain.cre.noi"
+        ],
+        "denominator_streams": [],
+        "formula": "sum over periods of domain.cre.noi"
+      }
+    }
+  },
+  "statements": {
+    "pack": "cre",
+    "statements": [
+      {
+        "id": "operating",
+        "label": "Operating statement",
+        "default": true,
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Base rental revenue",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 3000.0,
+            "streams": [
+              "cre.unit.base_rent.a"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Percentage rent",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Other operating income",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Less: vacancy and credit loss",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Less: free rent",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Expense reimbursements",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "subtotal",
+            "label": "Effective gross income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 3000.0
+          },
+          {
+            "kind": "line",
+            "label": "Operating expenses",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net operating income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 3000.0
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Tenant improvements and leasing commissions",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Capital expenditure",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Debt service",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Mortgage insurance",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "ratio",
+            "label": "Debt service coverage",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Loan proceeds",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Equity contributions",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Sale proceeds",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 250.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 750.0,
+            "streams": [
+              "misc.windfall"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 3750.0,
+          "model_total": 3750.0,
+          "residual": 0.0
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'operating', so the bottom line is short by 750.00: misc.windfall. Classify them, or give the statement a row that claims them."
+          }
+        ]
+      }
+    ]
+  }
+}

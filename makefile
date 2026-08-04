@@ -108,6 +108,11 @@ verify-site: verify-site-nofresh verify-site-fresh
 # every event, while the freshness pair below needs a base ref that differs
 # between a pull request and a push.
 verify-site-nofresh:
+	# The size budget lives in build-wasm.sh and so only fired on a rebuild —
+	# `check:wasm` verifies version, stamp and function, not bytes. That made a
+	# breach invisible to `make verify`, which is the gap this file exists to
+	# close.
+	cd site && node scripts/check-wasm-budget.mjs
 	cd site && npm run sync:check
 	cd site && npm run check:tokens
 	cd site && npm run check:links

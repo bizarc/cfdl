@@ -8,7 +8,7 @@
 //! Engine-universal metrics (NPV, IRR, MOIC, payback, WAL) live in
 //! `cfdl-engine`, not here.
 
-use cfdl_engine::{DomainMetrics, MetricLineage, Money, Results, Scalar, Series};
+use cfdl_engine::{DomainMetrics, MetricLineage, Money, Results, Scalar, Series, SeriesValue};
 use cfdl_pack::MetricSpec;
 use std::collections::BTreeMap;
 
@@ -58,6 +58,33 @@ pub fn compute(pack: &str, specs: &[MetricSpec], results: &Results) -> Option<Do
                     _ => None,
                 };
                 (value, vec![num_id.clone()], vec![den_id.clone()])
+            }
+            "subtotal_total" => {
+                // Reduce a published per-period subtotal to its lifetime total.
+                //
+                // The point is that the metric stops DEFINING anything. Before
+                // this, `domain.cre.noi` was nine hand-listed stream selectors
+                // here and a category fold in statements.toml — two independent
+                // statements of one quantity, which is a drift waiting to
+                // happen and which needed an analytic identity to police.
+                // Now the fold is the definition and this is a reduction of it.
+                let Some(id) = &spec.subtotal else { continue };
+                let Some(series) = results.deterministic.series.get(id) else {
+                    // Absent because the pack declares no such subtotal, or
+                    // because no stream carried its categories. Omitting is
+                    // right: publishing 0 would assert a total nobody computed.
+                    continue;
+                };
+                let total: f64 = series
+                    .values
+                    .iter()
+                    .filter_map(|v| match v {
+                        SeriesValue::Money(m) => Some(m.amount),
+                        SeriesValue::Number(n) => Some(*n),
+                        SeriesValue::Null => None,
+                    })
+                    .sum();
+                (Some(total), vec![id.clone()], vec![])
             }
             "wal_years" => {
                 let value = wal_years(results, &spec.numerator_streams);
@@ -245,6 +272,7 @@ mod tests {
             denominator_metric: den_metric.map(|s| s.to_string()),
             formula: formula.to_string(),
             require_positive,
+            subtotal: None,
         }
     }
 
@@ -330,6 +358,7 @@ mod tests {
                 errors: None,
             },
             domain_metrics: None,
+            statements: None,
         }
     }
 

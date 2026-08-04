@@ -323,6 +323,7 @@ dependencies = [
  "cfdl-metrics",
  "cfdl-pack",
  "cfdl-parser",
+ "cfdl-statement",
  "clap",
  "serde",
  "serde_json",
@@ -422,6 +423,7 @@ dependencies = [
  "cfdl-engine",
  "cfdl-metrics",
  "cfdl-pack",
+ "cfdl-statement",
  "pyo3",
  "serde_json",
 ]
@@ -444,6 +446,7 @@ dependencies = [
  "cfdl-engine",
  "cfdl-metrics",
  "cfdl-pack",
+ "cfdl-statement",
  "http-body-util",
  "serde",
  "serde_json",
@@ -454,6 +457,16 @@ dependencies = [
  "tracing-subscriber",
  "utoipa",
  "utoipa-swagger-ui",
+]
+
+[[package]]
+name = "cfdl-statement"
+version = "0.7.0"
+dependencies = [
+ "cfdl-engine",
+ "cfdl-expr",
+ "cfdl-pack",
+ "serde_json",
 ]
 
 [[package]]
@@ -474,6 +487,7 @@ dependencies = [
  "cfdl-engine",
  "cfdl-metrics",
  "cfdl-pack",
+ "cfdl-statement",
  "serde",
  "serde_json",
  "wasm-bindgen",

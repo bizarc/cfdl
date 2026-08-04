@@ -21,6 +21,7 @@ pub struct LoadedPack {
     pub lowering_rules: Vec<LoweringRule>,
     pub metric_specs: Vec<MetricSpec>,
     pub subtotal_specs: Vec<SubtotalSpec>,
+    pub statement_specs: Vec<StatementSpec>,
     pub validations: Vec<PackValidation>,
 }
 
@@ -475,6 +476,14 @@ pub struct MetricSpec {
     /// Omit the metric unless its value is strictly positive.
     #[serde(default)]
     pub require_positive: bool,
+    /// `subtotal_total` only: the per-period subtotal series to reduce.
+    ///
+    /// This is how a lifetime scalar stops being a second, independent
+    /// definition of the same quantity. Before it, `domain.cre.noi` existed
+    /// twice — nine hand-listed stream selectors here, and a category fold in
+    /// statements.toml — and two independent statements of one quantity drift.
+    #[serde(default)]
+    pub subtotal: Option<String>,
 }
 
 /// A per-period subtotal: a named fold over the ledger.
@@ -533,6 +542,54 @@ struct MetricsFile {
     metrics: Vec<MetricSpec>,
 }
 
+/// A declared statement: an ordered tree of rows over the subtotals and
+/// categories, carrying order, labels, depth and display signs.
+///
+/// Rows COMPUTE nothing. Everything numeric was already folded by the engine;
+/// this says how to present it. Keeping the two apart is the fix for backlog
+/// 1.3: a deduction can be shown as a positive number in a "less:" row while
+/// still being counted negatively, which the old sign-flipping could not do.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatementSpec {
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    /// Shown when a consumer asks for "the" statement and the pack has several.
+    #[serde(default)]
+    pub default: bool,
+    #[serde(default)]
+    pub rows: Vec<StatementRow>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatementRow {
+    /// `line` | `subtotal` | `ratio` | `spacer`. `residual` is emitted by the
+    /// evaluator for streams no row claimed and may not be authored.
+    pub kind: String,
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    /// Indent level for presentation only.
+    #[serde(default)]
+    pub depth: u32,
+    /// `line` rows: the categories folded into this row.
+    #[serde(default)]
+    pub categories: Vec<String>,
+    /// `line` rows: stream selectors, for what a category cannot express.
+    #[serde(default)]
+    pub streams: Vec<String>,
+    /// `subtotal` / `ratio` rows: the published series to read.
+    #[serde(default)]
+    pub subtotal: Option<String>,
+    /// How to RENDER the sign: `natural` (default), `positive`, `negative`.
+    /// Never changes what is summed — the row carries the signed value too.
+    #[serde(default)]
+    pub display: Option<String>,
+}
+
 /// `statements.toml`. Holds `[[subtotals]]`, which the compiler lowers into the
 /// IR for the engine to evaluate, and will hold `[[statements]]` — the ordering
 /// and labelling read after a run. One file because a subtotal exists to be a
@@ -543,6 +600,8 @@ struct MetricsFile {
 struct StatementsFile {
     #[serde(default)]
     subtotals: Vec<SubtotalSpec>,
+    #[serde(default)]
+    statements: Vec<StatementSpec>,
 }
 
 /// Standard packs compiled into the library for hosts without filesystem
@@ -692,6 +751,12 @@ impl PackRegistry {
                 Some(raw) => parse_subtotal_specs(raw, &source)?,
                 None => Vec::new(),
             };
+            let statement_specs = match lookup(manifest.entrypoints.statements.as_deref()) {
+                Some(raw) => {
+                    parse_statement_specs(raw, &source, &manifest.categories, &subtotal_specs)?
+                }
+                None => Vec::new(),
+            };
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -701,6 +766,7 @@ impl PackRegistry {
                     lowering_rules,
                     metric_specs,
                     subtotal_specs,
+                    statement_specs,
                     validations,
                 },
             );
@@ -876,6 +942,12 @@ impl PackRegistry {
                 load_validations(&pack_dir, manifest.entrypoints.validations.as_deref())?;
             let subtotal_specs =
                 load_subtotal_specs(&pack_dir, manifest.entrypoints.statements.as_deref())?;
+            let statement_specs = load_statement_specs(
+                &pack_dir,
+                manifest.entrypoints.statements.as_deref(),
+                &manifest.categories,
+                &subtotal_specs,
+            )?;
 
             packs.insert(
                 manifest.name.clone(),
@@ -886,6 +958,7 @@ impl PackRegistry {
                     lowering_rules,
                     metric_specs,
                     subtotal_specs,
+                    statement_specs,
                     validations,
                 },
             );
@@ -973,6 +1046,14 @@ impl PackRegistry {
 
     /// Per-period subtotal declarations for this pack, in declaration order.
     /// The order is load-bearing: it is the dependency order.
+    /// Declared statements for this pack, in file order.
+    pub fn statement_specs(&self, pack_name: &str) -> Vec<StatementSpec> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.statement_specs.clone())
+            .unwrap_or_default()
+    }
+
     pub fn subtotal_specs(&self, pack_name: &str) -> Vec<SubtotalSpec> {
         self.packs
             .get(pack_name)
@@ -1180,6 +1261,20 @@ fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, Pac
     Ok(validations)
 }
 
+fn load_statement_specs(
+    pack_dir: &Path,
+    statements_path: Option<&str>,
+    categories: &[String],
+    subtotals: &[SubtotalSpec],
+) -> Result<Vec<StatementSpec>, PackLoadError> {
+    let Some(relative) = statements_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    parse_statement_specs(&raw, &path.display().to_string(), categories, subtotals)
+}
+
 fn load_subtotal_specs(
     pack_dir: &Path,
     statements_path: Option<&str>,
@@ -1211,6 +1306,135 @@ fn load_metric_specs(
 /// satisfied — and because only earlier ids are reachable, no cycle can be
 /// expressed at all. That is the same argument `docs/14_state_and_recurrence.md`
 /// §5 makes about waterfalls: an authored order needs no solver.
+/// Parse and validate `[[statements]]`.
+///
+/// The interesting check is the last one: every category the pack declares must
+/// appear in exactly ONE `line` row. That is what makes a statement's bottom
+/// line reconcile to net cash flow rather than merely resemble it, and it is
+/// checkable here — statically, before any model runs — because a category is
+/// declared rather than discovered.
+///
+/// Both failure directions matter, and the second is worse. A category in no
+/// row means cash the statement never shows, so the bottom line is short. A
+/// category in two rows means cash counted twice, and a statement that is
+/// wrong by double-counting looks entirely plausible.
+fn parse_statement_specs(
+    raw: &str,
+    source: &str,
+    categories: &[String],
+    subtotals: &[SubtotalSpec],
+) -> Result<Vec<StatementSpec>, PackLoadError> {
+    let parsed: StatementsFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse statements '{source}': {err}"),
+    })?;
+    let mut seen_ids: Vec<&str> = Vec::new();
+    let mut defaults = 0usize;
+    for spec in &parsed.statements {
+        let err = |msg: String| PackLoadError {
+            message: format!("Statement '{}' in '{source}': {msg}", spec.id),
+        };
+        if seen_ids.contains(&spec.id.as_str()) {
+            return Err(err("declared twice.".to_string()));
+        }
+        seen_ids.push(&spec.id);
+        if spec.default {
+            defaults += 1;
+        }
+        let mut claimed: Vec<&str> = Vec::new();
+        for row in &spec.rows {
+            match row.kind.as_str() {
+                "spacer" => {}
+                "line" => {
+                    if row.categories.is_empty() && row.streams.is_empty() {
+                        return Err(err(format!(
+                            "row '{}' is a line with neither categories nor streams.",
+                            row.label
+                        )));
+                    }
+                    for c in &row.categories {
+                        if !categories.iter().any(|d| d == c) {
+                            return Err(err(format!(
+                                "row '{}' claims category '{c}', which the pack does not declare.",
+                                row.label
+                            )));
+                        }
+                        if claimed.contains(&c.as_str()) {
+                            return Err(err(format!(
+                                "category '{c}' appears in more than one line row. Cash counted \
+                                 twice makes a bottom line that looks plausible and is wrong."
+                            )));
+                        }
+                        claimed.push(c);
+                    }
+                }
+                "subtotal" | "ratio" => {
+                    let Some(id) = &row.subtotal else {
+                        return Err(err(format!(
+                            "row '{}' is a {} with no `subtotal`.",
+                            row.label, row.kind
+                        )));
+                    };
+                    let Some(found) = subtotals.iter().find(|s| &s.id == id) else {
+                        return Err(err(format!(
+                            "row '{}' reads '{id}', which is not a declared subtotal.",
+                            row.label
+                        )));
+                    };
+                    if row.kind == "ratio" && found.kind != "number" {
+                        return Err(err(format!(
+                            "row '{}' is a ratio but '{id}' is {}.",
+                            row.label, found.kind
+                        )));
+                    }
+                }
+                "residual" => {
+                    return Err(err(
+                        "a `residual` row is emitted by the evaluator for streams no row \
+                         claimed; it cannot be authored."
+                            .to_string(),
+                    ))
+                }
+                other => {
+                    return Err(err(format!(
+                        "row '{}' has unknown kind '{other}'.",
+                        row.label
+                    )))
+                }
+            }
+            if let Some(d) = &row.display {
+                if !matches!(d.as_str(), "natural" | "positive" | "negative") {
+                    return Err(err(format!(
+                        "row '{}' has unknown display '{d}'.",
+                        row.label
+                    )));
+                }
+            }
+        }
+        // Completeness, checked statically.
+        let missing: Vec<&String> = categories
+            .iter()
+            .filter(|c| !claimed.contains(&c.as_str()))
+            .collect();
+        if !missing.is_empty() {
+            return Err(err(format!(
+                "these categories appear in no line row, so their cash would be missing from \
+                 the bottom line: {}.",
+                missing
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )));
+        }
+    }
+    if defaults > 1 {
+        return Err(PackLoadError {
+            message: format!("'{source}': more than one statement is marked default."),
+        });
+    }
+    Ok(parsed.statements)
+}
+
 fn parse_subtotal_specs(raw: &str, source: &str) -> Result<Vec<SubtotalSpec>, PackLoadError> {
     let parsed: StatementsFile = toml::from_str(raw).map_err(|err| PackLoadError {
         message: format!("Failed to parse statements '{source}': {err}"),
@@ -1284,6 +1508,16 @@ fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLo
     for spec in &parsed.metrics {
         match spec.op.as_str() {
             "sum" | "negated_sum" => {}
+            "subtotal_total" => {
+                if spec.subtotal.is_none() {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Metric '{}': op 'subtotal_total' requires `subtotal`.",
+                            spec.id
+                        ),
+                    });
+                }
+            }
             "wal_years" => {
                 if spec.numerator_streams.is_empty() {
                     return Err(PackLoadError {

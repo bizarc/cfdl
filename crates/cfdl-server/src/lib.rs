@@ -209,6 +209,19 @@ async fn run(Json(req): Json<RunRequest>) -> Response {
                 .map(|reg| reg.metric_specs(&pack_name))
                 .unwrap_or_default();
             results.domain_metrics = cfdl_metrics::compute(&pack_name, &specs, &results);
+            // Statements read a stream's CATEGORY, which lives on the IR rather
+            // than in results. Parsing it back here keeps the results document from
+            // carrying a field only this consumer wants.
+            let statement_specs = registry
+                .as_ref()
+                .map(|reg| reg.statement_specs(&pack_name))
+                .unwrap_or_default();
+            let categories = serde_json::from_str::<serde_json::Value>(&ir_json)
+                .ok()
+                .map(|ir| cfdl_statement::stream_categories(&ir))
+                .unwrap_or_default();
+            results.statements =
+                cfdl_statement::compute(&pack_name, &statement_specs, &categories, &results);
         }
         Ok::<_, cfdl_engine::EngineError>(results)
     })

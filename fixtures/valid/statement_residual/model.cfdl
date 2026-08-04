@@ -1,0 +1,29 @@
+// A statement must never lose cash quietly.
+//
+// `misc.windfall` carries no category, so no row of the CRE operating
+// statement can claim it. The statement therefore emits a visible
+// `residual` row holding it, and W3500 names the stream — rather than
+// omitting the money and leaving a bottom line that is short with no signal.
+//
+// The reconciliation still closes, because the residual row is part of the
+// bottom line. That is the point: the gate makes the omission VISIBLE, it does
+// not paper over it.
+version 0.1
+model "residual-probe"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+entity asset tower
+
+// Classified: lands in the statement's revenue row.
+stream cre.unit.base_rent.a on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 1000
+}
+
+// NOT classified. No row can claim it, so the statement must SHOW it rather
+// than quietly come up 750 short.
+stream misc.windfall on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 250
+}
