@@ -19,7 +19,18 @@ OUT_DIR="${SITE_DIR}/public/wasm"
 
 # Gzipped budget for the engine module. Raise deliberately, with a note in the
 # commit message explaining what grew.
-BUDGET_KB=600
+#
+# 600 -> 640 when stream categories landed. The bundle had been sitting at
+# exactly 600/600, so the next addition of any kind was going to trip this;
+# categories added ~9 KB raw / 3 KB gzipped between the category data itself,
+# the load-time validation and the parser arm.
+#
+# Worth recording what did NOT work, since it is the obvious first guess: the
+# pack TOMLs are include_str!-embedded, so their comments do ship — but cutting
+# ~2 KB of comment prose out of them recovered 0 KB gzipped, because gzip was
+# already collapsing repetitive text. If this needs shrinking for real, the
+# lever is the module, not the documentation.
+BUDGET_KB=640
 
 if [[ "${SKIP_WASM:-0}" == "1" ]]; then
   echo "build-wasm: SKIP_WASM=1 — using the committed bundle"
