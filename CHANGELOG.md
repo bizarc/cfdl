@@ -8,6 +8,52 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: one selector dialect, and two metrics that were quietly wrong
+
+There were two implementations of the `.*` stream selector and they disagreed
+about whether it reaches the BARE name. That matters because a lowering rule
+writing `energy.ppa.revenue{{contract.dot_suffix}}` emits the bare name for an
+unsuffixed contract and `energy.ppa.revenue.plant_a` for a suffixed one, so a
+selector reaching only one form silently drops the other — an absent stream
+contributes 0 rather than raising.
+
+Neither defect was caught, for the same reason: none of the affected fixtures
+runs with `--pack`, so `domain_metrics` is absent from every golden that would
+have shown them.
+
+- **`domain.credit.wal_years` omitted unsuffixed pools.** `wal_years` matched
+  `stream.<prefix>.` against series keys, which carry no `.total`, so a bare
+  `credit.pool.prepay` failed the prefix test. It selects sched_principal,
+  prepay, bullet and recoveries this way and goldens ship all four bare, so an
+  unsuffixed pool reported a weighted average life computed over a subset of its
+  own principal. (`sum` reached the bare name too — but only because its keys
+  end in `.total`, which supplied the separating dot by coincidence rather than
+  by decision.)
+- **Every energy metric omitted suffixed contracts.** All fourteen selectors in
+  `packs/energy/metrics.toml` named their stream exactly, while all ten energy
+  lowering rules template the name. A suffixed PPA therefore contributed nothing
+  to revenue, EBITDA, DSCR or tax benefits. Three goldens ship
+  `energy.ppa.revenue.plant_a`, one carrying $29.9m.
+- **`cre.exit_forward` double-counted an unsuffixed percentage rent.** Its
+  forward-NOI expression summed both `cre.pct_rent` and `cre.pct_rent.*`, and
+  the glob already includes the bare name — so the stream entered twice and
+  inflated the exit price it strikes. Latent: every shipped model suffixes that
+  contract.
+
+Matching now lives in one place, `cfdl_expr::selector_matches`, and matches
+NAMES rather than storage keys, so the key format cannot be load-bearing again.
+`.*` reaches the bare name and its children both; the path-segment boundary is
+unchanged, so `cre.pct_rent.*` still does not reach `cre.pct_rent_extra`.
+
+**No shipped model's numbers move.** Ten goldens change — four IR expression
+texts, the four `model_hash` values that follow, and 28 lineage selector
+strings. Checked leaf by leaf: zero numeric values differ.
+
+`check-pack-validations.py` gains a fourth check, because "pick the right
+selector by reading the file" is exactly what failed here: a metric that names a
+templated stream exactly is now rejected. Verified both ways — it reports all
+fourteen energy selectors against the pre-fix file.
+
 ### Added: schema `--write`, warning codes in the gates, and a determinism lint
 
 `check-results-schema.py` and `check-ir-schema.py` gained `--write`, which

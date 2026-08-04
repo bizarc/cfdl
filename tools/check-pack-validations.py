@@ -62,6 +62,22 @@ engine code is listed there, so checking uniqueness across that page catches the
 collision at the point an author is most likely to make it, without the false
 positives.
 
+## 4. A metric selector must be able to reach the streams it names.
+
+A lowering rule naming its stream `energy.ppa.revenue{{contract.dot_suffix}}`
+emits the BARE name for an unsuffixed contract and `energy.ppa.revenue.plant_a`
+for a suffixed one. A metric selecting the bare name EXACTLY therefore reaches
+only half of what the rule can produce, and the half it misses contributes
+nothing — an absent stream sums to 0 rather than raising.
+
+All fourteen of the energy pack's selectors were in that state, so a suffixed
+PPA contract dropped out of revenue, EBITDA and DSCR. Three goldens ship
+`energy.ppa.revenue.plant_a`, one carrying $29.9m; none runs with `--pack`, so
+`domain_metrics` is absent from all three and nothing looked.
+
+The rule is mechanical: if a lowering rule's `stream_name` is templated, a
+metric naming it needs `.*`, which reaches the bare form and its children both.
+
 Usage: python3 tools/check-pack-validations.py
 """
 
@@ -71,6 +87,12 @@ import collections
 import pathlib
 import re
 import sys
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - CI pins 3.11
+    print("python >= 3.11 required (tomllib)", file=sys.stderr)
+    raise SystemExit(1)
 
 # These tools print prose. A Windows console defaults to cp1252, which
 # cannot encode every character the check names use, so pin stdout to UTF-8.
@@ -90,6 +112,23 @@ DOC_CODE_RE = re.compile(r"`([EWI]\d+)_([A-Z0-9_]+)`")
 
 CODE_RE = re.compile(r'code = "([EWI]\d+)_([A-Z0-9_]+)"')
 MATCH_RE = re.compile(r'^match = ', re.M)
+STREAM_NAME_RE = re.compile(r'stream_name = "([^"]+)"')
+TEMPLATE_RE = re.compile(r"\{\{[^}]+\}\}")
+
+
+def templated_stream_names(rules_path: pathlib.Path) -> set[str]:
+    """Stream names a pack's rules build by template, with the template removed.
+
+    `energy.ppa.revenue{{contract.dot_suffix}}` yields `energy.ppa.revenue` —
+    the bare form an unsuffixed contract produces, and the prefix every
+    suffixed one extends.
+    """
+    names = set()
+    for match in STREAM_NAME_RE.finditer(rules_path.read_text(encoding="utf-8")):
+        raw = match.group(1)
+        if "{{" in raw:
+            names.add(TEMPLATE_RE.sub("", raw).rstrip("."))
+    return names
 
 
 def main() -> int:
@@ -170,10 +209,43 @@ def main() -> int:
         )
         return 1
 
+    # --- 4. metric selectors can reach the streams they name ----------------
+    unreachable: list[str] = []
+    checked_selectors = 0
+    for metrics_path in sorted(PACKS.glob("*/metrics.toml")):
+        pack = metrics_path.parent.name
+        rules_path = metrics_path.parent / "lowering" / "rules.toml"
+        if not rules_path.exists():
+            continue
+        templated = templated_stream_names(rules_path)
+        specs = tomllib.loads(metrics_path.read_text(encoding="utf-8")).get("metrics", [])
+        for spec in specs:
+            for key in ("numerator_streams", "denominator_streams"):
+                for selector in spec.get(key, []):
+                    checked_selectors += 1
+                    if not selector.endswith(".*") and selector in templated:
+                        unreachable.append(f"{pack}: {spec.get('id', '<no id>')}  <-  {selector}")
+    if unreachable:
+        print(
+            f"  {len(unreachable)} metric selector(s) name a stream their pack builds by\n"
+            "  template, but name it EXACTLY — so they reach the unsuffixed contract and\n"
+            "  silently miss every suffixed one (an absent stream contributes 0):",
+            file=sys.stderr,
+        )
+        for u in unreachable:
+            print(f"      {u}", file=sys.stderr)
+        print(
+            "\n  Append `.*`. It reaches the bare name and its children both, so it is\n"
+            "  correct whichever form the contract takes.",
+            file=sys.stderr,
+        )
+        return 1
+
     print(
         f"check-pack-validations: OK ({len(seen)} pack codes across {len(files)} packs, "
         f"{len(documented)} documented codes, "
-        f"each naming one check; every validation states its match mode)"
+        f"each naming one check; every validation states its match mode; "
+        f"{checked_selectors} metric selectors reach their streams)"
     )
     return 0
 

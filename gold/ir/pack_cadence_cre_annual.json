@@ -120,7 +120,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.pct_rent\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.ops.expense\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.property.opex\", time.t + 1.0, time.t + 1.0)) / 0.065 * (1.0 - 0.02)"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.ops.expense\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 1.0) + series_sum(\"cre.property.opex\", time.t + 1.0, time.t + 1.0)) / 0.065 * (1.0 - 0.02)"
       },
       "active_when": {
         "lang": "cfdl",

@@ -392,6 +392,7 @@ name = "cfdl-metrics"
 version = "0.7.0"
 dependencies = [
  "cfdl-engine",
+ "cfdl-expr",
  "cfdl-pack",
  "serde",
 ]

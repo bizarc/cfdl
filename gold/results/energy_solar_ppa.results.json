@@ -10653,7 +10653,7 @@
     "lineage": {
       "domain.energy.debt_service": {
         "numerator_streams": [
-          "energy.debt.service"
+          "energy.debt.service.*"
         ],
         "denominator_streams": [],
         "formula": "-sum(numerator_streams)"
@@ -10669,38 +10669,38 @@
       },
       "domain.energy.ebitda": {
         "numerator_streams": [
-          "energy.ppa.revenue",
-          "energy.merchant.revenue",
-          "energy.storage.margin",
-          "energy.capacity.revenue"
+          "energy.ppa.revenue.*",
+          "energy.merchant.revenue.*",
+          "energy.storage.margin.*",
+          "energy.capacity.revenue.*"
         ],
         "denominator_streams": [
-          "energy.om.expense"
+          "energy.om.expense.*"
         ],
         "formula": "sum(numerator_streams) + sum(denominator_streams)"
       },
       "domain.energy.opex": {
         "numerator_streams": [
-          "energy.om.expense"
+          "energy.om.expense.*"
         ],
         "denominator_streams": [],
         "formula": "-sum(numerator_streams)"
       },
       "domain.energy.revenue": {
         "numerator_streams": [
-          "energy.ppa.revenue",
-          "energy.merchant.revenue",
-          "energy.storage.margin",
-          "energy.capacity.revenue"
+          "energy.ppa.revenue.*",
+          "energy.merchant.revenue.*",
+          "energy.storage.margin.*",
+          "energy.capacity.revenue.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.energy.tax_benefits": {
         "numerator_streams": [
-          "energy.itc.credit",
-          "energy.ptc.credit",
-          "energy.macrs.shield"
+          "energy.itc.credit.*",
+          "energy.ptc.credit.*",
+          "energy.macrs.shield.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
