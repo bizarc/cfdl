@@ -38,11 +38,11 @@ jobs:
 
       - name: Format
         if: runner.os == 'Linux'
-        run: cargo fmt --all -- --check
+        run: make fmt-check
 
       - name: Lint (clippy)
         if: runner.os == 'Linux'
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: make lint
 
       - name: Tests
         run: cargo test --all --all-features
@@ -110,6 +110,14 @@ jobs:
       - name: Install Python package (with dev + viz extras)
         run: python -m pip install -e "python/[dev,viz]"
 
+      # `make verify-python`, not an inlined pytest. The makefile is the single
+      # definition of what the gates are; a workflow that restates them is a
+      # second list that drifts, which is how a 23% WAL error once survived (see
+      # below) and how four gates later fired only after a push.
+      #
+      # py-check is skipped: it compares the committed native extension against
+      # the engine sources, and CI has just built the extension from those
+      # sources, so it can only ever pass here. It is a local-drift gate.
       - name: Python SDK tests
         run: python -m pytest -q python/tests
 

@@ -56,55 +56,31 @@ jobs:
         working-directory: site
         run: npm ci
 
-      - name: Generated content is in sync with canonical sources
-        working-directory: site
-        run: npm run sync:check
+      # One step calling one make target, rather than six inlined `npm run`s.
+      # The makefile is the single definition of what the gates are; restating
+      # them here made a second list, and a gate present in one list and absent
+      # from the other silently stops running. That has bitten in both
+      # directions — see the note in ci.yml.
+      #
+      # The freshness gates are not in here because they need a base ref, which
+      # differs between a PR and a push; they keep their own steps below.
+      - name: Site gates
+        run: make verify-site-nofresh
 
-      - name: Design-system token guard
-        working-directory: site
-        run: npm run check:tokens
-
-      - name: Internal link check
-        working-directory: site
-        run: npm run check:links
-
-      - name: Playground examples match the repo's models
-        working-directory: site
-        run: npm run check:examples
-
-      - name: No native browser dialogs
-        working-directory: site
-        run: npm run check:dialogs
-
-      # Two gates that need neither git history nor a triggered path filter:
-      # the engine version baked into the bundle, and a hash of the sources
-      # it was built from. These catch what the commit-range check cannot.
-      - name: Committed wasm bundle matches the engine sources
-        working-directory: site
-        run: npm run check:wasm
-
-      # The wasm bundle is committed because Vercel's build image has no Rust
-      # toolchain; make sure an engine change can't ship without a rebuild.
-      - name: Committed wasm bundle is fresh
-        working-directory: site
+      # The committed wasm bundle and notebook pages must match the sources they
+      # were generated from. Both are committed because neither Vercel nor this
+      # runner can regenerate them — the bundle needs Rust, the notebooks need
+      # Python plus the compiled extension.
+      #
+      # `make verify-site-fresh` is the same target a developer runs locally;
+      # only BASE_REF differs. On a PR that is the base branch, on a push the
+      # commit before it, so a direct-to-main change cannot ship a stale engine.
+      - name: Committed artefacts are fresh
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            node scripts/check-wasm-fresh.mjs "origin/${{ github.base_ref }}"
+            make verify-site-fresh BASE_REF="origin/${{ github.base_ref }}"
           else
-            # On a push, compare against the commit before this push so a
-            # direct-to-main change cannot ship a stale engine.
-            node scripts/check-wasm-fresh.mjs "${{ github.event.before }}"
-          fi
-
-      # Notebook pages are committed for the same reason: rendering them means
-      # executing them, which needs Python and the compiled Rust extension.
-      - name: Committed notebook pages are fresh
-        working-directory: site
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            node scripts/check-notebooks-fresh.mjs "origin/${{ github.base_ref }}"
-          else
-            node scripts/check-notebooks-fresh.mjs "${{ github.event.before }}"
+            make verify-site-fresh BASE_REF="${{ github.event.before }}"
           fi
 
       - name: Lint
