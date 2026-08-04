@@ -109,6 +109,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    # OFF until the token is widened to Team scope, because it cannot succeed
+    # before then and a job that always fails teaches people to ignore red.
+    #
+    # Turn it on with a repository variable — Settings -> Secrets and variables
+    # -> Actions -> Variables -> ENABLE_CI_DEPLOY = true. A variable rather than
+    # deleting this line so enabling it is one click and reversible, and so the
+    # workflow is reviewed and in main rather than living on a branch.
+    if: vars.ENABLE_CI_DEPLOY == 'true'
     # These are required after all, and the token must be TEAM-scoped.
     #
     # Three attempts established it, and the failures are worth keeping because
