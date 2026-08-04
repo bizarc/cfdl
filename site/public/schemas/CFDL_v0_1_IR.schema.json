@@ -632,6 +632,10 @@
         "currency": {
           "$ref": "#/$defs/Currency"
         },
+        "category": {
+          "type": "string",
+          "description": "What this stream is economically (revenue, opex, debt_service, ...). Aggregation reads this rather than pattern-matching the name, so the meaning is declared once at the point of emission instead of being re-derived by every consumer. Must name a category the active pack declares (E5022). Absent when the stream is unclassified, which is legal and leaves it out of every category fold."
+        },
         "schedule": {
           "$ref": "#/$defs/Schedule"
         },

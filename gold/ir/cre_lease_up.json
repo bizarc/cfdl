@@ -60,6 +60,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

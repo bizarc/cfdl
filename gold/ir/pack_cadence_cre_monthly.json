@@ -113,6 +113,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2027-12-01",
@@ -151,6 +152,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -190,6 +192,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -229,6 +232,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -268,6 +272,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "OnDate",
         "on": "2025-01-01"

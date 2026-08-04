@@ -67,6 +67,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

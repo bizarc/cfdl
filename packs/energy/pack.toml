@@ -2,6 +2,17 @@ name = "energy"
 version = "0.1.0"
 description = "Energy & microgrids pack: PPA/merchant revenue, storage, O&M, tax credits, project debt."
 
+# Closed vocabulary for a stream's `category`. Aggregation reads this rather
+# than pattern-matching a stream's name. Deliberately coarse; see README.md
+# for why tax benefits are kept out of EBITDA.
+categories = [
+  "operating.revenue.energy",
+  "operating.expense.om",
+  "operating.tax_benefit",
+  "investing.capital.capex",
+  "financing.debt_service",
+]
+
 
 [entrypoints]
 aliases = "aliases.toml"

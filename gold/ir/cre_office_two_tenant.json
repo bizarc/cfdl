@@ -191,6 +191,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2035-12-01",
@@ -229,6 +230,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -268,6 +270,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -307,6 +310,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -346,6 +350,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -385,6 +390,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -424,6 +430,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -463,6 +470,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -502,6 +510,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -539,6 +548,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-07-01"
@@ -576,6 +586,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.deduction.vacancy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

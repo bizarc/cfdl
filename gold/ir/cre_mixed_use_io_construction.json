@@ -100,6 +100,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2033-12-01",
@@ -138,6 +139,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

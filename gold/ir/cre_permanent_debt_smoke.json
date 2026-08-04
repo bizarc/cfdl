@@ -60,6 +60,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

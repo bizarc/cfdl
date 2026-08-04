@@ -122,6 +122,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.interest",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -161,6 +162,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.penalty",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -200,6 +202,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.prepayment",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -239,6 +242,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -278,6 +282,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.principal",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -317,6 +322,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.servicing",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -356,6 +362,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.purchase",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"

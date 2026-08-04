@@ -41,6 +41,39 @@ pub struct PackManifest {
     /// ever do: it is removed as each rule becomes cadence-neutral.
     #[serde(default)]
     pub cadences: Vec<String>,
+    /// The categories this pack's streams may be classified into: a closed
+    /// vocabulary of dotted **paths**, rooted in the cash flow statement's
+    /// three sections.
+    ///
+    /// ```text
+    /// operating.revenue.base_rent
+    /// operating.deduction.vacancy
+    /// investing.capital.leasing
+    /// financing.debt_service
+    /// ```
+    ///
+    /// Hierarchical rather than flat because every system that solves this
+    /// converged on the same shape — IAS 7 and ASC 230's three sections, a
+    /// chart of accounts' five root types, beancount's `Expenses:Rent:Office`,
+    /// XBRL's calculation linkbase. A small universal root, then an arbitrary
+    /// domain tree beneath it, with the rollup defined by the tree.
+    ///
+    /// The payoff is that a subtotal is a PREFIX QUERY over the same selector
+    /// streams already use (`cfdl_expr::selector_matches`): NOI is
+    /// `operating.*`, effective gross income is `operating.revenue.*` plus
+    /// `operating.deduction.*`. No second matching mechanism, and a generic
+    /// statement works against a pack it has never seen.
+    ///
+    /// The ROOT is enforced (`operating`, `investing`, `financing`); which root
+    /// a given category takes is the pack's call, because that genuinely varies:
+    /// interest paid is operating under IFRS and financing under US GAAP, and
+    /// for a lender the interest RECEIVED on a pool is operating revenue. CFDL
+    /// fixes the vocabulary of sections, not the accounting policy.
+    ///
+    /// Empty means the pack does not classify, and every rule's `category` must
+    /// then be empty too.
+    #[serde(default)]
+    pub categories: Vec<String>,
     #[serde(default)]
     pub entrypoints: PackEntrypoints,
 }
@@ -287,6 +320,21 @@ pub struct LoweringRule {
     /// USD contract.
     #[serde(default)]
     pub currency: String,
+    /// What this stream IS, economically — `revenue`, `opex`, `debt_service`.
+    ///
+    /// Aggregation reads this rather than pattern-matching the stream's name.
+    /// A name is an address, not a meaning: deciding that `cre.vacancy.loss` is
+    /// a deduction by looking at its spelling means every consumer re-derives
+    /// the same judgement independently, and they drift — which is exactly how
+    /// two selector dialects came to disagree. Classified once, at the point of
+    /// emission, a stream is necessarily both reported as a line and counted in
+    /// its subtotal.
+    ///
+    /// Must be one of the categories the pack manifest declares; an unlisted
+    /// value is `E5022`. Empty means unclassified, which is legal but leaves
+    /// the stream out of every category fold.
+    #[serde(default)]
+    pub category: String,
     /// May contain `{{contract.<key>}}` placeholders (see expand_rule_template).
     pub amount_expr: String,
     pub schedule_kind: String,
@@ -560,6 +608,8 @@ impl PackRegistry {
                 Some(raw) => parse_lowering_rules(raw, &source)?,
                 None => Vec::new(),
             };
+            validate_category_vocabulary(&manifest.categories, &source)?;
+            validate_rule_categories(&lowering_rules, &manifest.categories, &source)?;
             let metric_specs = match lookup(manifest.entrypoints.metrics.as_deref()) {
                 Some(raw) => parse_metric_specs(raw, &source)?,
                 None => Vec::new(),
@@ -712,6 +762,15 @@ impl PackRegistry {
             let templates = load_templates(&pack_dir, manifest.entrypoints.templates.as_deref())?;
             let lowering_rules =
                 load_lowering_rules(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
+            validate_category_vocabulary(
+                &manifest.categories,
+                &manifest_path.display().to_string(),
+            )?;
+            validate_rule_categories(
+                &lowering_rules,
+                &manifest.categories,
+                &manifest_path.display().to_string(),
+            )?;
             let metric_specs =
                 load_metric_specs(&pack_dir, manifest.entrypoints.metrics.as_deref())?;
             let validations =
@@ -798,6 +857,15 @@ impl PackRegistry {
         self.packs
             .get(pack_name)
             .map(|pack| pack.manifest.cadences.clone())
+            .unwrap_or_default()
+    }
+
+    /// The closed vocabulary a stream's `category` must name, for this pack.
+    /// Empty when the pack does not classify.
+    pub fn categories(&self, pack_name: &str) -> Vec<String> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.manifest.categories.clone())
             .unwrap_or_default()
     }
 
@@ -1079,6 +1147,75 @@ fn load_lowering_rules(
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
     parse_lowering_rules(&raw, &path.display().to_string())
+}
+
+/// The cash flow statement's three sections. A category path must start with
+/// one of these so that a fold written against an unfamiliar pack — or a
+/// generic statement — still has something universal to aggregate on.
+///
+/// CFDL fixes this vocabulary and nothing below it. Which section a category
+/// belongs under is a policy question the pack answers: IFRS and US GAAP
+/// disagree about interest paid, and a lender's interest received is operating
+/// revenue rather than financing at all.
+pub const CATEGORY_ROOTS: [&str; 3] = ["operating", "investing", "financing"];
+
+/// Every declared category must be a dotted path rooted in a known section.
+fn validate_category_vocabulary(categories: &[String], source: &str) -> Result<(), PackLoadError> {
+    for category in categories {
+        let root = category.split('.').next().unwrap_or("");
+        if !CATEGORY_ROOTS.contains(&root) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Pack '{source}' declares category '{category}', whose root segment \
+                     '{root}' is not one of {}. A category is a path into the cash flow \
+                     statement, so it has to say which section it belongs to.",
+                    CATEGORY_ROOTS.join(", ")
+                ),
+            });
+        }
+        if category.split('.').any(|seg| seg.is_empty()) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Pack '{source}' declares category '{category}', which has an empty path \
+                     segment."
+                ),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Every rule's `category` must be one the manifest declares.
+///
+/// Checked here rather than in `parse_lowering_rules` because the vocabulary
+/// lives in the manifest and the rules in another file, so this is the first
+/// point that sees both. A pack that fails this does not load at all, which is
+/// the right severity: a mistyped category would otherwise become a bucket that
+/// no fold names and no statement reports, and the stream would simply go
+/// missing from its subtotal while still appearing as a line.
+fn validate_rule_categories(
+    rules: &[LoweringRule],
+    categories: &[String],
+    source: &str,
+) -> Result<(), PackLoadError> {
+    for rule in rules {
+        if rule.category.is_empty() || categories.iter().any(|c| c == &rule.category) {
+            continue;
+        }
+        let known = if categories.is_empty() {
+            "the pack declares none".to_string()
+        } else {
+            categories.join(", ")
+        };
+        return Err(PackLoadError {
+            message: format!(
+                "Lowering rule '{}' in '{source}' declares category '{}', which the pack \
+                 manifest does not list. Known categories: {known}.",
+                rule.id, rule.category
+            ),
+        });
+    }
+    Ok(())
 }
 
 fn parse_lowering_rules(raw: &str, source: &str) -> Result<Vec<LoweringRule>, PackLoadError> {

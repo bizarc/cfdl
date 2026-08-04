@@ -60,6 +60,7 @@
       },
       "direction": "inflow",
       "currency": "INR",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

@@ -716,6 +716,7 @@ mod tests {
                         attached_entity: "borrower".to_string(),
                         direction: Some("inflow".to_string()),
                         currency: Some("USD".to_string()),
+                        category: None,
                         schedule: None,
                         amount: None,
                         active_when: None,

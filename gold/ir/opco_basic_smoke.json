@@ -162,6 +162,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.exit",
       "schedule": {
         "kind": "OnDate",
         "on": "2031-12-01",
@@ -200,6 +201,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -239,6 +241,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recurring",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -278,6 +281,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.working_capital",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

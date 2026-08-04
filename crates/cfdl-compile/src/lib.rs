@@ -310,6 +310,9 @@ struct ActivePackContext {
     /// Model calendars the pack declares it lowers correctly on; empty means
     /// all. See `cfdl_pack::PackManifest::cadences`.
     cadences: Vec<String>,
+    /// The closed vocabulary a stream's `category` must name. See
+    /// `cfdl_pack::PackManifest::categories`.
+    categories: Vec<String>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
 }
@@ -540,6 +543,10 @@ struct IrStream {
     owner: IrEntityRef,
     direction: String,
     currency: String,
+    /// What this stream is, economically. Omitted when unclassified, so a
+    /// model that classifies nothing produces the IR it always did.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    category: Option<String>,
     schedule: IrSchedule,
     amount: IrExpr,
     active_when: IrExpr,
@@ -709,11 +716,48 @@ fn build_ir(
         .collect();
     contracts.sort_by(|a, b| a.0.cmp(&b.0));
 
+    // The vocabulary a hand-written stream's `category` is checked against.
+    // It belongs to the active pack, because the categories are a domain
+    // judgement and the folds that consume them are declared there. With no
+    // pack there is no vocabulary, so any category is unknown — which is the
+    // honest answer rather than a special case: nothing would ever read it.
+    let pack_categories: &[String] = active_pack
+        .map(|pack| pack.categories.as_slice())
+        .unwrap_or(&[]);
+
     let mut streams: Vec<((String, String), IrStream)> = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
         };
+        if let Some(category) = stream.category.as_deref() {
+            if !pack_categories.iter().any(|c| c == category) {
+                let known = if pack_categories.is_empty() {
+                    "the active pack declares none (or no pack is in use)".to_string()
+                } else {
+                    pack_categories.join(", ")
+                };
+                return Err(vec![Diagnostic {
+                    code: "E5022_UNKNOWN_STREAM_CATEGORY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' declares category '{category}', which is not a category \
+                         the active pack defines. Known categories: {known}.",
+                        stream.name
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(stream.span)),
+                    path: None,
+                    hint: Some(
+                        "A category is what a fold aggregates on, so it has to name one the \
+                         pack declares — otherwise the stream reports as a line and is counted \
+                         in no subtotal."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                }]);
+            }
+        }
         let stable_key = stable_key(&source_stmt.file, &stream.name);
         let schedule = lower_schedule(
             stream.schedule.as_ref(),
@@ -740,6 +784,7 @@ fn build_ir(
             owner: IrEntityRef {
                 symbol: stream.attached_entity.clone(),
             },
+            category: stream.category.clone(),
             direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
             currency: stream
                 .currency
@@ -1035,6 +1080,7 @@ fn resolve_active_pack_inner(
         name: active.name.clone(),
         version: active.version.clone(),
         cadences: registry.cadences(&active.name),
+        categories: registry.categories(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
     }))
@@ -1760,6 +1806,9 @@ fn lower_contract_streams(
                         rule.direction.clone()
                     },
                     currency: rule_currency.clone(),
+                    // Validated against the pack's vocabulary at load time, so
+                    // by here it is either empty or known.
+                    category: (!rule.category.is_empty()).then(|| rule.category.clone()),
                     schedule,
                     amount: IrExpr {
                         lang: "cfdl".to_string(),
@@ -3291,6 +3340,7 @@ mod pack_validation_parity_tests {
             name: pack.to_string(),
             version: "0.1.0".to_string(),
             cadences: registry.cadences(pack),
+            categories: registry.categories(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
         }

@@ -155,6 +155,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.capex",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -192,6 +193,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.capex",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-12-01"
@@ -229,6 +231,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.om",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -268,6 +271,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5022_UNKNOWN_STREAM_CATEGORY",
+    "severity": "error",
+    "message": "Stream 'cre.other.income' declares category 'operating_revenue', which is not a category the active pack defines. Known categories: operating.revenue.base_rent, operating.revenue.other, operating.revenue.percentage_rent, operating.revenue.recovery, operating.deduction.vacancy, operating.deduction.abatement, operating.expense.opex, investing.capital.leasing, investing.capital.construction, investing.capital.capex, investing.reversion, financing.debt_service.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 20,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A category is what a fold aggregates on, so it has to name one the pack declares — otherwise the stream reports as a line and is counted in no subtotal.",
+    "notes": []
+  }
+]

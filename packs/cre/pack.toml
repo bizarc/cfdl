@@ -2,6 +2,24 @@ name = "cre"
 version = "0.1.0"
 description = "Commercial Real Estate pack v0.1 (deterministic lowering)."
 
+# Closed vocabulary for a stream's `category`. Aggregation reads this rather
+# than pattern-matching a stream's name. Shaped like an operating pro forma;
+# see README.md for what each one means and why they are separate.
+categories = [
+  "operating.revenue.base_rent",
+  "operating.revenue.other",
+  "operating.revenue.percentage_rent",
+  "operating.revenue.recovery",
+  "operating.deduction.vacancy",
+  "operating.deduction.abatement",
+  "operating.expense.opex",
+  "investing.capital.leasing",
+  "investing.capital.construction",
+  "investing.capital.capex",
+  "investing.reversion",
+  "financing.debt_service",
+]
+
 
 [entrypoints]
 aliases = "aliases.toml"

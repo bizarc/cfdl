@@ -60,6 +60,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-12-01",

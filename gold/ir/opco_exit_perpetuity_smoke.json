@@ -92,6 +92,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.exit",
       "schedule": {
         "kind": "OnDate",
         "on": "2030-01-01",

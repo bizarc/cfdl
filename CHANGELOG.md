@@ -8,6 +8,64 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: stream categories
+
+Every stream may now declare what it IS, economically, and aggregation reads
+that rather than pattern-matching its name:
+
+    stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
+      schedule every year from 2001-01 to 2006-01
+      category operating.deduction.abatement
+      amount = ...
+    }
+
+A name is an address; a category is a meaning. Deciding that `cre.vacancy.loss`
+is a deduction by reading its spelling means every metric, fold and statement
+re-derives the same judgement independently — and they drift, which is exactly
+how two `.*` selector dialects came to disagree.
+
+**Why direction is not enough.** CRE emits seven outflow rules; three sit above
+the NOI line (`ops.expense`, `vacancy.loss`, `property.opex`) and four below it
+(`unit.ti_lc`, `rollover.ti_lc`, `construction.draws`, `permanent_debt_service`).
+`direction` says "outflow" to all seven. The split already existed — as nine
+hand-listed stream names in `domain.cre.noi`, restated in
+`cre_exit_forward_noi_derived` and again in a benchmark's reference generator.
+Categories do not add a concept; they move one to where it cannot drift.
+
+**Categories are hierarchical paths, rooted in the cash flow statement.**
+`operating.revenue.base_rent`, `investing.capital.leasing`,
+`financing.debt_service`. Every system that solves this converged on the same
+shape — IAS 7's three sections, a chart of accounts' five root types,
+beancount's `Expenses:Rent:Office`, XBRL's calculation linkbase: a small
+universal root, then an arbitrary domain tree, with the rollup defined by the
+tree. So a subtotal is a prefix query over the selector streams already use —
+NOI is `operating.*` — and a generic statement works against a pack it has
+never seen.
+
+CFDL enforces the root vocabulary and nothing below it. WHICH root a category
+takes is the pack's call, because that genuinely varies: interest paid is
+operating under IFRS and financing under US GAAP, and a lender's interest
+*received* is operating revenue rather than financing at all.
+
+All 58 lowering rules across the four packs are classified, and
+`benchmarks/cre/mit_rentleg_plaza` now classifies its ten native streams —
+including the abatement line that backlog 1.3 is about, which the pack has no
+contract for and which a name-based selector could never have reached.
+
+New diagnostic `E5022_UNKNOWN_STREAM_CATEGORY`. A pack whose vocabulary is not
+rooted in a known section fails to load.
+
+**No numbers move.** 81 goldens change: 169 added `category` fields, the 40
+`model_hash` values that follow, and one parser message now advertising the new
+item. Checked leaf by leaf — zero numeric values differ, and all 21 benchmarks
+still reconcile.
+
+The wasm budget moved 600 → 640 KB gzipped. It had been sitting at exactly
+600/600, so the next addition of any kind was going to trip it; categories cost
+~9 KB raw / 3 KB gzipped. Recorded in `build-wasm.sh`, along with the thing that
+did *not* work: the pack TOMLs are `include_str!`-embedded so their comments do
+ship, but cutting 2 KB of comment prose recovered 0 KB gzipped.
+
 ### Fixed: one selector dialect, and two metrics that were quietly wrong
 
 There were two implementations of the `.*` stream selector and they disagreed

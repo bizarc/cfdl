@@ -336,3 +336,55 @@ and the stochastic-modeling docs.
 Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-parity
 case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
 rent), and the CRE office notebook in `examples/notebooks/`.
+
+## Stream categories
+
+Every stream this pack emits declares a `category`, and aggregation reads that
+rather than pattern-matching the stream's name. A name is an address; a category
+is a meaning. Deciding that `cre.vacancy.loss` is a deduction by looking at its
+spelling means every metric, fold and statement re-derives the same judgement
+independently — and they drift, which is exactly how two selector dialects came
+to disagree about what `.*` matched.
+
+Categories are dotted **paths** rooted in the cash flow statement's three
+sections, so a subtotal is a prefix query over the same selector streams use:
+
+| category | what it holds |
+|---|---|
+| `operating.revenue.base_rent` | contract and market rent, including rollover |
+| `operating.revenue.other` | other operating income |
+| `operating.revenue.percentage_rent` | overage rent |
+| `operating.revenue.recovery` | expense reimbursements billed to tenants |
+| `operating.deduction.vacancy` | vacancy and credit loss |
+| `operating.deduction.abatement` | free rent |
+| `operating.expense.opex` | property operating expenses |
+| `investing.capital.leasing` | TI and leasing commissions |
+| `investing.capital.construction` | construction draws |
+| `investing.capital.capex` | general capital improvements |
+| `investing.reversion` | sale proceeds at the end of the hold |
+| `financing.debt_service` | principal and interest |
+
+So net operating income is everything under `operating.*`, effective gross
+income is `operating.revenue.*` plus `operating.deduction.*`, and the leasing
+and capital costs that sit below the NOI line are `investing.capital.*`. No
+subtotal has to list stream names.
+
+`recovery` sits under `revenue` rather than beside it because a pro forma
+reports it as its own line while still counting it above NOI — the tree
+expresses both facts at once. `deduction` is deliberately not an `expense`:
+vacancy is not a cost of operating the building, and netting the two would make
+the expense ratio meaningless.
+
+A hand-written stream may declare a category too, which is how a model expresses
+something the pack has no contract for and still has it counted. This is exactly
+what `benchmarks/cre/mit_rentleg_plaza` does with its abatement line:
+
+    stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
+      schedule every year from 2001-01 to 2006-01
+      category operating.deduction.abatement
+      amount = ...
+    }
+
+An unlisted category is `E5022` rather than a new bucket, because the failure it
+prevents is silent: the stream would still report as a line, so the statement
+would look complete while the subtotal it belonged in came up short.

@@ -2,7 +2,7 @@
   {
     "code": "E0004_EXPECTED_TOKEN",
     "severity": "error",
-    "message": "Unexpected keyword 'payment' in a stream body. Expected 'schedule', 'amount', 'active when', or '}'. Payment terms go inside the schedule: `schedule every month net 30 from …`.",
+    "message": "Unexpected keyword 'payment' in a stream body. Expected 'schedule', 'amount', 'active when', 'category', or '}'. Payment terms go inside the schedule: `schedule every month net 30 from …`.",
     "file": "model.cfdl",
     "span": {
       "start_line": 13,
