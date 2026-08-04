@@ -1,0 +1,87 @@
+# CRE per-period subtotals — the middle rows of an operating statement.
+#
+# These are folds over the ledger, evaluated once per period. Until they existed
+# a statement had its line items and its bottom line and nothing between them:
+# `domain.cre.noi` was one number for a whole hold, so a lender's coverage test
+# — which is annual, and which breaches in a single year — could not be
+# expressed at all.
+#
+# THEY FOLD CATEGORIES, NOT STREAM NAMES. That is the whole point of a category
+# being a dotted path: net operating income is everything classified
+# `operating.*`, and nothing has to enumerate which streams those are. Add a
+# contract to the pack and its streams join the right subtotals because the rule
+# that emits them already said what they are. `domain.cre.noi`'s metric sibling,
+# by contrast, lists nine stream selectors by hand and has to be edited whenever
+# the pack grows.
+#
+# Verified against a published source rather than asserted. On the HUD Sample
+# workbook's Operating Pro Forma:
+#
+#   operating.revenue.* + operating.deduction.*   = 145,557  = its EGI  (row 15)
+#   operating.*                                   =  22,043  = its NOI  (row 24)
+#   noi / financing.*                             = 1.5757380799199372
+#                                                 = its DSCR (row 102), exactly
+#
+# Order is the dependency order. A subtotal may reference only ones declared
+# above it, which is what makes a cycle unexpressible rather than merely
+# rejected — the same argument docs/14_state_and_recurrence.md §5 makes about
+# waterfalls.
+
+# Potential gross revenue: the rent roll before anything is deducted.
+[[subtotals]]
+id = "domain.cre.pgr"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*"]
+formula = "sum(operating.revenue.*)"
+
+# Effective gross income: potential gross revenue net of vacancy and free rent.
+# Recoveries sit under `operating.revenue.recovery` and so are already in the
+# first term — which is correct, and is why a pro forma reports them as their
+# own line while still counting them above NOI.
+[[subtotals]]
+id = "domain.cre.egi"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*", "operating.deduction.*"]
+formula = "potential gross revenue less vacancy and abatements"
+
+# Total operating expenses, signed as they are stored (negative).
+[[subtotals]]
+id = "domain.cre.opex_total"
+kind = "money"
+op = "sum"
+categories = ["operating.expense.*"]
+formula = "sum(operating.expense.*)"
+
+# Net operating income. Deliberately `operating.*` rather than
+# `egi + opex_total`: the two are equal by construction, and folding the section
+# directly means a new operating category — an expense reimbursement structure
+# nobody has thought of yet — lands in NOI without this file changing.
+[[subtotals]]
+id = "domain.cre.noi"
+kind = "money"
+op = "sum"
+categories = ["operating.*"]
+formula = "sum(operating.*)"
+
+# What coverage is measured against. `financing.*` rather than
+# `financing.debt_service` because mortgage insurance is not a payment on the
+# debt and yet is part of the line a lender tests — HUD states its debt service
+# as P+I+MIP and computes DSCR from it. See backlog 7.14.
+[[subtotals]]
+id = "domain.cre.debt_service"
+kind = "money"
+op = "negated_sum"
+categories = ["financing.*"]
+formula = "-sum(financing.*)"
+
+# Debt service coverage, per period. This is the row backlog 1.4 is about: a
+# lifetime ratio of 1.4 can contain a year at 0.9 and report nothing.
+[[subtotals]]
+id = "domain.cre.dscr"
+kind = "number"
+op = "ratio"
+numerator = "domain.cre.noi"
+denominator = "domain.cre.debt_service"
+formula = "domain.cre.noi / domain.cre.debt_service"

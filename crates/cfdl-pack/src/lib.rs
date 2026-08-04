@@ -20,6 +20,7 @@ pub struct LoadedPack {
     pub templates: Vec<PackTemplate>,
     pub lowering_rules: Vec<LoweringRule>,
     pub metric_specs: Vec<MetricSpec>,
+    pub subtotal_specs: Vec<SubtotalSpec>,
     pub validations: Vec<PackValidation>,
 }
 
@@ -90,6 +91,9 @@ pub struct PackEntrypoints {
     pub metrics: Option<String>,
     #[serde(default)]
     pub validations: Option<String>,
+    /// `statements.toml`: `[[subtotals]]` now, `[[statements]]` next.
+    #[serde(default)]
+    pub statements: Option<String>,
 }
 
 /// A single declarative domain check supplied by a pack.
@@ -473,10 +477,72 @@ pub struct MetricSpec {
     pub require_positive: bool,
 }
 
+/// A per-period subtotal: a named fold over the ledger.
+///
+/// Where a `MetricSpec` reduces to one lifetime scalar, this produces a value
+/// per period — the middle rows of a statement, which had no representation at
+/// all. `domain.cre.noi` was a single number for a ten-year hold.
+///
+/// Folds are declared over CATEGORIES rather than stream names wherever
+/// possible, which is the point of categories being dotted paths: net operating
+/// income is everything under `operating.*`, and effective gross income is
+/// `operating.revenue.*` plus `operating.deduction.*`. No stream is named, so
+/// adding a contract to a pack does not mean remembering to add its stream to a
+/// subtotal — the classification already said where it belongs.
+///
+/// Verified against a published source: those two definitions reproduce the HUD
+/// Sample workbook's own Effective Gross Income and Net Operating Income rows
+/// exactly, and `financing.*` reproduces the debt service its published DSCR
+/// divides by.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SubtotalSpec {
+    /// Output series key, e.g. `domain.cre.noi`. Must start with `domain.`.
+    pub id: String,
+    /// `money` (a sum of cash) or `number` (a ratio).
+    pub kind: String,
+    /// `sum`, `negated_sum`, or `ratio`.
+    pub op: String,
+    /// Category path prefixes to fold, e.g. `operating.revenue.*`. The
+    /// preferred form.
+    #[serde(default)]
+    pub categories: Vec<String>,
+    /// Stream-name selectors, for the cases a category cannot express — a
+    /// single named stream rather than a class of them.
+    #[serde(default)]
+    pub streams: Vec<String>,
+    /// Ids of subtotals declared EARLIER in this file. Order is the dependency
+    /// order, so a forward reference is a compile error and no cycle is
+    /// reachable. Same discipline `metrics.toml` ratios already use.
+    #[serde(default)]
+    pub subtotals: Vec<String>,
+    /// `ratio` only: the subtotal ids to divide.
+    #[serde(default)]
+    pub numerator: Option<String>,
+    #[serde(default)]
+    pub denominator: Option<String>,
+    /// Human-readable lineage, emitted verbatim so a published row can be
+    /// audited without reading the pack.
+    #[serde(default)]
+    pub formula: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct MetricsFile {
     #[serde(default)]
     metrics: Vec<MetricSpec>,
+}
+
+/// `statements.toml`. Holds `[[subtotals]]`, which the compiler lowers into the
+/// IR for the engine to evaluate, and will hold `[[statements]]` — the ordering
+/// and labelling read after a run. One file because a subtotal exists to be a
+/// statement row, and splitting them would make the cross-reference between
+/// them unvalidatable at load time.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct StatementsFile {
+    #[serde(default)]
+    subtotals: Vec<SubtotalSpec>,
 }
 
 /// Standard packs compiled into the library for hosts without filesystem
@@ -505,6 +571,10 @@ mod embedded {
         (
             "metrics.toml",
             include_str!("../../../packs/cre/metrics.toml"),
+        ),
+        (
+            "statements.toml",
+            include_str!("../../../packs/cre/statements.toml"),
         ),
         (
             "validations.toml",
@@ -618,6 +688,10 @@ impl PackRegistry {
                 Some(raw) => parse_validations(raw, &source)?,
                 None => Vec::new(),
             };
+            let subtotal_specs = match lookup(manifest.entrypoints.statements.as_deref()) {
+                Some(raw) => parse_subtotal_specs(raw, &source)?,
+                None => Vec::new(),
+            };
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -626,6 +700,7 @@ impl PackRegistry {
                     templates,
                     lowering_rules,
                     metric_specs,
+                    subtotal_specs,
                     validations,
                 },
             );
@@ -799,6 +874,8 @@ impl PackRegistry {
                 load_metric_specs(&pack_dir, manifest.entrypoints.metrics.as_deref())?;
             let validations =
                 load_validations(&pack_dir, manifest.entrypoints.validations.as_deref())?;
+            let subtotal_specs =
+                load_subtotal_specs(&pack_dir, manifest.entrypoints.statements.as_deref())?;
 
             packs.insert(
                 manifest.name.clone(),
@@ -808,6 +885,7 @@ impl PackRegistry {
                     templates,
                     lowering_rules,
                     metric_specs,
+                    subtotal_specs,
                     validations,
                 },
             );
@@ -890,6 +968,15 @@ impl PackRegistry {
         self.packs
             .get(pack_name)
             .map(|pack| pack.manifest.categories.clone())
+            .unwrap_or_default()
+    }
+
+    /// Per-period subtotal declarations for this pack, in declaration order.
+    /// The order is load-bearing: it is the dependency order.
+    pub fn subtotal_specs(&self, pack_name: &str) -> Vec<SubtotalSpec> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.subtotal_specs.clone())
             .unwrap_or_default()
     }
 
@@ -1093,6 +1180,18 @@ fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, Pac
     Ok(validations)
 }
 
+fn load_subtotal_specs(
+    pack_dir: &Path,
+    statements_path: Option<&str>,
+) -> Result<Vec<SubtotalSpec>, PackLoadError> {
+    let Some(relative) = statements_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    parse_subtotal_specs(&raw, &path.display().to_string())
+}
+
 fn load_metric_specs(
     pack_dir: &Path,
     metrics_path: Option<&str>,
@@ -1103,6 +1202,75 @@ fn load_metric_specs(
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
     parse_metric_specs(&raw, &path.display().to_string())
+}
+
+/// Parse and validate `[[subtotals]]`.
+///
+/// The forward-reference check is the cycle guard. Subtotals are evaluated in
+/// declaration order, so a reference to something declared later cannot be
+/// satisfied — and because only earlier ids are reachable, no cycle can be
+/// expressed at all. That is the same argument `docs/14_state_and_recurrence.md`
+/// §5 makes about waterfalls: an authored order needs no solver.
+fn parse_subtotal_specs(raw: &str, source: &str) -> Result<Vec<SubtotalSpec>, PackLoadError> {
+    let parsed: StatementsFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse statements '{source}': {err}"),
+    })?;
+    let mut seen: Vec<&str> = Vec::new();
+    for spec in &parsed.subtotals {
+        let err = |msg: String| PackLoadError {
+            message: format!("Subtotal '{}' in '{source}': {msg}", spec.id),
+        };
+        if !spec.id.starts_with("domain.") {
+            return Err(err("id must start with 'domain.'.".to_string()));
+        }
+        if seen.contains(&spec.id.as_str()) {
+            return Err(err("declared twice.".to_string()));
+        }
+        if !matches!(spec.kind.as_str(), "money" | "number") {
+            return Err(err(format!("unknown kind '{}'.", spec.kind)));
+        }
+        match spec.op.as_str() {
+            "sum" | "negated_sum" => {
+                if spec.categories.is_empty() && spec.streams.is_empty() && spec.subtotals.is_empty()
+                {
+                    return Err(err(
+                        "op 'sum' needs at least one of categories, streams or subtotals."
+                            .to_string(),
+                    ));
+                }
+                if spec.kind != "money" {
+                    return Err(err("a sum is money.".to_string()));
+                }
+            }
+            "ratio" => {
+                let (Some(num), Some(den)) = (&spec.numerator, &spec.denominator) else {
+                    return Err(err("op 'ratio' requires numerator and denominator.".to_string()));
+                };
+                if spec.kind != "number" {
+                    return Err(err("a ratio is a number, not money.".to_string()));
+                }
+                for side in [num, den] {
+                    if !seen.contains(&side.as_str()) {
+                        return Err(err(format!(
+                            "'{side}' is not a subtotal declared earlier in this file. \
+                             Order is the dependency order; move it above."
+                        )));
+                    }
+                }
+            }
+            other => return Err(err(format!("unknown op '{other}'."))),
+        }
+        for referenced in &spec.subtotals {
+            if !seen.contains(&referenced.as_str()) {
+                return Err(err(format!(
+                    "'{referenced}' is not a subtotal declared earlier in this file. \
+                     Order is the dependency order; move it above."
+                )));
+            }
+        }
+        seen.push(&spec.id);
+    }
+    Ok(parsed.subtotals)
 }
 
 fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLoadError> {
