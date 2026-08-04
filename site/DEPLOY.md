@@ -1,0 +1,248 @@
+# Deploying the site
+
+The site is a Next.js app that embeds the CFDL engine compiled to WebAssembly.
+That one fact drives everything below: **the wasm bundle needs a Rust
+toolchain, and Vercel's build image does not have one.**
+
+## How it works
+
+GitHub Actions builds — it is the only place with Rust — and hands Vercel a
+finished artifact. Vercel does not build.
+
+```
+push ──> GitHub Actions ──> install Rust + wasm-pack
+                       ──> ./scripts/build-wasm.sh      (engine -> public/wasm/)
+                       ──> vercel build                 (next build -> .vercel/output)
+                       ──> vercel deploy --prebuilt     (upload only)
+```
+
+- **A branch or PR** deploys to a preview URL.
+- **`main`** deploys to production.
+- **Locally**: `npm run build:wasm` once, then `npm run dev`. The bundle is
+  gitignored and rebuilt on demand.
+
+Deployment is still automatic on every push. What changed is which machine
+compiles, not whether a human has to press anything.
+
+### Why the bundle is not committed
+
+It used to be, because Vercel could not build it. Twenty-seven bundles
+accumulated that way — 45 MB of uncompressed blobs, though git deltas
+successive wasm builds well enough that they cost about 3.7 MB of the packed
+repository, roughly a third of it. The growth is slow but monotonic, and it is
+growth for an artifact nobody can review.
+
+It also required machinery to keep honest: a source-hash stamp, a freshness
+check against the base ref, and a version check, all of which existed *only*
+because a generated artifact was in git. Building in CI deletes the problem
+rather than policing it — a bundle built from the current sources is fresh by
+construction.
+
+`check-wasm-smoke.mjs` survives all of that and should stay. It is a functional
+test of the built bundle, not a freshness check, and it is the only thing that
+would catch a bundle that builds cleanly and does not run.
+
+---
+
+## One-time migration
+
+Do these in order. The site keeps working throughout — nothing here is
+irreversible.
+
+The point of the migration is to stop Vercel needing a pre-built artifact, not
+to reclaim space. Measured on this repo, the whole committed history of the
+bundle costs about 3.7 MB of a 10.6 MB packed repository; purging it is
+optional cleanup and is kept in an appendix rather than the main path, because
+rewriting published history invalidates every clone in exchange for very
+little.
+
+### 0. Back up
+
+Cheap insurance, and a prerequisite if you later run the appendix.
+
+```bash
+cd ~/Documents
+git clone --mirror https://github.com/bizarc/cfdl.git cfdl-backup.git
+tar czf cfdl-backup-$(date +%Y%m%d).tar.gz cfdl-backup.git
+```
+
+Keep the tarball off the machine you are working on. It contains every commit,
+branch and tag as they are today, and it is the only way back.
+
+### 1. Vercel: get the project IDs and a token
+
+The Vercel UI moves; these are the current paths and the labels may differ
+slightly.
+
+1. **Link the project locally** (once), to learn its IDs:
+   ```bash
+   cd site
+   npx vercel@latest login
+   npx vercel@latest link
+   cat .vercel/project.json     # -> { "projectId": "...", "orgId": "..." }
+   ```
+   `.vercel/` is already gitignored by the Vercel CLI's own ignore rules —
+   confirm it is not tracked before committing anything.
+
+2. **Create a token**: Vercel dashboard → your avatar → **Account Settings** →
+   **Tokens** → *Create*. Scope it to the team that owns the project. Copy it
+   once; it is not shown again.
+
+### 2. GitHub: add the secrets
+
+Repository → **Settings** → **Secrets and variables** → **Actions** → *New
+repository secret*, three times:
+
+| name | value |
+|---|---|
+| `VERCEL_TOKEN` | the token from step 1 |
+| `VERCEL_ORG_ID` | `orgId` from `.vercel/project.json` |
+| `VERCEL_PROJECT_ID` | `projectId` from `.vercel/project.json` |
+
+### 3. Add the deploy workflow, and prove it works BEFORE turning Vercel off
+
+Add the job below to `.github/workflows/site.yml` (or a new `deploy.yml`).
+Push it on a branch and confirm the preview URL renders the playground and runs
+a model. Only when that passes do you disable Vercel's own build.
+
+```yaml
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The whole reason this job exists: Vercel's image has no Rust.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.13.1 --locked
+
+      - uses: actions/setup-node@v4
+        with:
+          # Match the Vercel build image so CI cannot pass where deploys fail.
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        working-directory: site
+        run: npm ci
+
+      - name: Pull Vercel environment
+        working-directory: site
+        run: npx vercel@latest pull --yes
+             --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+             --token=${{ secrets.VERCEL_TOKEN }}
+
+      # BEFORE `vercel build`, so the bundle is in public/ when Next copies it.
+      - name: Build the wasm bundle
+        working-directory: site
+        run: npm run build:wasm
+
+      - name: Functional smoke test of the built bundle
+        working-directory: site
+        run: node scripts/check-wasm-smoke.mjs
+
+      - name: Build
+        working-directory: site
+        run: npx vercel@latest build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+             --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        working-directory: site
+        run: npx vercel@latest deploy --prebuilt
+             ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+             --token=${{ secrets.VERCEL_TOKEN }}
+```
+
+**Ordering matters in one place**: `build:wasm` must run before `vercel build`,
+because `vercel build` runs `next build`, and Next copies `public/` as it finds
+it.
+
+### 4. Vercel: stop it building
+
+Only after step 3's preview deploy is verified.
+
+Vercel dashboard → project → **Settings** → **Git**. Either:
+
+- **Disconnect the Git repository** — cleanest. Vercel stops watching entirely
+  and only ever receives prebuilt uploads from CI; or
+- leave it connected and set **Ignored Build Step** to `exit 0`, which makes
+  Vercel skip the build. Prefer disconnecting: with the integration live, a push
+  still creates a deployment record, and having two paths that can both produce
+  a deployment is the thing worth removing.
+
+### 5. Remove the bundle from the working tree
+
+Land this as an ordinary commit.
+
+```bash
+printf 'site/public/wasm/\n' >> .gitignore
+git rm -r --cached site/public/wasm/
+```
+
+Then delete what is now dead weight:
+
+- `site/scripts/wasm-stamp.mjs` and `site/public/wasm/.build-stamp`
+- `site/scripts/check-wasm-fresh.mjs`
+- `site/scripts/check-wasm-version.mjs`
+- the `check:wasm` composite script in `package.json` — replace with a direct
+  call to `check-wasm-smoke.mjs`
+- the `wasm-check` target's stamp/version steps in the root `makefile`
+- the `crates/**` and `Cargo.toml` path filters in `site.yml`, which existed
+  only so the freshness gate would run
+
+Keep `BUDGET_KB` in `build-wasm.sh`. It now runs in CI on every deploy, which is
+a better place for it than a developer's laptop.
+
+
+---
+
+# Appendix: purging the bundle from history (optional)
+
+**Irreversible, and probably not worth it.** Measured on this repo: 10.56 MiB
+packed before, 6.87 MiB after — 3.69 MB, about a third. The 45 MB of blob bytes
+that number is sometimes quoted as is uncompressed; git deltas successive wasm
+builds against each other well enough that twenty-seven of them cost roughly
+140 KB each in the pack.
+
+Once the migration above has landed, nothing new accumulates, so this only ever
+recovers what is already there. Do not start without step 0's tarball.
+
+```bash
+pip install git-filter-repo          # or: brew install git-filter-repo
+
+cd ~/Documents/cfdl
+git filter-repo --path site/public/wasm/ --invert-paths
+```
+
+`git filter-repo` refuses to run on a repo with a remote configured, and
+deliberately drops the remote after rewriting — both are guard rails, not bugs.
+Re-add it and force-push everything:
+
+```bash
+git remote add origin https://github.com/bizarc/cfdl.git
+git push --force --all origin
+git push --force --tags origin
+```
+
+All 12 tags are rewritten, so they must be force-pushed too. Verify:
+
+```bash
+git count-objects -vH | grep size-pack     # expect roughly 16 MB, from 63 MB
+git log --all --oneline -- site/public/wasm/ | wc -l   # expect 0
+```
+
+## Afterwards (only if you ran the appendix)
+
+Every existing clone is now incompatible and must be re-cloned. On this repo
+that is a short list — at the time of writing it had **0 forks, 0 stars and 0
+open pull requests**, so the only affected clones are your own. Delete them and
+clone fresh rather than trying to rebase across the rewrite.
+
+Any open branch you care about should be merged or rebased *before* step 6, not
+after.
