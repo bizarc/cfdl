@@ -1,0 +1,15 @@
+[package]
+name = "cfdl-statement"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Financial statements for CFDL results"
+publish = false
+
+[dependencies]
+cfdl-engine = { path = "../cfdl-engine" }
+cfdl-expr = { path = "../cfdl-expr" }
+cfdl-pack = { path = "../cfdl-pack" }
+serde_json = { workspace = true }

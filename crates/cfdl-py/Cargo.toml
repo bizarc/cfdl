@@ -18,4 +18,5 @@ serde_json = { workspace = true }
 cfdl-compile = { path = "../cfdl-compile" }
 cfdl-engine = { path = "../cfdl-engine" }
 cfdl-metrics = { path = "../cfdl-metrics" }
+cfdl-statement = { path = "../cfdl-statement" }
 cfdl-pack = { path = "../cfdl-pack" }

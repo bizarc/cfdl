@@ -26,6 +26,7 @@ utoipa-swagger-ui = { version = "7", features = ["axum"] }
 cfdl-compile = { path = "../cfdl-compile", features = ["embedded-packs"] }
 cfdl-engine = { path = "../cfdl-engine" }
 cfdl-metrics = { path = "../cfdl-metrics" }
+cfdl-statement = { path = "../cfdl-statement" }
 cfdl-pack = { path = "../cfdl-pack", features = ["embedded-packs"] }
 
 [dev-dependencies]

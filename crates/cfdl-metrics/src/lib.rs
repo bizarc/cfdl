@@ -358,6 +358,7 @@ mod tests {
                 errors: None,
             },
             domain_metrics: None,
+            statements: None,
         }
     }
 

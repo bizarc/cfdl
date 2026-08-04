@@ -70,6 +70,9 @@
     },
     "domain_metrics": {
       "$ref": "#/$defs/DomainMetrics"
+    },
+    "statements": {
+      "$ref": "#/$defs/StatementsSection"
     }
   },
   "$defs": {
@@ -547,6 +550,157 @@
           "description": "Per-stream record of the contract terms a pack rule consumed to strike it, passed through from the IR's `stream_inputs` verbatim. See the IR schema's StreamInputs. Hand-written streams have no entry, because no rule struck them."
         }
       }
+    },
+    "StatementsSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack",
+        "statements"
+      ],
+      "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already folded. Absent when the pack declares no statement.",
+      "properties": {
+        "pack": {
+          "type": "string"
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statement"
+          }
+        }
+      }
+    },
+    "Statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "default",
+        "rows",
+        "reconciliation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatementRow"
+          }
+        },
+        "reconciliation": {
+          "$ref": "#/$defs/StatementReconciliation"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatementDiagnostic"
+          },
+          "description": "Completeness findings. Empty is the healthy case."
+        }
+      }
+    },
+    "StatementRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "depth",
+        "display_sign"
+      ],
+      "description": "One row. `residual` is emitted for cash no row claimed and cannot be authored; a `spacer` carries no values.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "line",
+            "subtotal",
+            "ratio",
+            "spacer",
+            "residual"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "display_sign": {
+          "type": "number",
+          "enum": [
+            1,
+            -1
+          ],
+          "description": "How to RENDER the sign. `values` is always the signed arithmetic quantity, so a consumer that ignores this still adds up correctly. -1 is how a deduction prints as a positive number in a 'less:' row while still being counted negatively — a line can be shown AND counted, which is backlog 1.3."
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SeriesValue"
+          }
+        },
+        "total": {
+          "type": "number",
+          "description": "Lifetime total. Absent for a ratio, where summing a column of ratios answers nothing, and for a spacer."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The streams this row drew from — what makes a published figure traceable without a flow ledger."
+        }
+      }
+    },
+    "StatementReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bottom_line",
+        "model_total",
+        "residual"
+      ],
+      "description": "Does the statement account for the model's cash? Published always and asserted rather than corrected: a bottom line that quietly differs from model.total is the failure this exists to make visible.",
+      "properties": {
+        "bottom_line": {
+          "type": "number"
+        },
+        "model_total": {
+          "type": "number"
+        },
+        "residual": {
+          "type": "number"
+        }
+      }
+    },
+    "StatementDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "SeriesValue": {
+      "description": "A series point: money, a bare number, or null where undefined."
     }
   }
 }

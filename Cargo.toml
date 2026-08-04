@@ -11,6 +11,7 @@ members = [
   "crates/cfdl-compile",
   "crates/cfdl-engine",
   "crates/cfdl-metrics",
+  "crates/cfdl-statement",
   "crates/cfdl-cli",
   "crates/cfdl-py",
   "crates/cfdl-lsp",

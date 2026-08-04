@@ -570,6 +570,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         scenarios,
         monte_carlo,
         domain_metrics: None,
+        statements: None,
     })
 }
 
@@ -2914,6 +2915,68 @@ pub struct Results {
     pub monte_carlo: MonteCarloSection,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_metrics: Option<DomainMetrics>,
+    /// Rendered statements. Present only when the active pack declares one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statements: Option<StatementsSection>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementsSection {
+    pub pack: String,
+    pub statements: Vec<Statement>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Statement {
+    pub id: String,
+    pub label: String,
+    pub default: bool,
+    pub rows: Vec<StatementRow>,
+    pub reconciliation: StatementReconciliation,
+    /// Completeness findings. Empty is the healthy case.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub diagnostics: Vec<StatementDiagnostic>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementRow {
+    /// `line` | `subtotal` | `ratio` | `spacer` | `residual`.
+    pub kind: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub label: String,
+    pub depth: u32,
+    /// How to RENDER the sign: +1 shows the value as stored, -1 flips it for
+    /// display only. `values` is always the signed arithmetic quantity, so a
+    /// consumer that ignores this still adds up correctly.
+    pub display_sign: f64,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<SeriesValue>,
+    /// Lifetime total of the row. Absent for a ratio, where summing means
+    /// nothing, and for a spacer.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total: Option<f64>,
+    /// The streams this row drew from. Present on `line` and `residual` rows;
+    /// it is what makes a published figure traceable without the ledger.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<String>,
+}
+
+/// Does the statement add up to the model's cash?
+///
+/// Published always and asserted rather than corrected. A statement whose
+/// bottom line quietly differs from `model.total` is the failure this exists to
+/// make visible.
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementReconciliation {
+    pub bottom_line: f64,
+    pub model_total: f64,
+    pub residual: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementDiagnostic {
+    pub code: String,
+    pub message: String,
 }
 
 /// The top of the audit chain: what went in, above the line items.
