@@ -37,6 +37,7 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `contract effects { ... }` | 🟡 | the block is **required** (`E2002`) but its contents are block-skipped: a stream declared inside is never emitted. Declare streams at top level or via a pack |
 | `contract parties` / `tags` blocks | 🟡 | accepted and discarded; absent from the IR |
 | `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions. An unrecognised item in the body is rejected (`E0004`); it used to be bumped and discarded, so `payment net 60 days` on its own line — and every typo'd key — compiled clean and did nothing |
+| `stream ... { category <path> }` | ✅ | what the stream IS, economically — a dotted path into the cash flow statement (`operating.deduction.abatement`). Aggregation reads this rather than pattern-matching the stream's name. Must name a category the active pack declares (`E5022`); the pack's own vocabulary must be rooted in `operating`, `investing` or `financing` |
 | `schedule on <date>` | ✅ | settles on its own date, undiscounted for the period it lands in |
 | `schedule every <interval> from .. to ..` | ✅ | `day`, `week`, `month`, `quarter`, `year`. Distinct from the calendar cadence: a stream may pay quarterly on a monthly grid |
 | `schedule every <interval> due` | ✅ | annuity due — payment at the interval's start. Without it the schedule is an ordinary annuity, paid at the end. See `12_payment_timing.md` |

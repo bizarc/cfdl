@@ -71,7 +71,14 @@ assume opex_utilities     = 12300.00
 assume opex_taxes_ins     = 14863.00
 assume opex_trend         = 0.025
 assume reserve_y1         = 21013.00    // replacement reserve deposit
-assume debt_service_year  = 13989.00    // first mortgage, level annual payment
+// The first mortgage, from the workbook's First Mortgage Sizing tab. Its
+// published payment is labelled "Calculated Monthly P+I+MIP Payment" — the
+// three are one line on the pro forma, and only two of them are debt service.
+assume first_mortgage     = 150000.00   // sizing tab, calculated loan amount
+assume mip_rate           = 0.0045      // sizing tab, 0.450% of original principal
+// Displayed to four places; the pro forma rounds the annual figure to whole
+// dollars anyway, so the digits beyond these are immaterial to the result.
+assume pi_mip_monthly     = 1165.7819   // sizing tab, monthly P+I+MIP
 
 // Restriction runs through year 14; year 15 is the first at market rents. The
 // assumptions tab states a 15-year affordability period, and the workbook's own
@@ -84,6 +91,7 @@ assume restricted_years   = 14
 
 stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD {
   schedule every year from 2024-01 to 2052-01
+  category operating.revenue.base_rent
   amount = if(time.t < inputs.restricted_years,
             inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
             inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
@@ -91,12 +99,14 @@ stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD 
 
 stream cre.ops.revenue on entity asset.home_project inflow currency USD {
   schedule every year from 2024-01 to 2052-01
+  category operating.revenue.other
   amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, time.t)
 }
 
 // Vacancy tracks the active rent track, so it steps at the cliff too.
 stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
+  category operating.deduction.vacancy
   amount = inputs.vacancy_rate *
            if(time.t < inputs.restricted_years,
              inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
@@ -145,13 +155,45 @@ state reserve_line {
   next round_to(prev * (1 + inputs.opex_trend), 1)
 }
 
-stream cre.property.opex on entity asset.home_project outflow currency USD {
+// One stream per PUBLISHED sub-line. The workbook reports these four
+// separately — it escalates and rounds each on its own before summing — and
+// until `cre.property_opex` took a suffix a model could declare exactly one
+// expense line, so they had to be added together here and the four published
+// figures could not be checked against anything (backlog 1.5).
+//
+// The states were already per-sub-line for the rounding reason, so this is a
+// decomposition and not a change: the four sum to what the single stream
+// carried, to the cent.
+stream cre.property.opex.management on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
-  amount = state.opex_management + state.opex_maintenance + state.opex_utilities + state.opex_taxes_ins
+  category operating.expense.opex
+  amount = state.opex_management
 }
 
+stream cre.property.opex.maintenance on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  category operating.expense.opex
+  amount = state.opex_maintenance
+}
+
+stream cre.property.opex.utilities on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  category operating.expense.opex
+  amount = state.opex_utilities
+}
+
+stream cre.property.opex.taxes_insurance on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2052-01
+  category operating.expense.opex
+  amount = state.opex_taxes_ins
+}
+
+// The replacement reserve is its own published line and is semantically not an
+// operating expense — HUD reports it below total expenses — but it does sit
+// above NOI, which is why it is an operating deduction rather than capital.
 stream cre.ops.expense on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
+  category operating.expense.opex
   amount = state.reserve_line
 }
 
@@ -160,9 +202,36 @@ stream cre.ops.expense on entity asset.home_project outflow currency USD {
 // Named to match what domain.cre.debt_service reads.
 // ---------------------------------------------------------------------------
 
+// The pro forma carries ONE debt line and the workbook defines it as P+I+MIP,
+// so it was modelled as one number and the two published components could not
+// be checked separately. Mortgage insurance is not a payment on the debt —
+// backlog 7.14 — and coverage here is measured against the whole line, which is
+// what `financing.*` folds to.
+//
+// MIP is the sizing tab's stated 0.450% of original principal, flat and exact.
+// Debt service is the residual.
+//
+// THE ROUND IS THE WORKBOOK'S, NOT A FUDGE. The pro forma's debt cell is
+// `=ROUND(...,0)`, so 13,989 is what it COMPUTES and not what it displays, and
+// the DSCR it publishes is that rounded line divided into a rounded NOI. Using
+// the sizing tab's unrounded 13,989.3828 instead would be more precise and less
+// accurate — it would leave a 0.38 residual against every published debt line.
+//
+// Written as the workbook's arithmetic rather than as its answer: the same
+// `round_to` this model already uses for the expense recurrence, applied to the
+// published monthly payment. So the derivation is visible and tracks the sizing
+// inputs, instead of a 13,989 constant that would not. The 0.38 the round
+// discards belongs to the P&I leg, which is the leg the workbook rounded.
 stream loan.permanent_debt_service on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2037-01
-  amount = inputs.debt_service_year
+  category financing.debt_service
+  amount = round_to(inputs.pi_mip_monthly * 12, 1) - inputs.first_mortgage * inputs.mip_rate
+}
+
+stream loan.mortgage_insurance on entity asset.home_project outflow currency USD {
+  schedule every year from 2024-01 to 2037-01
+  category financing.mortgage_insurance
+  amount = inputs.first_mortgage * inputs.mip_rate
 }
 ```
 

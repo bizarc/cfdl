@@ -92,6 +92,7 @@ assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
 // post-spike market rent of $16.80/SF from 2004.
 stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.revenue.base_rent
   amount = inputs.suite_100_sf * if(time.t <= 2,
              inputs.suite_100_rent_psf,
              inputs.market_rent_psf * (1 + inputs.rent_spike))
@@ -101,6 +102,7 @@ stream cre.unit.base_rent.suite_100 on entity asset.rentleg inflow currency USD 
 // lease signed 1/02 at the then-current $14.00/SF, flat through 2006.
 stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.revenue.base_rent
   amount = inputs.suite_200_sf * inputs.market_rent_psf
 }
 
@@ -112,6 +114,7 @@ stream cre.unit.base_rent.suite_200 on entity asset.rentleg inflow currency USD 
 // MIT fn 2 — Suite 100 expected 2004 vacancy: 50% x 6mo = 25% of its PGR.
 stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.deduction.vacancy
   amount = if(time.t == 0,
             inputs.suite_200_sf * inputs.market_rent_psf,
             if(time.t == 3,
@@ -123,6 +126,7 @@ stream cre.vacancy.loss on entity asset.rentleg outflow currency USD {
 // MIT fn 3 — 5 months free rent on the new Suite 200 lease, taken in 2002.
 stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.deduction.abatement
   amount = if(time.t == 1,
             (inputs.abatement_months / 12) * inputs.suite_200_sf * inputs.market_rent_psf,
             0)
@@ -139,6 +143,7 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 
 stream cre.property.opex on entity asset.rentleg outflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.expense.opex
   amount = inputs.building_sf * inputs.opex_psf_full
            * pow(1 + inputs.opex_growth, time.t)
            * (inputs.opex_pct_fixed
@@ -159,6 +164,7 @@ stream cre.property.opex on entity asset.rentleg outflow currency USD {
 // 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
 stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
   schedule every year from 2001-01 to 2006-01
+  category operating.revenue.recovery
   amount = inputs.suite_100_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -173,6 +179,7 @@ stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD
 // MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.
 stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD {
   schedule every year from 2002-01 to 2006-01
+  category operating.revenue.recovery
   amount = inputs.suite_200_sf
            * max(0,
                (inputs.building_sf * inputs.opex_psf_full
@@ -193,6 +200,7 @@ stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD
 //   0.06 * (5 * $14 - (5/12) * $14) * 10,000 SF
 stream cre.unit.ti_lc.suite_200 on entity asset.rentleg outflow currency USD {
   schedule every year from 2002-01 to 2002-01
+  category investing.capital.leasing
   amount = inputs.suite_200_sf
            * (inputs.ti_new_psf
               + inputs.lc_new_pct
@@ -206,6 +214,7 @@ stream cre.unit.ti_lc.suite_200 on entity asset.rentleg outflow currency USD {
 //                  (no abatement deduction: concessions are gone by 2004)
 stream cre.unit.ti_lc.suite_100 on entity asset.rentleg outflow currency USD {
   schedule every year from 2004-01 to 2004-01
+  category investing.capital.leasing
   amount = inputs.suite_100_sf
            * ((inputs.renewal_prob * inputs.ti_renew_psf
                + (1 - inputs.renewal_prob) * inputs.ti_new_psf)
@@ -217,6 +226,7 @@ stream cre.unit.ti_lc.suite_100 on entity asset.rentleg outflow currency USD {
 // $1.00/SF/yr of general capital improvements, uninflated, over the hold.
 stream cre.capex on entity asset.rentleg outflow currency USD {
   schedule every year from 2001-01 to 2005-01
+  category investing.capital.capex
   amount = inputs.building_sf * inputs.capex_psf
 }
 
