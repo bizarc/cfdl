@@ -356,6 +356,48 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.construction.draws",
+      "contract": "cre.construction_stub",
+      "terms": {
+        "amount": "45000"
+      }
+    },
+    {
+      "stream": "cre.lease.base_rent",
+      "contract": "cre.lease",
+      "terms": {
+        "base_rent": "25000",
+        "base_rent_year": "0"
+      },
+      "defaults_applied": [
+        "base_rent_year"
+      ]
+    },
+    {
+      "stream": "cre.ops.revenue",
+      "contract": "cre.ops_revenue",
+      "terms": {
+        "amount": "30000"
+      }
+    },
+    {
+      "stream": "cre.ops.expense",
+      "contract": "cre.ops_expense",
+      "terms": {
+        "amount": "12000"
+      }
+    },
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.06",
+        "noi_value": "216000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

@@ -1,11 +1,108 @@
 {
-  "results_version": "0.2",
-  "model_hash": "494671af5222ab151da08e04fa67d166575c5ec0225dafc3aee89ba0c7354be7",
+  "results_version": "0.3",
+  "model_hash": "df76031ab3934a921ed0e9341c239632281788f51b7024f9136c1a4234ecf649",
+  "ledger_hash": "6f45159d11c154b64d501574d22bfa82717a527016ac4e328b4c7b5f845f7a25",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.lease_unit.anchor",
+        "stream": "cre.unit.base_rent.anchor",
+        "terms": {
+          "escalation": "0.02",
+          "rent_year": "540000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.anchor",
+        "stream": "cre.unit.recoveries.anchor",
+        "terms": {
+          "expense_stop_year": "228000",
+          "gross_up_factor": "0.95",
+          "opex_escalation": "0.03",
+          "opex_year": "240000",
+          "pro_rata_share": "0.60"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.anchor",
+        "stream": "cre.unit.ti_lc.anchor",
+        "terms": {
+          "lc_total": "60000",
+          "ti_total": "150000"
+        }
+      },
+      {
+        "contract": "cre.percentage_rent.anchor",
+        "stream": "cre.pct_rent.anchor",
+        "terms": {
+          "breakpoint_year": "12000000",
+          "overage_pct": "0.02",
+          "sales_growth": "0.03",
+          "sales_year": "11500000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.shops",
+        "stream": "cre.unit.base_rent.shops",
+        "terms": {
+          "escalation": "0.025",
+          "rent_year": "288000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.shops",
+        "defaults_applied": [
+          "expense_stop_year"
+        ],
+        "stream": "cre.unit.recoveries.shops",
+        "terms": {
+          "expense_stop_year": "0",
+          "gross_up_factor": "0.95",
+          "opex_escalation": "0.03",
+          "opex_year": "240000",
+          "pro_rata_share": "0.30"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.shops",
+        "stream": "cre.unit.ti_lc.shops",
+        "terms": {
+          "lc_total": "40000",
+          "ti_total": "90000"
+        }
+      },
+      {
+        "contract": "cre.vacancy_loss",
+        "stream": "cre.vacancy.loss",
+        "terms": {
+          "potential_gross_year": "850000",
+          "rate": "0.03"
+        }
+      },
+      {
+        "contract": "cre.property_opex",
+        "stream": "cre.property.opex",
+        "terms": {
+          "escalation": "0.03",
+          "opex_year": "240000"
+        }
+      },
+      {
+        "contract": "cre.exit",
+        "stream": "cre.exit.proceeds",
+        "terms": {
+          "exit_cap": "0.0675",
+          "noi_forward_year": "640000",
+          "selling_costs": "0.015"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

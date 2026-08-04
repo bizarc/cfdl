@@ -1,11 +1,29 @@
 {
-  "results_version": "0.2",
-  "model_hash": "2478fe1a0c9ca3bad8d4f33c4bbb915b06d144fb495a17b266758b36328104ab",
+  "results_version": "0.3",
+  "model_hash": "343d0eabcbd7221f0b8e545d8f6c70bcf5dca82d08dab38ea6a1a8cc7c336390",
+  "ledger_hash": "17d9358864b637b1b81e1c4a0fcdae71dfac7480300fb83e689677b67548a042",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.permanent_debt",
+        "defaults_applied": [
+          "payment_frequency"
+        ],
+        "stream": "loan.permanent_debt_service",
+        "terms": {
+          "balloon_at_maturity": "1",
+          "payment_frequency": "",
+          "principal": "6000000",
+          "rate": "0.055"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

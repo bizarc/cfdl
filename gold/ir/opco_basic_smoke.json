@@ -314,6 +314,52 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "opco.revenue.recurring",
+      "contract": "opco.revenue_line",
+      "terms": {
+        "amount": "120000",
+        "amount_year": "0",
+        "growth_curve": "",
+        "growth_rate": "0.0"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "growth_curve"
+      ]
+    },
+    {
+      "stream": "opco.opex.recurring",
+      "contract": "opco.opex_line",
+      "terms": {
+        "amount": "70000",
+        "amount_year": "0",
+        "growth_curve": "",
+        "growth_rate": "0"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "growth_curve",
+        "growth_rate"
+      ]
+    },
+    {
+      "stream": "opco.working_capital.adjustment",
+      "contract": "opco.working_capital",
+      "terms": {
+        "amount": "3000"
+      }
+    },
+    {
+      "stream": "opco.exit.value",
+      "contract": "opco.exit_multiple",
+      "terms": {
+        "base_value": "800000",
+        "exit_multiple": "6.5"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

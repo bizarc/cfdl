@@ -92,6 +92,19 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "testpack.fee",
+      "contract": "test.fee_contract",
+      "terms": {
+        "rate": "25",
+        "units": "10"
+      },
+      "defaults_applied": [
+        "units"
+      ]
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

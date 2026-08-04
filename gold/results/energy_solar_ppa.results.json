@@ -1,11 +1,79 @@
 {
-  "results_version": "0.2",
-  "model_hash": "5d8abb87c837ebce7f05fa36b9cd78f3c59ffb13e969ebb4e2f4a8ddecaed390",
+  "results_version": "0.3",
+  "model_hash": "31f0cd9b5931f97346e7e466fd175fdf910cd07ca6c2a1daf6bf08c95140693a",
+  "ledger_hash": "04aa8f8c47f53a3e7efd921bebf2e41dccdb4fd6288020ace9f0dd11f5e21732",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "energy.capex",
+        "stream": "energy.capex.outlay",
+        "terms": {
+          "amount": "2400000"
+        }
+      },
+      {
+        "contract": "energy.itc",
+        "stream": "energy.itc.credit",
+        "terms": {
+          "credit": "720000"
+        }
+      },
+      {
+        "contract": "energy.ppa",
+        "defaults_applied": [
+          "availability"
+        ],
+        "stream": "energy.ppa.revenue",
+        "terms": {
+          "availability": "1",
+          "degradation": "0.005",
+          "escalation": "0.02",
+          "mwh_year": "4200",
+          "ppa_price": "85"
+        }
+      },
+      {
+        "contract": "energy.storage_arbitrage",
+        "defaults_applied": [
+          "degradation"
+        ],
+        "stream": "energy.storage.margin",
+        "terms": {
+          "degradation": "0",
+          "mwh_cycled_year": "500",
+          "spread": "30"
+        }
+      },
+      {
+        "contract": "energy.capacity",
+        "stream": "energy.capacity.revenue",
+        "terms": {
+          "payment_year": "60000"
+        }
+      },
+      {
+        "contract": "energy.om",
+        "stream": "energy.om.expense",
+        "terms": {
+          "escalation": "0.025",
+          "om_year": "70000"
+        }
+      },
+      {
+        "contract": "energy.debt_service",
+        "stream": "energy.debt.service",
+        "terms": {
+          "principal": "1600000",
+          "rate": "0.06"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

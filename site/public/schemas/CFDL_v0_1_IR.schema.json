@@ -112,6 +112,13 @@
         "$ref": "#/$defs/Stream"
       }
     },
+    "stream_inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/StreamInputs"
+      },
+      "description": "Per-stream record of what each pack rule consumed. Omitted when nothing was lowered from a pack."
+    },
     "events": {
       "type": "array",
       "minItems": 0,
@@ -1298,6 +1305,39 @@
         },
         "schedule": {
           "$ref": "#/$defs/Schedule"
+        }
+      }
+    },
+    "StreamInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stream",
+        "contract",
+        "terms"
+      ],
+      "description": "What a pack lowering rule CONSUMED to strike one stream: the placeholders its templates actually substituted, plus the rule defaults that filled a gap. Not the contract's whole term map — a contract lowers to several streams and each reads a different subset, so 'the contract's terms' is not an answer to 'what struck this line'. Pack, rule id and source span are already on the stream's own provenance and are not repeated here. Absent for hand-written streams, which no rule struck.",
+      "properties": {
+        "stream": {
+          "$ref": "#/$defs/Id"
+        },
+        "contract": {
+          "type": "string",
+          "description": "The contract instance the rule matched, including any suffix."
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Resolved placeholder values, as the strings the templates substituted. Not coerced: a term's payload is text plus a span, which is the contract packs already work against."
+        },
+        "defaults_applied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Keys the contract did not supply, filled from the rule's own defaults. Separated because 'the model said 0' and 'the pack assumed 0' are different facts, and a reader tracing a number needs to tell them apart."
         }
       }
     }

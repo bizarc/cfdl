@@ -93,6 +93,21 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "loan.permanent_debt_service",
+      "contract": "cre.permanent_debt",
+      "terms": {
+        "balloon_at_maturity": "1",
+        "payment_frequency": "",
+        "principal": "6000000",
+        "rate": "0.055"
+      },
+      "defaults_applied": [
+        "payment_frequency"
+      ]
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

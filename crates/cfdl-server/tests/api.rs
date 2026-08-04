@@ -67,7 +67,7 @@ async fn run_from_files() {
     )
     .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["results_version"], "0.2");
+    assert_eq!(body["results_version"], "0.3");
     assert!(body["deterministic"]["metrics"]["model.npv"].is_object());
 }
 

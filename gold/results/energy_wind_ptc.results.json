@@ -1,11 +1,74 @@
 {
-  "results_version": "0.2",
-  "model_hash": "1d8652415b7dbfc8c81223a004e804f3c2cc7c5d6790be4e1a515966bd81e6ba",
+  "results_version": "0.3",
+  "model_hash": "bfe6bacc5cda9803375f42c7e67df43ea91a33f8f389c99ad38ab5a116d011b5",
+  "ledger_hash": "c6925b16ca399c9bba00c8f87c2004f870083a0030dbf3503cb20d71cfca899f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "energy.capex",
+        "stream": "energy.capex.outlay",
+        "terms": {
+          "amount": "42000000"
+        }
+      },
+      {
+        "contract": "energy.merchant",
+        "stream": "energy.merchant.revenue",
+        "terms": {
+          "availability": "0.95",
+          "degradation": "0.007",
+          "mwh_year": "105000",
+          "price": "42",
+          "price_escalation": "0.015"
+        }
+      },
+      {
+        "contract": "energy.ptc",
+        "defaults_applied": [
+          "round_step"
+        ],
+        "stream": "energy.ptc.credit",
+        "terms": {
+          "availability": "0.95",
+          "credit_per_mwh": "27.5",
+          "degradation": "0.007",
+          "escalation": "0.02",
+          "mwh_year": "105000",
+          "round_step": "1.00"
+        }
+      },
+      {
+        "contract": "energy.macrs_shield",
+        "stream": "energy.macrs.shield",
+        "terms": {
+          "basis": "42000000",
+          "life": "5",
+          "tax_rate": "0.21"
+        }
+      },
+      {
+        "contract": "energy.om",
+        "stream": "energy.om.expense",
+        "terms": {
+          "escalation": "0.02",
+          "om_year": "1300000"
+        }
+      },
+      {
+        "contract": "energy.debt_service",
+        "stream": "energy.debt.service",
+        "terms": {
+          "principal": "25000000",
+          "rate": "0.055"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

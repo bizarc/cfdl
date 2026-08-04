@@ -225,6 +225,37 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ppa.revenue",
+      "contract": "energy.ppa",
+      "terms": {
+        "availability": "1",
+        "degradation": "0.005",
+        "escalation": "0.02",
+        "mwh_year": "4200",
+        "ppa_price": "85"
+      },
+      "defaults_applied": [
+        "availability"
+      ]
+    },
+    {
+      "stream": "energy.om.expense",
+      "contract": "energy.om",
+      "terms": {
+        "escalation": "0.025",
+        "om_year": "48000"
+      }
+    },
+    {
+      "stream": "energy.capacity.revenue",
+      "contract": "energy.capacity",
+      "terms": {
+        "payment_year": "60000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

@@ -303,6 +303,58 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.unit.base_rent.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "escalation": "0.03",
+        "rent_year": "480000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "expense_stop_year": "300000",
+        "gross_up_factor": "1",
+        "opex_escalation": "0.025",
+        "opex_year": "300000",
+        "pro_rata_share": "0.40"
+      },
+      "defaults_applied": [
+        "gross_up_factor"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "lc_total": "0",
+        "ti_total": "0"
+      },
+      "defaults_applied": [
+        "lc_total",
+        "ti_total"
+      ]
+    },
+    {
+      "stream": "cre.property.opex",
+      "contract": "cre.property_opex",
+      "terms": {
+        "escalation": "0.025",
+        "opex_year": "300000"
+      }
+    },
+    {
+      "stream": "cre.exit.proceeds",
+      "contract": "cre.exit_forward",
+      "terms": {
+        "exit_cap": "0.065",
+        "selling_costs": "0.02"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

@@ -321,6 +321,8 @@ struct PackLoweringOutput {
     streams: Vec<((String, String), IrStream)>,
     /// States declared by lowering rules, deduplicated by name.
     states: Vec<IrState>,
+    /// What each lowered stream consumed. Parallel to `streams`.
+    stream_inputs: Vec<IrStreamInputs>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -350,6 +352,10 @@ struct Ir {
     states: Vec<IrState>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
+    /// What each pack-lowered stream consumed, keyed by stream name. Omitted
+    /// when nothing was lowered from a pack.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    stream_inputs: Vec<IrStreamInputs>,
     events: Vec<serde_json::Value>,
     options: Vec<serde_json::Value>,
     runs: Vec<IrRun>,
@@ -551,6 +557,33 @@ struct IrStream {
     amount: IrExpr,
     active_when: IrExpr,
     provenance: IrNodeProvenance,
+}
+
+/// What a pack rule CONSUMED to strike one stream.
+///
+/// Records the placeholders the rule's templates actually substituted, plus the
+/// rule defaults that filled a gap — not the contract's whole term map. A
+/// contract lowers to several streams, each reading a different subset of its
+/// terms, so "the contract's terms" is not an answer to "what struck this
+/// line".
+///
+/// A side table rather than fields on `IrStream`: the engine passes it through
+/// verbatim, so neither `IrStream` nor the per-period evaluation path is
+/// widened by it. Pack, rule id and source span are already on the stream's own
+/// `provenance` and are not repeated here.
+#[derive(Debug, Serialize)]
+struct IrStreamInputs {
+    stream: String,
+    contract: String,
+    /// Resolved placeholder values, as the strings the templates substituted.
+    /// Not coerced: a term's payload is text plus a span, which is the contract
+    /// packs already work against.
+    terms: BTreeMap<String, String>,
+    /// Keys the contract did not supply, filled from the rule's own defaults.
+    /// Separated because "the model said 0" and "the pack assumed 0" are
+    /// different facts, and a reader tracing a number needs to tell them apart.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    defaults_applied: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -871,6 +904,7 @@ fn build_ir(
         }
     }
     let lowered_states = lowered.states;
+    let stream_inputs = lowered.stream_inputs;
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -942,6 +976,7 @@ fn build_ir(
                 s
             })
             .collect(),
+        stream_inputs,
         events: ir_events,
         options: ir_options,
         runs: {
@@ -1161,6 +1196,7 @@ fn lower_contract_streams(
         return PackLoweringOutput {
             streams: vec![],
             states: vec![],
+            stream_inputs: vec![],
             diagnostics: vec![],
         };
     };
@@ -1213,6 +1249,7 @@ fn lower_contract_streams(
 
     let mut lowered = Vec::new();
     let mut lowered_states: BTreeMap<String, IrState> = BTreeMap::new();
+    let mut stream_inputs: Vec<IrStreamInputs> = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Contract(contract) = &source_stmt.statement else {
@@ -1581,6 +1618,12 @@ fn lower_contract_streams(
                 ));
                 continue;
             }
+            // The UNEXPANDED rule, kept before `rule` is rebound below. Its
+            // templates still carry their `{{contract.<key>}}` placeholders,
+            // which is the only place the set of terms a rule consumes can be
+            // read — after expansion the keys are gone and only their values
+            // remain, indistinguishable from literals.
+            let source_rule = rule;
             let rule = &expanded_rule;
 
             // A rule may narrow the pack's cadence support, so a pack can
@@ -1792,6 +1835,61 @@ fn lower_contract_streams(
                 }
             }
 
+            // What this rule actually read to strike this stream. Derived from
+            // the rule's own templates rather than from the contract, because a
+            // contract lowers to several streams and each reads a different
+            // subset — the debt-service rule and the interest rule of one loan
+            // do not consume the same terms.
+            {
+                let mut consumed: BTreeMap<String, String> = BTreeMap::new();
+                let mut defaults_applied: Vec<String> = Vec::new();
+                for template in [
+                    &source_rule.amount_expr,
+                    &source_rule.schedule_from,
+                    &source_rule.schedule_to,
+                    &source_rule.stream_name,
+                    &source_rule.schedule_net_days,
+                    &source_rule.schedule_net_months,
+                    &source_rule.schedule_every,
+                    &source_rule.state_init,
+                    &source_rule.state_next,
+                ] {
+                    for key in cfdl_pack::template_placeholders(template) {
+                        // Cadence primitives and name derivations are computed,
+                        // not supplied — they say nothing about what the model
+                        // stated, so they are not provenance.
+                        if key.starts_with("periods.")
+                            || key.starts_with("whole_periods.")
+                            || key.starts_with("model.")
+                            || key.starts_with("time.")
+                            || matches!(
+                                key.as_str(),
+                                "name" | "suffix" | "dot_suffix" | "suffix_ident"
+                            )
+                        {
+                            continue;
+                        }
+                        if let Some(term) = contract.terms.get(&key) {
+                            consumed.insert(key.clone(), term.value.clone());
+                        } else if let Some(default) = source_rule.defaults.get(&key) {
+                            consumed.insert(key.clone(), default.clone());
+                            if !defaults_applied.contains(&key) {
+                                defaults_applied.push(key.clone());
+                            }
+                        }
+                    }
+                }
+                if !consumed.is_empty() {
+                    defaults_applied.sort();
+                    stream_inputs.push(IrStreamInputs {
+                        stream: rule.stream_name.clone(),
+                        contract: contract.name.clone(),
+                        terms: consumed,
+                        defaults_applied,
+                    });
+                }
+            }
+
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
                 IrStream {
@@ -1836,6 +1934,7 @@ fn lower_contract_streams(
     PackLoweringOutput {
         streams: lowered,
         states: lowered_states.into_values().collect(),
+        stream_inputs,
         diagnostics,
     }
 }

@@ -1,11 +1,38 @@
 {
-  "results_version": "0.2",
-  "model_hash": "80a669f48a25c29638f8c66aa264f127dc6a9e0ead96257b3028921ffe6c972d",
+  "results_version": "0.3",
+  "model_hash": "ed3e7250b501f438d89dc4025c94631d25e3afd12f28f0caee8e4990476c09e1",
+  "ledger_hash": "a263397808244af2b596db495fd71c2525457fcf2af652a2b285d71e498e6e0f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.ops_revenue",
+        "stream": "cre.ops.revenue",
+        "terms": {
+          "amount": "5000"
+        }
+      },
+      {
+        "contract": "cre.ops_expense",
+        "stream": "cre.ops.expense",
+        "terms": {
+          "amount": "2000"
+        }
+      },
+      {
+        "contract": "cre.exit_cap",
+        "stream": "cre.exit.sale",
+        "terms": {
+          "exit_cap": "0.09",
+          "noi_value": "36000"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

@@ -332,6 +332,23 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.ops.expense",
+      "contract": "cre.ops_expense",
+      "terms": {
+        "amount": "55000"
+      }
+    },
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.055",
+        "noi_value": "1740000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

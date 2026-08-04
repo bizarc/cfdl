@@ -1,11 +1,27 @@
 {
-  "results_version": "0.2",
-  "model_hash": "158fc06bd077276665d6ba8c60c229963d9c9725dcbe8e30c5f450755d10fe1c",
+  "results_version": "0.3",
+  "model_hash": "6cb9ac938c823488744d22a97c0709b954be738caf121f668a192b885c0f8b2f",
+  "ledger_hash": "7dd5f1605d66bb27b8773021365325da2c22c5be4459bf74955a303a10742027",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "energy.ppa.plant_a",
+        "stream": "energy.ppa.revenue.plant_a",
+        "terms": {
+          "availability": "1.0",
+          "degradation": "0.005",
+          "escalation": "0.0",
+          "mwh_year": "5000",
+          "ppa_price": "3000"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

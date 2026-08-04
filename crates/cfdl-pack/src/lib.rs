@@ -641,6 +641,30 @@ impl PackRegistry {
 /// returned as `Err` so the caller can emit one diagnostic per missing term.
 /// Substitution is textual: numeric contract terms yield valid expression
 /// fragments, string terms must be quoted inside the template.
+/// The placeholder keys a template refers to, in order of first appearance.
+///
+/// The same scan `expand_rule_template` performs, without resolving anything.
+/// It exists so the compiler can record WHICH contract terms a rule actually
+/// consumed: a contract may lower to several streams, each reading a different
+/// subset of its terms, so "the contract's terms" is not the answer to "what
+/// struck this line". Keys are returned with any `contract.` prefix stripped,
+/// matching what `resolve` is handed.
+pub fn template_placeholders(template: &str) -> Vec<String> {
+    let mut keys: Vec<String> = Vec::new();
+    let mut rest = template;
+    while let Some(start) = rest.find("{{") {
+        let after = &rest[start + 2..];
+        let Some(end) = after.find("}}") else { break };
+        let raw_key = after[..end].trim();
+        let key = raw_key.strip_prefix("contract.").unwrap_or(raw_key);
+        if !keys.iter().any(|k| k == key) {
+            keys.push(key.to_string());
+        }
+        rest = &after[end + 2..];
+    }
+    keys
+}
+
 pub fn expand_rule_template(
     template: &str,
     resolve: &dyn Fn(&str) -> Option<String>,

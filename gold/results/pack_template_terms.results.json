@@ -1,11 +1,27 @@
 {
-  "results_version": "0.2",
-  "model_hash": "688bbb6a5fcb54dd8f94049329a39edc40606f5292aa09406482e943fbfd72ff",
+  "results_version": "0.3",
+  "model_hash": "883832a6f2981131a85d88a9738b5213d92757f6a1c1becc53e4084350e2406d",
+  "ledger_hash": "d72736f035f8d827c89abd50cb6a5288dd299c610deeb65d5de47bb2494482eb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "test.fee_contract",
+        "defaults_applied": [
+          "units"
+        ],
+        "stream": "testpack.fee",
+        "terms": {
+          "rate": "25",
+          "units": "10"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

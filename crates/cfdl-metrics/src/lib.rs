@@ -298,14 +298,16 @@ mod tests {
             );
         }
         Results {
-            results_version: "0.2".to_string(),
+            results_version: "0.3".to_string(),
             model_hash: "test".to_string(),
+            ledger_hash: "test".to_string(),
             engine: EngineInfo {
                 name: "cfdl-engine".to_string(),
                 version: "0.1.0".to_string(),
                 build: None,
             },
             warnings: vec![],
+            inputs: None,
             deterministic: DeterministicSection {
                 status: "ok".to_string(),
                 metrics,

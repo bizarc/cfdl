@@ -1,11 +1,23 @@
 {
-  "results_version": "0.2",
-  "model_hash": "3b91b19a9205a22ecd19fc529ce90dc25e06b9f0061015b5f2a595270ce00c02",
+  "results_version": "0.3",
+  "model_hash": "82a4651c868cb0f832180a49bb71f50906fc98857a5b44e22a3b50699e689508",
+  "ledger_hash": "3584e6d591ad366bb56f443f616a1e959559c28a9e9a5b311610d7ae48265398",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.ops_revenue",
+        "stream": "cre.ops.revenue",
+        "terms": {
+          "amount": "30000"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

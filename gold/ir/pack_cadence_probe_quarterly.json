@@ -92,6 +92,16 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "testpack.cadence_probe",
+      "contract": "test.cadence_probe",
+      "terms": {
+        "amount_year": "120000",
+        "escalation": "0.10"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

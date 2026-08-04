@@ -1,11 +1,56 @@
 {
-  "results_version": "0.2",
-  "model_hash": "ba8642d23322bdcdaa09dbe9b906b0a5c26f9059e9eb73b8eab04f5ab9080dc1",
+  "results_version": "0.3",
+  "model_hash": "4aa92bd55cbe7c60f17b143f3ef1cbc186222fdf2e791b379cdcb43520a4a311",
+  "ledger_hash": "8bcb5a034bd87b948f57e9915bcc06d18bf3438e4e748d4bf771f4e4d655bbaf",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.construction_stub",
+        "stream": "cre.construction.draws",
+        "terms": {
+          "amount": "45000"
+        }
+      },
+      {
+        "contract": "cre.lease",
+        "defaults_applied": [
+          "base_rent_year"
+        ],
+        "stream": "cre.lease.base_rent",
+        "terms": {
+          "base_rent": "25000",
+          "base_rent_year": "0"
+        }
+      },
+      {
+        "contract": "cre.ops_revenue",
+        "stream": "cre.ops.revenue",
+        "terms": {
+          "amount": "30000"
+        }
+      },
+      {
+        "contract": "cre.ops_expense",
+        "stream": "cre.ops.expense",
+        "terms": {
+          "amount": "12000"
+        }
+      },
+      {
+        "contract": "cre.exit_cap",
+        "stream": "cre.exit.sale",
+        "terms": {
+          "exit_cap": "0.06",
+          "noi_value": "180000"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

@@ -124,6 +124,21 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "opco.exit.value",
+      "contract": "opco.exit_perpetuity",
+      "terms": {
+        "base_value": "1169.858560",
+        "discount_rate": "0.085",
+        "growth_rate": "0.025",
+        "selling_costs": "0"
+      },
+      "defaults_applied": [
+        "selling_costs"
+      ]
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

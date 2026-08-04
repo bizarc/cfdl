@@ -224,6 +224,30 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.ops.revenue",
+      "contract": "cre.ops_revenue",
+      "terms": {
+        "amount": "5000"
+      }
+    },
+    {
+      "stream": "cre.ops.expense",
+      "contract": "cre.ops_expense",
+      "terms": {
+        "amount": "2000"
+      }
+    },
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.09",
+        "noi_value": "36000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

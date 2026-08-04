@@ -121,6 +121,19 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ppa.revenue.plant_a",
+      "contract": "energy.ppa.plant_a",
+      "terms": {
+        "availability": "1.0",
+        "degradation": "inputs.degradation",
+        "escalation": "0.0",
+        "mwh_year": "inputs.annual_yield",
+        "ppa_price": "3000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

@@ -578,6 +578,100 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.unit.base_rent.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "escalation": "0.02",
+        "rent_year": "540000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "expense_stop_year": "228000",
+        "gross_up_factor": "0.95",
+        "opex_escalation": "0.03",
+        "opex_year": "240000",
+        "pro_rata_share": "0.60"
+      }
+    },
+    {
+      "stream": "cre.unit.ti_lc.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "lc_total": "60000",
+        "ti_total": "150000"
+      }
+    },
+    {
+      "stream": "cre.pct_rent.anchor",
+      "contract": "cre.percentage_rent.anchor",
+      "terms": {
+        "breakpoint_year": "12000000",
+        "overage_pct": "0.02",
+        "sales_growth": "0.03",
+        "sales_year": "11500000"
+      }
+    },
+    {
+      "stream": "cre.unit.base_rent.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "escalation": "0.025",
+        "rent_year": "288000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "expense_stop_year": "0",
+        "gross_up_factor": "0.95",
+        "opex_escalation": "0.03",
+        "opex_year": "240000",
+        "pro_rata_share": "0.30"
+      },
+      "defaults_applied": [
+        "expense_stop_year"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "lc_total": "40000",
+        "ti_total": "90000"
+      }
+    },
+    {
+      "stream": "cre.vacancy.loss",
+      "contract": "cre.vacancy_loss",
+      "terms": {
+        "potential_gross_year": "850000",
+        "rate": "0.03"
+      }
+    },
+    {
+      "stream": "cre.property.opex",
+      "contract": "cre.property_opex",
+      "terms": {
+        "escalation": "0.03",
+        "opex_year": "240000"
+      }
+    },
+    {
+      "stream": "cre.exit.proceeds",
+      "contract": "cre.exit",
+      "terms": {
+        "exit_cap": "0.0675",
+        "noi_forward_year": "640000",
+        "selling_costs": "0.015"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

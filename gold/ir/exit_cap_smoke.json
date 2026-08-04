@@ -92,6 +92,16 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.05",
+        "noi_value": "100000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

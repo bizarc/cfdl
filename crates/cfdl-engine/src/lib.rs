@@ -530,15 +530,33 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         }
     };
 
+    // Hashed over the ledger only — the per-stream, per-period series. Not the
+    // metrics: NPV and IRR are folds OF the ledger, so including them would
+    // make the hash change for a reason the ledger did not.
+    let ledger_hash = canonical_hash(&serde_json::json!({
+        "series": &deterministic.series,
+        "annual_rollup": &deterministic.annual_rollup,
+    }));
+
+    let inputs = {
+        let section = InputsSection {
+            resolved: base_run.resolved_inputs.clone(),
+            streams: ir.stream_inputs.clone(),
+        };
+        (!section.resolved.is_empty() || !section.streams.is_empty()).then_some(section)
+    };
+
     Ok(Results {
-        results_version: "0.2".to_string(),
+        results_version: "0.3".to_string(),
         model_hash,
+        ledger_hash,
         engine: EngineInfo {
             name: "cfdl-engine".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             build: None,
         },
         warnings,
+        inputs,
         deterministic,
         scenarios,
         monte_carlo,
@@ -549,6 +567,9 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
 #[derive(Debug, Clone)]
 struct DeterministicRunOutput {
     warnings: Vec<String>,
+    /// Evaluated `assume` values, carried out so `compute_results` can publish
+    /// them without re-evaluating (which would duplicate every warning).
+    resolved_inputs: BTreeMap<String, f64>,
     metrics: BTreeMap<String, Scalar>,
     series: BTreeMap<String, Series>,
     npv: f64,
@@ -1107,6 +1128,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     Ok(DeterministicRunOutput {
         warnings,
+        resolved_inputs: base_inputs,
         metrics,
         series: series_map,
         npv,
@@ -2455,6 +2477,12 @@ struct Ir {
     time: IrTime,
     #[serde(default)]
     streams: Vec<IrStream>,
+    /// Per-stream record of what each pack rule consumed. Deserialized as
+    /// opaque JSON and republished verbatim: the engine has no use for it, and
+    /// giving it a typed shape here would mean maintaining that shape in two
+    /// crates for no gain.
+    #[serde(default)]
+    stream_inputs: Vec<serde_json::Value>,
     #[serde(default)]
     assumptions: IrAssumptions,
     #[serde(default)]
@@ -2694,13 +2722,48 @@ pub struct MetricLineage {
 pub struct Results {
     pub results_version: String,
     pub model_hash: String,
+    /// Content hash of the deterministic ledger — the per-stream, per-period
+    /// series this run produced.
+    ///
+    /// Together with `model_hash`, `engine` and the run config in
+    /// `deterministic.metrics`, this closes the chain: identical inputs on an
+    /// identical engine must reproduce an identical `ledger_hash`. If they do
+    /// not, something is nondeterministic, and the golden suite would otherwise
+    /// report that as a flapping test rather than as the defect it is.
+    ///
+    /// It hashes the LEDGER, not the inputs, deliberately. "Did the inputs
+    /// change" is already answerable from `model_hash`; what nothing answered
+    /// before is "did the output change", which is the question a reviewer
+    /// staring at a re-blessed golden actually has.
+    pub ledger_hash: String,
     pub engine: EngineInfo,
     pub warnings: Vec<String>,
+    /// Resolved assumptions and the contract terms each lowered stream
+    /// consumed. Absent when the model declares neither.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inputs: Option<InputsSection>,
     pub deterministic: DeterministicSection,
     pub scenarios: ScenarioSection,
     pub monte_carlo: MonteCarloSection,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_metrics: Option<DomainMetrics>,
+}
+
+/// The top of the audit chain: what went in, above the line items.
+#[derive(Debug, Clone, Serialize)]
+pub struct InputsSection {
+    /// Evaluated `assume` values, as `inputs.<name>` resolves them.
+    ///
+    /// In a deterministic run a random assumption resolves to its clipped
+    /// central value, not to a draw — publishing it here is what stops that
+    /// being invisible.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub resolved: BTreeMap<String, f64>,
+    /// Per-stream record of the contract terms a pack rule consumed. Passed
+    /// through from the IR verbatim, so `IrStream` and the per-period
+    /// evaluation path are untouched by it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -3079,6 +3142,69 @@ fn probability_negative(values: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    /// A minimal one-stream IR, with the amount parameterised so a test can
+    /// change the model without changing anything else about the run.
+    #[cfg(test)]
+    fn probe_ir(amount: &str) -> String {
+        format!(
+            r#"{{
+              "model": {{"name": "hash-probe", "currency": "USD"}},
+              "time": {{"calendar": "annual", "start": "2026-01-01", "periods": 3}},
+              "streams": [{{
+                "id": "s1", "name": "probe.rent",
+                "owner": {{"symbol": "legal.co"}},
+                "direction": "inflow", "currency": "USD",
+                "schedule": {{"kind": "Every", "every": "annual",
+                             "from": "2026-01-01", "to": "2028-01-01"}},
+                "amount": {{"lang": "cfdl", "src": "{amount}"}},
+                "active_when": {{"lang": "cfdl", "src": "true"}}
+              }}]
+            }}"#
+        )
+    }
+
+    /// The property `ledger_hash` exists to make testable: identical inputs on
+    /// an identical engine reproduce an identical ledger.
+    ///
+    /// Worth stating as a test rather than trusting the golden suite to notice.
+    /// A golden diff says "this document changed"; it cannot say whether the
+    /// change was a real behavioural difference or a run-to-run wobble, and a
+    /// wobble would surface as a flapping test rather than as the defect it is.
+    #[test]
+    fn ledger_hash_is_reproducible_and_moves_only_with_the_ledger() {
+        use super::*;
+        let run = |src: &str, rate: f64| -> (String, String, f64) {
+            let config = RunConfig {
+                discount_rate: rate,
+                ..RunConfig::default()
+            };
+            let results = run_from_json_str(src, config).expect("run");
+            let npv = match results.deterministic.metrics.get("model.npv") {
+                Some(Scalar::Money(m)) => m.amount,
+                other => panic!("expected money npv, got {other:?}"),
+            };
+            (results.model_hash, results.ledger_hash, npv)
+        };
+
+        let (m1, l1, npv1) = run(&probe_ir("100"), 0.10);
+        let (m2, l2, npv2) = run(&probe_ir("100"), 0.10);
+        assert_eq!(m1, m2, "same source must hash the same");
+        assert_eq!(l1, l2, "same run twice must reproduce the ledger exactly");
+        assert_eq!(npv1, npv2);
+
+        // The discount rate must NOT move the ledger. The ledger is cash before
+        // discounting; the rate belongs to a fold over it. If this ever fails,
+        // discounting has leaked into the ledger.
+        let (_, l_rate, npv_rate) = run(&probe_ir("100"), 0.25);
+        assert_eq!(l1, l_rate, "the discount rate is not part of the ledger");
+        assert_ne!(npv1, npv_rate, "but it is part of the valuation");
+
+        // A change to the model's cash must move it.
+        let (m_amt, l_amt, _) = run(&probe_ir("101"), 0.10);
+        assert_ne!(m1, m_amt);
+        assert_ne!(l1, l_amt, "a different ledger must hash differently");
+    }
+
     #[test]
     fn wal_nets_within_an_offset_but_not_across_one() {
         use super::*;

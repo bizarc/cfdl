@@ -8,6 +8,57 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: provenance, resolved inputs, and a ledger hash — `results_version` 0.3
+
+A published line item can now be traced back to the term that struck it.
+
+**`inputs.streams`** records, per stream, the contract terms a pack rule
+actually consumed. Not the contract's whole term map: a contract lowers to
+several streams and each reads a different subset, so "the contract's terms" is
+not an answer to "what struck this line". One `cre.lease_unit` contract produces
+three streams with three different term sets:
+
+    cre.unit.base_rent.tenant_a   <- rent_year, escalation
+    cre.unit.recoveries.tenant_a  <- opex_year, opex_escalation, expense_stop_year,
+                                     pro_rata_share, gross_up_factor (pack default)
+    cre.unit.ti_lc.tenant_a       <- ti_total, lc_total
+
+`defaults_applied` separates the values the model stated from the ones the pack
+assumed, because "the model said 0" and "the pack assumed 0" are different facts
+and a reader tracing a number needs to tell them apart.
+
+Note what this was NOT: `crates/cfdl-compile/src/lib.rs` emits `terms: {}` on
+every contract and always has, so nothing was being un-dropped. The terms are
+read from the rule's own templates *before* expansion — afterwards the keys are
+gone and only their values remain, indistinguishable from literals.
+
+**`inputs.resolved`** publishes evaluated `assume` values. Worth having on the
+page rather than only in the model source: in a deterministic run a random
+assumption resolves to its clipped CENTRAL value, not to a draw, and publishing
+it is what stops that being invisible.
+
+**`ledger_hash`** is a SHA-256 over the deterministic ledger — the series and
+the annual rollup. Together with `model_hash` and `engine` it closes the chain:
+identical inputs on an identical engine must reproduce an identical ledger. A
+golden diff can say "this document changed"; it cannot say whether that was a
+real behavioural difference or a run-to-run wobble, and a wobble would surface
+as a flapping test rather than as the defect it is.
+
+It deliberately covers the ledger and not the metrics. NPV and IRR are folds OF
+the ledger, so including them would make the hash move for a reason the ledger
+did not — and it means `ledger_hash` is **invariant to the discount rate**,
+which is correct: the ledger is cash before discounting. There is a test
+asserting exactly that, alongside reproducibility and the fact that changing a
+model's cash does move it.
+
+The engine passes `stream_inputs` through as opaque JSON. `IrStream` is not
+widened and the per-period evaluation path is untouched.
+
+**No numbers move.** 116 goldens change: 1,384 IR `stream_inputs` leaves, the
+same republished under `inputs.streams`, 72 `ledger_hash` values, 7 resolved
+assumptions, plus the `results_version` bump and the 44 `model_hash` values that
+follow the IR change. Zero numeric leaves differ.
+
 ### Added: stream categories
 
 Every stream may now declare what it IS, economically, and aggregation reads

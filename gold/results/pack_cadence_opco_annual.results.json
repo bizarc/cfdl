@@ -1,11 +1,76 @@
 {
-  "results_version": "0.2",
-  "model_hash": "79c40e172965b585bea3b64bd1a52b6bd56848a0c433526af7492cd23e9eb84d",
+  "results_version": "0.3",
+  "model_hash": "26b12ec4ade6013573b8e0aa453169f44e1310241cbd6c0fc6669cc652a8904d",
+  "ledger_hash": "b7222f74461a9e243110408ababeadff8839ba3ae99f5b4f6aad2e3f9026b8fc",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "opco.revenue_line",
+        "defaults_applied": [
+          "amount",
+          "growth_curve"
+        ],
+        "stream": "opco.revenue.recurring",
+        "terms": {
+          "amount": "0",
+          "amount_year": "1440000",
+          "growth_curve": "",
+          "growth_rate": "0.0"
+        }
+      },
+      {
+        "contract": "opco.opex_line",
+        "defaults_applied": [
+          "amount",
+          "growth_curve"
+        ],
+        "stream": "opco.opex.recurring",
+        "terms": {
+          "amount": "0",
+          "amount_year": "840000",
+          "growth_curve": "",
+          "growth_rate": "0.0"
+        }
+      },
+      {
+        "contract": "opco.capex_line",
+        "defaults_applied": [
+          "amount",
+          "growth_curve",
+          "growth_rate"
+        ],
+        "stream": "opco.capex",
+        "terms": {
+          "amount": "0",
+          "amount_year": "60000",
+          "growth_curve": "",
+          "growth_rate": "0",
+          "pct_of_revenue": "0.02"
+        }
+      },
+      {
+        "contract": "opco.cash_taxes",
+        "defaults_applied": [
+          "da_growth",
+          "da_monthly",
+          "tax_rate_curve"
+        ],
+        "stream": "opco.taxes",
+        "terms": {
+          "da_growth": "0",
+          "da_monthly": "0",
+          "da_year": "120000",
+          "tax_rate": "0.25",
+          "tax_rate_curve": ""
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

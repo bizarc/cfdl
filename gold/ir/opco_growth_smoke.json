@@ -183,6 +183,37 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "opco.revenue.recurring",
+      "contract": "opco.revenue_line",
+      "terms": {
+        "amount": "100000",
+        "amount_year": "0",
+        "growth_curve": "",
+        "growth_rate": "0.12"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "growth_curve"
+      ]
+    },
+    {
+      "stream": "opco.opex.recurring",
+      "contract": "opco.opex_line",
+      "terms": {
+        "amount": "60000",
+        "amount_year": "0",
+        "growth_curve": "",
+        "growth_rate": "0"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "growth_curve",
+        "growth_rate"
+      ]
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

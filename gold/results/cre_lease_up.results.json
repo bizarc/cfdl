@@ -1,11 +1,27 @@
 {
-  "results_version": "0.2",
-  "model_hash": "071f817d6c46493680f9380bd5e83bbf1fda865f06447f810ec84e54e6aa6e07",
+  "results_version": "0.3",
+  "model_hash": "c1ae1895d3e6af19b23a4699840e98f4c7b26e642787184aa3baee8d6c4d6c17",
+  "ledger_hash": "a366acbe377c874752dde4e0d276b1a82a9a15bef2b13543e0185c0f28e6a87a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.lease",
+        "defaults_applied": [
+          "base_rent_year"
+        ],
+        "stream": "cre.lease.base_rent",
+        "terms": {
+          "base_rent": "25000",
+          "base_rent_year": "0"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

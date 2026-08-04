@@ -1,11 +1,66 @@
 {
-  "results_version": "0.2",
-  "model_hash": "b480151bcdc78807a330e5e0f4e40df1c9b0b542e85d6a8ce0c7e44813a531d5",
+  "results_version": "0.3",
+  "model_hash": "021f396cc328b67d9adc95207bb861e23011cbd61f446e57032f707d17b1cf8f",
+  "ledger_hash": "c9df625980f985fbd4474bb43b4dd85a38bb88e445db559c8cab9f448df43bd0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.base_rent.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "gross_up_factor"
+        ],
+        "stream": "cre.unit.recoveries.tenant_a",
+        "terms": {
+          "expense_stop_year": "300000",
+          "gross_up_factor": "1",
+          "opex_escalation": "0.025",
+          "opex_year": "300000",
+          "pro_rata_share": "0.40"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "lc_total",
+          "ti_total"
+        ],
+        "stream": "cre.unit.ti_lc.tenant_a",
+        "terms": {
+          "lc_total": "0",
+          "ti_total": "0"
+        }
+      },
+      {
+        "contract": "cre.property_opex",
+        "stream": "cre.property.opex",
+        "terms": {
+          "escalation": "0.025",
+          "opex_year": "300000"
+        }
+      },
+      {
+        "contract": "cre.exit_forward",
+        "stream": "cre.exit.proceeds",
+        "terms": {
+          "exit_cap": "0.065",
+          "selling_costs": "0.02"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

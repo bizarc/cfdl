@@ -1,11 +1,18 @@
 {
-  "results_version": "0.2",
+  "results_version": "0.3",
   "model_hash": "7ce53a085d6da14fcbc00b6a7793bd8c4d58e69d191b3d06384c87ea1b33c2ca",
+  "ledger_hash": "da0775e6a61e70187b178e03a40feb9d22addf3ff7ab86c0061216aea6009a45",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "resolved": {
+      "rent": 1000.0,
+      "vacancy": 0.06666666666666667
+    }
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

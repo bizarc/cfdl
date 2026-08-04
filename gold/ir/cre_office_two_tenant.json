@@ -651,6 +651,111 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "cre.unit.base_rent.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "escalation": "0.03",
+        "rent_year": "480000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "expense_stop_year": "300000",
+        "gross_up_factor": "1",
+        "opex_escalation": "0.025",
+        "opex_year": "300000",
+        "pro_rata_share": "0.40"
+      },
+      "defaults_applied": [
+        "gross_up_factor"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "lc_total": "80000",
+        "ti_total": "120000"
+      }
+    },
+    {
+      "stream": "cre.rollover.rent.tenant_a",
+      "contract": "cre.rollover.tenant_a",
+      "terms": {
+        "market_escalation": "0.03",
+        "market_rent_year": "560000",
+        "renewal_probability": "0.7",
+        "renewal_rent_year": "520000"
+      }
+    },
+    {
+      "stream": "cre.rollover.ti_lc.tenant_a",
+      "contract": "cre.rollover.tenant_a",
+      "terms": {
+        "new_ti_lc": "350000",
+        "renewal_probability": "0.7",
+        "renewal_ti_lc": "100000"
+      }
+    },
+    {
+      "stream": "cre.unit.base_rent.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "escalation": "0.025",
+        "rent_year": "360000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "expense_stop_year": "180000",
+        "gross_up_factor": "1",
+        "opex_escalation": "0.025",
+        "opex_year": "300000",
+        "pro_rata_share": "0.30"
+      },
+      "defaults_applied": [
+        "gross_up_factor"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "lc_total": "50000",
+        "ti_total": "100000"
+      }
+    },
+    {
+      "stream": "cre.vacancy.loss",
+      "contract": "cre.vacancy_loss",
+      "terms": {
+        "potential_gross_year": "900000",
+        "rate": "0.02"
+      }
+    },
+    {
+      "stream": "cre.property.opex",
+      "contract": "cre.property_opex",
+      "terms": {
+        "escalation": "0.025",
+        "opex_year": "300000"
+      }
+    },
+    {
+      "stream": "cre.exit.proceeds",
+      "contract": "cre.exit_forward",
+      "terms": {
+        "exit_cap": "0.065",
+        "selling_costs": "0.02"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

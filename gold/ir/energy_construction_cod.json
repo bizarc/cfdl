@@ -304,6 +304,44 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "energy.capex.outlay",
+      "contract": "energy.capex",
+      "terms": {
+        "amount": "500000"
+      }
+    },
+    {
+      "stream": "energy.capex.outlay.final_draw",
+      "contract": "energy.capex.final_draw",
+      "terms": {
+        "amount": "700000"
+      }
+    },
+    {
+      "stream": "energy.ppa.revenue",
+      "contract": "energy.ppa",
+      "terms": {
+        "availability": "1",
+        "degradation": "0.01",
+        "escalation": "0.02",
+        "mwh_year": "2400",
+        "ppa_price": "90"
+      },
+      "defaults_applied": [
+        "availability"
+      ]
+    },
+    {
+      "stream": "energy.om.expense",
+      "contract": "energy.om",
+      "terms": {
+        "escalation": "0.02",
+        "om_year": "36000"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

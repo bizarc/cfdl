@@ -1,11 +1,158 @@
 {
-  "results_version": "0.2",
-  "model_hash": "cb8142fb0142e6a2f5fc0c8f55a3d42df06e8e405abd96532f1395f152eac0c7",
+  "results_version": "0.3",
+  "model_hash": "b04bfc461e49126eab38a485cc22d9b9920b8c335b66367f1fbfb921f02546df",
+  "ledger_hash": "f5d8264a77e792c2f58a0f822073082ee71c1ded45a7bcf78f1a6725541b02cd",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.bullet.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.interest.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "index_curve": "sofr",
+          "margin": "0.03",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate_cap": "0.10",
+          "rate_floor": "0.0725",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "prepay_penalty_rate",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.penalty.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.prepay.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.recoveries.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0",
+          "severity": "0.50"
+        }
+      },
+      {
+        "contract": "credit.pool_float_io_bullet.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.pool.servicing.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      },
+      {
+        "contract": "credit.purchase.smoke",
+        "stream": "credit.purchase.price.smoke",
+        "terms": {
+          "price": "1200000"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

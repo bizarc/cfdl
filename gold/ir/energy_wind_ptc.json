@@ -421,6 +421,66 @@
       }
     }
   ],
+  "stream_inputs": [
+    {
+      "stream": "energy.capex.outlay",
+      "contract": "energy.capex",
+      "terms": {
+        "amount": "42000000"
+      }
+    },
+    {
+      "stream": "energy.merchant.revenue",
+      "contract": "energy.merchant",
+      "terms": {
+        "availability": "0.95",
+        "degradation": "0.007",
+        "mwh_year": "105000",
+        "price": "42",
+        "price_escalation": "0.015"
+      }
+    },
+    {
+      "stream": "energy.ptc.credit",
+      "contract": "energy.ptc",
+      "terms": {
+        "availability": "0.95",
+        "credit_per_mwh": "27.5",
+        "degradation": "0.007",
+        "escalation": "0.02",
+        "mwh_year": "105000",
+        "round_step": "1.00"
+      },
+      "defaults_applied": [
+        "round_step"
+      ]
+    },
+    {
+      "stream": "energy.macrs.shield",
+      "contract": "energy.macrs_shield",
+      "terms": {
+        "basis": "42000000",
+        "life": "5",
+        "tax_rate": "0.21"
+      }
+    },
+    {
+      "stream": "energy.om.expense",
+      "contract": "energy.om",
+      "terms": {
+        "escalation": "0.02",
+        "om_year": "1300000"
+      }
+    },
+    {
+      "stream": "energy.debt.service",
+      "contract": "energy.debt_service",
+      "terms": {
+        "principal": "25000000",
+        "rate": "0.055"
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [
