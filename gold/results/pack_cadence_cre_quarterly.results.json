@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "6a929984e164624288d416ff70ddb5374124e50dc93322909a892b065154d2b7",
+  "model_hash": "9aa0a8ec8900e8b7bed31ee945b5464ac2744829c1c63650f3407feb52c74ccd",
   "ledger_hash": "8745777e0903c27a9e418aab02305afd00be870ce967a660122147909ee01351",
   "engine": {
     "name": "cfdl-engine",
@@ -248,6 +248,63 @@
           },
           {
             "amount": 128826.75,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]

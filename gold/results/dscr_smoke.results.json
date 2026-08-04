@@ -553,53 +553,7 @@
   },
   "domain_metrics": {
     "pack": "cre",
-    "metrics": {
-      "domain.cre.debt_service": {
-        "amount": 360000.0,
-        "currency": "USD"
-      },
-      "domain.cre.dscr": 1.333333,
-      "domain.cre.noi": {
-        "amount": 480000.0,
-        "currency": "USD"
-      }
-    },
-    "lineage": {
-      "domain.cre.debt_service": {
-        "numerator_streams": [
-          "loan.construction_interest",
-          "loan.permanent_debt_service",
-          "loan.mortgage_insurance"
-        ],
-        "denominator_streams": [],
-        "formula": "-sum(numerator_streams)"
-      },
-      "domain.cre.dscr": {
-        "numerator_streams": [
-          "domain.cre.noi"
-        ],
-        "denominator_streams": [
-          "domain.cre.debt_service"
-        ],
-        "formula": "domain.cre.noi / domain.cre.debt_service"
-      },
-      "domain.cre.noi": {
-        "numerator_streams": [
-          "cre.lease.base_rent",
-          "cre.ops.revenue",
-          "cre.unit.base_rent.*",
-          "cre.unit.recoveries.*",
-          "cre.rollover.rent.*",
-          "cre.pct_rent.*"
-        ],
-        "denominator_streams": [
-          "cre.ops.expense",
-          "cre.vacancy.loss",
-          "cre.property.opex.*",
-          "cre.unit.abatement.*"
-        ],
-        "formula": "sum(numerator_streams) + sum(denominator_streams)"
-      }
-    }
+    "metrics": {},
+    "lineage": {}
   }
 }

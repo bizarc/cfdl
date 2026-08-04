@@ -402,8 +402,8 @@ Computed automatically whenever a model runs with the `cre` pack, alongside the 
 
 | Metric | Type | Built from |
 |---|---|---|
-| `domain.cre.noi` | money | `cre.lease.base_rent`, `cre.ops.revenue`, `cre.ops.expense`, `cre.vacancy.loss` |
-| `domain.cre.debt_service` | money | `loan.construction_interest`, `loan.permanent_debt_service`, `loan.mortgage_insurance` |
+| `domain.cre.noi` | money | derived |
+| `domain.cre.debt_service` | money | derived |
 | `domain.cre.dscr` | number | `domain.cre.noi` ÷ `domain.cre.debt_service` |
 | `domain.cre.leasing_costs` | money | derived |
 

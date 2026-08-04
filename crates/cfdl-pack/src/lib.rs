@@ -475,6 +475,14 @@ pub struct MetricSpec {
     /// Omit the metric unless its value is strictly positive.
     #[serde(default)]
     pub require_positive: bool,
+    /// `subtotal_total` only: the per-period subtotal series to reduce.
+    ///
+    /// This is how a lifetime scalar stops being a second, independent
+    /// definition of the same quantity. Before it, `domain.cre.noi` existed
+    /// twice — nine hand-listed stream selectors here, and a category fold in
+    /// statements.toml — and two independent statements of one quantity drift.
+    #[serde(default)]
+    pub subtotal: Option<String>,
 }
 
 /// A per-period subtotal: a named fold over the ledger.
@@ -1284,6 +1292,16 @@ fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLo
     for spec in &parsed.metrics {
         match spec.op.as_str() {
             "sum" | "negated_sum" => {}
+            "subtotal_total" => {
+                if spec.subtotal.is_none() {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Metric '{}': op 'subtotal_total' requires `subtotal`.",
+                            spec.id
+                        ),
+                    });
+                }
+            }
             "wal_years" => {
                 if spec.numerator_streams.is_empty() {
                     return Err(PackLoadError {

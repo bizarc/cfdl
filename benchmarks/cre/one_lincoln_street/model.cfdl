@@ -35,6 +35,12 @@
 
 version 0.1
 model "one-lincoln-street"
+// The case has always RUN with `--pack cre` for its domain metrics; it now has
+// to DECLARE the pack too. Metrics are a post-pass over results and needed the
+// pack only at run time, but per-period subtotals are lowered into the IR, so
+// they need it at compile time. A model that wants a pack's reporting has to
+// say it uses the pack.
+use pack "cre" version "0.1.0"
 time calendar quarterly from 2000-01 for 16
 
 entity asset tower
@@ -71,6 +77,7 @@ state cum_required {
 // Equity funds first, until the commitment is exhausted.
 stream equity.contribution on entity asset.tower inflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
+  category financing.equity
   amount = curve_value("required_funding", time.date)
            - min(curve_value("required_funding", time.date),
                  max(0, state.cum_required - inputs.equity_commitment))
@@ -79,6 +86,7 @@ stream equity.contribution on entity asset.tower inflow currency USD {
 // The construction loan takes the balance.
 stream loan.construction_draw on entity asset.tower inflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
+  category financing.debt_proceeds
   amount = min(curve_value("required_funding", time.date),
                max(0, state.cum_required - inputs.equity_commitment))
 }
@@ -87,6 +95,7 @@ stream loan.construction_draw on entity asset.tower inflow currency USD {
 // Named to match what domain.cre.debt_service reads.
 stream loan.construction_interest on entity asset.tower outflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
+  category financing.debt_service
   amount = (max(0, state.cum_required - curve_value("required_funding", time.date) - inputs.equity_commitment)
             + min(curve_value("required_funding", time.date),
                   max(0, state.cum_required - inputs.equity_commitment)) / 2)

@@ -957,15 +957,21 @@ def main() -> int:
             failures += 1
 
 
-@check("per-period NOI folds to the same total as the lifetime NOI metric")
-def subtotal_reduces_to_its_metric():
-    """The two definitions of NOI must agree, because there are two of them.
+@check("cre: the operating.* classification reaches exactly the streams NOI needs")
+def category_fold_matches_direct_stream_sum():
+    """The CATEGORY fold must reach the same streams a person would pick.
 
-    `packs/cre/statements.toml` folds `operating.*` per period;
-    `packs/cre/metrics.toml` sums nine hand-listed stream selectors over the
-    hold. Stage 7 deletes the second by making metrics consume the folds, but
-    until then they are independent statements of the same quantity, and
-    independent statements of the same quantity drift. This is what catches it.
+    This used to compare two definitions of NOI — the category fold and nine
+    hand-listed stream selectors in metrics.toml — because there were two.
+    There is now one: the metric is a reduction of the fold, so comparing them
+    would be a tautology.
+
+    What still has content is whether the CLASSIFICATION is right. The fold sums
+    whatever carries an `operating.*` category; this sums the `cre.` streams
+    directly, without consulting a category at all. They agree only if every
+    stream that belongs above the NOI line is classified as such and nothing
+    else is. A rule that emitted an operating stream under `investing.` would
+    pass every other gate in the repo and fail this one.
     """
     src = """version 0.1
 model "noi-fold-identity"

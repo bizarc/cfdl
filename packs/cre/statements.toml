@@ -65,16 +65,24 @@ op = "sum"
 categories = ["operating.*"]
 formula = "sum(operating.*)"
 
-# What coverage is measured against. `financing.*` rather than
-# `financing.debt_service` because mortgage insurance is not a payment on the
-# debt and yet is part of the line a lender tests — HUD states its debt service
-# as P+I+MIP and computes DSCR from it. See backlog 7.14.
+# What coverage is measured against: the categories that are PAYMENTS on the
+# debt, not the whole financing section.
+#
+# It folded `financing.*` until a construction case arrived with draws in it. A
+# draw is financing and is not debt service, so the broad fold netted money
+# received against money paid and the coverage ratio quietly improved. The
+# section is the wrong grain for this question; the two service categories are
+# the right one.
+#
+# Mortgage insurance is included even though it is not a payment on the debt,
+# because it is part of the line a lender tests — HUD states its debt service as
+# P+I+MIP and computes DSCR from it. See backlog 7.14.
 [[subtotals]]
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.*"]
-formula = "-sum(financing.*)"
+categories = ["financing.debt_service", "financing.mortgage_insurance"]
+formula = "-sum(financing.debt_service, financing.mortgage_insurance)"
 
 # Debt service coverage, per period. This is the row backlog 1.4 is about: a
 # lifetime ratio of 1.4 can contain a year at 0.9 and report nothing.
@@ -85,3 +93,13 @@ op = "ratio"
 numerator = "domain.cre.noi"
 denominator = "domain.cre.debt_service"
 formula = "domain.cre.noi / domain.cre.debt_service"
+
+# Leasing costs — TI and commissions. Below the NOI line, which is what
+# `investing.` says; the fold reaches both the per-unit and the rollover
+# families without naming either.
+[[subtotals]]
+id = "domain.cre.leasing_costs"
+kind = "money"
+op = "negated_sum"
+categories = ["investing.capital.leasing"]
+formula = "-sum(investing.capital.leasing)"

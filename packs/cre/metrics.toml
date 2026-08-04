@@ -1,41 +1,34 @@
-# CRE domain metrics, evaluated in order (ratios may reference earlier ids).
+# CRE domain metrics.
+#
+# These are REDUCTIONS of the per-period subtotals in statements.toml, not
+# separate definitions. That distinction is the point of this file's current
+# shape: `domain.cre.noi` used to be nine hand-listed stream selectors here AND
+# a category fold there — two independent statements of one quantity, which is
+# a drift waiting to happen, and which needed an analytic identity to police.
+#
+# Now the fold is the definition and these are its lifetime totals. Adding a
+# contract to the pack changes both together, because there is only one place
+# that says what NOI is.
+#
+# `domain.cre.dscr` stays a ratio of two metrics rather than a reduction of the
+# per-period DSCR series: summing a series of ratios means nothing. The lifetime
+# coverage ratio is lifetime NOI over lifetime debt service, which is what this
+# computes — and is a different question from the per-period series, which is
+# the one a lender actually asks.
 
 [[metrics]]
 id = "domain.cre.noi"
 kind = "money"
-op = "sum"
-numerator_streams = [
-  "cre.lease.base_rent",
-  "cre.ops.revenue",
-  "cre.unit.base_rent.*",
-  "cre.unit.recoveries.*",
-  "cre.rollover.rent.*",
-  "cre.pct_rent.*",
-]
-denominator_streams = [
-  "cre.ops.expense",
-  "cre.vacancy.loss",
-  "cre.property.opex.*",
-  # Free rent is a deduction from potential gross revenue, not an expense.
-  # Base rent is published GROSS, so NOI is unchanged by the split only if
-  # the offset is carried here.
-  "cre.unit.abatement.*",
-]
-formula = "sum(numerator_streams) + sum(denominator_streams)"
+op = "subtotal_total"
+subtotal = "domain.cre.noi"
+formula = "sum over periods of domain.cre.noi"
 
 [[metrics]]
 id = "domain.cre.debt_service"
 kind = "money"
-op = "negated_sum"
-numerator_streams = [
-  "loan.construction_interest",
-  "loan.permanent_debt_service",
-  # Mortgage insurance is not a payment on the debt, but coverage is measured
-  # against the whole published line — HUD's pro forma states its debt service
-  # as P+I+MIP and computes DSCR from it. Backlog 7.14.
-  "loan.mortgage_insurance",
-]
-formula = "-sum(numerator_streams)"
+op = "subtotal_total"
+subtotal = "domain.cre.debt_service"
+formula = "sum over periods of domain.cre.debt_service"
 require_positive = true
 
 [[metrics]]
@@ -49,7 +42,7 @@ formula = "domain.cre.noi / domain.cre.debt_service"
 [[metrics]]
 id = "domain.cre.leasing_costs"
 kind = "money"
-op = "negated_sum"
-numerator_streams = ["cre.unit.ti_lc.*", "cre.rollover.ti_lc.*"]
-formula = "-sum(numerator_streams)"
+op = "subtotal_total"
+subtotal = "domain.cre.leasing_costs"
+formula = "sum over periods of domain.cre.leasing_costs"
 require_positive = true

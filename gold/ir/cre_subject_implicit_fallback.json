@@ -73,9 +73,10 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.*"
+        "financing.debt_service",
+        "financing.mortgage_insurance"
       ],
-      "formula": "-sum(financing.*)"
+      "formula": "-sum(financing.debt_service, financing.mortgage_insurance)"
     },
     {
       "id": "domain.cre.dscr",
@@ -84,6 +85,15 @@
       "numerator": "domain.cre.noi",
       "denominator": "domain.cre.debt_service",
       "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
     }
   ],
   "contracts": [

@@ -19,6 +19,8 @@ categories = [
   "investing.reversion",
   "financing.debt_service",
   "financing.mortgage_insurance",
+  "financing.debt_proceeds",
+  "financing.equity",
 ]
 
 

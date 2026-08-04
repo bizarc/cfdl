@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "9a785e05dd7dfcc87f0d055a7be6c896a01382e85686d4aa143b2edcc4fcc7cd",
+  "model_hash": "deb3d51eec8252a71d1d4a9389d58c01d9a10ce2cbf75445a75d5e2eb174e988",
   "ledger_hash": "580620292e0ca7c3120e4629784e3e7c207a05bcc9be881179bc134968a29907",
   "engine": {
     "name": "cfdl-engine",
@@ -122,6 +122,63 @@
         ]
       },
       "domain.cre.egi": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
