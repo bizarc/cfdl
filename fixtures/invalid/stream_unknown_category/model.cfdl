@@ -1,0 +1,20 @@
+version 0.1
+model "stream-unknown-category"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+entity asset tower
+
+// A category has to name one of the closed set the pack declares, because a
+// category is what a fold aggregates on. An unlisted one is worse than a
+// missing one: the stream still reports as a line, so the statement looks
+// complete while the subtotal it should have joined is quietly short.
+//
+// `operating_revenue` is plausible — it is what another system might call this,
+// and it is one underscore away from the real `operating.revenue.other` — which
+// is the point. Without E5022 it would compile clean and create a bucket
+// nothing names.
+stream cre.other.income on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating_revenue
+  amount = 1000
+}

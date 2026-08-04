@@ -42,3 +42,20 @@
 # unrelated pack. Two independent published sources confirming one mechanism.
 pack = "cre"
 period_tolerance = 0.5
+
+# One tolerance cannot serve this case, which is why the published subtotals
+# went unasserted until now.
+#
+# The workbook rounds every pro forma line to whole dollars and CFDL carries
+# full precision, so the money lines agree to within a dollar and no closer.
+# The DSCR is quoted to sixteen significant figures and agrees to five decimals
+# — but it is computed from the ROUNDED NOI over the ROUNDED debt service, so
+# the residual is that rounding rather than a modelling difference. NOTES.md
+# records all four values and the differences.
+#
+# A single 1.0 would assert nothing about the ratio; a single 1e-4 would fail
+# every money line.
+[tolerance]
+"domain.cre.egi" = 1.0
+"domain.cre.noi" = 1.0
+"domain.cre.dscr" = 1.0e-4

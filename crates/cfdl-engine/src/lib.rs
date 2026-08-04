@@ -530,15 +530,42 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         }
     };
 
+    // Hashed over the ledger only — the per-stream, per-period series. Not the
+    // metrics: NPV and IRR are folds OF the ledger, so including them would
+    // make the hash change for a reason the ledger did not.
+    // `domain.*` is excluded on the same argument that excludes the metrics:
+    // a subtotal is a fold OF the ledger, so a pack changing how it chooses to
+    // subtotal must not make the hash claim the cash moved. What is hashed is
+    // the cash and the states that produced it.
+    let ledger_only: BTreeMap<&String, &Series> = deterministic
+        .series
+        .iter()
+        .filter(|(key, _)| !key.starts_with("domain."))
+        .collect();
+    let ledger_hash = canonical_hash(&serde_json::json!({
+        "series": ledger_only,
+        "annual_rollup": &deterministic.annual_rollup,
+    }));
+
+    let inputs = {
+        let section = InputsSection {
+            resolved: base_run.resolved_inputs.clone(),
+            streams: ir.stream_inputs.clone(),
+        };
+        (!section.resolved.is_empty() || !section.streams.is_empty()).then_some(section)
+    };
+
     Ok(Results {
-        results_version: "0.2".to_string(),
+        results_version: "0.3".to_string(),
         model_hash,
+        ledger_hash,
         engine: EngineInfo {
             name: "cfdl-engine".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             build: None,
         },
         warnings,
+        inputs,
         deterministic,
         scenarios,
         monte_carlo,
@@ -549,6 +576,9 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
 #[derive(Debug, Clone)]
 struct DeterministicRunOutput {
     warnings: Vec<String>,
+    /// Evaluated `assume` values, carried out so `compute_results` can publish
+    /// them without re-evaluating (which would duplicate every warning).
+    resolved_inputs: BTreeMap<String, f64>,
     metrics: BTreeMap<String, Scalar>,
     series: BTreeMap<String, Series>,
     npv: f64,
@@ -900,6 +930,106 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         stream_offsets.insert(format!("option.{name}"), 0.0);
     }
 
+    // --- Subtotals: the fold layer ------------------------------------------
+    //
+    // Evaluated after every stream and every option, so the ledger is complete,
+    // and in the IR's array order, which is the dependency order the pack
+    // declared. A reference can only reach something already computed, which is
+    // what makes a cycle unexpressible rather than merely rejected.
+    //
+    // These live in their OWN maps and are never merged into `stream_series`.
+    // That is the same construction the `state.` prefix relies on below, and it
+    // is load-bearing: `model_series` was summed from streams alone,
+    // `valued_streams` drives NPV and IRR, and `build_annual_rollup` iterates
+    // `stream_series`. A subtotal is a fold OF the cash, so counting it as cash
+    // would double every number it touches.
+    let stream_category: BTreeMap<&str, &str> = ir
+        .streams
+        .iter()
+        .filter_map(|s| s.category.as_deref().map(|c| (s.name.as_str(), c)))
+        .collect();
+    let mut subtotal_money: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut subtotal_ratio: BTreeMap<String, Vec<Option<f64>>> = BTreeMap::new();
+
+    for spec in &ir.subtotals {
+        match spec.op.as_str() {
+            "sum" | "negated_sum" => {
+                let sign = if spec.op == "negated_sum" { -1.0 } else { 1.0 };
+                let mut acc = vec![0.0_f64; cash_periods];
+                for (name, values) in &stream_series {
+                    // A stream is folded if its CATEGORY is selected, or if it
+                    // is named outright. Category first: it is what the pack
+                    // meant, and it keeps a subtotal correct when the pack
+                    // grows a contract nobody thought to add here.
+                    let by_category = stream_category
+                        .get(name.as_str())
+                        .is_some_and(|c| cfdl_expr::selector_matches_any(&spec.categories, c));
+                    let by_name = cfdl_expr::selector_matches_any(&spec.streams, name);
+                    if !(by_category || by_name) {
+                        continue;
+                    }
+                    for (t, v) in values.iter().take(cash_periods).enumerate() {
+                        acc[t] += sign * v;
+                    }
+                }
+                for referenced in &spec.subtotals {
+                    if let Some(src) = subtotal_money.get(referenced) {
+                        for (t, v) in src.iter().enumerate() {
+                            acc[t] += sign * v;
+                        }
+                    }
+                }
+                // Rounded HERE, not just on the way out, so the ratio below
+                // divides the same numbers that get published. Two reasons.
+                //
+                // A fold of signed cash whose flows cancel leaves a residue —
+                // about 2e-12 — rather than an exact zero. Dividing that by a
+                // real denominator yields ~2.6e-17, whose last bits differ by
+                // platform: that shipped, and Windows disagreed with Linux and
+                // macOS on one golden.
+                //
+                // And it makes the published rows self-consistent: a reader can
+                // divide the published NOI by the published debt service and
+                // get the published coverage ratio, instead of a number that
+                // only reconciles against intermediates nobody can see.
+                for v in acc.iter_mut() {
+                    *v = round_amount(*v);
+                }
+                subtotal_money.insert(spec.id.clone(), acc);
+            }
+            "ratio" => {
+                let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
+                    continue;
+                };
+                let (Some(num), Some(den)) =
+                    (subtotal_money.get(num_id), subtotal_money.get(den_id))
+                else {
+                    continue;
+                };
+                // A zero denominator publishes `null` and says nothing else.
+                // It is not a warning: a coverage ratio is genuinely undefined
+                // once a loan matures, and HUD's does at year 14 of 29 — that
+                // is the model being right, not a problem. A warning firing on
+                // correct models is noise, and it would fail every benchmark,
+                // since tools/benchmark-runner.py treats any warning as a
+                // failure.
+                //
+                // Nothing is discarded silently either, which is the standard
+                // that would otherwise argue for a warning: the null is IN the
+                // series, per period, so a reader sees exactly which periods
+                // are undefined and a consumer cannot mistake one for zero.
+                let values: Vec<Option<f64>> = (0..cash_periods)
+                    .map(|t| {
+                        let d = den.get(t).copied().unwrap_or(0.0);
+                        (d.abs() > f64::EPSILON).then(|| num.get(t).copied().unwrap_or(0.0) / d)
+                    })
+                    .collect();
+                subtotal_ratio.insert(spec.id.clone(), values);
+            }
+            _ => {}
+        }
+    }
+
     let mut series_map = BTreeMap::new();
     for (name, values) in &stream_series {
         series_map.insert(
@@ -923,6 +1053,34 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         series_map.insert(
             format!("state.{name}"),
             Series::from_plain(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &values[..periods.min(values.len())],
+            ),
+        );
+    }
+    // Subtotals, under their own `domain.` prefix. Money keeps a currency and
+    // no offset — a fold spans streams that may settle at different points, so
+    // there is no single placement to claim. Ratios are plain numbers, and
+    // `null` where the denominator vanishes.
+    for (id, values) in &subtotal_money {
+        series_map.insert(
+            id.clone(),
+            Series::from_values(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &ir.model.currency,
+                None,
+                &values[..periods.min(values.len())],
+            ),
+        );
+    }
+    for (id, values) in &subtotal_ratio {
+        series_map.insert(
+            id.clone(),
+            Series::from_optional(
                 &ir.time.calendar,
                 &ir.time.start,
                 periods as u32,
@@ -1107,6 +1265,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     Ok(DeterministicRunOutput {
         warnings,
+        resolved_inputs: base_inputs,
         metrics,
         series: series_map,
         npv,
@@ -2455,6 +2614,17 @@ struct Ir {
     time: IrTime,
     #[serde(default)]
     streams: Vec<IrStream>,
+    /// Per-stream record of what each pack rule consumed. Deserialized as
+    /// opaque JSON and republished verbatim: the engine has no use for it, and
+    /// giving it a typed shape here would mean maintaining that shape in two
+    /// crates for no gain.
+    #[serde(default)]
+    stream_inputs: Vec<serde_json::Value>,
+    /// Per-period subtotals, in dependency order. The compiler has already
+    /// rejected forward references, so a lookup here always finds something
+    /// already computed.
+    #[serde(default)]
+    subtotals: Vec<IrSubtotal>,
     #[serde(default)]
     assumptions: IrAssumptions,
     #[serde(default)]
@@ -2607,10 +2777,35 @@ struct IrStream {
     name: String,
     owner: IrEntityRef,
     direction: String,
+    /// What this stream is, economically. The fold layer aggregates on this
+    /// rather than on the name — the one field of stream metadata the engine
+    /// genuinely needs, read once per stream rather than per period.
+    #[serde(default)]
+    category: Option<String>,
     schedule: IrSchedule,
     amount: IrExpr,
     #[serde(default)]
     active_when: Option<IrExpr>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrSubtotal {
+    id: String,
+    // `kind` is in the IR but not read here: `op` already determines the shape
+    // (a sum is money, a ratio is a number), and the pack loader has rejected
+    // any spec where the two disagree. Deserializing a field only to ignore it
+    // would be the kind of accepted-and-discarded the repo rejects elsewhere.
+    op: String,
+    #[serde(default)]
+    categories: Vec<String>,
+    #[serde(default)]
+    streams: Vec<String>,
+    #[serde(default)]
+    subtotals: Vec<String>,
+    #[serde(default)]
+    numerator: Option<String>,
+    #[serde(default)]
+    denominator: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -2694,13 +2889,48 @@ pub struct MetricLineage {
 pub struct Results {
     pub results_version: String,
     pub model_hash: String,
+    /// Content hash of the deterministic ledger — the per-stream, per-period
+    /// series this run produced.
+    ///
+    /// Together with `model_hash`, `engine` and the run config in
+    /// `deterministic.metrics`, this closes the chain: identical inputs on an
+    /// identical engine must reproduce an identical `ledger_hash`. If they do
+    /// not, something is nondeterministic, and the golden suite would otherwise
+    /// report that as a flapping test rather than as the defect it is.
+    ///
+    /// It hashes the LEDGER, not the inputs, deliberately. "Did the inputs
+    /// change" is already answerable from `model_hash`; what nothing answered
+    /// before is "did the output change", which is the question a reviewer
+    /// staring at a re-blessed golden actually has.
+    pub ledger_hash: String,
     pub engine: EngineInfo,
     pub warnings: Vec<String>,
+    /// Resolved assumptions and the contract terms each lowered stream
+    /// consumed. Absent when the model declares neither.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inputs: Option<InputsSection>,
     pub deterministic: DeterministicSection,
     pub scenarios: ScenarioSection,
     pub monte_carlo: MonteCarloSection,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_metrics: Option<DomainMetrics>,
+}
+
+/// The top of the audit chain: what went in, above the line items.
+#[derive(Debug, Clone, Serialize)]
+pub struct InputsSection {
+    /// Evaluated `assume` values, as `inputs.<name>` resolves them.
+    ///
+    /// In a deterministic run a random assumption resolves to its clipped
+    /// central value, not to a draw — publishing it here is what stops that
+    /// being invisible.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub resolved: BTreeMap<String, f64>,
+    /// Per-stream record of the contract terms a pack rule consumed. Passed
+    /// through from the IR verbatim, so `IrStream` and the per-period
+    /// evaluation path are untouched by it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
@@ -2794,6 +3024,14 @@ pub enum Scalar {
 pub enum SeriesValue {
     Money(Money),
     Number(f64),
+    /// A period where the value is genuinely undefined — a coverage ratio in a
+    /// period with no debt service. Published as JSON `null`, which the results
+    /// schema has always permitted.
+    ///
+    /// Not zero: a coverage ratio of "no debt" is not a coverage ratio of zero,
+    /// and a consumer that averaged the series would be badly misled. Not an
+    /// omission either, because a shortened series breaks index alignment.
+    Null,
 }
 
 impl SeriesValue {
@@ -2802,7 +3040,7 @@ impl SeriesValue {
     pub fn money_amount(&self) -> Option<f64> {
         match self {
             SeriesValue::Money(m) => Some(m.amount),
-            SeriesValue::Number(_) => None,
+            SeriesValue::Number(_) | SeriesValue::Null => None,
         }
     }
 }
@@ -2852,6 +3090,38 @@ impl Series {
     /// can be inspected rather than only its effect on cash. No currency and
     /// no offset — a state is not paid, so it does not sit anywhere in its
     /// period.
+    /// A plain-number series where some periods are genuinely undefined.
+    /// `None` publishes as JSON `null`, which the results schema permits.
+    ///
+    /// Rounded like every other published number. That is not cosmetic: a
+    /// ratio's numerator is a fold of signed cash, so a period whose flows
+    /// cancel leaves a residue rather than an exact zero — around 2e-12 in
+    /// practice — and dividing that by a real denominator publishes something
+    /// like 2.655e-17. Whose last bits differ by platform: this shipped, and
+    /// the Windows runner disagreed with Linux and macOS on one golden while
+    /// both of those agreed with each other.
+    ///
+    /// `round_amount` is described at its definition as the single global
+    /// rounding policy for deterministic numeric outputs. Skipping it here was
+    /// the defect; nothing else published bypasses it.
+    fn from_optional(calendar: &str, start: &str, periods: u32, values: &[Option<f64>]) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset: None,
+            values: values
+                .iter()
+                .map(|v| match v {
+                    Some(x) => SeriesValue::Number(round_amount(*x)),
+                    None => SeriesValue::Null,
+                })
+                .collect(),
+        }
+    }
+
     fn from_plain(calendar: &str, start: &str, periods: u32, values: &[f64]) -> Self {
         Self {
             index: SeriesIndex {
@@ -3079,6 +3349,69 @@ fn probability_negative(values: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    /// A minimal one-stream IR, with the amount parameterised so a test can
+    /// change the model without changing anything else about the run.
+    #[cfg(test)]
+    fn probe_ir(amount: &str) -> String {
+        format!(
+            r#"{{
+              "model": {{"name": "hash-probe", "currency": "USD"}},
+              "time": {{"calendar": "annual", "start": "2026-01-01", "periods": 3}},
+              "streams": [{{
+                "id": "s1", "name": "probe.rent",
+                "owner": {{"symbol": "legal.co"}},
+                "direction": "inflow", "currency": "USD",
+                "schedule": {{"kind": "Every", "every": "annual",
+                             "from": "2026-01-01", "to": "2028-01-01"}},
+                "amount": {{"lang": "cfdl", "src": "{amount}"}},
+                "active_when": {{"lang": "cfdl", "src": "true"}}
+              }}]
+            }}"#
+        )
+    }
+
+    /// The property `ledger_hash` exists to make testable: identical inputs on
+    /// an identical engine reproduce an identical ledger.
+    ///
+    /// Worth stating as a test rather than trusting the golden suite to notice.
+    /// A golden diff says "this document changed"; it cannot say whether the
+    /// change was a real behavioural difference or a run-to-run wobble, and a
+    /// wobble would surface as a flapping test rather than as the defect it is.
+    #[test]
+    fn ledger_hash_is_reproducible_and_moves_only_with_the_ledger() {
+        use super::*;
+        let run = |src: &str, rate: f64| -> (String, String, f64) {
+            let config = RunConfig {
+                discount_rate: rate,
+                ..RunConfig::default()
+            };
+            let results = run_from_json_str(src, config).expect("run");
+            let npv = match results.deterministic.metrics.get("model.npv") {
+                Some(Scalar::Money(m)) => m.amount,
+                other => panic!("expected money npv, got {other:?}"),
+            };
+            (results.model_hash, results.ledger_hash, npv)
+        };
+
+        let (m1, l1, npv1) = run(&probe_ir("100"), 0.10);
+        let (m2, l2, npv2) = run(&probe_ir("100"), 0.10);
+        assert_eq!(m1, m2, "same source must hash the same");
+        assert_eq!(l1, l2, "same run twice must reproduce the ledger exactly");
+        assert_eq!(npv1, npv2);
+
+        // The discount rate must NOT move the ledger. The ledger is cash before
+        // discounting; the rate belongs to a fold over it. If this ever fails,
+        // discounting has leaked into the ledger.
+        let (_, l_rate, npv_rate) = run(&probe_ir("100"), 0.25);
+        assert_eq!(l1, l_rate, "the discount rate is not part of the ledger");
+        assert_ne!(npv1, npv_rate, "but it is part of the valuation");
+
+        // A change to the model's cash must move it.
+        let (m_amt, l_amt, _) = run(&probe_ir("101"), 0.10);
+        assert_ne!(m1, m_amt);
+        assert_ne!(l1, l_amt, "a different ledger must hash differently");
+    }
+
     #[test]
     fn wal_nets_within_an_offset_but_not_across_one() {
         use super::*;

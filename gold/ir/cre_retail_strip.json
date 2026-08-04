@@ -23,6 +23,62 @@
     "constants": {},
     "random": {}
   },
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "-sum(financing.*)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    }
+  ],
   "contracts": [
     {
       "id": "dc5e2ef5ef14791d51f28354a2784437",
@@ -190,6 +246,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2032-12-01",
@@ -228,6 +285,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.percentage_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -267,6 +325,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -299,13 +358,14 @@
       }
     },
     {
-      "id": "38a05278fdd20a4425d29e32c4ae7c8b",
-      "name": "cre.unit.base_rent.anchor",
+      "id": "ef385cf9cab4bffc61f4b81f28c0e4b9",
+      "name": "cre.unit.abatement.anchor",
       "owner": {
         "symbol": "asset.strip_center"
       },
-      "direction": "inflow",
+      "direction": "outflow",
       "currency": "USD",
+      "category": "operating.deduction.abatement",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -314,7 +374,87 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(540000.0 / 12.0) * clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+        "src": "(540000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0)) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
+      "id": "d399c6e61282336db5195523296bd0d7",
+      "name": "cre.unit.abatement.shops",
+      "owner": {
+        "symbol": "asset.strip_center"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2031-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(288000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 2.0, 0.0, 1.0)) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 49,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
+      "id": "38a05278fdd20a4425d29e32c4ae7c8b",
+      "name": "cre.unit.base_rent.anchor",
+      "owner": {
+        "symbol": "asset.strip_center"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2032-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(540000.0 / 12.0) * pow(1.0 + 0.02, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -345,6 +485,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -353,7 +494,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(288000.0 / 12.0) * clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 2.0, 0.0, 1.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+        "src": "(288000.0 / 12.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -384,6 +525,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -423,6 +565,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recovery",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -462,6 +605,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -499,6 +643,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.leasing",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-07-01"
@@ -536,6 +681,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.deduction.vacancy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -565,6 +711,116 @@
           },
           "rule_id": "cre_vacancy_loss"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.unit.abatement.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "escalation": "0.02",
+        "rent_year": "540000"
+      }
+    },
+    {
+      "stream": "cre.unit.base_rent.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "escalation": "0.02",
+        "rent_year": "540000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "expense_stop_year": "228000",
+        "gross_up_factor": "0.95",
+        "opex_escalation": "0.03",
+        "opex_year": "240000",
+        "pro_rata_share": "0.60"
+      }
+    },
+    {
+      "stream": "cre.unit.ti_lc.anchor",
+      "contract": "cre.lease_unit.anchor",
+      "terms": {
+        "lc_total": "60000",
+        "ti_total": "150000"
+      }
+    },
+    {
+      "stream": "cre.pct_rent.anchor",
+      "contract": "cre.percentage_rent.anchor",
+      "terms": {
+        "breakpoint_year": "12000000",
+        "overage_pct": "0.02",
+        "sales_growth": "0.03",
+        "sales_year": "11500000"
+      }
+    },
+    {
+      "stream": "cre.unit.abatement.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "escalation": "0.025",
+        "rent_year": "288000"
+      }
+    },
+    {
+      "stream": "cre.unit.base_rent.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "escalation": "0.025",
+        "rent_year": "288000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "expense_stop_year": "0",
+        "gross_up_factor": "0.95",
+        "opex_escalation": "0.03",
+        "opex_year": "240000",
+        "pro_rata_share": "0.30"
+      },
+      "defaults_applied": [
+        "expense_stop_year"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.shops",
+      "contract": "cre.lease_unit.shops",
+      "terms": {
+        "lc_total": "40000",
+        "ti_total": "90000"
+      }
+    },
+    {
+      "stream": "cre.vacancy.loss",
+      "contract": "cre.vacancy_loss",
+      "terms": {
+        "potential_gross_year": "850000",
+        "rate": "0.03"
+      }
+    },
+    {
+      "stream": "cre.property.opex",
+      "contract": "cre.property_opex",
+      "terms": {
+        "escalation": "0.03",
+        "opex_year": "240000"
+      }
+    },
+    {
+      "stream": "cre.exit.proceeds",
+      "contract": "cre.exit",
+      "terms": {
+        "exit_cap": "0.0675",
+        "noi_forward_year": "640000",
+        "selling_costs": "0.015"
       }
     }
   ],

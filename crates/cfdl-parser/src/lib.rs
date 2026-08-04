@@ -108,10 +108,28 @@ pub struct StreamStmt {
     pub direction: Option<String>,
     /// Optional: currency code (e.g. "USD"). Default when lowering is model currency.
     pub currency: Option<String>,
+    /// Optional: what this stream IS, economically — `category revenue`.
+    ///
+    /// Aggregation reads this rather than pattern-matching the name, so a
+    /// hand-written stream can join a pack's subtotals without the pack having
+    /// to guess at its spelling. Must name a category the active pack declares
+    /// (`E5022`).
+    pub category: Option<String>,
     pub schedule: Option<ScheduleSpec>,
     pub amount: Option<ExprSlot>,
     pub active_when: Option<ExprSlot>,
     pub span: Span,
+}
+
+/// What a `{ … }` stream body yielded. A struct rather than a tuple because
+/// the tuple had already reached four elements and every caller had to
+/// remember their order.
+struct StreamBlock {
+    schedule: Option<ScheduleSpec>,
+    amount: Option<ExprSlot>,
+    active_when: Option<ExprSlot>,
+    category: Option<String>,
+    end_span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -1078,15 +1096,16 @@ impl<'a> Parser<'a> {
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut category = None;
         let mut end_span = entity_ref_tok.span;
 
         if matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
-            let (parsed_schedule, parsed_amount, parsed_active_when, parsed_end_span) =
-                self.parse_stream_block();
-            schedule = parsed_schedule;
-            amount = parsed_amount;
-            active_when = parsed_active_when;
-            end_span = parsed_end_span;
+            let block = self.parse_stream_block();
+            schedule = block.schedule;
+            amount = block.amount;
+            active_when = block.active_when;
+            category = block.category;
+            end_span = block.end_span;
         }
 
         Some(StreamStmt {
@@ -1094,6 +1113,7 @@ impl<'a> Parser<'a> {
             attached_entity,
             direction,
             currency,
+            category,
             schedule,
             amount,
             active_when,
@@ -1101,18 +1121,12 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_stream_block(
-        &mut self,
-    ) -> (
-        Option<ScheduleSpec>,
-        Option<ExprSlot>,
-        Option<ExprSlot>,
-        Span,
-    ) {
+    fn parse_stream_block(&mut self) -> StreamBlock {
         let lbrace = self.bump();
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut category = None;
         let mut end_span = lbrace.span;
 
         while !self.is_eof() {
@@ -1156,6 +1170,35 @@ impl<'a> Parser<'a> {
                         end_span = self.consume_stream_item();
                     }
                 }
+                TokenKind::Ident(ref ident) if ident == "category" => {
+                    let kw = self.bump();
+                    let value_tok = self.peek().clone();
+                    match &value_tok.kind {
+                        // A category is a dotted PATH into the cash flow
+                        // statement (`operating.deduction.abatement`), so the
+                        // usual spelling lexes as a Qname. A single segment is
+                        // accepted too — the pack's vocabulary decides what is
+                        // valid, not the grammar.
+                        TokenKind::Qname(name) | TokenKind::Ident(name) => {
+                            let _ = self.bump();
+                            end_span = value_tok.span;
+                            category = Some(name.clone());
+                        }
+                        _ => {
+                            // Deliberately bare, not a string: a category names
+                            // one of a closed set the pack declares, so it reads
+                            // like `currency USD` rather than like free text.
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a category path after 'category', e.g. \
+                                 `category operating.revenue.base_rent`."
+                                    .to_string(),
+                            );
+                            end_span = self.consume_stream_item();
+                            let _ = kw;
+                        }
+                    }
+                }
                 _ => {
                     // This used to bump and discard. A stream body therefore
                     // swallowed anything it did not recognise: a typo'd key, or
@@ -1180,7 +1223,7 @@ impl<'a> Parser<'a> {
                     self.push_expected(
                         span,
                         format!(
-                            "Unexpected {found} in a stream body. Expected 'schedule', 'amount', 'active when', or '}}'. Payment terms go inside the schedule: `schedule every month net 30 from …`."
+                            "Unexpected {found} in a stream body. Expected 'schedule', 'amount', 'active when', 'category', or '}}'. Payment terms go inside the schedule: `schedule every month net 30 from …`."
                         ),
                     );
                     end_span = self.consume_stream_item();
@@ -1188,7 +1231,13 @@ impl<'a> Parser<'a> {
             }
         }
 
-        (schedule, amount, active_when, end_span)
+        StreamBlock {
+            schedule,
+            amount,
+            active_when,
+            category,
+            end_span,
+        }
     }
 
     /// `state <name> { init <expr>  next <expr> }`

@@ -260,6 +260,29 @@ Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
 independent recursive reference) and the LBO notebook in
 `examples/notebooks/`.
 
+## Stream categories
+
+Every stream this pack emits declares a `category` — a dotted path rooted in the
+cash flow statement's three sections — and aggregation reads that rather than
+pattern-matching the stream's name.
+
+`operating.revenue.recurring`, `operating.expense.opex`,
+`operating.working_capital`, `operating.tax`, `investing.capital.capex`,
+`investing.acquisition`, `investing.exit`, `financing.interest`,
+`financing.debt_principal`, `financing.debt_proceeds`.
+
+The split follows the two statements an operating company reports. `interest` is
+its own category rather than part of a `debt_service` blob because a P&L
+subtracts interest before tax while principal never touches it; for the same
+reason `debt_proceeds` is separate from `debt_principal`, since a draw and a
+repayment are opposite entries in the financing section rather than one net line.
+
+Note that interest is placed under `financing` here, which is the US GAAP
+convention; IFRS permits it under operating. That choice belongs to the pack —
+CFDL fixes the vocabulary of sections, not the accounting policy.
+
+An unlisted category is `E5022`.
+
 ## Metrics reference
 
 Computed automatically whenever a model runs with the `opco` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.

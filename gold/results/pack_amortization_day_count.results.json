@@ -1,11 +1,153 @@
 {
-  "results_version": "0.2",
-  "model_hash": "10afb48b8a87b161cd87406560f470e09980cc9148492423a74b93d518d84417",
+  "results_version": "0.3",
+  "model_hash": "9c1fe4a2750dc0d5afecbe721595aaa69627cc48a0142a82b40c86f59242070f",
+  "ledger_hash": "ac0748093eb07abf606ced80748fd8f68fa3ed8624f761229fd83467a732568d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.interest.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "prepay_penalty_rate",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.penalty.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.prepay.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.recoveries.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0",
+          "severity": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.sched_principal.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.pool.servicing.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "100000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.08",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

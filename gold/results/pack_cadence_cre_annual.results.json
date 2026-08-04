@@ -1,11 +1,74 @@
 {
-  "results_version": "0.2",
-  "model_hash": "6cec2594a2dc13b2a672b85b6766b688e40373683f95fdb70b5f76dc24955954",
+  "results_version": "0.3",
+  "model_hash": "12088d2f508f27c370326a11abf28b7096c6da6041f3cd3afb6bea92767b7cff",
+  "ledger_hash": "699a3f1a930528d64c117323068dccb1360fb04a58614960c728f7e9f9a9e457",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.abatement.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.base_rent.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "gross_up_factor"
+        ],
+        "stream": "cre.unit.recoveries.tenant_a",
+        "terms": {
+          "expense_stop_year": "300000",
+          "gross_up_factor": "1",
+          "opex_escalation": "0.025",
+          "opex_year": "300000",
+          "pro_rata_share": "0.40"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "lc_total",
+          "ti_total"
+        ],
+        "stream": "cre.unit.ti_lc.tenant_a",
+        "terms": {
+          "lc_total": "0",
+          "ti_total": "0"
+        }
+      },
+      {
+        "contract": "cre.property_opex",
+        "stream": "cre.property.opex",
+        "terms": {
+          "escalation": "0.025",
+          "opex_year": "300000"
+        }
+      },
+      {
+        "contract": "cre.exit_forward",
+        "stream": "cre.exit.proceeds",
+        "terms": {
+          "exit_cap": "0.065",
+          "selling_costs": "0.02"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {
@@ -35,8 +98,12 @@
         "amount": -922687.5,
         "currency": "USD"
       },
+      "stream.cre.unit.abatement.tenant_a.total": {
+        "amount": -200000.000016,
+        "currency": "USD"
+      },
       "stream.cre.unit.base_rent.tenant_a.total": {
-        "amount": 1283631.999984,
+        "amount": 1483632.0,
         "currency": "USD"
       },
       "stream.cre.unit.recoveries.tenant_a.total": {
@@ -49,6 +116,123 @@
       }
     },
     "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 279999.999984,
+            "currency": "USD"
+          },
+          {
+            "amount": 497400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 515307.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -20000.000016,
+            "currency": "USD"
+          },
+          {
+            "amount": 189900.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200119.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -300000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -307500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -315187.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 497400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 515307.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "annual",
@@ -114,6 +298,28 @@
           }
         ]
       },
+      "stream.cre.unit.abatement.tenant_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -200000.000016,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.cre.unit.base_rent.tenant_a": {
         "index": {
           "calendar": "annual",
@@ -123,7 +329,7 @@
         "offset": 1.0,
         "values": [
           {
-            "amount": 279999.999984,
+            "amount": 480000.0,
             "currency": "USD"
           },
           {

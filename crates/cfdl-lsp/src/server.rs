@@ -1,3 +1,10 @@
+// Exempt from the workspace's BTreeMap-only rule (see clippy.toml). That rule
+// exists because iteration order reaches published numbers through float
+// summation; nothing in this file reaches a number. These maps are the editor
+// document store, capability tables and completion indices, whose order is
+// either irrelevant or re-sorted before display.
+#![allow(clippy::disallowed_types)]
+
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

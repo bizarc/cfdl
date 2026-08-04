@@ -1,14 +1,25 @@
 # Energy domain metrics, evaluated in order.
+#
+# Every selector is a `.*` glob, and that is not decoration. All ten energy
+# lowering rules name their stream `energy.<x>{{contract.dot_suffix}}`, which
+# expands to the BARE name for an unsuffixed contract and to `energy.<x>.<sfx>`
+# for a suffixed one. These selectors were previously exact, so a suffixed
+# contract — `energy.PPA.plant_a`, which fixtures and goldens do ship — produced
+# `energy.ppa.revenue.plant_a` and contributed nothing to revenue, EBITDA or
+# DSCR. Silently: an absent stream contributes 0 rather than raising.
+#
+# `.*` matches the bare name and its children both, so it is correct for either
+# form. Prefer it over an exact name for anything a `dot_suffix` rule emits.
 
 [[metrics]]
 id = "domain.energy.revenue"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "energy.ppa.revenue",
-  "energy.merchant.revenue",
-  "energy.storage.margin",
-  "energy.capacity.revenue",
+  "energy.ppa.revenue.*",
+  "energy.merchant.revenue.*",
+  "energy.storage.margin.*",
+  "energy.capacity.revenue.*",
 ]
 formula = "sum(numerator_streams)"
 
@@ -16,7 +27,7 @@ formula = "sum(numerator_streams)"
 id = "domain.energy.opex"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["energy.om.expense"]
+numerator_streams = ["energy.om.expense.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true
 
@@ -25,19 +36,19 @@ id = "domain.energy.ebitda"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "energy.ppa.revenue",
-  "energy.merchant.revenue",
-  "energy.storage.margin",
-  "energy.capacity.revenue",
+  "energy.ppa.revenue.*",
+  "energy.merchant.revenue.*",
+  "energy.storage.margin.*",
+  "energy.capacity.revenue.*",
 ]
-denominator_streams = ["energy.om.expense"]
+denominator_streams = ["energy.om.expense.*"]
 formula = "sum(numerator_streams) + sum(denominator_streams)"
 
 [[metrics]]
 id = "domain.energy.debt_service"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["energy.debt.service"]
+numerator_streams = ["energy.debt.service.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true
 
@@ -53,5 +64,5 @@ formula = "domain.energy.ebitda / domain.energy.debt_service"
 id = "domain.energy.tax_benefits"
 kind = "money"
 op = "sum"
-numerator_streams = ["energy.itc.credit", "energy.ptc.credit", "energy.macrs.shield"]
+numerator_streams = ["energy.itc.credit.*", "energy.ptc.credit.*", "energy.macrs.shield.*"]
 formula = "sum(numerator_streams)"

@@ -105,16 +105,29 @@ fn scalar_value(scalar: &Scalar) -> f64 {
 }
 
 /// Sum the signed stream totals (`stream.{name}.total` Money scalars) for the
-/// given stream names; absent streams contribute 0. An entry ending in `.*`
-/// is a prefix wildcard: `cre.unit.base_rent.*` sums every per-instance
-/// stream lowered from a suffixed contract.
+/// given stream names; absent streams contribute 0. An entry ending in `.*` is
+/// a prefix wildcard: `cre.unit.base_rent.*` sums every per-instance stream
+/// lowered from a suffixed contract, AND the bare `cre.unit.base_rent` that an
+/// unsuffixed contract lowers to.
+///
+/// Matching delegates to `cfdl_expr::selector_matches` so there is one dialect.
+/// This previously matched `stream.{prefix}.` against the whole key, which
+/// reached the bare instance only because the key's own `.total` suffix
+/// happened to supply the separating dot — a coincidence of key format rather
+/// than a decision, and one `wal_years` does not share because its keys carry
+/// no `.total`. Recovering the NAME and matching that removes the coincidence.
 fn sum_stream_totals(metrics: &BTreeMap<String, Scalar>, streams: &[String]) -> f64 {
     let mut total = 0.0;
     for name in streams {
-        if let Some(prefix) = name.strip_suffix(".*") {
-            let key_prefix = format!("stream.{prefix}.");
+        if name.ends_with(".*") {
             for (key, scalar) in metrics {
-                if key.starts_with(&key_prefix) && key.ends_with(".total") {
+                let Some(stream_name) = key
+                    .strip_prefix("stream.")
+                    .and_then(|rest| rest.strip_suffix(".total"))
+                else {
+                    continue;
+                };
+                if cfdl_expr::selector_matches(name, stream_name) {
                     if let Scalar::Money(m) = scalar {
                         total += m.amount;
                     }
@@ -150,12 +163,19 @@ fn wal_years(results: &Results, streams: &[String]) -> Option<f64> {
     let mut weighted = 0.0_f64;
     let mut total = 0.0_f64;
     for name in streams {
-        let matched: Vec<&Series> = if let Some(prefix) = name.strip_suffix(".*") {
-            let key_prefix = format!("stream.{prefix}.");
+        // Series keys are `stream.<name>` with no `.total`, so the boundary dot
+        // that rescued `sum_stream_totals` is absent here: matching
+        // `stream.<prefix>.` against the key dropped the BARE instance an
+        // unsuffixed contract lowers to, and `domain.credit.wal_years` selects
+        // sched_principal, prepay, bullet and recoveries exactly that way.
+        // Delegating to the shared selector is the fix.
+        let matched: Vec<&Series> = if name.ends_with(".*") {
             series
                 .iter()
-                .filter(|(key, _)| key.starts_with(&key_prefix))
-                .map(|(_, s)| s)
+                .filter_map(|(key, s)| {
+                    let stream_name = key.strip_prefix("stream.")?;
+                    cfdl_expr::selector_matches(name, stream_name).then_some(s)
+                })
                 .collect()
         } else {
             series.get(&format!("stream.{name}")).into_iter().collect()
@@ -278,14 +298,16 @@ mod tests {
             );
         }
         Results {
-            results_version: "0.2".to_string(),
+            results_version: "0.3".to_string(),
             model_hash: "test".to_string(),
+            ledger_hash: "test".to_string(),
             engine: EngineInfo {
                 name: "cfdl-engine".to_string(),
                 version: "0.1.0".to_string(),
                 build: None,
             },
             warnings: vec![],
+            inputs: None,
             deterministic: DeterministicSection {
                 status: "ok".to_string(),
                 metrics,
@@ -330,6 +352,145 @@ mod tests {
             other => panic!("expected number, got {other:?}"),
         };
         assert!((dscr - (480_000.0 / 360_000.0)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn sum_glob_includes_the_unsuffixed_instance() {
+        // `sum` gets this right, but only by accident, and the accident is worth
+        // pinning. It matches `stream.<prefix>.` against keys that carry a
+        // `.total` suffix, so a BARE stream's key — `stream.<prefix>.total` —
+        // supplies the boundary dot itself. Change the key format and the bare
+        // instance silently drops out, which is what happens in `wal_years`
+        // below, where the keys have no `.total`.
+        let specs = vec![spec(
+            "domain.credit.interest",
+            "money",
+            "sum",
+            &["credit.pool.interest.*"],
+            &[],
+            None,
+            None,
+            "sum(numerator_streams)",
+            false,
+        )];
+        let results = make_results_with_metrics(vec![
+            ("stream.credit.pool.interest.total", 1_000.0),
+            ("stream.credit.pool.interest.p.total", 250.0),
+        ]);
+        let dm = compute("credit", &specs, &results).expect("metrics");
+        let interest = match dm.metrics.get("domain.credit.interest").expect("interest") {
+            Scalar::Money(m) => m.amount,
+            other => panic!("expected money, got {other:?}"),
+        };
+        assert!(
+            (interest - 1_250.0).abs() < 1e-6,
+            "expected the bare and the suffixed stream, got {interest}"
+        );
+    }
+
+    #[test]
+    fn wal_years_glob_includes_the_unsuffixed_instance() {
+        // The real defect. `wal_years` matches against SERIES keys, which are
+        // `stream.<name>` with no `.total`, so the accident that rescues `sum`
+        // does not apply: `stream.credit.pool.prepay` does not start with
+        // `stream.credit.pool.prepay.`, and the bare stream was dropped.
+        //
+        // `packs/credit/metrics.toml`'s `domain.credit.wal_years` selects
+        // sched_principal, prepay, bullet and recoveries exactly this way, and
+        // goldens ship all four bare — so an unsuffixed pool reported a WAL over
+        // a subset of its own principal, with no diagnostic. Nothing caught it:
+        // none of the affected fixtures runs with `--pack`, so `domain_metrics`
+        // is absent from every golden that would have shown it.
+        use cfdl_engine::{Series, SeriesIndex, SeriesValue};
+        let mut results = make_results_with_metrics(vec![]);
+        results
+            .deterministic
+            .metrics
+            .insert("run.periods_per_year".to_string(), Scalar::Number(12.0));
+        let series = |values: &[f64]| Series {
+            index: SeriesIndex {
+                calendar: "monthly".to_string(),
+                start: "2026-01-01".to_string(),
+                periods: values.len() as u32,
+            },
+            offset: Some(1.0),
+            values: values
+                .iter()
+                .map(|v| {
+                    SeriesValue::Money(Money {
+                        amount: *v,
+                        currency: "USD".to_string(),
+                    })
+                })
+                .collect(),
+        };
+        // Bare stream pays 100 in period 0 (instant 1/12); suffixed pays 100 in
+        // period 2 (instant 3/12). Including both gives a mean of 2/12; dropping
+        // the bare one gives 3/12.
+        results.deterministic.series.insert(
+            "stream.credit.pool.prepay".to_string(),
+            series(&[100.0, 0.0, 0.0]),
+        );
+        results.deterministic.series.insert(
+            "stream.credit.pool.prepay.p".to_string(),
+            series(&[0.0, 0.0, 100.0]),
+        );
+        let specs = vec![spec(
+            "domain.credit.wal_years",
+            "number",
+            "wal_years",
+            &["credit.pool.prepay.*"],
+            &[],
+            None,
+            None,
+            "wal_years(numerator_streams)",
+            false,
+        )];
+        let dm = compute("credit", &specs, &results).expect("metrics");
+        let wal = match dm.metrics.get("domain.credit.wal_years").expect("wal") {
+            Scalar::Number(v) => *v,
+            other => panic!("expected number, got {other:?}"),
+        };
+        // Tolerance is 1e-6, not tighter: `compute` publishes through `round6`,
+        // so 2/12 arrives as 0.166667 and an exact comparison would fail on the
+        // rounding rather than on the selector.
+        assert!(
+            (wal - 2.0 / 12.0).abs() < 1e-6,
+            "expected the bare stream to be weighted too; got {wal} \
+             ({} means it was dropped)",
+            3.0 / 12.0
+        );
+    }
+
+    #[test]
+    fn glob_selector_does_not_reach_a_sibling_sharing_a_text_prefix() {
+        // The boundary the fix must not widen: `.*` adds a path segment, so a
+        // differently-named sibling stays out. Matching on the raw string
+        // prefix would sweep it in.
+        let specs = vec![spec(
+            "domain.credit.interest",
+            "money",
+            "sum",
+            &["credit.pool.interest.*"],
+            &[],
+            None,
+            None,
+            "sum(numerator_streams)",
+            false,
+        )];
+        let results = make_results_with_metrics(vec![
+            ("stream.credit.pool.interest.total", 1_000.0),
+            ("stream.credit.pool.interest_accrued.total", 999.0),
+        ]);
+        let dm = compute("credit", &specs, &results).expect("metrics");
+        let interest = match dm.metrics.get("domain.credit.interest").expect("interest") {
+            Scalar::Money(m) => m.amount,
+            other => panic!("expected money, got {other:?}"),
+        };
+        assert!(
+            (interest - 1_000.0).abs() < 1e-6,
+            "interest_accrued is a different stream, got {interest}"
+        );
     }
 
     #[test]

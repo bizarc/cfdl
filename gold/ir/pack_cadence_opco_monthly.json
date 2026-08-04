@@ -173,6 +173,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.capex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -212,6 +213,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -251,6 +253,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.recurring",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -290,6 +293,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.tax",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -320,6 +324,68 @@
           "rule_id": "opco_cash_taxes"
         }
       }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "opco.revenue.recurring",
+      "contract": "opco.revenue_line",
+      "terms": {
+        "amount": "0",
+        "amount_year": "1440000",
+        "growth_curve": "",
+        "growth_rate": "0.0"
+      },
+      "defaults_applied": [
+        "amount",
+        "growth_curve"
+      ]
+    },
+    {
+      "stream": "opco.opex.recurring",
+      "contract": "opco.opex_line",
+      "terms": {
+        "amount": "0",
+        "amount_year": "840000",
+        "growth_curve": "",
+        "growth_rate": "0.0"
+      },
+      "defaults_applied": [
+        "amount",
+        "growth_curve"
+      ]
+    },
+    {
+      "stream": "opco.capex",
+      "contract": "opco.capex_line",
+      "terms": {
+        "amount": "0",
+        "amount_year": "60000",
+        "growth_curve": "",
+        "growth_rate": "0",
+        "pct_of_revenue": "0.02"
+      },
+      "defaults_applied": [
+        "amount",
+        "growth_curve",
+        "growth_rate"
+      ]
+    },
+    {
+      "stream": "opco.taxes",
+      "contract": "opco.cash_taxes",
+      "terms": {
+        "da_growth": "0",
+        "da_monthly": "0",
+        "da_year": "120000",
+        "tax_rate": "0.25",
+        "tax_rate_curve": ""
+      },
+      "defaults_applied": [
+        "da_growth",
+        "da_monthly",
+        "tax_rate_curve"
+      ]
     }
   ],
   "events": [],

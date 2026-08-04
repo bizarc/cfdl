@@ -310,6 +310,11 @@ struct ActivePackContext {
     /// Model calendars the pack declares it lowers correctly on; empty means
     /// all. See `cfdl_pack::PackManifest::cadences`.
     cadences: Vec<String>,
+    /// The closed vocabulary a stream's `category` must name. See
+    /// `cfdl_pack::PackManifest::categories`.
+    categories: Vec<String>,
+    /// Per-period subtotal declarations, in declaration order.
+    subtotal_specs: Vec<cfdl_pack::SubtotalSpec>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
 }
@@ -318,6 +323,8 @@ struct PackLoweringOutput {
     streams: Vec<((String, String), IrStream)>,
     /// States declared by lowering rules, deduplicated by name.
     states: Vec<IrState>,
+    /// What each lowered stream consumed. Parallel to `streams`.
+    stream_inputs: Vec<IrStreamInputs>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -345,8 +352,16 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     states: Vec<IrState>,
+    /// Per-period subtotals declared by the active pack. Omitted when the pack
+    /// declares none, so existing IR is byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subtotals: Vec<IrSubtotal>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
+    /// What each pack-lowered stream consumed, keyed by stream name. Omitted
+    /// when nothing was lowered from a pack.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    stream_inputs: Vec<IrStreamInputs>,
     events: Vec<serde_json::Value>,
     options: Vec<serde_json::Value>,
     runs: Vec<IrRun>,
@@ -540,10 +555,74 @@ struct IrStream {
     owner: IrEntityRef,
     direction: String,
     currency: String,
+    /// What this stream is, economically. Omitted when unclassified, so a
+    /// model that classifies nothing produces the IR it always did.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    category: Option<String>,
     schedule: IrSchedule,
     amount: IrExpr,
     active_when: IrExpr,
     provenance: IrNodeProvenance,
+}
+
+/// What a pack rule CONSUMED to strike one stream.
+///
+/// Records the placeholders the rule's templates actually substituted, plus the
+/// rule defaults that filled a gap — not the contract's whole term map. A
+/// contract lowers to several streams, each reading a different subset of its
+/// terms, so "the contract's terms" is not an answer to "what struck this
+/// line".
+///
+/// A side table rather than fields on `IrStream`: the engine passes it through
+/// verbatim, so neither `IrStream` nor the per-period evaluation path is
+/// widened by it. Pack, rule id and source span are already on the stream's own
+/// `provenance` and are not repeated here.
+#[derive(Debug, Serialize)]
+struct IrStreamInputs {
+    stream: String,
+    contract: String,
+    /// Resolved placeholder values, as the strings the templates substituted.
+    /// Not coerced: a term's payload is text plus a span, which is the contract
+    /// packs already work against.
+    terms: BTreeMap<String, String>,
+    /// Keys the contract did not supply, filled from the rule's own defaults.
+    /// Separated because "the model said 0" and "the pack assumed 0" are
+    /// different facts, and a reader tracing a number needs to tell them apart.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    defaults_applied: Vec<String>,
+}
+
+/// A per-period subtotal: a named fold over the ledger, lowered from the
+/// active pack's `[[subtotals]]`.
+///
+/// Lowered into the IR rather than evaluated as a post-pass so that the engine
+/// — which is the only thing that has the per-period series — computes it, and
+/// so that every host (`cli`, `wasm`, `py`, `server`) gets it with no plumbing:
+/// it rides in the IR they already load. Same reasoning as `IrState`.
+///
+/// Array order is dependency order. `parse_subtotal_specs` has already rejected
+/// any forward reference, so by here a reference names something earlier.
+#[derive(Debug, Serialize)]
+struct IrSubtotal {
+    id: String,
+    kind: String,
+    op: String,
+    /// Category path prefixes to fold — `operating.*`. The preferred form: it
+    /// names what a stream IS rather than what it is called.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    categories: Vec<String>,
+    /// Stream-name selectors, for what a category cannot express.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    streams: Vec<String>,
+    /// Ids of subtotals declared earlier.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    subtotals: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    numerator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    denominator: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    formula: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -709,11 +788,48 @@ fn build_ir(
         .collect();
     contracts.sort_by(|a, b| a.0.cmp(&b.0));
 
+    // The vocabulary a hand-written stream's `category` is checked against.
+    // It belongs to the active pack, because the categories are a domain
+    // judgement and the folds that consume them are declared there. With no
+    // pack there is no vocabulary, so any category is unknown — which is the
+    // honest answer rather than a special case: nothing would ever read it.
+    let pack_categories: &[String] = active_pack
+        .map(|pack| pack.categories.as_slice())
+        .unwrap_or(&[]);
+
     let mut streams: Vec<((String, String), IrStream)> = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
         };
+        if let Some(category) = stream.category.as_deref() {
+            if !pack_categories.iter().any(|c| c == category) {
+                let known = if pack_categories.is_empty() {
+                    "the active pack declares none (or no pack is in use)".to_string()
+                } else {
+                    pack_categories.join(", ")
+                };
+                return Err(vec![Diagnostic {
+                    code: "E5022_UNKNOWN_STREAM_CATEGORY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' declares category '{category}', which is not a category \
+                         the active pack defines. Known categories: {known}.",
+                        stream.name
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(stream.span)),
+                    path: None,
+                    hint: Some(
+                        "A category is what a fold aggregates on, so it has to name one the \
+                         pack declares — otherwise the stream reports as a line and is counted \
+                         in no subtotal."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                }]);
+            }
+        }
         let stable_key = stable_key(&source_stmt.file, &stream.name);
         let schedule = lower_schedule(
             stream.schedule.as_ref(),
@@ -740,6 +856,7 @@ fn build_ir(
             owner: IrEntityRef {
                 symbol: stream.attached_entity.clone(),
             },
+            category: stream.category.clone(),
             direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
             currency: stream
                 .currency
@@ -826,6 +943,7 @@ fn build_ir(
         }
     }
     let lowered_states = lowered.states;
+    let stream_inputs = lowered.stream_inputs;
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -839,6 +957,13 @@ fn build_ir(
     let (ir_curves, curve_diags) = lower_curves(resolve_output);
     if !curve_diags.is_empty() {
         let mut diagnostics = curve_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
+    let (ir_subtotals, subtotal_diags) = lower_subtotals(active_pack);
+    if !subtotal_diags.is_empty() {
+        let mut diagnostics = subtotal_diags;
         sort_compile_diagnostics(&mut diagnostics);
         return Err(diagnostics);
     }
@@ -897,6 +1022,8 @@ fn build_ir(
                 s
             })
             .collect(),
+        stream_inputs,
+        subtotals: ir_subtotals,
         events: ir_events,
         options: ir_options,
         runs: {
@@ -1035,6 +1162,8 @@ fn resolve_active_pack_inner(
         name: active.name.clone(),
         version: active.version.clone(),
         cadences: registry.cadences(&active.name),
+        categories: registry.categories(&active.name),
+        subtotal_specs: registry.subtotal_specs(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
     }))
@@ -1115,6 +1244,7 @@ fn lower_contract_streams(
         return PackLoweringOutput {
             streams: vec![],
             states: vec![],
+            stream_inputs: vec![],
             diagnostics: vec![],
         };
     };
@@ -1167,6 +1297,7 @@ fn lower_contract_streams(
 
     let mut lowered = Vec::new();
     let mut lowered_states: BTreeMap<String, IrState> = BTreeMap::new();
+    let mut stream_inputs: Vec<IrStreamInputs> = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Contract(contract) = &source_stmt.statement else {
@@ -1535,6 +1666,12 @@ fn lower_contract_streams(
                 ));
                 continue;
             }
+            // The UNEXPANDED rule, kept before `rule` is rebound below. Its
+            // templates still carry their `{{contract.<key>}}` placeholders,
+            // which is the only place the set of terms a rule consumes can be
+            // read — after expansion the keys are gone and only their values
+            // remain, indistinguishable from literals.
+            let source_rule = rule;
             let rule = &expanded_rule;
 
             // A rule may narrow the pack's cadence support, so a pack can
@@ -1746,6 +1883,61 @@ fn lower_contract_streams(
                 }
             }
 
+            // What this rule actually read to strike this stream. Derived from
+            // the rule's own templates rather than from the contract, because a
+            // contract lowers to several streams and each reads a different
+            // subset — the debt-service rule and the interest rule of one loan
+            // do not consume the same terms.
+            {
+                let mut consumed: BTreeMap<String, String> = BTreeMap::new();
+                let mut defaults_applied: Vec<String> = Vec::new();
+                for template in [
+                    &source_rule.amount_expr,
+                    &source_rule.schedule_from,
+                    &source_rule.schedule_to,
+                    &source_rule.stream_name,
+                    &source_rule.schedule_net_days,
+                    &source_rule.schedule_net_months,
+                    &source_rule.schedule_every,
+                    &source_rule.state_init,
+                    &source_rule.state_next,
+                ] {
+                    for key in cfdl_pack::template_placeholders(template) {
+                        // Cadence primitives and name derivations are computed,
+                        // not supplied — they say nothing about what the model
+                        // stated, so they are not provenance.
+                        if key.starts_with("periods.")
+                            || key.starts_with("whole_periods.")
+                            || key.starts_with("model.")
+                            || key.starts_with("time.")
+                            || matches!(
+                                key.as_str(),
+                                "name" | "suffix" | "dot_suffix" | "suffix_ident"
+                            )
+                        {
+                            continue;
+                        }
+                        if let Some(term) = contract.terms.get(&key) {
+                            consumed.insert(key.clone(), term.value.clone());
+                        } else if let Some(default) = source_rule.defaults.get(&key) {
+                            consumed.insert(key.clone(), default.clone());
+                            if !defaults_applied.contains(&key) {
+                                defaults_applied.push(key.clone());
+                            }
+                        }
+                    }
+                }
+                if !consumed.is_empty() {
+                    defaults_applied.sort();
+                    stream_inputs.push(IrStreamInputs {
+                        stream: rule.stream_name.clone(),
+                        contract: contract.name.clone(),
+                        terms: consumed,
+                        defaults_applied,
+                    });
+                }
+            }
+
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
                 IrStream {
@@ -1760,6 +1952,9 @@ fn lower_contract_streams(
                         rule.direction.clone()
                     },
                     currency: rule_currency.clone(),
+                    // Validated against the pack's vocabulary at load time, so
+                    // by here it is either empty or known.
+                    category: (!rule.category.is_empty()).then(|| rule.category.clone()),
                     schedule,
                     amount: IrExpr {
                         lang: "cfdl".to_string(),
@@ -1787,6 +1982,7 @@ fn lower_contract_streams(
     PackLoweringOutput {
         streams: lowered,
         states: lowered_states.into_values().collect(),
+        stream_inputs,
         diagnostics,
     }
 }
@@ -2471,6 +2667,60 @@ fn lower_states(
 
 /// Lower `curve` statements into IR curves: dedupe names, sort points by
 /// date, reject duplicate point dates.
+/// Lower the active pack's `[[subtotals]]` into IR nodes.
+///
+/// The pack loader has already checked shape and rejected forward references,
+/// so the remaining job is the one thing only the compiler can see: whether a
+/// category a subtotal folds is actually in the pack's declared vocabulary. A
+/// subtotal over `operating.revenu.*` — one letter out — would otherwise fold
+/// nothing, publish a series of zeros, and say so nowhere.
+fn lower_subtotals(active_pack: Option<&ActivePackContext>) -> (Vec<IrSubtotal>, Vec<Diagnostic>) {
+    let Some(pack) = active_pack else {
+        return (vec![], vec![]);
+    };
+    let mut out = Vec::new();
+    let mut diags = Vec::new();
+    for spec in &pack.subtotal_specs {
+        for selector in &spec.categories {
+            let reaches_any = pack
+                .categories
+                .iter()
+                .any(|declared| cfdl_expr::selector_matches(selector, declared));
+            if !reaches_any {
+                diags.push(Diagnostic {
+                    code: "E5023_SUBTOTAL_UNKNOWN_CATEGORY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Subtotal '{}' folds category '{selector}', which matches none of the \
+                         categories pack '{}' declares. It would sum nothing and publish zeros.",
+                        spec.id, pack.name
+                    ),
+                    file: None,
+                    span: None,
+                    path: None,
+                    hint: Some(format!(
+                        "Declared categories: {}.",
+                        pack.categories.join(", ")
+                    )),
+                    notes: vec![],
+                });
+            }
+        }
+        out.push(IrSubtotal {
+            id: spec.id.clone(),
+            kind: spec.kind.clone(),
+            op: spec.op.clone(),
+            categories: spec.categories.clone(),
+            streams: spec.streams.clone(),
+            subtotals: spec.subtotals.clone(),
+            numerator: spec.numerator.clone(),
+            denominator: spec.denominator.clone(),
+            formula: spec.formula.clone(),
+        });
+    }
+    (out, diags)
+}
+
 fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>, Vec<Diagnostic>) {
     let mut curves: Vec<IrCurve> = Vec::new();
     let mut diags = Vec::new();
@@ -3291,6 +3541,8 @@ mod pack_validation_parity_tests {
             name: pack.to_string(),
             version: "0.1.0".to_string(),
             cadences: registry.cadences(pack),
+            categories: registry.categories(pack),
+            subtotal_specs: registry.subtotal_specs(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
         }

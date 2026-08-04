@@ -112,6 +112,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "annual",
@@ -151,6 +152,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.om",
       "schedule": {
         "kind": "Every",
         "every": "annual",
@@ -190,6 +192,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "annual",
@@ -219,6 +222,37 @@
           },
           "rule_id": "energy_ppa_revenue"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ppa.revenue",
+      "contract": "energy.ppa",
+      "terms": {
+        "availability": "1",
+        "degradation": "0.005",
+        "escalation": "0.02",
+        "mwh_year": "4200",
+        "ppa_price": "85"
+      },
+      "defaults_applied": [
+        "availability"
+      ]
+    },
+    {
+      "stream": "energy.om.expense",
+      "contract": "energy.om",
+      "terms": {
+        "escalation": "0.025",
+        "om_year": "48000"
+      }
+    },
+    {
+      "stream": "energy.capacity.revenue",
+      "contract": "energy.capacity",
+      "terms": {
+        "payment_year": "60000"
       }
     }
   ],

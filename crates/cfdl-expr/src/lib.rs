@@ -175,6 +175,50 @@ pub fn uses_series(compiled: &CompiledExpr) -> bool {
     cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
 }
 
+/// Does `name` match `pattern`? The one selector dialect.
+///
+/// `<prefix>.*` matches `<prefix>` ITSELF and every name beneath `<prefix>.`;
+/// anything else is an exact name. There is no mid-pattern `*`, no `?` and no
+/// regex — a selector has to stay greppable.
+///
+/// Matching the bare prefix is the part that was inconsistent, and it is the
+/// part that matters. Pack rules emit `<name>{{contract.dot_suffix}}`, which
+/// expands to a BARE name for an unsuffixed contract and a suffixed one
+/// otherwise, so a selector that skips the bare form silently drops the
+/// unsuffixed instance of whatever it selects.
+///
+/// Two implementations of this existed and disagreed on exactly that point.
+/// `EnvAdapter::matching_series` matched the bare prefix deliberately;
+/// `cfdl-metrics` matched `stream.<prefix>.` against the whole KEY, so whether
+/// the bare instance was reached depended on the key format rather than on any
+/// decision:
+///
+/// - `sum_stream_totals` keys end in `.total`, so `stream.<p>.total` supplied
+///   the separating dot itself and the bare instance was included by accident.
+/// - `wal_years` keys do not, so `stream.<p>` failed the prefix test and the
+///   bare instance was silently dropped. `domain.credit.wal_years` selects
+///   sched_principal, prepay, bullet and recoveries this way and goldens ship
+///   all four bare, so an unsuffixed pool reported a weighted average life over
+///   a subset of its own principal.
+///
+/// Neither was caught: none of the affected fixtures runs with `--pack`, so
+/// `domain_metrics` is absent from every golden that would have shown it.
+///
+/// Selectors match NAMES. The key format a caller stores them under
+/// (`stream.<name>`, `stream.<name>.total`) is the caller's business, which is
+/// what stops the accident above from being load-bearing again.
+pub fn selector_matches(pattern: &str, name: &str) -> bool {
+    match pattern.strip_suffix(".*") {
+        Some(prefix) => name == prefix || name.starts_with(&format!("{prefix}.")),
+        None => name == pattern,
+    }
+}
+
+/// Does `name` match any of `patterns`? Empty patterns match nothing.
+pub fn selector_matches_any(patterns: &[String], name: &str) -> bool {
+    patterns.iter().any(|p| selector_matches(p, name))
+}
+
 pub fn eval(compiled: &CompiledExpr, env: &ExprEnv) -> Result<Value, ExprError> {
     eval_with_mode(compiled, env, Mode::Decimal)
 }
@@ -321,12 +365,13 @@ impl EnvAdapter<'_> {
     }
 
     fn matching_series(&self, name: &str) -> Vec<&Vec<f64>> {
-        if let Some(prefix) = name.strip_suffix(".*") {
-            let dot_prefix = format!("{prefix}.");
+        // Exact lookups stay a map hit rather than a scan; the glob case
+        // delegates so there is one dialect. See `selector_matches`.
+        if name.ends_with(".*") {
             self.env
                 .series
                 .iter()
-                .filter(|(key, _)| key.as_str() == prefix || key.starts_with(&dot_prefix))
+                .filter(|(key, _)| selector_matches(name, key))
                 .map(|(_, v)| v)
                 .collect()
         } else {
@@ -378,6 +423,58 @@ fn calc_to_domain(v: cfdl_calc::Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn selector_glob_matches_the_bare_prefix_and_its_children() {
+        // The whole point. A pack rule emitting `<name>{{contract.dot_suffix}}`
+        // produces the bare name for an unsuffixed contract, so a selector that
+        // matched only children would drop it.
+        assert!(selector_matches(
+            "credit.pool.interest.*",
+            "credit.pool.interest"
+        ));
+        assert!(selector_matches(
+            "credit.pool.interest.*",
+            "credit.pool.interest.p"
+        ));
+        assert!(selector_matches(
+            "credit.pool.interest.*",
+            "credit.pool.interest.a.b"
+        ));
+    }
+
+    #[test]
+    fn selector_glob_does_not_match_a_sibling_sharing_a_text_prefix() {
+        // `.*` is a path-segment boundary, not a string prefix: an extra
+        // segment is required, so `interest_accrued` is a different name.
+        assert!(!selector_matches(
+            "credit.pool.interest.*",
+            "credit.pool.interest_accrued"
+        ));
+        assert!(!selector_matches("cre.pct_rent.*", "cre.pct_rent_extra"));
+    }
+
+    #[test]
+    fn selector_without_a_glob_is_an_exact_name() {
+        assert!(selector_matches("energy.ppa.revenue", "energy.ppa.revenue"));
+        assert!(!selector_matches(
+            "energy.ppa.revenue",
+            "energy.ppa.revenue.plant_a"
+        ));
+    }
+
+    #[test]
+    fn selector_any_is_a_disjunction_and_empty_matches_nothing() {
+        let patterns = vec![
+            "cre.ops.expense".to_string(),
+            "cre.property.opex.*".to_string(),
+        ];
+        assert!(selector_matches_any(&patterns, "cre.ops.expense"));
+        assert!(selector_matches_any(&patterns, "cre.property.opex"));
+        assert!(selector_matches_any(&patterns, "cre.property.opex.taxes"));
+        assert!(!selector_matches_any(&patterns, "cre.vacancy.loss"));
+        assert!(!selector_matches_any(&[], "cre.ops.expense"));
+    }
 
     #[test]
     fn basic_eval_with_env() {

@@ -1,11 +1,24 @@
 {
-  "results_version": "0.2",
-  "model_hash": "cd1f62ce9005ba37dda55909457125107badb0f05490d62ae65e4a6c598f4808",
+  "results_version": "0.3",
+  "model_hash": "51e4386174afce3da756da1353d269582f30158ea5442bff87605a7f829fc9f8",
+  "ledger_hash": "cd078747a6d534dc91bdaeb0e77b3e9fd5a1dd55ffa896f34d1e951cd6dd6a16",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "test.cadence_probe",
+        "stream": "testpack.cadence_probe",
+        "terms": {
+          "amount_year": "120000",
+          "escalation": "0.10"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

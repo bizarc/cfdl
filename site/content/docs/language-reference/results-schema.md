@@ -31,18 +31,23 @@ against it by `make results-schema`.
     "warnings",
     "deterministic",
     "scenarios",
-    "monte_carlo"
+    "monte_carlo",
+    "ledger_hash"
   ],
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.2",
-      "description": "Version of this results document's shape. 0.2 added `deterministic.annual_rollup`, the optional root-level `domain_metrics`, and `Series.offset`."
+      "const": "0.3",
+      "description": "Schema version of this document. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
       "description": "Hash of canonical IR for traceability",
       "minLength": 8
+    },
+    "ledger_hash": {
+      "type": "string",
+      "description": "SHA-256 over the canonical form of the deterministic ledger — `deterministic.series` and `deterministic.annual_rollup`. Together with `model_hash` and `engine` this closes the chain: identical inputs on an identical engine must reproduce an identical ledger_hash. It covers the LEDGER, not the metrics: NPV and IRR are folds of the ledger, so including them would make the hash move for a reason the ledger did not. It is therefore invariant to the discount rate, which is correct — the ledger is cash before discounting."
     },
     "engine": {
       "type": "object",
@@ -70,6 +75,9 @@ against it by `make results-schema`.
       "items": {
         "type": "string"
       }
+    },
+    "inputs": {
+      "$ref": "#/$defs/InputsSection"
     },
     "deterministic": {
       "$ref": "#/$defs/DeterministicSection"
@@ -204,7 +212,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric.",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared fold over the ledger. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is a fold OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a fold spans streams that may settle at different points in a period and so has no single placement to claim.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }
@@ -536,6 +544,27 @@ against it by `make results-schema`.
       "properties": {
         "series": {
           "$ref": "#/$defs/SeriesMap"
+        }
+      }
+    },
+    "InputsSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What went in, above the line items — the top of the audit chain. Absent when the model declares neither assumptions nor pack-lowered streams.",
+      "properties": {
+        "resolved": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Evaluated `assume` values, as `inputs.<name>` resolves them. In a deterministic run a random assumption resolves to its clipped CENTRAL value rather than to a draw; publishing it here is what stops that being invisible."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "Per-stream record of the contract terms a pack rule consumed to strike it, passed through from the IR's `stream_inputs` verbatim. See the IR schema's StreamInputs. Hand-written streams have no entry, because no rule struck them."
         }
       }
     }

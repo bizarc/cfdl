@@ -1,0 +1,17 @@
+# Determinism in the numeric path is structural, and this keeps it that way.
+#
+# Every map in cfdl-engine, cfdl-expr, cfdl-compile and cfdl-metrics is a
+# BTreeMap, so iteration order is a property of the type rather than of anyone
+# remembering. That matters because folds over streams sum floats: reassociating
+# a sum changes its low bits, so a HashMap in the wrong place would produce
+# results that differ between runs of the same model — and the golden suite,
+# which diffs whole documents, would report it as a flapping test rather than as
+# the nondeterminism it is.
+#
+# The lint is enabled per-crate rather than workspace-wide (see the crate-root
+# attributes) so that cfdl-lsp, whose document store has no bearing on any
+# number, is not forced to justify itself.
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "iteration order is unspecified; use BTreeMap so determinism is a property of the type" },
+  { path = "std::collections::HashSet", reason = "iteration order is unspecified; use BTreeSet so determinism is a property of the type" },
+]

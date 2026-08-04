@@ -1,6 +1,7 @@
 {
-  "results_version": "0.2",
+  "results_version": "0.3",
   "model_hash": "d210326a392cca6da11622c44766fd72cb044e7ce36788956f851103720f6ddb",
+  "ledger_hash": "b11eeec46d81bfa818a659ef460936674cedc4bea47c0dcf3c510bd3ff5b60a2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -567,7 +568,8 @@
       "domain.cre.debt_service": {
         "numerator_streams": [
           "loan.construction_interest",
-          "loan.permanent_debt_service"
+          "loan.permanent_debt_service",
+          "loan.mortgage_insurance"
         ],
         "denominator_streams": [],
         "formula": "-sum(numerator_streams)"
@@ -593,7 +595,8 @@
         "denominator_streams": [
           "cre.ops.expense",
           "cre.vacancy.loss",
-          "cre.property.opex"
+          "cre.property.opex.*",
+          "cre.unit.abatement.*"
         ],
         "formula": "sum(numerator_streams) + sum(denominator_streams)"
       }

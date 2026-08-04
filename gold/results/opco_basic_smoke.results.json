@@ -1,11 +1,60 @@
 {
-  "results_version": "0.2",
-  "model_hash": "d637124031906947e0dd54a253931ac7fe81071dc71245c4bc1fb829b08db164",
+  "results_version": "0.3",
+  "model_hash": "7d2cc1bc29b0317319b41c8a605ae021b61892796bb1d789e2313f7faa2859a2",
+  "ledger_hash": "ea8772001269507da4944db133c62e41d67aca83993ce070c680f081356c204a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "opco.revenue_line",
+        "defaults_applied": [
+          "amount_year",
+          "growth_curve"
+        ],
+        "stream": "opco.revenue.recurring",
+        "terms": {
+          "amount": "120000",
+          "amount_year": "0",
+          "growth_curve": "",
+          "growth_rate": "0.0"
+        }
+      },
+      {
+        "contract": "opco.opex_line",
+        "defaults_applied": [
+          "amount_year",
+          "growth_curve",
+          "growth_rate"
+        ],
+        "stream": "opco.opex.recurring",
+        "terms": {
+          "amount": "70000",
+          "amount_year": "0",
+          "growth_curve": "",
+          "growth_rate": "0"
+        }
+      },
+      {
+        "contract": "opco.working_capital",
+        "stream": "opco.working_capital.adjustment",
+        "terms": {
+          "amount": "3000"
+        }
+      },
+      {
+        "contract": "opco.exit_multiple",
+        "stream": "opco.exit.value",
+        "terms": {
+          "base_value": "800000",
+          "exit_multiple": "6.5"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

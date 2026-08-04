@@ -110,6 +110,13 @@ against it by `make ir-schema`.
         "$ref": "#/$defs/State"
       }
     },
+    "subtotals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Subtotal"
+      },
+      "description": "Per-period subtotals declared by the active pack, in dependency order. Omitted when the pack declares none."
+    },
     "contracts": {
       "type": "array",
       "minItems": 0,
@@ -123,6 +130,13 @@ against it by `make ir-schema`.
       "items": {
         "$ref": "#/$defs/Stream"
       }
+    },
+    "stream_inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/StreamInputs"
+      },
+      "description": "Per-stream record of what each pack rule consumed. Omitted when nothing was lowered from a pack."
     },
     "events": {
       "type": "array",
@@ -643,6 +657,10 @@ against it by `make ir-schema`.
         },
         "currency": {
           "$ref": "#/$defs/Currency"
+        },
+        "category": {
+          "type": "string",
+          "description": "What this stream is economically (revenue, opex, debt_service, ...). Aggregation reads this rather than pattern-matching the name, so the meaning is declared once at the point of emission instead of being re-derived by every consumer. Must name a category the active pack declares (E5022). Absent when the stream is unclassified, which is legal and leaves it out of every category fold."
         },
         "schedule": {
           "$ref": "#/$defs/Schedule"
@@ -1306,6 +1324,99 @@ against it by `make ir-schema`.
         },
         "schedule": {
           "$ref": "#/$defs/Schedule"
+        }
+      }
+    },
+    "StreamInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stream",
+        "contract",
+        "terms"
+      ],
+      "description": "What a pack lowering rule CONSUMED to strike one stream: the placeholders its templates actually substituted, plus the rule defaults that filled a gap. Not the contract's whole term map — a contract lowers to several streams and each reads a different subset, so 'the contract's terms' is not an answer to 'what struck this line'. Pack, rule id and source span are already on the stream's own provenance and are not repeated here. Absent for hand-written streams, which no rule struck.",
+      "properties": {
+        "stream": {
+          "$ref": "#/$defs/Id"
+        },
+        "contract": {
+          "type": "string",
+          "description": "The contract instance the rule matched, including any suffix."
+        },
+        "terms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Resolved placeholder values, as the strings the templates substituted. Not coerced: a term's payload is text plus a span, which is the contract packs already work against."
+        },
+        "defaults_applied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Keys the contract did not supply, filled from the rule's own defaults. Separated because 'the model said 0' and 'the pack assumed 0' are different facts, and a reader tracing a number needs to tell them apart."
+        }
+      }
+    },
+    "Subtotal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "op"
+      ],
+      "description": "A per-period subtotal: a named fold over the ledger, lowered from the active pack. Where a metric reduces to one lifetime scalar, this produces a value per period — the middle rows of a statement. Folds CATEGORIES by preference rather than stream names, so net operating income is everything under `operating.*` and nothing enumerates which streams those are. Array order is DEPENDENCY order: an entry may reference only ones before it, which makes a cycle unexpressible rather than merely rejected. A subtotal is a fold OF the cash and never counts as cash: it is excluded from model.total, model.npv, model.net_cash_flow and the per-stream annual rollup, by the same construction the `state.` prefix relies on.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Output series key; must start with `domain.`."
+        },
+        "kind": {
+          "enum": [
+            "money",
+            "number"
+          ]
+        },
+        "op": {
+          "enum": [
+            "sum",
+            "negated_sum",
+            "ratio"
+          ]
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Category path selectors, e.g. `operating.revenue.*`."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Stream-name selectors, for what a category cannot express."
+        },
+        "subtotals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of subtotals declared earlier."
+        },
+        "numerator": {
+          "type": "string"
+        },
+        "denominator": {
+          "type": "string"
+        },
+        "formula": {
+          "type": "string",
+          "description": "Human-readable lineage, emitted verbatim."
         }
       }
     }

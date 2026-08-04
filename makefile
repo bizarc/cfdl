@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt lint test build clean gold gold-update ci doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: help fmt fmt-check lint test build clean gold gold-update ci verify verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -14,7 +14,8 @@ help:
 	@echo "  clean       - remove build artifacts"
 	@echo "  gold        - run golden suite (tools/golden-runner)"
 	@echo "  gold-update - update gold outputs (DANGEROUS; requires intent)"
-	@echo "  ci          - run fmt+lint+test+gold (CI parity)"
+	@echo "  ci          - the FAST SUBSET: Rust workspace + tool gates"
+	@echo "  verify      - EVERYTHING CI runs; use this before pushing"
 	@echo "  py-develop  - maturin develop the Python SDK (editable, [dev,viz])"
 	@echo "  doc-examples - compile and run every example in the pack guides"
 	@echo "  wasm        - rebuild the committed playground wasm bundle"
@@ -26,6 +27,12 @@ help:
 
 fmt:
 	cargo fmt --all
+
+# What `ci` runs. `fmt` REWRITES and therefore always succeeds, so a `ci` that
+# depended on it could never fail on formatting while CI — which checks — could.
+# Exactly the local/CI divergence this file exists to prevent, one level down.
+fmt-check:
+	cargo fmt --all -- --check
 
 lint:
 	cargo clippy --all-targets --all-features -- -D warnings
@@ -57,7 +64,66 @@ bench:
 	cargo build -p cfdl-cli
 	$(PYGATE) tools/benchmark-runner.py
 
-ci: fmt lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples wasm-check
+# THE GATE LIST LIVES HERE AND NOWHERE ELSE.
+#
+# It used to live in two places — these targets, and the same commands inlined
+# into .github/workflows — with neither authoritative. It drifted in both
+# directions and both hurt:
+#
+#   - CI was once the shorter list, and a 23% error in weighted average life
+#     survived because `analytic-checks` only ran when someone remembered to.
+#     That is recorded at .github/workflows/ci.yml.
+#   - `make ci` was later the shorter list, and four gates (sync:check,
+#     py-test, check-notebooks-fresh, and the site checks) caught things only
+#     after a push, while a full local `make ci` was green.
+#
+# The workflows now CALL these targets rather than restating them, so there is
+# one definition and local-equals-CI holds by construction. Adding a gate to a
+# workflow without adding it here is the mistake this arrangement prevents:
+# there is nowhere else to add it.
+
+# The fast inner loop: the Rust workspace and the gates that need only it.
+# Deliberately NOT everything — see `verify`.
+ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples wasm-check
+	@echo
+	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
+	@echo "  Not run here: py-test, notebooks-check, and the site gates"
+	@echo "  (sync:check, check:tokens, check:links, check:examples,"
+	@echo "   check:dialogs, check-wasm-fresh)."
+	@echo "  They need a Python venv and node_modules, which the Rust loop"
+	@echo "  should not have to install. Before pushing:  make verify"
+
+# Everything CI runs. What to run before pushing.
+verify: ci verify-python verify-site
+	@echo
+	@echo "make verify: OK — every gate CI runs has passed locally."
+
+# Needs `make py-develop` first (editable install + native extension).
+verify-python: py-check py-test notebooks-check
+
+# Needs `cd site && npm ci` first.
+verify-site: verify-site-nofresh verify-site-fresh
+
+# The site gates that need no git history. Split out because CI runs these on
+# every event, while the freshness pair below needs a base ref that differs
+# between a pull request and a push.
+verify-site-nofresh:
+	cd site && npm run sync:check
+	cd site && npm run check:tokens
+	cd site && npm run check:links
+	cd site && npm run check:examples
+	cd site && npm run check:dialogs
+	cd site && npm run check:wasm
+
+# Compare committed artefacts against what the sources would produce, relative
+# to BASE_REF.
+verify-site-fresh:
+	cd site && node scripts/check-wasm-fresh.mjs "$(BASE_REF)"
+	cd site && node scripts/check-notebooks-fresh.mjs "$(BASE_REF)"
+
+# What the freshness gates diff against. CI overrides it with the PR base or
+# the previous commit; locally `main` is the useful default.
+BASE_REF ?= main
 
 # The wasm bundle is committed (Vercel has no Rust toolchain), so it can drift
 # from the engine silently. `make ci` never covered it, and a five-day-old

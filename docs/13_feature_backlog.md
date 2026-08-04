@@ -48,7 +48,19 @@ which is the underlying cause.
 Shape: a term that names a period rather than an amount, resolved after the
 opex stream exists. Depends on 5.1.
 
-### 1.3 Abatements as a first-class NOI line
+### 1.3 Abatements as a first-class NOI line — RESOLVED
+
+**Resolved.** `cre.lease_unit` now emits `cre.unit.abatement.<id>` as its own
+deduction and publishes base rent GROSS; `domain.cre.noi` carries the abatement
+family in its denominator, so the two still net to the rent collected. Verified
+as an exact decomposition: gross + abatement equals the previous net to 0.00e+00
+on `cre_office_two_tenant`, and NPV, NOI and DSCR are unchanged.
+
+A stream may also declare `category operating.deduction.abatement` directly,
+which is how `benchmarks/cre/mit_rentleg_plaza` has its hand-written abatement
+counted — the pack has no contract for that shape and a name-based selector
+could never have reached it.
+
 
 `domain.cre.noi` sums base rent, recoveries, percentage rent, ops revenue, and
 subtracts ops expense, vacancy and property opex. Free rent has no line.
@@ -80,7 +92,15 @@ The same applies to `domain.energy.dscr` and `domain.opco.fcf_to_debt_service`.
 Note this is a metrics-layer change, not an engine one — the series it needs are
 all already computed.
 
-### 1.5 A property may have only one operating expense line
+### 1.5 A property may have only one operating expense line — RESOLVED
+
+**Resolved.** `cre_property_opex` takes `{{contract.dot_suffix}}` and
+`domain.cre.noi` selects `cre.property.opex.*`. `benchmarks/cre/hud_home_multifamily`
+now carries its four published sub-lines as four streams, and
+**asserts all four independently** against the Sample workbook's Operating Pro
+Forma rows 18–21 — where it previously asserted only their total. The states
+were already per-sub-line for the rounding reason, so the split moved nothing.
+
 
 `cre.property_opex` emits `cre.property.opex` with no `{{contract.dot_suffix}}`,
 so a model may declare exactly one. Every real pro forma splits management,
@@ -1016,7 +1036,35 @@ Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
 
-### 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service
+### 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service — RESOLVED
+
+**Resolved for the reporting half.** `benchmarks/cre/hud_home_multifamily` now
+carries the two legs as separate lines, both grounded in the workbook's own
+First Mortgage Sizing tab: mortgage insurance is the stated 0.450% of original
+principal on the stated $150,000 loan (675.00 exactly, flat), and debt service
+is the residual of the published "Calculated Monthly P+I+MIP Payment" of
+1,165.7819. That reconstructs the 13,314.3827 this item recorded, and both
+figures are now asserted rather than reconciled in prose.
+
+`domain.cre.debt_service` carries `loan.mortgage_insurance` because coverage
+here is measured against the whole published line — which is what this item
+said, and what the DSCR the workbook publishes is computed from.
+
+No expectation moved. The two legs sum to the pro forma's own 13,989, because
+that cell is `=ROUND(...,0)` and so is computed rather than merely displayed;
+the published DSCR is that rounded line divided into a rounded NOI. The model
+applies the same round via `round_to` rather than restating the result, so the
+0.38 the workbook discards sits on the P&I leg — the leg it rounded.
+
+Still open: converting the case onto `cre.permanent_debt`. That contract
+computes P&I from principal and rate, and reaching HUD's payment needs a
+monthly schedule on an annual grid — which `E2108` forbids and which the grain
+rule in `docs/01_language_spec.md` deliberately keeps forbidden. A pack
+`cre.mortgage_insurance` contract is the remaining shape, and it is not added
+here because nothing would use it yet (see 7.15 on shipping contracts with no
+external user).
+
+#### Original entry: 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service
 
 Found converting the CRE benchmarks onto `cre.permanent_debt`.
 `benchmarks/cre/office_two_tenant` converted cleanly.

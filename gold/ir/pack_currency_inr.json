@@ -60,6 +60,7 @@
       },
       "direction": "inflow",
       "currency": "INR",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -89,6 +90,19 @@
           },
           "rule_id": "energy_ppa_revenue"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ppa.revenue.plant_a",
+      "contract": "energy.ppa.plant_a",
+      "terms": {
+        "availability": "1.0",
+        "degradation": "0.005",
+        "escalation": "0.0",
+        "mwh_year": "5000",
+        "ppa_price": "3000"
       }
     }
   ],

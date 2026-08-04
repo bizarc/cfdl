@@ -13,7 +13,11 @@ This makes it a gate. Any golden that violates the schema fails the build, so
 the schema and the emitter cannot diverge without someone deciding which of
 them is wrong.
 
-Usage: python3 tools/check-ir-schema.py
+Usage: python3 tools/check-ir-schema.py            # check
+       python3 tools/check-ir-schema.py --write    # propagate to the copies
+
+`--write` regenerates the mirror and the embedded doc block from the source
+schema, so keeping the three copies in step stops being a three-way paste.
 """
 
 from __future__ import annotations
@@ -22,6 +26,9 @@ import json
 import os
 import pathlib
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import schema_sync  # noqa: E402  (path set above so the tools dir is importable)
 
 # These tools print prose. A Windows console defaults to cp1252, which
 # cannot encode every character the check names use, so pin stdout to UTF-8.
@@ -36,6 +43,18 @@ GOLD_IR = REPO_ROOT / "gold" / "ir"
 
 
 def main() -> int:
+    if "--write" in sys.argv[1:]:
+        changed = schema_sync.sync(SCHEMA_PATH, MIRROR_PATH, DOC_PATH, REPO_ROOT)
+        if not changed:
+            print("check-ir-schema: already in sync; nothing written")
+        else:
+            print(f"check-ir-schema: rewrote {len(changed)} copy/copies from "
+                  f"{SCHEMA_PATH.relative_to(REPO_ROOT)}")
+            for path in changed:
+                print(f"      {path}")
+        # Fall through: writing the copies is not evidence the schema is
+        # satisfiable. The goldens still have to validate against it.
+
     try:
         from jsonschema import Draft202012Validator
     except ImportError:
@@ -67,7 +86,7 @@ def main() -> int:
         print(
             f"check-ir-schema: {MIRROR_PATH.relative_to(REPO_ROOT)} differs from\n"
             f"                 {SCHEMA_PATH.relative_to(REPO_ROOT)}. The site serves the\n"
-            "                 mirror, so they must agree.",
+            "                 mirror, so they must agree. Run with `--write`.",
             file=sys.stderr,
         )
         return 1
@@ -85,7 +104,8 @@ def main() -> int:
             print(
                 f"check-ir-schema: {DOC_PATH.relative_to(REPO_ROOT)} does not embed the\n"
                 f"                 current {SCHEMA_PATH.relative_to(REPO_ROOT)}. That page is\n"
-                "                 generated; regenerate it rather than editing it.",
+                "                 generated; regenerate it with `--write` rather than\n"
+                "                 editing it.",
                 file=sys.stderr,
             )
             return 1

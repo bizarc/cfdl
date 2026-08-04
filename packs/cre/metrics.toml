@@ -12,14 +12,29 @@ numerator_streams = [
   "cre.rollover.rent.*",
   "cre.pct_rent.*",
 ]
-denominator_streams = ["cre.ops.expense", "cre.vacancy.loss", "cre.property.opex"]
+denominator_streams = [
+  "cre.ops.expense",
+  "cre.vacancy.loss",
+  "cre.property.opex.*",
+  # Free rent is a deduction from potential gross revenue, not an expense.
+  # Base rent is published GROSS, so NOI is unchanged by the split only if
+  # the offset is carried here.
+  "cre.unit.abatement.*",
+]
 formula = "sum(numerator_streams) + sum(denominator_streams)"
 
 [[metrics]]
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["loan.construction_interest", "loan.permanent_debt_service"]
+numerator_streams = [
+  "loan.construction_interest",
+  "loan.permanent_debt_service",
+  # Mortgage insurance is not a payment on the debt, but coverage is measured
+  # against the whole published line — HUD's pro forma states its debt service
+  # as P+I+MIP and computes DSCR from it. Backlog 7.14.
+  "loan.mortgage_insurance",
+]
 formula = "-sum(numerator_streams)"
 require_positive = true
 

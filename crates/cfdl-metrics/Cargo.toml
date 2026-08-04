@@ -11,4 +11,5 @@ publish = false
 [dependencies]
 serde = { workspace = true }
 cfdl-engine = { path = "../cfdl-engine" }
+cfdl-expr = { path = "../cfdl-expr" }
 cfdl-pack = { path = "../cfdl-pack" }

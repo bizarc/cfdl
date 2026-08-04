@@ -1,11 +1,128 @@
 {
-  "results_version": "0.2",
-  "model_hash": "8b50996758a6f892a5ae43c054298c8e9fa00ac782021bf959deaf0439b1ceb2",
+  "results_version": "0.3",
+  "model_hash": "253fa506a1227537775b9e1e80efbcf5b5c1b4b98a276c3d59c4ab46bf6c879b",
+  "ledger_hash": "e28ae543a8fb0e8152b26cfa76befbcc8cc940d51341b36e5b3f8f8c8414575a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "opco.revenue_line",
+        "defaults_applied": [
+          "amount_year",
+          "growth_curve"
+        ],
+        "stream": "opco.revenue.recurring",
+        "terms": {
+          "amount": "200000",
+          "amount_year": "0",
+          "growth_curve": "",
+          "growth_rate": "0.05"
+        }
+      },
+      {
+        "contract": "opco.opex_line",
+        "defaults_applied": [
+          "amount_year",
+          "growth_curve"
+        ],
+        "stream": "opco.opex.recurring",
+        "terms": {
+          "amount": "120000",
+          "amount_year": "0",
+          "growth_curve": "",
+          "growth_rate": "0.03"
+        }
+      },
+      {
+        "contract": "opco.working_capital_policy",
+        "stream": "opco.working_capital.adjustment",
+        "terms": {
+          "ap_days": "25",
+          "ar_days": "40",
+          "inv_days": "15",
+          "release_at_end": "1"
+        }
+      },
+      {
+        "contract": "opco.capex_line",
+        "defaults_applied": [
+          "amount_year",
+          "growth_curve",
+          "growth_rate"
+        ],
+        "stream": "opco.capex",
+        "terms": {
+          "amount": "5000",
+          "amount_year": "0",
+          "growth_curve": "",
+          "growth_rate": "0",
+          "pct_of_revenue": "0.02"
+        }
+      },
+      {
+        "contract": "opco.term_debt",
+        "stream": "opco.debt.interest",
+        "terms": {
+          "principal": "3000000",
+          "rate": "0.09"
+        }
+      },
+      {
+        "contract": "opco.term_debt",
+        "stream": "opco.debt.principal",
+        "terms": {
+          "principal": "3000000",
+          "rate": "0.09"
+        }
+      },
+      {
+        "contract": "opco.term_debt",
+        "defaults_applied": [
+          "funded_at_close"
+        ],
+        "stream": "opco.debt.proceeds",
+        "terms": {
+          "funded_at_close": "1",
+          "principal": "3000000"
+        }
+      },
+      {
+        "contract": "opco.cash_taxes",
+        "defaults_applied": [
+          "da_growth",
+          "da_year",
+          "tax_rate_curve"
+        ],
+        "stream": "opco.taxes",
+        "terms": {
+          "da_growth": "0",
+          "da_monthly": "20000",
+          "da_year": "0",
+          "tax_rate": "0.25",
+          "tax_rate_curve": ""
+        }
+      },
+      {
+        "contract": "opco.acquisition",
+        "stream": "opco.acquisition.price",
+        "terms": {
+          "price": "5000000"
+        }
+      },
+      {
+        "contract": "opco.exit_ebitda",
+        "stream": "opco.exit.value",
+        "terms": {
+          "exit_multiple": "7.0",
+          "selling_costs": "0.02"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

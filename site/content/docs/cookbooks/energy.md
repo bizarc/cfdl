@@ -152,18 +152,38 @@ credit window) with `energy.macrs_shield` (IRS Pub 946 GDS tables via
 Full worked models: `benchmarks/energy/solar_ppa_microgrid/` and the solar
 microgrid notebook in `examples/notebooks/`.
 
+## Stream categories
+
+Every stream this pack emits declares a `category` — a dotted path rooted in the
+cash flow statement's three sections — and aggregation reads that rather than
+pattern-matching the stream's name.
+
+`operating.revenue.energy`, `operating.expense.om`, `operating.tax_benefit`,
+`investing.capital.capex`, `financing.debt_service`.
+
+Deliberately coarse. PPA, merchant, storage margin and capacity are all
+`operating.revenue.energy`, because a project's EBITDA does not care which
+contract produced a dollar — and a finer split can be added later without
+reclassifying anything, since `operating.revenue.*` would still match.
+
+`tax_benefit` is separate from revenue and stays out of EBITDA. An ITC, a PTC
+and a MACRS shield are not operating income, and folding them in would overstate
+the margin that every DSCR is measured against.
+
+An unlisted category is `E5022`.
+
 ## Metrics reference
 
 Computed automatically whenever a model runs with the `energy` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
 
 | Metric | Type | Built from |
 |---|---|---|
-| `domain.energy.revenue` | money | `energy.ppa.revenue`, `energy.merchant.revenue`, `energy.storage.margin`, `energy.capacity.revenue` |
-| `domain.energy.opex` | money | `energy.om.expense` |
-| `domain.energy.ebitda` | money | `energy.ppa.revenue`, `energy.merchant.revenue`, `energy.storage.margin`, `energy.capacity.revenue`, `energy.om.expense` |
-| `domain.energy.debt_service` | money | `energy.debt.service` |
+| `domain.energy.revenue` | money | derived |
+| `domain.energy.opex` | money | derived |
+| `domain.energy.ebitda` | money | derived |
+| `domain.energy.debt_service` | money | derived |
 | `domain.energy.dscr` | number | `domain.energy.ebitda` ÷ `domain.energy.debt_service` |
-| `domain.energy.tax_benefits` | money | `energy.itc.credit`, `energy.ptc.credit`, `energy.macrs.shield` |
+| `domain.energy.tax_benefits` | money | derived |
 
 ## Validations reference
 

@@ -1,11 +1,154 @@
 {
-  "results_version": "0.2",
-  "model_hash": "ed3e45bcb97e0d434bca69f7aaf29a1ad1f48956f85769ea9d2ac2cd470886cd",
+  "results_version": "0.3",
+  "model_hash": "d57222ec310d5a4afca75a63757cab189d907958ea366fe5c75fec73e74a2436",
+  "ledger_hash": "477a19804c1192d6206e6bf9f54c13577a6e10bebbdd214e4fbd3be144d0a618",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.interest",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "prepay_penalty_rate",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.penalty",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.prepay",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "severity"
+        ],
+        "stream": "credit.pool.recoveries",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0",
+          "severity": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.sched_principal",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.pool.servicing",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

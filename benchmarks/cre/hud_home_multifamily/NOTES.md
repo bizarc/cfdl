@@ -41,7 +41,31 @@ publishes at four points to sixteen significant figures:
 | year 15 | 1.2886742479090734 | 1.2887268568160697 | −5.3e-05 |
 
 Agreement to five decimal places on a ratio built from lines the workbook has
-already rounded to whole dollars. The residual is entirely that rounding.
+already rounded to whole dollars. The residual is entirely that rounding: the
+workbook's DSCR cell is `-E24/E27`, and both of those are `=ROUND(...,0)`, so it
+divides a rounded NOI by a rounded debt service while CFDL divides the
+unrounded ones.
+
+**These are now assertions rather than a table.** This section used to end by
+saying the four values were reproduced by hand and that nothing checked them —
+the harness could reach per-stream cash and lifetime scalars, and a coverage
+ratio is neither. `expected.csv` now carries `domain.cre.egi`, `domain.cre.noi`
+and `domain.cre.dscr` straight from the Operating Pro Forma's rows 15, 24 and
+102, at every anchor year rather than four.
+
+Two things made that possible. The subtotals exist per period at all, as folds
+over categories rather than named streams. And `case.toml` can set a tolerance
+per column: the money lines need ~1.0 because the workbook publishes whole
+dollars, the DSCR needs 1e-4 because it agrees to five decimals, and a single
+number cannot express both — a shared 1.0 would assert nothing about the ratio
+and a shared 1e-4 would fail every line above it.
+
+DSCR is asserted at six of the eleven anchors and left blank at the rest. The
+mortgage matures in year 14, after which the workbook's formula returns a
+literal 100 — `IF(debt=0, 100, ...)`, a sentinel and not a ratio. CFDL publishes
+null there, which is the honest answer, and the harness rejects a stated value
+against a null rather than coercing it to zero. Asserting the sentinel would be
+asserting Excel's error handling.
 
 ## The affordability cliff, which is the point of the case
 
@@ -182,3 +206,35 @@ than projecting it. Out of scope, deliberately:
   only.
 - **AMI-indexed rent limits and sources & uses.** Regulatory rent caps are
   inputs to the Sample, not derivations within it.
+
+## What this case asserts now that it did not
+
+Two published decompositions became machine-checked assertions when streams
+stopped having to be aggregates.
+
+**The four expense sub-lines.** The workbook publishes Management, Operations
+and Maintenance, Utilities, and Taxes/Insurance/Reserves separately (Operating
+Pro Forma rows 18–21) and this case previously asserted only their total,
+because `cre.property_opex` emitted one un-suffixed stream and a property could
+declare exactly one expense line. Four streams now carry them, and
+`expected.csv` asserts all four at every anchor year. The four states already
+existed — they were split for the rounding reason — so this moved nothing:
+their sum reproduces the total the file asserted before, at every anchor.
+
+**P&I and MIP.** The pro forma's debt line is one number and the workbook
+defines it as P+I+MIP. Both legs are now separate streams, grounded in the
+First Mortgage Sizing tab rather than inferred: MIP is the stated 0.450% of the
+stated $150,000 principal (675.00, flat, exact), and debt service is the
+residual of the published "Calculated Monthly P+I+MIP Payment" of 1,165.7819.
+**And the round is the workbook's.** The pro forma's debt cell is
+`=ROUND(...,0)`, so 13,989 is what it computes rather than what it displays, and
+the DSCR it publishes is that rounded line divided into a rounded NOI. An
+intermediate version of this work used the sizing tab's unrounded 13,989.3828
+and moved the lifetime expectation to 195,851.36; that was more precise and less
+accurate, and it would have left a 0.38 residual on every published debt line.
+
+The model applies the workbook's round through the same `round_to` it already
+uses for the expense recurrence, rather than restating 13,989 as a constant — so
+the derivation is visible and tracks the sizing inputs. P&I is then 13,314 and
+MIP 675, summing to the published line exactly. Nothing about the previous
+expectations changed.

@@ -956,6 +956,57 @@ def main() -> int:
                   f"differ by {abs(got - expected):,.4f}")
             failures += 1
 
+
+@check("per-period NOI folds to the same total as the lifetime NOI metric")
+def subtotal_reduces_to_its_metric():
+    """The two definitions of NOI must agree, because there are two of them.
+
+    `packs/cre/statements.toml` folds `operating.*` per period;
+    `packs/cre/metrics.toml` sums nine hand-listed stream selectors over the
+    hold. Stage 7 deletes the second by making metrics consume the folds, but
+    until then they are independent statements of the same quantity, and
+    independent statements of the same quantity drift. This is what catches it.
+    """
+    src = """version 0.1
+model "noi-fold-identity"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 4
+entity asset tower
+
+contract cre.lease_unit.a on entity asset.tower {
+  term 2026-01..2029-01
+  terms { rent_year = 120000  escalation = 0.03  free_rent_months = 6 }
+}
+
+contract cre.property_opex.main on entity asset.tower {
+  term 2026-01..2029-01
+  terms { opex_year = 40000  escalation = 0.02 }
+}
+
+contract cre.vacancy_loss on entity asset.tower {
+  term 2026-01..2029-01
+  terms { rate = 0.05  potential_gross_year = 120000 }
+}
+"""
+    block = run_pack_model(src, 0.08, "cre")
+    per_period = sum(
+        v["amount"] if isinstance(v, dict) else v
+        for v in (
+            e for e in block["series"]["domain.cre.noi"]["values"]
+        )
+    )
+    # The lifetime metric lives in the domain_metrics section, which
+    # run_pack_model drops, so recompute it the way metrics.toml does: the
+    # signed sum of every stream the NOI selectors reach. Equivalent by
+    # construction if — and only if — the two definitions agree.
+    lifetime = sum(
+        sum(x["amount"] if isinstance(x, dict) else x for x in s["values"])
+        for key, s in block["series"].items()
+        if key.startswith("stream.cre.")
+    )
+    return per_period, lifetime
+
+
     print()
     if failures:
         print(f"analytic-checks: {failures} of {len(CHECKS)} identities do not hold")

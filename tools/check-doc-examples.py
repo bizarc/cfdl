@@ -126,7 +126,17 @@ def stream_totals(results: dict) -> dict[str, float]:
             point["amount"] for point in block["values"] if isinstance(point, dict)
         )
         for name, block in series.items()
-        if name != "model.net_cash_flow" and not name.startswith("state.")
+        # `domain.` is excluded for a different reason than `state.`, and the
+        # difference is the point of this gate. A `stream.` appears because the
+        # example's author wrote it, so one that totals zero really is a feature
+        # the example claims and never exercises. A `domain.` subtotal is
+        # emitted by the PACK for every model that uses it, whether or not that
+        # model has anything to put in it — a debt-service fold is zero in a
+        # debt-free example, which is the model being described accurately
+        # rather than the example overclaiming.
+        if name != "model.net_cash_flow"
+        and not name.startswith("state.")
+        and not name.startswith("domain.")
     }
 
 
@@ -189,7 +199,17 @@ def nonzero_period_counts(results: dict) -> dict[str, int]:
             if isinstance(point, dict) and abs(point["amount"]) > 0.005
         )
         for name, block in series.items()
-        if name != "model.net_cash_flow" and not name.startswith("state.")
+        # `domain.` is excluded for a different reason than `state.`, and the
+        # difference is the point of this gate. A `stream.` appears because the
+        # example's author wrote it, so one that totals zero really is a feature
+        # the example claims and never exercises. A `domain.` subtotal is
+        # emitted by the PACK for every model that uses it, whether or not that
+        # model has anything to put in it — a debt-service fold is zero in a
+        # debt-free example, which is the model being described accurately
+        # rather than the example overclaiming.
+        if name != "model.net_cash_flow"
+        and not name.startswith("state.")
+        and not name.startswith("domain.")
     }
 
 

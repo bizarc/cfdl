@@ -23,6 +23,62 @@
     "constants": {},
     "random": {}
   },
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "-sum(financing.*)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    }
+  ],
   "contracts": [
     {
       "id": "7a965032108ccaedd50cd8540e9a6796",
@@ -164,6 +220,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.construction",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -203,6 +260,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2031-12-01",
@@ -241,6 +299,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.base_rent",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -280,6 +339,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -319,6 +379,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.other",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -348,6 +409,48 @@
           },
           "rule_id": "cre_ops_revenue"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.construction.draws",
+      "contract": "cre.construction_stub",
+      "terms": {
+        "amount": "45000"
+      }
+    },
+    {
+      "stream": "cre.lease.base_rent",
+      "contract": "cre.lease",
+      "terms": {
+        "base_rent": "25000",
+        "base_rent_year": "0"
+      },
+      "defaults_applied": [
+        "base_rent_year"
+      ]
+    },
+    {
+      "stream": "cre.ops.revenue",
+      "contract": "cre.ops_revenue",
+      "terms": {
+        "amount": "30000"
+      }
+    },
+    {
+      "stream": "cre.ops.expense",
+      "contract": "cre.ops_expense",
+      "terms": {
+        "amount": "12000"
+      }
+    },
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.06",
+        "noi_value": "180000"
       }
     }
   ],

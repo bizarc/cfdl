@@ -10,6 +10,7 @@ entity legal firm
 // exit_multiple and exit_ebitda both apply a MULTIPLE to something.
 stream firm.fcff on entity legal.firm inflow currency USD {
   schedule every year from 2026-01 to 2030-01
+  category operating.revenue.recurring
   amount = 1000 * pow(1.04, time.t)
 }
 

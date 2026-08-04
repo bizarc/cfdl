@@ -146,3 +146,23 @@ credit window) with `energy.macrs_shield` (IRS Pub 946 GDS tables via
 
 Full worked models: `benchmarks/energy/solar_ppa_microgrid/` and the solar
 microgrid notebook in `examples/notebooks/`.
+
+## Stream categories
+
+Every stream this pack emits declares a `category` — a dotted path rooted in the
+cash flow statement's three sections — and aggregation reads that rather than
+pattern-matching the stream's name.
+
+`operating.revenue.energy`, `operating.expense.om`, `operating.tax_benefit`,
+`investing.capital.capex`, `financing.debt_service`.
+
+Deliberately coarse. PPA, merchant, storage margin and capacity are all
+`operating.revenue.energy`, because a project's EBITDA does not care which
+contract produced a dollar — and a finer split can be added later without
+reclassifying anything, since `operating.revenue.*` would still match.
+
+`tax_benefit` is separate from revenue and stays out of EBITDA. An ITC, a PTC
+and a MACRS shield are not operating income, and folding them in would overstate
+the margin that every DSCR is measured against.
+
+An unlisted category is `E5022`.

@@ -23,6 +23,62 @@
     "constants": {},
     "random": {}
   },
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "-sum(financing.*)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    }
+  ],
   "contracts": [
     {
       "id": "ca1e4145c3e32a5be406c23538c6d7d2",
@@ -43,9 +99,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 34,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 40,
           "end_col": 1
         }
       }
@@ -69,9 +125,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 25,
           "start_col": 1,
-          "end_line": 29,
+          "end_line": 30,
           "end_col": 1
         }
       }
@@ -112,6 +168,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.other",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -131,7 +188,7 @@
         "source_span": {
           "start_line": 17,
           "start_col": 1,
-          "end_line": 20,
+          "end_line": 21,
           "end_col": 1
         }
       }
@@ -144,6 +201,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "investing.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2030-12-01",
@@ -160,9 +218,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 34,
           "start_col": 1,
-          "end_line": 39,
+          "end_line": 40,
           "end_col": 1
         },
         "generated_by": {
@@ -182,6 +240,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.opex",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -199,9 +258,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 24,
+          "start_line": 25,
           "start_col": 1,
-          "end_line": 29,
+          "end_line": 30,
           "end_col": 1
         },
         "generated_by": {
@@ -221,6 +280,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.other",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -250,6 +310,30 @@
           },
           "rule_id": "cre_ops_revenue"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.ops.revenue",
+      "contract": "cre.ops_revenue",
+      "terms": {
+        "amount": "175750"
+      }
+    },
+    {
+      "stream": "cre.ops.expense",
+      "contract": "cre.ops_expense",
+      "terms": {
+        "amount": "63600"
+      }
+    },
+    {
+      "stream": "cre.exit.sale",
+      "contract": "cre.exit_cap",
+      "terms": {
+        "exit_cap": "0.052",
+        "noi_value": "1432200"
       }
     }
   ],

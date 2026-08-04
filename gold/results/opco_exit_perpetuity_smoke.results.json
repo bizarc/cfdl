@@ -1,11 +1,29 @@
 {
-  "results_version": "0.2",
-  "model_hash": "aaa6e0301bf2d5cb3a43ffc4cf0f99b16ade07a2a4e738ee961c906c82da7c2b",
+  "results_version": "0.3",
+  "model_hash": "53a8f9aa1791a8b8d90f639a8887cf993a6071358e3798ec82741f3cad221b60",
+  "ledger_hash": "72758180f442b4c432fadc4f3ab425762d354ea4a8d77c8b60be981cc8b5ad00",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "opco.exit_perpetuity",
+        "defaults_applied": [
+          "selling_costs"
+        ],
+        "stream": "opco.exit.value",
+        "terms": {
+          "base_value": "1169.858560",
+          "discount_rate": "0.085",
+          "growth_rate": "0.025",
+          "selling_costs": "0"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

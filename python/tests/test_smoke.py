@@ -32,5 +32,5 @@ def test_compile_and_run_examples(example_name: str, config_name: str) -> None:
         config_json=str(config_path),
     )
     results = json.loads(results_json)
-    assert results["results_version"] == "0.2"
+    assert results["results_version"] == "0.3"
     assert "deterministic" in results

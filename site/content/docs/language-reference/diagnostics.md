@@ -290,6 +290,15 @@ Warnings:
   `state_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
   Identical definitions collapse instead, which is what several contracts
   sharing one curve should do.
+- `E5022_UNKNOWN_STREAM_CATEGORY` — a stream declares `category <path>` that
+  the active pack does not list in its manifest `categories`. A category is a
+  dotted path into the cash flow statement (`operating.deduction.abatement`)
+  and is what a fold aggregates on, so an unlisted one would leave the stream
+  reported as a line and counted in no subtotal — visible and wrong, rather
+  than absent and obvious. Use one the pack declares, or add it to the pack's
+  vocabulary. With no pack in use there is no vocabulary, so any category is
+  unknown. A pack whose own vocabulary is not rooted in `operating`,
+  `investing` or `financing` fails to load rather than reaching this check.
 - `E5010_TERM_UNKNOWN_INPUT` — a contract term references `inputs.<name>` for
   an input that is not declared. Declare it with `assume <name> = …` or
   `assume <name> ~ <Dist>(…)`.

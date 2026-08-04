@@ -323,6 +323,30 @@ Full worked models: `benchmarks/credit/level_pay_pool/`,
 `io_bullet_loan/`, `float_bridge_pool/`, and the loan-pool notebook in
 `examples/notebooks/`.
 
+## Stream categories
+
+Every stream this pack emits declares a `category` — a dotted path rooted in the
+cash flow statement's three sections — and aggregation reads that rather than
+pattern-matching the stream's name.
+
+`operating.collection.interest`, `operating.collection.principal`,
+`operating.collection.prepayment`, `operating.collection.recovery`,
+`operating.collection.penalty`, `operating.expense.servicing`,
+`investing.purchase`.
+
+Collections sit under `operating`, not `financing`: for a lender, interest
+received is operating revenue rather than a financing flow. That is the same
+judgement an IFRS filer makes for a financial institution, and it is why CFDL
+enforces only the root vocabulary and leaves the assignment to the pack.
+
+`principal` covers both scheduled amortisation and a bullet, since both retire
+principal. `prepayment` stands apart because it is what a speed assumption
+moves, and every published factor table reports it separately. `recovery` is not
+principal: it arrives after a default, on its own lag, and a weighted average
+life that treated it as scheduled would be wrong.
+
+An unlisted category is `E5022`.
+
 ## Metrics reference
 
 Computed automatically whenever a model runs with the `credit` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.

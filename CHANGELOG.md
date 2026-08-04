@@ -8,6 +8,231 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: streams are line items — backlog 1.3, 1.5, and the reporting half of 7.14
+
+A stream is the atom a statement reports, so a stream that is secretly an
+aggregate is a row a statement cannot show. Three of them were.
+
+**A property may now have more than one expense line (1.5).**
+`cre.property_opex` takes a suffix and `domain.cre.noi` selects
+`cre.property.opex.*`. `benchmarks/cre/hud_home_multifamily` carries its four
+published sub-lines as four streams and **asserts all four independently**
+against the Sample workbook's Operating Pro Forma rows 18–21, where it
+previously asserted only their total. The four states already existed — split
+for the rounding reason — so this moved nothing: their sum reproduces the
+previously asserted total at every anchor year.
+
+**Free rent is its own deduction (1.3).** `cre.lease_unit` emits
+`cre.unit.abatement.<id>` and publishes base rent GROSS; the abatement family
+sits in `domain.cre.noi`'s denominator, so the two net to the rent collected.
+Previously a model could report the line OR have it counted in NOI, never both.
+Verified as an exact decomposition — gross + abatement equals the previous net
+to 0.00e+00, and NPV, NOI and DSCR are unchanged.
+
+**HUD's mortgage separates P&I from MIP (7.14).** The pro forma's debt line is
+one number and the workbook defines it as P+I+MIP. Both legs are now grounded
+in the First Mortgage Sizing tab rather than inferred: MIP is the stated 0.450%
+of the stated $150,000 principal (675.00, flat, exact), and debt service is the
+residual of the published "Calculated Monthly P+I+MIP Payment" of 1,165.7819 —
+which reconstructs the 13,314.3828 that backlog 7.14 had recorded by hand.
+`domain.cre.debt_service` carries the MIP because coverage there is measured
+against the whole published line, which is what the workbook's own DSCR uses.
+
+**No expectation moved.** An intermediate version of this change used the sizing
+tab's unrounded 13,989.3828 and moved the lifetime figure to 195,851.36, on the
+reasoning that the pro forma's 13,989 was a rounded display. It is not: that
+cell is `=ROUND(...,0)`, so 13,989 is what the workbook COMPUTES, and its
+published DSCR is that rounded line divided into a rounded NOI. Using the
+unrounded payment would have been more precise and less accurate. The model
+applies the workbook's own round — via the `round_to` it already uses for the
+expense recurrence — rather than restating 13,989 as a constant, so the
+derivation stays visible.
+
+Every native stream in every pack-using model is now classified, so the
+completeness gate that Stage 8 turns on starts from zero unclassified streams.
+
+**Invariants hold across all ten changed results goldens**: `model.total`,
+`model.npv`, `model.irr`, `model.moic`, `domain.cre.noi`, `domain.cre.dscr` and
+every `model.net_cash_flow` period are identical. What changed is that
+aggregates became lines.
+
+### Added: provenance, resolved inputs, and a ledger hash — `results_version` 0.3
+
+A published line item can now be traced back to the term that struck it.
+
+**`inputs.streams`** records, per stream, the contract terms a pack rule
+actually consumed. Not the contract's whole term map: a contract lowers to
+several streams and each reads a different subset, so "the contract's terms" is
+not an answer to "what struck this line". One `cre.lease_unit` contract produces
+three streams with three different term sets:
+
+    cre.unit.base_rent.tenant_a   <- rent_year, escalation
+    cre.unit.recoveries.tenant_a  <- opex_year, opex_escalation, expense_stop_year,
+                                     pro_rata_share, gross_up_factor (pack default)
+    cre.unit.ti_lc.tenant_a       <- ti_total, lc_total
+
+`defaults_applied` separates the values the model stated from the ones the pack
+assumed, because "the model said 0" and "the pack assumed 0" are different facts
+and a reader tracing a number needs to tell them apart.
+
+Note what this was NOT: `crates/cfdl-compile/src/lib.rs` emits `terms: {}` on
+every contract and always has, so nothing was being un-dropped. The terms are
+read from the rule's own templates *before* expansion — afterwards the keys are
+gone and only their values remain, indistinguishable from literals.
+
+**`inputs.resolved`** publishes evaluated `assume` values. Worth having on the
+page rather than only in the model source: in a deterministic run a random
+assumption resolves to its clipped CENTRAL value, not to a draw, and publishing
+it is what stops that being invisible.
+
+**`ledger_hash`** is a SHA-256 over the deterministic ledger — the series and
+the annual rollup. Together with `model_hash` and `engine` it closes the chain:
+identical inputs on an identical engine must reproduce an identical ledger. A
+golden diff can say "this document changed"; it cannot say whether that was a
+real behavioural difference or a run-to-run wobble, and a wobble would surface
+as a flapping test rather than as the defect it is.
+
+It deliberately covers the ledger and not the metrics. NPV and IRR are folds OF
+the ledger, so including them would make the hash move for a reason the ledger
+did not — and it means `ledger_hash` is **invariant to the discount rate**,
+which is correct: the ledger is cash before discounting. There is a test
+asserting exactly that, alongside reproducibility and the fact that changing a
+model's cash does move it.
+
+The engine passes `stream_inputs` through as opaque JSON. `IrStream` is not
+widened and the per-period evaluation path is untouched.
+
+**No numbers move.** 116 goldens change: 1,384 IR `stream_inputs` leaves, the
+same republished under `inputs.streams`, 72 `ledger_hash` values, 7 resolved
+assumptions, plus the `results_version` bump and the 44 `model_hash` values that
+follow the IR change. Zero numeric leaves differ.
+
+### Added: stream categories
+
+Every stream may now declare what it IS, economically, and aggregation reads
+that rather than pattern-matching its name:
+
+    stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
+      schedule every year from 2001-01 to 2006-01
+      category operating.deduction.abatement
+      amount = ...
+    }
+
+A name is an address; a category is a meaning. Deciding that `cre.vacancy.loss`
+is a deduction by reading its spelling means every metric, fold and statement
+re-derives the same judgement independently — and they drift, which is exactly
+how two `.*` selector dialects came to disagree.
+
+**Why direction is not enough.** CRE emits seven outflow rules; three sit above
+the NOI line (`ops.expense`, `vacancy.loss`, `property.opex`) and four below it
+(`unit.ti_lc`, `rollover.ti_lc`, `construction.draws`, `permanent_debt_service`).
+`direction` says "outflow" to all seven. The split already existed — as nine
+hand-listed stream names in `domain.cre.noi`, restated in
+`cre_exit_forward_noi_derived` and again in a benchmark's reference generator.
+Categories do not add a concept; they move one to where it cannot drift.
+
+**Categories are hierarchical paths, rooted in the cash flow statement.**
+`operating.revenue.base_rent`, `investing.capital.leasing`,
+`financing.debt_service`. Every system that solves this converged on the same
+shape — IAS 7's three sections, a chart of accounts' five root types,
+beancount's `Expenses:Rent:Office`, XBRL's calculation linkbase: a small
+universal root, then an arbitrary domain tree, with the rollup defined by the
+tree. So a subtotal is a prefix query over the selector streams already use —
+NOI is `operating.*` — and a generic statement works against a pack it has
+never seen.
+
+CFDL enforces the root vocabulary and nothing below it. WHICH root a category
+takes is the pack's call, because that genuinely varies: interest paid is
+operating under IFRS and financing under US GAAP, and a lender's interest
+*received* is operating revenue rather than financing at all.
+
+All 58 lowering rules across the four packs are classified, and
+`benchmarks/cre/mit_rentleg_plaza` now classifies its ten native streams —
+including the abatement line that backlog 1.3 is about, which the pack has no
+contract for and which a name-based selector could never have reached.
+
+New diagnostic `E5022_UNKNOWN_STREAM_CATEGORY`. A pack whose vocabulary is not
+rooted in a known section fails to load.
+
+**No numbers move.** 81 goldens change: 169 added `category` fields, the 40
+`model_hash` values that follow, and one parser message now advertising the new
+item. Checked leaf by leaf — zero numeric values differ, and all 21 benchmarks
+still reconcile.
+
+The wasm budget moved 600 → 640 KB gzipped. It had been sitting at exactly
+600/600, so the next addition of any kind was going to trip it; categories cost
+~9 KB raw / 3 KB gzipped. Recorded in `build-wasm.sh`, along with the thing that
+did *not* work: the pack TOMLs are `include_str!`-embedded so their comments do
+ship, but cutting 2 KB of comment prose recovered 0 KB gzipped.
+
+### Fixed: one selector dialect, and two metrics that were quietly wrong
+
+There were two implementations of the `.*` stream selector and they disagreed
+about whether it reaches the BARE name. That matters because a lowering rule
+writing `energy.ppa.revenue{{contract.dot_suffix}}` emits the bare name for an
+unsuffixed contract and `energy.ppa.revenue.plant_a` for a suffixed one, so a
+selector reaching only one form silently drops the other — an absent stream
+contributes 0 rather than raising.
+
+Neither defect was caught, for the same reason: none of the affected fixtures
+runs with `--pack`, so `domain_metrics` is absent from every golden that would
+have shown them.
+
+- **`domain.credit.wal_years` omitted unsuffixed pools.** `wal_years` matched
+  `stream.<prefix>.` against series keys, which carry no `.total`, so a bare
+  `credit.pool.prepay` failed the prefix test. It selects sched_principal,
+  prepay, bullet and recoveries this way and goldens ship all four bare, so an
+  unsuffixed pool reported a weighted average life computed over a subset of its
+  own principal. (`sum` reached the bare name too — but only because its keys
+  end in `.total`, which supplied the separating dot by coincidence rather than
+  by decision.)
+- **Every energy metric omitted suffixed contracts.** All fourteen selectors in
+  `packs/energy/metrics.toml` named their stream exactly, while all ten energy
+  lowering rules template the name. A suffixed PPA therefore contributed nothing
+  to revenue, EBITDA, DSCR or tax benefits. Three goldens ship
+  `energy.ppa.revenue.plant_a`, one carrying $29.9m.
+- **`cre.exit_forward` double-counted an unsuffixed percentage rent.** Its
+  forward-NOI expression summed both `cre.pct_rent` and `cre.pct_rent.*`, and
+  the glob already includes the bare name — so the stream entered twice and
+  inflated the exit price it strikes. Latent: every shipped model suffixes that
+  contract.
+
+Matching now lives in one place, `cfdl_expr::selector_matches`, and matches
+NAMES rather than storage keys, so the key format cannot be load-bearing again.
+`.*` reaches the bare name and its children both; the path-segment boundary is
+unchanged, so `cre.pct_rent.*` still does not reach `cre.pct_rent_extra`.
+
+**No shipped model's numbers move.** Ten goldens change — four IR expression
+texts, the four `model_hash` values that follow, and 28 lineage selector
+strings. Checked leaf by leaf: zero numeric values differ.
+
+`check-pack-validations.py` gains a fourth check, because "pick the right
+selector by reading the file" is exactly what failed here: a metric that names a
+templated stream exactly is now rejected. Verified both ways — it reports all
+fourteen energy selectors against the pre-fix file.
+
+### Added: schema `--write`, warning codes in the gates, and a determinism lint
+
+`check-results-schema.py` and `check-ir-schema.py` gained `--write`, which
+regenerates the site mirror and the embedded docs block from the source schema.
+Both gates could previously say the three copies disagreed but not make them
+agree, so keeping them in step was a three-way paste — and `docs/06` is the copy
+that fell four releases behind. The canonical serialisation now lives in one
+place, `tools/schema_sync.py`, rather than being re-derived by hand.
+
+`check-pack-validations.py`'s code-uniqueness checks matched an `E` followed by
+digits, so warning codes were invisible to both of them: a `W3500` could be
+added twice, or added without ever being documented, and nothing looked. Widened
+to `[EWI]`, keyed on letter-plus-number so `E3500` and `W3500` stay distinct.
+
+`clippy.toml` disallows `HashMap`/`HashSet`, making determinism in the numeric
+path a property of the type rather than of anyone remembering. Float sums
+reassociate, so a map with unspecified iteration order there would produce
+results that differ between runs of the same model — and the golden suite would
+report it as a flapping test rather than as the nondeterminism it is. `cfdl-lsp`
+and one never-iterated map in `cfdl-calc` are exempt at the declaration, with
+reasons.
+
 ### Added: `cre.permanent_debt`
 
 A commercial mortgage on a stabilised property — the CRE pack previously had no

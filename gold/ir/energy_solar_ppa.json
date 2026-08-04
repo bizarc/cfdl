@@ -216,6 +216,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -255,6 +256,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "investing.capital.capex",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -292,6 +294,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "financing.debt_service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -331,6 +334,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.tax_benefit",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-12-01"
@@ -368,6 +372,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.expense.om",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -407,6 +412,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -446,6 +452,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -475,6 +482,71 @@
           },
           "rule_id": "energy_storage_arbitrage"
         }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "energy.capex.outlay",
+      "contract": "energy.capex",
+      "terms": {
+        "amount": "2400000"
+      }
+    },
+    {
+      "stream": "energy.itc.credit",
+      "contract": "energy.itc",
+      "terms": {
+        "credit": "720000"
+      }
+    },
+    {
+      "stream": "energy.ppa.revenue",
+      "contract": "energy.ppa",
+      "terms": {
+        "availability": "1",
+        "degradation": "0.005",
+        "escalation": "0.02",
+        "mwh_year": "4200",
+        "ppa_price": "85"
+      },
+      "defaults_applied": [
+        "availability"
+      ]
+    },
+    {
+      "stream": "energy.storage.margin",
+      "contract": "energy.storage_arbitrage",
+      "terms": {
+        "degradation": "0",
+        "mwh_cycled_year": "500",
+        "spread": "30"
+      },
+      "defaults_applied": [
+        "degradation"
+      ]
+    },
+    {
+      "stream": "energy.capacity.revenue",
+      "contract": "energy.capacity",
+      "terms": {
+        "payment_year": "60000"
+      }
+    },
+    {
+      "stream": "energy.om.expense",
+      "contract": "energy.om",
+      "terms": {
+        "escalation": "0.025",
+        "om_year": "70000"
+      }
+    },
+    {
+      "stream": "energy.debt.service",
+      "contract": "energy.debt_service",
+      "terms": {
+        "principal": "1600000",
+        "rate": "0.06"
       }
     }
   ],

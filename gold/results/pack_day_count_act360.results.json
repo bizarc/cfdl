@@ -1,11 +1,148 @@
 {
-  "results_version": "0.2",
-  "model_hash": "e841732ef1ae55840fe847a65d06f1d518a75d8c9f2c88debc5d0f35104ced5e",
+  "results_version": "0.3",
+  "model_hash": "a5e7b33de86a79c10f231b84c94ca8fafda04e43668c688845e9b0a18ecaaa3c",
+  "ledger_hash": "9466ca9cb5a3fda4eebb0a42dd2fe17d9a5101b6e886ef8dd9f289c26d51ab28",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.bullet.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.interest.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.06",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "prepay_penalty_rate",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.penalty.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.prepay.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.recoveries.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0",
+          "severity": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_io_bullet.p",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.pool.servicing.p",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1200000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {

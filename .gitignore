@@ -82,3 +82,5 @@ python/cfdl_sdk/.build-stamp
 # It was swept in once by `git add -A`; ignoring it is the only reliable guard.
 # Remove this line if the deck should start being tracked.
 VALIDATION_REVIEW.html
+.vercel
+.env*
