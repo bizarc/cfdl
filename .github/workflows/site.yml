@@ -109,21 +109,26 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    # No VERCEL_ORG_ID / VERCEL_PROJECT_ID here on purpose.
+    # These are required after all, and the token must be TEAM-scoped.
     #
-    # The token is PROJECT-scoped, and Vercel's docs are explicit that such a
-    # token carries its own scope: "Team- and project-scoped tokens do not
-    # require the teamId query parameter or the team slug on API requests.
-    # Vercel infers the team and project from the token's scope."
+    # Three attempts established it, and the failures are worth keeping because
+    # each one looks like a different problem:
     #
-    # Supplying them anyway made the CLI resolve through a team-level lookup,
-    # which a project-scoped token denies by design — "denies any request to
-    # another project, to a user-level resource, or to a team-level resource".
-    # The symptom is an unhelpful "Could not retrieve Project Settings", which
-    # reads like a missing link rather than a refused permission.
+    #   with these vars     -> "Could not retrieve Project Settings"  (team-level lookup denied)
+    #   without them        -> "Loading teams... User not found"      (user-level lookup denied)
+    #   skip `vercel pull`  -> "No Project Settings found locally"    (build needs what pull fetches)
     #
-    # The secrets are still set, so widening the token to Team scope and putting
-    # them back is the fallback if a future CLI wants them.
+    # So `vercel build` requires the settings only `vercel pull` provides, and
+    # `pull` requires a user/team resolution that a PROJECT-scoped token refuses
+    # by design — it "denies any request to another project, to a user-level
+    # resource, or to a team-level resource". The tight scope and this workflow
+    # are incompatible; there is no third spelling.
+    #
+    # Team scope is still far narrower than Full Account, which reaches every
+    # team the owner belongs to.
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -149,25 +154,12 @@ jobs:
         working-directory: site
         run: npm ci
 
-      # `vercel pull` is deliberately NOT used, and the reason is worth keeping.
-      #
-      # It resolves the user/team context before fetching settings, and a
-      # project-scoped token cannot do that. Both spellings were tried and both
-      # failed for the same underlying reason:
-      #
-      #   with VERCEL_ORG_ID    -> "Could not retrieve Project Settings"  (team-level)
-      #   without it            -> "Loading teams... User not found"      (user-level)
-      #
-      # Writing the project link ourselves skips the resolution entirely. The
-      # IDs are not secret — they identify a project, they do not grant anything
-      # — and the token remains scoped to this one project.
-      - name: Link the project without resolving a user
+      - name: Pull Vercel environment
         working-directory: site
-        run: |
-          mkdir -p .vercel
-          cat > .vercel/project.json <<JSON
-          {"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}
-          JSON
+        run: >
+          npx vercel@latest pull --yes
+          --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          --token=${{ secrets.VERCEL_TOKEN }}
 
       # BEFORE `vercel build`. That runs `next build`, which copies public/ as it
       # finds it — build the bundle after and the deploy ships without an engine.
