@@ -30,7 +30,15 @@ OUT_DIR="${SITE_DIR}/public/wasm"
 # ~2 KB of comment prose out of them recovered 0 KB gzipped, because gzip was
 # already collapsing repetitive text. If this needs shrinking for real, the
 # lever is the module, not the documentation.
-BUDGET_KB=640
+#
+# 640 -> 680 when statement declarations landed. That is the SECOND raise in one
+# working session, which is the tripwire doing its job: the reporting work has
+# added ~50 KB gzipped across categories, subtotals, provenance and statements,
+# and raising the number each time is not a strategy. The structural answer is
+# site/DEPLOY.md — build the bundle in CI and stop committing it, which makes
+# the budget a CI concern rather than something a developer trips over. Until
+# that lands, raise it deliberately and keep noticing.
+BUDGET_KB=680
 
 if [[ "${SKIP_WASM:-0}" == "1" ]]; then
   echo "build-wasm: SKIP_WASM=1 — using the committed bundle"

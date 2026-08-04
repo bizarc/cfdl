@@ -103,3 +103,144 @@ kind = "money"
 op = "negated_sum"
 categories = ["investing.capital.leasing"]
 formula = "-sum(investing.capital.leasing)"
+
+# ---------------------------------------------------------------------------
+# The operating statement.
+#
+# Rows are PRESENTATION. They carry order, labels, depth and a display sign;
+# they compute nothing that the subtotals above have not already computed.
+#
+# `display` is the answer to backlog 1.3. Argus prints a deduction as a POSITIVE
+# number in a "less:" row, and the old way to get that was to flip the sign of
+# the thing itself — which meant a line could be shown OR counted, never both.
+# A row therefore carries the signed value AND a display sign: a consumer that
+# ignores presentation still gets correct arithmetic, and a consumer that
+# renders gets a pro forma. The arithmetic sign lives in the stream's direction
+# and nowhere else.
+#
+# Row order follows HUD's own Operating Pro Forma (reference/PROVENANCE.md) and
+# the section comments MIT's model carries in code.
+#
+# EVERY CATEGORY THE PACK DECLARES APPEARS IN EXACTLY ONE `line` ROW. That is
+# what makes the bottom line reconcile to net cash flow rather than merely
+# resemble it, and the completeness gate checks it rather than trusting it.
+
+[[statements]]
+id = "operating"
+label = "Operating statement"
+default = true
+
+[[statements.rows]]
+kind = "line"
+label = "Base rental revenue"
+depth = 1
+categories = ["operating.revenue.base_rent"]
+
+[[statements.rows]]
+kind = "line"
+label = "Percentage rent"
+depth = 1
+categories = ["operating.revenue.percentage_rent"]
+
+[[statements.rows]]
+kind = "line"
+label = "Other operating income"
+depth = 1
+categories = ["operating.revenue.other"]
+
+[[statements.rows]]
+kind = "line"
+label = "Less: vacancy and credit loss"
+depth = 1
+categories = ["operating.deduction.vacancy"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Less: free rent"
+depth = 1
+categories = ["operating.deduction.abatement"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Expense reimbursements"
+depth = 1
+categories = ["operating.revenue.recovery"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Effective gross income"
+depth = 0
+subtotal = "domain.cre.egi"
+
+[[statements.rows]]
+kind = "line"
+label = "Operating expenses"
+depth = 1
+categories = ["operating.expense.opex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net operating income"
+depth = 0
+subtotal = "domain.cre.noi"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Tenant improvements and leasing commissions"
+depth = 1
+categories = ["investing.capital.leasing"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Capital expenditure"
+depth = 1
+categories = ["investing.capital.capex", "investing.capital.construction"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt service"
+depth = 1
+categories = ["financing.debt_service"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Mortgage insurance"
+depth = 1
+categories = ["financing.mortgage_insurance"]
+display = "positive"
+
+[[statements.rows]]
+kind = "ratio"
+label = "Debt service coverage"
+depth = 0
+subtotal = "domain.cre.dscr"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Loan proceeds"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
+kind = "line"
+label = "Equity contributions"
+depth = 1
+categories = ["financing.equity"]
+
+[[statements.rows]]
+kind = "line"
+label = "Sale proceeds"
+depth = 1
+categories = ["investing.reversion"]
