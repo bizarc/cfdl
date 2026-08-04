@@ -79,10 +79,29 @@ slightly.
    cd site
    npx vercel@latest login
    npx vercel@latest link
-   cat .vercel/project.json     # -> { "projectId": "...", "orgId": "..." }
    ```
-   `.vercel/` is already gitignored by the Vercel CLI's own ignore rules —
-   confirm it is not tracked before committing anything.
+
+   Where the CLI writes the result depends on which link it performs, and
+   recent versions default to the repo-level one:
+
+   | link type | file | shape |
+   |---|---|---|
+   | repo-level (current default) | `<repo root>/.vercel/repo.json` | `projects[0].id` and `projects[0].orgId`, plus the project's `directory` |
+   | project-level (older) | `site/.vercel/project.json` | `projectId` and `orgId` at the top level |
+
+   So read whichever exists:
+   ```bash
+   cat ../.vercel/repo.json 2>/dev/null || cat .vercel/project.json
+   ```
+
+   On a repo-level link, check that `projects[0].directory` is `site`. That is
+   the CLI recording where the app lives, and it is what makes a root-level link
+   correct rather than a mistake.
+
+   Both locations are gitignored — the root `.vercel/` by the bare `.vercel`
+   rule, `site/.vercel/` by its own. Worth confirming with
+   `git check-ignore -v` rather than assuming, because the `site/.vercel/` rule
+   on its own does not cover a root-level directory.
 
 2. **Create a token**: Vercel dashboard → your avatar → **Account Settings** →
    **Tokens** → *Create*. Scope it to the team that owns the project. Copy it
