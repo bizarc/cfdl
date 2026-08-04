@@ -41,7 +41,31 @@ publishes at four points to sixteen significant figures:
 | year 15 | 1.2886742479090734 | 1.2887268568160697 | −5.3e-05 |
 
 Agreement to five decimal places on a ratio built from lines the workbook has
-already rounded to whole dollars. The residual is entirely that rounding.
+already rounded to whole dollars. The residual is entirely that rounding: the
+workbook's DSCR cell is `-E24/E27`, and both of those are `=ROUND(...,0)`, so it
+divides a rounded NOI by a rounded debt service while CFDL divides the
+unrounded ones.
+
+**These are now assertions rather than a table.** This section used to end by
+saying the four values were reproduced by hand and that nothing checked them —
+the harness could reach per-stream cash and lifetime scalars, and a coverage
+ratio is neither. `expected.csv` now carries `domain.cre.egi`, `domain.cre.noi`
+and `domain.cre.dscr` straight from the Operating Pro Forma's rows 15, 24 and
+102, at every anchor year rather than four.
+
+Two things made that possible. The subtotals exist per period at all, as folds
+over categories rather than named streams. And `case.toml` can set a tolerance
+per column: the money lines need ~1.0 because the workbook publishes whole
+dollars, the DSCR needs 1e-4 because it agrees to five decimals, and a single
+number cannot express both — a shared 1.0 would assert nothing about the ratio
+and a shared 1e-4 would fail every line above it.
+
+DSCR is asserted at six of the eleven anchors and left blank at the rest. The
+mortgage matures in year 14, after which the workbook's formula returns a
+literal 100 — `IF(debt=0, 100, ...)`, a sentinel and not a ratio. CFDL publishes
+null there, which is the honest answer, and the harness rejects a stated value
+against a null rather than coercing it to zero. Asserting the sentinel would be
+asserting Excel's error handling.
 
 ## The affordability cliff, which is the point of the case
 

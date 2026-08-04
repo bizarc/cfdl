@@ -47,6 +47,14 @@ CFDL = os.environ.get("CFDL_BIN", str(ROOT / "target" / "debug" / _CLI_NAME))
 
 
 def scalar(value):
+    """A series point as a number, or None where it is genuinely undefined.
+
+    `None` is not zero. A coverage ratio in a period with no debt service has no
+    value, and the engine publishes JSON null to say so; coercing that to 0.0
+    would let a case "match" an expectation it never computed.
+    """
+    if value is None:
+        return None
     if isinstance(value, dict) and "amount" in value:
         return float(value["amount"])
     return float(value)
@@ -68,7 +76,14 @@ def resolve_columns(fieldnames, series, failures):
     for column in fields:
         if column == index_col:
             continue
-        if column == "net_cash_flow":
+        # A header naming a result series verbatim wins. That is what lets a
+        # case assert `domain.cre.dscr`, `domain.cre.noi` or a `state.` series —
+        # the reconciliations that previously could only live in NOTES.md as
+        # prose, because the harness could reach per-stream cash and nothing
+        # else.
+        if column in series:
+            key, label = column, column
+        elif column == "net_cash_flow":
             key, label = "model.net_cash_flow", "net"
         else:
             key, label = f"stream.{column}", column
@@ -108,7 +123,13 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
         failures.append(f"engine warnings: {results['warnings'][:3]}")
 
     series = results["deterministic"]["series"]
-    tolerance = float(case.get("period_tolerance", 0.01))
+    # One tolerance cannot serve a whole case. HUD publishes money to whole
+    # dollars, so its lines need ~1.0; its DSCR is quoted to sixteen figures and
+    # agrees to five decimals, so a shared 1.0 would assert nothing about it
+    # while a shared 1e-4 would fail every money line. `period_tolerance` stays
+    # the default; `[tolerance]` overrides it per column.
+    default_tolerance = float(case.get("period_tolerance", 0.01))
+    per_column = {k: float(v) for k, v in (case.get("tolerance") or {}).items()}
     with open(case_dir / "expected.csv", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         resolved = resolve_columns(reader.fieldnames, series, failures)
@@ -131,10 +152,23 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
                     )
                     return failures
                 got, expected = actual[t], float(cell)
-                if abs(got - expected) > tolerance:
+                if got is None:
+                    # The CSV states a value the results say is undefined. A
+                    # blank cell means "not asserted"; a stated one means the
+                    # case expected a number and did not get one.
+                    failures.append(
+                        f"{label} period {t}: series is null (undefined here) "
+                        f"but {expected:.6f} was expected"
+                    )
+                    if len(failures) > 5:
+                        failures.append("... (truncated)")
+                        return failures
+                    continue
+                tol = per_column.get(column, default_tolerance)
+                if abs(got - expected) > tol:
                     failures.append(
                         f"{label} period {t}: {got:.6f} vs expected {expected:.6f} "
-                        f"(|diff| {abs(got - expected):.6f} > {tolerance})"
+                        f"(|diff| {abs(got - expected):.6f} > {tol})"
                     )
                     if len(failures) > 5:
                         failures.append("... (truncated)")
