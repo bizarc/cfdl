@@ -1231,7 +1231,9 @@ fn parse_subtotal_specs(raw: &str, source: &str) -> Result<Vec<SubtotalSpec>, Pa
         }
         match spec.op.as_str() {
             "sum" | "negated_sum" => {
-                if spec.categories.is_empty() && spec.streams.is_empty() && spec.subtotals.is_empty()
+                if spec.categories.is_empty()
+                    && spec.streams.is_empty()
+                    && spec.subtotals.is_empty()
                 {
                     return Err(err(
                         "op 'sum' needs at least one of categories, streams or subtotals."
@@ -1244,7 +1246,9 @@ fn parse_subtotal_specs(raw: &str, source: &str) -> Result<Vec<SubtotalSpec>, Pa
             }
             "ratio" => {
                 let (Some(num), Some(den)) = (&spec.numerator, &spec.denominator) else {
-                    return Err(err("op 'ratio' requires numerator and denominator.".to_string()));
+                    return Err(err(
+                        "op 'ratio' requires numerator and denominator.".to_string()
+                    ));
                 };
                 if spec.kind != "number" {
                     return Err(err("a ratio is a number, not money.".to_string()));
