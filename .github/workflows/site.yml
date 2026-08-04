@@ -149,12 +149,25 @@ jobs:
         working-directory: site
         run: npm ci
 
-      - name: Pull Vercel environment
+      # `vercel pull` is deliberately NOT used, and the reason is worth keeping.
+      #
+      # It resolves the user/team context before fetching settings, and a
+      # project-scoped token cannot do that. Both spellings were tried and both
+      # failed for the same underlying reason:
+      #
+      #   with VERCEL_ORG_ID    -> "Could not retrieve Project Settings"  (team-level)
+      #   without it            -> "Loading teams... User not found"      (user-level)
+      #
+      # Writing the project link ourselves skips the resolution entirely. The
+      # IDs are not secret — they identify a project, they do not grant anything
+      # — and the token remains scoped to this one project.
+      - name: Link the project without resolving a user
         working-directory: site
-        run: >
-          npx vercel@latest pull --yes
-          --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-          --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<JSON
+          {"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}
+          JSON
 
       # BEFORE `vercel build`. That runs `next build`, which copies public/ as it
       # finds it — build the bundle after and the deploy ships without an engine.
