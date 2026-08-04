@@ -38,6 +38,17 @@ because a generated artifact was in git. Building in CI deletes the problem
 rather than policing it — a bundle built from the current sources is fresh by
 construction.
 
+### There is no OIDC alternative to the token
+
+Worth stating because it looks like there should be, and `vercel env pull`
+leaves a `VERCEL_OIDC_TOKEN` in `site/.env.local` that makes it look likelier.
+
+Vercel's OIDC federation runs the other way: Vercel issues short-lived tokens so
+a *deployed app or build* can authenticate to AWS, GCP or Azure without stored
+cloud credentials. It is not a means for an external CI system to authenticate
+**to** Vercel. A `VERCEL_TOKEN` is the supported path for deploying, and
+project-scoping is what makes it tight.
+
 `check-wasm-smoke.mjs` survives all of that and should stay. It is a functional
 test of the built bundle, not a freshness check, and it is the only thing that
 would catch a bundle that builds cleanly and does not run.
@@ -103,9 +114,29 @@ slightly.
    `git check-ignore -v` rather than assuming, because the `site/.vercel/` rule
    on its own does not cover a root-level directory.
 
-2. **Create a token**: Vercel dashboard → your avatar → **Account Settings** →
-   **Tokens** → *Create*. Scope it to the team that owns the project. Copy it
-   once; it is not shown again.
+2. **Create a PROJECT-SCOPED token.** Vercel supports three scopes — Full
+   Account (your account *and every team you belong to*), Team (one team, all
+   its projects), and Project (one project). Use Project: it "denies any request
+   to another project, to a user-level resource, or to a team-level resource",
+   so a leak costs this project's deployments and nothing else.
+
+   From the [Account Tokens page](https://vercel.com/account/tokens) — the
+   scope selector at top-left must show your **personal account**, not a team;
+   team settings have no Tokens entry, which is the usual reason people cannot
+   find it. Then: **Scope** dropdown → select the team that owns `cfdl` → it
+   drills into that team's projects → select **cfdl**.
+
+   Selecting **All Projects** silently gives you a *team*-scoped token instead.
+   Project tokens are prefixed `vcp_`.
+
+   On expiry: because the scope is one project the blast radius is small, which
+   justifies a longer life than a full-account token would. Expiry also fails
+   safe — deploys stop rather than misbehave. Pick the longest you will actually
+   put in a calendar reminder, and not "no expiration": a standing credential
+   with no review date is one nobody ever revisits.
+
+   Some teams require 2FA before they will issue tokens scoped to them; the
+   dashboard says so when you select the team.
 
 ### 2. GitHub: add the secrets
 
