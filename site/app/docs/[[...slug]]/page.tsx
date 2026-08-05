@@ -13,6 +13,7 @@ import { EnginePrefetch } from "@/components/playground/EnginePrefetch";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
 import { TableOfContents } from "@/components/docs/TableOfContents";
+import { SpecificationBanner } from "@/components/docs/SpecificationBanner";
 import { mdxComponents } from "@/components/docs/mdx-components";
 import { getAllDocs, getDocBySlug } from "@/lib/docs";
 import { getHighlighter } from "@/lib/shiki";
@@ -104,6 +105,7 @@ export default async function DocPage({ params }: { params: Promise<Params> }) {
         </aside>
 
         <main className="min-w-0 flex-1 py-8">
+          {doc.layer === "specification" && <SpecificationBanner />}
           <article>{content}</article>
 
           {(prev || next) && (

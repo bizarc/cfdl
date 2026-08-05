@@ -23,7 +23,7 @@ const COLUMNS = [
   {
     title: "Reference",
     links: [
-      { href: "/docs/language-reference", label: "Specs & schemas" },
+      { href: "/docs/specification", label: "Specs & schemas" },
       { href: "/docs/reference/cli", label: "CLI reference" },
       { href: "/docs/benchmarks", label: "Benchmarks" },
       { href: "/docs/licensing", label: "Licensing" },

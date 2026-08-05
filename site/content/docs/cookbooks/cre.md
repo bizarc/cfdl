@@ -3,6 +3,7 @@ id: cookbook-cre
 title: "CRE pack guide"
 slug: "/docs/cookbooks/cre"
 source: packs/cre/README.md
+generated: full
 ---
 
 This pack provides deterministic lowering for a minimal Commercial Real Estate
@@ -409,7 +410,7 @@ Computed automatically whenever a model runs with the `cre` pack, alongside the 
 
 ## Validations reference
 
-Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/specification/diagnostics).
 
 | Code | Rejects |
 |---|---|

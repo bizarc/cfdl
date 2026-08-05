@@ -1,8 +1,10 @@
 ---
 id: pack-interface
 title: "Pack Interface (v0.1)"
-slug: "/docs/language-reference/pack-interface"
+slug: "/docs/specification/pack-interface"
 source: docs/07_pack_interface.md
+generated: full
+layer: specification
 ---
 
 **CFDL Domain Pack Interface v0.1**
@@ -352,7 +354,7 @@ Compiler behavior:
 
 The expression function vocabulary is fixed and built into the engine
 (`cfdl-calc`) — `pmt`, `year_frac`, `cpr_to_smm`, `curve_value`, and so on
-(see the [Expression Environment](/docs/language-reference/expression-environment)).
+(see the [Expression Environment](/docs/specification/expression-environment)).
 Packs do **not** define their own expression functions in v0.1.
 
 ### 6.8 Pack validations

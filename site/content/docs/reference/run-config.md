@@ -87,4 +87,4 @@ values override `deterministic` values for that scenario only.
 
 `deterministic.metrics`, one `scenarios.<name>` block per scenario, and
 `monte_carlo.metrics` with mean/stdev/min/max and percentiles per metric —
-see the [Results schema](/docs/language-reference/results-schema).
+see the [Results schema](/docs/specification/results-schema).

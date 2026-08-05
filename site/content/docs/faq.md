@@ -41,10 +41,11 @@ internal team. Bug reports are welcome via
 
 ## How stable is the language?
 
-Pre-1.0: the language/IR spec is v0.1 and interfaces may change until 1.0
-freezes the IR and Results schemas (additive-only after that). The
-[implementation status](/docs/language-reference/implementation-status) page
-tracks exactly what is implemented.
+Pre-1.0: the language and IR are at v0.1, and interfaces may change until 1.0
+freezes the IR and Results schemas — additive-only after that. The
+[Specification](/docs/specification) defines what the language is today, and
+every run records the engine version that produced it, so a result can always
+be traced to the behaviour that made it.
 
 ## Which surface should I use?
 

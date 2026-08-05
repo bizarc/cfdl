@@ -82,5 +82,5 @@ Lists the packs (id, version) visible in a packs directory.
 
 Commands exit `0` on success and nonzero when errors were emitted.
 Diagnostics carry stable codes (`E1202`, `E5008`, …) cataloged in the
-[Diagnostics reference](/docs/language-reference/diagnostics); codes are never
+[Diagnostics reference](/docs/specification/diagnostics); codes are never
 renamed or reused.

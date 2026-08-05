@@ -1,8 +1,10 @@
 ---
 id: results-schema
 title: "Results Schema (v0.1)"
-slug: "/docs/language-reference/results-schema"
+slug: "/docs/specification/results-schema"
 source: docs/06_results_schema.md
+generated: full
+layer: specification
 ---
 
 <!-- GENERATED from docs/schemas/results.schema.json — do not edit by hand.

@@ -1,8 +1,10 @@
 ---
 id: language-spec
 title: "Language Spec (v0.1)"
-slug: "/docs/language-reference/language-spec"
+slug: "/docs/specification/language-spec"
 source: docs/01_language_spec.md
+generated: full
+layer: specification
 ---
 
 **Status:** Draft

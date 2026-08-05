@@ -45,5 +45,5 @@ currency and source lineage (`core` vs `domain:<pack>`).
 
 ## Reference links
 
-- [Results schema](/docs/language-reference/results-schema)
+- [Results schema](/docs/specification/results-schema)
 - [Domain Packs](/docs/packs)

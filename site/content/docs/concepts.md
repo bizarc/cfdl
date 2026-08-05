@@ -31,8 +31,8 @@ Every surface (CLI, Python, playground, API server) runs the same pipeline:
    summaries with percentiles.
 
 Both documents have published JSON Schemas — see the
-[IR schema](/docs/language-reference/ir-schema) and
-[Results schema](/docs/language-reference/results-schema).
+[IR schema](/docs/specification/ir-schema) and
+[Results schema](/docs/specification/results-schema).
 
 ## What's in a model
 
@@ -51,7 +51,7 @@ Both documents have published JSON Schemas — see the
 - **Expressions** — bare, Excel-familiar formulas
   (`base_rent * pow(1 + escalation, years)`) with decimal money math and a
   financial function library (`pmt`, `year_frac`, `eomonth`, `macrs_rate`, …). See
-  the [expression environment](/docs/language-reference/expression-environment).
+  the [expression environment](/docs/specification/expression-environment).
 
 ## Packs
 

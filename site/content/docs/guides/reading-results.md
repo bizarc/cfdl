@@ -48,8 +48,8 @@ declarations — deterministically ordered with stable IDs. Useful habits:
 ## Schemas
 
 Machine-readable schemas ship with the repo and the docs site:
-[IR schema](/docs/language-reference/ir-schema) ·
-[Results schema](/docs/language-reference/results-schema). Both freeze as v1 at
+[IR schema](/docs/specification/ir-schema) ·
+[Results schema](/docs/specification/results-schema). Both freeze as v1 at
 launch with an additive-only policy after that.
 
 ## Reference links

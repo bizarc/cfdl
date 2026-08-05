@@ -1,8 +1,10 @@
 ---
 id: expression-environment
 title: "Expression Environment (v0.1)"
-slug: "/docs/language-reference/expression-environment"
+slug: "/docs/specification/expression-environment"
 source: docs/03_expression_environment.md
+generated: full
+layer: specification
 ---
 
 Status: Normative for the CFDL expression language (implemented by `cfdl-calc`,
@@ -89,7 +91,7 @@ amount = inputs.rent_year / time.ppy
 
 Domain packs do **not** use it. A lowering rule resolves its own
 periods-per-year at compile time (`{{model.periods_per_year}}`, see
-[Pack Interface](/docs/language-reference/pack-interface)), because a rule may pay on its own interval: a
+[Pack Interface](/docs/specification/pack-interface)), because a rule may pay on its own interval: a
 monthly-paying loan carried on a daily book divides by 12, not 365, and only
 the compiler can see that. `time.ppy` reads the calendar and would say 365.
 

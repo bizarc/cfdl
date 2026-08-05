@@ -7,7 +7,7 @@ const NAV = [
   { href: "/docs/getting-started", label: "Docs" },
   { href: "/docs/packs", label: "Packs" },
   { href: "/docs/benchmarks", label: "Benchmarks" },
-  { href: "/docs/language-reference", label: "Reference" },
+  { href: "/docs/specification", label: "Reference" },
 ];
 
 /** lucide-react dropped brand marks, so the GitHub glyph lives here. */

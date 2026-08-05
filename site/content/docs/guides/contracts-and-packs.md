@@ -68,4 +68,4 @@ contract cre.lease_unit.tenant_b on entity asset.tower { ... }
 ## Reference links
 
 - [Domain Packs overview](/docs/packs) and the four pack guides
-- [Pack Interface spec](/docs/language-reference/pack-interface)
+- [Pack Interface spec](/docs/specification/pack-interface)
