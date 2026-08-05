@@ -464,6 +464,35 @@ occurrences in one period cannot be distinguished once they land in the same
 bucket. Coarser is fine — a quarterly schedule on a monthly grid pays in every
 third period, which is representable.
 
+**The grain rule.** `E2108` is not a limitation to be worked around; it is the
+enforcement of the rule the language is built on:
+
+> **Model at the finest grain at which anything varies; report at any coarser
+> grain by folding.**
+
+No granularity is imposed. A model may be annual, monthly or daily, and the
+timeline it declares is the grain at which its expressions are evaluated —
+`evaluate_stream` builds its environment from `timeline[idx]`, so every
+occurrence inside one period sees an identical environment. A constant amount is
+therefore exact; anything varying with `time.*` is computed once and multiplied.
+
+That is precisely why a finer schedule is rejected. Take a monthly mortgage on
+an annual grid. The level payment is constant, so twelve identical evaluations
+sum to the right annual figure — but decomposed into interest and principal,
+interest is `balance x rate/12` against a balance that falls every month, and
+all twelve evaluations see the same `time.t`. Interest is overstated and
+principal understated while still summing to a total that looks correct. Wrong
+at every line beneath the one line that looks right.
+
+If interest varies monthly, the model is monthly. Reporting it annually is then
+a regrouping of the same ledger and costs nothing: a statement, a rollup and a
+valuation each name the grain they report at, and many coexist in one run. See
+`docs/06_results_schema.md` for `StatementGrain`.
+
+An earlier proposal took the opposite trade — retire `E2108` and add a
+sub-period occurrence layer so a model could compute finer than its grid. It was
+**rejected**; the reasoning is recorded in `docs/15_streams_and_the_grid.md`.
+
 Recommended v0.1 rule (normative):
 - If timeline is monthly/quarterly/annual, schedule occurrences are represented at that period’s end-date unless the schedule specifies otherwise.
 

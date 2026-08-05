@@ -234,6 +234,27 @@ Kept in the repository, not published:
 **Not cut:** the benchmark results, the sources they reconcile to, and the fact
 that CI re-verifies them on every commit.
 
+### The word "fold"
+
+`fold` is engine vocabulary — a functional-programming term for the operation,
+used precisely in the Rust and in design notes. It should not appear on the
+site, and it needs no synonym invented for it, because the domain already has
+the words: a stream carries a **category**, a **subtotal** aggregates categories
+per period, a **ratio** divides two subtotals, and a **statement** presents
+them. Those need no translation for a financial reader.
+
+Removed from the generated schema pages, which were its main route onto the
+site.
+
+### Still tied to the repository
+
+The GitHub link is gone from the header and footer, but **thirteen content pages
+still reference the repository**, and the install pages are not cosmetic: the
+CLI, Python SDK and API server pages each begin `git clone`. That is the only
+documented way to install CFDL today. Cutting it needs a distribution channel
+first — published crates, a PyPI wheel, or signed release binaries — and until
+then removing the links would leave the product with no install path.
+
 ---
 
 ## 5. Two structural moves
@@ -258,8 +279,11 @@ beside the prose.
 ## 6. Sequencing
 
 1. **De-duplicate** — the four duplicate spines in §2.3. Mechanical, no writing.
-2. **Re-cut the nav** — `nav.ts` only, moving Validation up and dissolving
-   Project. No page moves.
+2. ~~**Re-cut the nav**~~ — **DONE.** `nav.ts` only, no page moves: Validation
+   is now the fourth entry of Introduction rather than the last entry of the
+   last section; "Project" is dissolved into "About" (FAQ, Licensing) with
+   Troubleshooting moved to Guides and `implementation-status` off the site
+   entirely. The header comment records why.
 3. **Write Authoring a Pack** — the largest writing task, and the one that
    unblocks external pack authors.
 4. **Write Statements & reporting** — the shipped-but-undocumented capability.

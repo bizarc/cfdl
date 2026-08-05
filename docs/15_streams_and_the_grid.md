@@ -1,6 +1,48 @@
 # Streams and the model grid — design
 
-Status: **proposal, not implemented.**
+Status: **REJECTED.** Considered, not taken. The reasoning is below; the
+proposal itself is kept intact beneath it because a design that was weighed and
+declined is worth more on the record than deleted.
+
+---
+
+## Why this was not taken
+
+This proposed retiring `E2108_SCHEDULE_FINER_THAN_CALENDAR` and adding an
+occurrence layer, so a stream could emit flows at times finer than the model
+grid and have them bucketed afterwards.
+
+The alternative that was taken instead is the **grain rule**, written into
+`docs/01_language_spec.md` beside the `E2108` definition:
+
+> Model at the finest grain at which anything varies; report at any coarser
+> grain by folding.
+
+Three reasons it wins:
+
+1. **It costs nothing.** A model that needs monthly mechanics declares a monthly
+   timeline. Nothing is lost, because reporting at a coarser grain is a
+   regrouping of the same ledger — a statement, an annual rollup and a valuation
+   each name the grain they report at, and all coexist in one run.
+
+2. **This proposal's benefit is not the benefit reporting needed.** Its stated
+   payoff was drill-down to individual sub-period payments. What a statement
+   actually needs is drill-down to the CONTRIBUTING STREAMS and their contract
+   terms, which the statement layer delivers without touching the evaluation
+   path.
+
+3. **The cost is concentrated in the most load-bearing code there is.**
+   `evaluate_stream` and the per-period environment are what every number in
+   every benchmark passes through. Changing them to support a modelling choice
+   the grain rule handles better is a large blast radius for no gain.
+
+Backlog **7.16** describes the underlying limitation and is answered by the
+grain rule rather than by this design: the case it describes becomes
+unconstructable, and `E2108` is what makes it so.
+
+---
+
+## The original proposal follows, unchanged
 
 The intended model: **the grid is fixed and always exists; a stream is not
 related to it.** A stream emits inflows and outflows at *times*, from its own

@@ -1,7 +1,19 @@
 /**
- * Docs navigation. Ported from the previous sidebar so the information
- * architecture (Introduction → Install → Tutorial → Guides → Packs →
- * Surfaces → Reference → Project) carries over unchanged.
+ * Docs navigation, cut by READER rather than by which file exists.
+ *
+ * This was a port — the previous sidebar carried over unchanged, and the shape
+ * it carried was a repository's docs/ tree. `docs/16_site_information_architecture.md`
+ * has the analysis; two of its findings are applied here.
+ *
+ * VALIDATION LEADS. It was the last entry of the last section. It answers the
+ * first question a professional asks, and it is the one page no competitor can
+ * copy: 21 benchmark cases reconciling to published figures from HUD, MIT,
+ * Damodaran and GNMA conventions.
+ *
+ * "PROJECT" IS DISSOLVED. It held five pages for five different readers —
+ * benchmarks (evaluator), implementation status (internal), troubleshooting
+ * (modeller), FAQ (mixed), licensing (buyer). A bin, not a section. Each page
+ * now sits with its reader, and the internal one is off the site entirely.
  *
  * Slugs here must match the frontmatter slugs under content/docs; the docs
  * page build fails loudly if one doesn't resolve.
@@ -25,6 +37,7 @@ export const NAV: NavSection[] = [
       { title: "Overview", slug: "/docs" },
       { title: "How CFDL works", slug: "/docs/concepts" },
       { title: "Getting started", slug: "/docs/getting-started" },
+      { title: "Validation", slug: "/docs/benchmarks" },
     ],
   },
   {
@@ -95,6 +108,7 @@ export const NAV: NavSection[] = [
       { title: "Curves", slug: "/docs/guides/curves" },
       { title: "Metrics", slug: "/docs/guides/metrics" },
       { title: "Reading results & IR", slug: "/docs/guides/reading-results" },
+      { title: "Troubleshooting", slug: "/docs/troubleshooting" },
     ],
   },
   {
@@ -124,11 +138,8 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    title: "Project",
+    title: "About",
     items: [
-      { title: "Benchmarks", slug: "/docs/benchmarks" },
-      { title: "Implementation status", slug: "/docs/language-reference/implementation-status" },
-      { title: "Troubleshooting", slug: "/docs/troubleshooting" },
       { title: "FAQ", slug: "/docs/faq" },
       { title: "Licensing", slug: "/docs/licensing" },
     ],
