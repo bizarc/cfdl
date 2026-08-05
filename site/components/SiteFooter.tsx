@@ -27,7 +27,6 @@ const COLUMNS = [
       { href: "/docs/reference/cli", label: "CLI reference" },
       { href: "/docs/benchmarks", label: "Benchmarks" },
       { href: "/docs/licensing", label: "Licensing" },
-      { href: "https://github.com/bizarc/cfdl", label: "Source on GitHub" },
     ],
   },
 ];
