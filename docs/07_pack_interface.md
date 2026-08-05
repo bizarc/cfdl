@@ -392,7 +392,38 @@ Packs SHOULD provide docs for:
 
 Editors may use this for hover hints and snippet insertion.
 
-### 6.10 Output specification (engine-computed metrics and aggregations)
+### 6.10 Output specification — SUPERSEDED
+
+**This section describes a design that was never built and cannot be built as
+written.** It is superseded by `statements.toml` — `[[subtotals]]` and
+`[[statements]]` — which is documented in §6.11 and shipped in all four packs.
+
+Recorded rather than deleted, because the reason it failed is instructive.
+
+**It is unimplementable, not merely unimplemented.** §6.10.1 matches streams on
+`contract_type + direction`. `IrStream` does not carry the contract type — the
+compiler expands a contract into streams and the type is not propagated onto
+them — so the matcher has nothing to match on. Any implementation would have had
+to invent a different key, at which point it is a different design.
+
+**Its intent was right.** It wanted categories that group streams by economic
+purpose, aggregations over them, and ratios over those. That is exactly what
+shipped. The difference is where classification lives:
+
+| §6.10 (proposed) | `statements.toml` (shipped) |
+|---|---|
+| a matcher guesses from names and contract types | the lowering rule that EMITS a stream declares its `category` |
+| categories are a pack-local convention | roots are closed by the language: `operating` / `investing` / `financing` |
+| aggregations are lifetime scalars | subtotals are per-period series, at any declared grain |
+| nothing checks coverage | every category must appear in exactly one statement line, checked at pack load |
+
+Classification at the point of emission is the change that matters. A stream
+classified once is necessarily both reported as a line and counted in its
+subtotal; under a matcher it could be one without the other, which is what
+backlog 1.3 was about.
+
+<details>
+<summary>Original §6.10 text, superseded</summary>
 
 A pack MUST provide an output specification if it defines domain-specific metrics. Output metrics (NPV, IRR, NOI, DSCR, etc.) are NOT defined in CFDL — they are computed by the engine based on the pack's output spec.
 
@@ -523,6 +554,98 @@ Metric rules:
 - Packs MAY define custom method names if the engine supports them.
 
 ---
+
+
+</details>
+### 6.11 `statements.toml` — subtotals and statements
+
+The shipped replacement for §6.10. Two array-of-tables in one file, declared in
+`[entrypoints]` as `statements = "statements.toml"`.
+
+#### Categories come first
+
+A subtotal folds **categories**, not stream names. A category is a dotted path
+whose ROOT is closed by the language — `operating`, `investing`, `financing`,
+the sections of a statement of cash flows (ASC 230-10-45 / IAS 7.10). The pack
+declares the leaves in `pack.toml`:
+
+```toml
+categories = [
+  "operating.revenue.base_rent",
+  "operating.expense.opex",
+  "financing.debt_service",
+]
+```
+
+A lowering rule sets `category` on the streams it emits, so classification
+happens once, at the point of emission. A hand-written stream may declare one
+directly; with no pack active, any well-formed path rooted in the three
+sections is valid.
+
+#### `[[subtotals]]`
+
+A per-period series, published as `domain.<pack>.<name>`.
+
+| field | meaning |
+|---|---|
+| `id` | output key; must start with `domain.` |
+| `kind` | `money` or `number` |
+| `op` | `sum`, `negated_sum`, or `ratio` |
+| `categories` | category selectors to fold; `operating.*` matches the prefix and its children |
+| `streams` | stream-name selectors, for what a category cannot express |
+| `subtotals` | other subtotals to add — declared ABOVE this one |
+| `numerator` / `denominator` | for `op = "ratio"` |
+| `formula` | human-readable note; not evaluated |
+
+Order is dependency order: a subtotal may reference only ones declared above
+it, which makes a cycle unexpressible rather than merely rejected.
+
+`negated_sum` exists because cash is stored signed. An expense is negative, and
+a line a reader expects to see positive — a servicing fee, debt service — flips
+once here rather than at every consumer.
+
+A `ratio` is **recomputed at whatever grain it is reported at**, from its
+re-bucketed numerator and denominator. It is never the mean of finer ratios: an
+annual coverage ratio is annual NOI over annual debt service, and a column of
+ratios cannot be re-bucketed at all. Where the denominator is zero the value is
+published as `null`, not zero — a period with no debt service has no coverage
+ratio.
+
+#### `[[statements]]`
+
+Presentation. Rows carry order, labels, depth and a display sign; they compute
+nothing the subtotals have not already computed.
+
+| field | meaning |
+|---|---|
+| `id`, `label` | identity |
+| `default` | at most one per pack |
+| `grain` | `annual`, or omitted for the model grid |
+| `rows` | ordered `[[statements.rows]]` |
+
+Row kinds: `line` (reads categories or streams), `subtotal`, `ratio`, `spacer`,
+`residual`. `display = "positive"` renders a stored negative as a positive
+number in a "less:" row — the value stays signed, so a consumer that ignores
+presentation still adds up correctly.
+
+**Grain belongs to the output.** Several statements coexist in one run: a
+monthly pro forma and an annual summary of the same ledger. Each publishes its
+own column labels in `grain.labels`, because a consumer cannot derive them — an
+annual statement over a monthly model has ten values where the model has 120.
+
+#### The completeness check
+
+**Every category the pack declares must appear in exactly one `line` row of
+every statement**, checked at pack load, before any model runs.
+
+Both directions matter. A category in no row is cash the statement never shows,
+so the bottom line is short. A category in two rows is cash counted twice, and a
+statement wrong by double-counting looks entirely plausible.
+
+This is what lets several views of one pack coexist safely — a remittance report
+and a BDC statement of operations re-cut the same categories, and each is
+provably total. At run time a `residual` row catches streams carrying no
+category at all, and `reconciliation.residual` is published always.
 
 ## 7) Compiler ↔ Pack API (programmatic)
 

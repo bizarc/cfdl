@@ -73,7 +73,31 @@ have it counted in NOI, not both.
 Shape: add an abatement stream family to the metric's denominator, and have
 `cre.lease_unit` emit the deduction separately rather than netting it.
 
-### 1.4 Coverage ratios are lifetime aggregates, not per-period tests
+### 1.4 Coverage ratios are lifetime aggregates, not per-period tests — RESOLVED
+
+**Resolved.** `domain.cre.dscr` is a per-period series, declared in
+`packs/cre/statements.toml` as a `ratio` subtotal over `domain.cre.noi` and
+`domain.cre.debt_service`. `benchmarks/cre/hud_home_multifamily` asserts the
+four published values this item is about, at every anchor year, as a column in
+`expected.csv` — converting `NOTES.md`'s "we reproduce all four by hand, and
+cannot assert any of them" into four machine-checked assertions against a public
+HUD workbook.
+
+The same shape now exists in the other packs: `domain.energy.dscr_periodic`
+against CFADS, which is the covenant a project lender tests, and
+`domain.opco.debt_service_coverage`.
+
+**A ratio is recomputed at whatever grain it is reported at**, never averaged
+from finer ratios. That is the trap this item implies and it is guarded by an
+analytic check with a probe where the two answers differ by more than a factor
+of two — verified by mutation to fail if the implementation ever averages.
+
+Still open, and deliberately: the reduction over the series — "never below x" as
+a covenant test — is not built. The series is what makes it expressible;
+`min`/`mean` over a subtotal is a metrics-layer addition with no external user
+yet.
+
+#### Original entry: 1.4 Coverage ratios are lifetime aggregates
 
 `domain.cre.dscr` divides total NOI by total debt service over the whole hold.
 That is not what a debt service coverage ratio is. A lender tests coverage
@@ -980,7 +1004,25 @@ gate only fires for codes someone remembered to document. Extracting from Rust
 needs to exclude the deliberately corrupted codes inside parser tests
 (`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.
 
-### 7.12 A pool's amortisation state is not exposed
+### 7.12 A pool's amortisation state is not exposed — PARTIAL
+
+**Not resolved.** An earlier plan recorded this as closed by the fold layer; it
+was not, and the correction is worth keeping. The fold layer shipped for CRE
+only, and `benchmarks/credit/auto_abs_speed_050` still asserts one column,
+`net_cash_flow`, with the percent-outstanding reconciliation still in prose.
+
+**What now exists.** `packs/credit/statements.toml` publishes
+`domain.credit.principal_collections` per period — scheduled principal and
+prepayments folded together. That is the input this item was missing, and
+`tools/benchmark-runner.py` accepts a verbatim series key, so it is assertable.
+
+**What is still missing.** Percent-outstanding is cumulative principal over the
+ORIGINAL balance, and neither the running sum nor the original balance is
+expressible as a subtotal — a subtotal folds one period, and this needs a
+cumulative one. That is the remaining work: either a `cumulative` op, or a pool
+factor computed where the balance state already lives.
+
+#### Original entry: 7.12 A pool's amortisation state is not exposed
 
 Found building `benchmarks/credit/auto_abs_speed_050` and `_150`. The published
 figure in an ABS exhibit is *percent of a note class outstanding*, which is
@@ -1142,7 +1184,19 @@ Every direct-download CRE candidate in the catalogue has now been checked. The
 remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
 registration, which is the actual blocker on CRE coverage — not the pack.
 
-### 7.16 Occurrences inside one model period cannot be told apart
+### 7.16 Occurrences inside one model period cannot be told apart — ANSWERED
+
+**Answered by the grain rule, not built.** `docs/01_language_spec.md` now states
+it beside the `E2108` definition: model at the finest grain at which anything
+varies; report at any coarser grain by folding. The case this item describes
+becomes unconstructable rather than merely diagnosed, and `E2108` is the
+enforcement.
+
+`docs/15_streams_and_the_grid.md`, which proposed the opposite trade — retire
+`E2108`, add a sub-period occurrence layer — is retired as **rejected**, with
+the reasoning recorded in the document.
+
+#### Original entry: 7.16 Occurrences inside one model period cannot be told apart
 
 The real limitation behind `E2108_SCHEDULE_FINER_THAN_CALENDAR`, measured after
 the check's own message turned out to be wrong.
@@ -1205,7 +1259,31 @@ Worth against: HUD's mortgage (7.14), and any instrument whose payment rhythm is
 finer than the book it is carried on — which is most lending on a quarterly or
 annual reporting grid.
 
-### 7.17 Reporting is a language capability, and it is missing
+### 7.17 Reporting is a language capability, and it is missing — LARGELY RESOLVED
+
+**Built.** Classification, per-period subtotals, ratios, statements, reporting
+grain and the completeness check all ship, in all four packs. `docs/07` §6.11 is
+the authoring reference; §6.10 is superseded and says why.
+
+What this item asked for, and where it landed:
+
+- **counts of line items per period** — a statement row per period, at any
+  declared grain, with drill-down to the contributing streams
+- **classification** — `category` on the emitting lowering rule, roots closed by
+  the language to `operating` / `investing` / `financing`
+- **subtotals and ratios** — `[[subtotals]]`, per period, published as
+  `domain.<pack>.<name>`
+- **presentation** — `[[statements]]` with order, depth, labels and a display
+  sign that never changes the arithmetic
+
+**The half that remains is the one this item's title is about.** Reporting is a
+LANGUAGE capability in its design — the category roots are the language's, and a
+pack-less model can now classify its streams — but the DECLARATIONS still live
+only in pack TOML. A model with no pack cannot declare a subtotal or a statement
+of its own. That needs a surface in the language, and the syntax is undecided;
+`docs/16` records the question.
+
+#### Original entry: 7.17 Reporting is a language capability, and it is missing
 
 *Belongs with the language and engine (section 5), and applies to every pack.*
 

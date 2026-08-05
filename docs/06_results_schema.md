@@ -40,7 +40,7 @@ against it by `make results-schema`.
     },
     "ledger_hash": {
       "type": "string",
-      "description": "SHA-256 over the canonical form of the deterministic ledger — `deterministic.series` and `deterministic.annual_rollup`. Together with `model_hash` and `engine` this closes the chain: identical inputs on an identical engine must reproduce an identical ledger_hash. It covers the LEDGER, not the metrics: NPV and IRR are folds of the ledger, so including them would make the hash move for a reason the ledger did not. It is therefore invariant to the discount rate, which is correct — the ledger is cash before discounting."
+      "description": "SHA-256 over the canonical form of the deterministic ledger — `deterministic.series` and `deterministic.annual_rollup`. Together with `model_hash` and `engine` this closes the chain: identical inputs on an identical engine must reproduce an identical ledger_hash. It covers the LEDGER, not the metrics: NPV and IRR are derived FROM the ledger, so including them would make the hash move for a reason the ledger did not. It is therefore invariant to the discount rate, which is correct — the ledger is cash before discounting."
     },
     "engine": {
       "type": "object",
@@ -208,7 +208,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared fold over the ledger. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is a fold OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a fold spans streams that may settle at different points in a period and so has no single placement to claim.",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared aggregation of the classified streams. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is an aggregation OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a subtotal spans streams that may settle at different points in a period and so has no single placement to claim.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }
@@ -571,7 +571,7 @@ against it by `make results-schema`.
         "pack",
         "statements"
       ],
-      "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already folded. Absent when the pack declares no statement.",
+      "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Absent when the pack declares no statement.",
       "properties": {
         "pack": {
           "type": "string"
