@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { syncRegion } from "./sync/regions.mjs";
 
 const checkMode = process.argv.includes("--check");
 
@@ -849,6 +850,76 @@ for (const [schema, sourceName] of Object.entries(stagedSchemas)) {
     fs.mkdirSync(schemaStaticDir, { recursive: true });
     fs.writeFileSync(target, content, "utf8");
   }
+}
+
+// --- Generated data regions inside authored pages ---------------------------
+//
+// GENERATE DATA, AUTHOR PROSE. A diagnostic register or a schema's field list
+// is data — derivable, and wrong the moment it is copied by hand. The sentences
+// around it are not. A region lets both live on one page: the script owns the
+// bytes between its markers and nothing else, so the prose survives every
+// rebuild and the table cannot fall behind its source.
+
+/** Every code the specification's register declares, with the family it belongs to. */
+function diagnosticsCatalogue() {
+  const src = fs.readFileSync(path.resolve(repoRoot, "docs", "08_diagnostics.md"), "utf8");
+  const rows = [];
+  let family = "";
+  let inRegister = false;
+  for (const line of src.split("\n")) {
+    if (/^##\s+7\)/.test(line)) { inRegister = true; continue; }
+    if (inRegister && /^##\s+(?!#)/.test(line)) break;
+    if (!inRegister) continue;
+    const heading = line.match(/^###\s+7\.\d+\s+(.+?)\s*\(/);
+    if (heading) { family = heading[1]; continue; }
+    const code = line.match(/^-\s+`([EWI]\d+)_([A-Z0-9_]+)`\s*(?:—\s*(.*))?$/);
+    if (code) {
+      rows.push({ code: `${code[1]}_${code[2]}`, family, meaning: (code[3] ?? "").trim() });
+      continue;
+    }
+    // The register wraps a long description onto continuation lines.
+    if (rows.length > 0 && /^\s{2,}\S/.test(line)) {
+      const last = rows[rows.length - 1];
+      last.meaning = `${last.meaning} ${line.trim()}`.trim();
+    }
+  }
+  if (rows.length === 0) {
+    throw new Error("docs/08_diagnostics.md: no codes found in the register (section 7).");
+  }
+  const seen = new Set();
+  const out = ["| Code | Family | Meaning |", "|---|---|---|"];
+  for (const { code, family: f, meaning } of rows) {
+    if (seen.has(code)) continue;
+    seen.add(code);
+    // Pipes would break the table; the register writes prose, not cells.
+    const text = (meaning || "").replace(/\|/g, "\\|");
+    out.push(`| \`${code}\` | ${f} | ${text} |`);
+  }
+  out.push("");
+  out.push(`*${seen.size} codes.*`);
+  return out;
+}
+
+const dataRegions = [
+  { page: "reference/diagnostics.md", key: "diagnostics-catalogue", body: diagnosticsCatalogue() },
+];
+
+const staleRegions = [];
+for (const { page, key, body } of dataRegions) {
+  const stale = syncRegion({
+    filePath: path.resolve(docsOutputRoot, page),
+    key,
+    body,
+    checkMode,
+    repoRoot,
+  });
+  if (stale) staleRegions.push(stale);
+}
+if (staleRegions.length > 0) {
+  throw new Error(
+    staleRegions.join("\n") +
+      "\n\nRun `npm run sync:content` to refresh the generated blocks.",
+  );
 }
 
 // --- Manifest: every page is owned by someone, and says so -----------------

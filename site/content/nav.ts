@@ -127,8 +127,10 @@ export const NAV: NavSection[] = [
   {
     title: "Reference",
     items: [
+      { title: "Overview", slug: "/docs/reference" },
       { title: "CLI", slug: "/docs/reference/cli" },
       { title: "Run config", slug: "/docs/reference/run-config" },
+      { title: "Diagnostics", slug: "/docs/reference/diagnostics" },
     ],
   },
   // Last, and after everything on a modeller's path. These pages are normative

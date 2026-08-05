@@ -64,6 +64,11 @@ def sources() -> list[pathlib.Path]:
     found += sorted(REPO_ROOT.glob("examples/*/README.md"))
     found += sorted(REPO_ROOT.glob("examples/language_tutorial/*/README.md"))
     found.append(REPO_ROOT / "docs" / "09_user_guide.md")
+    # The diagnostic register feeds a generated table on an authored Reference
+    # page, so what is written there reaches a reader who is not looking at a
+    # specification. The rest of docs/08 is published as Specification, where an
+    # internal cross-reference is legitimate — only the register is read here.
+    found.append(REPO_ROOT / "docs" / "08_diagnostics.md")
     return [p for p in found if p.exists()]
 
 
