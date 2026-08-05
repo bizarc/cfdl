@@ -2,6 +2,7 @@
 id: reference-cli
 title: CLI Reference
 slug: /docs/reference/cli
+generated: none
 ---
 
 # CLI Reference

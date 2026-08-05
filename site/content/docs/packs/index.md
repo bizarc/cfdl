@@ -2,6 +2,7 @@
 id: packs-overview
 title: Domain Packs
 slug: /docs/packs
+generated: none
 ---
 
 # Domain Packs

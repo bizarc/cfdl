@@ -2,6 +2,7 @@
 id: install-api-server
 title: Run the API Server
 slug: /docs/install/api-server
+generated: none
 ---
 
 # Run the API Server

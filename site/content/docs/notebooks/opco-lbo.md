@@ -3,6 +3,7 @@ id: notebook-opco
 title: "Operating company LBO"
 slug: "/docs/notebooks/opco-lbo"
 source: examples/notebooks/04_opco_lbo.ipynb
+generated: full
 ---
 
 # Operating company LBO

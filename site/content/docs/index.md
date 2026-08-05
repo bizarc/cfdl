@@ -2,6 +2,7 @@
 id: index
 title: Documentation
 slug: /docs
+generated: none
 ---
 
 # Documentation

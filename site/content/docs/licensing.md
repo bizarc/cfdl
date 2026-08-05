@@ -2,6 +2,7 @@
 id: licensing
 title: Licensing
 slug: /docs/licensing
+generated: none
 ---
 
 # Licensing

@@ -2,6 +2,7 @@
 id: guide-contracts-packs
 title: Contracts & Packs
 slug: /docs/guides/contracts-and-packs
+generated: none
 ---
 
 # Contracts & Packs

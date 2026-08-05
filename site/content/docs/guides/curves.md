@@ -2,6 +2,7 @@
 id: guide-curves
 title: Curves
 slug: /docs/guides/curves
+generated: none
 ---
 
 # Curves

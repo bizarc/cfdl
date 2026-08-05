@@ -3,6 +3,7 @@ id: notebook-credit
 title: "Credit loan pool (level-pay)"
 slug: "/docs/notebooks/credit-loan-pool"
 source: examples/notebooks/03_credit_loan_pool.ipynb
+generated: full
 ---
 
 # Credit loan pool (level-pay)

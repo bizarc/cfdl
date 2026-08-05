@@ -2,6 +2,7 @@
 id: guide-reading-results
 title: Reading Results & IR
 slug: /docs/guides/reading-results
+generated: none
 ---
 
 # Reading Results & IR

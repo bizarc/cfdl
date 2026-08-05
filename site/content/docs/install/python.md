@@ -2,6 +2,7 @@
 id: install-python
 title: Install for Python
 slug: /docs/install/python
+generated: none
 ---
 
 # Install for Python

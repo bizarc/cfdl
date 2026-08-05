@@ -2,6 +2,7 @@
 id: guide-multi-file
 title: Multi-File Models
 slug: /docs/guides/multi-file-models
+generated: none
 ---
 
 # Multi-File Models

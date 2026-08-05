@@ -2,6 +2,7 @@
 id: concepts
 title: How CFDL Works
 slug: /docs/concepts
+generated: none
 ---
 
 # How CFDL Works

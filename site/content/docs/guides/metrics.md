@@ -2,6 +2,7 @@
 id: guide-metrics
 title: Metrics
 slug: /docs/guides/metrics
+generated: none
 ---
 
 # Metrics

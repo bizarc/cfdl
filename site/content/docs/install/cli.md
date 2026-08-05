@@ -2,6 +2,7 @@
 id: install-cli
 title: Install the CLI
 slug: /docs/install/cli
+generated: none
 ---
 
 # Install the CLI
