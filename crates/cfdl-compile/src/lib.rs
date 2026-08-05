@@ -789,13 +789,24 @@ fn build_ir(
     contracts.sort_by(|a, b| a.0.cmp(&b.0));
 
     // The vocabulary a hand-written stream's `category` is checked against.
-    // It belongs to the active pack, because the categories are a domain
-    // judgement and the folds that consume them are declared there. With no
-    // pack there is no vocabulary, so any category is unknown — which is the
-    // honest answer rather than a special case: nothing would ever read it.
-    let pack_categories: &[String] = active_pack
-        .map(|pack| pack.categories.as_slice())
-        .unwrap_or(&[]);
+    //
+    // WITH a pack, it is the pack's closed list. The leaf names are a domain
+    // judgement — whether percentage rent is its own line or part of base rent
+    // is a CRE question — and keeping the set closed is what stops two models
+    // in one pack from spelling the same idea differently.
+    //
+    // WITHOUT a pack, the vocabulary is the LANGUAGE's: any well-formed path
+    // rooted in `operating` / `investing` / `financing`.
+    //
+    // This used to reject every category when no pack was active, on the
+    // argument that "nothing would ever read it". That argument was circular —
+    // nothing read it because the fold layer was declared only in packs, and
+    // the fold layer is a language capability that packs SUPPLY DEFAULTS for,
+    // not one they own. CFDL already validates every pack's categories against
+    // these three roots (`cfdl_pack::CATEGORY_ROOTS`), so the language was
+    // already asserting what the top of the vocabulary means while refusing to
+    // let a pack-less model use it.
+    let pack_categories: Option<&[String]> = active_pack.map(|pack| pack.categories.as_slice());
 
     let mut streams: Vec<((String, String), IrStream)> = Vec::new();
     for source_stmt in &resolve_output.source_statements {
@@ -803,28 +814,53 @@ fn build_ir(
             continue;
         };
         if let Some(category) = stream.category.as_deref() {
-            if !pack_categories.iter().any(|c| c == category) {
-                let known = if pack_categories.is_empty() {
-                    "the active pack declares none (or no pack is in use)".to_string()
-                } else {
-                    pack_categories.join(", ")
+            let root = category.split('.').next().unwrap_or("");
+            let well_formed = cfdl_pack::CATEGORY_ROOTS.contains(&root)
+                && !category.split('.').any(|seg| seg.is_empty());
+            let accepted = match pack_categories {
+                Some(list) => list.iter().any(|c| c == category),
+                None => well_formed,
+            };
+            if !accepted {
+                let (known, message) = match pack_categories {
+                    Some(list) => (
+                        list.join(", "),
+                        format!(
+                            "Stream '{}' declares category '{category}', which is not a \
+                             category the active pack defines.",
+                            stream.name
+                        ),
+                    ),
+                    None => (
+                        cfdl_pack::CATEGORY_ROOTS.join(", "),
+                        format!(
+                            "Stream '{}' declares category '{category}', whose root segment \
+                             '{root}' is not one of {}. A category is a path into the cash \
+                             flow statement, so it has to say which section it belongs to.",
+                            stream.name,
+                            cfdl_pack::CATEGORY_ROOTS.join(", ")
+                        ),
+                    ),
                 };
                 return Err(vec![Diagnostic {
                     code: "E5022_UNKNOWN_STREAM_CATEGORY".to_string(),
                     severity: "error".to_string(),
-                    message: format!(
-                        "Stream '{}' declares category '{category}', which is not a category \
-                         the active pack defines. Known categories: {known}.",
-                        stream.name
-                    ),
+                    message: format!("{message} Known categories: {known}."),
                     file: Some(source_stmt.file.clone()),
                     span: Some(map_span(stream.span)),
                     path: None,
                     hint: Some(
-                        "A category is what a fold aggregates on, so it has to name one the \
-                         pack declares — otherwise the stream reports as a line and is counted \
-                         in no subtotal."
-                            .to_string(),
+                        if pack_categories.is_some() {
+                            "A category is what a fold aggregates on, so it has to name one \
+                             the pack declares — otherwise the stream reports as a line and \
+                             is counted in no subtotal."
+                                .to_string()
+                        } else {
+                            "With no pack active, any dotted path rooted in operating, \
+                             investing or financing is valid — for example \
+                             `operating.revenue.rent`."
+                                .to_string()
+                        },
                     ),
                     notes: vec![],
                 }]);
