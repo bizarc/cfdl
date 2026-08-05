@@ -27,10 +27,10 @@ Excel-grade reference models.
 
 | Pack | Domain | Guide |
 |---|---|---|
-| `energy` | Renewables & project finance: PPA/merchant revenue, storage, ITC/PTC, MACRS, debt service | [Energy pack guide](/docs/cookbooks/energy) |
-| `cre` | Commercial real estate at institutional DCF fidelity: lease-by-lease, rollover, recoveries, exit on forward NOI | [CRE pack guide](/docs/cookbooks/cre) |
-| `credit` | Loan pools: CPR/CDR, severity, recovery lag, floaters off rate curves, purchase pricing | [Credit pack guide](/docs/cookbooks/credit) |
-| `opco` | Operating businesses / LBO: working capital, capex, term debt, cash taxes, trailing-EBITDA exit | [OpCo pack guide](/docs/cookbooks/opco) |
+| `energy` | Renewables & project finance: PPA/merchant revenue, storage, ITC/PTC, MACRS, debt service | [Energy pack guide](/docs/packs/energy) |
+| `cre` | Commercial real estate at institutional DCF fidelity: lease-by-lease, rollover, recoveries, exit on forward NOI | [CRE pack guide](/docs/packs/cre) |
+| `credit` | Loan pools: CPR/CDR, severity, recovery lag, floaters off rate curves, purchase pricing | [Credit pack guide](/docs/packs/credit) |
+| `opco` | Operating businesses / LBO: working capital, capex, term debt, cash taxes, trailing-EBITDA exit | [OpCo pack guide](/docs/packs/opco) |
 
 ## Using a pack
 
@@ -56,8 +56,8 @@ time to compute the pack's domain metrics.
 
 ## Going deeper
 
-- Per-pack guides: [Energy](/docs/cookbooks/energy) · [CRE](/docs/cookbooks/cre) ·
-  [Credit](/docs/cookbooks/credit) · [OpCo](/docs/cookbooks/opco)
+- Per-pack guides: [Energy](/docs/packs/energy) · [CRE](/docs/packs/cre) ·
+  [Credit](/docs/packs/credit) · [OpCo](/docs/packs/opco)
 - Worked notebooks, one per pack, with their real outputs and charts:
   [Notebooks](/docs/notebooks)
 - The authoritative pack format spec:

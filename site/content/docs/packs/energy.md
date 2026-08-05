@@ -1,7 +1,7 @@
 ---
-id: cookbook-energy
+id: pack-energy
 title: "Energy pack guide"
-slug: "/docs/cookbooks/energy"
+slug: "/docs/packs/energy"
 source: packs/energy/README.md
 generated: full
 ---

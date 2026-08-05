@@ -724,24 +724,11 @@ function packReferenceSections(pack) {
   return out.length ? out.join("\n") + "\n" : "";
 }
 
-const cookbookPacks = ["energy", "cre", "credit", "opco"];
+const packGuides = ["energy", "cre", "credit", "opco"];
 const packTitles = { energy: "Energy", cre: "CRE", credit: "Credit", opco: "OpCo" };
-const cookbookIndexLines = [
-  "---",
-  "id: cookbooks",
-  'title: "Cookbooks"',
-  'slug: "/docs/cookbooks"',
-  "---",
-  "",
-  "Per-industry recipes: the contract types, terms, and metrics each pack ships,",
-  "with worked example notebooks. Generated from each pack's README.",
-  "",
-  "## Packs",
-  ""
-];
 
 // Domain example pages folded into each pack guide (instead of separate
-// sidebar entries next to the cookbooks).
+// sidebar entries next to the pack guides).
 const packWorkedExamples = {
   cre: [
     ["CRE examples overview", "/docs/examples/cre-examples"],
@@ -759,7 +746,7 @@ const packWorkedExamples = {
   ]
 };
 
-for (const pack of cookbookPacks) {
+for (const pack of packGuides) {
   const readmePath = path.resolve(repoRoot, `packs/${pack}/README.md`);
   if (!fs.existsSync(readmePath)) continue;
   let body = normalizeLinks(stripLeadingH1(fs.readFileSync(readmePath, "utf8")));
@@ -779,36 +766,16 @@ for (const pack of cookbookPacks) {
   }
   const page = renderDoc(
     {
-      id: `cookbook-${pack}`,
+      id: `pack-${pack}`,
       title: `"${packTitles[pack] ?? pack} pack guide"`,
-      slug: `"/docs/cookbooks/${pack}"`
+      slug: `"/docs/packs/${pack}"`
     },
     `packs/${pack}/README.md`,
     body
   );
-  writeGenerated(`cookbooks/${pack}.md`, page);
-  cookbookIndexLines.push(`- [${packTitles[pack] ?? pack} pack guide](/docs/cookbooks/${pack})`);
+  writeGenerated(`packs/${pack}.md`, page);
 }
 
-cookbookIndexLines.push("");
-cookbookIndexLines.push("## Example notebooks");
-cookbookIndexLines.push("");
-cookbookIndexLines.push(
-  "One Jupyter notebook per pack walks a benchmark model through the Python " +
-    "SDK. Each is published with the outputs and chart it actually produced:"
-);
-cookbookIndexLines.push("");
-for (const [title, slug] of [
-  ["Solar PPA microgrid", "energy-solar-microgrid"],
-  ["CRE office acquisition", "cre-office-acquisition"],
-  ["Credit loan pool", "credit-loan-pool"],
-  ["Operating company LBO", "opco-lbo"]
-]) {
-  cookbookIndexLines.push(`- [${title}](/docs/notebooks/${slug})`);
-}
-cookbookIndexLines.push("");
-
-writeGenerated("cookbooks/index.md", cookbookIndexLines.join("\n"));
 
 // --- Benchmark methodology page --------------------------------------------
 

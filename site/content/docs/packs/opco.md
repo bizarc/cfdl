@@ -1,7 +1,7 @@
 ---
-id: cookbook-opco
+id: pack-opco
 title: "OpCo pack guide"
-slug: "/docs/cookbooks/opco"
+slug: "/docs/packs/opco"
 source: packs/opco/README.md
 generated: full
 ---
