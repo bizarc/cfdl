@@ -45,27 +45,27 @@ function normalizeLinks(markdown) {
     )
     .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language Guide](/docs/language-guide)")
     .replaceAll("`docs/09_user_guide.md`", "[Language Guide](/docs/language-guide)")
-    .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/docs/language-reference/language-spec)")
-    .replaceAll("`docs/02_grammar.md`", "[Grammar](/docs/language-reference/grammar)")
-    .replaceAll("`docs/04_compiler_spec.md`", "[Compiler Spec](/docs/language-reference/compiler-spec)")
-    .replaceAll("`docs/08_diagnostics.md`", "[Diagnostics](/docs/language-reference/diagnostics)")
-    .replaceAll("`docs/07_pack_interface.md`", "[Pack Interface](/docs/language-reference/pack-interface)")
-    .replaceAll("`docs/cfdl_v_0_1.md`", "[Language Spec](/docs/language-reference/language-spec)")
+    .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/docs/specification/language-spec)")
+    .replaceAll("`docs/02_grammar.md`", "[Grammar](/docs/specification/grammar)")
+    .replaceAll("`docs/04_compiler_spec.md`", "[Compiler Spec](/docs/specification/compiler-spec)")
+    .replaceAll("`docs/08_diagnostics.md`", "[Diagnostics](/docs/specification/diagnostics)")
+    .replaceAll("`docs/07_pack_interface.md`", "[Pack Interface](/docs/specification/pack-interface)")
+    .replaceAll("`docs/cfdl_v_0_1.md`", "[Language Spec](/docs/specification/language-spec)")
     .replaceAll(
       "`docs/CFDL_v0_1_Grammar.ebnf.md`",
-      "[Grammar](/docs/language-reference/grammar)"
+      "[Grammar](/docs/specification/grammar)"
     )
     .replaceAll(
       "`docs/compiler_spec_v_0_1.md`",
-      "[Compiler Spec](/docs/language-reference/compiler-spec)"
+      "[Compiler Spec](/docs/specification/compiler-spec)"
     )
     .replaceAll(
       "`docs/diagnostics_spec.md`",
-      "[Diagnostics](/docs/language-reference/diagnostics)"
+      "[Diagnostics](/docs/specification/diagnostics)"
     )
     .replaceAll(
       "`docs/pack_interface_v_0_1.md`",
-      "[Pack Interface](/docs/language-reference/pack-interface)"
+      "[Pack Interface](/docs/specification/pack-interface)"
     )
     .replaceAll(
       "`docs/docs_packs_guide.md`",
@@ -103,11 +103,17 @@ function readSource(relativePath) {
  * the team can still trace any page back to its canonical file (and regenerate
  * checks still work) without rendering anything.
  */
-function renderDoc(frontmatter, sourcePath, body) {
+function renderDoc(frontmatter, sourcePath, body, layer) {
   const fm = [
     "---",
     ...Object.entries(frontmatter).map(([k, v]) => `${k}: ${v}`),
     `source: ${toPosix(sourcePath)}`,
+    // Ownership, for the manifest check in this file.
+    "generated: full",
+    // Drives the banner in app/docs/[[...slug]]/page.tsx. Emitted here rather
+    // than written per page, so a new specification page cannot be added
+    // without being labelled as one.
+    ...(layer ? [`layer: ${layer}`] : []),
     "---",
     "",
     body.trimEnd(),
@@ -143,10 +149,10 @@ function buildCompilerSpecDigest() {
     "",
     "## Related reference",
     "",
-    "- [Diagnostics](/docs/language-reference/diagnostics) — the error code guide",
-    "- [IR schema](/docs/language-reference/ir-schema) — canonical ordering and shape",
-    "- [Pack interface](/docs/language-reference/pack-interface) — lowering rules",
-    "- [Language spec](/docs/language-reference/language-spec) — validation rules",
+    "- [Diagnostics](/docs/specification/diagnostics) — the error code guide",
+    "- [IR schema](/docs/specification/ir-schema) — canonical ordering and shape",
+    "- [Pack interface](/docs/specification/pack-interface) — lowering rules",
+    "- [Language spec](/docs/specification/language-spec) — validation rules",
     "",
     ""
   ].join("\n");
@@ -219,84 +225,83 @@ const docSpecs = [
   },
   {
     source: "docs/01_language_spec.md",
-    output: "language-reference/language-spec.md",
+    output: "specification/language-spec.md",
+    layer: "specification",
     frontmatter: {
       id: "language-spec",
       title: '"Language Spec (v0.1)"',
-      slug: '"/docs/language-reference/language-spec"'
+      slug: '"/docs/specification/language-spec"'
     }
   },
   {
     source: "docs/02_grammar.md",
-    output: "language-reference/grammar.md",
+    output: "specification/grammar.md",
+    layer: "specification",
     frontmatter: {
       id: "grammar",
       title: '"Grammar (EBNF)"',
-      slug: '"/docs/language-reference/grammar"'
+      slug: '"/docs/specification/grammar"'
     }
   },
   {
     source: "docs/04_compiler_spec.md",
-    output: "language-reference/compiler-spec.md",
+    output: "specification/compiler-spec.md",
+    layer: "specification",
     frontmatter: {
       id: "compiler-spec",
       title: '"Compiler Spec (v0.1)"',
-      slug: '"/docs/language-reference/compiler-spec"'
+      slug: '"/docs/specification/compiler-spec"'
     },
     digestOnly: true
   },
   {
     source: "docs/08_diagnostics.md",
-    output: "language-reference/diagnostics.md",
+    output: "specification/diagnostics.md",
+    layer: "specification",
     frontmatter: {
       id: "diagnostics",
       title: '"Diagnostics Reference"',
-      slug: '"/docs/language-reference/diagnostics"'
+      slug: '"/docs/specification/diagnostics"'
     }
   },
   {
     source: "docs/07_pack_interface.md",
-    output: "language-reference/pack-interface.md",
+    output: "specification/pack-interface.md",
+    layer: "specification",
     frontmatter: {
       id: "pack-interface",
       title: '"Pack Interface (v0.1)"',
-      slug: '"/docs/language-reference/pack-interface"'
+      slug: '"/docs/specification/pack-interface"'
     }
   },
   {
     source: "docs/03_expression_environment.md",
-    output: "language-reference/expression-environment.md",
+    output: "specification/expression-environment.md",
+    layer: "specification",
     frontmatter: {
       id: "expression-environment",
       title: '"Expression Environment (v0.1)"',
-      slug: '"/docs/language-reference/expression-environment"'
+      slug: '"/docs/specification/expression-environment"'
     }
   },
   {
     source: "docs/05_ir_schema.md",
-    output: "language-reference/ir-schema.md",
+    output: "specification/ir-schema.md",
+    layer: "specification",
     frontmatter: {
       id: "ir-schema",
       title: '"IR Schema (v0.1)"',
-      slug: '"/docs/language-reference/ir-schema"'
+      slug: '"/docs/specification/ir-schema"'
     }
   },
   {
     source: "docs/06_results_schema.md",
-    output: "language-reference/results-schema.md",
+    output: "specification/results-schema.md",
+    layer: "specification",
     frontmatter: {
       id: "results-schema",
       title: '"Results Schema (v0.1)"',
-      slug: '"/docs/language-reference/results-schema"'
-    }
-  },
-  {
-    source: "docs/10_implementation_status.md",
-    output: "language-reference/implementation-status.md",
-    frontmatter: {
-      id: "implementation-status",
-      title: '"Implementation Status"',
-      slug: '"/docs/language-reference/implementation-status"'
+      slug: '"/docs/specification/results-schema"'
     }
   }
 ];
@@ -305,7 +310,7 @@ for (const spec of docSpecs) {
   let body = spec.digestOnly
     ? buildCompilerSpecDigest()
     : normalizeLinks(stripLeadingH1(readSource(spec.source)));
-  const rendered = renderDoc(spec.frontmatter, spec.source, body);
+  const rendered = renderDoc(spec.frontmatter, spec.source, body, spec.layer);
   writeGenerated(spec.output, rendered);
 }
 
@@ -460,24 +465,22 @@ const referenceIndex = [
   "",
   "## Language",
   "",
-  "- [Language Spec](/docs/language-reference/language-spec)",
-  "- [Grammar](/docs/language-reference/grammar)",
-  "- [Expression Environment](/docs/language-reference/expression-environment)",
-  "- [Compiler Spec](/docs/language-reference/compiler-spec)",
-  "- [Diagnostics](/docs/language-reference/diagnostics)",
-  "- [Pack Interface](/docs/language-reference/pack-interface)",
-  "- [Implementation Status](/docs/language-reference/implementation-status)",
+  "- [Language Spec](/docs/specification/language-spec)",
+  "- [Grammar](/docs/specification/grammar)",
+  "- [Expression Environment](/docs/specification/expression-environment)",
+  "- [Compiler Spec](/docs/specification/compiler-spec)",
+  "- [Diagnostics](/docs/specification/diagnostics)",
+  "- [Pack Interface](/docs/specification/pack-interface)",
+  "- [Implementation Status](/docs/specification/implementation-status)",
   "",
   "## Tools and data contracts",
   "",
   "- [CLI Reference](/docs/reference/cli)",
   "- [Run-Config Reference](/docs/reference/run-config)",
-  "- [IR Schema](/docs/language-reference/ir-schema)",
-  "- [Results Schema](/docs/language-reference/results-schema)",
+  "- [IR Schema](/docs/specification/ir-schema)",
+  "- [Results Schema](/docs/specification/results-schema)",
   ""
 ].join("\n");
-
-writeGenerated("reference.md", referenceIndex);
 
 // --- Cookbooks: one page per pack, synced from packs/<pack>/README.md -------
 // --- Benchmark cases, discovered once and used for both the worked-example
@@ -693,7 +696,7 @@ function packReferenceSections(pack) {
       "## Validations reference",
       "",
       "Checked at compile time. Each is a stable diagnostic code that is never " +
-        "renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).",
+        "renamed or reused; see [diagnostics](/docs/specification/diagnostics).",
       "",
       "| Code | Rejects |",
       "|---|---|",

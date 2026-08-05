@@ -1,8 +1,10 @@
 ---
 id: diagnostics
 title: "Diagnostics Reference"
-slug: "/docs/language-reference/diagnostics"
+slug: "/docs/specification/diagnostics"
 source: docs/08_diagnostics.md
+generated: full
+layer: specification
 ---
 
 **CFDL Diagnostics Specification v0.1**

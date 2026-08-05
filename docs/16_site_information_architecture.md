@@ -246,14 +246,14 @@ them. Those need no translation for a financial reader.
 Removed from the generated schema pages, which were its main route onto the
 site.
 
-### Still tied to the repository
+### Installation
 
-The GitHub link is gone from the header and footer, but **thirteen content pages
-still reference the repository**, and the install pages are not cosmetic: the
-CLI, Python SDK and API server pages each begin `git clone`. That is the only
-documented way to install CFDL today. Cutting it needs a distribution channel
-first — published crates, a PyPI wheel, or signed release binaries — and until
-then removing the links would leave the product with no install path.
+`git clone` is the documented install path and is not a problem to be routed
+around. Published artifacts — crates, a wheel, signed binaries — are a separate
+decision to be taken on their own timing, not a prerequisite for this work.
+
+The install pages are therefore out of scope here, and nothing in the site
+should imply they are waiting on something.
 
 ---
 

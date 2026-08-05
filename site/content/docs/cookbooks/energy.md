@@ -3,6 +3,7 @@ id: cookbook-energy
 title: "Energy pack guide"
 slug: "/docs/cookbooks/energy"
 source: packs/energy/README.md
+generated: full
 ---
 
 Energy & microgrids: solar/wind PPA and merchant revenue, battery storage
@@ -187,7 +188,7 @@ Computed automatically whenever a model runs with the `energy` pack, alongside t
 
 ## Validations reference
 
-Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/specification/diagnostics).
 
 | Code | Rejects |
 |---|---|

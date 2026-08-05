@@ -61,5 +61,5 @@ decimal-exact. Date helpers: `eomonth`, `edate`, `parse_date`,
 
 ## Reference links
 
-- [Language spec — time & schedules](/docs/language-reference/language-spec)
-- [Expression environment — date functions](/docs/language-reference/expression-environment)
+- [Language spec — time & schedules](/docs/specification/language-spec)
+- [Expression environment — date functions](/docs/specification/expression-environment)

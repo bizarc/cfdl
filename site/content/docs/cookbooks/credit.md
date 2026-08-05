@@ -3,6 +3,7 @@ id: cookbook-credit
 title: "Credit pack guide"
 slug: "/docs/cookbooks/credit"
 source: packs/credit/README.md
+generated: full
 ---
 
 Credit / lending pack: fixed-rate loan pools with CPR prepayments, CDR
@@ -365,7 +366,7 @@ Computed automatically whenever a model runs with the `credit` pack, alongside t
 
 ## Validations reference
 
-Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/specification/diagnostics).
 
 | Code | Rejects |
 |---|---|

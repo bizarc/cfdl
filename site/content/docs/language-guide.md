@@ -3,6 +3,7 @@ id: language-guide
 title: "Language Guide"
 slug: "/docs/language-guide"
 source: docs/09_user_guide.md
+generated: full
 ---
 
 This guide covers CFDL language basics, CLI usage, and common workflows. For exact grammar and semantics, see the spec docs (`01_language_spec.md` – `08_diagnostics.md`).

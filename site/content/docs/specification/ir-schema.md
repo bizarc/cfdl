@@ -1,8 +1,10 @@
 ---
 id: ir-schema
 title: "IR Schema (v0.1)"
-slug: "/docs/language-reference/ir-schema"
+slug: "/docs/specification/ir-schema"
 source: docs/05_ir_schema.md
+generated: full
+layer: specification
 ---
 
 <!-- GENERATED from docs/schemas/ir.schema.json — do not edit by hand.

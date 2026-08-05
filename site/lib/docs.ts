@@ -11,6 +11,14 @@ export interface DocMeta {
 
 export interface Doc extends DocMeta {
   body: string;
+  /**
+   * Which layer of the documentation a page belongs to.
+   *
+   * `specification` marks the normative pages, which render a banner pointing
+   * at their Reference counterpart. Emitted by sync-content.mjs rather than
+   * written per page, so it cannot be forgotten on a new one.
+   */
+  layer?: string;
 }
 
 const CONTENT_ROOT = path.join(process.cwd(), "content", "docs");
@@ -67,6 +75,7 @@ export function getAllDocs(): Doc[] {
       title: data.title || rel,
       file: rel,
       body,
+      layer: data.layer,
     };
   });
 

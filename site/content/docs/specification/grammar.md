@@ -1,8 +1,10 @@
 ---
 id: grammar
 title: "Grammar (EBNF)"
-slug: "/docs/language-reference/grammar"
+slug: "/docs/specification/grammar"
 source: docs/02_grammar.md
+generated: full
+layer: specification
 ---
 
 > This grammar is intentionally pragmatic for v0.1: it captures the surface syntax needed by the Core spec. It is suitable as the basis for a hand-written parser or parser-generator input after minor adaptation (token rules, whitespace/comment handling).

@@ -61,4 +61,4 @@ time to compute the pack's domain metrics.
 - Worked notebooks, one per pack, with their real outputs and charts:
   [Notebooks](/docs/notebooks)
 - The authoritative pack format spec:
-  [Pack Interface](/docs/language-reference/pack-interface)
+  [Pack Interface](/docs/specification/pack-interface)

@@ -81,9 +81,9 @@ byte-reproducible on any machine.
 ## What you just produced
 
 - `ir.json` — the canonical compiled model
-  ([IR schema](/docs/language-reference/ir-schema)); commit it, diff it, hash it.
+  ([IR schema](/docs/specification/ir-schema)); commit it, diff it, hash it.
 - `results.json` — cash flows + metrics
-  ([Results schema](/docs/language-reference/results-schema)); everything
+  ([Results schema](/docs/specification/results-schema)); everything
   downstream (pandas, dashboards, reports) reads this.
 
 ## Where to go next

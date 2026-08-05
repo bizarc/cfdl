@@ -56,4 +56,4 @@ on the roadmap.
 ## Reference links
 
 - [Credit pack guide](/docs/cookbooks/credit)
-- [Expression environment — curve_value](/docs/language-reference/expression-environment)
+- [Expression environment — curve_value](/docs/specification/expression-environment)

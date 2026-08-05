@@ -7,7 +7,7 @@ generated: none
 # Troubleshooting
 
 Organized by surface. Diagnostic codes (`E….`) are cataloged in the
-[Diagnostics reference](/docs/language-reference/diagnostics).
+[Diagnostics reference](/docs/specification/diagnostics).
 
 ## CLI
 

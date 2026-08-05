@@ -57,5 +57,5 @@ rollover; per-trial branching preserves it.
 
 Monte Carlo results summarize each metric with `mean`, `stdev`, `min`/`max`,
 and percentiles (`p01` through `p99`, including `p05`/`p25`/`p50`/`p75`/`p95`)
-— see the [Results schema](/docs/language-reference/results-schema). The
+— see the [Results schema](/docs/specification/results-schema). The
 [Python SDK](/docs/python-sdk) exposes them via `results.monte_carlo()`.

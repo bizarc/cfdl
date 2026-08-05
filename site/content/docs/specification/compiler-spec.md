@@ -1,8 +1,10 @@
 ---
 id: compiler-spec
 title: "Compiler Spec (v0.1)"
-slug: "/docs/language-reference/compiler-spec"
+slug: "/docs/specification/compiler-spec"
 source: docs/04_compiler_spec.md
+generated: full
+layer: specification
 ---
 
 This page is a usability-focused digest of the compiler spec for model authors and SDK integrators.
@@ -30,7 +32,7 @@ This page is a usability-focused digest of the compiler spec for model authors a
 
 ## Related reference
 
-- [Diagnostics](/docs/language-reference/diagnostics) — the error code guide
-- [IR schema](/docs/language-reference/ir-schema) — canonical ordering and shape
-- [Pack interface](/docs/language-reference/pack-interface) — lowering rules
-- [Language spec](/docs/language-reference/language-spec) — validation rules
+- [Diagnostics](/docs/specification/diagnostics) — the error code guide
+- [IR schema](/docs/specification/ir-schema) — canonical ordering and shape
+- [Pack interface](/docs/specification/pack-interface) — lowering rules
+- [Language spec](/docs/specification/language-spec) — validation rules

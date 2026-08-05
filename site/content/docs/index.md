@@ -42,7 +42,7 @@ models.
 
 - [Stochastic modeling](/docs/stochastic-modeling) — assumptions, seeded
   Monte Carlo, percentile outputs. The headline capability.
-- [Language reference](/docs/language-reference) — authoritative specs,
+- [Specification](/docs/specification) — authoritative specs,
   grammar, diagnostics, and JSON schemas.
 - [CLI reference](/docs/reference/cli) and
   [run-config reference](/docs/reference/run-config).
@@ -50,6 +50,5 @@ models.
 ## Project
 
 [Benchmarks](/docs/benchmarks) ·
-[Implementation status](/docs/language-reference/implementation-status) ·
 [Troubleshooting](/docs/troubleshooting) · [FAQ](/docs/faq) ·
 [Licensing](/docs/licensing)

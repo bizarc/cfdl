@@ -3,6 +3,7 @@ id: cookbook-opco
 title: "OpCo pack guide"
 slug: "/docs/cookbooks/opco"
 source: packs/opco/README.md
+generated: full
 ---
 
 Operating-company / LBO pack: recurring operating lines, policy-driven
@@ -301,7 +302,7 @@ Computed automatically whenever a model runs with the `opco` pack, alongside the
 
 ## Validations reference
 
-Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/language-reference/diagnostics).
+Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/specification/diagnostics).
 
 | Code | Rejects |
 |---|---|

@@ -124,17 +124,26 @@ export const NAV: NavSection[] = [
   {
     title: "Reference",
     items: [
-      { title: "Index", slug: "/docs/language-reference" },
       { title: "CLI", slug: "/docs/reference/cli" },
       { title: "Run config", slug: "/docs/reference/run-config" },
-      { title: "Language spec", slug: "/docs/language-reference/language-spec" },
-      { title: "Grammar", slug: "/docs/language-reference/grammar" },
-      { title: "Expressions", slug: "/docs/language-reference/expression-environment" },
-      { title: "Compiler spec", slug: "/docs/language-reference/compiler-spec" },
-      { title: "Diagnostics", slug: "/docs/language-reference/diagnostics" },
-      { title: "Pack interface", slug: "/docs/language-reference/pack-interface" },
-      { title: "IR schema", slug: "/docs/language-reference/ir-schema" },
-      { title: "Results schema", slug: "/docs/language-reference/results-schema" },
+    ],
+  },
+  // Last, and after everything on a modeller's path. These pages are normative
+  // and unwelcoming by design; a reader who wants them will look for them, and
+  // one who does not should not meet them on the way to something else. Every
+  // page carries a banner pointing at its Reference counterpart.
+  {
+    title: "Specification",
+    items: [
+      { title: "Overview", slug: "/docs/specification" },
+      { title: "Language spec", slug: "/docs/specification/language-spec" },
+      { title: "Grammar", slug: "/docs/specification/grammar" },
+      { title: "Expressions", slug: "/docs/specification/expression-environment" },
+      { title: "Compiler spec", slug: "/docs/specification/compiler-spec" },
+      { title: "Diagnostics", slug: "/docs/specification/diagnostics" },
+      { title: "Pack interface", slug: "/docs/specification/pack-interface" },
+      { title: "IR schema", slug: "/docs/specification/ir-schema" },
+      { title: "Results schema", slug: "/docs/specification/results-schema" },
     ],
   },
   {
