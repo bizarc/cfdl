@@ -2,6 +2,7 @@
 id: notebooks
 title: "Notebooks"
 slug: "/docs/notebooks"
+generated: full
 ---
 
 # Notebooks

@@ -2,6 +2,7 @@
 id: install-index
 title: Install & Setup
 slug: /docs/install
+generated: none
 ---
 
 # Install & Setup

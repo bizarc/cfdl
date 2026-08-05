@@ -2,6 +2,7 @@
 id: install-playground
 title: Playground (zero install)
 slug: /docs/install/playground
+generated: none
 ---
 
 # Playground — zero install

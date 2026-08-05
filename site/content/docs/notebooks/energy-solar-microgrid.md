@@ -3,6 +3,7 @@ id: notebook-energy
 title: "Solar PPA microgrid"
 slug: "/docs/notebooks/energy-solar-microgrid"
 source: examples/notebooks/01_energy_solar_microgrid.ipynb
+generated: full
 ---
 
 # Solar PPA microgrid

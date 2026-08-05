@@ -1,6 +1,7 @@
 ---
 id: getting-started
 title: Getting Started
+generated: none
 ---
 
 # Getting Started

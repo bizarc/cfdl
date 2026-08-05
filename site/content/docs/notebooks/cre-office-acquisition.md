@@ -3,6 +3,7 @@ id: notebook-cre
 title: "CRE office acquisition (institutional lease-by-lease DCF)"
 slug: "/docs/notebooks/cre-office-acquisition"
 source: examples/notebooks/02_cre_office_acquisition.ipynb
+generated: full
 ---
 
 # CRE office acquisition (institutional lease-by-lease DCF)

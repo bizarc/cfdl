@@ -203,6 +203,9 @@ def render(path: pathlib.Path, notebook: dict) -> tuple[str, dict[str, bytes], s
         f'title: "{title}"',
         f'slug: "/docs/notebooks/{slug}"',
         f"source: examples/notebooks/{path.name}",
+        # Declares who owns the bytes, for the site's manifest check. This
+        # script does, wholly — the page is re-rendered from the notebook.
+        "generated: full",
         "---",
         "",
         f"# {title}",
@@ -224,6 +227,7 @@ def index_page(toc: list[tuple[str, str, str]]) -> str:
         "id: notebooks",
         'title: "Notebooks"',
         'slug: "/docs/notebooks"',
+        "generated: full",
         "---",
         "",
         "# Notebooks",

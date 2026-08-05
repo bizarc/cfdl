@@ -2,6 +2,7 @@
 id: faq
 title: FAQ
 slug: /docs/faq
+generated: none
 ---
 
 # FAQ

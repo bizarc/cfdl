@@ -2,6 +2,7 @@
 id: python-sdk
 title: Python SDK
 slug: /docs/python-sdk
+generated: none
 ---
 
 # Python SDK
