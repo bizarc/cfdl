@@ -49,8 +49,17 @@ pub struct RunConfig {
     pub parameter_overrides: BTreeMap<String, f64>,
     pub scenarios: BTreeMap<String, ScenarioRunConfig>,
     pub monte_carlo: Option<MonteCarloRunConfig>,
-    /// The grain to value at. `None` means the model grid, which is what every
-    /// run did before this existed and is what keeps published NPVs unmoved.
+    /// The grain to value at — `"annual"`, or `None` for the model grid.
+    ///
+    /// Named for the `Grain` it produces, because that is what it is choosing.
+    /// Two alternatives were considered and rejected: "discounting period"
+    /// collides with `period`, which means a model grid period everywhere else
+    /// in CFDL, and "cadence" is already taken — `pack.cadences` means which
+    /// model calendars a pack's rules lower correctly on, which is a
+    /// compatibility list rather than an aggregation frequency.
+    ///
+    /// `None` means the model grid, which is what every run did before this
+    /// existed and is what keeps published NPVs unmoved.
     ///
     /// Naming a coarser grain — currently `"annual"` — sums cash into those
     /// buckets and discounts each once, which is the convention published
@@ -1308,6 +1317,13 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 /// are summed.  The resulting index uses `calendar = "annual"` and `start =
 /// "{first_year}-01-01"`.
 /// A bucketing of the model grid into report periods.
+///
+/// "Grain" rather than a coined term: it is what analytics tooling already
+/// calls this — Superset and Looker both offer a Time Grain of
+/// day/week/month/quarter/year, meaning exactly "what one row represents".
+/// Not to be confused with `pack.cadences`, which is a different thing wearing
+/// a similar word: the list of model calendars a pack's rules lower correctly
+/// on, rather than a frequency to aggregate at.
 ///
 /// The model grain and the annual rollup were always two bucketings of one
 /// mechanism; only one of them was written down. Making it a type means a
