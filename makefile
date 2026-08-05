@@ -84,12 +84,28 @@ bench:
 
 # The fast inner loop: the Rust workspace and the gates that need only it.
 # Deliberately NOT everything — see `verify`.
-ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples wasm-check
+#
+# `wasm-check` is deliberately ABSENT, and its removal cost no coverage: it runs
+# `cd site && npm run check:wasm`, which is character-for-character what
+# `verify-site-nofresh` already runs. The gate was in both lists, and the copy
+# here was the expensive one.
+#
+# Expensive because the stamp it checks hashes ENGINE SOURCES, so any engine
+# edit fails it, and the only way to pass is a full `wasm-pack --release` build
+# of the whole engine — a release build in a loop where nothing else needs one,
+# to keep a 2 MB artifact in sync that only the website consumes. It was the
+# single largest cost in the edit-test cycle and the reason this loop stopped
+# feeling fast.
+#
+# Nothing moves later than it used to: `verify` is the pre-push gate this
+# target's own message points at, and it still runs the check. The rebuild now
+# happens once before a push instead of once per `make ci`.
+ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
 	@echo "  (sync:check, check:tokens, check:links, check:examples,"
-	@echo "   check:dialogs, check-wasm-fresh)."
+	@echo "   check:dialogs, check:wasm, check-wasm-fresh)."
 	@echo "  They need a Python venv and node_modules, which the Rust loop"
 	@echo "  should not have to install. Before pushing:  make verify"
 
