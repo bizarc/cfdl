@@ -1,5 +1,6 @@
 # Benchmark case: 2 MW solar + storage microgrid, 25-year PPA, level-pay debt.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.
+summary = "A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price."
 pack = "energy"
 period_tolerance = 0.01   # dollars, per-period net cash flow

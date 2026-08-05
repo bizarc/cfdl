@@ -7,7 +7,7 @@ source: benchmarks/credit/float_bridge_pool
 
 # Credit: floating-rate bridge pool
 
-$15mm floating IO bridge pool, SOFR + 275 off a stepped forward curve with a binding 7.00% floor, 36mo bullet, 10 CPR, 2.5 CDR, 45% severity, 5mo recovery lag, purchased at par. Exercises the `curve` concept end-to-end (curve statement -> IR -> curve_value lookup with step interpolation).
+A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

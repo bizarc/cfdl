@@ -80,8 +80,7 @@ quotes a monthly figure directly, so it must not be converted. Conflating the
 two is a factor-level error that no unit test would notice.
 
 The ramp is what makes the balance a running product rather than `pow(k, p)` —
-see the header of `lowering/rules.toml` and
-`docs/14_state_and_recurrence.md`.
+see the header of `lowering/rules.toml`.
 
 Prepayment and default follow the market-standard MBS conventions for CPR,
 SMM and the standard prepayment and default curves; the pack is checked for
@@ -97,9 +96,9 @@ parity against the published industry reference schedule.
 `benchmarks/credit/mbs_pool_conventions` asserts anchor figures across the life
 of a 30-year pool and passes, including recoveries — a level-pay pool's
 defaulted balance keeps amortising in foreclosure, so what is liquidated is the
-amortised balance rather than face. One known gap remains, in
-`docs/13_feature_backlog.md`: age-varying prepayment and default curves are not
-expressible, so only constant-hazard pools can be modelled.
+amortised balance rather than face. One limitation remains: age-varying
+prepayment and default curves are not expressible, so only constant-hazard
+pools can be modelled.
 
 ## Contract types
 

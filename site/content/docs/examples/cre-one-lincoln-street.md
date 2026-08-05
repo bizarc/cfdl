@@ -7,7 +7,7 @@ source: benchmarks/cre/one_lincoln_street
 
 # cre: one lincoln street
 
-One Lincoln Street, Boston — construction period funding and interest, quarter by quarter across the 2000-2003 build. A real, named transaction taught as a case with its exhibits published, and freely redistributable under CC BY-NC-SA 4.0 — so the source PDF is committed under reference/ and a reader can mark every figure directly. EXTERNAL, ALL OF IT. Every number in expected.csv is the exhibit's, and every one is DERIVED by the model from three published drivers: a sixteen-quarter draw schedule, an 8% rate, and a $110,738,000 equity commitment. Nothing is fitted and nothing is fed back in.   equity.contribution         worst 0.00   exact to the dollar   loan.construction_draw      worst 0.00   exact to the dollar   loan.construction_interest  worst  480   see below period_tolerance = 500 — the exhibit rounds interest to whole thousands, so half a thousand is the tightest bound it can support. The two funding columns sit at zero regardless. Confirmed binding: at 400 the case fails. domain.cre.debt_service carries a wider tolerance for a stated reason. The exhibit's own total, 16,312,000, is the sum of its ROUNDED quarterly figures; the engine sums the exact ones and gets 16,310,570. The 1,430 gap is nine quarters of rounding, not a modelling difference.
+A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

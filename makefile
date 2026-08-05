@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt fmt-check lint test build clean gold gold-update ci verify verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -100,7 +100,7 @@ bench:
 # Nothing moves later than it used to: `verify` is the pre-push gate this
 # target's own message points at, and it still runs the check. The rebuild now
 # happens once before a push instead of once per `make ci`.
-ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations rule-fragments doc-examples
+ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice rule-fragments doc-examples
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
@@ -151,6 +151,12 @@ BASE_REF ?= main
 # bundle once shipped a playground that rejected every `schedule every`.
 wasm:
 	cd site && npm run build:wasm
+
+# Internal engineering narrative must not reach the documentation site. Lives
+# in the fast loop rather than the site gates: it reads repository files and
+# needs no node_modules, no venv and no toolchain.
+site-voice:
+	$(PYGATE) tools/check-site-voice.py
 
 wasm-check:
 	cd site && npm run check:wasm

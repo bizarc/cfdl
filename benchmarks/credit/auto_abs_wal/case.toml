@@ -25,5 +25,6 @@
 # a guard so a change to the level-pay rules cannot move this 43-contract model
 # silently. It is NOT an external figure and is not evidence of anything; the
 # external evidence is above and in NOTES.md.
+summary = "An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back."
 pack = "credit"
 period_tolerance = 0.01

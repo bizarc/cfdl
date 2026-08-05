@@ -4,7 +4,7 @@
 // WHY THIS SOURCE. benchmarks/opco/damodaran_fcff validated the pack's DRIVERS
 // — revenue, operating cost, cash taxes — but asserts no value at all, because
 // its cost of capital converges 7.055% -> 8.81% and a term structure in the
-// discount rate is not expressible (docs/13_feature_backlog.md 7.4). This model
+// discount rate is not expressible today. This model
 // is a regulated utility in steady state, so its cost of capital is a single
 // flat number, and the terminal IS the valuation. That makes it the first case
 // in this repo to assert a VALUE rather than a cash flow.

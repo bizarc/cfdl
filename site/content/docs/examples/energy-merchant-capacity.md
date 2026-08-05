@@ -7,7 +7,7 @@ source: benchmarks/energy/merchant_capacity
 
 # energy: merchant capacity
 
-100 MW merchant renewable with a capacity contract and the production tax credit, against the national laboratory's project-finance model. Companion to utility_pv_singleowner, and a deliberately NARROWER claim. `energy.merchant` and `energy.ptc` are the same expression as `energy.ppa` with different term names, and `energy.capacity` is a single division. So agreement on those three shows the terms are wired to the right places and the contracts compose — it does not re-prove arithmetic the PV case already established to 9.1e-7. NOTES.md states this plainly. THE EXCEPTION, and the reason this case is worth having: the production tax credit's statutory STAIRCASE. Asserted here at a non-zero escalation, which is exactly the configuration that used to be wrong by up to 1.8% in a single year. All ten years of the credit window now agree to 8e-7. There is deliberately no reference_gen.py. Every figure is the reference model's, read from a throwaway environment outside this repo. period_tolerance = 0.001 — decimal against IEEE-754 float64 over 25 years of compounding. The worst disagreement on any period of any stream is 9e-7.
+A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

@@ -7,7 +7,7 @@ source: benchmarks/opco/lbo_buyout
 
 # OpCo: leveraged buyout
 
-5-year services LBO. Entry 8.0x run-rate EBITDA ($33.6mm) funded with a $21mm / 8.5% term loan (12mo IO, 7yr am, balloon at exit); DSO/DPO/DIO working capital with release at exit; 3%-of-revenue capex; 26% cash taxes on EBITDA - D&A - interest (no NOLs); exit 8.5x trailing-12 EBITDA net of 1.5% selling costs.
+A leveraged buyout: entry at a stated multiple, debt paid down out of operating cash flow, and an exit that returns the sponsor's equity.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

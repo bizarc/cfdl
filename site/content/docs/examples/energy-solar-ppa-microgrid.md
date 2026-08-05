@@ -7,7 +7,7 @@ source: benchmarks/energy/solar_ppa_microgrid
 
 # Energy: solar PPA microgrid
 
-2 MW solar + storage microgrid, 25-year PPA, level-pay debt.
+A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

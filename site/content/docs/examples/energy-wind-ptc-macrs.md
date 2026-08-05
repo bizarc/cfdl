@@ -7,7 +7,7 @@ source: benchmarks/energy/wind_ptc_macrs
 
 # Energy: wind with PTC and MACRS
 
-30 MW wind, merchant + 10y PTC + 5y MACRS shield + debt.
+A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

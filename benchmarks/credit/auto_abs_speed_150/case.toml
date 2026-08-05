@@ -22,5 +22,6 @@
 # REGRESSION — expected.csv. net_cash_flow is the engine's own output, kept so
 # a change to the level-pay rules cannot move this 43-contract model silently.
 # It is not an external figure.
+summary = "The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens."
 pack = "credit"
 period_tolerance = 0.01

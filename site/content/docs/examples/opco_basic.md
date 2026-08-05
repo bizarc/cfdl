@@ -4,7 +4,7 @@ title: "OpCo: Basic Operating Model"
 slug: "/docs/examples/opco_basic"
 ---
 
-This example uses **standalone streams** for revenue and opex (per guidance); pack **contracts** for working capital and exit multiple. See [When to use streams vs contracts](/docs/language-guide#when-to-use-streams-vs-contracts).
+This example uses **standalone streams** for revenue and opex (per guidance); pack **contracts** for working capital and exit multiple. See [When to use streams vs contracts](/docs/language-guide).
 
 Compile:
 

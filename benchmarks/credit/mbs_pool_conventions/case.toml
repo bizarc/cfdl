@@ -13,5 +13,6 @@
 # period_tolerance = 0.51 — the reference figures are rounded to whole dollars,
 # so half a dollar is the tightest bound they can support. Not loosened beyond
 # that: every asserted figure matches within it.
+summary = "A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector."
 pack = "credit"
 period_tolerance = 0.51

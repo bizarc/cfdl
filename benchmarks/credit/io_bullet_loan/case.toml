@@ -2,5 +2,6 @@
 # 1.5 CDR, 40% severity, 4mo recovery lag, purchased at par.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.
+summary = "An interest-only loan repaying its entire principal in a single balloon at maturity."
 pack = "credit"
 period_tolerance = 0.01

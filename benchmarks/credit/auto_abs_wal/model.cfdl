@@ -11,7 +11,7 @@
 // Absolute Prepayment Model — a constant number of ORIGINAL units prepaying
 // each month, so the implied SMM RISES over the life — and every pool factor
 // in this pack is pow(k, p), valid only for constant k. Same blocker as the
-// ramped-curve item in docs/13_feature_backlog.md. The per-class columns need
+// ramped curve. The per-class columns need
 // a sequential-pay liability waterfall, which this pack does not model at all.
 //
 // At zero speed the exhibit's stated assumptions are exactly this pack's

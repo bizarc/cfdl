@@ -86,7 +86,6 @@ when the payoff genuinely belongs in the debt service line.
 
 **Not modelled:** sizing to a target coverage ratio (a solve), refinance (needs
 the events layer), and mortgage insurance — MIP is not a payment on the debt.
-See `docs/13_feature_backlog.md` 7.14.
 
 ## Expected terms (authoring contract)
 

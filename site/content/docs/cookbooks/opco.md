@@ -61,8 +61,8 @@ Growth is annual-compound stepped continuously on the model clock:
 > **The curve carries a per-period rate, and compounding is still `pow(1+g, t)`.**
 > That applies one period's rate as though it had held from the start: exact
 > while the rate is flat, drifting once it moves, because the true factor is the
-> running product and computing it needs a stream to read its own prior period
-> (`docs/13_feature_backlog.md` 5.1). A cumulative-index curve would be exact
+> running product, and computing it needs a stream to read its own prior
+> period. A cumulative-index curve would be exact
 > today and was deliberately not chosen — it would hide the gap in every model
 > that used it. The drift is measured year by year in
 > `benchmarks/opco/damodaran_fcff/NOTES.md`.
