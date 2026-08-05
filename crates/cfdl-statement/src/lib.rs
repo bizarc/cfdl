@@ -13,16 +13,17 @@
 //! category at all is invisible until something runs.
 
 use cfdl_engine::{
-    Money, Results, Scalar, SeriesValue, Statement, StatementDiagnostic, StatementReconciliation,
-    StatementRow, StatementsSection,
+    Grain, Money, Results, Scalar, SeriesValue, Statement, StatementDiagnostic,
+    StatementReconciliation, StatementRow, StatementsSection,
 };
-use cfdl_pack::StatementSpec;
+use cfdl_pack::{StatementSpec, SubtotalSpec};
 use std::collections::BTreeMap;
 
 /// Render every statement the pack declares. `None` when it declares none.
 pub fn compute(
     pack: &str,
     specs: &[StatementSpec],
+    subtotals: &[SubtotalSpec],
     stream_categories: &BTreeMap<String, String>,
     results: &Results,
 ) -> Option<StatementsSection> {
@@ -45,9 +46,31 @@ pub fn compute(
         .filter(|k| k.starts_with("stream.") || k.starts_with("option."))
         .collect();
 
+    // The index every series shares, used to rebuild the timeline a coarser
+    // grain needs. A post-pass has no timeline of its own.
+    let index = series.values().next().map(|s| s.index.clone());
+
     let statements = specs
         .iter()
-        .map(|spec| render(spec, &cash_keys, stream_categories, results, periods))
+        .map(|spec| {
+            let grain = index
+                .as_ref()
+                .map(|ix| Grain::from_index(ix, spec.grain.as_deref()))
+                .unwrap_or_else(|| Grain {
+                    calendar: String::new(),
+                    start: String::new(),
+                    buckets: (0..periods).map(|i| vec![i]).collect(),
+                });
+            render(
+                spec,
+                subtotals,
+                &grain,
+                &cash_keys,
+                stream_categories,
+                results,
+                periods,
+            )
+        })
         .collect();
     Some(StatementsSection {
         pack: pack.to_string(),
@@ -57,6 +80,8 @@ pub fn compute(
 
 fn render(
     spec: &StatementSpec,
+    subtotals: &[SubtotalSpec],
+    grain: &Grain,
     cash_keys: &[&String],
     stream_categories: &BTreeMap<String, String>,
     results: &Results,
@@ -109,6 +134,7 @@ fn render(
                     }
                 }
                 let total = acc.iter().sum::<f64>();
+                let acc = grain.sum(&acc);
                 rows.push(StatementRow {
                     kind: "line".to_string(),
                     label: row.label.clone(),
@@ -119,28 +145,25 @@ fn render(
                     streams: drawn,
                 });
             }
-            kind @ ("subtotal" | "ratio") => {
+            "subtotal" => {
                 let id = row.subtotal.clone().unwrap_or_default();
                 let (values, total) = match series.get(&id) {
                     Some(s) => {
-                        let vals = s.values.clone();
-                        // A ratio has no meaningful total: summing a column of
-                        // coverage ratios answers no question anyone asks.
-                        let tot = (kind == "subtotal").then(|| {
-                            round6(
-                                vals.iter()
-                                    .filter_map(|v| match v {
-                                        SeriesValue::Money(m) => Some(m.amount),
-                                        SeriesValue::Number(n) => Some(*n),
-                                        SeriesValue::Null => None,
-                                    })
-                                    .sum::<f64>(),
-                            )
-                        });
-                        (vals, tot)
+                        let raw: Vec<f64> = s
+                            .values
+                            .iter()
+                            .map(|v| match v {
+                                SeriesValue::Money(m) => m.amount,
+                                SeriesValue::Number(n) => *n,
+                                SeriesValue::Null => 0.0,
+                            })
+                            .collect();
+                        let tot = round6(raw.iter().sum::<f64>());
+                        (money(&grain.sum(&raw), results), Some(tot))
                     }
                     None => (vec![], None),
                 };
+                let kind = "subtotal";
                 rows.push(StatementRow {
                     kind: kind.to_string(),
                     label: row.label.clone(),
@@ -148,6 +171,84 @@ fn render(
                     display_sign,
                     values,
                     total,
+                    streams: vec![],
+                });
+            }
+            "ratio" => {
+                // THE CORRECTNESS TRAP, and why this arm takes the SPECS rather
+                // than the published ratio series.
+                //
+                // An annual coverage ratio is annual NOI over annual debt
+                // service. It is NOT the mean of twelve monthly ratios, and it
+                // is not any other function of them — a column of ratios cannot
+                // be re-bucketed at all. So a coarse grain recomputes it from
+                // its inputs, which means knowing what its inputs ARE, which is
+                // in the subtotal declaration and not in the series.
+                //
+                // Handing this arm the ratio values and a grain would have made
+                // averaging them the obvious thing to write. Handing it the
+                // specs makes the wrong version unavailable.
+                let id = row.subtotal.clone().unwrap_or_default();
+                let spec = subtotals.iter().find(|s| s.id == id);
+                //
+                // The inputs must be PRESENT, not merely declared. A pack always
+                // declares the spec, but a model whose streams carry no category
+                // publishes no subtotal series at all — and `Grain::sum` of an
+                // absent series is not an empty vector, it is one zero per
+                // bucket. Recomputing from that gives a zero denominator in every
+                // period and a full column of nulls, which says "undefined here"
+                // about a ratio that was never computed. `dscr_smoke` is exactly
+                // that model, and it is how this was caught.
+                let fetch = |k: &str| -> Option<Vec<f64>> {
+                    series.get(k).map(|s| {
+                        s.values
+                            .iter()
+                            .map(|v| match v {
+                                SeriesValue::Money(m) => m.amount,
+                                SeriesValue::Number(n) => *n,
+                                SeriesValue::Null => 0.0,
+                            })
+                            .collect()
+                    })
+                };
+                let inputs =
+                    spec.and_then(|s| match (s.numerator.as_ref(), s.denominator.as_ref()) {
+                        (Some(n), Some(d)) => fetch(n).zip(fetch(d)),
+                        _ => None,
+                    });
+                let values = match inputs {
+                    Some((num_raw, den_raw)) => {
+                        let num = grain.sum(&num_raw);
+                        let den = grain.sum(&den_raw);
+                        num.iter()
+                            .zip(den.iter())
+                            .map(|(n, d)| {
+                                if d.abs() > f64::EPSILON {
+                                    SeriesValue::Number(round6(n / d))
+                                } else {
+                                    SeriesValue::Null
+                                }
+                            })
+                            .collect()
+                    }
+                    // Not a declared ratio, or its inputs were never published.
+                    // Falls back to the ratio series itself, which is absent in
+                    // the same cases — so the row carries no values rather than
+                    // a column of manufactured ones.
+                    None => series
+                        .get(&id)
+                        .map(|s| s.values.clone())
+                        .unwrap_or_default(),
+                };
+                rows.push(StatementRow {
+                    kind: "ratio".to_string(),
+                    label: row.label.clone(),
+                    depth: row.depth,
+                    display_sign,
+                    values,
+                    // No total: summing a column of coverage ratios answers no
+                    // question anyone asks.
+                    total: None,
                     streams: vec![],
                 });
             }
@@ -185,6 +286,7 @@ fn render(
             }
         }
         let total = acc.iter().sum::<f64>();
+        let acc = grain.sum(&acc);
         diagnostics.push(StatementDiagnostic {
             code: "W3500_STATEMENT_UNCLASSIFIED_STREAM".to_string(),
             message: format!(

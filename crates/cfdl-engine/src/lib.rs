@@ -562,14 +562,25 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     // a subtotal is a fold OF the ledger, so a pack changing how it chooses to
     // subtotal must not make the hash claim the cash moved. What is hashed is
     // the cash and the states that produced it.
+    //
+    // THE FILTER APPLIES TO THE ROLLUP TOO. It did not, and the rollup gaining
+    // kind-aware subtotals moved `ledger_hash` on fifteen goldens whose cash was
+    // bit-identical — the hash asserting the ledger changed when only a fold
+    // over it had. The exclusion belongs to the argument, not to the field it
+    // was first written on, so it is expressed once and applied to both.
+    let is_ledger = |key: &str| !key.starts_with("domain.");
     let ledger_only: BTreeMap<&String, &Series> = deterministic
         .series
         .iter()
-        .filter(|(key, _)| !key.starts_with("domain."))
+        .filter(|(key, _)| is_ledger(key))
         .collect();
+    let rollup_only: Option<BTreeMap<&String, &Series>> = deterministic
+        .annual_rollup
+        .as_ref()
+        .map(|r| r.series.iter().filter(|(key, _)| is_ledger(key)).collect());
     let ledger_hash = canonical_hash(&serde_json::json!({
         "series": ledger_only,
-        "annual_rollup": &deterministic.annual_rollup,
+        "annual_rollup": rollup_only.map(|series| serde_json::json!({ "series": series })),
     }));
 
     let inputs = {
@@ -1297,6 +1308,8 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &stream_series,
             &model_series,
             &ir.model.currency,
+            &subtotal_money,
+            &ir.subtotals,
         ))
     };
 
@@ -1382,6 +1395,23 @@ impl Grain {
         }
     }
 
+    /// Build a grain from what a results document already carries.
+    ///
+    /// A statement is a post-pass and has no timeline — only a `SeriesIndex`.
+    /// Reconstructing the dates from `(calendar, start, periods)` is exact,
+    /// because that triple is what generated them in the first place.
+    ///
+    /// `name` is the grain a declaration asked for. `None` or `"period"` gives
+    /// the identity bucketing, which is what everything defaults to.
+    pub fn from_index(index: &SeriesIndex, name: Option<&str>) -> Self {
+        let timeline = timeline_dates(&index.start, &index.calendar, index.periods as usize)
+            .unwrap_or_default();
+        match name {
+            Some("annual") if !timeline.is_empty() => Grain::calendar_year(&timeline),
+            _ => Grain::identity(&timeline, &index.calendar, &index.start),
+        }
+    }
+
     pub fn is_identity(&self) -> bool {
         self.buckets.iter().all(|b| b.len() <= 1)
     }
@@ -1407,6 +1437,8 @@ fn build_annual_rollup(
     stream_series: &BTreeMap<String, Vec<f64>>,
     model_series: &[f64],
     currency: &str,
+    subtotal_money: &BTreeMap<String, Vec<f64>>,
+    subtotal_specs: &[IrSubtotal],
 ) -> AnnualRollupSection {
     // One caller of Grain rather than its own bucketing. The rollup and a
     // coarser statement ask the same question of the same partition; keeping
@@ -1453,6 +1485,55 @@ fn build_annual_rollup(
                 None,
                 &aggregate(values),
             ),
+        );
+    }
+
+    // Subtotals roll up BY KIND, and that distinction is the whole reason this
+    // takes the specs rather than the two value maps.
+    //
+    // Money folds. A ratio does not: the mean of twelve monthly coverage ratios
+    // is not the annual coverage ratio, and the annual ratio is not recoverable
+    // from the monthly column at all. So it is recomputed from its numerator and
+    // denominator AFTER those have been rolled up — which is only possible
+    // because the declaration says what they are.
+    //
+    // Deliberately keyed off `subtotal_money` for the inputs rather than off the
+    // published ratio series, for the same reason cfdl-statement takes specs:
+    // given a column of ratios and a grain, averaging them is the obvious thing
+    // to write, and it is wrong.
+    for (id, values) in subtotal_money {
+        rollup.insert(
+            id.clone(),
+            Series::from_values(
+                "annual",
+                &start,
+                n_years,
+                currency,
+                None,
+                &aggregate(values),
+            ),
+        );
+    }
+    for spec in subtotal_specs {
+        if spec.op != "ratio" {
+            continue;
+        }
+        let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
+            continue;
+        };
+        let (Some(num), Some(den)) = (subtotal_money.get(num_id), subtotal_money.get(den_id))
+        else {
+            continue;
+        };
+        let (num, den) = (aggregate(num), aggregate(den));
+        let values: Vec<Option<f64>> = num
+            .iter()
+            .zip(den.iter())
+            .map(|(n, d)| (d.abs() > f64::EPSILON).then(|| round_amount(n / d)))
+            .collect();
+        rollup.insert(
+            spec.id.clone(),
+            Series::from_optional("annual", &start, n_years, &values),
         );
     }
 
@@ -3769,6 +3850,78 @@ mod tests {
         let (m_amt, l_amt, _) = run(&probe_ir("101"), 0.10);
         assert_ne!(m1, m_amt);
         assert_ne!(l1, l_amt, "a different ledger must hash differently");
+    }
+
+    /// A SUBTOTAL is a fold OF the ledger, so declaring one must not make the
+    /// hash claim the cash moved.
+    ///
+    /// `deterministic.series` was filtered for `domain.*` from the start, and
+    /// this looked settled because of it. It was not: the annual rollup went
+    /// into the same hash UNFILTERED, so the moment the rollup gained kind-aware
+    /// subtotals, `ledger_hash` moved on fifteen goldens whose cash was
+    /// bit-identical. The filter had been written onto one field rather than
+    /// onto the argument that justifies it.
+    ///
+    /// Monthly on purpose — an annual model publishes no rollup at all, and
+    /// would have passed this test throughout the window when it was broken.
+    #[test]
+    fn a_fold_over_the_ledger_is_not_part_of_the_ledger() {
+        use super::*;
+        let ir = |subtotals: &str| {
+            format!(
+                r#"{{
+                  "model": {{"name": "fold-probe", "currency": "USD"}},
+                  "time": {{"calendar": "monthly", "start": "2026-01-01", "periods": 24}},
+                  "subtotals": [{subtotals}],
+                  "streams": [
+                    {{"id": "s1", "name": "probe.rent",
+                      "owner": {{"symbol": "legal.co"}},
+                      "direction": "inflow", "currency": "USD",
+                      "category": "operating.revenue.base_rent",
+                      "schedule": {{"kind": "Every", "every": "monthly",
+                                   "from": "2026-01-01", "to": "2027-12-01"}},
+                      "amount": {{"lang": "cfdl", "src": "30000"}},
+                      "active_when": {{"lang": "cfdl", "src": "true"}}}},
+                    {{"id": "s2", "name": "probe.debt",
+                      "owner": {{"symbol": "legal.co"}},
+                      "direction": "outflow", "currency": "USD",
+                      "category": "financing.debt_service",
+                      "schedule": {{"kind": "Every", "every": "monthly",
+                                   "from": "2026-01-01", "to": "2027-12-01"}},
+                      "amount": {{"lang": "cfdl", "src": "15000"}},
+                      "active_when": {{"lang": "cfdl", "src": "true"}}}}
+                  ]
+                }}"#
+            )
+        };
+        let run = |src: String| run_from_json_str(&src, RunConfig::default()).expect("run");
+
+        let bare = run(ir(""));
+        let folded = run(ir(r#"
+            {"id": "domain.p.noi", "kind": "money", "op": "sum",
+             "categories": ["operating.*"]},
+            {"id": "domain.p.ds", "kind": "money", "op": "negated_sum",
+             "categories": ["financing.debt_service"]},
+            {"id": "domain.p.dscr", "kind": "number", "op": "ratio",
+             "numerator": "domain.p.noi", "denominator": "domain.p.ds"}
+        "#));
+
+        // The folds really were computed and published, in both places — so a
+        // passing hash assertion below means the filter worked, not that there
+        // was nothing to filter.
+        assert!(folded.deterministic.series.contains_key("domain.p.dscr"));
+        let rollup = folded
+            .deterministic
+            .annual_rollup
+            .as_ref()
+            .expect("a monthly model publishes an annual rollup");
+        assert!(rollup.series.contains_key("domain.p.dscr"));
+        assert!(bare.deterministic.annual_rollup.is_some());
+
+        assert_eq!(
+            bare.ledger_hash, folded.ledger_hash,
+            "declaring a subtotal folds the ledger; it does not change it"
+        );
     }
 
     #[test]

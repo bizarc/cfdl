@@ -63,7 +63,12 @@ def run_model(source: str, annual_rate: float) -> dict:
 
 
 def run_pack_model(source: str, annual_rate: float, pack: str) -> dict:
-    """Compile and run a model that uses a domain pack."""
+    """Compile and run a model that uses a domain pack, returning the run block."""
+    return run_pack_model_full(source, annual_rate, pack)["deterministic"]
+
+
+def run_pack_model_full(source: str, annual_rate: float, pack: str) -> dict:
+    """As above, but the whole results document — statements included."""
     with tempfile.TemporaryDirectory() as tmp:
         d = pathlib.Path(tmp)
         (d / "model.cfdl").write_text(source, encoding="utf-8")
@@ -77,7 +82,7 @@ def run_pack_model(source: str, annual_rate: float, pack: str) -> dict:
             done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
             if done.returncode != 0:
                 raise SystemExit(f"model failed:\n{done.stdout}\n{done.stderr}\n{source}")
-        return json.loads(res.read_text(encoding="utf-8"))["deterministic"]
+        return json.loads(res.read_text(encoding="utf-8"))
 
 
 def series(block: dict, name: str) -> list[float]:
@@ -955,6 +960,95 @@ def main() -> int:
             print(f"         got {got:,.4f}, expected {expected:,.4f}, "
                   f"differ by {abs(got - expected):,.4f}")
             failures += 1
+
+
+@check("cre: an annual coverage ratio is recomputed, not averaged", tol=1e-6)
+def annual_ratio_is_recomputed_not_averaged() -> tuple[float, float]:
+    """The correctness trap that grain-aware reporting exists to avoid.
+
+    An annual DSCR is annual NOI over annual debt service, NOT the mean of
+    twelve monthly ratios. A column of ratios cannot be re-bucketed at all.
+
+    Building a probe that actually TESTS that is harder than it looks, and two
+    earlier attempts here did not — both reported recomputed == averaged to
+    six figures and would have passed against an implementation that averaged.
+    The algebra says why: when the DENOMINATOR is constant,
+
+        mean(n_i / d) = (sum n_i) / 12d = (sum n) / (sum d)
+
+    exactly. So varying NOI proves nothing on its own, and neither does a
+    fixture whose lines are flat within the year, which most of them are. Level
+    debt service — the normal case — is precisely the case that cannot
+    discriminate.
+
+    Both sides must vary, and out of step with each other. Here revenue steps UP
+    mid-year while debt service steps DOWN, which separates the two readings by
+    more than a factor of two:
+
+        recomputed  300,000 / 150,000     = 2.00   <- what a lender tests
+        mean of the twelve monthly ratios = 4.25   <- the trap
+
+    The identity asserted is the STATEMENT's published annual value against the
+    ratio of the annual sums; the guard below fails the check if the probe ever
+    stops separating the two, so this cannot quietly decay back into a
+    tautology.
+    """
+    src = """version 0.1
+model "annual-ratio-discriminating"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+entity asset tower
+
+stream cre.unit.base_rent.a on entity asset.tower inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category operating.revenue.base_rent
+  amount = if(time.t < 6, 10000, 40000)
+}
+
+stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category financing.debt_service
+  amount = if(time.t < 6, 20000, 5000)
+}
+"""
+    doc = run_pack_model_full(src, 0.08, "cre")
+    block = doc["deterministic"]
+    amt = lambda v: 0.0 if v is None else (v["amount"] if isinstance(v, dict) else v)
+
+    noi = [amt(v) for v in block["series"]["domain.cre.noi"]["values"]]
+    ds = [amt(v) for v in block["series"]["domain.cre.debt_service"]["values"]]
+    monthly = [amt(v) for v in block["series"]["domain.cre.dscr"]["values"]]
+
+    recomputed = sum(noi) / sum(ds)
+    averaged = sum(monthly) / len(monthly)
+    assert abs(recomputed - averaged) > 1.0, (
+        f"probe no longer discriminates: recomputed {recomputed} vs averaged "
+        f"{averaged}. Both the numerator and the denominator must vary within "
+        f"the year, out of step with each other."
+    )
+
+    # The ANNUAL ROLLUP is the second consumer that could have averaged, and it
+    # folds independently of the statement path — so it gets the same assertion
+    # rather than being trusted because its neighbour passed.
+    rollup = block["annual_rollup"]["series"]
+    rolled = amt(rollup["domain.cre.dscr"]["values"][0])
+    assert abs(rolled - recomputed) < 1e-6, (
+        f"annual_rollup published DSCR {rolled}, not the ratio of the annual "
+        f"sums ({recomputed}){'; that is the MEAN of the monthly ratios' if abs(rolled - averaged) < 1e-6 else ''}"
+    )
+
+    annual = next(s for s in doc["statements"]["statements"] if s["id"] == "operating_annual")
+    row = next(r for r in annual["rows"] if r["kind"] == "ratio")
+    assert len(row["values"]) == 1, f"expected one annual bucket, got {len(row['values'])}"
+    published = amt(row["values"][0])
+
+    # Fails loudly against an implementation that averaged, rather than merely
+    # disagreeing by a rounding-sized amount.
+    assert abs(published - averaged) > 1.0, (
+        f"the annual statement published {published}, which is the MEAN of the "
+        f"monthly ratios, not the ratio of the annual sums ({recomputed})"
+    )
+    return published, recomputed
 
 
 @check("cre: the operating.* classification reaches exactly the streams NOI needs")

@@ -558,6 +558,13 @@ pub struct StatementSpec {
     /// Shown when a consumer asks for "the" statement and the pack has several.
     #[serde(default)]
     pub default: bool,
+    /// The grain this statement reports at. `None` is the model grid.
+    ///
+    /// Grain belongs to the OUTPUT, not the run: one package can carry a
+    /// monthly cash flow statement and an annual summary of the same cash,
+    /// because each declaration names its own.
+    #[serde(default)]
+    pub grain: Option<String>,
     #[serde(default)]
     pub rows: Vec<StatementRow>,
 }
