@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "73d30157fe448b2f4bf299bc29c2486773b280dc7df3b4d3b857450d51fc2153",
+  "model_hash": "7022f0bcbf5cf39a4a1583e3f705a4f84bcd5a47b45be6d1be0c4d394d8c5855",
   "ledger_hash": "72758180f442b4c432fadc4f3ab425762d354ea4a8d77c8b60be981cc8b5ad00",
   "engine": {
     "name": "cfdl-engine",
@@ -153,7 +153,36 @@
           }
         ]
       },
-      "domain.opco.gross_burn": {
+      "domain.opco.lfcf_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1040.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1081.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.864,
+            "currency": "USD"
+          },
+          {
+            "amount": 1169.85856,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_financing": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
@@ -182,7 +211,36 @@
           }
         ]
       },
-      "domain.opco.lfcf_periodic": {
+      "domain.opco.net_cash_from_investing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 19985.083733,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_operations": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",

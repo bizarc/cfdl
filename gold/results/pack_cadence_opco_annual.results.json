@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "5955af828e3a9e1acf843e7f59d0894a43f8dfbb104624390182d366dcd2d7e5",
+  "model_hash": "e3e793c4daf74113eb9eefbadbb6770e26d80d688df1f6940d4d433740c36a42",
   "ledger_hash": "b7222f74461a9e243110408ababeadff8839ba3ae99f5b4f6aad2e3f9026b8fc",
   "engine": {
     "name": "cfdl-engine",
@@ -182,27 +182,6 @@
           }
         ]
       },
-      "domain.opco.gross_burn": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          {
-            "amount": 928800.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 928800.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 928800.0,
-            "currency": "USD"
-          }
-        ]
-      },
       "domain.opco.lfcf_periodic": {
         "index": {
           "calendar": "annual",
@@ -220,6 +199,69 @@
           },
           {
             "amount": 391200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_financing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_investing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -88800.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_operations": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 480000.0,
             "currency": "USD"
           }
         ]

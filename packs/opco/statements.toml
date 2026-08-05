@@ -180,12 +180,24 @@ categories = ["investing.exit"]
 # ---------------------------------------------------------------------------
 # SUB-INDUSTRY VIEWS.
 #
-# The same cash, read by different mandates. A sponsor underwriting an LBO
-# reads down to cash available for debt service and debt paydown, because the
-# return comes from deleveraging. An early-stage investor reads gross and net
-# burn and the runway they imply, because there is no debt and no EBITDA to
-# speak of. The categories are unchanged; the grouping, order and naming are
-# not, and the completeness gate proves each view still totals.
+# The same cash, read by different mandates.
+#
+# A NOTE ON WHAT IS AND IS NOT STANDARD, because the two views below are not
+# equally well grounded and the file should say so.
+#
+# "Cash flow available for debt service" is a defined term in credit agreements
+# and project finance documents, and the coverage ratio struck from it is a
+# tested covenant. That view is grounded.
+#
+# The second view is the STATEMENT OF CASH FLOWS as ASC 230 / IAS 7 define it —
+# net cash from operating, investing and financing activities. Those are the
+# three sections CFDL's own category roots already are, so this view is the
+# language's structure reported directly, and it is a real reporting standard.
+#
+# It deliberately does NOT use "gross burn" and "net burn". Those are common
+# venture vernacular but they are not defined in any accounting standard, and
+# naming a subtotal after a convention nobody codified would put a term in the
+# output that no source can be pointed at.
 
 [[subtotals]]
 id = "domain.opco.cfads"
@@ -194,14 +206,27 @@ op = "sum"
 categories = ["operating.*", "investing.capital.capex"]
 formula = "cash flow available for debt service"
 
-# Gross burn is the cash operating cost line alone — the number a runway
-# calculation divides into the balance. Net burn nets revenue against it.
+# ASC 230-10-45 / IAS 7.10: the operating section of a statement of cash flows.
 [[subtotals]]
-id = "domain.opco.gross_burn"
+id = "domain.opco.net_cash_from_operations"
 kind = "money"
-op = "negated_sum"
-categories = ["operating.expense.*", "investing.capital.capex"]
-formula = "-sum(operating expenses, capital expenditure)"
+op = "sum"
+categories = ["operating.*"]
+formula = "net cash provided by (used in) operating activities"
+
+[[subtotals]]
+id = "domain.opco.net_cash_from_investing"
+kind = "money"
+op = "sum"
+categories = ["investing.*"]
+formula = "net cash provided by (used in) investing activities"
+
+[[subtotals]]
+id = "domain.opco.net_cash_from_financing"
+kind = "money"
+op = "sum"
+categories = ["financing.*"]
+formula = "net cash provided by (used in) financing activities"
 
 # Sponsor / leveraged buyout view.
 [[statements]]
@@ -304,10 +329,14 @@ label = "Exit proceeds"
 depth = 1
 categories = ["investing.exit"]
 
-# Early-stage / venture view. Burn and runway, not margin.
+# The statement of cash flows, by activity — ASC 230-10-45 / IAS 7.10.
+#
+# The three sections ARE CFDL's category roots, so this view is the language's
+# own structure reported directly: every category the pack declares belongs to
+# exactly one section by construction, and the completeness gate checks it.
 [[statements]]
-id = "burn"
-label = "Cash burn"
+id = "cash_flows"
+label = "Statement of cash flows"
 
 [[statements.rows]]
 kind = "line"
@@ -317,23 +346,17 @@ categories = ["operating.revenue.recurring"]
 
 [[statements.rows]]
 kind = "line"
-label = "Cash operating expenses"
+label = "Operating expenses"
 depth = 1
 categories = ["operating.expense.opex"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Capital expenditure"
+label = "Income taxes paid"
 depth = 1
-categories = ["investing.capital.capex"]
+categories = ["operating.tax"]
 display = "positive"
-
-[[statements.rows]]
-kind = "subtotal"
-label = "Gross burn"
-depth = 0
-subtotal = "domain.opco.gross_burn"
 
 [[statements.rows]]
 kind = "line"
@@ -342,53 +365,65 @@ depth = 1
 categories = ["operating.working_capital"]
 
 [[statements.rows]]
-kind = "line"
-label = "Cash taxes"
-depth = 1
-categories = ["operating.tax"]
-display = "positive"
-
-[[statements.rows]]
 kind = "subtotal"
-label = "Net burn"
+label = "Net cash from operating activities"
 depth = 0
-subtotal = "domain.opco.cfads"
+subtotal = "domain.opco.net_cash_from_operations"
 
 [[statements.rows]]
 kind = "spacer"
 
 [[statements.rows]]
 kind = "line"
-label = "Venture debt drawn"
+label = "Purchases of property and equipment"
 depth = 1
-categories = ["financing.debt_proceeds"]
-
-[[statements.rows]]
-kind = "line"
-label = "Interest"
-depth = 1
-categories = ["financing.interest"]
+categories = ["investing.capital.capex"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Principal repayment"
-depth = 1
-categories = ["financing.debt_principal"]
-display = "positive"
-
-[[statements.rows]]
-kind = "spacer"
-
-[[statements.rows]]
-kind = "line"
-label = "Investment received"
+label = "Acquisitions, net of cash acquired"
 depth = 1
 categories = ["investing.acquisition"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Liquidity event"
+label = "Proceeds from disposals"
 depth = 1
 categories = ["investing.exit"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net cash from investing activities"
+depth = 0
+subtotal = "domain.opco.net_cash_from_investing"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Proceeds from borrowings"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
+kind = "line"
+label = "Repayment of borrowings"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest paid"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net cash from financing activities"
+depth = 0
+subtotal = "domain.opco.net_cash_from_financing"

@@ -138,14 +138,31 @@
       "formula": "cash flow available for debt service"
     },
     {
-      "id": "domain.opco.gross_burn",
+      "id": "domain.opco.net_cash_from_operations",
       "kind": "money",
-      "op": "negated_sum",
+      "op": "sum",
       "categories": [
-        "operating.expense.*",
-        "investing.capital.capex"
+        "operating.*"
       ],
-      "formula": "-sum(operating expenses, capital expenditure)"
+      "formula": "net cash provided by (used in) operating activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_investing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "investing.*"
+      ],
+      "formula": "net cash provided by (used in) investing activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_financing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "net cash provided by (used in) financing activities"
     }
   ],
   "contracts": [

@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "98daea4b647d07b6edbba329d3f3d38a0546801612f96dc06b16ae481cf21541",
+  "model_hash": "57c50382ee45130115049d472c1031ab2d83315acfcff40a8fcb61c61f2b0c49",
   "ledger_hash": "e28ae543a8fb0e8152b26cfa76befbcc8cc940d51341b36e5b3f8f8c8414575a",
   "engine": {
     "name": "cfdl-engine",
@@ -535,111 +535,6 @@
           }
         ]
       },
-      "domain.opco.gross_burn": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 24
-        },
-        "values": [
-          {
-            "amount": 129000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 129312.248868,
-            "currency": "USD"
-          },
-          {
-            "amount": 129625.294028,
-            "currency": "USD"
-          },
-          {
-            "amount": 129939.137551,
-            "currency": "USD"
-          },
-          {
-            "amount": 130253.781513,
-            "currency": "USD"
-          },
-          {
-            "amount": 130569.227996,
-            "currency": "USD"
-          },
-          {
-            "amount": 130885.479087,
-            "currency": "USD"
-          },
-          {
-            "amount": 131202.53688,
-            "currency": "USD"
-          },
-          {
-            "amount": 131520.403471,
-            "currency": "USD"
-          },
-          {
-            "amount": 131839.080967,
-            "currency": "USD"
-          },
-          {
-            "amount": 132158.571475,
-            "currency": "USD"
-          },
-          {
-            "amount": 132478.877113,
-            "currency": "USD"
-          },
-          {
-            "amount": 132800.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 133121.942264,
-            "currency": "USD"
-          },
-          {
-            "amount": 133444.706036,
-            "currency": "USD"
-          },
-          {
-            "amount": 133768.293456,
-            "currency": "USD"
-          },
-          {
-            "amount": 134092.706667,
-            "currency": "USD"
-          },
-          {
-            "amount": 134417.947819,
-            "currency": "USD"
-          },
-          {
-            "amount": 134744.019066,
-            "currency": "USD"
-          },
-          {
-            "amount": 135070.922571,
-            "currency": "USD"
-          },
-          {
-            "amount": 135398.6605,
-            "currency": "USD"
-          },
-          {
-            "amount": 135727.235026,
-            "currency": "USD"
-          },
-          {
-            "amount": 136056.648327,
-            "currency": "USD"
-          },
-          {
-            "amount": 136386.902588,
-            "currency": "USD"
-          }
-        ]
-      },
       "domain.opco.lfcf_periodic": {
         "index": {
           "calendar": "monthly",
@@ -741,6 +636,321 @@
           },
           {
             "amount": -1381922.092856,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_financing": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 2977500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -95399.19798,
+            "currency": "USD"
+          },
+          {
+            "amount": -1696119.614359,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_investing": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": -5009000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -9016.296495,
+            "currency": "USD"
+          },
+          {
+            "amount": -9032.659384,
+            "currency": "USD"
+          },
+          {
+            "amount": -9049.088938,
+            "currency": "USD"
+          },
+          {
+            "amount": -9065.585427,
+            "currency": "USD"
+          },
+          {
+            "amount": -9082.149126,
+            "currency": "USD"
+          },
+          {
+            "amount": -9098.780306,
+            "currency": "USD"
+          },
+          {
+            "amount": -9115.479245,
+            "currency": "USD"
+          },
+          {
+            "amount": -9132.246217,
+            "currency": "USD"
+          },
+          {
+            "amount": -9149.081499,
+            "currency": "USD"
+          },
+          {
+            "amount": -9165.985371,
+            "currency": "USD"
+          },
+          {
+            "amount": -9182.958111,
+            "currency": "USD"
+          },
+          {
+            "amount": -9200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -9217.11132,
+            "currency": "USD"
+          },
+          {
+            "amount": -9234.292353,
+            "currency": "USD"
+          },
+          {
+            "amount": -9251.543385,
+            "currency": "USD"
+          },
+          {
+            "amount": -9268.864699,
+            "currency": "USD"
+          },
+          {
+            "amount": -9286.256582,
+            "currency": "USD"
+          },
+          {
+            "amount": -9303.719322,
+            "currency": "USD"
+          },
+          {
+            "amount": -9321.253207,
+            "currency": "USD"
+          },
+          {
+            "amount": -9338.858527,
+            "currency": "USD"
+          },
+          {
+            "amount": -9356.535574,
+            "currency": "USD"
+          },
+          {
+            "amount": -9374.284639,
+            "currency": "USD"
+          },
+          {
+            "amount": 7356574.894464,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_operations": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": -152936.643836,
+            "currency": "USD"
+          },
+          {
+            "amount": 70039.903333,
+            "currency": "USD"
+          },
+          {
+            "amount": 70426.874308,
+            "currency": "USD"
+          },
+          {
+            "amount": 70815.779231,
+            "currency": "USD"
+          },
+          {
+            "amount": 71206.626862,
+            "currency": "USD"
+          },
+          {
+            "amount": 71599.426001,
+            "currency": "USD"
+          },
+          {
+            "amount": 71994.185483,
+            "currency": "USD"
+          },
+          {
+            "amount": 72254.228187,
+            "currency": "USD"
+          },
+          {
+            "amount": 72515.223878,
+            "currency": "USD"
+          },
+          {
+            "amount": 72777.173817,
+            "currency": "USD"
+          },
+          {
+            "amount": 73040.079249,
+            "currency": "USD"
+          },
+          {
+            "amount": 73303.941399,
+            "currency": "USD"
+          },
+          {
+            "amount": 73568.761471,
+            "currency": "USD"
+          },
+          {
+            "amount": 73834.540651,
+            "currency": "USD"
+          },
+          {
+            "amount": 74101.280105,
+            "currency": "USD"
+          },
+          {
+            "amount": 74368.980976,
+            "currency": "USD"
+          },
+          {
+            "amount": 74637.644389,
+            "currency": "USD"
+          },
+          {
+            "amount": 74907.271448,
+            "currency": "USD"
+          },
+          {
+            "amount": 75177.863234,
+            "currency": "USD"
+          },
+          {
+            "amount": 75449.420808,
+            "currency": "USD"
+          },
+          {
+            "amount": 75721.945209,
+            "currency": "USD"
+          },
+          {
+            "amount": 75995.437452,
+            "currency": "USD"
+          },
+          {
+            "amount": 76269.898533,
+            "currency": "USD"
+          },
+          {
+            "amount": 323589.62752,
             "currency": "USD"
           }
         ]
@@ -2389,23 +2599,6 @@
             }
           ]
         },
-        "domain.opco.gross_burn": {
-          "index": {
-            "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
-          },
-          "values": [
-            {
-              "amount": 1568784.638949,
-              "currency": "USD"
-            },
-            {
-              "amount": 1615029.98432,
-              "currency": "USD"
-            }
-          ]
-        },
         "domain.opco.lfcf_periodic": {
           "index": {
             "calendar": "annual",
@@ -2419,6 +2612,57 @@
             },
             {
               "amount": -1709432.945966,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_financing": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 2292604.81212,
+              "currency": "USD"
+            },
+            {
+              "amount": -2745510.792139,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_investing": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -5109090.310119,
+              "currency": "USD"
+            },
+            {
+              "amount": 7254422.174856,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_operations": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 637036.797912,
+              "currency": "USD"
+            },
+            {
+              "amount": 1147622.671796,
               "currency": "USD"
             }
           ]
@@ -5749,8 +5993,8 @@
         }
       },
       {
-        "id": "burn",
-        "label": "Cash burn",
+        "id": "cash_flows",
+        "label": "Statement of cash flows",
         "default": false,
         "grain": {
           "calendar": "monthly",
@@ -5893,7 +6137,7 @@
           },
           {
             "kind": "line",
-            "label": "Cash operating expenses",
+            "label": "Operating expenses",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -6001,216 +6245,111 @@
           },
           {
             "kind": "line",
-            "label": "Capital expenditure",
+            "label": "Income taxes paid",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
               {
-                "amount": -9000.0,
+                "amount": -9375.0,
                 "currency": "USD"
               },
               {
-                "amount": -9016.296495,
+                "amount": -9504.718096,
                 "currency": "USD"
               },
               {
-                "amount": -9032.659384,
+                "amount": -9635.083642,
                 "currency": "USD"
               },
               {
-                "amount": -9049.088938,
+                "amount": -9766.099568,
                 "currency": "USD"
               },
               {
-                "amount": -9065.585427,
+                "amount": -9897.768819,
                 "currency": "USD"
               },
               {
-                "amount": -9082.149126,
+                "amount": -10030.094352,
                 "currency": "USD"
               },
               {
-                "amount": -9098.780306,
+                "amount": -10163.079135,
                 "currency": "USD"
               },
               {
-                "amount": -9115.479245,
+                "amount": -10433.412146,
                 "currency": "USD"
               },
               {
-                "amount": -9132.246217,
+                "amount": -10705.435531,
                 "currency": "USD"
               },
               {
-                "amount": -9149.081499,
+                "amount": -10979.159985,
                 "currency": "USD"
               },
               {
-                "amount": -9165.985371,
+                "amount": -11254.596275,
                 "currency": "USD"
               },
               {
-                "amount": -9182.958111,
+                "amount": -11531.755241,
                 "currency": "USD"
               },
               {
-                "amount": -9200.0,
+                "amount": -11810.647791,
                 "currency": "USD"
               },
               {
-                "amount": -9217.11132,
+                "amount": -12091.284908,
                 "currency": "USD"
               },
               {
-                "amount": -9234.292353,
+                "amount": -12373.677648,
                 "currency": "USD"
               },
               {
-                "amount": -9251.543385,
+                "amount": -12657.837136,
                 "currency": "USD"
               },
               {
-                "amount": -9268.864699,
+                "amount": -12943.774576,
                 "currency": "USD"
               },
               {
-                "amount": -9286.256582,
+                "amount": -13231.501243,
                 "currency": "USD"
               },
               {
-                "amount": -9303.719322,
+                "amount": -13521.028486,
                 "currency": "USD"
               },
               {
-                "amount": -9321.253207,
+                "amount": -13812.367733,
                 "currency": "USD"
               },
               {
-                "amount": -9338.858527,
+                "amount": -14105.530482,
                 "currency": "USD"
               },
               {
-                "amount": -9356.535574,
+                "amount": -14400.528313,
                 "currency": "USD"
               },
               {
-                "amount": -9374.284639,
+                "amount": -14697.372879,
                 "currency": "USD"
               },
               {
-                "amount": -9392.106016,
+                "amount": -14996.075911,
                 "currency": "USD"
               }
             ],
-            "total": -220635.135743,
+            "total": -283917.829896,
             "streams": [
-              "opco.capex"
+              "opco.taxes"
             ]
-          },
-          {
-            "kind": "subtotal",
-            "label": "Gross burn",
-            "depth": 0,
-            "display_sign": 1.0,
-            "values": [
-              {
-                "amount": 129000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 129312.248868,
-                "currency": "USD"
-              },
-              {
-                "amount": 129625.294028,
-                "currency": "USD"
-              },
-              {
-                "amount": 129939.137551,
-                "currency": "USD"
-              },
-              {
-                "amount": 130253.781513,
-                "currency": "USD"
-              },
-              {
-                "amount": 130569.227996,
-                "currency": "USD"
-              },
-              {
-                "amount": 130885.479087,
-                "currency": "USD"
-              },
-              {
-                "amount": 131202.53688,
-                "currency": "USD"
-              },
-              {
-                "amount": 131520.403471,
-                "currency": "USD"
-              },
-              {
-                "amount": 131839.080967,
-                "currency": "USD"
-              },
-              {
-                "amount": 132158.571475,
-                "currency": "USD"
-              },
-              {
-                "amount": 132478.877113,
-                "currency": "USD"
-              },
-              {
-                "amount": 132800.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 133121.942264,
-                "currency": "USD"
-              },
-              {
-                "amount": 133444.706036,
-                "currency": "USD"
-              },
-              {
-                "amount": 133768.293456,
-                "currency": "USD"
-              },
-              {
-                "amount": 134092.706667,
-                "currency": "USD"
-              },
-              {
-                "amount": 134417.947819,
-                "currency": "USD"
-              },
-              {
-                "amount": 134744.019066,
-                "currency": "USD"
-              },
-              {
-                "amount": 135070.922571,
-                "currency": "USD"
-              },
-              {
-                "amount": 135398.6605,
-                "currency": "USD"
-              },
-              {
-                "amount": 135727.235026,
-                "currency": "USD"
-              },
-              {
-                "amount": 136056.648327,
-                "currency": "USD"
-              },
-              {
-                "amount": 136386.902588,
-                "currency": "USD"
-              }
-            ],
-            "total": 3183814.623269
           },
           {
             "kind": "line",
@@ -6321,217 +6460,109 @@
             ]
           },
           {
-            "kind": "line",
-            "label": "Cash taxes",
-            "depth": 1,
-            "display_sign": -1.0,
-            "values": [
-              {
-                "amount": -9375.0,
-                "currency": "USD"
-              },
-              {
-                "amount": -9504.718096,
-                "currency": "USD"
-              },
-              {
-                "amount": -9635.083642,
-                "currency": "USD"
-              },
-              {
-                "amount": -9766.099568,
-                "currency": "USD"
-              },
-              {
-                "amount": -9897.768819,
-                "currency": "USD"
-              },
-              {
-                "amount": -10030.094352,
-                "currency": "USD"
-              },
-              {
-                "amount": -10163.079135,
-                "currency": "USD"
-              },
-              {
-                "amount": -10433.412146,
-                "currency": "USD"
-              },
-              {
-                "amount": -10705.435531,
-                "currency": "USD"
-              },
-              {
-                "amount": -10979.159985,
-                "currency": "USD"
-              },
-              {
-                "amount": -11254.596275,
-                "currency": "USD"
-              },
-              {
-                "amount": -11531.755241,
-                "currency": "USD"
-              },
-              {
-                "amount": -11810.647791,
-                "currency": "USD"
-              },
-              {
-                "amount": -12091.284908,
-                "currency": "USD"
-              },
-              {
-                "amount": -12373.677648,
-                "currency": "USD"
-              },
-              {
-                "amount": -12657.837136,
-                "currency": "USD"
-              },
-              {
-                "amount": -12943.774576,
-                "currency": "USD"
-              },
-              {
-                "amount": -13231.501243,
-                "currency": "USD"
-              },
-              {
-                "amount": -13521.028486,
-                "currency": "USD"
-              },
-              {
-                "amount": -13812.367733,
-                "currency": "USD"
-              },
-              {
-                "amount": -14105.530482,
-                "currency": "USD"
-              },
-              {
-                "amount": -14400.528313,
-                "currency": "USD"
-              },
-              {
-                "amount": -14697.372879,
-                "currency": "USD"
-              },
-              {
-                "amount": -14996.075911,
-                "currency": "USD"
-              }
-            ],
-            "total": -283917.829896,
-            "streams": [
-              "opco.taxes"
-            ]
-          },
-          {
             "kind": "subtotal",
-            "label": "Net burn",
+            "label": "Net cash from operating activities",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
               {
-                "amount": -161936.643836,
+                "amount": -152936.643836,
                 "currency": "USD"
               },
               {
-                "amount": 61023.606838,
+                "amount": 70039.903333,
                 "currency": "USD"
               },
               {
-                "amount": 61394.214924,
+                "amount": 70426.874308,
                 "currency": "USD"
               },
               {
-                "amount": 61766.690293,
+                "amount": 70815.779231,
                 "currency": "USD"
               },
               {
-                "amount": 62141.041435,
+                "amount": 71206.626862,
                 "currency": "USD"
               },
               {
-                "amount": 62517.276875,
+                "amount": 71599.426001,
                 "currency": "USD"
               },
               {
-                "amount": 62895.405177,
+                "amount": 71994.185483,
                 "currency": "USD"
               },
               {
-                "amount": 63138.748943,
+                "amount": 72254.228187,
                 "currency": "USD"
               },
               {
-                "amount": 63382.977661,
+                "amount": 72515.223878,
                 "currency": "USD"
               },
               {
-                "amount": 63628.092318,
+                "amount": 72777.173817,
                 "currency": "USD"
               },
               {
-                "amount": 63874.093878,
+                "amount": 73040.079249,
                 "currency": "USD"
               },
               {
-                "amount": 64120.983288,
+                "amount": 73303.941399,
                 "currency": "USD"
               },
               {
-                "amount": 64368.761471,
+                "amount": 73568.761471,
                 "currency": "USD"
               },
               {
-                "amount": 64617.429332,
+                "amount": 73834.540651,
                 "currency": "USD"
               },
               {
-                "amount": 64866.987751,
+                "amount": 74101.280105,
                 "currency": "USD"
               },
               {
-                "amount": 65117.437592,
+                "amount": 74368.980976,
                 "currency": "USD"
               },
               {
-                "amount": 65368.779691,
+                "amount": 74637.644389,
                 "currency": "USD"
               },
               {
-                "amount": 65621.014866,
+                "amount": 74907.271448,
                 "currency": "USD"
               },
               {
-                "amount": 65874.143913,
+                "amount": 75177.863234,
                 "currency": "USD"
               },
               {
-                "amount": 66128.167601,
+                "amount": 75449.420808,
                 "currency": "USD"
               },
               {
-                "amount": 66383.086681,
+                "amount": 75721.945209,
                 "currency": "USD"
               },
               {
-                "amount": 66638.901878,
+                "amount": 75995.437452,
                 "currency": "USD"
               },
               {
-                "amount": 66895.613894,
+                "amount": 76269.898533,
                 "currency": "USD"
               },
               {
-                "amount": 314197.521503,
+                "amount": 323589.62752,
                 "currency": "USD"
               }
             ],
-            "total": 1564024.333967
+            "total": 1784659.469708
           },
           {
             "kind": "spacer",
@@ -6540,336 +6571,115 @@
           },
           {
             "kind": "line",
-            "label": "Venture debt drawn",
-            "depth": 1,
-            "display_sign": 1.0,
-            "values": [
-              {
-                "amount": 3000000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              }
-            ],
-            "total": 3000000.0,
-            "streams": [
-              "opco.debt.proceeds"
-            ]
-          },
-          {
-            "kind": "line",
-            "label": "Interest",
+            "label": "Purchases of property and equipment",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
               {
-                "amount": -22500.0,
+                "amount": -9000.0,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9016.296495,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9032.659384,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9049.088938,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9065.585427,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9082.149126,
                 "currency": "USD"
               },
               {
-                "amount": -22500.0,
+                "amount": -9098.780306,
                 "currency": "USD"
               },
               {
-                "amount": -21953.256015,
+                "amount": -9115.479245,
                 "currency": "USD"
               },
               {
-                "amount": -21402.41145,
+                "amount": -9132.246217,
                 "currency": "USD"
               },
               {
-                "amount": -20847.435551,
+                "amount": -9149.081499,
                 "currency": "USD"
               },
               {
-                "amount": -20288.297333,
+                "amount": -9165.985371,
                 "currency": "USD"
               },
               {
-                "amount": -19724.965578,
+                "amount": -9182.958111,
                 "currency": "USD"
               },
               {
-                "amount": -19157.408835,
+                "amount": -9200.0,
                 "currency": "USD"
               },
               {
-                "amount": -18585.595417,
+                "amount": -9217.11132,
                 "currency": "USD"
               },
               {
-                "amount": -18009.493398,
+                "amount": -9234.292353,
                 "currency": "USD"
               },
               {
-                "amount": -17429.070613,
+                "amount": -9251.543385,
                 "currency": "USD"
               },
               {
-                "amount": -16844.294658,
+                "amount": -9268.864699,
                 "currency": "USD"
               },
               {
-                "amount": -16255.132883,
+                "amount": -9286.256582,
                 "currency": "USD"
               },
               {
-                "amount": -15661.552395,
+                "amount": -9303.719322,
                 "currency": "USD"
               },
               {
-                "amount": -15063.520053,
+                "amount": -9321.253207,
                 "currency": "USD"
               },
               {
-                "amount": -14461.002468,
+                "amount": -9338.858527,
                 "currency": "USD"
               },
               {
-                "amount": -13853.966002,
+                "amount": -9356.535574,
                 "currency": "USD"
               },
               {
-                "amount": -13242.376762,
+                "amount": -9374.284639,
                 "currency": "USD"
               },
               {
-                "amount": -12626.200603,
+                "amount": -9392.106016,
                 "currency": "USD"
               }
             ],
-            "total": -452905.980014,
+            "total": -220635.135743,
             "streams": [
-              "opco.debt.interest"
+              "opco.capex"
             ]
           },
           {
             "kind": "line",
-            "label": "Principal repayment",
-            "depth": 1,
-            "display_sign": -1.0,
-            "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": -72899.19798,
-                "currency": "USD"
-              },
-              {
-                "amount": -73445.941965,
-                "currency": "USD"
-              },
-              {
-                "amount": -73996.786529,
-                "currency": "USD"
-              },
-              {
-                "amount": -74551.762428,
-                "currency": "USD"
-              },
-              {
-                "amount": -75110.900647,
-                "currency": "USD"
-              },
-              {
-                "amount": -75674.232401,
-                "currency": "USD"
-              },
-              {
-                "amount": -76241.789144,
-                "currency": "USD"
-              },
-              {
-                "amount": -76813.602563,
-                "currency": "USD"
-              },
-              {
-                "amount": -77389.704582,
-                "currency": "USD"
-              },
-              {
-                "amount": -77970.127367,
-                "currency": "USD"
-              },
-              {
-                "amount": -78554.903322,
-                "currency": "USD"
-              },
-              {
-                "amount": -79144.065097,
-                "currency": "USD"
-              },
-              {
-                "amount": -79737.645585,
-                "currency": "USD"
-              },
-              {
-                "amount": -80335.677927,
-                "currency": "USD"
-              },
-              {
-                "amount": -80938.195511,
-                "currency": "USD"
-              },
-              {
-                "amount": -81545.231978,
-                "currency": "USD"
-              },
-              {
-                "amount": -82156.821218,
-                "currency": "USD"
-              },
-              {
-                "amount": -1683493.413756,
-                "currency": "USD"
-              }
-            ],
-            "total": -3000000.0,
-            "streams": [
-              "opco.debt.principal"
-            ]
-          },
-          {
-            "kind": "spacer",
-            "depth": 0,
-            "display_sign": 1.0
-          },
-          {
-            "kind": "line",
-            "label": "Investment received",
+            "label": "Acquisitions, net of cash acquired",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -6977,7 +6787,7 @@
           },
           {
             "kind": "line",
-            "label": "Liquidity event",
+            "label": "Proceeds from disposals",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
@@ -7082,6 +6892,545 @@
             "streams": [
               "opco.exit.value"
             ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net cash from investing activities",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -5009000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -9016.296495,
+                "currency": "USD"
+              },
+              {
+                "amount": -9032.659384,
+                "currency": "USD"
+              },
+              {
+                "amount": -9049.088938,
+                "currency": "USD"
+              },
+              {
+                "amount": -9065.585427,
+                "currency": "USD"
+              },
+              {
+                "amount": -9082.149126,
+                "currency": "USD"
+              },
+              {
+                "amount": -9098.780306,
+                "currency": "USD"
+              },
+              {
+                "amount": -9115.479245,
+                "currency": "USD"
+              },
+              {
+                "amount": -9132.246217,
+                "currency": "USD"
+              },
+              {
+                "amount": -9149.081499,
+                "currency": "USD"
+              },
+              {
+                "amount": -9165.985371,
+                "currency": "USD"
+              },
+              {
+                "amount": -9182.958111,
+                "currency": "USD"
+              },
+              {
+                "amount": -9200.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -9217.11132,
+                "currency": "USD"
+              },
+              {
+                "amount": -9234.292353,
+                "currency": "USD"
+              },
+              {
+                "amount": -9251.543385,
+                "currency": "USD"
+              },
+              {
+                "amount": -9268.864699,
+                "currency": "USD"
+              },
+              {
+                "amount": -9286.256582,
+                "currency": "USD"
+              },
+              {
+                "amount": -9303.719322,
+                "currency": "USD"
+              },
+              {
+                "amount": -9321.253207,
+                "currency": "USD"
+              },
+              {
+                "amount": -9338.858527,
+                "currency": "USD"
+              },
+              {
+                "amount": -9356.535574,
+                "currency": "USD"
+              },
+              {
+                "amount": -9374.284639,
+                "currency": "USD"
+              },
+              {
+                "amount": 7356574.894464,
+                "currency": "USD"
+              }
+            ],
+            "total": 2145331.864737
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Proceeds from borrowings",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 3000000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 3000000.0,
+            "streams": [
+              "opco.debt.proceeds"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Repayment of borrowings",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -72899.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -73445.941965,
+                "currency": "USD"
+              },
+              {
+                "amount": -73996.786529,
+                "currency": "USD"
+              },
+              {
+                "amount": -74551.762428,
+                "currency": "USD"
+              },
+              {
+                "amount": -75110.900647,
+                "currency": "USD"
+              },
+              {
+                "amount": -75674.232401,
+                "currency": "USD"
+              },
+              {
+                "amount": -76241.789144,
+                "currency": "USD"
+              },
+              {
+                "amount": -76813.602563,
+                "currency": "USD"
+              },
+              {
+                "amount": -77389.704582,
+                "currency": "USD"
+              },
+              {
+                "amount": -77970.127367,
+                "currency": "USD"
+              },
+              {
+                "amount": -78554.903322,
+                "currency": "USD"
+              },
+              {
+                "amount": -79144.065097,
+                "currency": "USD"
+              },
+              {
+                "amount": -79737.645585,
+                "currency": "USD"
+              },
+              {
+                "amount": -80335.677927,
+                "currency": "USD"
+              },
+              {
+                "amount": -80938.195511,
+                "currency": "USD"
+              },
+              {
+                "amount": -81545.231978,
+                "currency": "USD"
+              },
+              {
+                "amount": -82156.821218,
+                "currency": "USD"
+              },
+              {
+                "amount": -1683493.413756,
+                "currency": "USD"
+              }
+            ],
+            "total": -3000000.0,
+            "streams": [
+              "opco.debt.principal"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Interest paid",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -21953.256015,
+                "currency": "USD"
+              },
+              {
+                "amount": -21402.41145,
+                "currency": "USD"
+              },
+              {
+                "amount": -20847.435551,
+                "currency": "USD"
+              },
+              {
+                "amount": -20288.297333,
+                "currency": "USD"
+              },
+              {
+                "amount": -19724.965578,
+                "currency": "USD"
+              },
+              {
+                "amount": -19157.408835,
+                "currency": "USD"
+              },
+              {
+                "amount": -18585.595417,
+                "currency": "USD"
+              },
+              {
+                "amount": -18009.493398,
+                "currency": "USD"
+              },
+              {
+                "amount": -17429.070613,
+                "currency": "USD"
+              },
+              {
+                "amount": -16844.294658,
+                "currency": "USD"
+              },
+              {
+                "amount": -16255.132883,
+                "currency": "USD"
+              },
+              {
+                "amount": -15661.552395,
+                "currency": "USD"
+              },
+              {
+                "amount": -15063.520053,
+                "currency": "USD"
+              },
+              {
+                "amount": -14461.002468,
+                "currency": "USD"
+              },
+              {
+                "amount": -13853.966002,
+                "currency": "USD"
+              },
+              {
+                "amount": -13242.376762,
+                "currency": "USD"
+              },
+              {
+                "amount": -12626.200603,
+                "currency": "USD"
+              }
+            ],
+            "total": -452905.980014,
+            "streams": [
+              "opco.debt.interest"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net cash from financing activities",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 2977500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -22500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -95399.19798,
+                "currency": "USD"
+              },
+              {
+                "amount": -1696119.614359,
+                "currency": "USD"
+              }
+            ],
+            "total": -452905.980019
           }
         ],
         "reconciliation": {

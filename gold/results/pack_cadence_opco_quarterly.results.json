@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "f27cc212145de242557cec9a1fef8962d0bd102b0084abbb7311cfc236c21bf8",
+  "model_hash": "e817ba653c1f6a1eab0b7519a45150491ddb0bdab12d72e313e6db75c4bde761",
   "ledger_hash": "fae71d79701ff1fc921afdafe694e4b4103de8df4c5a63ea56207149071e3ad2",
   "engine": {
     "name": "cfdl-engine",
@@ -299,63 +299,6 @@
           }
         ]
       },
-      "domain.opco.gross_burn": {
-        "index": {
-          "calendar": "quarterly",
-          "start": "2025-01-01",
-          "periods": 12
-        },
-        "values": [
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 232200.0,
-            "currency": "USD"
-          }
-        ]
-      },
       "domain.opco.lfcf_periodic": {
         "index": {
           "calendar": "quarterly",
@@ -409,6 +352,177 @@
           },
           {
             "amount": 97800.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_financing": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_investing": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -22200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_operations": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120000.0,
             "currency": "USD"
           }
         ]
@@ -1014,27 +1128,6 @@
             }
           ]
         },
-        "domain.opco.gross_burn": {
-          "index": {
-            "calendar": "annual",
-            "start": "2025-01-01",
-            "periods": 3
-          },
-          "values": [
-            {
-              "amount": 928800.0,
-              "currency": "USD"
-            },
-            {
-              "amount": 928800.0,
-              "currency": "USD"
-            },
-            {
-              "amount": 928800.0,
-              "currency": "USD"
-            }
-          ]
-        },
         "domain.opco.lfcf_periodic": {
           "index": {
             "calendar": "annual",
@@ -1052,6 +1145,69 @@
             },
             {
               "amount": 391200.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_financing": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_investing": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": -88800.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -88800.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -88800.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.opco.net_cash_from_operations": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 3
+          },
+          "values": [
+            {
+              "amount": 480000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 480000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 480000.0,
               "currency": "USD"
             }
           ]
