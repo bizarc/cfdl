@@ -23,4 +23,5 @@ categories = [
 aliases = "aliases.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
+statements = "statements.toml"
 validations = "validations.toml"

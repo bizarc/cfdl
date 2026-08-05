@@ -1,0 +1,429 @@
+# OpCo per-period subtotals and the free cash flow statement.
+#
+# Shaped like the FCF BUILD-UP a banker or an equity analyst writes: revenue to
+# EBITDA, EBITDA to unlevered free cash flow through tax, working capital and
+# capex, then the financing leg down to levered free cash flow.
+#
+# That order is the point. `benchmarks/opco/banker_dcf_conventions` reconciles a
+# source that publishes the build-up line by line, and the model carries six
+# opaque UFCF streams against it — the statement is where the intermediate lines
+# become visible rather than implied.
+#
+# Order is dependency order.
+
+[[subtotals]]
+id = "domain.opco.revenue_periodic"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*"]
+formula = "sum(operating.revenue.*)"
+
+[[subtotals]]
+id = "domain.opco.opex_periodic"
+kind = "money"
+op = "negated_sum"
+categories = ["operating.expense.*"]
+formula = "-sum(operating.expense.*)"
+
+# Revenue less cash operating cost. Tax and working capital are excluded — both
+# sit below EBITDA in every convention this pack reconciles against.
+[[subtotals]]
+id = "domain.opco.ebitda_periodic"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*", "operating.expense.*"]
+formula = "sum(operating.revenue.*, operating.expense.*)"
+
+# Unlevered free cash flow: everything operating, less capital expenditure, and
+# BEFORE any financing. That exclusion is what "unlevered" means, and it is why
+# this cannot simply fold `operating.* + investing.*` — an acquisition or an
+# exit is investing and is not part of the operating asset's free cash flow.
+[[subtotals]]
+id = "domain.opco.ufcf_periodic"
+kind = "money"
+op = "sum"
+categories = ["operating.*", "investing.capital.capex"]
+formula = "sum(operating.*, investing.capital.capex)"
+
+# What the debt costs each period, as an amount paid.
+[[subtotals]]
+id = "domain.opco.debt_service_periodic"
+kind = "money"
+op = "negated_sum"
+categories = ["financing.interest", "financing.debt_principal"]
+formula = "-sum(financing.interest, financing.debt_principal)"
+
+# Levered free cash flow: UFCF after the whole financing section, draws
+# included. The streams are signed, so adding `financing.*` subtracts interest
+# and principal and adds proceeds without this file restating the signs.
+[[subtotals]]
+id = "domain.opco.lfcf_periodic"
+kind = "money"
+op = "sum"
+subtotals = ["domain.opco.ufcf_periodic"]
+categories = ["financing.*"]
+formula = "domain.opco.ufcf_periodic + sum(financing.*)"
+
+# Coverage, per period. `domain.opco.fcf_to_debt_service` in metrics.toml is
+# this ratio over the whole life; a lender tests it every period.
+[[subtotals]]
+id = "domain.opco.debt_service_coverage"
+kind = "number"
+op = "ratio"
+numerator = "domain.opco.ufcf_periodic"
+denominator = "domain.opco.debt_service_periodic"
+formula = "domain.opco.ufcf_periodic / domain.opco.debt_service_periodic"
+
+# ---------------------------------------------------------------------------
+
+[[statements]]
+id = "free_cash_flow"
+label = "Free cash flow"
+default = true
+
+[[statements.rows]]
+kind = "line"
+label = "Revenue"
+depth = 1
+categories = ["operating.revenue.recurring"]
+
+[[statements.rows]]
+kind = "line"
+label = "Operating expenses"
+depth = 1
+categories = ["operating.expense.opex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "EBITDA"
+depth = 0
+subtotal = "domain.opco.ebitda_periodic"
+
+[[statements.rows]]
+kind = "line"
+label = "Cash taxes"
+depth = 1
+categories = ["operating.tax"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Change in working capital"
+depth = 1
+categories = ["operating.working_capital"]
+
+[[statements.rows]]
+kind = "line"
+label = "Capital expenditure"
+depth = 1
+categories = ["investing.capital.capex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Unlevered free cash flow"
+depth = 0
+subtotal = "domain.opco.ufcf_periodic"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt principal"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt proceeds"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
+kind = "ratio"
+label = "Debt service coverage"
+depth = 0
+subtotal = "domain.opco.debt_service_coverage"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Levered free cash flow"
+depth = 0
+subtotal = "domain.opco.lfcf_periodic"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Acquisition"
+depth = 1
+categories = ["investing.acquisition"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Exit proceeds"
+depth = 1
+categories = ["investing.exit"]
+
+# ---------------------------------------------------------------------------
+# SUB-INDUSTRY VIEWS.
+#
+# The same cash, read by different mandates.
+#
+# A NOTE ON WHAT IS AND IS NOT STANDARD, because the two views below are not
+# equally well grounded and the file should say so.
+#
+# "Cash flow available for debt service" is a defined term in credit agreements
+# and project finance documents, and the coverage ratio struck from it is a
+# tested covenant. That view is grounded.
+#
+# The second view is the STATEMENT OF CASH FLOWS as ASC 230 / IAS 7 define it —
+# net cash from operating, investing and financing activities. Those are the
+# three sections CFDL's own category roots already are, so this view is the
+# language's structure reported directly, and it is a real reporting standard.
+#
+# It deliberately does NOT use "gross burn" and "net burn". Those are common
+# venture vernacular but they are not defined in any accounting standard, and
+# naming a subtotal after a convention nobody codified would put a term in the
+# output that no source can be pointed at.
+
+[[subtotals]]
+id = "domain.opco.cfads"
+kind = "money"
+op = "sum"
+categories = ["operating.*", "investing.capital.capex"]
+formula = "cash flow available for debt service"
+
+# ASC 230-10-45 / IAS 7.10: the operating section of a statement of cash flows.
+[[subtotals]]
+id = "domain.opco.net_cash_from_operations"
+kind = "money"
+op = "sum"
+categories = ["operating.*"]
+formula = "net cash provided by (used in) operating activities"
+
+[[subtotals]]
+id = "domain.opco.net_cash_from_investing"
+kind = "money"
+op = "sum"
+categories = ["investing.*"]
+formula = "net cash provided by (used in) investing activities"
+
+[[subtotals]]
+id = "domain.opco.net_cash_from_financing"
+kind = "money"
+op = "sum"
+categories = ["financing.*"]
+formula = "net cash provided by (used in) financing activities"
+
+# Sponsor / leveraged buyout view.
+[[statements]]
+id = "sponsor"
+label = "Sponsor cash flow"
+
+[[statements.rows]]
+kind = "line"
+label = "Acquisition of the platform"
+depth = 1
+categories = ["investing.acquisition"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt drawn"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Revenue"
+depth = 1
+categories = ["operating.revenue.recurring"]
+
+[[statements.rows]]
+kind = "line"
+label = "Operating expenses"
+depth = 1
+categories = ["operating.expense.opex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "EBITDA"
+depth = 0
+subtotal = "domain.opco.ebitda_periodic"
+
+[[statements.rows]]
+kind = "line"
+label = "Cash taxes"
+depth = 1
+categories = ["operating.tax"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Change in net working capital"
+depth = 1
+categories = ["operating.working_capital"]
+
+[[statements.rows]]
+kind = "line"
+label = "Capital expenditure"
+depth = 1
+categories = ["investing.capital.capex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Cash flow available for debt service"
+depth = 0
+subtotal = "domain.opco.cfads"
+
+[[statements.rows]]
+kind = "line"
+label = "Cash interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Mandatory amortisation and sweep"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "ratio"
+label = "Debt service coverage"
+depth = 0
+subtotal = "domain.opco.debt_service_coverage"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Levered free cash flow"
+depth = 0
+subtotal = "domain.opco.lfcf_periodic"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Exit proceeds"
+depth = 1
+categories = ["investing.exit"]
+
+# The statement of cash flows, by activity — ASC 230-10-45 / IAS 7.10.
+#
+# The three sections ARE CFDL's category roots, so this view is the language's
+# own structure reported directly: every category the pack declares belongs to
+# exactly one section by construction, and the completeness gate checks it.
+[[statements]]
+id = "cash_flows"
+label = "Statement of cash flows"
+
+[[statements.rows]]
+kind = "line"
+label = "Revenue"
+depth = 1
+categories = ["operating.revenue.recurring"]
+
+[[statements.rows]]
+kind = "line"
+label = "Operating expenses"
+depth = 1
+categories = ["operating.expense.opex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Income taxes paid"
+depth = 1
+categories = ["operating.tax"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Change in net working capital"
+depth = 1
+categories = ["operating.working_capital"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net cash from operating activities"
+depth = 0
+subtotal = "domain.opco.net_cash_from_operations"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Purchases of property and equipment"
+depth = 1
+categories = ["investing.capital.capex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Acquisitions, net of cash acquired"
+depth = 1
+categories = ["investing.acquisition"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Proceeds from disposals"
+depth = 1
+categories = ["investing.exit"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net cash from investing activities"
+depth = 0
+subtotal = "domain.opco.net_cash_from_investing"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Proceeds from borrowings"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
+kind = "line"
+label = "Repayment of borrowings"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest paid"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net cash from financing activities"
+depth = 0
+subtotal = "domain.opco.net_cash_from_financing"

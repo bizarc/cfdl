@@ -1,0 +1,190 @@
+# Energy per-period subtotals and the project operating statement.
+#
+# Shaped like a PROJECT FINANCE MODEL's operating block, because that is what a
+# lender to a generating asset reads: revenue, operations and maintenance, the
+# cash available to service debt, and the coverage ratio tested against it.
+#
+# CFADS AND DSCR ARE THE POINT. A project finance covenant is tested EVERY
+# PERIOD, and a lifetime coverage ratio cannot express it — the same argument
+# backlog 1.4 makes for CRE. `domain.energy.dscr` exists in metrics.toml today
+# as one number for the whole life of the asset; this makes it a series.
+#
+# Order is dependency order.
+
+[[subtotals]]
+id = "domain.energy.revenue"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*"]
+formula = "sum(operating.revenue.*)"
+
+[[subtotals]]
+id = "domain.energy.opex"
+kind = "money"
+op = "negated_sum"
+categories = ["operating.expense.*"]
+formula = "-sum(operating.expense.*)"
+
+# Revenue net of operating cost, before tax benefits. Tax credits are excluded
+# deliberately: a PTC or an ITC is not operating margin, and a reader comparing
+# assets on EBITDA would be misled by folding a subsidy into it.
+[[subtotals]]
+id = "domain.energy.ebitda"
+kind = "money"
+op = "sum"
+categories = ["operating.revenue.*", "operating.expense.*"]
+formula = "sum(operating.revenue.*, operating.expense.*)"
+
+# Cash flow available for debt service — the project finance term of art, and
+# the denominator's counterpart in the covenant below.
+#
+# `operating.*` rather than `ebitda + tax_benefit`, so a new operating category
+# joins it without this file changing. That does mean tax credits are IN CFADS,
+# which is the convention where they are monetised as cash; where they are not,
+# the model should not classify them as operating.
+[[subtotals]]
+id = "domain.energy.cfads"
+kind = "money"
+op = "sum"
+categories = ["operating.*"]
+formula = "sum(operating.*)"
+
+[[subtotals]]
+id = "domain.energy.debt_service_periodic"
+kind = "money"
+op = "negated_sum"
+categories = ["financing.debt_service"]
+formula = "-sum(financing.debt_service)"
+
+# The covenant. Undefined once the debt matures, which is published as `null`
+# rather than as a zero — a period with no debt service has no coverage ratio,
+# and a consumer that averaged a zero in would understate the deal.
+[[subtotals]]
+id = "domain.energy.dscr_periodic"
+kind = "number"
+op = "ratio"
+numerator = "domain.energy.cfads"
+denominator = "domain.energy.debt_service_periodic"
+formula = "domain.energy.cfads / domain.energy.debt_service_periodic"
+
+# ---------------------------------------------------------------------------
+
+[[statements]]
+id = "operating"
+label = "Project operating statement"
+default = true
+
+[[statements.rows]]
+kind = "line"
+label = "Energy revenue"
+depth = 1
+categories = ["operating.revenue.energy"]
+
+[[statements.rows]]
+kind = "line"
+label = "Operations and maintenance"
+depth = 1
+categories = ["operating.expense.om"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "EBITDA"
+depth = 0
+subtotal = "domain.energy.ebitda"
+
+[[statements.rows]]
+kind = "line"
+label = "Tax credits and benefits"
+depth = 1
+categories = ["operating.tax_benefit"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Cash flow available for debt service"
+depth = 0
+subtotal = "domain.energy.cfads"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Capital expenditure"
+depth = 1
+categories = ["investing.capital.capex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt service"
+depth = 1
+categories = ["financing.debt_service"]
+display = "positive"
+
+[[statements.rows]]
+kind = "ratio"
+label = "Debt service coverage"
+depth = 0
+subtotal = "domain.energy.dscr_periodic"
+
+# The same project, annually. A PPA model is often built monthly for the
+# generation profile and covenanted annually.
+[[statements]]
+id = "operating_annual"
+label = "Project operating statement (annual)"
+grain = "annual"
+
+[[statements.rows]]
+kind = "line"
+label = "Energy revenue"
+depth = 1
+categories = ["operating.revenue.energy"]
+
+[[statements.rows]]
+kind = "line"
+label = "Operations and maintenance"
+depth = 1
+categories = ["operating.expense.om"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "EBITDA"
+depth = 0
+subtotal = "domain.energy.ebitda"
+
+[[statements.rows]]
+kind = "line"
+label = "Tax credits and benefits"
+depth = 1
+categories = ["operating.tax_benefit"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Cash flow available for debt service"
+depth = 0
+subtotal = "domain.energy.cfads"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Capital expenditure"
+depth = 1
+categories = ["investing.capital.capex"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Debt service"
+depth = 1
+categories = ["financing.debt_service"]
+display = "positive"
+
+[[statements.rows]]
+kind = "ratio"
+label = "Debt service coverage"
+depth = 0
+subtotal = "domain.energy.dscr_periodic"

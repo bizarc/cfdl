@@ -1,0 +1,349 @@
+# Credit per-period subtotals and the collections statement.
+#
+# Shaped like a SERVICER REMITTANCE REPORT, which is the artifact this domain
+# actually publishes: what the pool collected this period, split by what the
+# money was, less the servicing fee, leaving what is available to distribute.
+# An ABS exhibit and a monthly investor report both have this shape.
+#
+# These fold CATEGORIES, not stream names, which is what keeps them correct as
+# the pack grows. `packs/credit/metrics.toml` names streams by hand and has to
+# be edited whenever a rule is added.
+#
+# Order is dependency order — a subtotal may reference only ones above it.
+
+# Everything the pool collected, before the servicer is paid. Interest,
+# scheduled principal, prepayments, recoveries and fees are separate categories
+# precisely so this can be one fold over them rather than a list that has to be
+# maintained.
+[[subtotals]]
+id = "domain.credit.gross_collections"
+kind = "money"
+op = "sum"
+categories = ["operating.collection.*"]
+formula = "sum(operating.collection.*)"
+
+# Principal returned, scheduled and unscheduled together.
+#
+# This is the series backlog 7.12 is about. Percent-of-pool-outstanding is
+# derived from CUMULATIVE principal, and until now there was no per-period
+# series carrying it — so `benchmarks/credit/auto_abs_speed_050` reconciles its
+# published percent-outstanding column in prose. It is not the whole of 7.12
+# (that needs the original balance to divide by), but it is the input that was
+# missing.
+[[subtotals]]
+id = "domain.credit.principal_collections"
+kind = "money"
+op = "sum"
+categories = ["operating.collection.principal", "operating.collection.prepayment"]
+formula = "sum(scheduled principal, prepayments)"
+
+# The servicing fee, signed positive as an amount paid.
+[[subtotals]]
+id = "domain.credit.servicing_fee"
+kind = "money"
+op = "negated_sum"
+categories = ["operating.expense.servicing"]
+formula = "-sum(operating.expense.servicing)"
+
+# What is left to distribute. `operating.*` rather than
+# `gross_collections - servicing_fee`: the two are equal by construction, and
+# folding the section means a new operating category lands here without this
+# file changing.
+[[subtotals]]
+id = "domain.credit.net_collections"
+kind = "money"
+op = "sum"
+categories = ["operating.*"]
+formula = "sum(operating.*)"
+
+# ---------------------------------------------------------------------------
+
+[[statements]]
+id = "collections"
+label = "Collections statement"
+default = true
+
+[[statements.rows]]
+kind = "line"
+label = "Interest collections"
+depth = 1
+categories = ["operating.collection.interest"]
+
+[[statements.rows]]
+kind = "line"
+label = "Scheduled principal"
+depth = 1
+categories = ["operating.collection.principal"]
+
+[[statements.rows]]
+kind = "line"
+label = "Unscheduled principal"
+depth = 1
+categories = ["operating.collection.prepayment"]
+
+[[statements.rows]]
+kind = "line"
+label = "Liquidation proceeds and recoveries"
+depth = 1
+categories = ["operating.collection.recovery"]
+
+[[statements.rows]]
+kind = "line"
+label = "Fees and charges"
+depth = 1
+categories = ["operating.collection.penalty"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Gross collections"
+depth = 0
+subtotal = "domain.credit.gross_collections"
+
+[[statements.rows]]
+kind = "line"
+label = "Servicing fee"
+depth = 1
+categories = ["operating.expense.servicing"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Available funds"
+depth = 0
+subtotal = "domain.credit.net_collections"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Pool purchase"
+depth = 1
+categories = ["investing.purchase"]
+display = "positive"
+
+# The same collections, annually. A pool is modelled monthly because that is
+# how it amortises; an investor report is read by year.
+[[statements]]
+id = "collections_annual"
+label = "Collections statement (annual)"
+grain = "annual"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest collections"
+depth = 1
+categories = ["operating.collection.interest"]
+
+[[statements.rows]]
+kind = "line"
+label = "Scheduled principal"
+depth = 1
+categories = ["operating.collection.principal"]
+
+[[statements.rows]]
+kind = "line"
+label = "Unscheduled principal"
+depth = 1
+categories = ["operating.collection.prepayment"]
+
+[[statements.rows]]
+kind = "line"
+label = "Liquidation proceeds and recoveries"
+depth = 1
+categories = ["operating.collection.recovery"]
+
+[[statements.rows]]
+kind = "line"
+label = "Fees and charges"
+depth = 1
+categories = ["operating.collection.penalty"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Gross collections"
+depth = 0
+subtotal = "domain.credit.gross_collections"
+
+[[statements.rows]]
+kind = "line"
+label = "Servicing fee"
+depth = 1
+categories = ["operating.expense.servicing"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Available funds"
+depth = 0
+subtotal = "domain.credit.net_collections"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Pool purchase"
+depth = 1
+categories = ["investing.purchase"]
+display = "positive"
+
+# ---------------------------------------------------------------------------
+# SUB-INDUSTRY VIEWS.
+#
+# One asset class, several conventions. The categories do not change — the same
+# cash is the same cash — but what a reader groups, names and puts first does.
+# A remittance report splits principal scheduled/unscheduled because that is
+# what CPR and SMM act on, and reports available funds. A BDC's statement of
+# operations reports total investment income and net investment income, because
+# that is what NII per share is struck from. Forcing both through one layout
+# serves neither, and the completeness gate makes each view provably total.
+
+[[subtotals]]
+id = "domain.credit.total_investment_income"
+kind = "money"
+op = "sum"
+categories = ["operating.collection.interest", "operating.collection.penalty"]
+formula = "sum(interest income, fee income)"
+
+# Agency / structured MBS. Principal first and split, because a pool factor and
+# a CPR are statements about principal, not about total cash.
+[[statements]]
+id = "mbs"
+label = "Remittance report"
+
+[[statements.rows]]
+kind = "line"
+label = "Scheduled principal"
+depth = 1
+categories = ["operating.collection.principal"]
+
+[[statements.rows]]
+kind = "line"
+label = "Unscheduled principal"
+depth = 1
+categories = ["operating.collection.prepayment"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Total principal distribution"
+depth = 0
+subtotal = "domain.credit.principal_collections"
+
+[[statements.rows]]
+kind = "line"
+label = "Gross interest"
+depth = 1
+categories = ["operating.collection.interest"]
+
+[[statements.rows]]
+kind = "line"
+label = "Liquidation proceeds and recoveries"
+depth = 1
+categories = ["operating.collection.recovery"]
+
+[[statements.rows]]
+kind = "line"
+label = "Fees and charges"
+depth = 1
+categories = ["operating.collection.penalty"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Gross collections"
+depth = 0
+subtotal = "domain.credit.gross_collections"
+
+[[statements.rows]]
+kind = "line"
+label = "Servicing fee"
+depth = 1
+categories = ["operating.expense.servicing"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Total distribution amount"
+depth = 0
+subtotal = "domain.credit.net_collections"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Pool purchase"
+depth = 1
+categories = ["investing.purchase"]
+display = "positive"
+
+# Direct lending / private credit. Yield first: cash interest and fees are one
+# income line, and principal is a return OF capital rather than a return on it.
+[[statements]]
+id = "investment_income"
+label = "Statement of operations"
+
+[[statements.rows]]
+kind = "line"
+label = "Cash interest"
+depth = 1
+categories = ["operating.collection.interest"]
+
+[[statements.rows]]
+kind = "line"
+label = "Fee income"
+depth = 1
+categories = ["operating.collection.penalty"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Total investment income"
+depth = 0
+subtotal = "domain.credit.total_investment_income"
+
+[[statements.rows]]
+kind = "line"
+label = "Scheduled amortisation of principal"
+depth = 1
+categories = ["operating.collection.principal"]
+
+[[statements.rows]]
+kind = "line"
+label = "Unscheduled principal repayments"
+depth = 1
+categories = ["operating.collection.prepayment"]
+
+[[statements.rows]]
+kind = "line"
+label = "Recoveries on non-accrual investments"
+depth = 1
+categories = ["operating.collection.recovery"]
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Gross collections"
+depth = 0
+subtotal = "domain.credit.gross_collections"
+
+[[statements.rows]]
+kind = "line"
+label = "Servicing and administrative expenses"
+depth = 1
+categories = ["operating.expense.servicing"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Net investment income"
+depth = 0
+subtotal = "domain.credit.net_collections"
+
+[[statements.rows]]
+kind = "spacer"
+
+[[statements.rows]]
+kind = "line"
+label = "Investments funded"
+depth = 1
+categories = ["investing.purchase"]
+display = "positive"

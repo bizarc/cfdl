@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "6cb9ac938c823488744d22a97c0709b954be738caf121f668a192b885c0f8b2f",
+  "model_hash": "6e0bc6d708abea6d5d619db84883840d48d9546701d21a14853904a7fd963617",
   "ledger_hash": "7dd5f1605d66bb27b8773021365325da2c22c5be4459bf74955a303a10742027",
   "engine": {
     "name": "cfdl-engine",
@@ -46,6 +46,312 @@
       }
     },
     "series": {
+      "domain.energy.cfads": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "domain.energy.debt_service_periodic": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "domain.energy.dscr_periodic": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.energy.ebitda": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "domain.energy.opex": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 0.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "domain.energy.revenue": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",
@@ -164,6 +470,81 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.energy.cfads": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "INR"
+            }
+          ]
+        },
+        "domain.energy.debt_service_periodic": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "INR"
+            }
+          ]
+        },
+        "domain.energy.dscr_periodic": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            null
+          ]
+        },
+        "domain.energy.ebitda": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "INR"
+            }
+          ]
+        },
+        "domain.energy.opex": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "INR"
+            }
+          ]
+        },
+        "domain.energy.revenue": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 15000000.0,
+              "currency": "INR"
+            }
+          ]
+        },
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",

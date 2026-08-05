@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "5c191c0c84d87a32661e3a375be8f45b9f43be2f5e455f87239b30c0cea2ecb4",
+  "model_hash": "b1070dcf4fe69652d320db5a75d4854106eea48e91d486d21b2ffc09e8f1ac2b",
   "ledger_hash": "df623282e8b9b42e6daa5ae20628b27d692d85758533329a9e3e234b60f08b27",
   "engine": {
     "name": "cfdl-engine",
@@ -207,6 +207,351 @@
       }
     },
     "series": {
+      "domain.credit.gross_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 112657.448266,
+            "currency": "USD"
+          },
+          {
+            "amount": 110542.052648,
+            "currency": "USD"
+          },
+          {
+            "amount": 108455.863022,
+            "currency": "USD"
+          },
+          {
+            "amount": 107176.013597,
+            "currency": "USD"
+          },
+          {
+            "amount": 105012.793302,
+            "currency": "USD"
+          },
+          {
+            "amount": 102880.012638,
+            "currency": "USD"
+          },
+          {
+            "amount": 100777.290058,
+            "currency": "USD"
+          },
+          {
+            "amount": 98704.248562,
+            "currency": "USD"
+          },
+          {
+            "amount": 96660.515643,
+            "currency": "USD"
+          },
+          {
+            "amount": 94645.723232,
+            "currency": "USD"
+          },
+          {
+            "amount": 92775.066094,
+            "currency": "USD"
+          },
+          {
+            "amount": 90935.89168,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.net_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 112657.448266,
+            "currency": "USD"
+          },
+          {
+            "amount": 110542.052648,
+            "currency": "USD"
+          },
+          {
+            "amount": 108455.863022,
+            "currency": "USD"
+          },
+          {
+            "amount": 107176.013597,
+            "currency": "USD"
+          },
+          {
+            "amount": 105012.793302,
+            "currency": "USD"
+          },
+          {
+            "amount": 102880.012638,
+            "currency": "USD"
+          },
+          {
+            "amount": 100777.290058,
+            "currency": "USD"
+          },
+          {
+            "amount": 98704.248562,
+            "currency": "USD"
+          },
+          {
+            "amount": 96660.515643,
+            "currency": "USD"
+          },
+          {
+            "amount": 94645.723232,
+            "currency": "USD"
+          },
+          {
+            "amount": 92775.066094,
+            "currency": "USD"
+          },
+          {
+            "amount": 90935.89168,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 106672.658558,
+            "currency": "USD"
+          },
+          {
+            "amount": 105104.445864,
+            "currency": "USD"
+          },
+          {
+            "amount": 103556.23084,
+            "currency": "USD"
+          },
+          {
+            "amount": 102027.773328,
+            "currency": "USD"
+          },
+          {
+            "amount": 100518.835971,
+            "currency": "USD"
+          },
+          {
+            "amount": 99029.184181,
+            "currency": "USD"
+          },
+          {
+            "amount": 97558.586106,
+            "currency": "USD"
+          },
+          {
+            "amount": 96106.812599,
+            "currency": "USD"
+          },
+          {
+            "amount": 94673.63719,
+            "currency": "USD"
+          },
+          {
+            "amount": 93258.836052,
+            "currency": "USD"
+          },
+          {
+            "amount": 91862.187968,
+            "currency": "USD"
+          },
+          {
+            "amount": 90483.474309,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.servicing_fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.total_investment_income": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 5984.789708,
+            "currency": "USD"
+          },
+          {
+            "amount": 5437.606785,
+            "currency": "USD"
+          },
+          {
+            "amount": 4899.632182,
+            "currency": "USD"
+          },
+          {
+            "amount": 4370.742823,
+            "currency": "USD"
+          },
+          {
+            "amount": 3850.817137,
+            "currency": "USD"
+          },
+          {
+            "amount": 3339.735049,
+            "currency": "USD"
+          },
+          {
+            "amount": 2837.377957,
+            "currency": "USD"
+          },
+          {
+            "amount": 2343.628714,
+            "currency": "USD"
+          },
+          {
+            "amount": 1858.371615,
+            "currency": "USD"
+          },
+          {
+            "amount": 1381.492378,
+            "currency": "USD"
+          },
+          {
+            "amount": 912.878126,
+            "currency": "USD"
+          },
+          {
+            "amount": 452.417372,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",
@@ -817,6 +1162,91 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.credit.gross_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1221222.918742,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.net_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1221222.918742,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1180852.662966,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.servicing_fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.total_investment_income": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 37669.489846,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",
@@ -1067,5 +1497,2387 @@
         "formula": "wal_years(numerator_streams)"
       }
     }
+  },
+  "statements": {
+    "pack": "credit",
+    "statements": [
+      {
+        "id": "collections",
+        "label": "Collections statement",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Interest collections",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 5984.789708,
+                "currency": "USD"
+              },
+              {
+                "amount": 5437.606785,
+                "currency": "USD"
+              },
+              {
+                "amount": 4899.632182,
+                "currency": "USD"
+              },
+              {
+                "amount": 4370.742823,
+                "currency": "USD"
+              },
+              {
+                "amount": 3850.817137,
+                "currency": "USD"
+              },
+              {
+                "amount": 3339.735049,
+                "currency": "USD"
+              },
+              {
+                "amount": 2837.377957,
+                "currency": "USD"
+              },
+              {
+                "amount": 2343.628714,
+                "currency": "USD"
+              },
+              {
+                "amount": 1858.371615,
+                "currency": "USD"
+              },
+              {
+                "amount": 1381.492378,
+                "currency": "USD"
+              },
+              {
+                "amount": 912.878126,
+                "currency": "USD"
+              },
+              {
+                "amount": 452.417372,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 37669.489846,
+            "streams": [
+              "credit.pool.interest.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Scheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 97033.10684,
+                "currency": "USD"
+              },
+              {
+                "amount": 96418.592015,
+                "currency": "USD"
+              },
+              {
+                "amount": 95807.968939,
+                "currency": "USD"
+              },
+              {
+                "amount": 95201.212965,
+                "currency": "USD"
+              },
+              {
+                "amount": 94598.299602,
+                "currency": "USD"
+              },
+              {
+                "amount": 93999.204515,
+                "currency": "USD"
+              },
+              {
+                "amount": 93403.903524,
+                "currency": "USD"
+              },
+              {
+                "amount": 92812.372599,
+                "currency": "USD"
+              },
+              {
+                "amount": 92224.587865,
+                "currency": "USD"
+              },
+              {
+                "amount": 91640.525596,
+                "currency": "USD"
+              },
+              {
+                "amount": 91060.16222,
+                "currency": "USD"
+              },
+              {
+                "amount": 90483.474309,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1124683.410989,
+            "streams": [
+              "credit.pool.sched_principal.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Unscheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 9639.551718,
+                "currency": "USD"
+              },
+              {
+                "amount": 8685.853849,
+                "currency": "USD"
+              },
+              {
+                "amount": 7748.261901,
+                "currency": "USD"
+              },
+              {
+                "amount": 6826.560364,
+                "currency": "USD"
+              },
+              {
+                "amount": 5920.53637,
+                "currency": "USD"
+              },
+              {
+                "amount": 5029.979666,
+                "currency": "USD"
+              },
+              {
+                "amount": 4154.682582,
+                "currency": "USD"
+              },
+              {
+                "amount": 3294.44,
+                "currency": "USD"
+              },
+              {
+                "amount": 2449.049326,
+                "currency": "USD"
+              },
+              {
+                "amount": 1618.310455,
+                "currency": "USD"
+              },
+              {
+                "amount": 802.025748,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 56169.251979,
+            "streams": [
+              "credit.pool.prepay.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Liquidation proceeds and recoveries",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 777.497446,
+                "currency": "USD"
+              },
+              {
+                "amount": 643.140194,
+                "currency": "USD"
+              },
+              {
+                "amount": 511.093407,
+                "currency": "USD"
+              },
+              {
+                "amount": 381.325995,
+                "currency": "USD"
+              },
+              {
+                "amount": 253.807249,
+                "currency": "USD"
+              },
+              {
+                "amount": 128.506837,
+                "currency": "USD"
+              },
+              {
+                "amount": 5.394802,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2700.76593,
+            "streams": [
+              "credit.pool.recoveries.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Fees and charges",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.penalty.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Gross collections",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "line",
+            "label": "Servicing fee",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.servicing.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Available funds",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Pool purchase",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -1200000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -1200000.0,
+            "streams": [
+              "credit.purchase.price.smoke"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 21222.918744,
+          "model_total": 21222.918743,
+          "residual": 1e-6
+        }
+      },
+      {
+        "id": "collections_annual",
+        "label": "Collections statement (annual)",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Interest collections",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 37669.489846,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 37669.489846,
+            "streams": [
+              "credit.pool.interest.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Scheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1124683.410989,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1124683.410989,
+            "streams": [
+              "credit.pool.sched_principal.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Unscheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 56169.251979,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 56169.251979,
+            "streams": [
+              "credit.pool.prepay.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Liquidation proceeds and recoveries",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 2700.76593,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2700.76593,
+            "streams": [
+              "credit.pool.recoveries.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Fees and charges",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.penalty.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Gross collections",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1221222.918742,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "line",
+            "label": "Servicing fee",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.servicing.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Available funds",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1221222.918742,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Pool purchase",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -1200000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -1200000.0,
+            "streams": [
+              "credit.purchase.price.smoke"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 21222.918744,
+          "model_total": 21222.918743,
+          "residual": 1e-6
+        }
+      },
+      {
+        "id": "mbs",
+        "label": "Remittance report",
+        "default": false,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Scheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 97033.10684,
+                "currency": "USD"
+              },
+              {
+                "amount": 96418.592015,
+                "currency": "USD"
+              },
+              {
+                "amount": 95807.968939,
+                "currency": "USD"
+              },
+              {
+                "amount": 95201.212965,
+                "currency": "USD"
+              },
+              {
+                "amount": 94598.299602,
+                "currency": "USD"
+              },
+              {
+                "amount": 93999.204515,
+                "currency": "USD"
+              },
+              {
+                "amount": 93403.903524,
+                "currency": "USD"
+              },
+              {
+                "amount": 92812.372599,
+                "currency": "USD"
+              },
+              {
+                "amount": 92224.587865,
+                "currency": "USD"
+              },
+              {
+                "amount": 91640.525596,
+                "currency": "USD"
+              },
+              {
+                "amount": 91060.16222,
+                "currency": "USD"
+              },
+              {
+                "amount": 90483.474309,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1124683.410989,
+            "streams": [
+              "credit.pool.sched_principal.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Unscheduled principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 9639.551718,
+                "currency": "USD"
+              },
+              {
+                "amount": 8685.853849,
+                "currency": "USD"
+              },
+              {
+                "amount": 7748.261901,
+                "currency": "USD"
+              },
+              {
+                "amount": 6826.560364,
+                "currency": "USD"
+              },
+              {
+                "amount": 5920.53637,
+                "currency": "USD"
+              },
+              {
+                "amount": 5029.979666,
+                "currency": "USD"
+              },
+              {
+                "amount": 4154.682582,
+                "currency": "USD"
+              },
+              {
+                "amount": 3294.44,
+                "currency": "USD"
+              },
+              {
+                "amount": 2449.049326,
+                "currency": "USD"
+              },
+              {
+                "amount": 1618.310455,
+                "currency": "USD"
+              },
+              {
+                "amount": 802.025748,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 56169.251979,
+            "streams": [
+              "credit.pool.prepay.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Total principal distribution",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 106672.658558,
+                "currency": "USD"
+              },
+              {
+                "amount": 105104.445864,
+                "currency": "USD"
+              },
+              {
+                "amount": 103556.23084,
+                "currency": "USD"
+              },
+              {
+                "amount": 102027.773328,
+                "currency": "USD"
+              },
+              {
+                "amount": 100518.835971,
+                "currency": "USD"
+              },
+              {
+                "amount": 99029.184181,
+                "currency": "USD"
+              },
+              {
+                "amount": 97558.586106,
+                "currency": "USD"
+              },
+              {
+                "amount": 96106.812599,
+                "currency": "USD"
+              },
+              {
+                "amount": 94673.63719,
+                "currency": "USD"
+              },
+              {
+                "amount": 93258.836052,
+                "currency": "USD"
+              },
+              {
+                "amount": 91862.187968,
+                "currency": "USD"
+              },
+              {
+                "amount": 90483.474309,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1180852.662966
+          },
+          {
+            "kind": "line",
+            "label": "Gross interest",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 5984.789708,
+                "currency": "USD"
+              },
+              {
+                "amount": 5437.606785,
+                "currency": "USD"
+              },
+              {
+                "amount": 4899.632182,
+                "currency": "USD"
+              },
+              {
+                "amount": 4370.742823,
+                "currency": "USD"
+              },
+              {
+                "amount": 3850.817137,
+                "currency": "USD"
+              },
+              {
+                "amount": 3339.735049,
+                "currency": "USD"
+              },
+              {
+                "amount": 2837.377957,
+                "currency": "USD"
+              },
+              {
+                "amount": 2343.628714,
+                "currency": "USD"
+              },
+              {
+                "amount": 1858.371615,
+                "currency": "USD"
+              },
+              {
+                "amount": 1381.492378,
+                "currency": "USD"
+              },
+              {
+                "amount": 912.878126,
+                "currency": "USD"
+              },
+              {
+                "amount": 452.417372,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 37669.489846,
+            "streams": [
+              "credit.pool.interest.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Liquidation proceeds and recoveries",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 777.497446,
+                "currency": "USD"
+              },
+              {
+                "amount": 643.140194,
+                "currency": "USD"
+              },
+              {
+                "amount": 511.093407,
+                "currency": "USD"
+              },
+              {
+                "amount": 381.325995,
+                "currency": "USD"
+              },
+              {
+                "amount": 253.807249,
+                "currency": "USD"
+              },
+              {
+                "amount": 128.506837,
+                "currency": "USD"
+              },
+              {
+                "amount": 5.394802,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2700.76593,
+            "streams": [
+              "credit.pool.recoveries.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Fees and charges",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.penalty.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Gross collections",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "line",
+            "label": "Servicing fee",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.servicing.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Total distribution amount",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Pool purchase",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -1200000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -1200000.0,
+            "streams": [
+              "credit.purchase.price.smoke"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 21222.918744,
+          "model_total": 21222.918743,
+          "residual": 1e-6
+        }
+      },
+      {
+        "id": "investment_income",
+        "label": "Statement of operations",
+        "default": false,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Cash interest",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 5984.789708,
+                "currency": "USD"
+              },
+              {
+                "amount": 5437.606785,
+                "currency": "USD"
+              },
+              {
+                "amount": 4899.632182,
+                "currency": "USD"
+              },
+              {
+                "amount": 4370.742823,
+                "currency": "USD"
+              },
+              {
+                "amount": 3850.817137,
+                "currency": "USD"
+              },
+              {
+                "amount": 3339.735049,
+                "currency": "USD"
+              },
+              {
+                "amount": 2837.377957,
+                "currency": "USD"
+              },
+              {
+                "amount": 2343.628714,
+                "currency": "USD"
+              },
+              {
+                "amount": 1858.371615,
+                "currency": "USD"
+              },
+              {
+                "amount": 1381.492378,
+                "currency": "USD"
+              },
+              {
+                "amount": 912.878126,
+                "currency": "USD"
+              },
+              {
+                "amount": 452.417372,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 37669.489846,
+            "streams": [
+              "credit.pool.interest.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Fee income",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.penalty.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Total investment income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 5984.789708,
+                "currency": "USD"
+              },
+              {
+                "amount": 5437.606785,
+                "currency": "USD"
+              },
+              {
+                "amount": 4899.632182,
+                "currency": "USD"
+              },
+              {
+                "amount": 4370.742823,
+                "currency": "USD"
+              },
+              {
+                "amount": 3850.817137,
+                "currency": "USD"
+              },
+              {
+                "amount": 3339.735049,
+                "currency": "USD"
+              },
+              {
+                "amount": 2837.377957,
+                "currency": "USD"
+              },
+              {
+                "amount": 2343.628714,
+                "currency": "USD"
+              },
+              {
+                "amount": 1858.371615,
+                "currency": "USD"
+              },
+              {
+                "amount": 1381.492378,
+                "currency": "USD"
+              },
+              {
+                "amount": 912.878126,
+                "currency": "USD"
+              },
+              {
+                "amount": 452.417372,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 37669.489846
+          },
+          {
+            "kind": "line",
+            "label": "Scheduled amortisation of principal",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 97033.10684,
+                "currency": "USD"
+              },
+              {
+                "amount": 96418.592015,
+                "currency": "USD"
+              },
+              {
+                "amount": 95807.968939,
+                "currency": "USD"
+              },
+              {
+                "amount": 95201.212965,
+                "currency": "USD"
+              },
+              {
+                "amount": 94598.299602,
+                "currency": "USD"
+              },
+              {
+                "amount": 93999.204515,
+                "currency": "USD"
+              },
+              {
+                "amount": 93403.903524,
+                "currency": "USD"
+              },
+              {
+                "amount": 92812.372599,
+                "currency": "USD"
+              },
+              {
+                "amount": 92224.587865,
+                "currency": "USD"
+              },
+              {
+                "amount": 91640.525596,
+                "currency": "USD"
+              },
+              {
+                "amount": 91060.16222,
+                "currency": "USD"
+              },
+              {
+                "amount": 90483.474309,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1124683.410989,
+            "streams": [
+              "credit.pool.sched_principal.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Unscheduled principal repayments",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 9639.551718,
+                "currency": "USD"
+              },
+              {
+                "amount": 8685.853849,
+                "currency": "USD"
+              },
+              {
+                "amount": 7748.261901,
+                "currency": "USD"
+              },
+              {
+                "amount": 6826.560364,
+                "currency": "USD"
+              },
+              {
+                "amount": 5920.53637,
+                "currency": "USD"
+              },
+              {
+                "amount": 5029.979666,
+                "currency": "USD"
+              },
+              {
+                "amount": 4154.682582,
+                "currency": "USD"
+              },
+              {
+                "amount": 3294.44,
+                "currency": "USD"
+              },
+              {
+                "amount": 2449.049326,
+                "currency": "USD"
+              },
+              {
+                "amount": 1618.310455,
+                "currency": "USD"
+              },
+              {
+                "amount": 802.025748,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 56169.251979,
+            "streams": [
+              "credit.pool.prepay.smoke"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Recoveries on non-accrual investments",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 777.497446,
+                "currency": "USD"
+              },
+              {
+                "amount": 643.140194,
+                "currency": "USD"
+              },
+              {
+                "amount": 511.093407,
+                "currency": "USD"
+              },
+              {
+                "amount": 381.325995,
+                "currency": "USD"
+              },
+              {
+                "amount": 253.807249,
+                "currency": "USD"
+              },
+              {
+                "amount": 128.506837,
+                "currency": "USD"
+              },
+              {
+                "amount": 5.394802,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2700.76593,
+            "streams": [
+              "credit.pool.recoveries.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Gross collections",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "line",
+            "label": "Servicing and administrative expenses",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0,
+            "streams": [
+              "credit.pool.servicing.smoke"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net investment income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052648,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013597,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793302,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012638,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723232,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.89168,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918742
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Investments funded",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -1200000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -1200000.0,
+            "streams": [
+              "credit.purchase.price.smoke"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 21222.918744,
+          "model_total": 21222.918743,
+          "residual": 1e-6
+        }
+      }
+    ]
   }
 }

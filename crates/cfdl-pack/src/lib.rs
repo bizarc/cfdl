@@ -663,6 +663,10 @@ mod embedded {
             include_str!("../../../packs/opco/metrics.toml"),
         ),
         (
+            "statements.toml",
+            include_str!("../../../packs/opco/statements.toml"),
+        ),
+        (
             "validations.toml",
             include_str!("../../../packs/opco/validations.toml"),
         ),
@@ -683,6 +687,10 @@ mod embedded {
             include_str!("../../../packs/credit/metrics.toml"),
         ),
         (
+            "statements.toml",
+            include_str!("../../../packs/credit/statements.toml"),
+        ),
+        (
             "validations.toml",
             include_str!("../../../packs/credit/validations.toml"),
         ),
@@ -701,6 +709,10 @@ mod embedded {
         (
             "metrics.toml",
             include_str!("../../../packs/energy/metrics.toml"),
+        ),
+        (
+            "statements.toml",
+            include_str!("../../../packs/energy/statements.toml"),
         ),
         (
             "validations.toml",

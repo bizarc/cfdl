@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "91518512c03c20499a75e2a9629c8470b3d877e12be8d91d6c85cc8b5acad621",
+  "model_hash": "6d160ab629720e94b3e6d2b377ee7f2a43021e7c9a36b122da3a2024f5e34f27",
   "ledger_hash": "f363ee3cbeb764e6496c987f21f76caf98d563f3bb629eabad7af336f44acbc4",
   "engine": {
     "name": "cfdl-engine",
@@ -72,6 +72,123 @@
       }
     },
     "series": {
+      "domain.energy.cfads": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 369000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 373119.3,
+            "currency": "USD"
+          },
+          {
+            "amount": 377287.85757,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.debt_service_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.dscr_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.energy.ebitda": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 369000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 373119.3,
+            "currency": "USD"
+          },
+          {
+            "amount": 377287.85757,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.opex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 48000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 49200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50430.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 417000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 422319.3,
+            "currency": "USD"
+          },
+          {
+            "amount": 427717.85757,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "annual",
