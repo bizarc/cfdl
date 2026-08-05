@@ -14,6 +14,7 @@ for it, and how to get a particular result.
 |---|---|
 | [CLI](/docs/reference/cli) | Commands and flags for `cfdl compile` and `cfdl run` |
 | [Run config](/docs/reference/run-config) | Discount rate, scenarios, Monte Carlo, and the rest of `run.json` |
+| [Diagnostics](/docs/reference/diagnostics) | Every code CFDL can report, what the ranges mean, and how to read one |
 
 ## Related
 

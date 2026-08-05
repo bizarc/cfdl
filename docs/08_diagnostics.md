@@ -173,7 +173,7 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1109_MISSING_ENTITY`
 
 
-State declarations (`docs/14_state_and_recurrence.md`):
+State declarations:
 
 - `E1120_STATE_MISSING_INIT` — a `state` has no `init`. The value at period 0 is
   required, not defaulted: a recurrence with an unstated base case would
@@ -235,13 +235,12 @@ State declarations (`docs/14_state_and_recurrence.md`):
   environment, and an amount that varies over time is computed once and
   multiplied rather than summed across the occurrences. A constant amount would
   be exact; anything else is silently wrong, so both are rejected. Use a coarser
-  interval, or declare a finer calendar. See `docs/13_feature_backlog.md` 7.16.
-
-### 7.6 Events and actions (E22xx)
+  interval, or declare a finer calendar.
 - `E2109_SCHEDULE_CONFLICTING_PLACEMENT` — a schedule combines `mid` with
   `due`, a day rule, or `net` payment terms. Each states where in its period
-  the cash sits; two placements is a contradiction, not a refinement. See
-  `docs/12_payment_timing.md`.
+  the cash sits; two placements is a contradiction, not a refinement.
+
+### 7.6 Events and actions (E22xx)
 
 - `E2201_EVENT_WHEN_NOT_BOOL`
 - `E2202_STREAM_ACTIVE_NOT_BOOL`

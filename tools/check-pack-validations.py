@@ -209,6 +209,51 @@ def main() -> int:
         )
         return 1
 
+    # --- 3b. codes cited in authored documentation exist --------------------
+    #
+    # The Reference pages are written by hand and cite codes in prose. A code
+    # that was renumbered, or invented while writing, produces a page that reads
+    # authoritatively and sends someone looking for an error that cannot occur.
+    #
+    # The generated catalogue on those pages comes from the register and so
+    # cannot drift; this covers the sentences AROUND it. Region interiors are
+    # skipped for that reason — they are the register, restated.
+    site_docs = REPO_ROOT / "site" / "content" / "docs"
+    known = {f"{number}_{suffix}" for number, sfx in documented.items() for suffix in sfx}
+    invented: list[str] = []
+    if site_docs.exists() and known:
+        for page in sorted(site_docs.rglob("*.md")):
+            head = page.read_text(encoding="utf-8")[:400]
+            if "generated: full" in head or "layer: specification" in head:
+                continue
+            in_region = False
+            for n, line in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
+                if line.strip().startswith("<!-- cfdl:generated"):
+                    in_region = True
+                    continue
+                if line.strip().startswith("<!-- /cfdl:generated"):
+                    in_region = False
+                    continue
+                if in_region:
+                    continue
+                for match in DOC_CODE_RE.finditer(line):
+                    code = f"{match.group(1)}_{match.group(2)}"
+                    if code not in known:
+                        invented.append(f"  {page.relative_to(REPO_ROOT)}:{n}  {code}")
+    if invented:
+        print(
+            "check-pack-validations: authored pages cite codes that do not exist.\n",
+            file=sys.stderr,
+        )
+        print("\n".join(invented), file=sys.stderr)
+        print(
+            f"\nEvery code must appear in {DIAGNOSTICS_DOC.relative_to(REPO_ROOT)}.\n"
+            "A renumbered or invented code reads authoritatively and sends a reader\n"
+            "looking for an error that cannot occur.",
+            file=sys.stderr,
+        )
+        return 1
+
     # --- 4. metric selectors can reach the streams they name ----------------
     unreachable: list[str] = []
     checked_selectors = 0
