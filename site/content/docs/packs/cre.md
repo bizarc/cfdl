@@ -1,7 +1,7 @@
 ---
-id: cookbook-cre
+id: pack-cre
 title: "CRE pack guide"
-slug: "/docs/cookbooks/cre"
+slug: "/docs/packs/cre"
 source: packs/cre/README.md
 generated: full
 ---

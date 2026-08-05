@@ -32,9 +32,9 @@ uncertainty.
 ## Model your domain
 
 Domain [packs](/docs/packs) ship contract templates, validated terms, and
-industry metrics: [Energy](/docs/cookbooks/energy) ·
-[CRE](/docs/cookbooks/cre) · [Credit](/docs/cookbooks/credit) ·
-[OpCo](/docs/cookbooks/opco). Each is gated by a
+industry metrics: [Energy](/docs/packs/energy) ·
+[CRE](/docs/packs/cre) · [Credit](/docs/packs/credit) ·
+[OpCo](/docs/packs/opco). Each is gated by a
 [benchmark suite](/docs/benchmarks) diffed against independent reference
 models.
 

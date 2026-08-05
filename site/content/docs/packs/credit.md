@@ -1,7 +1,7 @@
 ---
-id: cookbook-credit
+id: pack-credit
 title: "Credit pack guide"
-slug: "/docs/cookbooks/credit"
+slug: "/docs/packs/credit"
 source: packs/credit/README.md
 generated: full
 ---

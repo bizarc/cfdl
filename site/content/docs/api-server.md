@@ -11,6 +11,9 @@ generated: none
 engine. It is filesystem-free: sources arrive in the request body and packs
 come from the embedded registry.
 
+This page is the endpoint reference. To get one running, see
+[Run the API server](/docs/install/api-server).
+
 ## Endpoints
 
 | Method | Path | Body | Response |

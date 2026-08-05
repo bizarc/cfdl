@@ -10,6 +10,9 @@ generated: none
 `cfdl-server` is a self-hostable HTTP API over the compiler and engine —
 filesystem-free, embedded packs only.
 
+This page covers running it. For the endpoints it exposes, see
+[API server](/docs/api-server).
+
 ## Docker
 
 ```bash

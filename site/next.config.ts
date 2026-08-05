@@ -64,6 +64,18 @@ const nextConfig: NextConfig = {
         destination: "/docs/specification",
         permanent: true,
       },
+      // The pack guides moved beside their overview, so a pack is one place
+      // rather than an overview in one section and a guide in another.
+      {
+        source: "/docs/cookbooks/:pack",
+        destination: "/docs/packs/:pack",
+        permanent: true,
+      },
+      {
+        source: "/docs/cookbooks",
+        destination: "/docs/packs",
+        permanent: true,
+      },
     ];
   },
 };

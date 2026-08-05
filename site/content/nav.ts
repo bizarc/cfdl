@@ -61,20 +61,6 @@ export const NAV: NavSection[] = [
       { title: "A simple contract", slug: "/docs/examples/simple_contract" },
       { title: "Using an industry pack", slug: "/docs/examples/with_pack" },
       { title: "Multi-file model", slug: "/docs/examples/multi_file" },
-      {
-        title: "Benchmark models",
-        slug: "/docs/examples",
-        items: [
-          { title: "Energy: solar PPA microgrid", slug: "/docs/examples/energy-solar-ppa-microgrid" },
-          { title: "Energy: wind PTC + MACRS", slug: "/docs/examples/energy-wind-ptc-macrs" },
-          { title: "CRE: two-tenant office", slug: "/docs/examples/cre-office-two-tenant" },
-          { title: "CRE: retail strip", slug: "/docs/examples/cre-retail-strip" },
-          { title: "Credit: level-pay pool", slug: "/docs/examples/credit-level-pay-pool" },
-          { title: "Credit: IO/bullet loan", slug: "/docs/examples/credit-io-bullet-loan" },
-          { title: "Credit: floating bridge", slug: "/docs/examples/credit-float-bridge-pool" },
-          { title: "OpCo: leveraged buyout", slug: "/docs/examples/opco-lbo-buyout" },
-        ],
-      },
     ],
   },
   // Surfaces sits directly after the language material: the notebooks inside
@@ -85,16 +71,6 @@ export const NAV: NavSection[] = [
     items: [
       { title: "Python SDK", slug: "/docs/python-sdk" },
       { title: "API server", slug: "/docs/api-server" },
-      {
-        title: "Notebooks",
-        slug: "/docs/notebooks",
-        items: [
-          { title: "Energy", slug: "/docs/notebooks/energy-solar-microgrid" },
-          { title: "CRE", slug: "/docs/notebooks/cre-office-acquisition" },
-          { title: "Credit", slug: "/docs/notebooks/credit-loan-pool" },
-          { title: "OpCo", slug: "/docs/notebooks/opco-lbo" },
-        ],
-      },
     ],
   },
   {
@@ -115,10 +91,37 @@ export const NAV: NavSection[] = [
     title: "Domain Packs",
     items: [
       { title: "Overview", slug: "/docs/packs" },
-      { title: "Energy", slug: "/docs/cookbooks/energy" },
-      { title: "CRE", slug: "/docs/cookbooks/cre" },
-      { title: "Credit", slug: "/docs/cookbooks/credit" },
-      { title: "OpCo", slug: "/docs/cookbooks/opco" },
+      { title: "Energy", slug: "/docs/packs/energy" },
+      { title: "CRE", slug: "/docs/packs/cre" },
+      { title: "Credit", slug: "/docs/packs/credit" },
+      { title: "OpCo", slug: "/docs/packs/opco" },
+    ],
+  },
+  // Examples is its own section rather than a tail on the tutorial. A reader on
+  // lesson three does not want a leveraged buyout, and someone looking for a
+  // worked deal should not have to know it lives under "Learn the Language".
+  {
+    title: "Examples",
+    items: [
+      { title: "Browse all", slug: "/docs/examples" },
+      { title: "Energy: solar PPA microgrid", slug: "/docs/examples/energy-solar-ppa-microgrid" },
+      { title: "Energy: wind PTC + MACRS", slug: "/docs/examples/energy-wind-ptc-macrs" },
+      { title: "CRE: two-tenant office", slug: "/docs/examples/cre-office-two-tenant" },
+      { title: "CRE: retail strip", slug: "/docs/examples/cre-retail-strip" },
+      { title: "Credit: level-pay pool", slug: "/docs/examples/credit-level-pay-pool" },
+      { title: "Credit: IO/bullet loan", slug: "/docs/examples/credit-io-bullet-loan" },
+      { title: "Credit: floating bridge", slug: "/docs/examples/credit-float-bridge-pool" },
+      { title: "OpCo: leveraged buyout", slug: "/docs/examples/opco-lbo-buyout" },
+      {
+        title: "Notebooks",
+        slug: "/docs/notebooks",
+        items: [
+          { title: "Energy", slug: "/docs/notebooks/energy-solar-microgrid" },
+          { title: "CRE", slug: "/docs/notebooks/cre-office-acquisition" },
+          { title: "Credit", slug: "/docs/notebooks/credit-loan-pool" },
+          { title: "OpCo", slug: "/docs/notebooks/opco-lbo" },
+        ],
+      },
     ],
   },
   {
