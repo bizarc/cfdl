@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { LineChart, type LineSeries } from "./charts/LineChart";
+import { CashFlowChart, type CashFlowBand } from "./charts/CashFlowChart";
 import { Tabs } from "@/components/ds/Tabs";
 import { Distribution } from "./charts/Distribution";
 import { cn } from "@/lib/cn";
@@ -118,7 +119,29 @@ function MetricsTab({
   const headline = ["model.npv", "model.irr", "model.moic", "model.payback_years"].filter(
     (k) => metrics[k] !== undefined,
   );
+  // "All metrics" was one alphabetical list, which interleaved things that have
+  // nothing to do with each other — a run's discount rate next to an entity
+  // total next to a stream total. The metric names already encode their kind as
+  // a prefix; this groups on it rather than inventing a taxonomy.
+  //
+  // `run.*` is deliberately last and named "Run configuration": those are
+  // INPUTS echoed back, not results, and reading them as outputs is exactly the
+  // confusion the flat list created.
+  const GROUPS: { title: string; match: (k: string) => boolean }[] = [
+    { title: "Model", match: (k) => k.startsWith("model.") },
+    { title: "Per stream", match: (k) => k.startsWith("stream.") },
+    { title: "Per entity", match: (k) => k.startsWith("entity.") },
+    { title: "Per option", match: (k) => k.startsWith("option.") },
+    { title: "Run configuration", match: (k) => k.startsWith("run.") },
+  ];
   const rest = Object.entries(metrics).filter(([k]) => !headline.includes(k));
+  const grouped = GROUPS.map((g) => ({
+    title: g.title,
+    rows: rest.filter(([k]) => g.match(k)),
+  })).filter((g) => g.rows.length > 0);
+  // Anything a future engine emits under a prefix nobody listed still shows up,
+  // rather than vanishing from the panel because the taxonomy did not know it.
+  const ungrouped = rest.filter(([k]) => !GROUPS.some((g) => g.match(k)));
 
   // A pack the model doesn't declare produces metrics that match no streams —
   // a column of 0.00 that reads as a broken calculation. Say what happened.
@@ -142,7 +165,10 @@ function MetricsTab({
         </div>
       )}
 
-      <MetricTable title="All metrics" rows={rest} />
+      {grouped.map((g) => (
+        <MetricTable key={g.title} title={g.title} rows={g.rows} />
+      ))}
+      <MetricTable title="Other" rows={ungrouped} />
 
       {packMismatch ? (
         <div className="rounded-lg border border-default bg-surface-sunken p-3">
@@ -201,24 +227,91 @@ function MetricTable({
 
 function CashFlowsTab({ results }: { results: Results | null }) {
   const [annual, setAnnual] = useState(false);
+  // Grain and accumulation are independent questions, so they are two controls
+  // rather than three buttons in one row.
+  //
+  // CUMULATIVE EXISTS BECAUSE OF SCALE. A reversion is routinely 70x a month's
+  // rent, and on a per-period axis that one bar compresses every operating
+  // period into the zero line. No drawing fixes that — the range is real. What
+  // changes is the question: accumulated, the same spike is the moment the
+  // curve crosses back over, and the trough before it is the capital at risk.
+  // It is the J-curve every RE and PE reader already knows how to read, and it
+  // makes `model.payback_years` visible rather than merely reported.
+  const [cumulative, setCumulative] = useState(false);
   const source = annual
     ? results?.deterministic?.annual_rollup?.series
     : results?.deterministic?.series;
 
   const chart = useMemo(() => {
     if (!source) return null;
-    const names = Object.keys(source).sort((a, b) =>
-      a === "model.net_cash_flow" ? -1 : b === "model.net_cash_flow" ? 1 : a.localeCompare(b),
+
+    // This tab charts CASH, and two things had to be excluded before the six
+    // slots meant anything.
+    //
+    // RATIOS. `domain.cre.dscr` lives between about 0.5 and 1.5 and was being
+    // drawn on an axis scaled to millions, so it rendered as a flat line on
+    // zero. A ratio carries no currency, which is exactly how it is detected
+    // here — a money value is `{ amount, currency }`, a ratio is a bare number.
+    //
+    // FOLDS BEFORE STREAMS. The picker took the first six names
+    // alphabetically, and `domain` sorts before `stream` — so the moment
+    // subtotals were published, every actual stream was evicted from the
+    // default chart by aggregates OF those streams. Charting both double-counts
+    // the same cash anyway. Streams rank first now; folds fill the remainder.
+    const isMoney = (name: string) =>
+      source[name].values.some((v) => v !== null && typeof v === "object");
+    const vals = (name: string) => source[name].values.map((v) => toNumber(v) ?? 0);
+
+    // FOLDS ARE NOT COMPONENTS. `domain.*` are aggregates OF the streams, so
+    // stacking both draws the same cash twice. They are excluded from the bars
+    // outright rather than ranked below them.
+    const componentNames = Object.keys(source).filter(
+      (k) => isMoney(k) && k !== "model.net_cash_flow" && !k.startsWith("domain."),
     );
-    const shown = names.slice(0, 6);
-    const series: LineSeries[] = shown.map((name, i) => ({
-      name,
+    if (componentNames.length === 0) return null;
+
+    // Ranked by how much cash each moves, not by name. Alphabetical order put
+    // whatever happened to sort first in front of whatever mattered.
+    const weight = (name: string) =>
+      vals(name).reduce((acc, v) => acc + Math.abs(v), 0);
+    const ranked = [...componentNames].sort((a, b) => weight(b) - weight(a));
+    const shown = ranked.slice(0, 6);
+
+    const bands: CashFlowBand[] = shown.map((name, i) => ({
+      name: name.replace(/^(stream|option)\./, ""),
       colorIndex: (i % 6) + 1,
-      values: source[name].values.map((v) => toNumber(v) ?? 0),
+      values: vals(name),
     }));
+
+    // Everything past the sixth is summed into one band rather than dropped, so
+    // the stack still sums to the net line and the chart cannot quietly
+    // misrepresent the period.
+    const remainder = ranked.slice(6);
+    if (remainder.length > 0) {
+      const n = Math.max(...shown.map((s) => source[s].values.length));
+      const acc = new Array(n).fill(0);
+      for (const name of remainder) {
+        vals(name).forEach((v, i) => {
+          acc[i] += v;
+        });
+      }
+      bands.push({ name: `${remainder.length} others`, colorIndex: 6, values: acc });
+    }
+
+    let net = source["model.net_cash_flow"] ? vals("model.net_cash_flow") : undefined;
+
+    if (cumulative) {
+      const running = (xs: number[]) => {
+        let acc = 0;
+        return xs.map((v) => (acc += v));
+      };
+      for (const b of bands) b.values = running(b.values);
+      if (net) net = running(net);
+    }
+
     const labels = periodLabels(source[shown[0]].index);
-    return { series, labels, hidden: names.length - shown.length, names };
-  }, [source]);
+    return { bands, net, labels, hidden: remainder.length, names: ranked, cumulative };
+  }, [source, cumulative]);
 
   if (!chart) return <Empty>Run a model to see cash flows.</Empty>;
 
@@ -226,19 +319,41 @@ function CashFlowsTab({ results }: { results: Results | null }) {
 
   return (
     <div className="space-y-4">
-      {hasAnnual && (
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        {hasAnnual && (
+          <div className="flex gap-1">
+            {[
+              ["Periodic", false],
+              ["Annual", true],
+            ].map(([label, value]) => (
+              <button
+                key={String(label)}
+                type="button"
+                onClick={() => setAnnual(value as boolean)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs transition-colors",
+                  annual === value
+                    ? "bg-accent-soft text-accent-text"
+                    : "text-muted hover:text-secondary",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-1">
           {[
-            ["Periodic", false],
-            ["Annual", true],
+            ["Per period", false],
+            ["Cumulative", true],
           ].map(([label, value]) => (
             <button
               key={String(label)}
               type="button"
-              onClick={() => setAnnual(value as boolean)}
+              onClick={() => setCumulative(value as boolean)}
               className={cn(
                 "rounded-md px-2.5 py-1 text-xs transition-colors",
-                annual === value
+                cumulative === value
                   ? "bg-accent-soft text-accent-text"
                   : "text-muted hover:text-secondary",
               )}
@@ -247,12 +362,31 @@ function CashFlowsTab({ results }: { results: Results | null }) {
             </button>
           ))}
         </div>
-      )}
+      </div>
 
-      <LineChart series={chart.series} labels={chart.labels} />
+      <CashFlowChart bands={chart.bands} net={chart.net} labels={chart.labels} />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+        {chart.net && (
+          <span className="text-secondary">
+            <span className="mr-1 inline-block h-px w-3 align-middle bg-current" />
+            net cash flow
+          </span>
+        )}
+        {chart.bands.map((b) => (
+          <span key={b.name} className="text-muted">
+            <span
+              className="mr-1 inline-block size-1.5 rounded-full align-middle"
+              style={{ background: `var(--cfdl-chart-series-${b.colorIndex})` }}
+            />
+            {b.name}
+          </span>
+        ))}
+      </div>
       {chart.hidden > 0 ? (
         <p className="text-xs text-muted">
-          Showing 6 of {chart.names.length} series. The full set is in the JSON tab.
+          The six largest movers are shown separately; the remaining {chart.hidden} are
+          summed into one band, so the bars still total the net line. Every series is in
+          the JSON tab.
         </p>
       ) : null}
 
@@ -261,22 +395,32 @@ function CashFlowsTab({ results }: { results: Results | null }) {
           <thead>
             <tr className="border-b border-default bg-surface-sunken">
               <th className="px-3 py-2 text-left font-semibold text-primary">Period</th>
-              {chart.series.map((s) => (
-                <th key={s.name} className="px-3 py-2 text-right font-mono font-medium text-secondary">
-                  {s.name.replace(/^stream\./, "")}
+              {chart.bands.map((b) => (
+                <th key={b.name} className="px-3 py-2 text-right font-mono font-medium text-secondary">
+                  {b.name}
                 </th>
               ))}
+              {chart.net && (
+                <th className="px-3 py-2 text-right font-mono font-semibold text-primary">
+                  net
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {chart.labels.slice(0, 60).map((label, i) => (
               <tr key={label} className="border-b border-subtle last:border-0">
                 <td className="px-3 py-1.5 font-mono text-muted">{label}</td>
-                {chart.series.map((s) => (
-                  <td key={s.name} className="px-3 py-1.5 text-right font-mono tabular-nums text-secondary">
-                    {s.values[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
+                {chart.bands.map((b) => (
+                  <td key={b.name} className="px-3 py-1.5 text-right font-mono tabular-nums text-secondary">
+                    {b.values[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
                   </td>
                 ))}
+                {chart.net && (
+                  <td className="px-3 py-1.5 text-right font-mono font-medium tabular-nums text-primary">
+                    {chart.net[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
