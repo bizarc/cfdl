@@ -13,7 +13,7 @@
 //! category at all is invisible until something runs.
 
 use cfdl_engine::{
-    Grain, Money, Results, Scalar, SeriesValue, Statement, StatementDiagnostic,
+    Grain, Money, Results, Scalar, SeriesValue, Statement, StatementDiagnostic, StatementGrain,
     StatementReconciliation, StatementRow, StatementsSection,
 };
 use cfdl_pack::{StatementSpec, SubtotalSpec};
@@ -60,6 +60,9 @@ pub fn compute(
                     calendar: String::new(),
                     start: String::new(),
                     buckets: (0..periods).map(|i| vec![i]).collect(),
+                    // No index means no dates to label with; a bare ordinal is
+                    // honest about that rather than inventing a calendar.
+                    labels: (0..periods).map(|i| i.to_string()).collect(),
                 });
             render(
                 spec,
@@ -363,6 +366,11 @@ fn render(
         id: spec.id.clone(),
         label: spec.label.clone(),
         default: spec.default,
+        grain: StatementGrain {
+            calendar: grain.calendar.clone(),
+            start: grain.start.clone(),
+            labels: grain.labels.clone(),
+        },
         rows,
         reconciliation: StatementReconciliation {
             bottom_line: round6(bottom_line),
