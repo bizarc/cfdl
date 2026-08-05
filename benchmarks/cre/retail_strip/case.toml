@@ -4,3 +4,11 @@
 # Status: pending practitioner review against institutional-grade references.
 pack = "cre"
 period_tolerance = 0.01
+
+# Per-period EGI and NOI. This case asserted a LIFETIME NOI of 4,012,080.73 and
+# nothing about the 120 periods that produce it — so percentage rent, the
+# base-year gross-up and the recovery stop could each be wrong in offsetting
+# ways and the total would still land.
+[tolerance]
+"domain.cre.egi" = 0.01
+"domain.cre.noi" = 0.01

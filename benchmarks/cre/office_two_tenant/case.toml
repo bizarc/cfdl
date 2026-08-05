@@ -5,3 +5,19 @@
 # Status: pending practitioner review against institutional-grade references.
 pack = "cre"
 period_tolerance = 0.01
+
+# The per-period subtotals, which this case computed and discarded until now.
+#
+# It asserted NOI, debt service and DSCR as LIFETIME scalars, and a lifetime
+# figure is exactly what backlog 1.4 says is not enough: offsetting per-period
+# errors cancel in a total, and a lifetime coverage ratio of 1.4 can contain a
+# year at 0.9 and report nothing. These are the 120 figures behind those four
+# numbers.
+#
+# Money and a ratio cannot share one tolerance — the same reason
+# hud_home_multifamily needed this table.
+[tolerance]
+"domain.cre.egi" = 0.01
+"domain.cre.noi" = 0.01
+"domain.cre.debt_service" = 0.01
+"domain.cre.dscr" = 1.0e-6

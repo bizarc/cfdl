@@ -44,8 +44,11 @@ def main():
         exit_shot = 0.0
         if t == 83:
             exit_shot += 640_000.0 / 0.0675 * 0.985
-        rows.append((t, net, shot, exit_shot))
-        noi_total += a_rent + a_rec + a_pct + s_rent + s_rec - vacancy - opex
+        # Per-period subtotals: computed here already, and discarded until now.
+        egi_t = a_rent + a_rec + a_pct + s_rent + s_rec - vacancy
+        noi_t = egi_t - opex
+        rows.append((t, net, shot, exit_shot, egi_t, noi_t))
+        noi_total += noi_t
         leasing_costs += ti_lc
 
     monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
@@ -62,14 +65,21 @@ def main():
         net / ((1.0 + monthly_rate) ** (t + 1))
         + shot / ((1.0 + monthly_rate) ** t)
         + exit_shot / ((1.0 + monthly_rate) ** (t + 1))
-        for t, net, shot, exit_shot in rows
+        for t, net, shot, exit_shot, _egi, _noi in rows
     )
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["period", "net_cash_flow"])
-        for t, net, shot, exit_shot in rows:
-            writer.writerow([t, f"{net + shot + exit_shot:.6f}"])
+        # No debt in this case, so no coverage column: a DSCR here would be a
+        # division by zero dressed up as an assertion.
+        writer.writerow(["period", "net_cash_flow", "domain.cre.egi", "domain.cre.noi"])
+        for t, net, shot, exit_shot, egi_t, noi_t in rows:
+            writer.writerow([
+                t,
+                f"{net + shot + exit_shot:.6f}",
+                f"{egi_t:.6f}",
+                f"{noi_t:.6f}",
+            ])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(

@@ -94,8 +94,13 @@ def main():
         net -= ti_lc
         if t == 119:
             exit_shot += forward_noi(119) / 0.065 * 0.98
-        rows.append((t, net, shot, exit_shot))
-        noi_total += a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy - opex
+        # The per-period subtotals. Computed here already — the loop summed
+        # them into `noi_total` and threw the periods away, so a lifetime NOI
+        # was asserted and the 120 figures behind it were not.
+        egi_t = a_rent + a_rec + b_rent + b_rec + roll_rent - vacancy
+        noi_t = egi_t - opex
+        rows.append((t, net, shot, exit_shot, egi_t, noi_t))
+        noi_total += noi_t
         leasing_costs += ti_lc + ti_lc_dated
 
     monthly_rate = (1.0 + DISC) ** (1.0 / 12.0) - 1.0    # Recurring flows are ordinary annuities: they settle at the close of the
@@ -117,15 +122,32 @@ def main():
         net / ((1.0 + monthly_rate) ** (t + 1))
         + shot / ((1.0 + monthly_rate) ** t)
         + exit_shot / ((1.0 + monthly_rate) ** (t + 1))
-        for t, net, shot, exit_shot in rows
+        for t, net, shot, exit_shot, _egi, _noi in rows
     )
     debt_total = debt_pay * PERIODS
 
     with open("expected.csv", "w", newline="") as fh:
         writer = csv.writer(fh, lineterminator="\n")
-        writer.writerow(["period", "net_cash_flow"])
-        for t, net, shot, exit_shot in rows:
-            writer.writerow([t, f"{net + shot + exit_shot:.6f}"])
+        writer.writerow([
+            "period",
+            "net_cash_flow",
+            "domain.cre.egi",
+            "domain.cre.noi",
+            "domain.cre.debt_service",
+            "domain.cre.dscr",
+        ])
+        for t, net, shot, exit_shot, egi_t, noi_t in rows:
+            writer.writerow([
+                t,
+                f"{net + shot + exit_shot:.6f}",
+                f"{egi_t:.6f}",
+                f"{noi_t:.6f}",
+                # Level payment, so this is constant — which is exactly why it
+                # cannot discriminate a recomputed annual ratio from an averaged
+                # one. See tools/analytic-checks.py.
+                f"{debt_pay:.6f}",
+                f"{noi_t / debt_pay:.6f}",
+            ])
 
     with open("expected_metrics.json", "w") as fh:
         json.dump(
