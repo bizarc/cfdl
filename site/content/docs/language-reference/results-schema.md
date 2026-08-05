@@ -598,6 +598,7 @@ against it by `make results-schema`.
         "id",
         "label",
         "default",
+        "grain",
         "rows",
         "reconciliation"
       ],
@@ -610,6 +611,9 @@ against it by `make results-schema`.
         },
         "default": {
           "type": "boolean"
+        },
+        "grain": {
+          "$ref": "#/$defs/StatementGrain"
         },
         "rows": {
           "type": "array",
@@ -626,6 +630,32 @@ against it by `make results-schema`.
             "$ref": "#/$defs/StatementDiagnostic"
           },
           "description": "Completeness findings. Empty is the healthy case."
+        }
+      }
+    },
+    "StatementGrain": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The grain this statement reports at, and one ready-to-render label per column. Published because a consumer cannot derive it: an annual statement over a monthly model has ten values where the model has 120, and nothing else in the document says which ten periods those are.",
+      "required": [
+        "calendar",
+        "start",
+        "labels"
+      ],
+      "properties": {
+        "calendar": {
+          "type": "string",
+          "description": "monthly | quarterly | annual | daily — the bucketing, not the model grid."
+        },
+        "start": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "One per column, aligned with every row's `values`."
         }
       }
     },

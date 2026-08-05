@@ -52,6 +52,58 @@ export interface Results {
     trial_summaries?: { trial: number; metrics: Record<string, MoneyOrNumber> }[];
   };
   domain_metrics?: { metrics?: Record<string, MoneyOrNumber> };
+  statements?: StatementsSection;
+}
+
+/** A pack's declared statements, rendered against this run. */
+export interface StatementsSection {
+  pack?: string;
+  statements?: Statement[];
+}
+
+export interface Statement {
+  id: string;
+  label: string;
+  default?: boolean;
+  /** Published rather than derived — see StatementGrain. */
+  grain: StatementGrain;
+  rows: StatementRow[];
+  reconciliation?: {
+    bottom_line?: number;
+    model_total?: number;
+    residual?: number;
+  };
+  diagnostics?: { code?: string; severity?: string; message?: string }[];
+}
+
+/**
+ * The engine publishes column labels rather than the UI deriving them.
+ *
+ * It has to: an annual statement over a monthly model has ten values where the
+ * model has 120, and nothing else in the document says WHICH ten periods those
+ * are. `periodLabels` works off a SeriesIndex and cannot answer that.
+ */
+export interface StatementGrain {
+  calendar: string;
+  start: string;
+  labels: string[];
+}
+
+export interface StatementRow {
+  /** line | subtotal | ratio | spacer | residual */
+  kind: string;
+  label?: string;
+  depth: number;
+  /**
+   * Rendering only. `values` is always the signed arithmetic quantity, so a
+   * consumer that ignores this still adds up correctly; multiplying by it is
+   * what turns a negative deduction into Argus's "less:" row of positives.
+   */
+  display_sign: number;
+  values?: (MoneyOrNumber | null)[];
+  total?: number;
+  /** The streams this row drew from — the drill-down target. */
+  streams?: string[];
 }
 
 export function toNumber(value: MoneyOrNumber | undefined): number | undefined {

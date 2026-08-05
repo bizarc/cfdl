@@ -18,6 +18,7 @@ import type { Diagnostic } from "@/lib/playground/protocol";
 
 const TABS = [
   "Metrics",
+  "Statement",
   "Cash flows",
   "Scenarios",
   "Monte Carlo",
@@ -77,6 +78,8 @@ export function ResultsPanel({
             selectedPack={selectedPack}
             modelDeclaredPack={modelDeclaredPack}
           />
+        ) : tab === "Statement" ? (
+          <StatementTab results={results} />
         ) : tab === "Cash flows" ? (
           <CashFlowsTab results={results} />
         ) : tab === "Scenarios" ? (
@@ -486,4 +489,213 @@ function JsonTab({ results }: { results: Results | null }) {
       </pre>
     </div>
   );
+}
+
+/**
+ * A pack's declared statement, rendered as a pro forma.
+ *
+ * The arithmetic is all done: every value here was folded by the engine per
+ * period. This arranges it — order, indent, labels, and the display sign that
+ * turns a stored negative into Argus's "less:" row of positives. `values` stays
+ * the signed quantity, so the column still adds up for anyone reading the JSON.
+ *
+ * Column labels come from `statement.grain.labels` rather than `periodLabels`.
+ * They have to: an annual statement over a monthly model has ten columns where
+ * the model has 120, and a SeriesIndex cannot say which ten.
+ */
+function StatementTab({ results }: { results: Results | null }) {
+  const statements = results?.statements?.statements;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [drill, setDrill] = useState<number | null>(null);
+
+  const active = useMemo(() => {
+    if (!statements?.length) return null;
+    return (
+      statements.find((s) => s.id === selected) ??
+      statements.find((s) => s.default) ??
+      statements[0]
+    );
+  }, [statements, selected]);
+
+  if (!statements?.length) {
+    return (
+      <Empty>
+        Run a model with a pack that declares statements to see a pro forma.
+      </Empty>
+    );
+  }
+  if (!active) return <Empty>No statement to show.</Empty>;
+
+  const labels = active.grain?.labels ?? [];
+  const recon = active.reconciliation;
+  // Published always and asserted rather than corrected: if the rows do not add
+  // up to the model's cash, the number saying so is on screen.
+  const residual = recon?.residual ?? 0;
+  const reconciles = Math.abs(residual) < 0.01;
+
+  return (
+    <div className="space-y-4">
+      {statements.length > 1 && (
+        <div className="flex flex-wrap gap-1">
+          {statements.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => {
+                setSelected(s.id);
+                setDrill(null);
+              }}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-xs transition-colors",
+                s.id === active.id
+                  ? "bg-accent-soft text-accent-text"
+                  : "text-muted hover:text-secondary",
+              )}
+            >
+              {s.label}
+              <span className="ml-1.5 opacity-60">{s.grain?.calendar}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {active.diagnostics?.map((d, i) => (
+        <div
+          key={i}
+          className="flex items-start gap-2 rounded-md border border-warn/40 bg-warn/5 p-2 text-xs text-secondary"
+        >
+          <AlertTriangle className="mt-px size-3.5 shrink-0 text-warn" />
+          <span>
+            {d.code ? <span className="font-mono opacity-70">{d.code} </span> : null}
+            {d.message}
+          </span>
+        </div>
+      ))}
+
+      <div className="overflow-x-auto rounded-lg border border-default">
+        <table className="w-full border-collapse text-xs">
+          <thead>
+            <tr className="border-b border-default bg-surface-raised">
+              <th className="sticky left-0 z-10 bg-surface-raised px-3 py-2 text-left font-medium text-secondary">
+                {active.label}
+              </th>
+              <th className="px-3 py-2 text-right font-medium text-secondary">Total</th>
+              {labels.map((l) => (
+                <th
+                  key={l}
+                  className="whitespace-nowrap px-3 py-2 text-right font-normal text-muted"
+                >
+                  {l}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {active.rows.map((row, i) => {
+              if (row.kind === "spacer") {
+                return (
+                  <tr key={i}>
+                    <td colSpan={labels.length + 2} className="h-3" />
+                  </tr>
+                );
+              }
+              const emphasis =
+                row.kind === "subtotal" || row.kind === "ratio" || row.kind === "residual";
+              const canDrill = Boolean(row.streams?.length);
+              return (
+                <tr
+                  key={i}
+                  onClick={() => canDrill && setDrill(drill === i ? null : i)}
+                  className={cn(
+                    "border-b border-default/50",
+                    emphasis && "font-medium text-primary",
+                    row.kind === "residual" && "text-warn",
+                    canDrill && "cursor-pointer hover:bg-surface-raised",
+                    drill === i && "bg-surface-raised",
+                  )}
+                >
+                  <td
+                    className={cn(
+                      "sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-1.5 text-left",
+                      emphasis && "bg-surface-raised",
+                      drill === i && "bg-surface-raised",
+                    )}
+                    style={{ paddingLeft: `${0.75 + row.depth * 0.85}rem` }}
+                  >
+                    {row.label}
+                    {canDrill && (
+                      <span className="ml-1.5 text-[10px] opacity-40">
+                        {row.streams!.length}
+                      </span>
+                    )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">
+                    {row.total === undefined
+                      ? ""
+                      : fmtSigned(row.total * (row.display_sign ?? 1))}
+                  </td>
+                  {labels.map((l, t) => {
+                    const v = row.values?.[t];
+                    const n = v === null || v === undefined ? undefined : toNumber(v);
+                    return (
+                      <td
+                        key={l}
+                        className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-secondary"
+                      >
+                        {n === undefined
+                          ? "—"
+                          : row.kind === "ratio"
+                            ? n.toFixed(4)
+                            : fmtSigned(n * (row.display_sign ?? 1))}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {drill !== null && active.rows[drill]?.streams?.length ? (
+        <div className="rounded-lg border border-default p-3">
+          <p className="mb-2 text-xs font-medium text-secondary">
+            {active.rows[drill].label} draws from
+          </p>
+          <ul className="space-y-1">
+            {active.rows[drill].streams!.map((s) => (
+              <li key={s} className="font-mono text-xs text-muted">
+                {s}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {recon && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-muted">
+          <span>
+            Bottom line{" "}
+            <span className="tabular-nums text-secondary">{fmtSigned(recon.bottom_line ?? 0)}</span>
+          </span>
+          <span>
+            Model total{" "}
+            <span className="tabular-nums text-secondary">{fmtSigned(recon.model_total ?? 0)}</span>
+          </span>
+          <span className={cn(reconciles ? "text-muted" : "text-warn")}>
+            Residual <span className="tabular-nums">{residual.toFixed(6)}</span>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Thousands-separated, two decimals, parenthesised when negative. */
+function fmtSigned(n: number): string {
+  const s = Math.abs(n).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return n < 0 ? `(${s})` : s;
 }
