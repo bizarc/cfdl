@@ -4360,6 +4360,219 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.cre.debt_service": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 480000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 570000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.dscr": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            0.3125,
+            0.526316,
+            0.781818,
+            0.781818,
+            0.781818,
+            0.781818
+          ]
+        },
+        "domain.cre.egi": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 150000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.leasing_costs": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.noi": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 150000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 516000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.opex_total": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -144000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.pgr": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 6
+          },
+          "values": [
+            {
+              "amount": 150000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 660000.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",
