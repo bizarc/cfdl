@@ -119,6 +119,17 @@ jobs:
     if: vars.ENABLE_CI_DEPLOY == 'true'
     # These are required after all, and the token must be TEAM-scoped.
     #
+    # `--scope` is passed explicitly as well. The project lives under the
+    # `bizarcs-projects` team — visible in any deployment URL — and naming it
+    # removes the CLI's need to infer which account a bare token belongs to.
+    # That inference is what fails when a token is scoped to a personal account
+    # while the project is owned by a team: the lookup succeeds against the
+    # wrong owner and reports the project as unreadable rather than as
+    # belonging to someone else.
+    #
+    # Override with a repository variable VERCEL_TEAM_SLUG if the team is ever
+    # renamed, rather than editing this file.
+    #
     # Three attempts established it, and the failures are worth keeping because
     # each one looks like a different problem:
     #
@@ -167,6 +178,7 @@ jobs:
         run: >
           npx vercel@latest pull --yes
           --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+          --scope=${{ vars.VERCEL_TEAM_SLUG || 'bizarcs-projects' }}
           --token=${{ secrets.VERCEL_TOKEN }}
 
       # BEFORE `vercel build`. That runs `next build`, which copies public/ as it
@@ -194,4 +206,5 @@ jobs:
         run: >
           npx vercel@latest deploy --prebuilt
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          --scope=${{ vars.VERCEL_TEAM_SLUG || 'bizarcs-projects' }}
           --token=${{ secrets.VERCEL_TOKEN }}
