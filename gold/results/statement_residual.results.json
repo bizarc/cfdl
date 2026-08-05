@@ -276,6 +276,15 @@
         "id": "operating",
         "label": "Operating statement",
         "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
         "rows": [
           {
             "kind": "line",
@@ -678,6 +687,15 @@
         "id": "operating_annual",
         "label": "Operating statement (annual)",
         "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
         "rows": [
           {
             "kind": "line",

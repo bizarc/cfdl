@@ -1352,6 +1352,23 @@ pub struct Grain {
     pub calendar: String,
     pub start: String,
     pub buckets: Vec<Vec<usize>>,
+    /// One label per bucket, built HERE because this is the last place the
+    /// dates exist. A statement is a post-pass with only a `SeriesIndex`, and a
+    /// coarse grain's buckets are opaque indices — nothing downstream can say
+    /// which year bucket 3 is without rebuilding the timeline again.
+    pub labels: Vec<String>,
+}
+
+/// Format one bucket's opening date for the calendar it is bucketed at.
+fn bucket_label(date: &Date, calendar: &str) -> String {
+    match calendar {
+        "annual" => format!("{:04}", date.year),
+        "quarterly" => format!("{:04}-Q{}", date.year, (date.month - 1) / 3 + 1),
+        "daily" => format!("{:04}-{:02}-{:02}", date.year, date.month, date.day),
+        // monthly, and anything unrecognised: a year-month is never wrong,
+        // only less precise than it could be.
+        _ => format!("{:04}-{:02}", date.year, date.month),
+    }
 }
 
 impl Grain {
@@ -1361,6 +1378,7 @@ impl Grain {
             calendar: calendar.to_string(),
             start: start.to_string(),
             buckets: (0..timeline.len()).map(|i| vec![i]).collect(),
+            labels: timeline.iter().map(|d| bucket_label(d, calendar)).collect(),
         }
     }
 
@@ -1392,6 +1410,7 @@ impl Grain {
                 .map(|y| format!("{y:04}-01-01"))
                 .unwrap_or_default(),
             buckets,
+            labels: years.iter().map(|y| format!("{y:04}")).collect(),
         }
     }
 
@@ -3180,11 +3199,28 @@ pub struct Statement {
     pub id: String,
     pub label: String,
     pub default: bool,
+    /// The grain this statement reports at, and the period labels that go with
+    /// it. Published because a consumer CANNOT derive it: an annual statement
+    /// over a monthly model has ten values where the model has 120, and nothing
+    /// else in the document says which ten periods those are. The playground
+    /// needs it to label a column; so does anyone rendering the JSON.
+    pub grain: StatementGrain,
     pub rows: Vec<StatementRow>,
     pub reconciliation: StatementReconciliation,
     /// Completeness findings. Empty is the healthy case.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<StatementDiagnostic>,
+}
+
+/// How a statement's columns are bucketed, and what to call them.
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementGrain {
+    /// `monthly` | `quarterly` | `annual` | whatever the model grid is.
+    pub calendar: String,
+    /// First bucket's start date.
+    pub start: String,
+    /// One label per column, ready to render.
+    pub labels: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
