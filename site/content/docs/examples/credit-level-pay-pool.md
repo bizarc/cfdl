@@ -7,7 +7,7 @@ source: benchmarks/credit/level_pay_pool
 
 # Credit: level-pay auto pool
 
-$25mm level-pay auto pool, 6.5% / 120mo, 8 CPR, 2 CDR, 35% severity, 6mo recovery lag, 50bp servicing strip, 1% prepay penalty, purchased at a 1-point discount (99.0). The pack lowers to the closed-form pool-factor expressions; the reference is an independent month-by-month recursion of the same convention.
+A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

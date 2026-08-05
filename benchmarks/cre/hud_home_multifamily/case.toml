@@ -40,6 +40,7 @@
 # This is one half of the acceptance test for docs/14_state_and_recurrence.md.
 # The other is benchmarks/opco/damodaran_fcff, an unrelated source in an
 # unrelated pack. Two independent published sources confirming one mechanism.
+summary = "A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends."
 pack = "cre"
 period_tolerance = 0.5
 

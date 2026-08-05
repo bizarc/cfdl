@@ -7,7 +7,7 @@ source: benchmarks/credit/mbs_pool_conventions
 
 # credit: mbs pool conventions
 
-a 30-year agency-MBS pool at market-standard prepayment, default and recovery conventions. Validated for parity against the published industry reference schedule for MBS cash flows. That source is external and not redistributable, so it is not vendored and its tables are not reproduced — the figures below are anchor values carried for regression, cited as facts. Every number asserted here is external, not ours. There is deliberately no reference_gen.py and no expected_metrics.json: a second implementation of our own is exactly what this case exists to replace. See NOTES.md. period_tolerance = 0.51 — the reference figures are rounded to whole dollars, so half a dollar is the tightest bound they can support. Not loosened beyond that: every asserted figure matches within it.
+A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -30,13 +30,13 @@ entity fund buyer
 // servicer advances. Cash Flow A runs it at a flat 1% SMM and 1% MDR — the
 // constant-hazard case, which is why it is reproducible today. Cash Flow B on
 // the same pool uses 150% PSA and 100% SDA, whose ramps the pack cannot yet
-// express; see docs/13_feature_backlog.md.
+// express directly today.
 //
 // The pack takes ANNUAL cpr/cdr and converts with cpr_to_periodic, so a
 // monthly 1% SMM is stated here as its annual equivalent:
 //   cpr = 1 - (1 - 0.01)^12 = 0.11361512828387077
 // which converts back to exactly 0.01. Practitioners quote SMM directly, so
-// having to do this by hand is itself a small gap — also in the backlog.
+// having to do this by hand is itself a small gap.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
 contract credit.pool_level_pay.a on entity fund.buyer {

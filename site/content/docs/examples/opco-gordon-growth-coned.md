@@ -7,7 +7,7 @@ source: benchmarks/opco/gordon_growth_coned
 
 # opco: gordon growth coned
 
-a stable-growth dividend discount valuation of a regulated utility, reconciled against the source's own nine-point growth sensitivity grid. THE FIRST CASE IN THIS REPO TO ASSERT A VALUE. Every other externally reconciled case asserts cash flows or a coverage ratio; benchmarks/opco/ damodaran_fcff explicitly asserts nothing discounted, because its cost of capital converges and a term structure in the discount rate is not expressible. A regulated utility in steady state has one flat rate, so the terminal is the whole valuation. EXTERNAL, ALL OF IT. Nine published values across nine growth rates, each derived by the model from two stated drivers — a current dividend of 2.32 and a cost of equity of 7.7%. Both are themselves derived exactly from the source's own inputs (EPS x payout, and CAPM), verified in NOTES.md. Nine points spanning a sign change, against one contract. A single point could be matched by coincidence; this cannot. period_tolerance = 1e-6 — the engine publishes to six decimals and the source states sixteen significant figures, so the rounding is the engine's, not the source's. Confirmed binding: at 1e-7 the case fails.
+A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -22,7 +22,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 // WHY THIS SOURCE. benchmarks/opco/damodaran_fcff validated the pack's DRIVERS
 // — revenue, operating cost, cash taxes — but asserts no value at all, because
 // its cost of capital converges 7.055% -> 8.81% and a term structure in the
-// discount rate is not expressible (docs/13_feature_backlog.md 7.4). This model
+// discount rate is not expressible today. This model
 // is a regulated utility in steady state, so its cost of capital is a single
 // flat number, and the terminal IS the valuation. That makes it the first case
 // in this repo to assert a VALUE rather than a cash flow.

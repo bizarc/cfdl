@@ -518,14 +518,31 @@ const benchmarkTitles = {
 };
 
 /** The description a case states in the leading comments of case.toml. */
+/**
+ * A benchmark's one-line description, as the case DECLARES it.
+ *
+ * This used to scrape the leading `#` comments of case.toml and print them as
+ * page prose. Those comments are maintainer's notes — tolerance archaeology,
+ * why a figure moved, which line was wrong and for how long — and publishing
+ * them put a wall of shouty-caps engineering narrative at the top of the HUD
+ * page, which is one of the strongest things there is to show a reader.
+ *
+ * A comment is written for whoever opens the file next. A `summary` is written
+ * for whoever reads the site. Keeping them separate is the whole of the
+ * generate-data-author-prose rule: a TOML comment is not data.
+ */
 function benchmarkSummary(caseDir) {
-  const lines = fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8").split("\n");
-  const prose = [];
-  for (const line of lines) {
-    if (!line.startsWith("#")) break;
-    prose.push(line.replace(/^#\s?/, "").replace(/^Benchmark case:\s*/, ""));
+  const raw = fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8");
+  const match = raw.match(/^summary\s*=\s*"([^"]*)"/m);
+  if (!match) {
+    const rel = toPosix(path.relative(repoRoot, path.resolve(caseDir, "case.toml")));
+    throw new Error(
+      `${rel}: no \`summary\` field.\n` +
+        `Every benchmark case declares a one-sentence summary for its page. ` +
+        `Comments in this file are notes for maintainers and are not published.`,
+    );
   }
-  return prose.filter((l) => l && !/^(Reference|Status):/.test(l)).join(" ").trim();
+  return match[1].trim();
 }
 
 function formatMetricValue(value) {

@@ -18,5 +18,6 @@
 # period_tolerance = 0.01 — a cent. The reconciliation is far tighter than
 # that: the worst disagreement across all 26 periods and all four escalating
 # streams is 9.1e-7 dollars.
+summary = "A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor."
 pack = "energy"
 period_tolerance = 0.01

@@ -7,7 +7,7 @@ source: benchmarks/credit/auto_abs_speed_150
 
 # credit: auto abs speed 150
 
-auto-receivables collateral at 1.50% ABS. One of the seven prepayment-speed columns of the same issuer exhibit as benchmarks/credit/auto_abs_wal, which takes the zero-speed column. The non-zero columns were unreachable until the pool factor became a per-period state: under a ramp the balance is a running product, and every pool factor in the pack was pow(k, p), valid only for a constant hazard. EXTERNAL — NOTES.md. The pool's principal collections reproduce the exhibit's published Class A-2 percent-outstanding column at every distribution date, worst 0.0036 percentage points against a source that rounds to 0.01. That reconciliation is not expressible through this harness: the published figure is a percentage of a note class, and this pack models collateral, not a liability stack. EXTERNAL — expected_metrics.json. domain.credit.principal is the pool's aggregate balance, 537,640,787.96, which is the sum of the 43 sub-pool balances the exhibit states. With no defaults every dollar advanced is eventually collected, so this asserts that all 43 sub-pools fully amortise under the ramp. REGRESSION — expected.csv. net_cash_flow is the engine's own output, kept so a change to the level-pay rules cannot move this 43-contract model silently. It is not an external figure.
+The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

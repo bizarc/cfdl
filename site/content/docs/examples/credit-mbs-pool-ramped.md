@@ -7,7 +7,7 @@ source: benchmarks/credit/mbs_pool_ramped
 
 # credit: mbs pool ramped
 
-the same 30-year agency-MBS pool as mbs_pool_conventions, at the published reference's RAMPED conventions — 150% PSA prepayments with 100% SDA defaults. The reference works this pool twice, once flat and once ramped. mbs_pool_conventions takes the flat run; this takes the ramped one, which was unreachable until the pool factor became a per-period state. Every number asserted here is external, not ours. There is deliberately no reference_gen.py: a second implementation of our own is exactly what this case exists to replace. See NOTES.md. period_tolerance = 0.51 — the reference figures are rounded to whole dollars, so half a dollar is the tightest bound they can support.
+A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

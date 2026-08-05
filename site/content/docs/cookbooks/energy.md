@@ -53,7 +53,6 @@ no hardcoded amounts.
 > rounded to the nearest 0.1 c/kWh after inflation adjustment; this rule carries
 > the escalated rate continuously. The error alternates sign year to year, up to
 > about 1.8% in any one year and roughly -0.3% over a 10-year credit window.
-> See `docs/13_feature_backlog.md`.
 
 ## Contract types
 

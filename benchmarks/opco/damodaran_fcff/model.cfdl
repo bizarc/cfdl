@@ -18,7 +18,7 @@
 //
 // WHAT IS ASSERTED, AND WHY NOT ALL TEN YEARS. The curves carry a PER-PERIOD
 // rate, which is the right interface and the one that will be correct once a
-// stream can read its own prior period (backlog 5.1). Until then the rules
+// stream can read its own prior period. Until then the rules
 // compound with pow(1 + g, t), which applies one period's rate as though it had
 // held throughout — exact while the rate is flat, drifting once it moves. So
 // years 1-5 are asserted and years 6-10 are not; NOTES.md carries the measured

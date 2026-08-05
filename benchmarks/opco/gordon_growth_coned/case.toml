@@ -20,5 +20,6 @@
 # period_tolerance = 1e-6 — the engine publishes to six decimals and the source
 # states sixteen significant figures, so the rounding is the engine's, not the
 # source's. Confirmed binding: at 1e-7 the case fails.
+summary = "A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form."
 pack = "opco"
 period_tolerance = 1e-6

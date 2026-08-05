@@ -7,7 +7,7 @@ source: benchmarks/cre/hud_home_multifamily
 
 # cre: hud home multifamily
 
-HUD HOME Multifamily Underwriting Template, populated Sample. THE ONE SOURCE WE CAN SHIP. A US federal work dedicated to the public domain, so the reference workbook itself is committed under reference/ — the first and only external case in this repo where a reader can open the source and check us, rather than take the reconciliation on trust. Every figure in expected.csv and expected_metrics.json is read out of that workbook's Operating Pro Forma. There is deliberately no reference_gen.py. Anchors: years 1-3 and 5 pin the trends, 10 pins the compounding, and 14/15/16/17 bracket BOTH the first mortgage maturing and the affordability cliff, where restricted rents revert to market and gross rent steps 46% in one year. Those four are the point of the case — a model with the right trend and the wrong switch looks correct for thirteen years. period_tolerance = 0.5 — the theoretical floor, and every line now sits under it. The workbook publishes whole dollars, so half a dollar is the most an exact figure can differ from its rounded print; nothing here needs more.   cre.unit.base_rent.home       worst 0.45   whole-dollar rounding   cre.vacancy.loss              worst 0.48   whole-dollar rounding   cre.ops.revenue               worst 0.42   whole-dollar rounding   cre.property.opex             worst 0.00   exact   cre.ops.expense               worst 0.00   exact   loan.permanent_debt_service   worst 0.00   exact THE TWO EXPENSE LINES WERE THE REASON THIS CASE CARRIED A TOLERANCE OF 13. The workbook escalates them as a RECURRENCE — each year is last year's already-rounded figure times the trend — and `pow(1 + trend, t)` compounds exact decimals from the base instead, so the paths separated a little more every year and reached 12.26 on 204,655 at year 29. Declared states express the recurrence directly, and both lines now reproduce the published figures EXACTLY over 29 years. Note the total expense line needs FOUR states, one per published sub-line: the workbook rounds each sub-line before summing, and rounding the sum is different arithmetic. Modelling the total as one rounded line still left 11.00. This is one half of the acceptance test for docs/14_state_and_recurrence.md. The other is benchmarks/opco/damodaran_fcff, an unrelated source in an unrelated pack. Two independent published sources confirming one mechanism.
+A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -36,7 +36,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 // `cre.property_opex` emits a single un-suffixed stream, so a property cannot
 // have more than one expense line; and `cre.vacancy_loss` takes a CONSTANT
 // `potential_gross_year`, so vacancy cannot track a rent roll that grows. Both
-// are recorded in docs/13_feature_backlog.md. The streams below are named into
+// The streams below are named into
 // the pack's taxonomy so `--pack cre` domain metrics still aggregate them,
 // which is the same posture benchmarks/cre/mit_rentleg_plaza takes.
 //
@@ -128,7 +128,7 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 // separate a little more every year. That left a 12.26 residual at year 29 and
 // was the sole reason this case carried period_tolerance = 13.
 //
-// A state says it directly. See docs/14_state_and_recurrence.md.
+// A declared state expresses that recurrence directly.
 // One state per sub-line, because each is rounded on its own before the sum.
 state opex_management {
   init inputs.opex_management
@@ -159,7 +159,7 @@ state reserve_line {
 // separately — it escalates and rounds each on its own before summing — and
 // until `cre.property_opex` took a suffix a model could declare exactly one
 // expense line, so they had to be added together here and the four published
-// figures could not be checked against anything (backlog 1.5).
+// figures could not be checked against anything.
 //
 // The states were already per-sub-line for the rounding reason, so this is a
 // decomposition and not a change: the four sum to what the single stream
@@ -205,7 +205,7 @@ stream cre.ops.expense on entity asset.home_project outflow currency USD {
 // The pro forma carries ONE debt line and the workbook defines it as P+I+MIP,
 // so it was modelled as one number and the two published components could not
 // be checked separately. Mortgage insurance is not a payment on the debt —
-// backlog 7.14 — and coverage here is measured against the whole line, which is
+// and coverage here is measured against the whole line, which is
 // what `financing.*` folds to.
 //
 // MIP is the sizing tab's stated 0.450% of original principal, flat and exact.

@@ -22,5 +22,6 @@
 # exhibit's own total, 16,312,000, is the sum of its ROUNDED quarterly figures;
 # the engine sums the exact ones and gets 16,310,570. The 1,430 gap is nine
 # quarters of rounding, not a modelling difference.
+summary = "A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing."
 pack = "cre"
 period_tolerance = 500.0

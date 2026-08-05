@@ -7,7 +7,7 @@ source: benchmarks/cre/mit_rentleg_plaza
 
 # cre: mit rentleg plaza
 
-Rentleg Plaza — MIT OCW 11.431J Problem Set 1, Part C. 30,000 NRSF office, two suites, annual 5-year DCF (2001-2005). Expense stops at two different levels, a base-year stop reset on re-lease, occupancy-varying operating expenses, probability-weighted rollover, a one-time market rent spike, and a reversion at 10x forward NOI net of a 5% commission. Set 1 (CC BY-NC-SA 4.0). The problem set publishes both the full pro forma table and the answer, PV @ 12% = $2,292,810. This is the first benchmark in the suite checked against a published third-party number rather than against an in-house reference_gen.py.
+A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

@@ -684,7 +684,7 @@ against it by `make results-schema`.
             1,
             -1
           ],
-          "description": "How to RENDER the sign. `values` is always the signed arithmetic quantity, so a consumer that ignores this still adds up correctly. -1 is how a deduction prints as a positive number in a 'less:' row while still being counted negatively — a line can be shown AND counted, which is backlog 1.3."
+          "description": "How to RENDER the sign. `values` is always the signed arithmetic quantity, so a consumer that ignores this still adds up correctly. -1 is how a deduction prints as a positive number in a 'less:' row while still being counted negatively — a line can be shown AND counted."
         },
         "values": {
           "type": "array",

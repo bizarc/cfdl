@@ -1,5 +1,6 @@
 # Benchmark case: 30 MW wind, merchant + 10y PTC + 5y MACRS shield + debt.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.
+summary = "A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule."
 pack = "energy"
 period_tolerance = 0.01

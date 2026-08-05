@@ -12,13 +12,13 @@ entity fund buyer
 // servicer advances. Cash Flow A runs it at a flat 1% SMM and 1% MDR — the
 // constant-hazard case, which is why it is reproducible today. Cash Flow B on
 // the same pool uses 150% PSA and 100% SDA, whose ramps the pack cannot yet
-// express; see docs/13_feature_backlog.md.
+// express directly today.
 //
 // The pack takes ANNUAL cpr/cdr and converts with cpr_to_periodic, so a
 // monthly 1% SMM is stated here as its annual equivalent:
 //   cpr = 1 - (1 - 0.01)^12 = 0.11361512828387077
 // which converts back to exactly 0.01. Practitioners quote SMM directly, so
-// having to do this by hand is itself a small gap — also in the backlog.
+// having to do this by hand is itself a small gap.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
 contract credit.pool_level_pay.a on entity fund.buyer {

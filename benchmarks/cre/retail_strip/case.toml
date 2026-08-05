@@ -2,6 +2,7 @@
 # percentage rent above breakpoint, net-lease inline shops, forward-NOI exit.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner review against institutional-grade references.
+summary = "A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold."
 pack = "cre"
 period_tolerance = 0.01
 

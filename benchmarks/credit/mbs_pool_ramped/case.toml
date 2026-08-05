@@ -12,5 +12,6 @@
 #
 # period_tolerance = 0.51 — the reference figures are rounded to whole dollars,
 # so half a dollar is the tightest bound they can support.
+summary = "A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off."
 pack = "credit"
 period_tolerance = 0.51

@@ -7,7 +7,7 @@ source: benchmarks/credit/io_bullet_loan
 
 # Credit: IO/bullet bridge loan
 
-$10mm IO/bullet bridge pool, 7.25% / 60mo bullet, 5 CPR, 1.5 CDR, 40% severity, 4mo recovery lag, purchased at par.
+An interest-only loan repaying its entire principal in a single balloon at maturity.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

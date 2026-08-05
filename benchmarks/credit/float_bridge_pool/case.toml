@@ -5,5 +5,6 @@
 # curve_value lookup with step interpolation).
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.
+summary = "A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination."
 pack = "credit"
 period_tolerance = 0.01

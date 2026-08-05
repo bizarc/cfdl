@@ -7,7 +7,7 @@ source: benchmarks/opco/damodaran_fcff
 
 # opco: damodaran fcff
 
-Damodaran's FCFF Simple Ginzu — textbook intrinsic valuation. THE FIRST OPCO CASE BUILT FROM PACK CONTRACTS. The other opco case reconciles a banker's DCF, but that filing publishes the RESULT — per-year unlevered cash flow — so it had to hand-write six native streams and validated the engine rather than the pack. This source publishes the DRIVERS, which is what a pack rule consumes. It takes opco off 0-of-10 contract types externally validated. Licence is explicit: "These spreadsheet programs are in Excel and are not copy protected. Download them and feel free to modify them to your own specifications." So the workbook is committed under reference/, as with HUD — a reader can open it and check every figure here directly. WHAT IS ASSERTED.   revenue / opex / taxes    years 1-10   exact   reinvestment              years 1-4    exact The growth and tax curves carry a PER-PERIOD rate. The rules compound it through a declared state (docs/14_state_and_recurrence.md), so the factor is the running product of each period's rate rather than pow(1 + g, t) — which applies one period's rate as though it had held from the start and drifted -2.4% on revenue by year 10. That drift is now zero and the blanks are gone. REINVESTMENT STILL STOPS AT YEAR 4, for an unrelated reason. It is a derived line — revenue(t) * g(t+1) / sales_to_capital — so it grows at (1 + g_t) * g_{t+1}/g_t, leading the growth path by a year. opco.capex_line is a self-growing line and cannot express a quantity defined by another line's growth. A contract shape gap, not a compounding one; see NOTES.md. NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital converges 7.055% -> 8.81% and the engine takes a single scalar discount rate. period_tolerance = 0.001 — the published figures carry four decimals and the engine agrees to 1e-6 everywhere it is asserted.
+A free cash flow to firm valuation following Damodaran's published method, with reinvestment driven by growth and return on capital.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -36,7 +36,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 //
 // WHAT IS ASSERTED, AND WHY NOT ALL TEN YEARS. The curves carry a PER-PERIOD
 // rate, which is the right interface and the one that will be correct once a
-// stream can read its own prior period (backlog 5.1). Until then the rules
+// stream can read its own prior period. Until then the rules
 // compound with pow(1 + g, t), which applies one period's rate as though it had
 // held throughout — exact while the rate is flat, drifting once it moves. So
 // years 1-5 are asserted and years 6-10 are not; NOTES.md carries the measured

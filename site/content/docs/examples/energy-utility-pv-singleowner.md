@@ -7,7 +7,7 @@ source: benchmarks/energy/utility_pv_singleowner
 
 # energy: utility pv singleowner
 
-100 MW-AC utility-scale PV, single-owner project finance. Reconciled against the national laboratory's open-source project-finance model (BSD-3, run once outside this repo — see NOTES.md for the version, the inputs and the command). Nothing about that tool persists here: no vendored package, no CI dependency, no reference_gen.py. The figures below are its outputs, carried as anchor values. There is deliberately no reference_gen.py. A second implementation of our own is exactly what an external model replaces, and writing one would turn an independent check back into a self-check. Anchors rather than all 26 periods: escalation and degradation compound, so a convention error shows up in every period after the first and grows. Periods 1-7 pin the MACRS table to its final year and the zero after it, 18/19 pin the debt tenor and its cliff, 25 pins the compounding at the end of the hold. period_tolerance = 0.01 — a cent. The reconciliation is far tighter than that: the worst disagreement across all 26 periods and all four escalating streams is 9.1e-7 dollars.
+A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

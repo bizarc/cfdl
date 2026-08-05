@@ -7,7 +7,7 @@ source: benchmarks/cre/retail_strip
 
 # CRE: retail strip with expense stops
 
-retail strip — base-year stop with 95% gross-up, percentage rent above breakpoint, net-lease inline shops, forward-NOI exit.
+A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,

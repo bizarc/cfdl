@@ -100,6 +100,24 @@ def resolve_columns(fieldnames, series, failures):
 def run_case(case_dir: pathlib.Path) -> list[str]:
     failures = []
     case = tomllib.loads((case_dir / "case.toml").read_text(encoding="utf-8"))
+
+    # Every case declares one sentence describing the DEAL, which is what the
+    # documentation site publishes for it.
+    #
+    # The site used to scrape this file's leading comments instead. Those are
+    # maintainer's notes — why a tolerance moved, which line was wrong and for
+    # how long — and publishing them put a wall of engineering narrative at the
+    # top of the strongest evidence pages there are. Requiring the field here
+    # rather than only in the site generator means a new case cannot be added
+    # without one, and the failure names the case rather than appearing later
+    # as a stale page.
+    summary = case.get("summary", "").strip()
+    if not summary:
+        failures.append(
+            f"{case_dir.name}: case.toml has no `summary`. Add one sentence "
+            f"describing the deal — it is what the docs page shows. Comments in "
+            f"this file are notes for maintainers and are not published."
+        )
     with tempfile.TemporaryDirectory() as tmp:
         ir = pathlib.Path(tmp) / "model.ir.json"
         results_path = pathlib.Path(tmp) / "results.json"

@@ -18,5 +18,6 @@
 #
 # period_tolerance = 0.001 — decimal against IEEE-754 float64 over 25 years of
 # compounding. The worst disagreement on any period of any stream is 9e-7.
+summary = "A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake."
 pack = "energy"
 period_tolerance = 0.001

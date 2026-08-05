@@ -7,7 +7,7 @@ source: benchmarks/credit/auto_abs_wal
 
 # credit: auto abs wal
 
-auto-receivables collateral at zero prepayment speed, reconciled against an issuer-published weighted-average-life exhibit. TWO KINDS OF FIGURE HERE, and the difference matters. EXTERNAL — expected_metrics.json. `domain.credit.principal` is the exhibit's own stated aggregate pool balance, 537,640,787.96. Reproducing it to the cent means 43 level-pay sub-pools, at 43 different rates and terms and four of them at a 0% promotional APR, each returned exactly the balance the issuer stated. Tolerance 0.01 — one cent, on half a billion. Two of the exhibit's six non-zero prepayment-speed columns are now their own cases (auto_abs_speed_050, auto_abs_speed_150); this one remains the zero-speed column. The headline reconciliation is not assertable through this harness and lives in NOTES.md: the exhibit publishes percent-outstanding per NOTE CLASS, and this pack models collateral, not a liability stack. The pool's principal path reproduces the published Class A-2 pay-down to within 0.004 percentage points at every one of its eight distribution dates, against a source that rounds to 0.01 — so it sits on the rounding floor — and its weighted average life comes to 0.3695 years against a published 0.37. REGRESSION — expected.csv. `net_cash_flow` is the engine's own output, kept as a guard so a change to the level-pay rules cannot move this 43-contract model silently. It is NOT an external figure and is not evidence of anything; the external evidence is above and in NOTES.md.
+An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -29,7 +29,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 // Absolute Prepayment Model — a constant number of ORIGINAL units prepaying
 // each month, so the implied SMM RISES over the life — and every pool factor
 // in this pack is pow(k, p), valid only for constant k. Same blocker as the
-// ramped-curve item in docs/13_feature_backlog.md. The per-class columns need
+// ramped curve. The per-class columns need
 // a sequential-pay liability waterfall, which this pack does not model at all.
 //
 // At zero speed the exhibit's stated assumptions are exactly this pack's

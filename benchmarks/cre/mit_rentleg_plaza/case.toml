@@ -11,5 +11,6 @@
 # the suite checked against a published third-party number rather than against
 # an in-house reference_gen.py.
 # Status: verified — every pro forma line and the published PV reproduce.
+summary = "A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate."
 pack = "cre"
 period_tolerance = 0.01
