@@ -15,9 +15,22 @@ _CALENDAR_FREQ = {
 
 
 def scalar(value) -> float:
-    """Coerce a metric/summary value (bare number or Money object) to float."""
+    """Coerce a metric/summary value (bare number or Money object) to float.
+
+    `None` becomes NaN rather than raising. A CFDL series publishes JSON `null`
+    for a value that is genuinely undefined — a coverage ratio in a period with
+    no debt service — and NaN is what that means to pandas: missing, not zero,
+    and the column stays numeric so it can still be aggregated.
+
+    This raised `TypeError: float() argument must be ... not 'NoneType'` the
+    moment the annual rollup gained kind-aware subtotals, because a rolled-up
+    DSCR is null wherever the debt has matured.
+    """
+    if value is None:
+        return float("nan")
     if isinstance(value, dict) and "amount" in value:
-        return float(value["amount"])
+        amount = value["amount"]
+        return float("nan") if amount is None else float(amount)
     return float(value)
 
 
