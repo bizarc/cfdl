@@ -1262,7 +1262,7 @@ annual reporting grid.
 ### 7.17 Reporting is a language capability, and it is missing — LARGELY RESOLVED
 
 **Built.** Classification, per-period subtotals, ratios, statements, reporting
-grain and the completeness check all ship, in all four packs. `docs/07` §6.11 is
+grain and the completeness check all ship, in all four packs. `docs/07` §6.10 is
 the authoring reference; §6.10 is superseded and says why.
 
 What this item asked for, and where it landed:
