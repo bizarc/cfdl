@@ -58,6 +58,96 @@
       }
     }
   ],
+  "subtotals": [
+    {
+      "id": "domain.opco.revenue_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.opco.opex_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ebitda_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ufcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "sum(operating.*, investing.capital.capex)"
+    },
+    {
+      "id": "domain.opco.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.interest",
+        "financing.debt_principal"
+      ],
+      "formula": "-sum(financing.interest, financing.debt_principal)"
+    },
+    {
+      "id": "domain.opco.lfcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "subtotals": [
+        "domain.opco.ufcf_periodic"
+      ],
+      "formula": "domain.opco.ufcf_periodic + sum(financing.*)"
+    },
+    {
+      "id": "domain.opco.debt_service_coverage",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.opco.ufcf_periodic",
+      "denominator": "domain.opco.debt_service_periodic",
+      "formula": "domain.opco.ufcf_periodic / domain.opco.debt_service_periodic"
+    },
+    {
+      "id": "domain.opco.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "cash flow available for debt service"
+    },
+    {
+      "id": "domain.opco.gross_burn",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*",
+        "investing.capital.capex"
+      ],
+      "formula": "-sum(operating expenses, capital expenditure)"
+    }
+  ],
   "contracts": [
     {
       "id": "4ba2aa2a2fa6f1b566fdf3641bfa2f2c",

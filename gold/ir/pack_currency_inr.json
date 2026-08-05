@@ -23,6 +23,62 @@
     "constants": {},
     "random": {}
   },
+  "subtotals": [
+    {
+      "id": "domain.energy.revenue",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.energy.opex",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.ebitda",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.energy.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service"
+      ],
+      "formula": "-sum(financing.debt_service)"
+    },
+    {
+      "id": "domain.energy.dscr_periodic",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.energy.cfads",
+      "denominator": "domain.energy.debt_service_periodic",
+      "formula": "domain.energy.cfads / domain.energy.debt_service_periodic"
+    }
+  ],
   "contracts": [
     {
       "id": "a0337ee6854e092c9c2b8f8da6b15e5f",

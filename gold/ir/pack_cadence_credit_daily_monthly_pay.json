@@ -59,6 +59,55 @@
       }
     }
   ],
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
   "contracts": [
     {
       "id": "a4835fbae4b45ef98841555fae108bcd",

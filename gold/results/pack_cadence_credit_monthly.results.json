@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "6b6ca43980d5f4c8af6ff3654409c8dccdcbf80a79f85959b1bb2fa3e022a7d4",
+  "model_hash": "bbe8311f739a4de0b6c7bc27f400b5db366fe0c146dcb7f067245af246175718",
   "ledger_hash": "4ef8427484e92ece7b64ec52c6ae3c8de729dd79bd41bba1e27c27b78a92e1f2",
   "engine": {
     "name": "cfdl-engine",
@@ -192,6 +192,831 @@
       }
     },
     "series": {
+      "domain.credit.gross_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 46637.038355,
+            "currency": "USD"
+          },
+          {
+            "amount": 45846.142786,
+            "currency": "USD"
+          },
+          {
+            "amount": 45065.844043,
+            "currency": "USD"
+          },
+          {
+            "amount": 45583.874159,
+            "currency": "USD"
+          },
+          {
+            "amount": 44770.473287,
+            "currency": "USD"
+          },
+          {
+            "amount": 43968.140763,
+            "currency": "USD"
+          },
+          {
+            "amount": 43176.739768,
+            "currency": "USD"
+          },
+          {
+            "amount": 42396.135099,
+            "currency": "USD"
+          },
+          {
+            "amount": 41626.193155,
+            "currency": "USD"
+          },
+          {
+            "amount": 40866.781915,
+            "currency": "USD"
+          },
+          {
+            "amount": 40117.770923,
+            "currency": "USD"
+          },
+          {
+            "amount": 39379.031267,
+            "currency": "USD"
+          },
+          {
+            "amount": 38650.435563,
+            "currency": "USD"
+          },
+          {
+            "amount": 37931.857937,
+            "currency": "USD"
+          },
+          {
+            "amount": 37223.174006,
+            "currency": "USD"
+          },
+          {
+            "amount": 36524.260863,
+            "currency": "USD"
+          },
+          {
+            "amount": 35834.997058,
+            "currency": "USD"
+          },
+          {
+            "amount": 35155.262583,
+            "currency": "USD"
+          },
+          {
+            "amount": 34484.938854,
+            "currency": "USD"
+          },
+          {
+            "amount": 33823.908692,
+            "currency": "USD"
+          },
+          {
+            "amount": 33172.056314,
+            "currency": "USD"
+          },
+          {
+            "amount": 32529.267308,
+            "currency": "USD"
+          },
+          {
+            "amount": 31895.428624,
+            "currency": "USD"
+          },
+          {
+            "amount": 31270.428555,
+            "currency": "USD"
+          },
+          {
+            "amount": 30654.15672,
+            "currency": "USD"
+          },
+          {
+            "amount": 30046.504054,
+            "currency": "USD"
+          },
+          {
+            "amount": 29447.362787,
+            "currency": "USD"
+          },
+          {
+            "amount": 28856.62643,
+            "currency": "USD"
+          },
+          {
+            "amount": 28274.189765,
+            "currency": "USD"
+          },
+          {
+            "amount": 27699.948825,
+            "currency": "USD"
+          },
+          {
+            "amount": 27133.800878,
+            "currency": "USD"
+          },
+          {
+            "amount": 26575.644421,
+            "currency": "USD"
+          },
+          {
+            "amount": 26025.379158,
+            "currency": "USD"
+          },
+          {
+            "amount": 25482.905987,
+            "currency": "USD"
+          },
+          {
+            "amount": 24979.240545,
+            "currency": "USD"
+          },
+          {
+            "amount": 24484.051676,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.net_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 46637.038355,
+            "currency": "USD"
+          },
+          {
+            "amount": 45846.142786,
+            "currency": "USD"
+          },
+          {
+            "amount": 45065.844043,
+            "currency": "USD"
+          },
+          {
+            "amount": 45583.874159,
+            "currency": "USD"
+          },
+          {
+            "amount": 44770.473287,
+            "currency": "USD"
+          },
+          {
+            "amount": 43968.140763,
+            "currency": "USD"
+          },
+          {
+            "amount": 43176.739768,
+            "currency": "USD"
+          },
+          {
+            "amount": 42396.135099,
+            "currency": "USD"
+          },
+          {
+            "amount": 41626.193155,
+            "currency": "USD"
+          },
+          {
+            "amount": 40866.781915,
+            "currency": "USD"
+          },
+          {
+            "amount": 40117.770923,
+            "currency": "USD"
+          },
+          {
+            "amount": 39379.031267,
+            "currency": "USD"
+          },
+          {
+            "amount": 38650.435563,
+            "currency": "USD"
+          },
+          {
+            "amount": 37931.857937,
+            "currency": "USD"
+          },
+          {
+            "amount": 37223.174006,
+            "currency": "USD"
+          },
+          {
+            "amount": 36524.260863,
+            "currency": "USD"
+          },
+          {
+            "amount": 35834.997058,
+            "currency": "USD"
+          },
+          {
+            "amount": 35155.262583,
+            "currency": "USD"
+          },
+          {
+            "amount": 34484.938854,
+            "currency": "USD"
+          },
+          {
+            "amount": 33823.908692,
+            "currency": "USD"
+          },
+          {
+            "amount": 33172.056314,
+            "currency": "USD"
+          },
+          {
+            "amount": 32529.267308,
+            "currency": "USD"
+          },
+          {
+            "amount": 31895.428624,
+            "currency": "USD"
+          },
+          {
+            "amount": 31270.428555,
+            "currency": "USD"
+          },
+          {
+            "amount": 30654.15672,
+            "currency": "USD"
+          },
+          {
+            "amount": 30046.504054,
+            "currency": "USD"
+          },
+          {
+            "amount": 29447.362787,
+            "currency": "USD"
+          },
+          {
+            "amount": 28856.62643,
+            "currency": "USD"
+          },
+          {
+            "amount": 28274.189765,
+            "currency": "USD"
+          },
+          {
+            "amount": 27699.948825,
+            "currency": "USD"
+          },
+          {
+            "amount": 27133.800878,
+            "currency": "USD"
+          },
+          {
+            "amount": 26575.644421,
+            "currency": "USD"
+          },
+          {
+            "amount": 26025.379158,
+            "currency": "USD"
+          },
+          {
+            "amount": 25482.905987,
+            "currency": "USD"
+          },
+          {
+            "amount": 24979.240545,
+            "currency": "USD"
+          },
+          {
+            "amount": 24484.051676,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 40652.248646,
+            "currency": "USD"
+          },
+          {
+            "amount": 40079.270777,
+            "currency": "USD"
+          },
+          {
+            "amount": 39513.479674,
+            "currency": "USD"
+          },
+          {
+            "amount": 38954.789699,
+            "currency": "USD"
+          },
+          {
+            "amount": 38403.116212,
+            "currency": "USD"
+          },
+          {
+            "amount": 37858.375552,
+            "currency": "USD"
+          },
+          {
+            "amount": 37320.485032,
+            "currency": "USD"
+          },
+          {
+            "amount": 36789.362927,
+            "currency": "USD"
+          },
+          {
+            "amount": 36264.928461,
+            "currency": "USD"
+          },
+          {
+            "amount": 35747.101796,
+            "currency": "USD"
+          },
+          {
+            "amount": 35235.804024,
+            "currency": "USD"
+          },
+          {
+            "amount": 34730.957155,
+            "currency": "USD"
+          },
+          {
+            "amount": 34232.484103,
+            "currency": "USD"
+          },
+          {
+            "amount": 33740.308682,
+            "currency": "USD"
+          },
+          {
+            "amount": 33254.355592,
+            "currency": "USD"
+          },
+          {
+            "amount": 32774.550408,
+            "currency": "USD"
+          },
+          {
+            "amount": 32300.819572,
+            "currency": "USD"
+          },
+          {
+            "amount": 31833.090382,
+            "currency": "USD"
+          },
+          {
+            "amount": 31371.290982,
+            "currency": "USD"
+          },
+          {
+            "amount": 30915.350354,
+            "currency": "USD"
+          },
+          {
+            "amount": 30465.198306,
+            "currency": "USD"
+          },
+          {
+            "amount": 30020.765464,
+            "currency": "USD"
+          },
+          {
+            "amount": 29581.983263,
+            "currency": "USD"
+          },
+          {
+            "amount": 29148.783936,
+            "currency": "USD"
+          },
+          {
+            "amount": 28721.100506,
+            "currency": "USD"
+          },
+          {
+            "amount": 28298.866777,
+            "currency": "USD"
+          },
+          {
+            "amount": 27882.017325,
+            "currency": "USD"
+          },
+          {
+            "amount": 27470.487487,
+            "currency": "USD"
+          },
+          {
+            "amount": 27064.213358,
+            "currency": "USD"
+          },
+          {
+            "amount": 26663.131775,
+            "currency": "USD"
+          },
+          {
+            "amount": 26267.180313,
+            "currency": "USD"
+          },
+          {
+            "amount": 25876.297275,
+            "currency": "USD"
+          },
+          {
+            "amount": 25490.421686,
+            "currency": "USD"
+          },
+          {
+            "amount": 25109.493281,
+            "currency": "USD"
+          },
+          {
+            "amount": 24733.452498,
+            "currency": "USD"
+          },
+          {
+            "amount": 24362.240474,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.servicing_fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.total_investment_income": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 5984.789708,
+            "currency": "USD"
+          },
+          {
+            "amount": 5766.872009,
+            "currency": "USD"
+          },
+          {
+            "amount": 5552.364369,
+            "currency": "USD"
+          },
+          {
+            "amount": 5341.2223,
+            "currency": "USD"
+          },
+          {
+            "amount": 5133.401855,
+            "currency": "USD"
+          },
+          {
+            "amount": 4928.859619,
+            "currency": "USD"
+          },
+          {
+            "amount": 4727.552707,
+            "currency": "USD"
+          },
+          {
+            "amount": 4529.438752,
+            "currency": "USD"
+          },
+          {
+            "amount": 4334.475904,
+            "currency": "USD"
+          },
+          {
+            "amount": 4142.622821,
+            "currency": "USD"
+          },
+          {
+            "amount": 3953.838665,
+            "currency": "USD"
+          },
+          {
+            "amount": 3768.083094,
+            "currency": "USD"
+          },
+          {
+            "amount": 3585.316258,
+            "currency": "USD"
+          },
+          {
+            "amount": 3405.498792,
+            "currency": "USD"
+          },
+          {
+            "amount": 3228.59181,
+            "currency": "USD"
+          },
+          {
+            "amount": 3054.556902,
+            "currency": "USD"
+          },
+          {
+            "amount": 2883.356125,
+            "currency": "USD"
+          },
+          {
+            "amount": 2714.952,
+            "currency": "USD"
+          },
+          {
+            "amount": 2549.307505,
+            "currency": "USD"
+          },
+          {
+            "amount": 2386.38607,
+            "currency": "USD"
+          },
+          {
+            "amount": 2226.151573,
+            "currency": "USD"
+          },
+          {
+            "amount": 2068.568333,
+            "currency": "USD"
+          },
+          {
+            "amount": 1913.601105,
+            "currency": "USD"
+          },
+          {
+            "amount": 1761.215076,
+            "currency": "USD"
+          },
+          {
+            "amount": 1611.375858,
+            "currency": "USD"
+          },
+          {
+            "amount": 1464.049486,
+            "currency": "USD"
+          },
+          {
+            "amount": 1319.202411,
+            "currency": "USD"
+          },
+          {
+            "amount": 1176.801493,
+            "currency": "USD"
+          },
+          {
+            "amount": 1036.814002,
+            "currency": "USD"
+          },
+          {
+            "amount": 899.207607,
+            "currency": "USD"
+          },
+          {
+            "amount": 763.950375,
+            "currency": "USD"
+          },
+          {
+            "amount": 631.010765,
+            "currency": "USD"
+          },
+          {
+            "amount": 500.357624,
+            "currency": "USD"
+          },
+          {
+            "amount": 371.960182,
+            "currency": "USD"
+          },
+          {
+            "amount": 245.788047,
+            "currency": "USD"
+          },
+          {
+            "amount": 121.811202,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",
@@ -1452,6 +2277,131 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.credit.gross_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 519434.16552,
+              "currency": "USD"
+            },
+            {
+              "amount": 418496.016357,
+              "currency": "USD"
+            },
+            {
+              "amount": 329659.811246,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.net_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 519434.16552,
+              "currency": "USD"
+            },
+            {
+              "amount": 418496.016357,
+              "currency": "USD"
+            },
+            {
+              "amount": 329659.811246,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 451549.919955,
+              "currency": "USD"
+            },
+            {
+              "amount": 379638.981044,
+              "currency": "USD"
+            },
+            {
+              "amount": 317938.902755,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.servicing_fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.total_investment_income": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": 58163.521803,
+              "currency": "USD"
+            },
+            {
+              "amount": 31777.501549,
+              "currency": "USD"
+            },
+            {
+              "amount": 10142.329052,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",
