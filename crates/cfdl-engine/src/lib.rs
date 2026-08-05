@@ -49,6 +49,27 @@ pub struct RunConfig {
     pub parameter_overrides: BTreeMap<String, f64>,
     pub scenarios: BTreeMap<String, ScenarioRunConfig>,
     pub monte_carlo: Option<MonteCarloRunConfig>,
+    /// The grain to value at — `"annual"`, or `None` for the model grid.
+    ///
+    /// Named for the `Grain` it produces, because that is what it is choosing.
+    /// Two alternatives were considered and rejected: "discounting period"
+    /// collides with `period`, which means a model grid period everywhere else
+    /// in CFDL, and "cadence" is already taken — `pack.cadences` means which
+    /// model calendars a pack's rules lower correctly on, which is a
+    /// compatibility list rather than an aggregation frequency.
+    ///
+    /// `None` means the model grid, which is what every run did before this
+    /// existed and is what keeps published NPVs unmoved.
+    ///
+    /// Naming a coarser grain — currently `"annual"` — sums cash into those
+    /// buckets and discounts each once, which is the convention published
+    /// sources use ("sum NOI by year, then discount the year"). Until this,
+    /// `ppy` came from `ir.time.calendar`, so a model's CALENDAR silently
+    /// decided its valuation convention: the same deal built monthly and
+    /// annually returned different present values, and `mit_rentleg_plaza`
+    /// records that as a 1.3% gap it attributed to the rebuild rather than to
+    /// the coupling.
+    pub valuation_grain: Option<String>,
 }
 
 impl Default for RunConfig {
@@ -59,6 +80,7 @@ impl Default for RunConfig {
             parameter_overrides: BTreeMap::new(),
             scenarios: BTreeMap::new(),
             monte_carlo: None,
+            valuation_grain: None,
         }
     }
 }
@@ -210,6 +232,7 @@ fn run_config_from_value(
         parameter_overrides: config_file.deterministic.parameters,
         scenarios: BTreeMap::new(),
         monte_carlo: None,
+        valuation_grain: None,
     };
 
     if let Some(as_of) = config_file.deterministic.as_of {
@@ -359,6 +382,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 parameter_overrides: merged_overrides,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )?;
         warnings.extend(scenario_run.warnings);
@@ -436,6 +460,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                     parameter_overrides: trial_overrides,
                     scenarios: BTreeMap::new(),
                     monte_carlo: None,
+                    valuation_grain: None,
                 },
             )?;
             warnings.extend(trial_run.warnings);
@@ -537,14 +562,25 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     // a subtotal is a fold OF the ledger, so a pack changing how it chooses to
     // subtotal must not make the hash claim the cash moved. What is hashed is
     // the cash and the states that produced it.
+    //
+    // THE FILTER APPLIES TO THE ROLLUP TOO. It did not, and the rollup gaining
+    // kind-aware subtotals moved `ledger_hash` on fifteen goldens whose cash was
+    // bit-identical — the hash asserting the ledger changed when only a fold
+    // over it had. The exclusion belongs to the argument, not to the field it
+    // was first written on, so it is expressed once and applied to both.
+    let is_ledger = |key: &str| !key.starts_with("domain.");
     let ledger_only: BTreeMap<&String, &Series> = deterministic
         .series
         .iter()
-        .filter(|(key, _)| !key.starts_with("domain."))
+        .filter(|(key, _)| is_ledger(key))
         .collect();
+    let rollup_only: Option<BTreeMap<&String, &Series>> = deterministic
+        .annual_rollup
+        .as_ref()
+        .map(|r| r.series.iter().filter(|(key, _)| is_ledger(key)).collect());
     let ledger_hash = canonical_hash(&serde_json::json!({
         "series": ledger_only,
-        "annual_rollup": &deterministic.annual_rollup,
+        "annual_rollup": rollup_only.map(|series| serde_json::json!({ "series": series })),
     }));
 
     let inputs = {
@@ -1124,7 +1160,18 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let model_total = model_series.iter().sum::<f64>();
     let ppy = periods_per_year(&ir.time.calendar);
     let per_period_rate = (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0;
-    let npv = npv_with_offsets(&valued_streams, per_period_rate);
+    // The identity grain keeps the original path, byte for byte. Regrouping the
+    // sum changes its last bit (measured at 1 ULP), and no published NPV should
+    // move because a capability was added that nobody asked for yet.
+    let npv = match config.valuation_grain.as_deref() {
+        Some("annual") => {
+            let grain = Grain::calendar_year(&timeline[..cash_periods.min(timeline.len())]);
+            // One bucket is one year, so the rate for a bucket is the ANNUAL
+            // rate — not the per-period rate the grid would use.
+            npv_at_grain(&valued_streams, config.discount_rate, &grain)
+        }
+        _ => npv_with_offsets(&valued_streams, per_period_rate),
+    };
     metrics.insert(
         "model.total".to_string(),
         Scalar::Money(Money {
@@ -1261,6 +1308,8 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &stream_series,
             &model_series,
             &ir.model.currency,
+            &subtotal_money,
+            &ir.subtotals,
         ))
     };
 
@@ -1280,37 +1329,136 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 /// output `Series`.  Values for all periods that fall within a given year
 /// are summed.  The resulting index uses `calendar = "annual"` and `start =
 /// "{first_year}-01-01"`.
+/// A bucketing of the model grid into report periods.
+///
+/// "Grain" rather than a coined term: it is what analytics tooling already
+/// calls this — Superset and Looker both offer a Time Grain of
+/// day/week/month/quarter/year, meaning exactly "what one row represents".
+/// Not to be confused with `pack.cadences`, which is a different thing wearing
+/// a similar word: the list of model calendars a pack's rules lower correctly
+/// on, rather than a frequency to aggregate at.
+///
+/// The model grain and the annual rollup were always two bucketings of one
+/// mechanism; only one of them was written down. Making it a type means a
+/// quarterly statement, an annual rollup and a valuation at a different
+/// convention are the same operation with a different partition, rather than
+/// three pieces of code that must be kept agreeing.
+///
+/// `buckets[i]` holds the model-period indices that fall in report period `i`.
+/// The identity bucketing — one model period per bucket — is what everything
+/// defaults to, which is why nothing moves until something opts in.
+#[derive(Debug, Clone)]
+pub struct Grain {
+    pub calendar: String,
+    pub start: String,
+    pub buckets: Vec<Vec<usize>>,
+}
+
+impl Grain {
+    /// One bucket per model period: the grid reporting on itself.
+    pub fn identity(timeline: &[Date], calendar: &str, start: &str) -> Self {
+        Self {
+            calendar: calendar.to_string(),
+            start: start.to_string(),
+            buckets: (0..timeline.len()).map(|i| vec![i]).collect(),
+        }
+    }
+
+    /// One bucket per distinct CALENDAR year — not per model year. A mid-year
+    /// start therefore produces a short first bucket, which is what the annual
+    /// rollup has always done and what a fiscal reader expects.
+    pub fn calendar_year(timeline: &[Date]) -> Self {
+        let mut years: Vec<i32> = Vec::new();
+        let mut seen = std::collections::BTreeSet::new();
+        for d in timeline {
+            if seen.insert(d.year) {
+                years.push(d.year);
+            }
+        }
+        let buckets = years
+            .iter()
+            .map(|&yr| {
+                timeline
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, d)| (d.year == yr).then_some(i))
+                    .collect()
+            })
+            .collect();
+        Self {
+            calendar: "annual".to_string(),
+            start: years
+                .first()
+                .map(|y| format!("{y:04}-01-01"))
+                .unwrap_or_default(),
+            buckets,
+        }
+    }
+
+    /// Build a grain from what a results document already carries.
+    ///
+    /// A statement is a post-pass and has no timeline — only a `SeriesIndex`.
+    /// Reconstructing the dates from `(calendar, start, periods)` is exact,
+    /// because that triple is what generated them in the first place.
+    ///
+    /// `name` is the grain a declaration asked for. `None` or `"period"` gives
+    /// the identity bucketing, which is what everything defaults to.
+    pub fn from_index(index: &SeriesIndex, name: Option<&str>) -> Self {
+        let timeline = timeline_dates(&index.start, &index.calendar, index.periods as usize)
+            .unwrap_or_default();
+        match name {
+            Some("annual") if !timeline.is_empty() => Grain::calendar_year(&timeline),
+            _ => Grain::identity(&timeline, &index.calendar, &index.start),
+        }
+    }
+
+    pub fn is_identity(&self) -> bool {
+        self.buckets.iter().all(|b| b.len() <= 1)
+    }
+
+    /// Sum a per-period series into this grain's buckets.
+    ///
+    /// Money buckets by summation. A RATIO does not, and must never be routed
+    /// through here: the mean of twelve monthly coverage ratios is not the
+    /// annual coverage ratio. A ratio is recomputed from its re-bucketed
+    /// numerator and denominator — see `rebucket_subtotals`, whose signature
+    /// takes the SPECS rather than the values so that computing the wrong
+    /// thing is not the path of least resistance.
+    pub fn sum(&self, values: &[f64]) -> Vec<f64> {
+        self.buckets
+            .iter()
+            .map(|b| b.iter().filter_map(|&i| values.get(i)).sum())
+            .collect()
+    }
+}
+
 fn build_annual_rollup(
     timeline: &[Date],
     stream_series: &BTreeMap<String, Vec<f64>>,
     model_series: &[f64],
     currency: &str,
+    subtotal_money: &BTreeMap<String, Vec<f64>>,
+    subtotal_specs: &[IrSubtotal],
 ) -> AnnualRollupSection {
-    // Collect the ordered, distinct calendar years.
-    let mut seen = std::collections::BTreeSet::new();
-    let mut years: Vec<i32> = Vec::new();
-    for date in timeline {
-        if seen.insert(date.year) {
-            years.push(date.year);
-        }
-    }
-
-    let n_years = years.len() as u32;
-    let start = format!("{:04}-01-01", years[0]);
-
-    // Sum a flat slice of per-period floats into one value per calendar year.
-    let aggregate = |values: &[f64]| -> Vec<f64> {
-        years
-            .iter()
-            .map(|&yr| {
-                timeline
-                    .iter()
-                    .zip(values.iter())
-                    .filter_map(|(d, v)| if d.year == yr { Some(*v) } else { None })
-                    .sum::<f64>()
-            })
-            .collect()
-    };
+    // One caller of Grain rather than its own bucketing. The rollup and a
+    // coarser statement ask the same question of the same partition; keeping
+    // two implementations of that meant keeping them agreeing.
+    //
+    // The grain is constructed HERE rather than passed, and the function stays
+    // `build_annual_rollup` rather than becoming a general `build_rollup`. It
+    // returns `AnnualRollupSection`, and the published schema pins
+    // `deterministic.annual_rollup` to `calendar: "annual"` — so a version that
+    // accepted any grain could emit quarterly data under a field called
+    // `annual_rollup`, which is a worse trade than one saved constructor call.
+    //
+    // Generality belongs where the grain genuinely varies per output: the
+    // statement and valuation paths. If the rollup ever becomes "at whatever
+    // grain you asked for", the field name and the schema move with it, and
+    // that is a deliberate contract change rather than a rename.
+    let grain = Grain::calendar_year(timeline);
+    let n_years = grain.buckets.len() as u32;
+    let start = grain.start.clone();
+    let aggregate = |values: &[f64]| -> Vec<f64> { grain.sum(values) };
 
     let mut rollup = BTreeMap::new();
 
@@ -1337,6 +1485,55 @@ fn build_annual_rollup(
                 None,
                 &aggregate(values),
             ),
+        );
+    }
+
+    // Subtotals roll up BY KIND, and that distinction is the whole reason this
+    // takes the specs rather than the two value maps.
+    //
+    // Money folds. A ratio does not: the mean of twelve monthly coverage ratios
+    // is not the annual coverage ratio, and the annual ratio is not recoverable
+    // from the monthly column at all. So it is recomputed from its numerator and
+    // denominator AFTER those have been rolled up — which is only possible
+    // because the declaration says what they are.
+    //
+    // Deliberately keyed off `subtotal_money` for the inputs rather than off the
+    // published ratio series, for the same reason cfdl-statement takes specs:
+    // given a column of ratios and a grain, averaging them is the obvious thing
+    // to write, and it is wrong.
+    for (id, values) in subtotal_money {
+        rollup.insert(
+            id.clone(),
+            Series::from_values(
+                "annual",
+                &start,
+                n_years,
+                currency,
+                None,
+                &aggregate(values),
+            ),
+        );
+    }
+    for spec in subtotal_specs {
+        if spec.op != "ratio" {
+            continue;
+        }
+        let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
+            continue;
+        };
+        let (Some(num), Some(den)) = (subtotal_money.get(num_id), subtotal_money.get(den_id))
+        else {
+            continue;
+        };
+        let (num, den) = (aggregate(num), aggregate(den));
+        let values: Vec<Option<f64>> = num
+            .iter()
+            .zip(den.iter())
+            .map(|(n, d)| (d.abs() > f64::EPSILON).then(|| round_amount(n / d)))
+            .collect();
+        rollup.insert(
+            spec.id.clone(),
+            Series::from_optional("annual", &start, n_years, &values),
         );
     }
 
@@ -2098,6 +2295,58 @@ fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
         for (i, value) in values.iter().enumerate() {
             total += value * scale / (1.0 + rate).powi(i as i32);
         }
+    }
+    total
+}
+
+/// Present value at a stated GRAIN: sum the cash into the grain's buckets
+/// first, then discount each bucket once.
+///
+/// This is the order practitioners use — sum NOI by year, then discount the
+/// year — and the order matters. `npv_with_offsets` above discounts each
+/// stream-period individually and accumulates, which is the same answer only
+/// when the grain IS the model grid.
+///
+/// Grouping is by `(bucket, offset)`, not by bucket alone. A discount factor
+/// depends only on position and offset, so summing within a `(bucket, offset)`
+/// group and discounting once is MATHEMATICALLY equal to the per-stream
+/// accumulation at model grain, including for models whose streams settle at
+/// different points in a period. Collapsing the offset dimension would change
+/// every mixed-offset model, which is why it is not collapsed.
+///
+/// Mathematically equal is not bit-equal: float addition is not associative,
+/// and regrouping the sum moves the last bit — measured at 1 ULP on a mixed-
+/// offset probe. So the identity grain does NOT route through here. The default
+/// path stays `npv_with_offsets` exactly as it was, and this function serves
+/// callers that ask for a different grain. That keeps the promise that nothing
+/// moves until something opts in, rather than re-blessing every NPV in the
+/// golden suite for a change of summation order.
+///
+/// At a coarser grain the sub-bucket offsets do collapse, which is exactly what
+/// an annual convention asserts: MIT OCW 11.431J's own footnote says "assumes
+/// first cash flow occurs 1 year from present".
+fn npv_at_grain(streams: &[(Vec<f64>, f64)], rate_per_bucket: f64, grain: &Grain) -> f64 {
+    // (bucket index, quantised offset) -> summed cash. The quantisation mirrors
+    // `by_offset` used for WAL and payback, so one convention describes both.
+    let mut grouped: BTreeMap<(usize, i64), f64> = BTreeMap::new();
+    for (values, offset) in streams {
+        let key_offset = (offset * 1e9).round() as i64;
+        for (bucket_idx, members) in grain.buckets.iter().enumerate() {
+            let mut sum = 0.0_f64;
+            for &i in members {
+                if let Some(v) = values.get(i) {
+                    sum += *v;
+                }
+            }
+            if sum != 0.0 {
+                *grouped.entry((bucket_idx, key_offset)).or_insert(0.0) += sum;
+            }
+        }
+    }
+    let mut total = 0.0_f64;
+    for ((bucket_idx, key_offset), sum) in grouped {
+        let offset = key_offset as f64 / 1e9;
+        total += sum / (1.0 + rate_per_bucket).powf(bucket_idx as f64 + offset);
     }
     total
 }
@@ -3440,6 +3689,134 @@ mod tests {
     /// A golden diff says "this document changed"; it cannot say whether the
     /// change was a real behavioural difference or a run-to-run wobble, and a
     /// wobble would surface as a flapping test rather than as the defect it is.
+    /// The property the whole decoupling exists for: the same cash, modelled
+    /// at two different grains, values the same when valued at one convention.
+    ///
+    /// Before this, `ppy` came from `ir.time.calendar`, so a model's CALENDAR
+    /// decided its valuation convention. `benchmarks/cre/mit_rentleg_plaza`
+    /// records the consequence — a monthly rebuild "discounting at
+    /// (1.12)^(1/12)-1 gives ~$2,323,050, about +1.3%" — and attributes it to
+    /// the rebuild. It is not the rebuild. Summing a year's cash and then
+    /// discounting at the annual rate is the same arithmetic whichever grain
+    /// the cash was modelled on, and this asserts exactly that.
+    #[test]
+    fn the_same_cash_values_the_same_at_one_convention_whatever_grain_it_was_modelled_on() {
+        use super::*;
+        let annual_line: Vec<Date> = (0..3)
+            .map(|i| Date {
+                year: 2026 + i,
+                month: 1,
+                day: 1,
+            })
+            .collect();
+        let monthly_line: Vec<Date> = (0..36)
+            .map(|i| Date {
+                year: 2026 + i / 12,
+                month: 1 + (i % 12) as u32,
+                day: 1,
+            })
+            .collect();
+
+        // 1,200 a year, one way as a single annual payment and the other as
+        // twelve monthly ones. Same cash, same years.
+        let annual_streams = vec![(vec![1200.0, 1200.0, 1200.0], 1.0)];
+        let monthly_streams = vec![(vec![100.0; 36], 1.0)];
+
+        let rate = 0.12;
+        let annual_grain_from_annual = Grain::calendar_year(&annual_line);
+        let annual_grain_from_monthly = Grain::calendar_year(&monthly_line);
+
+        let a = npv_at_grain(&annual_streams, rate, &annual_grain_from_annual);
+        let b = npv_at_grain(&monthly_streams, rate, &annual_grain_from_monthly);
+        assert!(
+            (a - b).abs() < 1e-9,
+            "valued at the same annual convention these must agree: {a} vs {b}"
+        );
+
+        // And the coupling this replaces would NOT have agreed: discounting the
+        // monthly model per period is a materially different number.
+        let coupled = npv_with_offsets(&monthly_streams, (1.0 + rate).powf(1.0 / 12.0) - 1.0);
+        assert!(
+            (coupled - a).abs() > 10.0,
+            "the old per-period path differs materially: {coupled} vs {a}"
+        );
+    }
+
+    /// At model grain the new path must agree with the old one to within float
+    /// reassociation — and no further.
+    ///
+    /// The first version of this test asserted bit-equality and failed at 1 ULP
+    /// (339.00849393939615 vs 339.0084939393961). That is not a defect in
+    /// either path: addition is not associative, and grouping by
+    /// `(bucket, offset)` sums in a different order than accumulating stream by
+    /// stream. The consequence is recorded rather than papered over — the
+    /// identity grain keeps using `npv_with_offsets`, so no published NPV moves.
+    ///
+    /// Mixed offsets are the case a naive bucketing would break, so they are
+    /// the case tested.
+    #[test]
+    fn npv_at_model_grain_agrees_with_the_per_stream_accumulation() {
+        use super::*;
+        let timeline: Vec<Date> = (0..6)
+            .map(|i| Date {
+                year: 2026 + i / 12,
+                month: 1 + (i % 12) as u32,
+                day: 1,
+            })
+            .collect();
+        let identity = Grain::identity(&timeline, "monthly", "2026-01-01");
+
+        // Deliberately mixed offsets: an ordinary annuity at 1.0 alongside a
+        // one-shot settling at the period's open. Collapsing the offset
+        // dimension would change this and not the single-offset case.
+        let streams = vec![
+            (vec![100.0, 100.0, 100.0, 100.0, 100.0, 100.0], 1.0),
+            (vec![-500.0, 0.0, 0.0, 0.0, 0.0, 0.0], 0.0),
+            (vec![0.0, 0.0, 250.0, 0.0, 0.0, 0.0], 0.5),
+        ];
+        for rate in [0.0, 0.004074, 0.05, 0.25] {
+            let old = npv_with_offsets(&streams, rate);
+            let new = npv_at_grain(&streams, rate, &identity);
+            let tolerance = old.abs().max(1.0) * 1e-12;
+            assert!(
+                (old - new).abs() <= tolerance,
+                "at model grain the two must agree to within reassociation \
+                 (rate {rate}): {old} vs {new}"
+            );
+        }
+    }
+
+    /// Summing into a coarser bucket and discounting once is NOT the same as
+    /// discounting each period — which is the entire point, and the reason a
+    /// model's calendar must stop deciding its valuation convention.
+    #[test]
+    fn a_coarser_grain_changes_the_valuation_and_that_is_the_point() {
+        use super::*;
+        let timeline: Vec<Date> = (0..12)
+            .map(|i| Date {
+                year: 2026,
+                month: 1 + i as u32,
+                day: 1,
+            })
+            .collect();
+        let annual = Grain::calendar_year(&timeline);
+        assert_eq!(
+            annual.buckets.len(),
+            1,
+            "twelve months of one year is one bucket"
+        );
+
+        let streams = vec![(vec![100.0; 12], 1.0)];
+        let monthly_rate = 0.01;
+        let per_period = npv_with_offsets(&streams, monthly_rate);
+        let at_annual = npv_at_grain(&streams, monthly_rate, &annual);
+        assert!(
+            (per_period - at_annual).abs() > 1.0,
+            "discounting twelve times differs from discounting one bucket once: \
+             {per_period} vs {at_annual}"
+        );
+    }
+
     #[test]
     fn ledger_hash_is_reproducible_and_moves_only_with_the_ledger() {
         use super::*;
@@ -3473,6 +3850,78 @@ mod tests {
         let (m_amt, l_amt, _) = run(&probe_ir("101"), 0.10);
         assert_ne!(m1, m_amt);
         assert_ne!(l1, l_amt, "a different ledger must hash differently");
+    }
+
+    /// A SUBTOTAL is a fold OF the ledger, so declaring one must not make the
+    /// hash claim the cash moved.
+    ///
+    /// `deterministic.series` was filtered for `domain.*` from the start, and
+    /// this looked settled because of it. It was not: the annual rollup went
+    /// into the same hash UNFILTERED, so the moment the rollup gained kind-aware
+    /// subtotals, `ledger_hash` moved on fifteen goldens whose cash was
+    /// bit-identical. The filter had been written onto one field rather than
+    /// onto the argument that justifies it.
+    ///
+    /// Monthly on purpose — an annual model publishes no rollup at all, and
+    /// would have passed this test throughout the window when it was broken.
+    #[test]
+    fn a_fold_over_the_ledger_is_not_part_of_the_ledger() {
+        use super::*;
+        let ir = |subtotals: &str| {
+            format!(
+                r#"{{
+                  "model": {{"name": "fold-probe", "currency": "USD"}},
+                  "time": {{"calendar": "monthly", "start": "2026-01-01", "periods": 24}},
+                  "subtotals": [{subtotals}],
+                  "streams": [
+                    {{"id": "s1", "name": "probe.rent",
+                      "owner": {{"symbol": "legal.co"}},
+                      "direction": "inflow", "currency": "USD",
+                      "category": "operating.revenue.base_rent",
+                      "schedule": {{"kind": "Every", "every": "monthly",
+                                   "from": "2026-01-01", "to": "2027-12-01"}},
+                      "amount": {{"lang": "cfdl", "src": "30000"}},
+                      "active_when": {{"lang": "cfdl", "src": "true"}}}},
+                    {{"id": "s2", "name": "probe.debt",
+                      "owner": {{"symbol": "legal.co"}},
+                      "direction": "outflow", "currency": "USD",
+                      "category": "financing.debt_service",
+                      "schedule": {{"kind": "Every", "every": "monthly",
+                                   "from": "2026-01-01", "to": "2027-12-01"}},
+                      "amount": {{"lang": "cfdl", "src": "15000"}},
+                      "active_when": {{"lang": "cfdl", "src": "true"}}}}
+                  ]
+                }}"#
+            )
+        };
+        let run = |src: String| run_from_json_str(&src, RunConfig::default()).expect("run");
+
+        let bare = run(ir(""));
+        let folded = run(ir(r#"
+            {"id": "domain.p.noi", "kind": "money", "op": "sum",
+             "categories": ["operating.*"]},
+            {"id": "domain.p.ds", "kind": "money", "op": "negated_sum",
+             "categories": ["financing.debt_service"]},
+            {"id": "domain.p.dscr", "kind": "number", "op": "ratio",
+             "numerator": "domain.p.noi", "denominator": "domain.p.ds"}
+        "#));
+
+        // The folds really were computed and published, in both places — so a
+        // passing hash assertion below means the filter worked, not that there
+        // was nothing to filter.
+        assert!(folded.deterministic.series.contains_key("domain.p.dscr"));
+        let rollup = folded
+            .deterministic
+            .annual_rollup
+            .as_ref()
+            .expect("a monthly model publishes an annual rollup");
+        assert!(rollup.series.contains_key("domain.p.dscr"));
+        assert!(bare.deterministic.annual_rollup.is_some());
+
+        assert_eq!(
+            bare.ledger_hash, folded.ledger_hash,
+            "declaring a subtotal folds the ledger; it does not change it"
+        );
     }
 
     #[test]
@@ -3547,6 +3996,7 @@ mod tests {
                 parameter_overrides: overrides.clone(),
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .unwrap();
@@ -3558,6 +4008,7 @@ mod tests {
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .unwrap();
@@ -3594,6 +4045,7 @@ mod tests {
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .expect("obs_map_flows run");
@@ -3675,6 +4127,7 @@ mod tests {
                 parameter_overrides: BTreeMap::new(),
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .expect("aggregation run");
@@ -3753,6 +4206,7 @@ mod tests {
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .expect("colon-boundary override run");
@@ -3780,6 +4234,7 @@ mod tests {
                 parameter_overrides: legacy,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .expect("run with legacy key");
@@ -3808,6 +4263,7 @@ mod tests {
                 parameter_overrides: bracket,
                 scenarios: BTreeMap::new(),
                 monte_carlo: None,
+                valuation_grain: None,
             },
         )
         .expect("run with bracket key");

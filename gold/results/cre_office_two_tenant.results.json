@@ -10624,6 +10624,319 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.cre.debt_service": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            },
+            {
+              "amount": 442142.994444,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.dscr": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            0.542811,
+            1.297148,
+            1.346024,
+            1.39629,
+            1.447984,
+            1.315191,
+            1.455524,
+            0.958342,
+            0.447389,
+            0.466165
+          ]
+        },
+        "domain.cre.egi": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": 540000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 881025.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 910322.625,
+              "currency": "USD"
+            },
+            {
+              "amount": 940426.850628,
+              "currency": "USD"
+            },
+            {
+              "amount": 971360.066694,
+              "currency": "USD"
+            },
+            {
+              "amount": 920924.748294,
+              "currency": "USD"
+            },
+            {
+              "amount": 991457.866998,
+              "currency": "USD"
+            },
+            {
+              "amount": 780329.819094,
+              "currency": "USD"
+            },
+            {
+              "amount": 563330.763996,
+              "currency": "USD"
+            },
+            {
+              "amount": 580770.686916,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.leasing_costs": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": 350000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 175000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.noi": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": 240000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 573525.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 595135.125,
+              "currency": "USD"
+            },
+            {
+              "amount": 617359.663128,
+              "currency": "USD"
+            },
+            {
+              "amount": 640216.199502,
+              "currency": "USD"
+            },
+            {
+              "amount": 581502.284424,
+              "currency": "USD"
+            },
+            {
+              "amount": 643549.841532,
+              "currency": "USD"
+            },
+            {
+              "amount": 423724.093002,
+              "currency": "USD"
+            },
+            {
+              "amount": 197809.894752,
+              "currency": "USD"
+            },
+            {
+              "amount": 206111.79594,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.opex_total": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": -300000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -307500.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -315187.5,
+              "currency": "USD"
+            },
+            {
+              "amount": -323067.1875,
+              "currency": "USD"
+            },
+            {
+              "amount": -331143.867192,
+              "currency": "USD"
+            },
+            {
+              "amount": -339422.463864,
+              "currency": "USD"
+            },
+            {
+              "amount": -347908.02546,
+              "currency": "USD"
+            },
+            {
+              "amount": -356605.726104,
+              "currency": "USD"
+            },
+            {
+              "amount": -365520.869256,
+              "currency": "USD"
+            },
+            {
+              "amount": -374658.890988,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.cre.pgr": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 10
+          },
+          "values": [
+            {
+              "amount": 678000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 899025.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 928322.625,
+              "currency": "USD"
+            },
+            {
+              "amount": 958426.850628,
+              "currency": "USD"
+            },
+            {
+              "amount": 989360.066694,
+              "currency": "USD"
+            },
+            {
+              "amount": 938924.748294,
+              "currency": "USD"
+            },
+            {
+              "amount": 1009457.866998,
+              "currency": "USD"
+            },
+            {
+              "amount": 798329.819094,
+              "currency": "USD"
+            },
+            {
+              "amount": 581330.763996,
+              "currency": "USD"
+            },
+            {
+              "amount": 598770.686916,
+              "currency": "USD"
+            }
+          ]
+        },
         "model.net_cash_flow": {
           "index": {
             "calendar": "annual",
@@ -19377,6 +19690,860 @@
                 "amount": 0.0,
                 "currency": "USD"
               },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 3237142.698205,
+                "currency": "USD"
+              }
+            ],
+            "total": 3237142.698205,
+            "streams": [
+              "cre.exit.proceeds"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 3009646.651021,
+          "model_total": 3009646.651045,
+          "residual": -0.000024
+        }
+      },
+      {
+        "id": "operating_annual",
+        "label": "Operating statement (annual)",
+        "default": false,
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Base rental revenue",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 660000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 858900.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 882844.5,
+                "currency": "USD"
+              },
+              {
+                "amount": 907461.7725,
+                "currency": "USD"
+              },
+              {
+                "amount": 932770.861614,
+                "currency": "USD"
+              },
+              {
+                "amount": 892339.798632,
+                "currency": "USD"
+              },
+              {
+                "amount": 960358.293594,
+                "currency": "USD"
+              },
+              {
+                "amount": 773143.615272,
+                "currency": "USD"
+              },
+              {
+                "amount": 581330.763996,
+                "currency": "USD"
+              },
+              {
+                "amount": 598770.686916,
+                "currency": "USD"
+              }
+            ],
+            "total": 8047920.292524,
+            "streams": [
+              "cre.rollover.rent.tenant_a",
+              "cre.unit.base_rent.tenant_a",
+              "cre.unit.base_rent.tenant_b"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Percentage rent",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Other operating income",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Less: vacancy and credit loss",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -18000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -180000.0,
+            "streams": [
+              "cre.vacancy.loss"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: free rent",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -120000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -120000.0,
+            "streams": [
+              "cre.unit.abatement.tenant_a",
+              "cre.unit.abatement.tenant_b"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Expense reimbursements",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 18000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 40125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 45478.125,
+                "currency": "USD"
+              },
+              {
+                "amount": 50965.078128,
+                "currency": "USD"
+              },
+              {
+                "amount": 56589.20508,
+                "currency": "USD"
+              },
+              {
+                "amount": 46584.949662,
+                "currency": "USD"
+              },
+              {
+                "amount": 49099.573404,
+                "currency": "USD"
+              },
+              {
+                "amount": 25186.203822,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 332028.135096,
+            "streams": [
+              "cre.unit.recoveries.tenant_a",
+              "cre.unit.recoveries.tenant_b"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Effective gross income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 540000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 881025.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 910322.625,
+                "currency": "USD"
+              },
+              {
+                "amount": 940426.850628,
+                "currency": "USD"
+              },
+              {
+                "amount": 971360.066694,
+                "currency": "USD"
+              },
+              {
+                "amount": 920924.748294,
+                "currency": "USD"
+              },
+              {
+                "amount": 991457.866998,
+                "currency": "USD"
+              },
+              {
+                "amount": 780329.819094,
+                "currency": "USD"
+              },
+              {
+                "amount": 563330.763996,
+                "currency": "USD"
+              },
+              {
+                "amount": 580770.686916,
+                "currency": "USD"
+              }
+            ],
+            "total": 8079948.42762
+          },
+          {
+            "kind": "line",
+            "label": "Operating expenses",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -300000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -307500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -315187.5,
+                "currency": "USD"
+              },
+              {
+                "amount": -323067.1875,
+                "currency": "USD"
+              },
+              {
+                "amount": -331143.867192,
+                "currency": "USD"
+              },
+              {
+                "amount": -339422.463864,
+                "currency": "USD"
+              },
+              {
+                "amount": -347908.02546,
+                "currency": "USD"
+              },
+              {
+                "amount": -356605.726104,
+                "currency": "USD"
+              },
+              {
+                "amount": -365520.869256,
+                "currency": "USD"
+              },
+              {
+                "amount": -374658.890988,
+                "currency": "USD"
+              }
+            ],
+            "total": -3361014.530364,
+            "streams": [
+              "cre.property.opex"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net operating income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 240000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 573525.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 595135.125,
+                "currency": "USD"
+              },
+              {
+                "amount": 617359.663128,
+                "currency": "USD"
+              },
+              {
+                "amount": 640216.199502,
+                "currency": "USD"
+              },
+              {
+                "amount": 581502.284424,
+                "currency": "USD"
+              },
+              {
+                "amount": 643549.841532,
+                "currency": "USD"
+              },
+              {
+                "amount": 423724.093002,
+                "currency": "USD"
+              },
+              {
+                "amount": 197809.894752,
+                "currency": "USD"
+              },
+              {
+                "amount": 206111.79594,
+                "currency": "USD"
+              }
+            ],
+            "total": 4718933.89728
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Tenant improvements and leasing commissions",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -350000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -175000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -525000.0,
+            "streams": [
+              "cre.rollover.ti_lc.tenant_a",
+              "cre.unit.ti_lc.tenant_a",
+              "cre.unit.ti_lc.tenant_b"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Capital expenditure",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Debt service",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              },
+              {
+                "amount": -442142.994444,
+                "currency": "USD"
+              }
+            ],
+            "total": -4421429.94444,
+            "streams": [
+              "loan.permanent_debt_service"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Mortgage insurance",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "ratio",
+            "label": "Debt service coverage",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              0.542811,
+              1.297148,
+              1.346024,
+              1.39629,
+              1.447984,
+              1.315191,
+              1.455524,
+              0.958342,
+              0.447389,
+              0.466165
+            ]
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Loan proceeds",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Equity contributions",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Sale proceeds",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
               {
                 "amount": 0.0,
                 "currency": "USD"

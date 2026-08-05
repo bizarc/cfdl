@@ -88,6 +88,10 @@ fn run_ir(
         // Statements read a stream's CATEGORY, which lives on the IR rather
         // than in results. Parsing it back here keeps the results document from
         // carrying a field only this consumer wants.
+        let subtotal_specs = registry
+            .as_ref()
+            .map(|reg| reg.subtotal_specs(&pack_name))
+            .unwrap_or_default();
         let statement_specs = registry
             .as_ref()
             .map(|reg| reg.statement_specs(&pack_name))
@@ -96,8 +100,13 @@ fn run_ir(
             .ok()
             .map(|ir| cfdl_statement::stream_categories(&ir))
             .unwrap_or_default();
-        results.statements =
-            cfdl_statement::compute(&pack_name, &statement_specs, &categories, &results);
+        results.statements = cfdl_statement::compute(
+            &pack_name,
+            &statement_specs,
+            &subtotal_specs,
+            &categories,
+            &results,
+        );
     }
     match serde_json::to_string_pretty(&results) {
         Ok(json) => Ok(json),
