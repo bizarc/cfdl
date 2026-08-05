@@ -900,8 +900,43 @@ function diagnosticsCatalogue() {
   return out;
 }
 
+/** Every statement each pack ships, read from the packs themselves. */
+function packStatements() {
+  const rows = [];
+  for (const pack of packGuides) {
+    const file = path.resolve(repoRoot, "packs", pack, "statements.toml");
+    if (!fs.existsSync(file)) continue;
+    const raw = fs.readFileSync(file, "utf8");
+    // One [[statements]] block at a time; `id`, `label` and `grain` are the
+    // only keys read, and rows are skipped entirely.
+    for (const block of raw.split(/^\[\[statements\]\]$/m).slice(1)) {
+      const upto = block.split(/^\[\[/m)[0];
+      const id = upto.match(/^id\s*=\s*"([^"]+)"/m);
+      const label = upto.match(/^label\s*=\s*"([^"]+)"/m);
+      const grain = upto.match(/^grain\s*=\s*"([^"]+)"/m);
+      const isDefault = /^default\s*=\s*true/m.test(upto);
+      if (!id) continue;
+      rows.push({
+        pack,
+        id: id[1],
+        label: label ? label[1] : id[1],
+        grain: grain ? grain[1] : "model grid",
+        isDefault,
+      });
+    }
+  }
+  if (rows.length === 0) throw new Error("no statements found in any pack");
+  const out = ["| Pack | Statement | Reported at |", "|---|---|---|"];
+  for (const r of rows) {
+    const name = r.isDefault ? `${r.label} *(default)*` : r.label;
+    out.push(`| \`${r.pack}\` | ${name} | ${r.grain} |`);
+  }
+  return out;
+}
+
 const dataRegions = [
   { page: "reference/diagnostics.md", key: "diagnostics-catalogue", body: diagnosticsCatalogue() },
+  { page: "reference/statements.md", key: "pack-statements", body: packStatements() },
 ];
 
 const staleRegions = [];
