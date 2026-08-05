@@ -849,19 +849,17 @@ fn build_ir(
                     file: Some(source_stmt.file.clone()),
                     span: Some(map_span(stream.span)),
                     path: None,
-                    hint: Some(
-                        if pack_categories.is_some() {
-                            "A category is what a fold aggregates on, so it has to name one \
+                    hint: Some(if pack_categories.is_some() {
+                        "A category is what a fold aggregates on, so it has to name one \
                              the pack declares — otherwise the stream reports as a line and \
                              is counted in no subtotal."
-                                .to_string()
-                        } else {
-                            "With no pack active, any dotted path rooted in operating, \
+                            .to_string()
+                    } else {
+                        "With no pack active, any dotted path rooted in operating, \
                              investing or financing is valid — for example \
                              `operating.revenue.rent`."
-                                .to_string()
-                        },
-                    ),
+                            .to_string()
+                    }),
                     notes: vec![],
                 }]);
             }
