@@ -190,9 +190,11 @@ jobs:
       # those: they are the two secrets, taken from the repository's own link
       # file. Writing them directly skips the lookup entirely.
       #
-      # Skipping `pull` WITHOUT writing this file was tried and fails with "No
-      # Project Settings found locally" — the settings are required, only the
-      # lookup is not.
+      # The `settings` block is required too, not just the ids: `vercel build`
+      # rejects a link without it, again with "No Project Settings found
+      # locally". They are the project's own build settings, and null means
+      # "use the framework default" — which is what this project does, since
+      # the build command lives in site/package.json rather than in Vercel.
       - name: Write the Vercel project link
         working-directory: site
         run: |
@@ -200,7 +202,16 @@ jobs:
           cat > .vercel/project.json <<JSON
           {
             "projectId": "${{ secrets.VERCEL_PROJECT_ID }}",
-            "orgId": "${{ secrets.VERCEL_ORG_ID }}"
+            "orgId": "${{ secrets.VERCEL_ORG_ID }}",
+            "settings": {
+              "framework": "nextjs",
+              "devCommand": null,
+              "installCommand": null,
+              "buildCommand": null,
+              "outputDirectory": null,
+              "rootDirectory": null,
+              "nodeVersion": "24.x"
+            }
           }
           JSON
 
