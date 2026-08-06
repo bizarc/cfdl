@@ -1,0 +1,194 @@
+// A sponsor leveraged buyout's debt schedule, reconciled against a published
+// teaching model that solves the same schedule BY ITERATION.
+//
+// WHAT THIS CASE IS FOR. "Circular interest" is the standard reason given for
+// why an LBO needs an iterative solver: interest depends on the average debt
+// balance, the average balance depends on how much cash swept the debt down,
+// and the cash available to sweep depends on interest. Excel closes the loop
+// by enabling iterative calculation; the reference model ships a literal
+// `CIRC` switch in its assumptions block to turn it on and off.
+//
+// THE LOOP IS LINEAR, SO IT HAS AN EXACT ALGEBRAIC SOLUTION. Write the ending
+// balance as the unknown and it appears on both sides only to the first power:
+//
+//     B(t)        = B(t-1) - LFCF(t)
+//     LFCF(t)     = (1 - tax) * (EBIT(t) - interest(t)) + C(t)
+//     interest(t) = rate(t) * (B(t-1) + B(t)) / 2 + K(t)
+//
+// Collect B(t), with k = (1 - tax) * rate(t) / 2:
+//
+//     B(t) = [ B(t-1) * (1 + k) - (1 - tax) * (EBIT(t) - K(t)) - C(t) ]
+//            / (1 - k)
+//
+// That is the `next` expression on `tlb_balance`. It reproduces the reference's
+// iterated answer to 2.8e-14 across every balance and every interest figure.
+// Excel iterates because iterating is easier to wire into a spreadsheet than
+// doing the algebra, NOT because the problem requires it. See NOTES.md.
+//
+// K(t) is the interest that does NOT depend on the swept balance — the
+// commitment fee on the undrawn revolver, fixed-rate senior notes, the PIK
+// subordinated coupon, amortised financing fees, less interest earned on the
+// minimum cash balance. All of it is known before B(t) is, which is exactly
+// what makes collecting B(t) legitimate.
+//
+// C(t) is the non-EBIT cash flow: D&A back, non-cash interest back, the
+// working capital movement, less capital expenditure.
+//
+// PERIOD 0 IS THE TRANSACTION YEAR and carries only the funded balances, so
+// every `init` below is a genuine input — the amount actually drawn — rather
+// than a first-year answer copied back in. Periods 1-4 are the hold years.
+
+version 0.1
+model "lbo-circular-interest"
+use pack "opco" version "0.1.0"
+time calendar annual from 2016-01 for 5
+
+entity legal target
+
+// Floating base rate, on the reference's own published path. The term loan
+// reprices off it annually, which is why it is a curve and not a constant.
+curve libor linear {
+  2016-01: 0.005
+  2017-01: 0.005
+  2018-01: 0.011
+  2019-01: 0.015
+  2020-01: 0.0215
+}
+
+// Adjusted EBIT ($mm).
+curve ebit linear {
+  2016-01: 73.0
+  2017-01: 76.65
+  2018-01: 81.249
+  2019-01: 86.93643
+  2020-01: 92.1526158
+}
+
+// Depreciation and amortisation, and capital expenditure. Equal in every
+// projected year — both run at 5.0% of sales — so they cancel out of free cash
+// flow exactly. Carried as separate lines anyway: they cancel by coincidence
+// of assumption, not by construction, and netting them would hide that.
+curve dna linear {
+  2016-01: 17.0
+  2017-01: 17.85
+  2018-01: 18.921
+  2019-01: 20.24547
+  2020-01: 21.4601982
+}
+
+curve capex linear {
+  2016-01: 17.0
+  2017-01: 17.85
+  2018-01: 18.921
+  2019-01: 20.24547
+  2020-01: 21.4601982
+}
+
+// Increase in net working capital — a use of cash, carried negative.
+curve delta_nwc linear {
+  2016-01: 0.0
+  2017-01: -2.9
+  2018-01: -3.654
+  2019-01: -4.51878
+  2020-01: -4.1443668
+}
+
+// ---------------------------------------------------------------------------
+// Subordinated notes: PIK for three years on the AVERAGE balance.
+//
+// That is a fixed point in the balance alone — nothing external enters — so it
+// collapses to a constant growth factor rather than needing a solver:
+//
+//     B = B0 + r * (B0 + B) / 2   ->   B = B0 * (1 + r/2) / (1 - r/2)
+//
+// the bilinear transform. After three years the coupon turns cash and the
+// balance holds flat, which is the `if` below.
+// ---------------------------------------------------------------------------
+state sub_balance {
+  init 100.0
+  next if(time.t <= 3, prev * (1 + 0.085 / 2) / (1 - 0.085 / 2), prev)
+}
+
+// The prior period's balance, so a stream at t can see both ends of the year.
+state sub_balance_open {
+  init 0.0
+  next prev.sub_balance
+}
+
+// ---------------------------------------------------------------------------
+// Term Loan B: the circular tranche, in closed form.
+//
+// The subordinated coupon appears inside this expression because it is part of
+// K(t). It is restated from `prev.sub_balance` rather than read from the
+// stream, because a stream is an output and this is an input to the recursion.
+// ---------------------------------------------------------------------------
+state tlb_balance {
+  init 275.0
+  next (prev * (1 + (1 - 0.35) * (curve_value("libor", time.date) + 0.03) / 2)
+        - (1 - 0.35) * (curve_value("ebit", time.date)
+             - (0.35 + 12.25
+                + if(time.t <= 3,
+                     prev.sub_balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
+                     0.085 * prev.sub_balance)
+                + 1.3604166666666666 - 0.0125))
+        - (curve_value("dna", time.date)
+           + if(time.t <= 3,
+                prev.sub_balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
+                0.0)
+           + 1.3604166666666666
+           + curve_value("delta_nwc", time.date)
+           - curve_value("capex", time.date)))
+       / (1 - (1 - 0.35) * (curve_value("libor", time.date) + 0.03) / 2)
+}
+
+state tlb_balance_open {
+  init 0.0
+  next prev.tlb_balance
+}
+
+// ---------------------------------------------------------------------------
+// The reported lines. Each reads the states above; none restates a balance.
+// ---------------------------------------------------------------------------
+
+// Term loan interest on the average balance — the quantity the closed form
+// exists to make computable without iterating.
+stream opco.interest.term_loan on entity legal.target outflow currency USD {
+  schedule every year from 2017-01 to 2020-01
+  category financing.interest
+  amount = (curve_value("libor", time.date) + 0.03)
+           * (state.tlb_balance_open + state.tlb_balance) / 2
+}
+
+// Subordinated coupon. While it is PIK it IS the balance increase, which is
+// why it is written as a difference rather than recomputed — the two cannot
+// disagree. Once PIK ends it is cash interest on a flat balance.
+stream opco.interest.sub_notes on entity legal.target outflow currency USD {
+  schedule every year from 2017-01 to 2020-01
+  category financing.interest
+  amount = if(time.t <= 3,
+              state.sub_balance - state.sub_balance_open,
+              0.085 * state.sub_balance)
+}
+
+// $175 of senior notes at a fixed 7.0%.
+stream opco.interest.senior_notes on entity legal.target outflow currency USD {
+  schedule every year from 2017-01 to 2020-01
+  category financing.interest
+  amount = 12.25
+}
+
+// $100 of undrawn revolver commitment at 0.35%. Never drawn in this deal, so
+// the line is the commitment fee alone.
+stream opco.interest.undrawn_revolver on entity legal.target outflow currency USD {
+  schedule every year from 2017-01 to 2020-01
+  category financing.interest
+  amount = 0.35
+}
+
+// Levered free cash flow, which in this structure is exactly the fall in the
+// term loan balance: all of it sweeps, mandatory amortisation included.
+stream opco.debt.repayment on entity legal.target outflow currency USD {
+  schedule every year from 2017-01 to 2020-01
+  category financing.debt_principal
+  amount = state.tlb_balance_open - state.tlb_balance
+}

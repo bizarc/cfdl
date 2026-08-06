@@ -82,9 +82,10 @@ that satisfied the money lines would assert nothing about the ratio.
 | opco | `damodaran_fcff` |
 | opco | `gordon_growth_coned` |
 | opco | `lbo_buyout` |
+| opco | `lbo_circular_interest` |
 | opco | `saas_sbc_convention_fork` |
 
-*23 cases.*
+*24 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 Each case declares in its `case.toml` where its figures came from, and which are
