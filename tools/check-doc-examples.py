@@ -55,7 +55,30 @@ CLI = REPO_ROOT / "target" / "debug" / ("cfdl.exe" if os.name == "nt" else "cfdl
 PACKS = REPO_ROOT / "packs"
 
 # Documentation whose fenced cfdl blocks are meant to be complete models.
-SOURCES = sorted(REPO_ROOT.glob("packs/*/README.md"))
+# The pack guides, plus every AUTHORED page on the documentation site.
+#
+# Generated pages are excluded deliberately. Their code comes from real models
+# under `examples/` and `benchmarks/`, which the golden and benchmark suites
+# already run — checking it again here would test the same bytes twice and
+# report a failure against a page rather than against the model that owns it.
+#
+# What this reaches is prose an author typed. Two snippets in the language guide
+# were wrong on the day it was written — `active_when =` instead of `active
+# when`, and a curve fence missing its interpolation mode — and nothing but a
+# person running them would have said so.
+def _authored_site_pages() -> list[pathlib.Path]:
+    docs = REPO_ROOT / "site" / "content" / "docs"
+    if not docs.exists():
+        return []
+    pages = []
+    for page in sorted(docs.rglob("*.md")):
+        head = page.read_text(encoding="utf-8")[:400]
+        if "generated: none" in head or "generated: regions" in head:
+            pages.append(page)
+    return pages
+
+
+SOURCES = sorted(REPO_ROOT.glob("packs/*/README.md")) + _authored_site_pages()
 
 FENCE = re.compile(r"```cfdl\n(.*?)```", re.S)
 ALLOW = re.compile(r"//\s*examples-allow:\s*(\S+)")
@@ -73,6 +96,12 @@ def complete_models(path: pathlib.Path) -> list[tuple[int, str]]:
     for match in FENCE.finditer(text):
         body = match.group(1)
         if not re.match(r"\s*version\s", body):
+            continue
+        # A block that imports other files is one FILE of a multi-file model,
+        # not a model. It cannot compile alone by construction, and the pages
+        # showing one are teaching exactly that. `examples/cre_multi_file` is
+        # the runnable version, and the golden suite covers it.
+        if re.search(r"^\s*import\s", body, re.M):
             continue
         line = text[: match.start()].count("\n") + 1
         found.append((line, body))

@@ -23,7 +23,7 @@ entity legal company
 assume growth ~ Normal(mean=0.02, stdev=0.01, clip=[0.0, 0.05])
 
 stream legal.revenue on entity legal.company inflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+  schedule every month from 2026-01 to 2027-12
   amount = 10000 * pow(1 + inputs.growth, time.t / 12.0)
 }
 ```
