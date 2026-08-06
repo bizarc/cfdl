@@ -131,6 +131,8 @@ export const NAV: NavSection[] = [
       { title: "CLI", slug: "/docs/reference/cli" },
       { title: "Run config", slug: "/docs/reference/run-config" },
       { title: "Expressions", slug: "/docs/reference/expressions" },
+      { title: "Pack contracts", slug: "/docs/reference/packs" },
+      { title: "Metrics", slug: "/docs/reference/metrics" },
       { title: "Statements", slug: "/docs/reference/statements" },
       { title: "Diagnostics", slug: "/docs/reference/diagnostics" },
     ],
