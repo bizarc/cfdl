@@ -45,9 +45,30 @@ def repo_root() -> Path:
         )
 
     subprocess.run([sys.executable, "-m", "pip", "install", "-q", "cfdl-sdk[viz]"], check=True)
+
+    # Packs and benchmark models track the engine, so take the checkout at the
+    # tag matching the wheel pip just resolved. `main` runs ahead of the last
+    # release and its packs may use metric ops the released engine rejects.
+    import importlib
+    from importlib.metadata import PackageNotFoundError, version
+
+    importlib.invalidate_caches()
+    try:
+        tag = f"v{version('cfdl-sdk')}"
+    except PackageNotFoundError:
+        tag = None
+
+    clone = ["git", "clone", "--depth", "1", "-q", REPO]
     target = Path("/content/cfdl")
     if not target.exists():
-        subprocess.run(["git", "clone", "--depth", "1", "-q", REPO, str(target)], check=True)
+        pinned = tag is not None and not subprocess.run(
+            clone + ["--branch", tag, str(target)]
+        ).returncode
+        if not pinned:
+            # A dev or pre-release wheel has no matching tag; main is the best
+            # available, and the notebook may fail if the two have diverged.
+            print(f"warning: no {tag} tag for this SDK build; falling back to main.")
+            subprocess.run(clone + [str(target)], check=True)
     return target
 
 
