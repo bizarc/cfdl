@@ -752,26 +752,6 @@ for (const pack of packGuides) {
     ...(benchmarkExampleLinks[pack] ?? []),
     ...(packWorkedExamples[pack] ?? [])
   ];
-  body += packReferenceSections(pack);
-
-  if (worked.length) {
-    body +=
-      "\n## Worked example models\n\n" +
-      "Benchmark cases are validated period-by-period against an independent\n" +
-      "reference implementation.\n\n" +
-      worked.map(([label, href]) => `- [${label}](${href})`).join("\n") +
-      "\n";
-  }
-  const page = renderDoc(
-    {
-      id: `pack-${pack}`,
-      title: `"${packTitles[pack] ?? pack} pack guide"`,
-      slug: `"/docs/packs/${pack}"`
-    },
-    `packs/${pack}/README.md`,
-    body
-  );
-  writeGenerated(`packs/${pack}.md`, page);
 }
 
 
@@ -953,6 +933,42 @@ function expressionBuiltins() {
   return out;
 }
 
+/** One pack's contracts: terms it reads and streams it emits. */
+function contractsFor(pack) {
+  const file = path.resolve(repoRoot, "packs", pack, "lowering", "rules.toml");
+  if (!fs.existsSync(file)) return [];
+  const raw = fs.readFileSync(file, "utf8");
+  const byContract = new Map();
+  for (const block of raw.split(/^\[\[rules\]\]$/m).slice(1)) {
+    const name = block.match(/^contract_name\s*=\s*"([^"]+)"/m);
+    if (!name) continue;
+    const entry = byContract.get(name[1]) ?? { streams: [], terms: new Set() };
+    const stream = block.match(/^stream_name\s*=\s*"([^"]+)"/m);
+    if (stream) {
+      entry.streams.push(
+        stream[1]
+          .replace(/\{\{contract\.dot_suffix\}\}/g, "[.suffix]")
+          .replace(/\{\{contract\.suffix\}\}/g, "[suffix]")
+          .replace(/\{\{contract\.[a-z_0-9]+\}\}/g, "[\u2026]"),
+      );
+    }
+    for (const m of block.matchAll(/\{\{contract\.([a-z_0-9]+)\}\}/g)) {
+      if (!/^(term_|suffix|dot_suffix)/.test(m[1])) entry.terms.add(m[1]);
+    }
+    byContract.set(name[1], entry);
+  }
+  const out = ["| Contract | Terms it reads | Streams it emits |", "|---|---|---|"];
+  for (const [name, e] of byContract) {
+    const terms = [...e.terms].sort();
+    const streams = [...new Set(e.streams)];
+    out.push(
+      `| \`${name}\` | ${terms.length ? terms.map((x) => `\`${x}\``).join(", ") : "\u2014"} | ` +
+        `${streams.map((x) => `\`${x}\``).join(", ")} |`,
+    );
+  }
+  return out;
+}
+
 /** Every contract each pack offers, with the streams it emits and terms it reads. */
 function packContracts() {
   const out = [];
@@ -1042,6 +1058,11 @@ const dataRegions = [
   { page: "reference/expressions.md", key: "expression-builtins", body: expressionBuiltins() },
   { page: "reference/packs.md", key: "pack-contracts", body: packContracts() },
   { page: "reference/metrics.md", key: "pack-metrics", body: packMetrics() },
+  ...packGuides.map((pack) => ({
+    page: `packs/${pack}.md`,
+    key: `contracts-${pack}`,
+    body: contractsFor(pack),
+  })),
   {
     page: "benchmarks.md",
     key: "benchmark-cases",
