@@ -934,9 +934,63 @@ function packStatements() {
   return out;
 }
 
+/**
+ * Every builtin the engine accepts, read from its dispatch table.
+ *
+ * The source is `crates/cfdl-calc/src/funcs.rs` — the implementation, not a
+ * document about it. A function cannot appear here unless the engine actually
+ * has it, and cannot be added to the engine without appearing here.
+ *
+ * GROUPING IS EDITORIAL and lives below; the LIST is not. Anything the engine
+ * gains that this file has not been told about lands under "Other" rather than
+ * being silently dropped, so the page is always complete even when it is not
+ * yet organised.
+ */
+const BUILTIN_GROUPS = [
+  ["Arithmetic", ["abs", "min", "max", "clamp", "exp", "ln", "pow", "sum", "avg"]],
+  ["Rounding", ["round", "round_up", "round_down", "round_to"]],
+  ["Dates", [
+    "date", "parse_date", "edate", "eomonth", "days_between", "months_between",
+    "year_frac", "roll", "is_business_day", "add_business_days",
+  ]],
+  ["Time value of money", ["pv", "fv", "pmt", "ipmt", "ppmt", "nper", "rate"]],
+  ["Domain", ["macrs_rate", "cpr_to_smm", "cpr_to_periodic"]],
+];
+
+function expressionBuiltins() {
+  const src = fs.readFileSync(
+    path.resolve(repoRoot, "crates", "cfdl-calc", "src", "funcs.rs"),
+    "utf8",
+  );
+  const found = new Set();
+  for (const match of src.matchAll(/^\s+"([a-z_0-9]+)"\s*=>/gm)) {
+    found.add(match[1]);
+  }
+  if (found.size === 0) {
+    throw new Error("crates/cfdl-calc/src/funcs.rs: no builtins found in the dispatch table.");
+  }
+  const placed = new Set();
+  const out = [];
+  for (const [heading, names] of BUILTIN_GROUPS) {
+    const present = names.filter((n) => found.has(n));
+    if (present.length === 0) continue;
+    present.forEach((n) => placed.add(n));
+    out.push(`**${heading}** — ${present.map((n) => `\`${n}\``).join(", ")}`);
+    out.push("");
+  }
+  const rest = [...found].filter((n) => !placed.has(n)).sort();
+  if (rest.length > 0) {
+    out.push(`**Other** — ${rest.map((n) => `\`${n}\``).join(", ")}`);
+    out.push("");
+  }
+  out.push(`*${found.size} functions.*`);
+  return out;
+}
+
 const dataRegions = [
   { page: "reference/diagnostics.md", key: "diagnostics-catalogue", body: diagnosticsCatalogue() },
   { page: "reference/statements.md", key: "pack-statements", body: packStatements() },
+  { page: "reference/expressions.md", key: "expression-builtins", body: expressionBuiltins() },
 ];
 
 const staleRegions = [];
