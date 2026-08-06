@@ -1,0 +1,39 @@
+# Benchmark case: 2 MW-dc distributed solar under a cost-based feed-in tariff.
+#
+# THREE-WAY, NOT TWO-WAY. Every other benchmark in this repo agrees with one
+# reference. This one agrees with a model that exists twice — a national
+# laboratory's published spreadsheet and an independent third-party port of it
+# to Python — so CFDL is the third implementation. Two implementations agreeing
+# can share an error; three built by unrelated authors in three languages
+# cannot, short of coincidence. That is the whole reason this case exists next
+# to utility_pv_singleowner rather than instead of it.
+#
+# The port is unlicensed, so it is neither vendored nor wired into CI. It was
+# run once outside this repo and only its OUTPUT NUMBERS are carried across —
+# the same handling utility_pv_singleowner gives the laboratory's own tool. See
+# NOTES.md for the commit, the shim the run needed, and the inputs.
+#
+# There is deliberately no reference_gen.py. A second implementation of our own
+# is precisely what an external model replaces.
+#
+# ALL 25 PERIODS, EVERY LINE. Not anchors. The four operating-expense lines
+# escalate at three different rates and one of them DECLINES, so a convention
+# error shows up as a fan rather than as a level shift, and the period where
+# the fan opens is the diagnosis. `domain.energy.opex` is the reference's own
+# published total across all five expense lines: the four decomposed lines are
+# restated from the reference's stated inputs, and that column is what proves
+# the restatement.
+#
+# period_tolerance = 1e-6, which is the ENGINE'S PUBLISHED PRECISION and not a
+# judgement about this deal. Results JSON carries money to six decimal places,
+# so half of that — 5e-7 — is the tightest any case here can assert.
+#
+# All seven individual stream columns agree with the reference EXACTLY: zero
+# disagreement, every line, all 25 periods. The only non-zero figure in the
+# case is 5.0e-7 on `domain.energy.opex` at period 19, and that is the
+# publication rounding itself — the engine rounds the subtotal it computed from
+# unrounded components, which is not the same as summing five already-rounded
+# components. It is a printing artefact, not arithmetic.
+summary = "A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty."
+pack = "energy"
+period_tolerance = 1e-6

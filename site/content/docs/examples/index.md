@@ -27,6 +27,7 @@ Use these examples to learn the language and run real models.
 
 Complete models for every pack, each checked period-by-period against an independent reference implementation. These are the most detailed examples on the site, and their numbers are verified rather than asserted.
 
+- [energy: crest solar cost based](/docs/examples/energy-crest-solar-cost-based)
 - [energy: merchant capacity](/docs/examples/energy-merchant-capacity)
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
 - [energy: utility pv singleowner](/docs/examples/energy-utility-pv-singleowner)
