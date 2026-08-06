@@ -1384,8 +1384,11 @@ against it by `make ir-schema`.
           "enum": [
             "sum",
             "negated_sum",
+            "cumulative",
+            "negated_cumulative",
             "ratio"
-          ]
+          ],
+          "description": "How the subtotal folds. `sum` and `negated_sum` total one period; `cumulative` and `negated_cumulative` carry a running total, which is how a stock is derived from a flow — principal paid to date, capital called to date. `ratio` divides two money subtotals."
         },
         "categories": {
           "type": "array",
