@@ -191,6 +191,9 @@ const exampleTitles = {
   simple_contract: "A Simple Contract",
   with_pack: "Using an Industry Pack",
   multi_file: "Multi-File Model",
+  curves: "Curves",
+  uncertainty: "Uncertainty and Monte Carlo",
+  options_events: "Events and Options",
   cre_lease_up: "CRE: Lease-Up",
   cre_developer: "CRE: Developer Lifecycle",
   cre_phased: "CRE: Phased Development",
@@ -313,7 +316,10 @@ const tutorialOrder = [
   "first_stream",
   "simple_contract",
   "with_pack",
-  "multi_file"
+  "multi_file",
+  "curves",
+  "uncertainty",
+  "options_events"
 ];
 const existingDirs = new Set(
   fs
@@ -946,15 +952,32 @@ const BUILTIN_GROUPS = [
   ]],
   ["Time value of money", ["pv", "fv", "pmt", "ipmt", "ppmt", "nper", "rate"]],
   ["Domain", ["macrs_rate", "cpr_to_smm", "cpr_to_periodic"]],
+  ["Choice", ["if"]],
+  ["Curves", ["curve_value"]],
+  ["Series folds", ["series_sum", "series_avg"]],
 ];
 
 function expressionBuiltins() {
+  const found = new Set();
+
   const src = fs.readFileSync(
     path.resolve(repoRoot, "crates", "cfdl-calc", "src", "funcs.rs"),
     "utf8",
   );
-  const found = new Set();
   for (const match of src.matchAll(/^\s+"([a-z_0-9]+)"\s*=>/gm)) {
+    found.add(match[1]);
+  }
+
+  // SPECIAL FORMS are dispatched in the evaluator rather than the function
+  // table, because they do not evaluate their arguments the ordinary way —
+  // `if` evaluates one branch, `curve_value` reaches the host for a lookup, and
+  // the series folds read a whole series rather than a value. Reading only
+  // funcs.rs published a list that claimed to be exact and was missing four.
+  const evalSrc = fs.readFileSync(
+    path.resolve(repoRoot, "crates", "cfdl-calc", "src", "eval.rs"),
+    "utf8",
+  );
+  for (const match of evalSrc.matchAll(/name == "([a-z_0-9]+)"/g)) {
     found.add(match[1]);
   }
   if (found.size === 0) {

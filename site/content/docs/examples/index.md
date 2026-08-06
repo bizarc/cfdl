@@ -13,6 +13,9 @@ Use these examples to learn the language and run real models.
 - [A Simple Contract](/docs/examples/simple_contract)
 - [Using an Industry Pack](/docs/examples/with_pack)
 - [Multi-File Model](/docs/examples/multi_file)
+- [Curves](/docs/examples/curves)
+- [Uncertainty and Monte Carlo](/docs/examples/uncertainty)
+- [Events and Options](/docs/examples/options_events)
 
 ## Domain examples
 
