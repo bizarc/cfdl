@@ -207,15 +207,6 @@ function exampleTitle(name) {
 
 const docSpecs = [
   {
-    source: "docs/09_user_guide.md",
-    output: "language-guide.md",
-    frontmatter: {
-      id: "language-guide",
-      title: '"Language Guide"',
-      slug: '"/docs/language-guide"'
-    }
-  },
-  {
     source: "distribution/install-configure.md",
     output: "install/vscode.md",
     frontmatter: {

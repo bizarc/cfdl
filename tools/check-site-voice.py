@@ -63,7 +63,6 @@ def sources() -> list[pathlib.Path]:
     found += sorted(REPO_ROOT.glob("benchmarks/*/*/case.toml"))
     found += sorted(REPO_ROOT.glob("examples/*/README.md"))
     found += sorted(REPO_ROOT.glob("examples/language_tutorial/*/README.md"))
-    found.append(REPO_ROOT / "docs" / "09_user_guide.md")
     # The diagnostic register feeds a generated table on an authored Reference
     # page, so what is written there reaches a reader who is not looking at a
     # specification. The rest of docs/08 is published as Specification, where an
