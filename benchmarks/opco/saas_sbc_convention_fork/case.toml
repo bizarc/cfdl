@@ -1,0 +1,46 @@
+# Benchmark case: a sponsor take-private DCF of a subscription-software
+# business, reconciled against a public merger filing.
+#
+# WHY THIS ONE AND NOT ANOTHER BANKER DCF. banker_dcf_conventions already pins
+# how CFDL places cash inside a period and discounts it. This case is here for
+# a different reason: the filing discloses unlevered free cash flow BOTH WAYS,
+# before and after stock-based compensation, for the same company on the same
+# page. $331mm before, $198mm after, in year one. That is the most contested
+# convention in software valuation, disclosed side by side, which almost never
+# happens.
+#
+# SBC is therefore modelled as its own stream rather than netted into the cash
+# flow line, and `model.net_cash_flow` asserts that pre-SBC minus SBC equals
+# the filing's published POST-SBC series. The fork is structural: one model
+# yields both conventions, and the post-SBC series cannot drift from the
+# pre-SBC one because it is not separately entered.
+#
+# THE FILING MIXES THE CONVENTIONS, and reproducing the grid is what proves it:
+# the explicit-period flows are post-SBC while the terminal multiple is applied
+# to a PRE-SBC base. Defensible — the multiple was calibrated on peers' pre-SBC
+# unlevered FCF — but it means one model carries both definitions at once.
+#
+# There is deliberately no reference_gen.py. Every figure asserted here is the
+# filing's, except one solved input; a second implementation of our own is what
+# an external source replaces.
+#
+# THE ONE SOLVED INPUT. The filing publishes FY2024E unlevered FCF as a full
+# year and states the DCF includes only Q2-Q4, but never publishes the
+# quarterly split. That single number is solved from the published grid:
+# ONE unknown against TWELVE published enterprise values, leaving eleven
+# degrees of freedom. At the solved value every one of the twelve lands within
+# +/-0.50 on ~7,000 — 0.007%, inside the filing's own whole-$mm rounding. All
+# twelve are reconciled in NOTES.md; the asserted metric is one of them.
+#
+# The asserted cell is 13.5% WACC and 16.0x — the middle discount rate, and a
+# multiple inside the disclosed 15.0x-18.0x range. Published implied enterprise
+# value $7,096mm. The other eleven cells need a different rate or multiple per
+# run, so they live in NOTES.md.
+#
+# tolerance 1.0 — a million on seven billion, set by the filing's rounding
+# rather than by the engine. The engine's own agreement on this cell is +0.32.
+#
+# Units are $mm throughout, matching the filing.
+summary = "A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it."
+pack = "opco"
+period_tolerance = 0.001
