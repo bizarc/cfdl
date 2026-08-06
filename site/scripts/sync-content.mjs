@@ -987,10 +987,95 @@ function expressionBuiltins() {
   return out;
 }
 
+/** Every contract each pack offers, with the streams it emits and terms it reads. */
+function packContracts() {
+  const out = [];
+  for (const pack of packGuides) {
+    const file = path.resolve(repoRoot, "packs", pack, "lowering", "rules.toml");
+    if (!fs.existsSync(file)) continue;
+    const raw = fs.readFileSync(file, "utf8");
+    const byContract = new Map();
+    for (const block of raw.split(/^\[\[rules\]\]$/m).slice(1)) {
+      const name = block.match(/^contract_name\s*=\s*"([^"]+)"/m);
+      if (!name) continue;
+      const entry = byContract.get(name[1]) ?? { streams: [], terms: new Set() };
+      const stream = block.match(/^stream_name\s*=\s*"([^"]+)"/m);
+      if (stream) {
+        // A rule's stream name is a template. `{{contract.dot_suffix}}` is how a
+        // pack lets one contract type be declared more than once — the suffix a
+        // model gives the contract lands here, so two leases produce two
+        // distinct streams. Rendering the placeholder raw would put template
+        // syntax on a page for readers who never see a lowering rule.
+        entry.streams.push(
+          stream[1]
+            .replace(/\{\{contract\.dot_suffix\}\}/g, "[.suffix]")
+            .replace(/\{\{contract\.suffix\}\}/g, "[suffix]")
+            .replace(/\{\{contract\.[a-z_0-9]+\}\}/g, "[…]"),
+        );
+      }
+      for (const m of block.matchAll(/\{\{contract\.([a-z_0-9]+)\}\}/g)) {
+        // `term_*`, `suffix` and `dot_suffix` are supplied by the contract's
+        // own declaration rather than written in its `terms` block.
+        if (!/^(term_|suffix|dot_suffix)/.test(m[1])) entry.terms.add(m[1]);
+      }
+      byContract.set(name[1], entry);
+    }
+    if (byContract.size === 0) continue;
+    out.push(`### \`${pack}\``);
+    out.push("");
+    out.push("| Contract | Terms it reads | Streams it emits |");
+    out.push("|---|---|---|");
+    for (const [name, e] of byContract) {
+      const terms = [...e.terms].sort();
+      const streams = [...new Set(e.streams)];
+      out.push(
+        `| \`${name}\` | ${terms.length ? terms.map((x) => `\`${x}\``).join(", ") : "—"} | ` +
+          `${streams.map((x) => `\`${x}\``).join(", ")} |`,
+      );
+    }
+    out.push("");
+  }
+  if (out.length === 0) throw new Error("no pack contracts found");
+  return out;
+}
+
+/** Every metric each pack declares. */
+function packMetrics() {
+  const out = [];
+  for (const pack of packGuides) {
+    const file = path.resolve(repoRoot, "packs", pack, "metrics.toml");
+    if (!fs.existsSync(file)) continue;
+    const raw = fs.readFileSync(file, "utf8");
+    const rows = [];
+    for (const block of raw.split(/^\[\[metrics\]\]$/m).slice(1)) {
+      const id = block.match(/^id\s*=\s*"([^"]+)"/m);
+      if (!id) continue;
+      const kind = block.match(/^kind\s*=\s*"([^"]+)"/m);
+      const formula = block.match(/^formula\s*=\s*"([^"]+)"/m);
+      rows.push({
+        id: id[1],
+        kind: kind ? kind[1] : "",
+        formula: formula ? formula[1].replace(/\|/g, "\\|") : "",
+      });
+    }
+    if (rows.length === 0) continue;
+    out.push(`### \`${pack}\``);
+    out.push("");
+    out.push("| Metric | Kind | Definition |");
+    out.push("|---|---|---|");
+    for (const r of rows) out.push(`| \`${r.id}\` | ${r.kind} | ${r.formula} |`);
+    out.push("");
+  }
+  if (out.length === 0) throw new Error("no pack metrics found");
+  return out;
+}
+
 const dataRegions = [
   { page: "reference/diagnostics.md", key: "diagnostics-catalogue", body: diagnosticsCatalogue() },
   { page: "reference/statements.md", key: "pack-statements", body: packStatements() },
   { page: "reference/expressions.md", key: "expression-builtins", body: expressionBuiltins() },
+  { page: "reference/packs.md", key: "pack-contracts", body: packContracts() },
+  { page: "reference/metrics.md", key: "pack-metrics", body: packMetrics() },
 ];
 
 const staleRegions = [];
