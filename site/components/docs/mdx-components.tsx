@@ -132,10 +132,12 @@ export const mdxComponents = {
   // it from highlighted spans.
   pre: ({
     "data-code": code,
+    "data-run": run,
     "data-lang": lang,
     ...p
   }: ComponentPropsWithoutRef<"pre"> & {
     "data-code"?: string;
+    "data-run"?: string;
     "data-lang"?: string;
   }) => (
     <div className="group relative">
@@ -146,7 +148,7 @@ export const mdxComponents = {
           p.className,
         )}
       />
-      {code ? <CodeActions code={code} lang={lang} className="top-8" /> : null}
+      {code ? <CodeActions code={code} lang={lang} run={run} className="top-8" /> : null}
     </div>
   ),
 };

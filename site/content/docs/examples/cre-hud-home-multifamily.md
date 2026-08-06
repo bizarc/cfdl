@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 // HUD HOME Multifamily Underwriting Template — populated Sample workbook.
 //
 // A 20-unit HOME-assisted rental development, 29-year operating pro forma.

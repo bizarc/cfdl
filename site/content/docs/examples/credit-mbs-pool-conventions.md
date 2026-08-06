@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.08}}
 version 0.1
 model "mbs-pool-conventions"
 use pack "credit" version "0.1.0"

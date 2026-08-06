@@ -29,7 +29,7 @@ Property-side: CRE pack for construction stub, lease, and exit; **standalone str
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000,"stream.loan.construction_interest:amount":40000,"stream.loan.permanent_debt_service:amount":55000}}}
 version 0.1
 model "cre-development-with-financing"
 use pack "cre" version "0.1.0"

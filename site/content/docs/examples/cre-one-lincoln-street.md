@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.08}}
 // One Lincoln Street, Boston — the construction period interest schedule.
 //
 // A real, named transaction: a 36-storey, ~1 million SF office development in

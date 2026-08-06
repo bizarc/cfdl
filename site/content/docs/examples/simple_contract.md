@@ -16,7 +16,7 @@ Compile:
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000}}}
 version 0.1
 model "tutorial-simple-contract"
 use pack "cre" version "0.1.0"

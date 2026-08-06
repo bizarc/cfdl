@@ -18,7 +18,7 @@ together they show both mechanisms.
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.08}}
 version 0.1
 model "tutorial-options-events"
 time calendar monthly from 2026-01 for 24

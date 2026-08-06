@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.12}}
 version 0.1
 model "lbo-buyout"
 use pack "opco" version "0.1.0"

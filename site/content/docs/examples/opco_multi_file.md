@@ -26,7 +26,7 @@ Full OpCo valuation (revenue, opex, working capital, exit multiple) split across
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 version 0.1
 model "opco-multi-file-example"
 use pack "opco" version "0.1.0"
@@ -38,13 +38,13 @@ import "contracts.cfdl"
 
 ## structure.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 entity operating business
 ```
 
 ## contracts.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 // Revenue and opex as standalone streams (individual items per guidance)
 stream operating.revenue on entity operating.business inflow currency USD {
   schedule every month from 2026-01 to 2031-12

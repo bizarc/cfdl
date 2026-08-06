@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.0705501574064654}}
 // Damodaran's FCFF Simple Ginzu — the reference implementation of textbook
 // intrinsic valuation, and the first opco case built from PACK CONTRACTS.
 //

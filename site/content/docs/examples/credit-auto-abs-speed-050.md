@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.03}}
 // Auto-receivables collateral at 0.50% ABS, reconciled against the same
 // issuer exhibit as benchmarks/credit/auto_abs_wal — one of its seven
 // prepayment-speed columns rather than the zero-speed one.

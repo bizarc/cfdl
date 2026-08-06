@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.03}}
 // Auto-receivables collateral, reconciled against an issuer-published
 // weighted-average-life exhibit filed with the securities regulator.
 //

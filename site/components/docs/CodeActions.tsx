@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, PlayCircle } from "lucide-react";
 import { sharePath } from "@/lib/playground/share";
+import type { RunConfig } from "@/lib/playground/protocol";
 import { cn } from "@/lib/cn";
 
 /**
@@ -17,10 +18,13 @@ import { cn } from "@/lib/cn";
 export function CodeActions({
   code,
   lang,
+  run,
   className,
 }: {
   code: string;
   lang?: string;
+  /** The model's own run config, as JSON, when the page knows one. */
+  run?: string;
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -41,8 +45,20 @@ export function CodeActions({
   const isRunnableModel = lang === "cfdl" && /^\s*version\s/m.test(code);
   // Root-relative on purpose: this renders on the server too, and an
   // origin-dependent href would hydrate to a different value.
+  // A model's own run config travels with it when the page has one, so a
+  // benchmark opens at the rate its published figures were struck at rather
+  // than the playground's default. Malformed JSON is ignored rather than
+  // thrown: a broken link is worse than a default rate.
+  let config: RunConfig | undefined;
+  if (run) {
+    try {
+      config = JSON.parse(run) as RunConfig;
+    } catch {
+      config = undefined;
+    }
+  }
   const playgroundHref = isRunnableModel
-    ? sharePath({ files: { "model.cfdl": code }, root: "model.cfdl" })
+    ? sharePath({ files: { "model.cfdl": code }, root: "model.cfdl", config })
     : null;
 
   return (
