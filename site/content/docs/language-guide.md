@@ -148,7 +148,8 @@ same run reproduces exactly. See
 
 ## Curves
 
-A curve is a dated series — a forward price, an index — read through `obs.*`:
+A curve is a dated series — a forward price, an index — declared once and read
+by date:
 
 ```cfdl
 curve power_price linear {
@@ -158,7 +159,15 @@ curve power_price linear {
 }
 ```
 
-The mode says how values between the stated points are found.
+```cfdl
+amount = 1200 * curve_value("power_price", time.date)
+```
+
+The mode says how a value between two stated points is found: `linear`
+interpolates, `step` holds the last point forward.
+
+`obs.*` is a different thing — observations supplied at run time rather than
+declared in the model.
 
 See [Curves](/docs/guides/curves).
 

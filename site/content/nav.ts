@@ -61,6 +61,9 @@ export const NAV: NavSection[] = [
       { title: "A simple contract", slug: "/docs/examples/simple_contract" },
       { title: "Using an industry pack", slug: "/docs/examples/with_pack" },
       { title: "Multi-file model", slug: "/docs/examples/multi_file" },
+      { title: "Curves", slug: "/docs/examples/curves" },
+      { title: "Uncertainty and Monte Carlo", slug: "/docs/examples/uncertainty" },
+      { title: "Events and options", slug: "/docs/examples/options_events" },
     ],
   },
   // Surfaces sits directly after the language material: the notebooks inside

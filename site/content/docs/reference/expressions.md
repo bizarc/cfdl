@@ -64,7 +64,13 @@ current build accepts.
 
 **Domain** — `macrs_rate`, `cpr_to_smm`, `cpr_to_periodic`
 
-*33 functions.*
+**Choice** — `if`
+
+**Curves** — `curve_value`
+
+**Series folds** — `series_sum`, `series_avg`
+
+*37 functions.*
 <!-- /cfdl:generated expression-builtins -->
 
 ## Related
