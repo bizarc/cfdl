@@ -173,13 +173,36 @@ jobs:
         working-directory: site
         run: npm ci
 
-      - name: Pull Vercel environment
+      # WHY THE PROJECT LINK IS WRITTEN RATHER THAN PULLED.
+      #
+      # `vercel pull` fetches project settings, and to do that it first resolves
+      # the token to a user and then to a team. A PROJECT-SCOPED token cannot do
+      # either — that is the point of the scope — so `pull` fails at the first
+      # step with "Not able to load user ... User not found (404)", before the
+      # project is ever consulted.
+      #
+      # Vercel requires choosing a project when issuing a token, so a
+      # project-scoped token is what is available. It CAN deploy to its own
+      # project; it just cannot answer "who am I".
+      #
+      # `vercel build` does not need the lookup — it needs the settings that
+      # `pull` would have written to `.vercel/project.json`. We already hold
+      # those: they are the two secrets, taken from the repository's own link
+      # file. Writing them directly skips the lookup entirely.
+      #
+      # Skipping `pull` WITHOUT writing this file was tried and fails with "No
+      # Project Settings found locally" — the settings are required, only the
+      # lookup is not.
+      - name: Write the Vercel project link
         working-directory: site
-        run: >
-          npx vercel@latest pull --yes
-          --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-          --scope=${{ vars.VERCEL_TEAM_SLUG || 'bizarcs-projects' }}
-          --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<JSON
+          {
+            "projectId": "${{ secrets.VERCEL_PROJECT_ID }}",
+            "orgId": "${{ secrets.VERCEL_ORG_ID }}"
+          }
+          JSON
 
       # BEFORE `vercel build`. That runs `next build`, which copies public/ as it
       # finds it — build the bundle after and the deploy ships without an engine.
@@ -206,5 +229,4 @@ jobs:
         run: >
           npx vercel@latest deploy --prebuilt
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          --scope=${{ vars.VERCEL_TEAM_SLUG || 'bizarcs-projects' }}
           --token=${{ secrets.VERCEL_TOKEN }}
