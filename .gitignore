@@ -84,3 +84,9 @@ python/cfdl_sdk/.build-stamp
 VALIDATION_REVIEW.html
 .vercel
 .env*
+
+# The compiled engine bundle. Built by CI immediately before deploying, and
+# locally with `npm run build:wasm`. Not committed: it is a 2 MB binary derived
+# entirely from the sources beside it, and keeping it in the tree meant every
+# engine edit forced a release build to satisfy a freshness gate.
+site/public/wasm/

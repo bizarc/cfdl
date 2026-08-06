@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm wasm-check cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -18,8 +18,7 @@ help:
 	@echo "  verify      - EVERYTHING CI runs; use this before pushing"
 	@echo "  py-develop  - maturin develop the Python SDK (editable, [dev,viz])"
 	@echo "  doc-examples - compile and run every example in the pack guides"
-	@echo "  wasm        - rebuild the committed playground wasm bundle"
-	@echo "  wasm-check  - verify the committed bundle matches the engine sources"
+	@echo "  wasm        - build the playground wasm bundle locally"
 	@echo "  cadence-parity - one deal on every calendar must give the same annual economics"
 	@echo "  py-test     - run the Python SDK pytest suite"
 	@echo "  notebooks-render - execute example notebooks into site docs pages"
@@ -85,27 +84,17 @@ bench:
 # The fast inner loop: the Rust workspace and the gates that need only it.
 # Deliberately NOT everything — see `verify`.
 #
-# `wasm-check` is deliberately ABSENT, and its removal cost no coverage: it runs
-# `cd site && npm run check:wasm`, which is character-for-character what
-# `verify-site-nofresh` already runs. The gate was in both lists, and the copy
-# here was the expensive one.
-#
-# Expensive because the stamp it checks hashes ENGINE SOURCES, so any engine
-# edit fails it, and the only way to pass is a full `wasm-pack --release` build
-# of the whole engine — a release build in a loop where nothing else needs one,
-# to keep a 2 MB artifact in sync that only the website consumes. It was the
-# single largest cost in the edit-test cycle and the reason this loop stopped
-# feeling fast.
-#
-# Nothing moves later than it used to: `verify` is the pre-push gate this
-# target's own message points at, and it still runs the check. The rebuild now
-# happens once before a push instead of once per `make ci`.
+# NO WASM GATE HERE, and none anywhere local. The bundle is not committed: CI
+# builds it from the current sources immediately before deploying and checks it
+# there. A release build of the whole engine used to be required just to satisfy
+# a freshness stamp on a 2 MB artifact only the website consumes, which was the
+# single largest cost in this loop.
 ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice rule-fragments doc-examples
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
 	@echo "  (sync:check, check:tokens, check:links, check:examples,"
-	@echo "   check:dialogs, check:wasm, check-wasm-fresh)."
+	@echo "   check:dialogs)."
 	@echo "  They need a Python venv and node_modules, which the Rust loop"
 	@echo "  should not have to install. Before pushing:  make verify"
 
@@ -123,32 +112,29 @@ verify-site: verify-site-nofresh verify-site-fresh
 # The site gates that need no git history. Split out because CI runs these on
 # every event, while the freshness pair below needs a base ref that differs
 # between a pull request and a push.
+# The wasm gates are NOT here. The bundle is built in CI immediately before it
+# is deployed and is not committed, so there is nothing on a developer's machine
+# or in this job for them to check — and a bundle built from the current sources
+# is fresh by construction rather than by inspection. They run in the deploy
+# job, against the bundle it just produced.
 verify-site-nofresh:
-	# The size budget lives in build-wasm.sh and so only fired on a rebuild —
-	# `check:wasm` verifies version, stamp and function, not bytes. That made a
-	# breach invisible to `make verify`, which is the gap this file exists to
-	# close.
-	cd site && node scripts/check-wasm-budget.mjs
 	cd site && npm run sync:check
 	cd site && npm run check:tokens
 	cd site && npm run check:links
 	cd site && npm run check:examples
 	cd site && npm run check:dialogs
-	cd site && npm run check:wasm
 
 # Compare committed artefacts against what the sources would produce, relative
 # to BASE_REF.
 verify-site-fresh:
-	cd site && node scripts/check-wasm-fresh.mjs "$(BASE_REF)"
 	cd site && node scripts/check-notebooks-fresh.mjs "$(BASE_REF)"
 
 # What the freshness gates diff against. CI overrides it with the PR base or
 # the previous commit; locally `main` is the useful default.
 BASE_REF ?= main
 
-# The wasm bundle is committed (Vercel has no Rust toolchain), so it can drift
-# from the engine silently. `make ci` never covered it, and a five-day-old
-# bundle once shipped a playground that rejected every `schedule every`.
+# Build the bundle locally, for `npm run dev` and the playground. Not committed:
+# CI builds it from the current sources immediately before deploying.
 wasm:
 	cd site && npm run build:wasm
 
@@ -157,9 +143,6 @@ wasm:
 # needs no node_modules, no venv and no toolchain.
 site-voice:
 	$(PYGATE) tools/check-site-voice.py
-
-wasm-check:
-	cd site && npm run check:wasm
 
 # A pack must lower the same deal to the same annual economics on every
 # calendar. The golden runner compares a fixture to its own blessed output and

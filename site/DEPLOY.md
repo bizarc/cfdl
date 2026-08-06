@@ -302,7 +302,6 @@ git rm -r --cached site/public/wasm/
 Then delete what is now dead weight:
 
 - `site/scripts/wasm-stamp.mjs` and `site/public/wasm/.build-stamp`
-- `site/scripts/check-wasm-fresh.mjs`
 - `site/scripts/check-wasm-version.mjs`
 - the `check:wasm` composite script in `package.json` — replace with a direct
   call to `check-wasm-smoke.mjs`
