@@ -24,6 +24,47 @@ push ──> GitHub Actions ──> install Rust + wasm-pack
 Deployment is still automatic on every push. What changed is which machine
 compiles, not whether a human has to press anything.
 
+## The token is project-scoped, and that shapes the workflow
+
+Vercel requires choosing a project when issuing a token, so a **project-scoped**
+token is what is available. It can deploy to its own project. It cannot answer
+"who am I" — user and team lookups are outside its scope by design.
+
+That rules out `vercel pull`, which resolves the token to a user, then to a
+team, before it ever reaches the project. It fails at the first step:
+
+```
+Error: Not able to load user because of unexpected error: User not found. (404)
+```
+
+The error names a *user*, not a permission, which is the clue: widening the
+scope was never the fix, because there is no wider scope to widen to.
+
+**`pull` is only needed for the lookup, not for the settings.** So the workflow
+writes `.vercel/project.json` itself, from the two secrets plus the project's
+own root directory, and never calls `pull`. Three things had to be right, each
+found by a separate failure:
+
+| | |
+|---|---|
+| `projectId` + `orgId` alone | not enough — `vercel build` wants a `settings` block too |
+| steps running in `site/` | the project already sets `rootDirectory: site`, so paths doubled to `site/site` |
+| `rootDirectory: null` in the written link | sent `build` to the repo root, where there is no `next` dependency |
+
+Build and deploy therefore run from the **repository root**, with the written
+link naming `site` as the root directory. The wasm build and its smoke test stay
+in `site/` — those are npm scripts, not Vercel calls.
+
+### What skipping `pull` costs
+
+`vercel pull` also fetches the project's **environment variables**. The workflow
+does not, so CI never sees them.
+
+That is fine today: nothing this site builds needs one. `NEXT_PUBLIC_WASM_BUILD`
+is computed in `next.config.ts` from the build stamp. But if an environment
+variable is ever added in the Vercel dashboard, **CI will not pick it up** — it
+has to be added as a GitHub secret and passed in the workflow as well.
+
 ### Why the bundle is not committed
 
 It used to be, because Vercel could not build it. Twenty-seven bundles
