@@ -1,342 +1,49 @@
 ---
 id: pack-opco
-title: "OpCo pack guide"
+title: "OpCo"
 slug: "/docs/packs/opco"
-source: packs/opco/README.md
-generated: full
+generated: regions
 ---
 
-Operating-company / LBO pack: recurring operating lines, policy-driven
-working capital, capex, scheduled term debt, cash taxes, and entry/exit —
-benchmarked in `benchmarks/opco/` against an independent month-by-month
-reference. All lowering is template-driven.
+# OpCo
 
-> **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
-> `annual`. Annual quantities divide by the rule's own periods-per-year rather
-> than a literal 12.
->
-> Two things are per-period by definition and so mean different economics on
-> different grids: `amount` and `da_monthly`. Use their annual siblings —
-> `amount_year`, `da_year` — to state a deal grid-independently. A line must
-> state one of `amount` / `amount_year` (`E7001`); giving both sums them.
->
-> **`growth_rate` compounds continuously on the model clock**, `(1+g)^(t/ppy)`,
-> which is a deliberate convention and is inherently grid-sensitive: a finer
-> grid captures more intra-year compounding. At 5% annual growth, year-one
-> revenue on a 120,000/period line is 1,472,709 monthly against 1,440,000
-> annually. Both are right for their convention. If you need annual totals to
-> match across calendars, hold `growth_rate` at zero and step the amount
-> explicitly, or model on the grid you intend to report on.
->
-> Term debt and policy-driven working capital are correct on every calendar but
-> are not annual-total invariant either: nominal rate accrual differs by
-> cadence by design (a 6% loan is 0.5%/month and 1.5%/quarter), and the
-> working-capital delta telescopes, so only its sum over the contract's life is
-> invariant.
+Operating companies: revenue and cost lines, working capital, leverage and an exit.
 
-## Activation
+## What it models
 
-```cfdl
-use pack "opco" version "0.1.0"
-```
+A business valued on its cash flow. Revenue and operating cost growing at declared rates, cash taxes, movements in working capital, capital spend, debt drawn and repaid, and an exit at a multiple or a perpetuity.
 
-## Contract types
+## Contracts
 
-All contracts accept instance suffixes (`opco.revenue_line.saas`,
-`opco.revenue_line.services`, ...) which suffix the lowered stream names.
-Growth is annual-compound stepped continuously on the model clock:
-`value(t) = amount * (1 + growth_rate)^(time.t / 12)`.
+Declare a contract and the pack expands it into the streams those terms imply,
+each classified so it lands on the right line of a
+[statement](/docs/reference/statements).
 
-> **A driver may vary over time.** `growth_rate` and `tax_rate` are scalars,
-> which is right for a stable business and wrong for what intrinsic valuation
-> actually does: growth decays toward the riskfree rate and the effective tax
-> rate climbs toward the marginal one as a firm matures.
->
-> `growth_curve` (on `revenue_line`, `opex_line`, `capex_line`) and
-> `tax_rate_curve` (on `cash_taxes`) name a model `curve` instead, read at each
-> period's date — the same mechanism `credit.pool_float_io_bullet` uses for a
-> floating index. Empty by default, so a model stating only the scalar is
-> unchanged.
->
-> **The curve carries a per-period rate, and compounding is still `pow(1+g, t)`.**
-> That applies one period's rate as though it had held from the start: exact
-> while the rate is flat, drifting once it moves, because the true factor is the
-> running product, and computing it needs a stream to read its own prior
-> period. A cumulative-index curve would be exact
-> today and was deliberately not chosen — it would hide the gap in every model
-> that used it. The drift is measured year by year in
-> `benchmarks/opco/damodaran_fcff/NOTES.md`.
->
-> `tax_rate` defaults to 0 so a curve can stand alone; stating neither it nor
-> the curve is `E7012_OPCO_TAXES_MISSING_RATE`, not a silent zero-tax model.
-
-### Operating lines
-
-- `opco.revenue_line` — `amount` (monthly), optional `growth_rate` or
-  `growth_curve`.
-  Stream `opco.revenue.recurring`.
-- `opco.opex_line` — same terms. Stream `opco.opex.recurring` (outflow).
-- `opco.working_capital` — fixed monthly WC outflow (`amount`).
-- `opco.working_capital_policy` — DSO/DPO/DIO-driven:
-  `WC(t) = annualized revenue * ar_days/365 + annualized opex * (inv_days - ap_days)/365`
-  from the modeled streams (phase-2 series lookups). Books the full initial
-  WC in the first period, the period-over-period change afterwards, and
-  releases the ending balance in the final period when `release_at_end = 1`.
-  Terms: `ar_days`, `ap_days`, `inv_days` (all default 0), `release_at_end`.
-- `opco.capex_line` — fixed `amount` (+ `growth_rate` or `growth_curve`) plus
-  `pct_of_revenue` of the modeled revenue streams. Stream `opco.capex`.
-
-### Financing
-
-- `opco.term_debt` — scheduled term loan: `principal`, `rate`,
-  `io_months` (default 0), `amort_months`; optional `funded_at_close`
-  (default 1) controls the proceeds inflow at `term_start`. After the IO
-  period the loan amortizes level-pay over `amort_months`; the remaining
-  balance pays as a balloon at the contract's `term_end`. Streams
-  `opco.debt.proceeds`, `opco.debt.interest`, `opco.debt.principal`.
-  **Cash sweeps and revolvers need per-period persistent state and are not
-  in v0.1.**
-- `opco.acquisition` — purchase `price` paid at `term_start`
-  (the equity check when paired with debt proceeds at the same date).
-
-### Taxes
-
-- `opco.cash_taxes` — `tax_rate` or `tax_rate_curve` on `max(0, EBITDA - D&A - interest)` per
-  period. EBITDA and interest come from the modeled streams; D&A is a
-  declared deduction (`da_monthly`, optional `da_growth`), not a cash
-  stream. **No NOL carryforwards** (losses floor at zero tax per period;
-  carryforwards need H3-style state). Stream `opco.taxes`.
-
-### Exit
-
-- `opco.exit_multiple` — `base_value * exit_multiple` at the contract's
-  `term_start`.
-- `opco.exit_ebitda` — `exit_multiple` × trailing-12-month EBITDA derived
-  from the modeled streams, net of `selling_costs`, at `term_start`.
-
-### `opco.exit_perpetuity`
-
-Terminal value as a growing perpetuity — the Gordon form, and the terminal every
-intrinsic valuation ends with. The pack could previously express only a
-*multiple* of something, so the largest single component of value in a DCF had
-no contract.
-
-```
-TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate) * (1 - selling_costs)
-```
-
-| term | meaning | default |
+<!-- cfdl:generated contracts-opco -->
+| Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `base_value` | the terminal-period flow, **before** the `(1 + g)` step | *required* |
-| `growth_rate` | perpetual growth; state `0` for a flat perpetuity | *required* |
-| `discount_rate` | terminal capitalisation rate | *required* |
-| `selling_costs` | fraction deducted from proceeds | `0` |
+| `opco.revenue_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate` | `opco.revenue.recurring[.suffix]` |
+| `opco.opex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate` | `opco.opex.recurring[.suffix]` |
+| `opco.working_capital` | `amount` | `opco.working_capital.adjustment[.suffix]` |
+| `opco.exit_multiple` | `base_value`, `exit_multiple` | `opco.exit.value` |
+| `opco.working_capital_policy` | `ap_days`, `ar_days`, `inv_days`, `release_at_end` | `opco.working_capital.adjustment[.suffix]` |
+| `opco.capex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate`, `pct_of_revenue` | `opco.capex[.suffix]` |
+| `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
+| `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate`, `tax_rate_curve` | `opco.taxes[.suffix]` |
+| `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value` |
+| `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
+| `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]` |
+<!-- /cfdl:generated contracts-opco -->
 
-**`discount_rate` is a term, not the run's NPV rate.** That is deliberate. A
-terminal cost of capital legitimately differs from the near-term one — it is the
-rate for a business that has reached steady state — and the published models
-that state these terminals build it explicitly, usually from their own CAPM
-inputs. The run's `annual_discount_rate` *discounts* the resulting cash flow;
-this rate *capitalises* it.
+A contract can be declared more than once by giving it a suffix, so the pieces
+stay separable in the results.
 
-**Match the rate to the flow.** A cost of equity belongs against a dividend or
-FCFE; a cost of capital belongs against FCFF. The contract is deliberately
-neutral about which `base_value` is, and cannot detect a mismatch.
+## Reporting
 
-`E7025` guards the one thing that must hold: `discount_rate > growth_rate`. The
-exit settles at the end of its period and carries no `mid` — a terminal value is
-a price struck at a point in time and discounts whole, unlike the flows around
-it (see `benchmarks/opco/banker_dcf_conventions`, Finding 6).
+A free cash flow build-up from revenue through unlevered to levered cash flow, a sponsor view for a leveraged buyout, and a statement of cash flows by activity as ASC 230 and IAS 7 define it.
 
-## Metrics
+## Related
 
-`domain.opco.revenue`, `.ebitda`, `.ebitda_margin`, `.capex`,
-`.working_capital` (net investment; releases net out), `.taxes`,
-`.debt_service`, `.fcf` (EBITDA − capex − WC − cash taxes; note taxes
-deduct interest, so this is FCF after the interest tax shield),
-`.fcf_to_debt_service`.
-
-## Diagnostics (E7xxx)
-
-- `E7001_OPCO_LINE_MISSING_AMOUNT`, `E7002_OPCO_LINE_INVALID_SCHEDULE`,
-  `E7003_OPCO_LINE_INVALID_GROWTH`
-- `E7010_OPCO_WC_MISSING_AMOUNT_OR_RULE`, `E7011_OPCO_WC_INVALID_SCHEDULE`
-- `E7020_OPCO_EXIT_MISSING_MULTIPLE`, `E7021_OPCO_EXIT_INVALID_MULTIPLE`,
-  `E7022_OPCO_EXIT_MISSING_BASE_VALUE`, `E7023_OPCO_EXIT_INVALID_SCHEDULE`
-- `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE`
-- `E7030_OPCO_DEBT_INVALID_AMORT`, `E7031_OPCO_DEBT_INVALID_RATE`
-- Missing templated terms surface as `E5006_MISSING_CONTRACT_TERM`.
-
-## Not in v0.1 (planned waterfall & capital-stack work)
-
-- Cash-flow sweeps, revolver draws/paydowns, PIK toggles (need per-period
-  persistent state).
-- NOL carryforwards.
-- Waterfall distributions to the capital stack.
-
-## Provenance and determinism
-
-Generated streams carry source contract file/span and
-`generated_by.pack/rule_id`; rule ordering, diagnostics ordering, IDs and
-results are deterministic under identical inputs.
-
-## Quick start
-
-A services business bought in an LBO — revenue/opex lines, working capital,
-capex, term debt:
-
-```cfdl
-version 0.1
-model "my-buyout"
-use pack "opco" version "0.1.0"
-time calendar monthly from 2026-01 for 60
-
-entity operating target
-
-contract opco.revenue_line on entity operating.target {
-  term 2026-01..2030-12
-  terms { amount = 1000000 growth_rate = 0.06 }
-}
-
-contract opco.opex_line on entity operating.target {
-  term 2026-01..2030-12
-  terms { amount = 650000 growth_rate = 0.04 }
-}
-
-// Net working capital nets to zero over the full term because
-// release_at_end returns the investment at exit — that is the point of the
-// term, not an inert stream.
-// examples-allow: working_capital.adjustment — released in full at exit
-contract opco.working_capital_policy on entity operating.target {
-  term 2026-01..2030-12
-  terms { ar_days = 45 ap_days = 30 inv_days = 10 release_at_end = 1 }
-}
-
-contract opco.capex_line on entity operating.target {
-  term 2026-01..2030-12
-  terms { amount = 40000 pct_of_revenue = 0.01 }
-}
-
-contract opco.term_debt on entity operating.target {
-  term 2026-01..2030-12
-  terms { principal = 20000000 rate = 0.09 amort_months = 84 }
-}
-```
-
-## Run it
-
-```bash
-cfdl compile my-buyout --packs packs --out my-buyout/ir.json
-cfdl run my-buyout/ir.json --packs packs --pack opco --out my-buyout/results.json --rate 0.10
-```
-
-## Recipes
-
-**Scheduled term debt** (IO period, level-pay amortization via
-`ipmt`/`ppmt`, balloon at maturity, proceeds at close):
-
-```cfdl
-contract opco.term_debt on entity operating.target {
-  term 2026-01..2030-12
-  terms {
-    principal = 14000000
-    rate = 0.085
-    io_months = 12
-    amort_months = 84
-  }
-}
-```
-
-**Trailing-EBITDA exit** (the LBO convention — trailing twelve months, not
-forward):
-
-```cfdl
-contract opco.exit_ebitda on entity operating.target {
-  term 2030-12..2030-12
-  terms { exit_multiple = 8.5 }
-}
-```
-
-Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
-independent recursive reference) and the LBO notebook in
-`examples/notebooks/`.
-
-## Stream categories
-
-Every stream this pack emits declares a `category` — a dotted path rooted in the
-cash flow statement's three sections — and aggregation reads that rather than
-pattern-matching the stream's name.
-
-`operating.revenue.recurring`, `operating.expense.opex`,
-`operating.working_capital`, `operating.tax`, `investing.capital.capex`,
-`investing.acquisition`, `investing.exit`, `financing.interest`,
-`financing.debt_principal`, `financing.debt_proceeds`.
-
-The split follows the two statements an operating company reports. `interest` is
-its own category rather than part of a `debt_service` blob because a P&L
-subtracts interest before tax while principal never touches it; for the same
-reason `debt_proceeds` is separate from `debt_principal`, since a draw and a
-repayment are opposite entries in the financing section rather than one net line.
-
-Note that interest is placed under `financing` here, which is the US GAAP
-convention; IFRS permits it under operating. That choice belongs to the pack —
-CFDL fixes the vocabulary of sections, not the accounting policy.
-
-An unlisted category is `E5022`.
-
-## Metrics reference
-
-Computed automatically whenever a model runs with the `opco` pack, alongside the core metrics (NPV, IRR, MOIC, payback, WAL). Enumerated from the pack definition, so this list is always complete.
-
-| Metric | Type | Built from |
-|---|---|---|
-| `domain.opco.revenue` | money | derived |
-| `domain.opco.ebitda` | money | derived |
-| `domain.opco.ebitda_margin` | number | `domain.opco.ebitda` ÷ `domain.opco.revenue` |
-| `domain.opco.capex` | money | derived |
-| `domain.opco.working_capital` | money | derived |
-| `domain.opco.taxes` | money | derived |
-| `domain.opco.debt_service` | money | derived |
-| `domain.opco.fcf` | money | derived |
-| `domain.opco.fcf_to_debt_service` | number | `domain.opco.fcf` ÷ `domain.opco.debt_service` |
-
-## Validations reference
-
-Checked at compile time. Each is a stable diagnostic code that is never renamed or reused; see [diagnostics](/docs/specification/diagnostics).
-
-| Code | Rejects |
-|---|---|
-| `E7001_OPCO_LINE_MISSING_AMOUNT` | OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual). |
-| `E7002_OPCO_LINE_INVALID_SCHEDULE` | OpCo line term range is missing, invalid, or outside model timeline. |
-| `E7003_OPCO_LINE_INVALID_GROWTH` | OpCo line has invalid 'growth_rate' term. |
-| `E7013_OPCO_WC_MISSING_AMOUNT_OR_RULE` | OpCo working capital requires term 'amount' or a supported rule expression. |
-| `E7014_OPCO_WC_INVALID_SCHEDULE` | OpCo working capital term range is missing, invalid, or outside model timeline. |
-| `E7020_OPCO_EXIT_MISSING_MULTIPLE` | OpCo exit is missing required term 'exit_multiple'. |
-| `E7021_OPCO_EXIT_INVALID_MULTIPLE` | OpCo exit 'exit_multiple' must be greater than 0. |
-| `E7022_OPCO_EXIT_MISSING_BASE_VALUE` | OpCo exit requires numeric term 'base_value'. |
-| `E7023_OPCO_EXIT_INVALID_SCHEDULE` | OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start). |
-| `E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE` | OpCo EBITDA exit requires 'exit_multiple' greater than 0. |
-| `E7030_OPCO_DEBT_INVALID_AMORT` | OpCo term debt requires 'amort_months' greater than 0. |
-| `E7031_OPCO_DEBT_INVALID_RATE` | OpCo term debt requires a non-negative 'rate'. |
-| `E7010_OPCO_LINE_AMBIGUOUS_AMOUNT` | OpCo line states both 'amount' (per period) and 'amount_year' (annual); they would be summed. Give one. |
-| `E7011_OPCO_TAXES_AMBIGUOUS_DA` | OpCo cash taxes state both 'da_monthly' (per period) and 'da_year' (annual); they would be summed. Give one. |
-| `E7012_OPCO_TAXES_MISSING_RATE` | OpCo cash taxes must state a rate: 'tax_rate' (scalar) or 'tax_rate_curve' (a model curve name). |
-| `E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH` | OpCo exit perpetuity needs 'discount_rate' strictly greater than 'growth_rate'. A perpetuity growing at or above its discount rate has no finite value. |
-| `E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE` | OpCo exit perpetuity is missing required term 'base_value' — the terminal-period flow the perpetuity is struck on. |
-| `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` | OpCo exit perpetuity is missing required term 'discount_rate'. This is the terminal capitalisation rate and is stated on the contract, not taken from the run's discount rate. |
-| `E7028_OPCO_PERPETUITY_MISSING_GROWTH` | OpCo exit perpetuity is missing required term 'growth_rate'. State 0 for a flat perpetuity. |
-| `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` | OpCo exit perpetuity 'selling_costs' is a fraction between 0 and 1. |
-
-## Worked example models
-
-Benchmark cases are validated period-by-period against an independent
-reference implementation.
-
-- [opco: banker dcf conventions](/docs/examples/opco-banker-dcf-conventions)
-- [opco: damodaran fcff](/docs/examples/opco-damodaran-fcff)
-- [opco: gordon growth coned](/docs/examples/opco-gordon-growth-coned)
-- [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)
-- [Operating Business examples overview](/docs/examples/operating-business-examples)
-- [Basic OpCo](/docs/examples/opco_basic)
-- [Growth via expressions](/docs/examples/opco_with_growth)
-- [Multi-file model](/docs/examples/opco_multi_file)
+- [Statements](/docs/reference/statements) — the pro forma this pack produces
+- [Metrics](/docs/reference/metrics) — what it reports over the whole model
+- [Validation](/docs/benchmarks) — the reference models it is gated against
