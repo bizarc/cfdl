@@ -208,7 +208,7 @@ jobs:
               "installCommand": null,
               "buildCommand": null,
               "outputDirectory": null,
-              "rootDirectory": null,
+              "rootDirectory": "site",
               "nodeVersion": "24.x"
             }
           }
