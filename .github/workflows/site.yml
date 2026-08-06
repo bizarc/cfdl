@@ -196,7 +196,6 @@ jobs:
       # "use the framework default" — which is what this project does, since
       # the build command lives in site/package.json rather than in Vercel.
       - name: Write the Vercel project link
-        working-directory: site
         run: |
           mkdir -p .vercel
           cat > .vercel/project.json <<JSON
@@ -228,15 +227,16 @@ jobs:
         working-directory: site
         run: node scripts/check-wasm-smoke.mjs
 
+      # From the REPO ROOT, not site/. The Vercel project sets rootDirectory to
+      # `site` in its own settings, so running from site/ makes the CLI resolve
+      # `site/site` and fail on a path that does not exist.
       - name: Build
-        working-directory: site
         run: >
           npx vercel@latest build
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
           --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy
-        working-directory: site
         run: >
           npx vercel@latest deploy --prebuilt
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
