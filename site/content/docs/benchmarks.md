@@ -73,6 +73,7 @@ that satisfied the money lines would assert nothing about the ratio.
 | credit | `level_pay_pool` |
 | credit | `mbs_pool_conventions` |
 | credit | `mbs_pool_ramped` |
+| energy | `crest_solar_cost_based` |
 | energy | `merchant_capacity` |
 | energy | `solar_ppa_microgrid` |
 | energy | `utility_pv_singleowner` |
@@ -82,7 +83,7 @@ that satisfied the money lines would assert nothing about the ratio.
 | opco | `gordon_growth_coned` |
 | opco | `lbo_buyout` |
 
-*21 cases.*
+*22 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 Each case declares in its `case.toml` where its figures came from, and which are
