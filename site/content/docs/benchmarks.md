@@ -83,9 +83,10 @@ that satisfied the money lines would assert nothing about the ratio.
 | opco | `gordon_growth_coned` |
 | opco | `lbo_buyout` |
 | opco | `lbo_circular_interest` |
+| opco | `lbo_option_pool_exit` |
 | opco | `saas_sbc_convention_fork` |
 
-*24 cases.*
+*25 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 Each case declares in its `case.toml` where its figures came from, and which are

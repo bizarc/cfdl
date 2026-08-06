@@ -50,4 +50,5 @@ Complete models for every pack, each checked period-by-period against an indepen
 - [opco: gordon growth coned](/docs/examples/opco-gordon-growth-coned)
 - [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout)
 - [opco: lbo circular interest](/docs/examples/opco-lbo-circular-interest)
+- [opco: lbo option pool exit](/docs/examples/opco-lbo-option-pool-exit)
 - [opco: saas sbc convention fork](/docs/examples/opco-saas-sbc-convention-fork)
