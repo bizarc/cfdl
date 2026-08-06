@@ -220,12 +220,20 @@ jobs:
         working-directory: site
         run: npm run build:wasm
 
-      # Kept from the old gate set. Not a freshness check — a functional one, and
-      # the only thing that catches a bundle which compiles cleanly and does not
-      # run.
-      - name: Smoke test the bundle
+      # THE ONLY PLACE THE BUNDLE IS CHECKED, because it is the only place one
+      # exists. It is not committed, so a developer's machine and the build job
+      # have nothing to inspect — and a bundle built from the current sources a
+      # step ago is fresh by construction, which is what the retired stamp and
+      # freshness gates were approximating.
+      #
+      # What remains is what freshness never covered: that it reports the engine
+      # version it was built from, runs, and is within budget.
+      - name: Check the bundle
         working-directory: site
-        run: node scripts/check-wasm-smoke.mjs
+        run: |
+          node scripts/check-wasm-version.mjs
+          node scripts/check-wasm-smoke.mjs
+          node scripts/check-wasm-budget.mjs
 
       # From the REPO ROOT, not site/. The Vercel project sets rootDirectory to
       # `site` in its own settings, so running from site/ makes the CLI resolve
