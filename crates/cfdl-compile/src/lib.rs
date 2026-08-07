@@ -668,6 +668,141 @@ struct IrProvenance {
 /// declared type, no declared fields and no declared states, so a misspelled
 /// anything was accepted and produced a wrong answer with no signal. Each check
 /// below closes one of those.
+/// Check that every party binding names a declared party, in a role its
+/// contract type recognises.
+///
+/// A role belongs to the AGREEMENT, not to the entity — the same party is
+/// lessor in one contract and lender in another — so the role list comes from
+/// the contract type and the entity only has to be a party.
+fn check_party_bindings(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    // Which declared entities are parties. An untyped entity could be anything,
+    // so it is accepted — the type is what enables the check.
+    let party_types: BTreeSet<&str> = ontology
+        .entities
+        .iter()
+        .filter(|e| e.family == "party")
+        .map(|e| e.type_id.as_str())
+        .collect();
+    let mut entity_is_party: BTreeMap<String, Option<bool>> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Entity(entity) = &source_stmt.statement {
+            let known = entity
+                .type_name
+                .as_deref()
+                .map(|t| party_types.contains(t) || t == "Party");
+            entity_is_party.insert(entity.symbol(), known);
+        }
+    }
+
+    let check = |type_name: &str,
+                 parties: &[cfdl_parser::PartyBinding],
+                 subject: &str,
+                 file: &str,
+                 diagnostics: &mut Vec<Diagnostic>| {
+        let declared_roles: Option<&Vec<String>> = ontology
+            .contracts
+            .iter()
+            .find(|c| c.type_id == type_name)
+            .map(|c| &c.parties);
+        for binding in parties {
+            match entity_is_party.get(&binding.entity) {
+                None => diagnostics.push(Diagnostic {
+                    code: "E1320_UNKNOWN_PARTY_ENTITY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{subject} binds role '{}' to '{}', which is not a declared entity.",
+                        binding.role, binding.entity
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(binding.span)),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                }),
+                Some(Some(false)) => diagnostics.push(Diagnostic {
+                    code: "E1321_NOT_A_PARTY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{subject} binds role '{}' to '{}', which is an asset rather than a party.",
+                        binding.role, binding.entity
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(binding.span)),
+                    path: None,
+                    hint: Some("A contract is between parties.".to_string()),
+                    notes: vec![],
+                }),
+                _ => {}
+            }
+            if let Some(roles) = declared_roles {
+                if !roles.is_empty() && !roles.contains(&binding.role) {
+                    diagnostics.push(Diagnostic {
+                        code: "E1322_UNKNOWN_PARTY_ROLE".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "{subject} binds role '{}', which type '{type_name}' does not declare.",
+                            binding.role
+                        ),
+                        file: Some(file.to_string()),
+                        span: Some(map_span(binding.span)),
+                        path: None,
+                        hint: Some(format!("Declared roles: {}.", roles.join(", "))),
+                        notes: vec![],
+                    });
+                }
+            }
+        }
+    };
+
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Option(option) if !option.parties.is_empty() => {
+                let subject = format!("Option '{}'", option.name);
+                check(
+                    &option.type_name,
+                    &option.parties,
+                    &subject,
+                    &source_stmt.file,
+                    &mut diagnostics,
+                );
+            }
+            Stmt::Contract(contract) if !contract.parties.is_empty() => {
+                let subject = format!("Contract '{}'", contract.name);
+                // A contract's ontology type is found through its lowering rule.
+                let type_name = ontology
+                    .contracts
+                    .iter()
+                    .find(|c| {
+                        c.contract_name
+                            .as_deref()
+                            .is_some_and(|rule| contract.name.starts_with(rule))
+                    })
+                    .map(|c| c.type_id.clone())
+                    .unwrap_or_default();
+                check(
+                    &type_name,
+                    &contract.parties,
+                    &subject,
+                    &source_stmt.file,
+                    &mut diagnostics,
+                );
+            }
+            _ => {}
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_entity_types(
     resolve_output: &cfdl_resolver::ResolveOutput,
     ontology: &cfdl_pack::PackOntology,
@@ -953,6 +1088,7 @@ fn build_ir(
         .map(|pack| pack.ontology.clone())
         .unwrap_or_else(cfdl_pack::PackOntology::language_base);
     check_entity_types(resolve_output, &ontology)?;
+    check_party_bindings(resolve_output, &ontology)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
@@ -2861,6 +2997,23 @@ fn lower_events_options(
                         "source_span": map_span(option.span),
                     },
                 });
+                // An option is a contract with an election, so it carries the
+                // same two things every contract does: what it is written on,
+                // and who it is between. Without an owner its payoff belonged
+                // to no entity and fell out of every per-entity total.
+                if let Some(subject) = &option.subject_entity {
+                    obj["owner"] = serde_json::json!({ "symbol": subject });
+                }
+                if !option.parties.is_empty() {
+                    obj["parties"] = serde_json::json!(option
+                        .parties
+                        .iter()
+                        .map(|p| serde_json::json!({
+                            "role": p.role,
+                            "entity": { "symbol": p.entity },
+                        }))
+                        .collect::<Vec<_>>());
+                }
                 if let Some(phase) = &option.exercisable_in {
                     obj["exercisable_in_phase"] = serde_json::json!(phase);
                 }
@@ -3805,6 +3958,7 @@ mod pack_validation_parity_tests {
             term_start: term_range.then(|| "2026-01".to_string()),
             term_end: term_range.then(|| "2026-06".to_string()),
             terms: map,
+            parties: vec![],
             span: span(),
         }
     }

@@ -253,6 +253,11 @@ pub struct ContractStmt {
     /// behaviour and what every model without the clause gets.
     pub payment_net: Option<PaymentTerms>,
     pub terms: BTreeMap<String, ContractTerm>,
+    /// Who the contract is between, by role. `parties` has been a reserved
+    /// keyword since v0.1 and was never parsed — a contract could not say who
+    /// it was with.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parties: Vec<PartyBinding>,
     pub span: Span,
 }
 
@@ -370,11 +375,33 @@ pub enum EventAction {
 pub struct OptionStmt {
     pub name: String,
     pub type_name: String,
+    /// The asset this option is written on.
+    ///
+    /// AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something
+    /// the way every other contract does. Without an owner its payoff belonged
+    /// to no entity and fell out of every per-entity total.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject_entity: Option<String>,
+    /// Who the option is between, by role.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parties: Vec<PartyBinding>,
     pub exercisable_in: Option<String>,
     /// Boolean trigger expression (raw source).
     pub exercise_when: Option<String>,
     /// Payoff amount expression (raw source).
     pub payoff: Option<String>,
+    pub span: Span,
+}
+
+/// A party filling a role in a contract — `holder = party.management`.
+///
+/// The role is named by the contract TYPE, not by the party: the same party is
+/// lessor in one contract and lender in another, so the role belongs to the
+/// agreement rather than to the entity.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct PartyBinding {
+    pub role: String,
+    pub entity: String,
     pub span: Span,
 }
 
@@ -1003,6 +1030,7 @@ impl<'a> Parser<'a> {
         let mut name: Option<String> = None;
         let mut name_span: Option<Span> = None;
         let mut subject_entity: Option<String> = None;
+        let mut parties: Vec<PartyBinding> = Vec::new();
         let mut has_term = false;
         let mut has_effects = false;
         let mut term_start = None;
@@ -1092,6 +1120,13 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Keyword(Keyword::Effects) => has_effects = true,
+                // `parties` has been reserved since v0.1 and never parsed, so
+                // a contract could not say who it was with.
+                TokenKind::Keyword(Keyword::Parties) if depth == 0 => {
+                    if let Some(bindings) = self.parse_parties_block() {
+                        parties = bindings;
+                    }
+                }
                 TokenKind::Keyword(Keyword::On) if depth == 0 => {
                     let entity_kw = self.bump();
                     if !matches!(entity_kw.kind, TokenKind::Keyword(Keyword::Entity)) {
@@ -1132,6 +1167,7 @@ impl<'a> Parser<'a> {
             term_start,
             term_end,
             terms,
+            parties,
             span: merge_spans(start.span, end_span),
         })
     }
@@ -2184,6 +2220,15 @@ impl<'a> Parser<'a> {
                 return None;
             }
         };
+        // `on entity <ref>` — the asset the option is written on. Optional so
+        // every option written before options had owners still parses.
+        let mut subject_entity = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::On)) {
+            let _ = self.bump();
+            let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
+            let entity_tok = self.bump();
+            subject_entity = Some(self.parse_entity_ref_token(&entity_tok)?);
+        }
         let _ = self.expect_keyword(Keyword::Type, "'type'")?;
         let type_tok = self.bump();
         let type_name = match type_tok.kind {
@@ -2211,6 +2256,7 @@ impl<'a> Parser<'a> {
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut exercise_when = None;
         let mut payoff = None;
+        let mut parties: Vec<PartyBinding> = Vec::new();
         loop {
             match self.peek().kind {
                 TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
@@ -2238,10 +2284,14 @@ impl<'a> Parser<'a> {
                         return None;
                     }
                 }
+                TokenKind::Keyword(Keyword::Parties) => {
+                    let _ = self.bump();
+                    parties = self.parse_parties_block()?;
+                }
                 _ => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'exercise when', 'payoff', or '}'.".to_string(),
+                        "Expected 'parties', 'exercise when', 'payoff', or '}'.".to_string(),
                     );
                     return None;
                 }
@@ -2251,6 +2301,8 @@ impl<'a> Parser<'a> {
         Some(OptionStmt {
             name,
             type_name,
+            subject_entity,
+            parties,
             exercisable_in,
             exercise_when,
             payoff,
@@ -2637,6 +2689,58 @@ impl<'a> Parser<'a> {
                 }
             }
         }
+    }
+
+    /// `parties { role = party.ref, role = party.ref }`
+    ///
+    /// Shared by contracts and options, because an option IS a contract with an
+    /// election and there is no reason for it to say who it is with differently.
+    fn parse_parties_block(&mut self) -> Option<Vec<PartyBinding>> {
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut bindings = Vec::new();
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    let _ = self.bump();
+                    break;
+                }
+                TokenKind::Punct(Punct::Comma) => {
+                    let _ = self.bump();
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected a role binding or '}' in parties block.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Ident(_) => {
+                    let role_tok = self.bump();
+                    let TokenKind::Ident(ref role) = role_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    let role = role.clone();
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    let entity_tok = self.bump();
+                    let entity = self.parse_entity_ref_token(&entity_tok)?;
+                    bindings.push(PartyBinding {
+                        role,
+                        entity,
+                        span: merge_spans(role_tok.span, entity_tok.span),
+                    });
+                }
+                _ => {
+                    let bad = self.bump();
+                    self.push_expected(
+                        bad.span,
+                        "Expected a role binding (e.g. holder = party.acme) in parties block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(bindings)
     }
 
     fn parse_entity_ref_token(&mut self, token: &Token) -> Option<String> {

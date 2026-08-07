@@ -1,2 +1,2 @@
-period,state.value_per_share,opco.exit.equity_value,opco.exit.option_proceeds,opco.exit.sponsor_proceeds,opco.exit.management_proceeds,option.mgmt_options_12_50,option.mgmt_options_14_00,option.mgmt_options_15_00,option.mgmt_options_17_50,option.mgmt_options_20_00
-0,20.877119011136774,575.6158451632398,44.5,487.54613944252134,132.5697057207185,4.188559505568387,3.438559505568387,2.938559505568387,1.6885595055683869,0.6578392583525803
+period,state.value_per_share,opco.exit.equity_value,opco.exit.option_proceeds,opco.exit.sponsor_proceeds,opco.exit.management_proceeds,option.mgmt_options_12_50,option.mgmt_options_14_00,option.mgmt_options_15_00,option.mgmt_options_17_50,option.mgmt_options_20_00,option.mgmt_options_22_50,option.mgmt_options_25_00
+0,20.877119011136774,575.6158451632398,44.5,487.54613944252134,132.5697057207185,4.188559505568387,3.438559505568387,2.938559505568387,1.6885595055683869,0.6578392583525803,0.0,0.0

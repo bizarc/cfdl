@@ -290,6 +290,20 @@ contract_name = "cre.exit_forward"
 subject_family = "asset"
 parties = ["seller"]
 
+# --- Options: contracts with an election ---------------------------------
+
+[[contracts]]
+type_id = "CRE.Contract.RenewalOption"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+description = "A tenant's right to extend at stated terms."
+
+[[contracts]]
+type_id = "CRE.Contract.PurchaseOption"
+subject_family = "asset"
+parties = ["grantor", "holder"]
+description = "A right to buy the asset at a stated price."
+
 # ---------------------------------------------------------------------------
 # References
 # ---------------------------------------------------------------------------

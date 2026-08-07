@@ -1,0 +1,249 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "option-as-contract",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 2
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8d4daf0aed594d76e3f13af8e7a2587d",
+      "symbol": "asset.target",
+      "type": "OpCo.Asset.Enterprise",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "e89b0662403afb4916f8a82c04fe9bf4",
+      "symbol": "party.mgmt",
+      "type": "OpCo.Party.Management",
+      "attrs": {
+        "name": "Management"
+      },
+      "state": {}
+    },
+    {
+      "id": "17f3ab21b9540633164c37ea3f9cfcb9",
+      "symbol": "party.sponsor",
+      "type": "OpCo.Party.Sponsor",
+      "attrs": {
+        "name": "Sponsor LLC"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.opco.revenue_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.opco.opex_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ebitda_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ufcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "sum(operating.*, investing.capital.capex)"
+    },
+    {
+      "id": "domain.opco.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.interest",
+        "financing.debt_principal"
+      ],
+      "formula": "-sum(financing.interest, financing.debt_principal)"
+    },
+    {
+      "id": "domain.opco.lfcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "subtotals": [
+        "domain.opco.ufcf_periodic"
+      ],
+      "formula": "domain.opco.ufcf_periodic + sum(financing.*)"
+    },
+    {
+      "id": "domain.opco.debt_service_coverage",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.opco.ufcf_periodic",
+      "denominator": "domain.opco.debt_service_periodic",
+      "formula": "domain.opco.ufcf_periodic / domain.opco.debt_service_periodic"
+    },
+    {
+      "id": "domain.opco.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "cash flow available for debt service"
+    },
+    {
+      "id": "domain.opco.net_cash_from_operations",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "net cash provided by (used in) operating activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_investing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "investing.*"
+      ],
+      "formula": "net cash provided by (used in) investing activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_financing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "net cash provided by (used in) financing activities"
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "e1ba15c20160b9d9375eba2296ccc681",
+      "name": "opco.revenue",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.recurring",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [
+    {
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "time.t >= 1"
+      },
+      "id": "fae9fb0610de620a2baa3b4015dc7915",
+      "name": "mgmt_pool",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "parties": [
+        {
+          "entity": {
+            "symbol": "party.sponsor"
+          },
+          "role": "grantor"
+        },
+        {
+          "entity": {
+            "symbol": "party.mgmt"
+          },
+          "role": "holder"
+        }
+      ],
+      "payoff": {
+        "lang": "cfdl",
+        "src": "250.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 16,
+          "start_col": 1,
+          "start_line": 12
+        }
+      },
+      "type": "OpCo.Contract.EquityOption"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e34c911fc30e425c340680e8ce0ae3cc",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

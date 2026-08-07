@@ -764,26 +764,37 @@ fn simulate_events(
             let Some((when, payoff)) = &compiled_options[option_idx] else {
                 continue;
             };
-            let forced = forced_exercise.iter().any(|name| name == &option.name);
-            let triggered = if forced {
-                true
-            } else {
-                if let Some(phase_name) = &option.exercisable_in_phase {
-                    let in_phase = ir.phases.iter().any(|phase| {
-                        phase.name == *phase_name
-                            && Date::parse(&phase.range.start)
-                                .map(|start| *date >= start)
-                                .unwrap_or(false)
-                            && Date::parse(&phase.range.end)
-                                .map(|end| *date <= end)
-                                .unwrap_or(false)
-                    });
-                    if !in_phase {
-                        continue;
+            // THE PHASE GATE BINDS ON A FORCED EXERCISE TOO. `exercisable in`
+            // is the window the option EXISTS in — a renewal option outside its
+            // window is not an option anyone holds — so an event cannot
+            // exercise one that is not exercisable yet. Previously `forced`
+            // short-circuited the whole test, so an `exercise option` action
+            // fired outside the declared window and against a false condition.
+            // What an event legitimately overrides is the option's own
+            // ELECTION, which is the `exercise when` below.
+            if let Some(phase_name) = &option.exercisable_in_phase {
+                let in_phase = ir.phases.iter().any(|phase| {
+                    phase.name == *phase_name
+                        && Date::parse(&phase.range.start)
+                            .map(|start| *date >= start)
+                            .unwrap_or(false)
+                        && Date::parse(&phase.range.end)
+                            .map(|end| *date <= end)
+                            .unwrap_or(false)
+                });
+                if !in_phase {
+                    if forced_exercise.iter().any(|name| name == &option.name) {
+                        warnings.push(format!(
+                            "Option '{}' was forced outside its exercisable phase '{phase_name}'; not exercised.",
+                            option.name
+                        ));
                     }
+                    continue;
                 }
-                eval_bool_expr(when, &env, &option.name, "exercise when", warnings)
-            };
+            }
+            let forced = forced_exercise.iter().any(|name| name == &option.name);
+            let triggered =
+                forced || eval_bool_expr(when, &env, &option.name, "exercise when", warnings);
             if !triggered {
                 continue;
             }
@@ -811,6 +822,21 @@ fn simulate_events(
                 .entry(stream.clone())
                 .or_insert_with(|| vec![true; periods])[t] = *active;
         }
+    }
+
+    // AN UNEXERCISED OPTION PUBLISHES ZERO, NOT NOTHING.
+    //
+    // `option_cash` was only written on exercise, so an option that stayed out
+    // of the money produced no series at all — a consumer could not tell "did
+    // not exercise" from "does not exist", and a case could not assert a
+    // NON-exercise, which is half of what an option model has to prove.
+    //
+    // Seeded after the loop rather than before it so `option_cash` keeps
+    // meaning "exercised" while the timeline runs.
+    for option in &ir.options {
+        option_cash
+            .entry(option.name.clone())
+            .or_insert_with(|| vec![0.0; periods]);
     }
 
     EventSim {

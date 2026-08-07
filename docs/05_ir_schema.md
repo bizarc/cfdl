@@ -1086,6 +1086,30 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "owner": {
+          "$ref": "#/$defs/EntityRef",
+          "description": "The asset this option is written on. AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something the way every other contract does. Absent on an option written before options had owners; without one its payoff belongs to no entity and falls out of every per-entity total."
+        },
+        "parties": {
+          "type": "array",
+          "description": "Who the option is between, by role. The role is named by the contract TYPE rather than by the party, because the same party is lessor in one agreement and lender in another — the role belongs to the agreement.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "entity"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "entity": {
+                "$ref": "#/$defs/EntityRef"
+              }
+            }
+          }
         }
       }
     },

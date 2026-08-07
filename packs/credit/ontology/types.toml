@@ -232,6 +232,14 @@ contract_name = "credit.purchase"
 subject_family = "asset"
 parties = ["buyer", "seller"]
 
+# --- Options: contracts with an election ---------------------------------
+
+[[contracts]]
+type_id = "Credit.Contract.CleanUpCall"
+subject_family = "asset"
+parties = ["issuer", "holder"]
+description = "The issuer's right to retire the pool once it falls below a stated size."
+
 # ---------------------------------------------------------------------------
 # References
 # ---------------------------------------------------------------------------

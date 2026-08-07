@@ -768,6 +768,7 @@ mod tests {
                         term_start: None,
                         term_end: None,
                         terms: BTreeMap::new(),
+                        parties: vec![],
                         span: span(),
                     }),
                 },

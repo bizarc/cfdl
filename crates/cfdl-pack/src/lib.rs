@@ -280,7 +280,12 @@ impl PackOntology {
     pub fn contract_for_rule(&self, contract_name: &str) -> Option<&OntologyContract> {
         self.contracts
             .iter()
-            .find(|c| c.contract_name == contract_name)
+            .find(|c| c.contract_name.as_deref() == Some(contract_name))
+    }
+
+    /// Contract types that are elections rather than lowered rules — options.
+    pub fn elections(&self) -> impl Iterator<Item = &OntologyContract> {
+        self.contracts.iter().filter(|c| c.contract_name.is_none())
     }
 }
 
@@ -322,9 +327,14 @@ pub struct OntologyField {
 pub struct OntologyContract {
     pub type_id: String,
     /// The lowering rule that turns this contract into cash. Binding the two
-    /// is what keeps the vocabulary and the arithmetic from drifting: a type
-    /// with no rule produces nothing, a rule with no type has no parties.
-    pub contract_name: String,
+    /// is what keeps the vocabulary and the arithmetic from drifting: a rule
+    /// with no type has no counterparties.
+    ///
+    /// ABSENT MEANS AN ELECTION — an option. An option is a contract whose cash
+    /// is a payoff the holder elects to take, resolved by the engine rather
+    /// than lowered by a pack rule, so there is no rule to name.
+    #[serde(default)]
+    pub contract_name: Option<String>,
     #[serde(default)]
     pub subject_family: Option<String>,
     /// Role names, not entity references — a party fills a role per contract,
@@ -1745,11 +1755,15 @@ fn validate_ontology_against_rules(
     let rule_names: BTreeSet<&str> = rules.iter().map(|r| r.contract_name.as_str()).collect();
 
     for contract in &ontology.contracts {
-        if !rule_names.contains(contract.contract_name.as_str()) {
+        // An election names no rule by design; there is nothing to join.
+        let Some(rule_name) = contract.contract_name.as_deref() else {
+            continue;
+        };
+        if !rule_names.contains(rule_name) {
             return Err(PackLoadError {
                 message: format!(
-                    "Ontology '{source}': contract type '{}' names lowering rule '{}', which the pack does not declare. A contract type with no rule produces no cash.",
-                    contract.type_id, contract.contract_name
+                    "Ontology '{source}': contract type '{}' names lowering rule '{rule_name}', which the pack does not declare.",
+                    contract.type_id
                 ),
             });
         }
@@ -1758,7 +1772,7 @@ fn validate_ontology_against_rules(
     let typed: BTreeSet<&str> = ontology
         .contracts
         .iter()
-        .map(|c| c.contract_name.as_str())
+        .filter_map(|c| c.contract_name.as_deref())
         .collect();
     let untyped: Vec<&str> = rule_names
         .into_iter()
@@ -2764,6 +2778,12 @@ to = "running"
 type_id = "T.Contract.Deal"
 contract_name = "t.deal"
 parties = ["buyer", "seller"]
+
+# An election: a contract whose cash is a payoff the holder takes, so it names
+# no lowering rule and is exempt from the rule join.
+[[contracts]]
+type_id = "T.Contract.Call"
+parties = ["grantor", "holder"]
 "#;
 
     /// Built through the real parser rather than a struct literal, so these
@@ -2889,7 +2909,20 @@ lifecycle = "t.missing"
         let o = parse_ontology(MINIMAL, "test", "t").unwrap();
         let err = validate_ontology_against_rules(&o, &[rule("t.something_else")], "test")
             .expect_err("a type with no rule produces no cash");
-        assert!(err.message.contains("produces no cash"), "{}", err.message);
+        assert!(
+            err.message.contains("which the pack does not declare"),
+            "{}",
+            err.message
+        );
+    }
+
+    /// An election is exempt from the join by design — it has no rule to name.
+    #[test]
+    fn an_election_needs_no_lowering_rule() {
+        let o = parse_ontology(MINIMAL, "test", "t").unwrap();
+        assert_eq!(o.elections().count(), 1);
+        validate_ontology_against_rules(&o, &[rule("t.deal")], "test")
+            .expect("an election is not a missing rule");
     }
 
     #[test]
@@ -2943,14 +2976,25 @@ mod ontology_shipped_packs {
             );
             // Every rule is joined to a type and back; load would have failed
             // otherwise, so this asserts the join is non-trivial.
+            // Lowered contract types are one-to-one with rules; elections
+            // (options) name no rule and are counted separately.
+            let lowered = ontology
+                .contracts
+                .iter()
+                .filter(|c| c.contract_name.is_some())
+                .count();
             assert_eq!(
-                ontology.contracts.len(),
+                lowered,
                 pack.lowering_rules
                     .iter()
                     .map(|r| r.contract_name.as_str())
                     .collect::<BTreeSet<_>>()
                     .len(),
-                "{name}: contract types and lowering rules should be one-to-one"
+                "{name}: lowered contract types and lowering rules should be one-to-one"
+            );
+            assert!(
+                ontology.elections().next().is_some(),
+                "{name} declares no option type — every pack has at least one election"
             );
         }
     }

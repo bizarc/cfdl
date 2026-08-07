@@ -252,6 +252,14 @@ contract_name = "energy.macrs_shield"
 subject_family = "asset"
 parties = ["claimant"]
 
+# --- Options: contracts with an election ---------------------------------
+
+[[contracts]]
+type_id = "Energy.Contract.OfftakeExtension"
+subject_family = "asset"
+parties = ["seller", "offtaker"]
+description = "An offtaker's right to extend the contracted term."
+
 # ---------------------------------------------------------------------------
 # References — market observables. Declared in the model today; the shape
 # admits an external source later without the model changing.

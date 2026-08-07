@@ -251,6 +251,17 @@ contract_name = "opco.exit_perpetuity"
 subject_family = "asset"
 parties = ["seller"]
 
+# --- Options: contracts with an election ---------------------------------
+# An option names no lowering rule. Its cash is the payoff of an election, which
+# the engine resolves directly — so unlike every other contract type here, there
+# is no rule to bind to.
+
+[[contracts]]
+type_id = "OpCo.Contract.EquityOption"
+subject_family = "asset"
+parties = ["grantor", "holder"]
+description = "A management or investor option over the enterprise's equity, struck at a stated price."
+
 # ---------------------------------------------------------------------------
 # References
 # ---------------------------------------------------------------------------
