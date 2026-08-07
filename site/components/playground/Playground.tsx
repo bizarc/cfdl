@@ -72,7 +72,6 @@ export function Playground() {
   const [engineError, setEngineError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newFileOpen, setNewFileOpen] = useState(false);
   const [newFileName, setNewFileName] = useState("contracts.cfdl");
 
@@ -85,6 +84,18 @@ export function Playground() {
   // writing wants the opposite. Persisted, because it is a workspace
   // preference and not a per-run one.
   const wide = useMediaQuery("(min-width: 1024px)");
+
+  // The drawer starts closed and the column starts open, so crossing the
+  // breakpoint lands on the right default for that layout. Adjusted during
+  // render rather than in an effect: an effect would paint one frame of the
+  // wrong state, and the sidebar is exactly the thing that would be seen
+  // sliding in and out on every resize.
+  const [sidebarOpen, setSidebarOpen] = useState(wide);
+  const [lastWide, setLastWide] = useState(wide);
+  if (lastWide !== wide) {
+    setLastWide(wide);
+    setSidebarOpen(wide);
+  }
   const [split, setSplit] = useState<number>(() => {
     if (typeof window === "undefined") return 50;
     const stored = Number(window.localStorage.getItem(SPLIT_KEY));
@@ -264,11 +275,29 @@ export function Playground() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
+        {/* Below lg the sidebar is a drawer OVER the panes, not a column
+            beside them. As a 16rem column it left a 375px viewport with
+            119px for the editor and the results panel entirely off-screen —
+            reachable only by scrolling the document sideways, which the
+            height-locked shell no longer allows. */}
         <aside
           className={cn(
-            "shrink-0 border-r border-subtle transition-all",
-            sidebarOpen ? "w-64" : "w-0 overflow-hidden",
+            "shrink-0 border-r border-subtle bg-surface-page",
+            wide
+              ? cn(
+                  // translate-x-0 explicitly rather than relying on the drawer's
+                  // utility being absent: this branch is what the sidebar
+                  // returns to when the window grows past lg, and it should
+                  // state its own offset instead of inheriting whatever the
+                  // other branch left behind.
+                  "translate-x-0 transition-all",
+                  sidebarOpen ? "w-64" : "w-0 overflow-hidden",
+                )
+              : cn(
+                  "absolute inset-y-0 left-0 z-40 w-64 shadow-lg transition-transform",
+                  sidebarOpen ? "translate-x-0" : "-translate-x-full",
+                ),
           )}
         >
           <Sidebar
@@ -282,11 +311,28 @@ export function Playground() {
           />
         </aside>
 
+        {/* Tapping outside a drawer closes it; a column has no backdrop. */}
+        {!wide && sidebarOpen ? (
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+            className="absolute inset-0 z-30 bg-surface-inverse/40"
+          />
+        ) : null}
+
         <main
           ref={mainRef}
           className={cn(
-            "grid min-h-0 flex-1 grid-rows-2 lg:grid-rows-1",
-            !wide && "lg:grid-cols-2",
+            // min-w-0: a flex child's automatic minimum is its content, and
+            // Monaco plus a results table made that 644px inside a 119px slot.
+            //
+            // grid-cols-1 is minmax(0, 1fr) and is load-bearing in the stacked
+            // layout: without a declared column the implicit one is `auto`, so
+            // the rows sized to their content and overflowed the pane. That is
+            // what clipped the right half of the Monte Carlo histogram — a
+            // bimodal run drew its second cluster off-screen.
+            "grid min-h-0 w-full min-w-0 flex-1 grid-cols-1 grid-rows-2 lg:grid-rows-1",
           )}
           // minmax(0, …) rather than a bare `fr`: an `fr` track has an `auto`
           // minimum, so a wide statement table pushes the results column past
@@ -300,7 +346,7 @@ export function Playground() {
               : undefined
           }
         >
-          <section className="min-h-0 border-b border-subtle lg:border-b-0">
+          <section className="min-h-0 min-w-0 border-b border-subtle lg:border-b-0">
             <EditorPane
               files={files}
               activeFile={activeFile}
@@ -330,7 +376,7 @@ export function Playground() {
 
           {wide ? <Splitter onDrag={setSplit} onReset={() => setSplit(50)} mainRef={mainRef} /> : null}
 
-          <section className="min-h-0">
+          <section className="min-h-0 min-w-0">
             <ResultsPanel
               results={results}
               diagnostics={diagnostics}
@@ -362,13 +408,26 @@ export function Playground() {
 
 /** Matches a CSS media query, without assuming one on the server. */
 function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false);
+  // Read synchronously on the first render — this tree is client-only
+  // (`ssr: false`), so there is no server value to match, and starting at
+  // `false` would paint one frame of the mobile layout on a desktop.
+  const [matches, setMatches] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches,
+  );
   useEffect(() => {
     const mql = window.matchMedia(query);
     const update = () => setMatches(mql.matches);
     update();
+    // Both signals, deliberately. `change` is the right event and is enough in
+    // a real browser; a viewport resized by devtools or an automation harness
+    // can update `mql.matches` without emitting it, and the layout then keeps
+    // rendering a splitter for a two-column grid that no longer exists.
     mql.addEventListener("change", update);
-    return () => mql.removeEventListener("change", update);
+    window.addEventListener("resize", update);
+    return () => {
+      mql.removeEventListener("change", update);
+      window.removeEventListener("resize", update);
+    };
   }, [query]);
   return matches;
 }
