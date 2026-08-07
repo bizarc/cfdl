@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "1388d216afb1e50ea700825e6be20a16bdd87ac517ebc16661f167bb35f18821",
-  "ledger_hash": "f99e80df1521cbf798d87de469fa21d02976b260bd60b8bca4216c106f3a174b",
+  "model_hash": "12b3be76c8dbfd4c2a2939e440cafc75d339580b3e47d72eb23a4c0d3eb3ac31",
+  "ledger_hash": "29b0132a8e30c292890629e8bcc26cd5b777c72f8eb3a24983a80c9e22ae4e15",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -2349,6 +2349,351 @@
           },
           {
             "amount": 55775.507397,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.strip_center.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 84
+        },
+        "values": [
+          {
+            "amount": -187125.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 22875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 22875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 22875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 22875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 22875.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -101425.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 28575.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 52575.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 52575.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 52575.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 52575.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53217.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53988.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 54974.176667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 55765.306667,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57037.971967,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 57849.760867,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59151.242526,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 59984.233218,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 61315.208454,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 28408.298862,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 29769.461467,
+            "currency": "USD"
+          },
+          {
+            "amount": 9369028.720726,
             "currency": "USD"
           }
         ]

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "093b32aa6aa62871adaef97cc0c9c013be2e00a80ef9120e892d25f1f57dadd1",
-  "ledger_hash": "6cf6540613ac50c19cbfbb87468af823fb896fef1eb6a23d94f6d1360645d8ec",
+  "model_hash": "2338527e7a5c0cf102e9830cf5d62253c6df8977f39e024474f692e03c881901",
+  "ledger_hash": "025b83a90c80602c1322abb77c87f045d183d8115064fefafac5dadd4c0de26d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -169,6 +169,27 @@
           },
           {
             "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250.0,
             "currency": "USD"
           }
         ]

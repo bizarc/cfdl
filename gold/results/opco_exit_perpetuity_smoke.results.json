@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "7022f0bcbf5cf39a4a1583e3f705a4f84bcd5a47b45be6d1be0c4d394d8c5855",
-  "ledger_hash": "72758180f442b4c432fadc4f3ab425762d354ea4a8d77c8b60be981cc8b5ad00",
+  "model_hash": "fe356391d878becb6c72c78ce6a09e38f4a755a6b59541eec7ebef6e943f37a9",
+  "ledger_hash": "8f664383891109b997401768951442ce944c693ea84232ad1262baf1da3f41ba",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -27,7 +27,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.firm.total": {
+      "entity.asset.firm.total": {
         "amount": 25401.406293,
         "currency": "USD"
       },
@@ -352,6 +352,35 @@
           },
           {
             "amount": 1169.85856,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.firm.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1040.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1081.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1124.864,
+            "currency": "USD"
+          },
+          {
+            "amount": 21154.942293,
             "currency": "USD"
           }
         ]

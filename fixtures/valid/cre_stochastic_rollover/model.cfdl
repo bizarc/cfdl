@@ -2,7 +2,7 @@ version 0.1
 model "cre-stochastic-rollover"
 time calendar monthly from 2031-01 for 24
 
-entity asset tower
+entity asset tower : Asset.Real
 
 // The conventional expected-value blend replaced by a BINARY renewal outcome per
 // Monte Carlo trial: one uniform draw per trial decides renew vs re-lease,

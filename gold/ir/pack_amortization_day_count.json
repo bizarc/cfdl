@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "a14d0ee52b2812f4856211fc4d53634a",
-      "symbol": "fund.buyer",
-      "type": "core.Entity",
+      "id": "c8726c9577f18720c017fefa34ac122b",
+      "symbol": "asset.buyer",
+      "type": "Credit.Asset.LoanPool",
       "attrs": {},
       "state": {}
     }
@@ -159,7 +159,7 @@
       "name": "credit.pool_level_pay.p",
       "type": "core.Contract",
       "subject": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "term": {
         "start": "2025-01-01",
@@ -186,7 +186,7 @@
       "id": "b58e24550a9e53daaa64b78c55cf350e",
       "name": "credit.pool.interest.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -226,7 +226,7 @@
       "id": "4514cb1de856e46e49b8802d5736c6e8",
       "name": "credit.pool.penalty.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -266,7 +266,7 @@
       "id": "669262821fa07db86a7741c322c77be4",
       "name": "credit.pool.prepay.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -306,7 +306,7 @@
       "id": "f7301f932857a1172eb2a76a424b6220",
       "name": "credit.pool.recoveries.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -346,7 +346,7 @@
       "id": "89bdd3f35a418a112aff0e94ef35184d",
       "name": "credit.pool.sched_principal.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -386,7 +386,7 @@
       "id": "6f0ed51cda193269743add0b99661268",
       "name": "credit.pool.servicing.p",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "outflow",
       "currency": "USD",

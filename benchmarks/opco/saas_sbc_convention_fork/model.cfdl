@@ -46,7 +46,7 @@ model "saas-sbc-convention-fork"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2024-04 for 60
 
-entity legal target
+entity asset target : OpCo.Asset.Enterprise
 
 // Terminal value: an NTM unlevered-FCF multiple struck at 31 December 2028 on
 // terminal-year (FY2029E) unlevered FCF. 16.0x sits inside the disclosed
@@ -70,31 +70,31 @@ assume terminal_year_ufcf    = 696.0
 // disproportionate share of the year's cash collection. Stated post-SBC
 // because the pre-SBC/SBC split of the stub is not recoverable either. See
 // NOTES.md, "The one solved input".
-stream opco.ufcf.stub_2024 on entity legal.target inflow currency USD {
+stream opco.ufcf.stub_2024 on entity asset.target inflow currency USD {
   schedule every month mid from 2024-08 to 2024-08
   category operating.revenue.recurring
   amount = 135.51
 }
 
-stream opco.ufcf.fy2025 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy2025 on entity asset.target inflow currency USD {
   schedule every month from 2025-06 to 2025-06
   category operating.revenue.recurring
   amount = 392
 }
 
-stream opco.ufcf.fy2026 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy2026 on entity asset.target inflow currency USD {
   schedule every month from 2026-06 to 2026-06
   category operating.revenue.recurring
   amount = 448
 }
 
-stream opco.ufcf.fy2027 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy2027 on entity asset.target inflow currency USD {
   schedule every month from 2027-06 to 2027-06
   category operating.revenue.recurring
   amount = 527
 }
 
-stream opco.ufcf.fy2028 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy2028 on entity asset.target inflow currency USD {
   schedule every month from 2028-06 to 2028-06
   category operating.revenue.recurring
   amount = 616
@@ -110,25 +110,25 @@ stream opco.ufcf.fy2028 on entity legal.target inflow currency USD {
 // split is not disclosed.
 // ---------------------------------------------------------------------------
 
-stream opco.sbc.fy2025 on entity legal.target outflow currency USD {
+stream opco.sbc.fy2025 on entity asset.target outflow currency USD {
   schedule every month from 2025-06 to 2025-06
   category operating.expense.opex
   amount = 166
 }
 
-stream opco.sbc.fy2026 on entity legal.target outflow currency USD {
+stream opco.sbc.fy2026 on entity asset.target outflow currency USD {
   schedule every month from 2026-06 to 2026-06
   category operating.expense.opex
   amount = 180
 }
 
-stream opco.sbc.fy2027 on entity legal.target outflow currency USD {
+stream opco.sbc.fy2027 on entity asset.target outflow currency USD {
   schedule every month from 2027-06 to 2027-06
   category operating.expense.opex
   amount = 190
 }
 
-stream opco.sbc.fy2028 on entity legal.target outflow currency USD {
+stream opco.sbc.fy2028 on entity asset.target outflow currency USD {
   schedule every month from 2028-06 to 2028-06
   category operating.expense.opex
   amount = 193
@@ -136,7 +136,7 @@ stream opco.sbc.fy2028 on entity legal.target outflow currency USD {
 
 // The exit. Discounted whole, not mid-period — and struck on the PRE-SBC
 // terminal-year figure, which is the convention fork this case exists to pin.
-stream opco.exit.value on entity legal.target inflow currency USD {
+stream opco.exit.value on entity asset.target inflow currency USD {
   schedule every month from 2028-12 to 2028-12
   category investing.exit
   amount = inputs.terminal_year_ufcf * inputs.terminal_ntm_multiple

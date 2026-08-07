@@ -43,7 +43,7 @@ model "one-lincoln-street"
 use pack "cre" version "0.1.0"
 time calendar quarterly from 2000-01 for 16
 
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 assume equity_commitment  = 110738000     // Exhibit 7, net construction period equity
 assume construction_rate  = 0.08          // 8.00%, compounded quarterly

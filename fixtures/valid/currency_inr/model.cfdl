@@ -2,16 +2,16 @@ version 0.1
 model "currency-inr" currency INR
 time calendar monthly from 2026-01 for 12
 
-entity project plant
+entity asset plant : Asset.Real
 
 // A model declares the currency it reports in. Every metric is denominated
 // in it; streams must agree, since cash flows are summed period by period.
-stream plant.revenue on entity project.plant inflow currency INR {
+stream plant.revenue on entity asset.plant inflow currency INR {
   schedule every month from 2026-01 to 2026-12
   amount = 1500000
 }
 
-stream plant.opex on entity project.plant outflow currency INR {
+stream plant.opex on entity asset.plant outflow currency INR {
   schedule every month from 2026-01 to 2026-12
   amount = 200000
 }

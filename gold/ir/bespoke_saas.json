@@ -37,16 +37,16 @@
   ],
   "entities": [
     {
-      "id": "0de94ebc8fa7e2405c74d40644a65214",
-      "symbol": "ops.team",
-      "type": "core.Entity",
+      "id": "718652edd9b63387a8fa1b681caa7bad",
+      "symbol": "asset.product",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "60969c1ff88b2b86182ce509aad52a1a",
-      "symbol": "saas.product",
-      "type": "core.Entity",
+      "id": "73559b6f68233e419e647b352894dce4",
+      "symbol": "asset.venture",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -61,7 +61,7 @@
       "id": "ff01c5ad29fd96ebcab08cb2389f08d3",
       "name": "ops.seed_investment",
       "owner": {
-        "symbol": "ops.team"
+        "symbol": "asset.venture"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -92,7 +92,7 @@
       "id": "625abeae1357e6e3f9de5f9d896e2d61",
       "name": "ops.team_cost",
       "owner": {
-        "symbol": "ops.team"
+        "symbol": "asset.venture"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -124,7 +124,7 @@
       "id": "3b412232907fb1a383cee528bcf7a362",
       "name": "saas.infra_cost",
       "owner": {
-        "symbol": "saas.product"
+        "symbol": "asset.product"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -156,7 +156,7 @@
       "id": "00641faaa02443fbccbdb7b373a6ea33",
       "name": "saas.mrr",
       "owner": {
-        "symbol": "saas.product"
+        "symbol": "asset.product"
       },
       "direction": "inflow",
       "currency": "USD",

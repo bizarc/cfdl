@@ -1,0 +1,27 @@
+version 0.1
+model "active-in-state"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 5
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 10000
+  state leased
+}
+
+event expiry when time.t >= 2 {
+  set entity asset.suite.status = "downtime"
+}
+
+event reletting when time.t >= 4 {
+  set entity asset.suite.status = "leased"
+}
+
+// The state name is CHECKED against the unit lifecycle. A misspelling is a
+// compile error, where `entity.state.status == "leasd"` would just be false
+// forever and say nothing.
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  category operating.revenue.base_rent
+  amount = 100
+  active in state leasd
+}

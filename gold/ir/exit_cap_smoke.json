@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "c9715dfdb3d8598a820644336b510453",
-      "symbol": "real_estate.property",
-      "type": "core.Entity",
+      "id": "ad1f1c6e084f2c4fe189bf227f7438cc",
+      "symbol": "asset.property",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     }
@@ -95,7 +95,7 @@
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -122,7 +122,7 @@
       "id": "ccbe675e2cc82d28901cd5ffc15baa5b",
       "name": "cre.exit.sale",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",

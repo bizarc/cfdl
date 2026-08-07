@@ -52,12 +52,12 @@ model "gordon-growth-coned"
 use pack "opco" version "0.1.0"
 time calendar annual from 2026-01 for 2
 
-entity legal utility
+entity asset utility : OpCo.Asset.Enterprise
 
 assume current_dps     = 2.32      // EPS 3.17 x payout ratio 0.7318611987381703
 assume cost_of_equity  = 0.077     // CAPM: 0.041 + 0.8 x 0.045
 
-contract opco.exit_perpetuity.g041 on entity legal.utility {
+contract opco.exit_perpetuity.g041 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -66,7 +66,7 @@ contract opco.exit_perpetuity.g041 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.g031 on entity legal.utility {
+contract opco.exit_perpetuity.g031 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -75,7 +75,7 @@ contract opco.exit_perpetuity.g031 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.g021 on entity legal.utility {
+contract opco.exit_perpetuity.g021 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -84,7 +84,7 @@ contract opco.exit_perpetuity.g021 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.g011 on entity legal.utility {
+contract opco.exit_perpetuity.g011 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -93,7 +93,7 @@ contract opco.exit_perpetuity.g011 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.g001 on entity legal.utility {
+contract opco.exit_perpetuity.g001 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -102,7 +102,7 @@ contract opco.exit_perpetuity.g001 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.gm009 on entity legal.utility {
+contract opco.exit_perpetuity.gm009 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -111,7 +111,7 @@ contract opco.exit_perpetuity.gm009 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.gm019 on entity legal.utility {
+contract opco.exit_perpetuity.gm019 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -120,7 +120,7 @@ contract opco.exit_perpetuity.gm019 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.gm029 on entity legal.utility {
+contract opco.exit_perpetuity.gm029 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps
@@ -129,7 +129,7 @@ contract opco.exit_perpetuity.gm029 on entity legal.utility {
   }
 }
 
-contract opco.exit_perpetuity.gm039 on entity legal.utility {
+contract opco.exit_perpetuity.gm039 on entity asset.utility {
   term 2026-01..2026-01
   terms {
     base_value = inputs.current_dps

@@ -29,9 +29,9 @@
   ],
   "entities": [
     {
-      "id": "3a67628cd2506863436e3dbffad4bc12",
-      "symbol": "project.microgrid",
-      "type": "core.Entity",
+      "id": "5ee7af216ff44dd9f6738e5e37dae0ab",
+      "symbol": "asset.microgrid",
+      "type": "Energy.Asset.GenerationFacility",
       "attrs": {},
       "state": {}
     }
@@ -102,7 +102,7 @@
       "name": "energy.capex",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "term": {
         "start": "2026-01-01",
@@ -128,7 +128,7 @@
       "name": "energy.capex.final_draw",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "term": {
         "start": "2026-01-01",
@@ -154,7 +154,7 @@
       "name": "energy.om",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "term": {
         "start": "2026-01-01",
@@ -180,7 +180,7 @@
       "name": "energy.ppa",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "term": {
         "start": "2026-01-01",
@@ -207,7 +207,7 @@
       "id": "8cfa79d9225fbb63d449d8671701ca54",
       "name": "energy.capex.outlay",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -245,7 +245,7 @@
       "id": "a0800cd337871680ab55e64c571a9b92",
       "name": "energy.capex.outlay.final_draw",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -283,7 +283,7 @@
       "id": "13807b4da544764046dea1c39c6aa1ae",
       "name": "energy.om.expense",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -323,7 +323,7 @@
       "id": "fe970e4b72aca6698705db0e193c1cbc",
       "name": "energy.ppa.revenue",
       "owner": {
-        "symbol": "project.microgrid"
+        "symbol": "asset.microgrid"
       },
       "direction": "inflow",
       "currency": "USD",

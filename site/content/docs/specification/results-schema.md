@@ -217,7 +217,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared aggregation of the classified streams. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is an aggregation OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a subtotal spans streams that may settle at different points in a period and so has no single placement to claim.",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `state.<name>` is a declared `state` and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `entity.<symbol>.net_cash_flow` is an entity's cash AGGREGATED BY RELATION — its own streams plus every descendant's, following `part_of` rather than a name prefix, so a building's cash is its units' cash because they ARE its units. An entity with no children carries its own streams only, which is the pool that models collective behaviour directly; the grain is the modeller's choice. Like a subtotal it is a fold OF the cash and never counts AS cash — excluded from model.total, model.npv, model.net_cash_flow and the annual rollup, because counting a parent and its children would double what it touches. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared aggregation of the classified streams. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like `state.`, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is an aggregation OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a subtotal spans streams that may settle at different points in a period and so has no single placement to claim.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }
@@ -253,6 +253,48 @@ against it by `make results-schema`.
         },
         "annual_rollup": {
           "$ref": "#/$defs/AnnualRollupSection"
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Every state change an event made, in the order it happened — the audit trail for whether and when something occurred. Entity state is otherwise unobservable: nothing else distinguishes an event that fired against a misspelled target from an event that never fired, and without this a case cannot assert a transition. Recorded even when the value does not change, because the question the log answers is whether the event fired. Omitted when a model has no events. Visibility is two rules, not one: an event or option guard reads the state as the period OPENED, so declaration order cannot change an answer; a stream reads it as the period CLOSED, so a transition takes effect in the period it fires.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "date",
+              "entity",
+              "field",
+              "to",
+              "event"
+            ],
+            "properties": {
+              "period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "date": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string",
+                "description": "The value before. Absent when the field had none — which, for a typed entity with a lifecycle, should not happen, because it opens in its declared initial state."
+              },
+              "to": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string",
+                "description": "The event that fired. A transition always has a cause."
+              }
+            }
+          }
         }
       }
     },

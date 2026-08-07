@@ -91,6 +91,36 @@ pub struct TimeStmt {
 pub struct EntityStmt {
     pub namespace: String,
     pub name: String,
+    /// The ontology type this entity is an instance of — `CRE.Asset.RealProperty`.
+    ///
+    /// Optional so every model written before types existed still parses. When
+    /// present it is checked against the active ontology, which is what makes
+    /// an entity a described thing rather than a two-part name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub type_name: Option<String>,
+    /// Attributes declared in the entity's block, as raw source. Checked
+    /// against the type's declared fields.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<EntityAttribute>,
+    /// The parent this entity belongs to, if the model groups it.
+    ///
+    /// ALWAYS OPTIONAL. A pool models collective behaviour perfectly well with
+    /// no loans under it; a building needs no units. The modeller chooses the
+    /// grain and the language does not prefer one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+    /// The lifecycle state this entity starts in, overriding the type's
+    /// declared initial state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_state: Option<String>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct EntityAttribute {
+    pub name: String,
+    /// Raw source of the value expression.
+    pub value: String,
     pub span: Span,
 }
 
@@ -118,6 +148,21 @@ pub struct StreamStmt {
     pub schedule: Option<ScheduleSpec>,
     pub amount: Option<ExprSlot>,
     pub active_when: Option<ExprSlot>,
+    /// `active in state leased, holdover` — the lifecycle states this stream
+    /// runs in.
+    ///
+    /// Kept as NAMES rather than desugared here, because the point of the form
+    /// is that the state is checked against the owner's declared lifecycle. A
+    /// string comparison cannot be: `entity.state.status != "refinancd"` is
+    /// true forever and says nothing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_in_states: Vec<StateGuard>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StateGuard {
+    pub state: String,
     pub span: Span,
 }
 
@@ -128,6 +173,7 @@ struct StreamBlock {
     schedule: Option<ScheduleSpec>,
     amount: Option<ExprSlot>,
     active_when: Option<ExprSlot>,
+    active_in_states: Vec<StateGuard>,
     category: Option<String>,
     end_span: Span,
 }
@@ -223,6 +269,11 @@ pub struct ContractStmt {
     /// behaviour and what every model without the clause gets.
     pub payment_net: Option<PaymentTerms>,
     pub terms: BTreeMap<String, ContractTerm>,
+    /// Who the contract is between, by role. `parties` has been a reserved
+    /// keyword since v0.1 and was never parsed — a contract could not say who
+    /// it was with.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parties: Vec<PartyBinding>,
     pub span: Span,
 }
 
@@ -340,11 +391,33 @@ pub enum EventAction {
 pub struct OptionStmt {
     pub name: String,
     pub type_name: String,
+    /// The asset this option is written on.
+    ///
+    /// AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something
+    /// the way every other contract does. Without an owner its payoff belonged
+    /// to no entity and fell out of every per-entity total.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject_entity: Option<String>,
+    /// Who the option is between, by role.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parties: Vec<PartyBinding>,
     pub exercisable_in: Option<String>,
     /// Boolean trigger expression (raw source).
     pub exercise_when: Option<String>,
     /// Payoff amount expression (raw source).
     pub payoff: Option<String>,
+    pub span: Span,
+}
+
+/// A party filling a role in a contract — `holder = party.management`.
+///
+/// The role is named by the contract TYPE, not by the party: the same party is
+/// lessor in one contract and lender in another, so the role belongs to the
+/// agreement rather than to the entity.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct PartyBinding {
+    pub role: String,
+    pub entity: String,
     pub span: Span,
 }
 
@@ -745,10 +818,183 @@ impl<'a> Parser<'a> {
             }
         };
 
+        // `entity <family> <name>` is the whole statement unless a type follows.
+        // The typed form has been in the grammar since v0.1
+        // (`entity_stmt = "entity" IDENT IDENT ":" qname entity_block`) and was
+        // never implemented; an entity was a two-part name, and the first
+        // identifier was doing informal typing badly.
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::Colon)) {
+            return Some(EntityStmt {
+                namespace,
+                name,
+                type_name: None,
+                attributes: Vec::new(),
+                parent: None,
+                initial_state: None,
+                span: merge_spans(start.span, name_tok.span),
+            });
+        }
+        let _ = self.bump(); // ':'
+
+        let type_tok = self.bump();
+        let type_name = match type_tok.kind {
+            TokenKind::Qname(ref qname) => qname.clone(),
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    type_tok.span,
+                    "Expected an ontology type after ':' (e.g. CRE.Asset.RealProperty)."
+                        .to_string(),
+                );
+                return None;
+            }
+        };
+
+        // The block is optional: a type alone is a complete statement, because
+        // a type with no required fields needs nothing said about it.
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
+            return Some(EntityStmt {
+                namespace,
+                name,
+                type_name: Some(type_name),
+                attributes: Vec::new(),
+                parent: None,
+                initial_state: None,
+                span: merge_spans(start.span, type_tok.span),
+            });
+        }
+        let _ = self.bump(); // '{'
+
+        let mut attributes: Vec<EntityAttribute> = Vec::new();
+        let mut parent: Option<String> = None;
+        let mut initial_state: Option<String> = None;
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+                // `part of <entity>` — optional hierarchy. Never required: a
+                // pool models collective behaviour with no loans under it, and
+                // a building needs no units. The modeller chooses the grain.
+                TokenKind::Ident(ref ident) if ident == "part" => {
+                    let part_tok = self.bump();
+                    let of_tok = self.bump();
+                    if !matches!(of_tok.kind, TokenKind::Ident(ref s) if s == "of") {
+                        self.push_expected(
+                            of_tok.span,
+                            "Expected 'of' after 'part' in entity block.".to_string(),
+                        );
+                        return None;
+                    }
+                    let parent_tok = self.bump();
+                    match parent_tok.kind {
+                        TokenKind::Qname(ref qname) => parent = Some(qname.clone()),
+                        TokenKind::Ident(ref ident) => parent = Some(ident.clone()),
+                        _ => {
+                            self.push_expected(
+                                merge_spans(part_tok.span, parent_tok.span),
+                                "Expected the parent entity after 'part of' (e.g. asset.tower)."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                // `state <name>` — the lifecycle state this entity STARTS in,
+                // overriding the type's declared initial. Every entity with a
+                // lifecycle is always in exactly one state, so this sets which.
+                TokenKind::Keyword(Keyword::State) => {
+                    let state_tok = self.bump();
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Ident(ref ident) => initial_state = Some(ident.clone()),
+                        TokenKind::String(ref s) => initial_state = Some(s.clone()),
+                        _ => {
+                            self.push_expected(
+                                merge_spans(state_tok.span, value_tok.span),
+                                "Expected a lifecycle state after 'state' (e.g. state operating)."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                // `key = <literal>`, one token, exactly as a contract's `terms`
+                // block reads. An attribute describes the thing; it is not an
+                // expression, and letting it be one made the value swallow the
+                // rest of the block.
+                TokenKind::Ident(_) => {
+                    let key_tok = self.bump();
+                    let TokenKind::Ident(ref key) = key_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    let key = key.clone();
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    // A signed number lexes as a sign punct then the number.
+                    let sign = match self.peek().kind {
+                        TokenKind::Punct(Punct::Minus) => {
+                            let _ = self.bump();
+                            "-"
+                        }
+                        TokenKind::Punct(Punct::Plus) => {
+                            let _ = self.bump();
+                            ""
+                        }
+                        _ => "",
+                    };
+                    let value_tok = self.bump();
+                    let value = match value_tok.kind {
+                        TokenKind::String(ref s) => s.clone(),
+                        TokenKind::Number(ref n) => format!("{sign}{n}"),
+                        TokenKind::Date(ref d) => d.clone(),
+                        TokenKind::Ident(ref ident) => ident.clone(),
+                        TokenKind::Qname(ref qname) => qname.clone(),
+                        TokenKind::Keyword(Keyword::True) => "true".to_string(),
+                        TokenKind::Keyword(Keyword::False) => "false".to_string(),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                format!("Expected a literal value for entity attribute '{key}'."),
+                            );
+                            return None;
+                        }
+                    };
+                    attributes.push(EntityAttribute {
+                        name: key,
+                        value,
+                        span: merge_spans(key_tok.span, value_tok.span),
+                    });
+                }
+                _ => {
+                    let bad = self.bump();
+                    self.push_expected(
+                        bad.span,
+                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+
         Some(EntityStmt {
             namespace,
             name,
-            span: merge_spans(start.span, name_tok.span),
+            type_name: Some(type_name),
+            attributes,
+            parent,
+            initial_state,
+            span: merge_spans(start.span, end.span),
         })
     }
 
@@ -800,6 +1046,7 @@ impl<'a> Parser<'a> {
         let mut name: Option<String> = None;
         let mut name_span: Option<Span> = None;
         let mut subject_entity: Option<String> = None;
+        let mut parties: Vec<PartyBinding> = Vec::new();
         let mut has_term = false;
         let mut has_effects = false;
         let mut term_start = None;
@@ -889,6 +1136,13 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Keyword(Keyword::Effects) => has_effects = true,
+                // `parties` has been reserved since v0.1 and never parsed, so
+                // a contract could not say who it was with.
+                TokenKind::Keyword(Keyword::Parties) if depth == 0 => {
+                    if let Some(bindings) = self.parse_parties_block() {
+                        parties = bindings;
+                    }
+                }
                 TokenKind::Keyword(Keyword::On) if depth == 0 => {
                     let entity_kw = self.bump();
                     if !matches!(entity_kw.kind, TokenKind::Keyword(Keyword::Entity)) {
@@ -929,6 +1183,7 @@ impl<'a> Parser<'a> {
             term_start,
             term_end,
             terms,
+            parties,
             span: merge_spans(start.span, end_span),
         })
     }
@@ -1096,6 +1351,7 @@ impl<'a> Parser<'a> {
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
         let mut end_span = entity_ref_tok.span;
 
@@ -1104,6 +1360,7 @@ impl<'a> Parser<'a> {
             schedule = block.schedule;
             amount = block.amount;
             active_when = block.active_when;
+            active_in_states = block.active_in_states;
             category = block.category;
             end_span = block.end_span;
         }
@@ -1117,6 +1374,7 @@ impl<'a> Parser<'a> {
             schedule,
             amount,
             active_when,
+            active_in_states,
             span: merge_spans(start.span, end_span),
         })
     }
@@ -1126,6 +1384,7 @@ impl<'a> Parser<'a> {
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
         let mut end_span = lbrace.span;
 
@@ -1163,11 +1422,24 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Keyword(Keyword::Active) => {
-                    if let Some(expr) = self.parse_active_stmt() {
-                        end_span = expr.span;
-                        active_when = Some(expr);
-                    } else {
-                        end_span = self.consume_stream_item();
+                    // Two forms share the keyword: `active when <expr>` and
+                    // `active in state <name>, <name>`.
+                    match self.peek_at(1).kind {
+                        TokenKind::Keyword(Keyword::In) => match self.parse_active_in_state() {
+                            Some((states, span)) => {
+                                end_span = span;
+                                active_in_states.extend(states);
+                            }
+                            None => end_span = self.consume_stream_item(),
+                        },
+                        _ => {
+                            if let Some(expr) = self.parse_active_stmt() {
+                                end_span = expr.span;
+                                active_when = Some(expr);
+                            } else {
+                                end_span = self.consume_stream_item();
+                            }
+                        }
                     }
                 }
                 TokenKind::Ident(ref ident) if ident == "category" => {
@@ -1235,6 +1507,7 @@ impl<'a> Parser<'a> {
             schedule,
             amount,
             active_when,
+            active_in_states,
             category,
             end_span,
         }
@@ -1333,6 +1606,42 @@ impl<'a> Parser<'a> {
             }
             _ => None,
         }
+    }
+
+    /// `active in state <name>[, <name>]*`
+    fn parse_active_in_state(&mut self) -> Option<(Vec<StateGuard>, Span)> {
+        let active_tok = self.bump();
+        let _ = self.expect_keyword(Keyword::In, "'in'")?;
+        let _ = self.expect_keyword(Keyword::State, "'state'")?;
+        let mut states = Vec::new();
+        let end;
+        loop {
+            let name_tok = self.bump();
+            match name_tok.kind {
+                TokenKind::Ident(ref name) => states.push(StateGuard {
+                    state: name.clone(),
+                    span: name_tok.span,
+                }),
+                TokenKind::String(ref name) => states.push(StateGuard {
+                    state: name.clone(),
+                    span: name_tok.span,
+                }),
+                _ => {
+                    self.push_expected(
+                        name_tok.span,
+                        "Expected a lifecycle state after 'active in state'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                let _ = self.bump();
+                continue;
+            }
+            end = name_tok.span;
+            break;
+        }
+        Some((states, merge_spans(active_tok.span, end)))
     }
 
     fn parse_active_stmt(&mut self) -> Option<ExprSlot> {
@@ -1981,6 +2290,15 @@ impl<'a> Parser<'a> {
                 return None;
             }
         };
+        // `on entity <ref>` — the asset the option is written on. Optional so
+        // every option written before options had owners still parses.
+        let mut subject_entity = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::On)) {
+            let _ = self.bump();
+            let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
+            let entity_tok = self.bump();
+            subject_entity = Some(self.parse_entity_ref_token(&entity_tok)?);
+        }
         let _ = self.expect_keyword(Keyword::Type, "'type'")?;
         let type_tok = self.bump();
         let type_name = match type_tok.kind {
@@ -2008,6 +2326,7 @@ impl<'a> Parser<'a> {
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut exercise_when = None;
         let mut payoff = None;
+        let mut parties: Vec<PartyBinding> = Vec::new();
         loop {
             match self.peek().kind {
                 TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
@@ -2035,10 +2354,14 @@ impl<'a> Parser<'a> {
                         return None;
                     }
                 }
+                TokenKind::Keyword(Keyword::Parties) => {
+                    let _ = self.bump();
+                    parties = self.parse_parties_block()?;
+                }
                 _ => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'exercise when', 'payoff', or '}'.".to_string(),
+                        "Expected 'parties', 'exercise when', 'payoff', or '}'.".to_string(),
                     );
                     return None;
                 }
@@ -2048,6 +2371,8 @@ impl<'a> Parser<'a> {
         Some(OptionStmt {
             name,
             type_name,
+            subject_entity,
+            parties,
             exercisable_in,
             exercise_when,
             payoff,
@@ -2436,6 +2761,58 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// `parties { role = party.ref, role = party.ref }`
+    ///
+    /// Shared by contracts and options, because an option IS a contract with an
+    /// election and there is no reason for it to say who it is with differently.
+    fn parse_parties_block(&mut self) -> Option<Vec<PartyBinding>> {
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut bindings = Vec::new();
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    let _ = self.bump();
+                    break;
+                }
+                TokenKind::Punct(Punct::Comma) => {
+                    let _ = self.bump();
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected a role binding or '}' in parties block.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Ident(_) => {
+                    let role_tok = self.bump();
+                    let TokenKind::Ident(ref role) = role_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    let role = role.clone();
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    let entity_tok = self.bump();
+                    let entity = self.parse_entity_ref_token(&entity_tok)?;
+                    bindings.push(PartyBinding {
+                        role,
+                        entity,
+                        span: merge_spans(role_tok.span, entity_tok.span),
+                    });
+                }
+                _ => {
+                    let bad = self.bump();
+                    self.push_expected(
+                        bad.span,
+                        "Expected a role binding (e.g. holder = party.acme) in parties block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(bindings)
+    }
+
     fn parse_entity_ref_token(&mut self, token: &Token) -> Option<String> {
         let qname = match &token.kind {
             TokenKind::Qname(value) => value,
@@ -2532,8 +2909,14 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&self) -> &Token {
+        self.peek_at(0)
+    }
+
+    /// Look `offset` tokens ahead. `active` starts two different clauses, and
+    /// which one is decided by the token after it.
+    fn peek_at(&self, offset: usize) -> &Token {
         self.tokens
-            .get(self.idx)
+            .get(self.idx + offset)
             .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
     }
 

@@ -3,39 +3,39 @@ model "cre-development-with-financing"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 72
 
-entity real_estate property
-entity loan construction
-entity loan permanent
+entity asset property : CRE.Asset.RealProperty
+entity asset construction : Asset.Financial
+entity asset permanent : Asset.Financial
 
-contract cre.construction_stub on entity real_estate.property {
+contract cre.construction_stub on entity asset.property {
   term 2026-01..2026-06
   terms {
     amount = 45000
   }
 }
 
-contract cre.lease on entity real_estate.property {
+contract cre.lease on entity asset.property {
   term 2026-07..2031-12
   terms {
     base_rent = 25000
   }
 }
 
-contract cre.ops_revenue on entity real_estate.property {
+contract cre.ops_revenue on entity asset.property {
   term 2028-01..2031-12
   terms {
     amount = 30000
   }
 }
 
-contract cre.ops_expense on entity real_estate.property {
+contract cre.ops_expense on entity asset.property {
   term 2028-01..2031-12
   terms {
     amount = 12000
   }
 }
 
-contract cre.exit_cap on entity real_estate.property {
+contract cre.exit_cap on entity asset.property {
   term 2031-12..2031-12
   terms {
     exit_cap = 0.06
@@ -43,13 +43,13 @@ contract cre.exit_cap on entity real_estate.property {
   }
 }
 
-stream loan.construction_interest on entity loan.construction {
+stream loan.construction_interest on entity asset.construction {
   schedule every month from 2026-01 to 2027-06
   category financing.debt_service
   amount = 40000
 }
 
-stream loan.permanent_debt_service on entity loan.permanent {
+stream loan.permanent_debt_service on entity asset.permanent {
   schedule every month from 2027-07 to 2031-12
   category financing.debt_service
   amount = 55000

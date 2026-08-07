@@ -3,7 +3,7 @@ model "opco-bad-schedule"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity operating business
+entity asset business : OpCo.Asset.Enterprise
 
 contract opco.opex_line {
   term 2027-12..2026-01

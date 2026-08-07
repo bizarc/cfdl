@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -14,6 +14,10 @@ pub enum EngineError {
     InvalidDate(String),
     InvalidRunConfig(String),
     Schedule(String),
+    /// A cross-stream read that can never resolve. The phase split is an engine
+    /// concept, so the check lives with the split rather than being restated in
+    /// the compiler where the two could drift.
+    PhaseReference(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -21,6 +25,7 @@ impl std::fmt::Display for EngineError {
         match self {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
+            EngineError::PhaseReference(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
             EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
@@ -364,6 +369,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         status: "ok".to_string(),
         metrics: base_run.metrics.clone(),
         series: base_run.series,
+        transitions: base_run.transitions.clone(),
         annual_rollup: base_run.annual_rollup,
         errors: None,
     };
@@ -620,6 +626,7 @@ struct DeterministicRunOutput {
     series: BTreeMap<String, Series>,
     npv: f64,
     annual_rollup: Option<AnnualRollupSection>,
+    transitions: Vec<TransitionRecord>,
 }
 
 /// Output of the discrete event/option pre-pass over the master timeline.
@@ -630,6 +637,30 @@ struct EventSim {
     stream_active: BTreeMap<String, Vec<bool>>,
     /// Option payoff cash flows: option name -> per-period amounts.
     option_cash: BTreeMap<String, Vec<f64>>,
+    /// Every state change an event made, in the order it happened.
+    ///
+    /// Entity state was UNOBSERVABLE in results: nothing distinguished "the
+    /// event fired and its target was misspelled" from "the event never fired",
+    /// and a case could not assert that a transition happened at all. The
+    /// audit trail is the point — if and when something occurred.
+    transitions: Vec<TransitionRecord>,
+}
+
+/// One state change: when, to what, from what, and what caused it.
+#[derive(Debug, Clone, Serialize)]
+pub struct TransitionRecord {
+    pub period: usize,
+    pub date: String,
+    pub entity: String,
+    pub field: String,
+    /// The value before. Absent when the field had none — which, for a typed
+    /// entity with a lifecycle, should not happen, because it opens in its
+    /// declared initial state.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    pub to: String,
+    /// The event that fired. A transition always has a cause.
+    pub event: String,
 }
 
 /// Evaluate events and options discretely at each time step (spec §12/§13).
@@ -642,15 +673,29 @@ fn simulate_events(
     config: &RunConfig,
     timeline: &[Date],
     base_inputs: &BTreeMap<String, f64>,
+    states: &BTreeMap<String, Vec<f64>>,
     warnings: &mut Vec<String>,
 ) -> EventSim {
     let periods = timeline.len();
     let mut entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>> =
         Vec::with_capacity(periods);
     let mut current_state: BTreeMap<String, BTreeMap<String, ExprValue>> = BTreeMap::new();
+    // AN ENTITY WITH A LIFECYCLE IS ALWAYS IN EXACTLY ONE STATE, from period 0.
+    // Before the ontology there was no declared state space, so a status was
+    // null until an event wrote one and `entity.status == "x"` was false for
+    // reasons that had nothing to do with the deal.
+    for entity in &ir.entities {
+        if let Some(initial) = &entity.initial_state {
+            current_state
+                .entry(entity.symbol.clone())
+                .or_default()
+                .insert("status".to_string(), ExprValue::String(initial.clone()));
+        }
+    }
     let mut current_active: BTreeMap<String, bool> = BTreeMap::new();
     let mut stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
     let mut option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut transitions: Vec<TransitionRecord> = Vec::new();
     let mut event_fired = vec![false; ir.events.len()];
     let mut option_exercised = vec![false; ir.options.len()];
     let mut forced_exercise: Vec<String> = Vec::new();
@@ -689,7 +734,22 @@ fn simulate_events(
         .collect();
 
     for (t, date) in timeline.iter().enumerate() {
-        let env = build_base_env(ir, config, t, date, base_inputs);
+        // THE SYNCHRONOUS RULE, MADE EXPLICIT.
+        //
+        // Every guard in this period reads the SAME frozen pre-state — the
+        // entity state as it stood when the period opened. Writes accumulate
+        // in `current_state` and become visible at t+1, never at t.
+        //
+        // That is the Esterel/SCADE discipline the engine already had by
+        // accident: `env` was built once before the loop, so nothing could
+        // race. It held vacuously, because guards could read no state at all.
+        // Now that they can, the property has to be deliberate — otherwise the
+        // value of a guard would depend on which event happened to be declared
+        // first, and declaration order would become semantics.
+        let pre_state = current_state.clone();
+        let mut env = build_base_env(ir, config, t, date, base_inputs);
+        bind_states(&mut env, states, t);
+        bind_all_entity_state(&mut env, &pre_state);
         for (event_idx, event) in ir.events.iter().enumerate() {
             if event_fired[event_idx] {
                 continue;
@@ -697,7 +757,7 @@ fn simulate_events(
             let Some(when) = &compiled_events[event_idx] else {
                 continue;
             };
-            if !eval_bool_expr(when, &env, &event.name, "event when", warnings) {
+            if !eval_bool_expr(when, &env, "Event", &event.name, "when", warnings) {
                 continue;
             }
             event_fired[event_idx] = true;
@@ -717,10 +777,22 @@ fn simulate_events(
                             .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
                         {
                             Ok(v) => {
-                                current_state
-                                    .entry(entity.symbol.clone())
-                                    .or_default()
-                                    .insert(field.clone(), v);
+                                let slot = current_state.entry(entity.symbol.clone()).or_default();
+                                let before = slot.get(field).map(describe_value);
+                                let after = describe_value(&v);
+                                slot.insert(field.clone(), v);
+                                // Recorded even when the value does not change:
+                                // the log answers "did this event fire", and a
+                                // set that wrote the same value still fired.
+                                transitions.push(TransitionRecord {
+                                    period: t,
+                                    date: date.to_string(),
+                                    entity: entity.symbol.clone(),
+                                    field: field.clone(),
+                                    from: before,
+                                    to: after,
+                                    event: event.name.clone(),
+                                });
                             }
                             Err(err) => warnings.push(format!(
                                 "Event '{}' set {}.{} failed [{}]: {}; skipped.",
@@ -764,32 +836,51 @@ fn simulate_events(
             let Some((when, payoff)) = &compiled_options[option_idx] else {
                 continue;
             };
-            let forced = forced_exercise.iter().any(|name| name == &option.name);
-            let triggered = if forced {
-                true
-            } else {
-                if let Some(phase_name) = &option.exercisable_in_phase {
-                    let in_phase = ir.phases.iter().any(|phase| {
-                        phase.name == *phase_name
-                            && Date::parse(&phase.range.start)
-                                .map(|start| *date >= start)
-                                .unwrap_or(false)
-                            && Date::parse(&phase.range.end)
-                                .map(|end| *date <= end)
-                                .unwrap_or(false)
-                    });
-                    if !in_phase {
-                        continue;
+            // THE PHASE GATE BINDS ON A FORCED EXERCISE TOO. `exercisable in`
+            // is the window the option EXISTS in — a renewal option outside its
+            // window is not an option anyone holds — so an event cannot
+            // exercise one that is not exercisable yet. Previously `forced`
+            // short-circuited the whole test, so an `exercise option` action
+            // fired outside the declared window and against a false condition.
+            // What an event legitimately overrides is the option's own
+            // ELECTION, which is the `exercise when` below.
+            if let Some(phase_name) = &option.exercisable_in_phase {
+                let in_phase = ir.phases.iter().any(|phase| {
+                    phase.name == *phase_name
+                        && Date::parse(&phase.range.start)
+                            .map(|start| *date >= start)
+                            .unwrap_or(false)
+                        && Date::parse(&phase.range.end)
+                            .map(|end| *date <= end)
+                            .unwrap_or(false)
+                });
+                if !in_phase {
+                    if forced_exercise.iter().any(|name| name == &option.name) {
+                        warnings.push(format!(
+                            "Option '{}' was forced outside its exercisable phase '{phase_name}'; not exercised.",
+                            option.name
+                        ));
                     }
+                    continue;
                 }
-                eval_bool_expr(when, &env, &option.name, "exercise when", warnings)
-            };
+            }
+            // An option HAS an owner, so `entity.<field>` in its guard means
+            // the owner's field — the same thing it means in a stream. Events
+            // have no owner and use the qualified path instead.
+            let mut option_env = env.clone();
+            if let Some(owner) = &option.owner {
+                apply_entity_state(&mut option_env, &pre_state, &owner.symbol);
+            }
+            let env = &option_env;
+            let forced = forced_exercise.iter().any(|name| name == &option.name);
+            let triggered = forced
+                || eval_bool_expr(when, env, "Option", &option.name, "exercise when", warnings);
             if !triggered {
                 continue;
             }
             option_exercised[option_idx] = true;
             let mut payoff_values = vec![0.0_f64; periods];
-            match cfdl_expr::eval(payoff, &env) {
+            match cfdl_expr::eval(payoff, env) {
                 Ok(ExprValue::Decimal(v)) => payoff_values[t] = v,
                 Ok(ExprValue::Int(v)) => payoff_values[t] = v as f64,
                 Ok(other) => warnings.push(format!(
@@ -813,10 +904,26 @@ fn simulate_events(
         }
     }
 
+    // AN UNEXERCISED OPTION PUBLISHES ZERO, NOT NOTHING.
+    //
+    // `option_cash` was only written on exercise, so an option that stayed out
+    // of the money produced no series at all — a consumer could not tell "did
+    // not exercise" from "does not exist", and a case could not assert a
+    // NON-exercise, which is half of what an option model has to prove.
+    //
+    // Seeded after the loop rather than before it so `option_cash` keeps
+    // meaning "exercised" while the timeline runs.
+    for option in &ir.options {
+        option_cash
+            .entry(option.name.clone())
+            .or_insert_with(|| vec![0.0; periods]);
+    }
+
     EventSim {
         entity_state,
         stream_active,
         option_cash,
+        transitions,
     }
 }
 
@@ -866,17 +973,34 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
-    let event_sim = simulate_events(ir, config, &timeline, &base_inputs, &mut warnings);
     // States are recurrences: every period is computed from the completed
-    // previous one, so the whole column exists before any stream is evaluated.
+    // previous one, so the whole column exists before anything reads it.
+    //
+    // THIS RUNS BEFORE EVENTS AND OPTIONS, which is the fix for a defect that
+    // made options nearly useless: an `exercise when` could not read
+    // `state.<name>` because no state existed yet when it was evaluated, and
+    // the failure was silent — a warning and `false`, so the option quietly
+    // never exercised and its value vanished.
+    //
+    // The reorder is sound because the dependency graph is a strict DAG. A
+    // state's `next` reads only `prev`, curves, inputs and time — never a
+    // stream, never an event, never an option — so nothing an event or option
+    // does can reach back into a state.
     let state_values = compute_states(ir, config, &timeline, &base_inputs, &mut warnings);
+    let event_sim = simulate_events(
+        ir,
+        config,
+        &timeline,
+        &base_inputs,
+        &state_values,
+        &mut warnings,
+    );
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     // Each stream's placement in its period, published on the series so a
     // consumer holding results.json can recompute the time-weighted metrics
     // the engine reported. `stream_series` is keyed by bare name; so is this.
     let mut stream_offsets: BTreeMap<String, f64> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
-    let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut model_series = vec![0.0_f64; cash_periods];
     // Each stream's series paired with where in its period the cash falls;
     // valuation needs both, while reported cash uses model_series alone.
@@ -887,9 +1011,21 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut phase2: Vec<&IrStream> = Vec::new();
     for stream in &ir.streams {
-        let phase2_stream = cfdl_expr::compile_expr(&stream.amount.src)
-            .map(|compiled| cfdl_expr::uses_series(&compiled))
-            .unwrap_or(false);
+        // A STREAM IS PHASE 2 IF *ANY* OF ITS EXPRESSIONS READS A SERIES, not
+        // just its amount. `active when series_sum(...) > 0` on a stream whose
+        // amount happens not to use one was classified phase 1, handed an empty
+        // series map, and its guard then failed — warned, evaluated FALSE, and
+        // the stream silently produced nothing at all.
+        let uses = |src: &str| {
+            cfdl_expr::compile_expr(src)
+                .map(|compiled| cfdl_expr::uses_series(&compiled))
+                .unwrap_or(false)
+        };
+        let phase2_stream = uses(&stream.amount.src)
+            || stream
+                .active_when
+                .as_ref()
+                .is_some_and(|guard| uses(&guard.src));
         if phase2_stream {
             phase2.push(stream);
             continue;
@@ -915,10 +1051,38 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             cash_periods,
             &mut model_series,
             &mut stream_totals,
-            &mut entity_totals,
             &mut stream_series,
         );
         full_series.insert(stream.name.clone(), values);
+    }
+
+    // A PHASE-2 STREAM CANNOT READ ANOTHER PHASE-2 STREAM, and saying so is
+    // the difference between a wrong number and a diagnostic.
+    //
+    // `full_series` is sealed here and never grows, so a phase-2 stream naming
+    // another one matches nothing — and `series_aggregate` returns 0 for an
+    // unmatched name, deliberately, because a pack rule that lowered no stream
+    // should contribute nothing. That default is right for an absent stream and
+    // wrong for a present one: the reference can NEVER work, and it reported a
+    // plausible zero instead of saying so.
+    let phase2_names: BTreeSet<&str> = phase2.iter().map(|s| s.name.as_str()).collect();
+    for stream in &phase2 {
+        let mut sources = vec![stream.amount.src.as_str()];
+        if let Some(guard) = &stream.active_when {
+            sources.push(guard.src.as_str());
+        }
+        for src in sources {
+            for referenced in series_references(src) {
+                if let Some(other) = phase2_names.get(referenced.as_str()) {
+                    return Err(EngineError::PhaseReference(format!(
+                        "Stream '{}' reads series '{other}', which itself reads a series. A \
+                         cross-stream read can only see streams that read none, so this would \
+                         always aggregate to zero.",
+                        stream.name
+                    )));
+                }
+            }
+        }
     }
 
     // Wrapped once, not per accrual: every phase-2 env shares this one map.
@@ -948,7 +1112,6 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             cash_periods,
             &mut model_series,
             &mut stream_totals,
-            &mut entity_totals,
             &mut stream_series,
         );
     }
@@ -1181,6 +1344,92 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         ),
     );
 
+    // ------------------------------------------------------------------
+    // Per-entity cash, AGGREGATED BY RELATION rather than by string glob.
+    //
+    // A cross-stream read matches series by NAME (`series_sum("cre.rent.*")`),
+    // which works only when the modeller encoded the hierarchy into the names.
+    // The `part_of` relation says it directly, so a building's cash is its
+    // units' cash because they are its units — not because someone prefixed
+    // them consistently.
+    //
+    // AN ENTITY WITH NO CHILDREN IS UNAFFECTED: its series is its own streams,
+    // which is the pool that models collective behaviour directly. The grain
+    // stays the modeller's choice.
+    //
+    // Like a subtotal, this is a fold OF the cash and never counts AS cash: it
+    // is excluded from model.net_cash_flow, model.total and NPV, because
+    // counting a parent and its children would double what it touches.
+    // ------------------------------------------------------------------
+    let mut entity_own: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut add_owned = |symbol: &str, values: &[f64]| {
+        let slot = entity_own
+            .entry(symbol.to_string())
+            .or_insert_with(|| vec![0.0; periods]);
+        for (idx, value) in values.iter().enumerate().take(periods) {
+            slot[idx] += value;
+        }
+    };
+    for stream in &ir.streams {
+        if let Some(values) = stream_series.get(&stream.name) {
+            add_owned(&stream.owner.symbol, values);
+        }
+    }
+    // An option is a contract, so its payoff belongs to the asset it is
+    // written on — which is why options gained an owner.
+    for option in &ir.options {
+        if let (Some(owner), Some(values)) = (
+            option.owner.as_ref(),
+            stream_series.get(&format!("option.{}", option.name)),
+        ) {
+            add_owned(&owner.symbol, values);
+        }
+    }
+
+    let parent_of: BTreeMap<&str, &str> = ir
+        .entities
+        .iter()
+        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+        .collect();
+    let mut entity_rollup: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for entity in &ir.entities {
+        entity_rollup
+            .entry(entity.symbol.clone())
+            .or_insert_with(|| vec![0.0; periods]);
+    }
+    for (symbol, own) in &entity_own {
+        // Walk from the owner up to the root, adding its cash to every
+        // ancestor. `visited` bounds the walk even though a cycle is rejected
+        // at compile time — this reads IR that may not have come from there.
+        let mut visited: BTreeSet<&str> = BTreeSet::new();
+        let mut cursor: Option<&str> = Some(symbol.as_str());
+        while let Some(current) = cursor {
+            if !visited.insert(current) {
+                break;
+            }
+            let slot = entity_rollup
+                .entry(current.to_string())
+                .or_insert_with(|| vec![0.0; periods]);
+            for (idx, value) in own.iter().enumerate().take(periods) {
+                slot[idx] += value;
+            }
+            cursor = parent_of.get(current).copied();
+        }
+    }
+    for (symbol, values) in &entity_rollup {
+        series_map.insert(
+            format!("entity.{symbol}.net_cash_flow"),
+            Series::from_values(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &ir.model.currency,
+                None,
+                values,
+            ),
+        );
+    }
+
     let mut metrics = BTreeMap::new();
     for (stream_name, total) in stream_totals {
         metrics.insert(
@@ -1191,11 +1440,13 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             }),
         );
     }
-    for (entity_symbol, total) in entity_totals {
+    // Rolled up, so the lifetime total agrees with the series above rather
+    // than disagreeing with it for any entity that has children.
+    for (entity_symbol, values) in &entity_rollup {
         metrics.insert(
             format!("entity.{entity_symbol}.total"),
             Scalar::Money(Money {
-                amount: round_amount(total),
+                amount: round_amount(values.iter().sum::<f64>()),
                 currency: ir.model.currency.clone(),
             }),
         );
@@ -1357,6 +1608,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         ))
     };
 
+    let transitions = event_sim.transitions.clone();
     Ok(DeterministicRunOutput {
         warnings,
         resolved_inputs: base_inputs,
@@ -1364,6 +1616,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         series: series_map,
         npv,
         annual_rollup,
+        transitions,
     })
 }
 
@@ -1691,22 +1944,18 @@ fn evaluate_stream(
             let mut env =
                 build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
             apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
-            // `state.<name>` at THIS period. `prev_states`/`prev_self` are left
-            // empty, so `prev` is not merely rejected in a stream — it is not
-            // there to be found. See docs/14_state_and_recurrence.md.
-            env.states = states
-                .iter()
-                .filter_map(|(name, values)| {
-                    values
-                        .get(idx)
-                        .map(|v| (name.clone(), ExprValue::Decimal(*v)))
-                })
-                .collect();
+            bind_states(&mut env, states, idx);
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
-            let active_value =
-                eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
+            let active_value = eval_bool_expr(
+                &active_expr,
+                &env,
+                "Stream",
+                &stream.name,
+                "active_when",
+                warnings,
+            );
             if !active_value {
                 continue;
             }
@@ -1736,7 +1985,6 @@ fn record_stream(
     cash_periods: usize,
     model_series: &mut [f64],
     stream_totals: &mut BTreeMap<String, f64>,
-    entity_totals: &mut BTreeMap<String, f64>,
     stream_series: &mut BTreeMap<String, Vec<f64>>,
 ) {
     let cash = &values[..cash_periods.min(values.len())];
@@ -1745,17 +1993,21 @@ fn record_stream(
     }
     let total = cash.iter().sum::<f64>();
     stream_totals.insert(stream.name.clone(), total);
-    entity_totals
-        .entry(stream.owner.symbol.clone())
-        .and_modify(|sum| *sum += total)
-        .or_insert(total);
     stream_series.insert(stream.name.clone(), cash.to_vec());
 }
 
+/// Evaluate a boolean guard, reporting a failure against the thing that owns it.
+///
+/// `subject_kind` exists because this is called from three places with three
+/// different kinds of subject — a stream's `active when`, an event's `when`,
+/// and an option's `exercise when` — and it used to hardcode "Stream". An
+/// option that failed to evaluate was reported as a stream, sending a reader
+/// looking for something that does not exist.
 fn eval_bool_expr(
     expr: &CompiledExpr,
     env: &ExprEnv,
-    stream_name: &str,
+    subject_kind: &str,
+    subject_name: &str,
     slot: &str,
     warnings: &mut Vec<String>,
 ) -> bool {
@@ -1763,15 +2015,15 @@ fn eval_bool_expr(
         Ok(ExprValue::Bool(value)) => value,
         Ok(other) => {
             warnings.push(format!(
-                "Stream '{}' {} expression returned non-bool '{other:?}'; using false.",
-                stream_name, slot
+                "{subject_kind} '{}' {} expression returned non-bool '{other:?}'; using false.",
+                subject_name, slot
             ));
             false
         }
         Err(err) => {
             warnings.push(format!(
-                "Stream '{}' {} evaluation failed [{}]: {}; using false.",
-                stream_name, slot, err.code, err.message
+                "{subject_kind} '{}' {} evaluation failed [{}]: {}; using false.",
+                subject_name, slot, err.code, err.message
             ));
             false
         }
@@ -1914,6 +2166,107 @@ fn build_base_env(
 
 /// Expose an entity's event-driven state to expressions, both as
 /// `entity.state.<field>` and directly as `entity.<field>` (spec §12.3).
+/// Bind `state.<name>` to each declared state's value AT period `idx`.
+///
+/// Extracted so a stream and an option bind the SAME period by construction
+/// rather than by two copies agreeing. `prev_states`/`prev_self` are left
+/// empty, so `prev` is not merely rejected outside a recurrence — it is not
+/// there to be found. See docs/14_state_and_recurrence.md.
+/// The series names an expression reads, as written.
+///
+/// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
+/// cross-stream read is. A computed name is not addressed here and is left to
+/// the runtime, where it still returns 0 for an unmatched name.
+fn series_references(src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = src.as_bytes();
+    for func in ["series_sum", "series_avg"] {
+        let mut from = 0usize;
+        while let Some(rel) = src[from..].find(func) {
+            let after = from + rel + func.len();
+            from = after;
+            let mut i = after;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'(' {
+                continue;
+            }
+            i += 1;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'"' {
+                continue;
+            }
+            i += 1;
+            let start = i;
+            while i < bytes.len() && bytes[i] != b'"' {
+                i += 1;
+            }
+            if i <= bytes.len() {
+                out.push(src[start..i].to_string());
+            }
+        }
+    }
+    out
+}
+
+/// Render a state value for the transition log.
+///
+/// A lifecycle state is text; a numeric or boolean field is rendered as
+/// written. The log is for reading and for asserting on, so the rendering is
+/// stable rather than clever.
+fn describe_value(value: &ExprValue) -> String {
+    match value {
+        ExprValue::String(text) => text.clone(),
+        ExprValue::Bool(flag) => flag.to_string(),
+        ExprValue::Int(n) => n.to_string(),
+        ExprValue::Decimal(n) => round_amount(*n).to_string(),
+        other => format!("{other:?}"),
+    }
+}
+
+fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
+    env.states = states
+        .iter()
+        .filter_map(|(name, values)| {
+            values
+                .get(idx)
+                .map(|v| (name.clone(), ExprValue::Decimal(*v)))
+        })
+        .collect();
+}
+
+/// Bind every entity's state under its qualified path — `entity.asset.tower.status`.
+///
+/// A stream reads `entity.<field>` relative to its owner, which works because a
+/// stream HAS one. An event does not, so the qualified form is how an event
+/// guard names the thing it is asking about. An option has an owner (it is a
+/// contract), so it gets both.
+fn bind_all_entity_state(
+    env: &mut ExprEnv,
+    state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
+) {
+    for (symbol, fields) in state_by_entity {
+        let Some((namespace, name)) = symbol.split_once('.') else {
+            continue;
+        };
+        let inner = ExprValue::Map(fields.clone());
+        match env.entity.get_mut(namespace) {
+            Some(ExprValue::Map(ns_map)) => {
+                ns_map.insert(name.to_string(), inner);
+            }
+            _ => {
+                let mut ns_map = BTreeMap::new();
+                ns_map.insert(name.to_string(), inner);
+                env.entity
+                    .insert(namespace.to_string(), ExprValue::Map(ns_map));
+            }
+        }
+    }
+}
+
 fn apply_entity_state(
     env: &mut ExprEnv,
     state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
@@ -2950,6 +3303,10 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(default)]
     states: Vec<IrState>,
+    /// Declared entities. Read so an entity's lifecycle STARTS where the model
+    /// says rather than at null — the totality the ontology exists to give.
+    #[serde(default)]
+    entities: Vec<IrEntityDecl>,
     /// Run modes the model declares for itself. A `run monte_carlo trials N
     /// seed S` in source used to be parsed, lowered, and then dropped here, so
     /// the model asked for trials and got a single deterministic pass.
@@ -3019,6 +3376,25 @@ struct IrOption {
     payoff: IrExpr,
     #[serde(default)]
     exercisable_in_phase: Option<String>,
+    /// The asset the option is written on. An option is a contract, so it has
+    /// one; with it, `entity.<field>` in a guard means the same thing it means
+    /// in a stream.
+    #[serde(default)]
+    owner: Option<IrEntityRef>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrEntityDecl {
+    symbol: String,
+    /// The lifecycle state this entity opens in. `None` when its type declares
+    /// no lifecycle, which is most entities.
+    #[serde(default)]
+    initial_state: Option<String>,
+    /// The entity this one is part of, when the model groups it. Absent for
+    /// most entities: hierarchy is available at every grain and required at
+    /// none.
+    #[serde(default)]
+    parent: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -3338,6 +3714,10 @@ pub struct DeterministicSection {
     pub status: String,
     pub metrics: BTreeMap<String, Scalar>,
     pub series: BTreeMap<String, Series>,
+    /// Every state change an event made, in the order it happened. Omitted when
+    /// the model has none, so a model without events is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub transitions: Vec<TransitionRecord>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub annual_rollup: Option<AnnualRollupSection>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4377,5 +4757,81 @@ mod tests {
     fn irr_undefined_all_positive() {
         // No sign change → IRR undefined
         assert!(super::irr_with_offsets(&[(vec![100.0, 200.0], 0.0)]).is_none());
+    }
+}
+
+#[cfg(test)]
+mod phase_reference_tests {
+    use super::*;
+
+    #[test]
+    fn extracts_literal_series_names() {
+        assert_eq!(
+            series_references(r#"series_sum("base.revenue", 0, time.t) * 0.1"#),
+            vec!["base.revenue"]
+        );
+        assert_eq!(
+            series_references(r#"series_avg( "a.b" , 0, 1) + series_sum("c.d", 0, 1)"#),
+            vec!["c.d", "a.b"]
+        );
+        // A computed name is not addressed here; the runtime still returns 0
+        // for an unmatched name, which is right for a stream that never lowered.
+        assert!(series_references("series_sum(name_var, 0, 1)").is_empty());
+        assert!(series_references("amount * 2").is_empty());
+    }
+
+    /// A phase-2 stream reading another phase-2 stream can never resolve —
+    /// `full_series` is sealed before phase 2 runs and never grows — so it
+    /// would always aggregate to zero. That is a wrong number reported as a
+    /// plausible one, which is the failure this rejects.
+    #[test]
+    fn phase2_reading_phase2_is_an_error_not_a_zero() {
+        let ir_json = serde_json::json!({
+            "model": { "name": "m", "currency": "USD" },
+            "time": { "calendar": "annual", "start": "2026-01-01", "periods": 3 },
+            "entities": [{ "symbol": "asset.co" }],
+            "streams": [
+                {
+                    "name": "base.revenue",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl", "src": "100" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                },
+                {
+                    "name": "derived.a",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl",
+                                "src": "series_sum(\"base.revenue\", 0, time.t)" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                },
+                {
+                    "name": "derived.b",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl",
+                                "src": "series_sum(\"derived.a\", 0, time.t)" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                }
+            ]
+        });
+        let ir: Ir = serde_json::from_value(ir_json).expect("ir parses");
+        let err = run_deterministic(&ir, &RunConfig::default())
+            .expect_err("a read that can never resolve is an error");
+        match err {
+            EngineError::PhaseReference(msg) => {
+                assert!(msg.contains("derived.b"), "{msg}");
+                assert!(msg.contains("derived.a"), "{msg}");
+                assert!(msg.contains("always aggregate to zero"), "{msg}");
+            }
+            other => panic!("expected PhaseReference, got {other:?}"),
+        }
     }
 }

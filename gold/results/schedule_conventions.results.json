@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "6c7bdf602e2ae3169351a23f2dfb10799667d74ec6f855e783935f30274ea3b1",
-  "ledger_hash": "f198066a9447956fd91814a95c8838d3a86f13f655d88595d4b72202edbdd727",
+  "model_hash": "cda78db368f024b28a366e601f5e717b5112725b083adc307746921cd8cff8cf",
+  "ledger_hash": "21d2ff9c7732dce506917118a5bd71146edd16cd26751b3712f2a9931c0010b8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.borrower.total": {
+      "entity.asset.borrower.total": {
         "amount": 50.0,
         "currency": "USD"
       },
@@ -28,16 +28,65 @@
       "model.wal_years": 0.013699,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 365.0,
-      "stream.legal.daily_fee.total": {
+      "stream.fee.daily.total": {
         "amount": -50.0,
         "currency": "USD"
       },
-      "stream.legal.rolled_payment.total": {
+      "stream.fee.rolled_payment.total": {
         "amount": 100.0,
         "currency": "USD"
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "daily",
+          "start": "2026-07-01",
+          "periods": 10
+        },
+        "values": [
+          {
+            "amount": -10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "daily",
@@ -87,7 +136,7 @@
           }
         ]
       },
-      "stream.legal.daily_fee": {
+      "stream.fee.daily": {
         "index": {
           "calendar": "daily",
           "start": "2026-07-01",
@@ -137,7 +186,7 @@
           }
         ]
       },
-      "stream.legal.rolled_payment": {
+      "stream.fee.rolled_payment": {
         "index": {
           "calendar": "daily",
           "start": "2026-07-01",
@@ -203,7 +252,7 @@
             }
           ]
         },
-        "stream.legal.daily_fee": {
+        "stream.fee.daily": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -216,7 +265,7 @@
             }
           ]
         },
-        "stream.legal.rolled_payment": {
+        "stream.fee.rolled_payment": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

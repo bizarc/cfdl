@@ -3,7 +3,7 @@ model "term-input-ref"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity project plant
+entity asset plant : Energy.Asset.GenerationFacility
 
 // A contract term may defer to a declared input instead of stating a literal.
 // The contract still records what was signed; the quantities that vary are
@@ -11,7 +11,7 @@ entity project plant
 assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 assume degradation ~ Triangular(min=0.004, mode=0.005, max=0.007)
 
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2027-12
   terms {
     // Contractual facts stay literal.

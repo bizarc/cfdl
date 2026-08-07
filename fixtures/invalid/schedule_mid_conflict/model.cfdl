@@ -1,10 +1,10 @@
 version 0.1
 model "schedule-mid-conflict"
 time calendar annual from 2026-01 for 4
-entity legal co
+entity asset co : Asset.Financial
 
 // Two positions in one period is a contradiction, not a refinement.
-stream co.mid_and_due on entity legal.co inflow currency USD {
+stream co.mid_and_due on entity asset.co inflow currency USD {
   schedule every year due mid from 2026-01 to 2029-01
   amount = 100
 }
@@ -12,13 +12,13 @@ stream co.mid_and_due on entity legal.co inflow currency USD {
 // Payment terms are resolved on the calendar and move cash between periods;
 // `mid` positions cash inside whichever period it lands in. Composing them
 // needs a design decision, so they are rejected rather than guessed at.
-stream co.mid_and_net on entity legal.co inflow currency USD {
+stream co.mid_and_net on entity asset.co inflow currency USD {
   schedule every year mid net 30 from 2026-01 to 2029-01
   amount = 100
 }
 
 // A day rule already names where the cash sits.
-stream co.mid_and_day on entity legal.co inflow currency USD {
+stream co.mid_and_day on entity asset.co inflow currency USD {
   schedule every year mid on day 15 from 2026-01 to 2029-01
   amount = 100
 }

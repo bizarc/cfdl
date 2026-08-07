@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
-use cfdl_parser::{parse, CompilationUnit, Span, Stmt, StreamStmt};
+use cfdl_parser::{parse, CompilationUnit, EventAction, Span, Stmt, StreamStmt};
 
 /// Supplies module sources to the resolver, keyed by root-relative path
 /// (posix-style, e.g. `"sub/a.cfdl"`). This is the seam that lets the same
@@ -394,6 +394,54 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
         }
     }
 
+    // EVENT ACTION TARGETS WERE NEVER RESOLVED. `deactivate stream loan.dbt`
+    // with the name misspelled matched nothing and was silently inert: the
+    // stream it was meant to stop kept paying, with no diagnostic at any stage
+    // and no warning at run time. Same for `exercise option` and for the entity
+    // in `set entity` — the resolver checked entity references for streams and
+    // contracts, and events were simply not covered.
+    for source_stmt in &output.source_statements {
+        let Stmt::Event(event) = &source_stmt.statement else {
+            continue;
+        };
+        for action in &event.actions {
+            let (kind, target, table, code) = match action {
+                EventAction::ActivateStream(name) | EventAction::DeactivateStream(name) => (
+                    "stream",
+                    name.clone(),
+                    &tables.streams,
+                    "E1302_UNRESOLVED_STREAM_REF",
+                ),
+                EventAction::ActivateContract(name) | EventAction::DeactivateContract(name) => (
+                    "contract",
+                    name.clone(),
+                    &tables.contracts,
+                    "E1303_UNRESOLVED_CONTRACT_REF",
+                ),
+                EventAction::SetEntityField { entity, .. } => (
+                    "entity",
+                    entity.clone(),
+                    &tables.entities,
+                    "E1301_UNRESOLVED_ENTITY_REF",
+                ),
+                // An option is not in the symbol tables; it is checked in the
+                // compiler, where the lowered options are known.
+                EventAction::ExerciseOption(_) => continue,
+            };
+            if !table.contains_key(&target) {
+                diagnostics.push(ResolveDiagnostic {
+                    code: code.to_string(),
+                    message: format!(
+                        "Event '{}' references unknown {kind} '{target}'.",
+                        event.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: event.span,
+                });
+            }
+        }
+    }
+
     if diagnostics.is_empty() {
         Ok(tables)
     } else {
@@ -706,6 +754,10 @@ mod tests {
                     statement: Stmt::Entity(cfdl_parser::EntityStmt {
                         namespace: "legal".to_string(),
                         name: "borrower".to_string(),
+                        type_name: None,
+                        attributes: vec![],
+                        parent: None,
+                        initial_state: None,
                         span: span(),
                     }),
                 },
@@ -720,6 +772,7 @@ mod tests {
                         schedule: None,
                         amount: None,
                         active_when: None,
+                        active_in_states: vec![],
                         span: span(),
                     }),
                 },
@@ -746,6 +799,10 @@ mod tests {
                     statement: Stmt::Entity(cfdl_parser::EntityStmt {
                         namespace: "legal".to_string(),
                         name: "borrower".to_string(),
+                        type_name: None,
+                        attributes: vec![],
+                        parent: None,
+                        initial_state: None,
                         span: span(),
                     }),
                 },
@@ -760,6 +817,7 @@ mod tests {
                         term_start: None,
                         term_end: None,
                         terms: BTreeMap::new(),
+                        parties: vec![],
                         span: span(),
                     }),
                 },

@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "d93a813cd26e50a4ccc8aede709c6106",
-      "symbol": "project.windfarm",
-      "type": "core.Entity",
+      "id": "18e3ec02665ee6189c0d1d0d5e0d5052",
+      "symbol": "asset.windfarm",
+      "type": "Energy.Asset.GenerationFacility",
       "attrs": {},
       "state": {}
     }
@@ -85,7 +85,7 @@
       "name": "energy.capex",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -111,7 +111,7 @@
       "name": "energy.debt_service",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -137,7 +137,7 @@
       "name": "energy.macrs_shield",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -163,7 +163,7 @@
       "name": "energy.merchant",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -189,7 +189,7 @@
       "name": "energy.om",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -215,7 +215,7 @@
       "name": "energy.ptc",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "term": {
         "start": "2027-01-01",
@@ -242,7 +242,7 @@
       "id": "8cfa79d9225fbb63d449d8671701ca54",
       "name": "energy.capex.outlay",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -280,7 +280,7 @@
       "id": "7d1973737c5cacf8e375682d2a1afa7d",
       "name": "energy.debt.service",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -320,7 +320,7 @@
       "id": "ace67e574633c9a66df1b92940a89a09",
       "name": "energy.macrs.shield",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -360,7 +360,7 @@
       "id": "a078890b48d2a5fc0b5bbe6989167045",
       "name": "energy.merchant.revenue",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -400,7 +400,7 @@
       "id": "13807b4da544764046dea1c39c6aa1ae",
       "name": "energy.om.expense",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -440,7 +440,7 @@
       "id": "558c844eabf656354ddf51472026deed",
       "name": "energy.ptc.credit",
       "owner": {
-        "symbol": "project.windfarm"
+        "symbol": "asset.windfarm"
       },
       "direction": "inflow",
       "currency": "USD",

@@ -2,13 +2,13 @@ version 0.1
 model "stream-unknown-item"
 time calendar monthly from 2026-01 for 12
 
-entity legal co
+entity asset co : Asset.Financial
 
 // A stream body used to swallow anything it did not recognise. `payment net 60
 // days` on its own line compiled clean and had no effect at all — the correct
 // form is inline, `schedule every month net 60 from …`. The same silence hid
 // every typo'd key.
-stream co.receipts on entity legal.co inflow currency USD {
+stream co.receipts on entity asset.co inflow currency USD {
   schedule every month from 2026-01 to 2026-12
   payment net 60 days
   amount = 10000

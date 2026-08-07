@@ -40,9 +40,9 @@ model "auto-abs-speed-050"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2018-10 for 64
 
-entity legal trust
+entity asset trust : Credit.Asset.LoanPool
 
-contract credit.pool_level_pay.p01 on entity legal.trust {
+contract credit.pool_level_pay.p01 on entity asset.trust {
   term 2018-10..2020-03
   terms {
     balance = 5616021.32
@@ -55,7 +55,7 @@ contract credit.pool_level_pay.p01 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p02 on entity legal.trust {
+contract credit.pool_level_pay.p02 on entity asset.trust {
   term 2018-10..2021-01
   terms {
     balance = 2616054.82
@@ -68,7 +68,7 @@ contract credit.pool_level_pay.p02 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p03 on entity legal.trust {
+contract credit.pool_level_pay.p03 on entity asset.trust {
   term 2018-10..2022-06
   terms {
     balance = 4635948.89
@@ -81,7 +81,7 @@ contract credit.pool_level_pay.p03 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p04 on entity legal.trust {
+contract credit.pool_level_pay.p04 on entity asset.trust {
   term 2018-10..2022-12
   terms {
     balance = 2205909.75
@@ -94,7 +94,7 @@ contract credit.pool_level_pay.p04 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p06 on entity legal.trust {
+contract credit.pool_level_pay.p06 on entity asset.trust {
   term 2018-10..2019-11
   terms {
     balance = 147440.15
@@ -107,7 +107,7 @@ contract credit.pool_level_pay.p06 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p07 on entity legal.trust {
+contract credit.pool_level_pay.p07 on entity asset.trust {
   term 2018-10..2021-03
   terms {
     balance = 216238.15
@@ -120,7 +120,7 @@ contract credit.pool_level_pay.p07 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p08 on entity legal.trust {
+contract credit.pool_level_pay.p08 on entity asset.trust {
   term 2018-10..2022-07
   terms {
     balance = 354043.75
@@ -133,7 +133,7 @@ contract credit.pool_level_pay.p08 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p09 on entity legal.trust {
+contract credit.pool_level_pay.p09 on entity asset.trust {
   term 2018-10..2022-12
   terms {
     balance = 342126.24
@@ -146,7 +146,7 @@ contract credit.pool_level_pay.p09 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p11 on entity legal.trust {
+contract credit.pool_level_pay.p11 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 610459.31
@@ -159,7 +159,7 @@ contract credit.pool_level_pay.p11 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p12 on entity legal.trust {
+contract credit.pool_level_pay.p12 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 1144291.74
@@ -172,7 +172,7 @@ contract credit.pool_level_pay.p12 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p13 on entity legal.trust {
+contract credit.pool_level_pay.p13 on entity asset.trust {
   term 2018-10..2022-02
   terms {
     balance = 699535.89
@@ -185,7 +185,7 @@ contract credit.pool_level_pay.p13 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p14 on entity legal.trust {
+contract credit.pool_level_pay.p14 on entity asset.trust {
   term 2018-10..2022-12
   terms {
     balance = 201897.47
@@ -198,7 +198,7 @@ contract credit.pool_level_pay.p14 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p16 on entity legal.trust {
+contract credit.pool_level_pay.p16 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 13918351.08
@@ -211,7 +211,7 @@ contract credit.pool_level_pay.p16 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p17 on entity legal.trust {
+contract credit.pool_level_pay.p17 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 26181002.53
@@ -224,7 +224,7 @@ contract credit.pool_level_pay.p17 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p18 on entity legal.trust {
+contract credit.pool_level_pay.p18 on entity asset.trust {
   term 2018-10..2022-02
   terms {
     balance = 28740527.64
@@ -237,7 +237,7 @@ contract credit.pool_level_pay.p18 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p19 on entity legal.trust {
+contract credit.pool_level_pay.p19 on entity asset.trust {
   term 2018-10..2022-12
   terms {
     balance = 9735143.46
@@ -250,7 +250,7 @@ contract credit.pool_level_pay.p19 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p21 on entity legal.trust {
+contract credit.pool_level_pay.p21 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 14533243.98
@@ -263,7 +263,7 @@ contract credit.pool_level_pay.p21 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p22 on entity legal.trust {
+contract credit.pool_level_pay.p22 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 26195374.46
@@ -276,7 +276,7 @@ contract credit.pool_level_pay.p22 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p23 on entity legal.trust {
+contract credit.pool_level_pay.p23 on entity asset.trust {
   term 2018-10..2022-03
   terms {
     balance = 37348352.52
@@ -289,7 +289,7 @@ contract credit.pool_level_pay.p23 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p24 on entity legal.trust {
+contract credit.pool_level_pay.p24 on entity asset.trust {
   term 2018-10..2023-01
   terms {
     balance = 19509631.08
@@ -302,7 +302,7 @@ contract credit.pool_level_pay.p24 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p26 on entity legal.trust {
+contract credit.pool_level_pay.p26 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 12183065.19
@@ -315,7 +315,7 @@ contract credit.pool_level_pay.p26 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p27 on entity legal.trust {
+contract credit.pool_level_pay.p27 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 20323443.61
@@ -328,7 +328,7 @@ contract credit.pool_level_pay.p27 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p28 on entity legal.trust {
+contract credit.pool_level_pay.p28 on entity asset.trust {
   term 2018-10..2022-03
   terms {
     balance = 32071657.98
@@ -341,7 +341,7 @@ contract credit.pool_level_pay.p28 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p29 on entity legal.trust {
+contract credit.pool_level_pay.p29 on entity asset.trust {
   term 2018-10..2023-01
   terms {
     balance = 20332473.43
@@ -354,7 +354,7 @@ contract credit.pool_level_pay.p29 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p31 on entity legal.trust {
+contract credit.pool_level_pay.p31 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 6428613.14
@@ -367,7 +367,7 @@ contract credit.pool_level_pay.p31 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p32 on entity legal.trust {
+contract credit.pool_level_pay.p32 on entity asset.trust {
   term 2018-10..2021-05
   terms {
     balance = 16325861.98
@@ -380,7 +380,7 @@ contract credit.pool_level_pay.p32 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p33 on entity legal.trust {
+contract credit.pool_level_pay.p33 on entity asset.trust {
   term 2018-10..2022-04
   terms {
     balance = 34020451.15
@@ -393,7 +393,7 @@ contract credit.pool_level_pay.p33 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p34 on entity legal.trust {
+contract credit.pool_level_pay.p34 on entity asset.trust {
   term 2018-10..2023-01
   terms {
     balance = 22175932.04
@@ -406,7 +406,7 @@ contract credit.pool_level_pay.p34 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p36 on entity legal.trust {
+contract credit.pool_level_pay.p36 on entity asset.trust {
   term 2018-10..2020-03
   terms {
     balance = 4214767.90
@@ -419,7 +419,7 @@ contract credit.pool_level_pay.p36 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p37 on entity legal.trust {
+contract credit.pool_level_pay.p37 on entity asset.trust {
   term 2018-10..2021-05
   terms {
     balance = 10197295.25
@@ -432,7 +432,7 @@ contract credit.pool_level_pay.p37 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p38 on entity legal.trust {
+contract credit.pool_level_pay.p38 on entity asset.trust {
   term 2018-10..2022-04
   terms {
     balance = 28511150.24
@@ -445,7 +445,7 @@ contract credit.pool_level_pay.p38 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p39 on entity legal.trust {
+contract credit.pool_level_pay.p39 on entity asset.trust {
   term 2018-10..2023-01
   terms {
     balance = 21518975.29
@@ -458,7 +458,7 @@ contract credit.pool_level_pay.p39 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p40 on entity legal.trust {
+contract credit.pool_level_pay.p40 on entity asset.trust {
   term 2018-10..2024-01
   terms {
     balance = 210992.57
@@ -471,7 +471,7 @@ contract credit.pool_level_pay.p40 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p41 on entity legal.trust {
+contract credit.pool_level_pay.p41 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 2314366.62
@@ -484,7 +484,7 @@ contract credit.pool_level_pay.p41 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p42 on entity legal.trust {
+contract credit.pool_level_pay.p42 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 6049009.56
@@ -497,7 +497,7 @@ contract credit.pool_level_pay.p42 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p43 on entity legal.trust {
+contract credit.pool_level_pay.p43 on entity asset.trust {
   term 2018-10..2022-04
   terms {
     balance = 17752272.88
@@ -510,7 +510,7 @@ contract credit.pool_level_pay.p43 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p44 on entity legal.trust {
+contract credit.pool_level_pay.p44 on entity asset.trust {
   term 2018-10..2023-02
   terms {
     balance = 17560641.20
@@ -523,7 +523,7 @@ contract credit.pool_level_pay.p44 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p45 on entity legal.trust {
+contract credit.pool_level_pay.p45 on entity asset.trust {
   term 2018-10..2024-01
   terms {
     balance = 133227.13
@@ -536,7 +536,7 @@ contract credit.pool_level_pay.p45 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p46 on entity legal.trust {
+contract credit.pool_level_pay.p46 on entity asset.trust {
   term 2018-10..2020-02
   terms {
     balance = 4089106.53
@@ -549,7 +549,7 @@ contract credit.pool_level_pay.p46 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p47 on entity legal.trust {
+contract credit.pool_level_pay.p47 on entity asset.trust {
   term 2018-10..2021-04
   terms {
     balance = 9761650.69
@@ -562,7 +562,7 @@ contract credit.pool_level_pay.p47 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p48 on entity legal.trust {
+contract credit.pool_level_pay.p48 on entity asset.trust {
   term 2018-10..2022-05
   terms {
     balance = 26285138.49
@@ -575,7 +575,7 @@ contract credit.pool_level_pay.p48 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p49 on entity legal.trust {
+contract credit.pool_level_pay.p49 on entity asset.trust {
   term 2018-10..2023-02
   terms {
     balance = 29949234.04
@@ -588,7 +588,7 @@ contract credit.pool_level_pay.p49 on entity legal.trust {
   }
 }
 
-contract credit.pool_level_pay.p50 on entity legal.trust {
+contract credit.pool_level_pay.p50 on entity asset.trust {
   term 2018-10..2023-11
   terms {
     balance = 279866.82

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1311_UNKNOWN_ENTITY_TYPE",
+    "severity": "error",
+    "message": "Entity 'asset.tower' declares type 'CRE.Asset.RealProprty', which the active ontology does not define.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 11,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Known types: Asset.Financial, Asset.Intangible, Asset.Real, CRE.Asset.EquityInterest, CRE.Asset.Portfolio, CRE.Asset.RealProperty, CRE.Asset.Unit, CRE.Party.Investor, CRE.Party.Lender, CRE.Party.PropertyManager, CRE.Party.Sponsor, CRE.Party.Tenant, Party.",
+    "notes": []
+  }
+]

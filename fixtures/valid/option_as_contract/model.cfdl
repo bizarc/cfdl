@@ -1,0 +1,22 @@
+version 0.1
+model "option-as-contract"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+entity asset target : OpCo.Asset.Enterprise
+entity party sponsor : OpCo.Party.Sponsor { name = "Sponsor LLC" }
+entity party mgmt : OpCo.Party.Management { name = "Management" }
+
+// An option is a contract with an election: it is written ON something and is
+// BETWEEN parties, exactly as every other contract is.
+option mgmt_pool on entity asset.target type OpCo.Contract.EquityOption {
+  parties { grantor = party.sponsor, holder = party.mgmt }
+  exercise when time.t >= 1
+  payoff 250.0
+}
+
+stream opco.revenue on entity asset.target inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.recurring
+  amount = 1000
+}

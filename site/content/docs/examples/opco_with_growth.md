@@ -32,15 +32,15 @@ model "opco-with-growth-example"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 72
 
-entity operating business
+entity asset business : OpCo.Asset.Enterprise
 
 // Revenue and opex as standalone streams (individual items per guidance). Growth via expressions.
-stream operating.revenue on entity operating.business inflow currency USD {
+stream operating.revenue on entity asset.business inflow currency USD {
   schedule every month from 2026-01 to 2031-12
   amount = 120000 * pow(1.03, time.t - 1)
 }
 
-stream operating.opex on entity operating.business outflow currency USD {
+stream operating.opex on entity asset.business outflow currency USD {
   schedule every month from 2026-01 to 2031-12
   amount = 70000
 }

@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "c9715dfdb3d8598a820644336b510453",
-      "symbol": "real_estate.property",
-      "type": "core.Entity",
+      "id": "ad1f1c6e084f2c4fe189bf227f7438cc",
+      "symbol": "asset.property",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     }
@@ -95,7 +95,7 @@
       "name": "cre.construction_stub",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -121,7 +121,7 @@
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -147,7 +147,7 @@
       "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -173,7 +173,7 @@
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -199,7 +199,7 @@
       "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -226,7 +226,7 @@
       "id": "190aad30dd61540fab9a1fc0b117a031",
       "name": "cre.construction.draws",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -266,7 +266,7 @@
       "id": "ccbe675e2cc82d28901cd5ffc15baa5b",
       "name": "cre.exit.sale",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -305,7 +305,7 @@
       "id": "48e53a86a43842aba7f55e30a8bc5632",
       "name": "cre.lease.base_rent",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -345,7 +345,7 @@
       "id": "1bd47f99d3ab874531b239cd0d473bd1",
       "name": "cre.ops.expense",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -385,7 +385,7 @@
       "id": "1af4c0280526ec8f5a487e5aba2b6481",
       "name": "cre.ops.revenue",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",

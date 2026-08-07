@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "95940af24924c225d09def44ea501b7bd61815814e97ad8ed0cbf71baf461211",
-  "ledger_hash": "d2789d81f343f25e4f96f512f03728a21aa0da637e8a319e238d986cd1eb5b27",
+  "model_hash": "f5fe45f7fd33f6e85c08f90a9f6b0d1af789cf377ef53ec91074c00c6a2ebe47",
+  "ledger_hash": "c009a8795a6f144bededda11fb072f90e61d3557d98cf7df081caff6101db739",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.borrower.total": {
+      "entity.asset.borrower.total": {
         "amount": -6000.0,
         "currency": "USD"
       },
@@ -24,12 +24,45 @@
       },
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.legal.rent.total": {
+      "stream.lease.rent.total": {
         "amount": -6000.0,
         "currency": "USD"
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",
@@ -63,7 +96,7 @@
           }
         ]
       },
-      "stream.legal.rent": {
+      "stream.lease.rent": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -113,7 +146,7 @@
             }
           ]
         },
-        "stream.legal.rent": {
+        "stream.lease.rent": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -145,7 +178,7 @@
         "name": "downside",
         "metrics": {
           "model.npv": {
-            "amount": -7003.249241,
+            "amount": -5836.041034,
             "currency": "USD"
           }
         }
@@ -154,7 +187,7 @@
         "name": "upside",
         "metrics": {
           "model.npv": {
-            "amount": -5252.436931,
+            "amount": -5836.041034,
             "currency": "USD"
           }
         }

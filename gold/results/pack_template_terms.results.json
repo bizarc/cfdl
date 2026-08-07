@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "883832a6f2981131a85d88a9738b5213d92757f6a1c1becc53e4084350e2406d",
-  "ledger_hash": "d72736f035f8d827c89abd50cb6a5288dd299c610deeb65d5de47bb2494482eb",
+  "model_hash": "db4995d75b089fee1fb7f3eb1c11920a1afa37b09b9f6fa5a6918605c9d0dad4",
+  "ledger_hash": "2d2bf0f1c6e6e560c65ccb01ead4fe6f670459501c6c07fb01b7b92ec2d1bbae",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -25,6 +25,10 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
+      "entity.asset.borrower.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "entity.legal.borrower.total": {
         "amount": 1500.0,
         "currency": "USD"
@@ -46,6 +50,72 @@
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.legal.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

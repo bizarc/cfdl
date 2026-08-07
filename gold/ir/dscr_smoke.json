@@ -12,16 +12,16 @@
   "phases": [],
   "entities": [
     {
-      "id": "f9d227c2fb77ef75ff98b9fe6496714b",
-      "symbol": "loan.permanent",
-      "type": "core.Entity",
+      "id": "0c38bc1e0b71ed828079ff5a9fd3475f",
+      "symbol": "asset.permanent",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "14686a458673e00c0469de88496b9f5c",
-      "symbol": "real_estate.prop",
-      "type": "core.Entity",
+      "id": "1b2062afc52d6bef8969b3c2a04f3bee",
+      "symbol": "asset.prop",
+      "type": "Asset.Real",
       "attrs": {},
       "state": {}
     }
@@ -36,7 +36,7 @@
       "id": "69b0eec32ff9e9af6ce8e8df72bb0810",
       "name": "cre.ops.expense",
       "owner": {
-        "symbol": "real_estate.prop"
+        "symbol": "asset.prop"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -68,7 +68,7 @@
       "id": "feb424365e14a8dcaad553fdaed496e0",
       "name": "cre.ops.revenue",
       "owner": {
-        "symbol": "real_estate.prop"
+        "symbol": "asset.prop"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -100,7 +100,7 @@
       "id": "10667607a18473265aeddd1719339789",
       "name": "loan.permanent_debt_service",
       "owner": {
-        "symbol": "loan.permanent"
+        "symbol": "asset.permanent"
       },
       "direction": "outflow",
       "currency": "USD",

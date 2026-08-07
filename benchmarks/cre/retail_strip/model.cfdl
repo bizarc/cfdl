@@ -3,7 +3,7 @@ model "retail-strip"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 84
 
-entity asset strip_center
+entity asset strip_center : CRE.Asset.RealProperty
 
 // Anchor grocer: base-year stop (stop = year-0 grossed-up opex), 95% gross-up,
 // 60% pro-rata, plus percentage rent above a $12M breakpoint.

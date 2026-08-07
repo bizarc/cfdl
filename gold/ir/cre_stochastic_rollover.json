@@ -14,7 +14,7 @@
     {
       "id": "a17cdce0ecf04a18a578649e6b9d2bce",
       "symbol": "asset.tower",
-      "type": "core.Entity",
+      "type": "Asset.Real",
       "attrs": {},
       "state": {}
     }

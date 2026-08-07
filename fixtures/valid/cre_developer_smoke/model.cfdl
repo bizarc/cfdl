@@ -3,7 +3,7 @@ model "cre-developer-smoke"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 72
 
-entity real_estate property
+entity asset property : CRE.Asset.RealProperty
 
 contract cre.construction_stub {
   term 2026-01..2026-06

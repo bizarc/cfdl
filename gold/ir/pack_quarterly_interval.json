@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "3388cfd913652af0f66b3b1d1452bf10",
-      "symbol": "legal.borrower",
-      "type": "core.Entity",
+      "id": "7063a536bb3763aab1bc57266f92e75d",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "name": "test.coupon_contract",
       "type": "core.Contract",
       "subject": {
-        "symbol": "legal.borrower"
+        "symbol": "asset.borrower"
       },
       "term": {
         "start": "2026-01-01",

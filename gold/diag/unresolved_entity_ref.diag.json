@@ -2,13 +2,13 @@
   {
     "code": "E1301_UNRESOLVED_ENTITY_REF",
     "severity": "error",
-    "message": "Stream 'legal.principal' references unknown entity 'legal.missing'.",
+    "message": "Stream 'debt.principal' references unknown entity 'lease.missing'.",
     "file": "model.cfdl",
     "span": {
       "start_line": 5,
       "start_col": 1,
       "end_line": 5,
-      "end_col": 46
+      "end_col": 45
     },
     "path": null,
     "hint": null,

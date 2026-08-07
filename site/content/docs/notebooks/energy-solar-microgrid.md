@@ -119,7 +119,7 @@ cf.head()
 ```
 
 ```
-shape: (300, 14)
+shape: (300, 15)
 ```
 
 ```
@@ -139,13 +139,21 @@ period
 2026-04                     2.631679          30166.666667   
 2026-05                     2.631679          30166.666667   
 
-         domain.energy.opex  domain.energy.revenue  model.net_cash_flow  \
-period                                                                    
-2026-01         5833.333333                36000.0        -2.381296e+06   
-2026-02         5833.333333                36000.0         1.870377e+04   
-2026-03         5833.333333                36000.0         1.870377e+04   
-2026-04         5833.333333                36000.0         1.870377e+04   
-2026-05         5833.333333                36000.0         1.870377e+04   
+         domain.energy.opex  domain.energy.revenue  \
+period                                               
+2026-01         5833.333333                36000.0   
+2026-02         5833.333333                36000.0   
+2026-03         5833.333333                36000.0   
+2026-04         5833.333333                36000.0   
+2026-05         5833.333333                36000.0   
+
+         entity.asset.microgrid.net_cash_flow  model.net_cash_flow  \
+period                                                               
+2026-01                         -2.381296e+06        -2.381296e+06   
+2026-02                          1.870377e+04         1.870377e+04   
+2026-03                          1.870377e+04         1.870377e+04   
+2026-04                          1.870377e+04         1.870377e+04   
+2026-05                          1.870377e+04         1.870377e+04   
 
          stream.energy.capacity.revenue  stream.energy.capex.outlay  \
 period                                                                
@@ -207,7 +215,7 @@ results.metrics_frame()
 3                     domain.energy.opex  2.391043e+06      USD  domain:energy
 4                  domain.energy.revenue  1.259400e+07      USD  domain:energy
 5             domain.energy.tax_benefits  7.200000e+05      USD  domain:energy
-6         entity.project.microgrid.total  5.771866e+06      USD           core
+6           entity.asset.microgrid.total  5.771866e+06      USD           core
 7                             model.moic  3.423834e+00     None           core
 8                              model.npv  1.220669e+06      USD           core
 9                  model.payback_periods  8.500000e+01     None           core

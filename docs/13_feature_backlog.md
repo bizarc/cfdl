@@ -1367,3 +1367,32 @@ Independent of the ledger and of each other:
 - Statement structure (2) needs (1) underneath it.
 - Drill-down (3) and counts (5) need the ledger.
 - Grain (4) is additive once flows are dated.
+
+### 7.18 Monte Carlo carries no transition log
+
+*Belongs with language and engine (section 5).*
+
+`deterministic.transitions` publishes the entity-state trajectory — period,
+entity, field, from, to, and the firing event — which made transitions
+assertable for the first time. Monte Carlo publishes none.
+
+**A per-trial log is the wrong shape.** It would be trials x transitions of
+output, and nobody reads ten thousand copies of the same sequence. The question
+a stochastic run actually asks is *when* something happens, not whether it
+happened in trial 4,127:
+
+- the distribution over the period each event first fired, and
+- the share of trials in which it fired at all.
+
+Both are summaries over the per-trial logs the engine already builds and throws
+away, so the work is in choosing the summary rather than in collecting the data.
+
+Found while building the deterministic log (task: transition log). Recorded
+rather than built because the useful artifact is a distribution, which is a
+different feature from a trail — not a smaller version of one.
+
+Two details already settled by the deterministic side and worth carrying over:
+a transition is recorded even when the value does not change, because the
+question is whether the event fired; and visibility is two rules, not one — an
+event or option guard reads the state as the period opened, a stream reads it as
+the period closed.

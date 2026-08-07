@@ -3,14 +3,14 @@ model "pack-period-term-not-literal"
 use pack "testpack" version "0.1.0"
 time calendar quarterly from 2026-01 for 8
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 assume tenor = 24
 
 // A months-denominated term is converted into the rule's own periods at
 // compile time, so it has to be a literal. Deferring it to an input moves the
 // value to run time, where the conversion can no longer happen.
-contract test.cadence_probe on entity legal.borrower {
+contract test.cadence_probe on entity asset.borrower {
   term 2026-01..2027-10
   terms {
     amount_year = 120000

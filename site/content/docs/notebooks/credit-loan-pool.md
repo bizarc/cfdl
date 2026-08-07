@@ -119,33 +119,57 @@ cf.head()
 ```
 
 ```
-shape: (126, 15)
+shape: (126, 21)
 ```
 
 ```
-         domain.credit.gross_collections  domain.credit.net_collections  \
+         domain.credit.balance_outstanding  domain.credit.gross_collections  \
+period                                                                        
+2026-01                       2.442971e+07                    457194.867943   
+2026-02                       2.411241e+07                    452225.142236   
+2026-03                       2.379807e+07                    447301.537920   
+2026-04                       2.348667e+07                    442423.647210   
+2026-05                       2.317816e+07                    437591.065867   
+
+         domain.credit.net_collections  domain.credit.original_balance  \
+period                                                                   
+2026-01                  446795.723595                      24750000.0   
+2026-02                  441976.718401                      24750000.0   
+2026-03                  437202.339282                      24750000.0   
+2026-04                  432472.191964                      24750000.0   
+2026-05                  427785.885597                      24750000.0   
+
+         domain.credit.pool_factor  domain.credit.principal_collections  \
 period                                                                    
-2026-01                    457194.867943                  446795.723595   
-2026-02                    452225.142236                  441976.718401   
-2026-03                    447301.537920                  437202.339282   
-2026-04                    442423.647210                  432472.191964   
-2026-05                    437591.065867                  427785.885597   
+2026-01                   0.987059                        320285.175229   
+2026-02                   0.974239                        317299.872656   
+2026-03                   0.961538                        314341.003541   
+2026-04                   0.948956                        311408.337988   
+2026-05                   0.936491                        308501.648088   
 
-         domain.credit.principal_collections  domain.credit.servicing_fee  \
-period                                                                      
-2026-01                        320285.175229                 10399.144348   
-2026-02                        317299.872656                 10248.423834   
-2026-03                        314341.003541                 10099.198637   
-2026-04                        311408.337988                  9951.455247   
-2026-05                        308501.648088                  9805.180270   
+         domain.credit.principal_paid_negated  \
+period                                          
+2026-01                         -3.202852e+05   
+2026-02                         -6.375850e+05   
+2026-03                         -9.519261e+05   
+2026-04                         -1.263334e+06   
+2026-05                         -1.571836e+06   
 
-         domain.credit.total_investment_income  model.net_cash_flow  \
-period                                                                
-2026-01                          136909.692714        -2.430320e+07   
-2026-02                          134925.269580         4.419767e+05   
-2026-03                          132960.534379         4.372023e+05   
-2026-04                          131015.309222         4.324722e+05   
-2026-05                          129089.417780         4.277859e+05   
+         domain.credit.principal_paid_to_date  domain.credit.servicing_fee  \
+period                                                                       
+2026-01                          3.202852e+05                 10399.144348   
+2026-02                          6.375850e+05                 10248.423834   
+2026-03                          9.519261e+05                 10099.198637   
+2026-04                          1.263334e+06                  9951.455247   
+2026-05                          1.571836e+06                  9805.180270   
+
+         domain.credit.total_investment_income  ...  model.net_cash_flow  \
+period                                          ...                        
+2026-01                          136909.692714  ...        -2.430320e+07   
+2026-02                          134925.269580  ...         4.419767e+05   
+2026-03                          132960.534379  ...         4.372023e+05   
+2026-04                          131015.309222  ...         4.324722e+05   
+2026-05                          129089.417780  ...         4.277859e+05   
 
          state.credit_level_pay_survival_auto_a  \
 period                                            
@@ -210,6 +234,8 @@ period
 2026-03                                  0.0  
 2026-04                                  0.0  
 2026-05                                  0.0  
+
+[5 rows x 21 columns]
 ```
 
 ```python
@@ -242,7 +268,7 @@ results.metrics_frame()
 6                          domain.credit.recoveries  1.167320e+06      USD   
 7                           domain.credit.servicing  4.999919e+05      USD   
 8                           domain.credit.wal_years  4.056967e+00     None   
-9                           entity.fund.buyer.total  5.477491e+06      USD   
+9                          entity.asset.buyer.total  5.477491e+06      USD   
 10                                       model.moic  1.225381e+00     None   
 11                                        model.npv -2.959752e+05      USD   
 12                            model.payback_periods  8.000000e+01     None   

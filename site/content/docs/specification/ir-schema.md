@@ -356,7 +356,7 @@ against it by `make ir-schema`.
         },
         "attrs": {
           "type": "object",
-          "description": "Ontology-validated when pack is present; otherwise minimally typed",
+          "description": "Attribute values declared in the entity's block, checked against the declared fields of its ontology type. Literals, not expressions: an attribute describes the thing rather than computing anything.",
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
@@ -367,6 +367,14 @@ against it by `make ir-schema`.
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
+        },
+        "parent": {
+          "type": "string",
+          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behaviour with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
+        },
+        "initial_state": {
+          "type": "string",
+          "description": "The lifecycle state this entity starts in, overriding its type's declared initial. Absent when the type declares no lifecycle. An entity WITH a lifecycle is always in exactly one of its states — there is no null state and no undeclared state, which is what makes a misspelled status a compile error rather than a wrong answer."
         }
       }
     },
@@ -1087,6 +1095,30 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "owner": {
+          "$ref": "#/$defs/EntityRef",
+          "description": "The asset this option is written on. AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something the way every other contract does. Absent on an option written before options had owners; without one its payoff belongs to no entity and falls out of every per-entity total."
+        },
+        "parties": {
+          "type": "array",
+          "description": "Who the option is between, by role. The role is named by the contract TYPE rather than by the party, because the same party is lessor in one agreement and lender in another — the role belongs to the agreement.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "entity"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "entity": {
+                "$ref": "#/$defs/EntityRef"
+              }
+            }
+          }
         }
       }
     },

@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
-      "symbol": "legal.borrower",
-      "type": "core.Entity",
+      "id": "a891aa65cc648d1159772a587ea85620",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -50,10 +50,10 @@
   "contracts": [],
   "streams": [
     {
-      "id": "fdc2a2e2b548777ae42256206a3a9be8",
-      "name": "legal.rent",
+      "id": "b7cd694d8df450fc86519943600c464b",
+      "name": "lease.rent",
       "owner": {
-        "symbol": "legal.borrower"
+        "symbol": "asset.borrower"
       },
       "direction": "inflow",
       "currency": "USD",

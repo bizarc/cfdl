@@ -1,0 +1,351 @@
+{
+  "results_version": "0.3",
+  "model_hash": "655e31e3845d6fe233b5b7287eede85a216e036b42b371d0bea989cd38b3c226",
+  "ledger_hash": "3bbff86a1ea1e7557d85f72033bb1b19763ac089708f86ab1250c6c984f1967c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite_a.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.asset.suite_b.total": {
+        "amount": 150.0,
+        "currency": "USD"
+      },
+      "entity.asset.tower.total": {
+        "amount": 360.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 326.789764,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 360.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.cre.opex.building.total": {
+        "amount": -90.0,
+        "currency": "USD"
+      },
+      "stream.cre.rent.suite_a.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.cre.rent.suite_b.total": {
+        "amount": 150.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite_a.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite_b.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.opex.building": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -30.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.rent.suite_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.rent.suite_b": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

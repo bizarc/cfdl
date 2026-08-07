@@ -21,7 +21,7 @@ model "mbs-pool-ramped"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // The SAME 30-year agency-MBS pool as benchmarks/credit/mbs_pool_conventions —
 // $100m, 8% WAC, 20% loss severity, 12-month recovery — run at the published
@@ -42,7 +42,7 @@ entity fund buyer
 // age_months is 0 — a new pool, so the curves start at their first month.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
-contract credit.pool_level_pay.a on entity fund.buyer {
+contract credit.pool_level_pay.a on entity asset.buyer {
   term 2026-01..2056-12
   terms {
     balance = 100000000

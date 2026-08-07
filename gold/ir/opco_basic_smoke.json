@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "41fd228904054acae87e152102d7194d",
-      "symbol": "operating.business",
-      "type": "core.Entity",
+      "id": "3ca4f141abfd58b09bf41a6654d7e5ff",
+      "symbol": "asset.business",
+      "type": "OpCo.Asset.Enterprise",
       "attrs": {},
       "state": {}
     }
@@ -160,7 +160,7 @@
       "name": "opco.exit_multiple",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "term": {
         "start": "2026-01-01",
@@ -186,7 +186,7 @@
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "term": {
         "start": "2026-01-01",
@@ -212,7 +212,7 @@
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "term": {
         "start": "2026-01-01",
@@ -238,7 +238,7 @@
       "name": "opco.working_capital",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "term": {
         "start": "2026-01-01",
@@ -265,7 +265,7 @@
       "id": "3a61c824f53d837e96d73bb451d299db",
       "name": "opco.exit.value",
       "owner": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -304,7 +304,7 @@
       "id": "4eec156f295fcddc4e6642e887288376",
       "name": "opco.opex.recurring",
       "owner": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -344,7 +344,7 @@
       "id": "cf1275cc300972e467c3732a37056442",
       "name": "opco.revenue.recurring",
       "owner": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -384,7 +384,7 @@
       "id": "2026e7b64fa5b617c95b8df161268c74",
       "name": "opco.working_capital.adjustment",
       "owner": {
-        "symbol": "operating.business"
+        "symbol": "asset.business"
       },
       "direction": "outflow",
       "currency": "USD",

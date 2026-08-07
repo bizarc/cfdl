@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -23,6 +23,11 @@ pub struct LoadedPack {
     pub subtotal_specs: Vec<SubtotalSpec>,
     pub statement_specs: Vec<StatementSpec>,
     pub validations: Vec<PackValidation>,
+    /// What a model using this pack may be ABOUT — the assets, parties,
+    /// contract types, lifecycles and references it can declare, and how they
+    /// relate. Empty when the pack declares no ontology, which keeps every
+    /// existing pack loading unchanged.
+    pub ontology: PackOntology,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -95,6 +100,347 @@ pub struct PackEntrypoints {
     /// `statements.toml`: `[[subtotals]]` now, `[[statements]]` next.
     #[serde(default)]
     pub statements: Option<String>,
+    /// `ontology/types.toml`: what the model may be about.
+    #[serde(default)]
+    pub ontology: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// Ontology
+//
+// A pack's lowering rules say how a contract becomes cash. The ontology says
+// what the model is ABOUT, which nothing said before: an entity was a two-part
+// name, and the namespace half was doing informal typing badly.
+//
+// FOUR FAMILIES, fixed here and filled in per pack: `asset` produces or
+// consumes cash, `party` contracts and owns, `contract` is an agreement
+// between parties attached to an asset, `reference` is a market observable.
+// ---------------------------------------------------------------------------
+
+/// The families an entity type may belong to. Closed, because the language —
+/// not the pack — decides what kinds of thing a model contains.
+pub const ENTITY_FAMILIES: &[&str] = &["asset", "party"];
+
+/// The classes an asset may take. The split every asset taxonomy starts from,
+/// and the one that decides how an asset is underwritten: a turbine is real, a
+/// tax-equity interest in it is financial, a royalty is intangible.
+pub const ASSET_CLASSES: &[&str] = &["real", "financial", "intangible"];
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct PackOntology {
+    pub entities: Vec<OntologyEntity>,
+    pub contracts: Vec<OntologyContract>,
+    pub lifecycles: Vec<OntologyLifecycle>,
+    pub references: Vec<OntologyReference>,
+    pub relations: Vec<OntologyRelation>,
+}
+
+impl PackOntology {
+    /// The vocabulary EVERY model has, pack or no pack.
+    ///
+    /// An ontology is a LANGUAGE capability that packs supply defaults for, not
+    /// one they own — the same argument the category vocabulary already makes:
+    /// rejecting it with no pack active is circular, because nothing reads it
+    /// only so long as nothing may declare it. A model with no pack can still
+    /// say that a thing is an asset, that the asset is real rather than
+    /// financial, who the parties are, and what belongs to what. What it cannot
+    /// do without a pack is name a CONTRACT type, because a contract type binds
+    /// to a lowering rule and lowering rules are what packs are.
+    ///
+    /// A pack's own types are added to these; a pack cannot remove them.
+    pub fn language_base() -> Self {
+        fn asset(type_id: &str, class: &str, description: &str) -> OntologyEntity {
+            OntologyEntity {
+                type_id: type_id.to_string(),
+                family: "asset".to_string(),
+                class: Some(class.to_string()),
+                lifecycle: None,
+                description: Some(description.to_string()),
+                fields: Vec::new(),
+            }
+        }
+        fn relation(
+            id: &str,
+            from: &str,
+            to: &str,
+            card: &str,
+            inverse: &str,
+            d: &str,
+        ) -> OntologyRelation {
+            OntologyRelation {
+                relation_id: id.to_string(),
+                from_family: from.to_string(),
+                to_family: to.to_string(),
+                cardinality: card.to_string(),
+                inverse: inverse.to_string(),
+                description: Some(d.to_string()),
+            }
+        }
+        Self {
+            entities: vec![
+                asset(
+                    "Asset.Real",
+                    "real",
+                    "A physical thing — land, a building, plant, equipment, a reserve.",
+                ),
+                asset(
+                    "Asset.Financial",
+                    "financial",
+                    "A claim on cash — a loan, a pool, a security, an equity interest, a going concern.",
+                ),
+                asset(
+                    "Asset.Intangible",
+                    "intangible",
+                    "A right without a physical form — a royalty, a licence, a patent.",
+                ),
+                OntologyEntity {
+                    type_id: "Party".to_string(),
+                    family: "party".to_string(),
+                    class: None,
+                    lifecycle: None,
+                    description: Some(
+                        "Someone who contracts, owns, lends or invests. A pack names roles more precisely; this is the generic one."
+                            .to_string(),
+                    ),
+                    fields: vec![OntologyField {
+                        name: "name".to_string(),
+                        field_type: "string".to_string(),
+                        required: false,
+                        unit: None,
+                        description: None,
+                    }],
+                },
+            ],
+            contracts: Vec::new(),
+            lifecycles: Vec::new(),
+            references: Vec::new(),
+            relations: vec![
+                relation(
+                    "part_of",
+                    "asset",
+                    "asset",
+                    "many_to_one",
+                    "contains",
+                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped.",
+                ),
+                relation(
+                    "owns",
+                    "party",
+                    "asset",
+                    "many_to_many",
+                    "owned_by",
+                    "Who holds the asset.",
+                ),
+            ],
+        }
+    }
+
+    /// A pack's vocabulary on top of the language's. Pack types win on a
+    /// collision, so a pack may refine `Asset.Real` into `CRE.Asset.RealProperty`
+    /// without the base disappearing.
+    pub fn merged_with_base(&self) -> Self {
+        let mut merged = Self::language_base();
+        let pack_types: BTreeSet<&str> = self.entities.iter().map(|e| e.type_id.as_str()).collect();
+        merged
+            .entities
+            .retain(|e| !pack_types.contains(e.type_id.as_str()));
+        merged.entities.extend(self.entities.iter().cloned());
+
+        let pack_relations: BTreeSet<&str> = self
+            .relations
+            .iter()
+            .map(|r| r.relation_id.as_str())
+            .collect();
+        merged
+            .relations
+            .retain(|r| !pack_relations.contains(r.relation_id.as_str()));
+        merged.relations.extend(self.relations.iter().cloned());
+
+        merged.contracts = self.contracts.clone();
+        merged.lifecycles = self.lifecycles.clone();
+        merged.references = self.references.clone();
+        merged
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entities.is_empty() && self.contracts.is_empty()
+    }
+
+    pub fn entity(&self, type_id: &str) -> Option<&OntologyEntity> {
+        self.entities.iter().find(|e| e.type_id == type_id)
+    }
+
+    pub fn lifecycle(&self, lifecycle_id: &str) -> Option<&OntologyLifecycle> {
+        self.lifecycles
+            .iter()
+            .find(|l| l.lifecycle_id == lifecycle_id)
+    }
+
+    /// The contract type bound to a lowering rule's `contract_name`.
+    pub fn contract_for_rule(&self, contract_name: &str) -> Option<&OntologyContract> {
+        self.contracts
+            .iter()
+            .find(|c| c.contract_name.as_deref() == Some(contract_name))
+    }
+
+    /// Contract types that are elections rather than lowered rules — options.
+    pub fn elections(&self) -> impl Iterator<Item = &OntologyContract> {
+        self.contracts.iter().filter(|c| c.contract_name.is_none())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyEntity {
+    pub type_id: String,
+    pub family: String,
+    /// Required for `asset`, absent for `party` — only an asset has a class.
+    #[serde(default)]
+    pub class: Option<String>,
+    /// The lifecycle this type moves through. Absent means the type has no
+    /// states; present means it is ALWAYS in exactly one of them.
+    #[serde(default)]
+    pub lifecycle: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub fields: Vec<OntologyField>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyField {
+    pub name: String,
+    pub field_type: String,
+    #[serde(default)]
+    pub required: bool,
+    /// The dimension the number carries. A quantity without one is how a PTC
+    /// gets rounded to a hundredth of a cent instead of a tenth.
+    #[serde(default)]
+    pub unit: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyContract {
+    pub type_id: String,
+    /// The lowering rule that turns this contract into cash. Binding the two
+    /// is what keeps the vocabulary and the arithmetic from drifting: a rule
+    /// with no type has no counterparties.
+    ///
+    /// ABSENT MEANS AN ELECTION — an option. An option is a contract whose cash
+    /// is a payoff the holder elects to take, resolved by the engine rather
+    /// than lowered by a pack rule, so there is no rule to name.
+    #[serde(default)]
+    pub contract_name: Option<String>,
+    #[serde(default)]
+    pub subject_family: Option<String>,
+    /// Role names, not entity references — a party fills a role per contract,
+    /// so the same party can be lessor in one and lender in another.
+    #[serde(default)]
+    pub parties: Vec<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+/// A declared state space. The point of declaring it is totality: an entity is
+/// ALWAYS in exactly one state, starting at `initial`. There is no null state
+/// and no undeclared state, which is what makes a misspelled status impossible
+/// rather than merely unlikely.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyLifecycle {
+    pub lifecycle_id: String,
+    pub initial: String,
+    pub states: Vec<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub transitions: Vec<OntologyTransition>,
+}
+
+impl OntologyLifecycle {
+    pub fn has_state(&self, state: &str) -> bool {
+        self.states.iter().any(|s| s == state)
+    }
+
+    /// Whether the declared relation permits this move. An empty transition
+    /// list means the pack has not constrained the machine, so every move
+    /// between declared states is allowed.
+    pub fn permits(&self, from: &str, to: &str) -> bool {
+        self.transitions.is_empty()
+            || self
+                .transitions
+                .iter()
+                .any(|t| t.from == from && t.to == to)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyTransition {
+    pub from: String,
+    pub to: String,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+/// A market observable. Declared in the model today; the shape admits an
+/// external source later without the model changing.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyReference {
+    pub reference_id: String,
+    pub kind: String,
+    #[serde(default)]
+    pub unit: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+/// A typed link, with an inverse so either end reads naturally.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyRelation {
+    pub relation_id: String,
+    pub from_family: String,
+    pub to_family: String,
+    pub cardinality: String,
+    pub inverse: String,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OntologyFile {
+    #[serde(default)]
+    pack: Option<OntologyFileHeader>,
+    #[serde(default)]
+    entities: Vec<OntologyEntity>,
+    #[serde(default)]
+    contracts: Vec<OntologyContract>,
+    #[serde(default)]
+    lifecycles: Vec<OntologyLifecycle>,
+    #[serde(default)]
+    references: Vec<OntologyReference>,
+    #[serde(default)]
+    relations: Vec<OntologyRelation>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OntologyFileHeader {
+    /// Checked against the pack's own name. Catches the copy-paste — an
+    /// ontology lifted from one pack into another and left self-identifying as
+    /// the first.
+    #[serde(default)]
+    ontology_id: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    version: Option<String>,
 }
 
 /// A single declarative domain check supplied by a pack.
@@ -646,6 +992,10 @@ mod embedded {
             "validations.toml",
             include_str!("../../../packs/cre/validations.toml"),
         ),
+        (
+            "ontology/types.toml",
+            include_str!("../../../packs/cre/ontology/types.toml"),
+        ),
     ];
 
     pub const OPCO: &[EmbeddedFile] = &[
@@ -669,6 +1019,10 @@ mod embedded {
         (
             "validations.toml",
             include_str!("../../../packs/opco/validations.toml"),
+        ),
+        (
+            "ontology/types.toml",
+            include_str!("../../../packs/opco/ontology/types.toml"),
         ),
     ];
 
@@ -694,6 +1048,10 @@ mod embedded {
             "validations.toml",
             include_str!("../../../packs/credit/validations.toml"),
         ),
+        (
+            "ontology/types.toml",
+            include_str!("../../../packs/credit/ontology/types.toml"),
+        ),
     ];
 
     pub const ENERGY: &[EmbeddedFile] = &[
@@ -717,6 +1075,10 @@ mod embedded {
         (
             "validations.toml",
             include_str!("../../../packs/energy/validations.toml"),
+        ),
+        (
+            "ontology/types.toml",
+            include_str!("../../../packs/energy/ontology/types.toml"),
         ),
     ];
 
@@ -776,6 +1138,11 @@ impl PackRegistry {
                 }
                 None => Vec::new(),
             };
+            let ontology = match lookup(manifest.entrypoints.ontology.as_deref()) {
+                Some(raw) => parse_ontology(raw, &source, &manifest.name)?,
+                None => PackOntology::default(),
+            };
+            validate_ontology_against_rules(&ontology, &lowering_rules, &source)?;
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -787,6 +1154,7 @@ impl PackRegistry {
                     subtotal_specs,
                     statement_specs,
                     validations,
+                    ontology,
                 },
             );
         }
@@ -967,6 +1335,16 @@ impl PackRegistry {
                 &manifest.categories,
                 &subtotal_specs,
             )?;
+            let ontology = load_ontology(
+                &pack_dir,
+                manifest.entrypoints.ontology.as_deref(),
+                &manifest.name,
+            )?;
+            validate_ontology_against_rules(
+                &ontology,
+                &lowering_rules,
+                &manifest_path.display().to_string(),
+            )?;
 
             packs.insert(
                 manifest.name.clone(),
@@ -979,6 +1357,7 @@ impl PackRegistry {
                     subtotal_specs,
                     statement_specs,
                     validations,
+                    ontology,
                 },
             );
         }
@@ -988,6 +1367,16 @@ impl PackRegistry {
 
     pub fn list(&self) -> Vec<&LoadedPack> {
         self.packs.values().collect()
+    }
+
+    pub fn pack(&self, name: &str) -> Option<&LoadedPack> {
+        self.packs.get(name)
+    }
+
+    /// What a model using this pack may be about. Empty for a pack that
+    /// declares no ontology, so a caller never has to special-case one.
+    pub fn ontology(&self, pack_name: &str) -> Option<&PackOntology> {
+        self.packs.get(pack_name).map(|pack| &pack.ontology)
     }
 
     pub fn active_pack(&self, name: &str, version: &str) -> Option<ActivePack> {
@@ -1138,6 +1527,266 @@ fn parse_aliases(raw: &str, source: &str) -> Result<BTreeMap<String, String>, Pa
         message: format!("Failed to parse aliases '{source}': {err}"),
     })?;
     Ok(parsed.aliases)
+}
+
+fn load_ontology(
+    pack_dir: &Path,
+    ontology_path: Option<&str>,
+    pack_name: &str,
+) -> Result<PackOntology, PackLoadError> {
+    let Some(relative) = ontology_path else {
+        return Ok(PackOntology::default());
+    };
+    let path = pack_dir.join(relative);
+    if !path.exists() {
+        return Ok(PackOntology::default());
+    }
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    parse_ontology(&raw, &path.display().to_string(), pack_name)
+}
+
+/// Parse a pack's ontology and check it is internally coherent.
+///
+/// The checks run HERE rather than at model-compile time on purpose: a broken
+/// vocabulary is the pack author's bug, and catching it at load means every
+/// model using the pack is spared a diagnostic that was never about the model.
+fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntology, PackLoadError> {
+    let parsed: OntologyFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse ontology '{source}': {err}"),
+    })?;
+
+    if let Some(header) = &parsed.pack {
+        if let Some(declared) = &header.ontology_id {
+            if declared != pack_name {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': declares ontology_id '{declared}' but belongs to pack '{pack_name}'."
+                    ),
+                });
+            }
+        }
+    }
+
+    let ontology = PackOntology {
+        entities: parsed.entities,
+        contracts: parsed.contracts,
+        lifecycles: parsed.lifecycles,
+        references: parsed.references,
+        relations: parsed.relations,
+    };
+
+    let mut seen_types: BTreeSet<&str> = BTreeSet::new();
+    for entity in &ontology.entities {
+        if !seen_types.insert(entity.type_id.as_str()) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': entity type '{}' is declared twice.",
+                    entity.type_id
+                ),
+            });
+        }
+        if !ENTITY_FAMILIES.contains(&entity.family.as_str()) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': entity '{}' has family '{}', which is not one of {}.",
+                    entity.type_id,
+                    entity.family,
+                    ENTITY_FAMILIES.join(", ")
+                ),
+            });
+        }
+        // An asset is underwritten by its class, so an asset without one is
+        // not a description of anything. A party has no class to give.
+        match (entity.family.as_str(), entity.class.as_deref()) {
+            ("asset", None) => {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': asset '{}' declares no class. Assets must be one of {}.",
+                        entity.type_id,
+                        ASSET_CLASSES.join(", ")
+                    ),
+                });
+            }
+            ("asset", Some(class)) if !ASSET_CLASSES.contains(&class) => {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': asset '{}' has class '{class}', which is not one of {}.",
+                        entity.type_id,
+                        ASSET_CLASSES.join(", ")
+                    ),
+                });
+            }
+            ("party", Some(class)) => {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': party '{}' declares class '{class}'. Only assets have a class.",
+                        entity.type_id
+                    ),
+                });
+            }
+            _ => {}
+        }
+        if let Some(lifecycle) = &entity.lifecycle {
+            if ontology.lifecycle(lifecycle).is_none() {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': entity '{}' names lifecycle '{lifecycle}', which is not declared.",
+                        entity.type_id
+                    ),
+                });
+            }
+        }
+    }
+
+    // A lifecycle exists to make the state space TOTAL. An initial state
+    // outside the declared set would leave an entity starting nowhere, which
+    // is exactly the null-until-first-write behaviour this replaces.
+    let mut seen_lifecycles: BTreeSet<&str> = BTreeSet::new();
+    for lifecycle in &ontology.lifecycles {
+        if !seen_lifecycles.insert(lifecycle.lifecycle_id.as_str()) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{}' is declared twice.",
+                    lifecycle.lifecycle_id
+                ),
+            });
+        }
+        if lifecycle.states.is_empty() {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{}' declares no states.",
+                    lifecycle.lifecycle_id
+                ),
+            });
+        }
+        if !lifecycle.has_state(&lifecycle.initial) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{}' starts at '{}', which is not one of its states ({}).",
+                    lifecycle.lifecycle_id,
+                    lifecycle.initial,
+                    lifecycle.states.join(", ")
+                ),
+            });
+        }
+        for transition in &lifecycle.transitions {
+            for (label, state) in [("from", &transition.from), ("to", &transition.to)] {
+                if !lifecycle.has_state(state) {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': lifecycle '{}' has a transition whose `{label}` is '{state}', which is not one of its states ({}).",
+                            lifecycle.lifecycle_id,
+                            lifecycle.states.join(", ")
+                        ),
+                    });
+                }
+            }
+        }
+    }
+
+    let mut seen_contracts: BTreeSet<&str> = BTreeSet::new();
+    for contract in &ontology.contracts {
+        if !seen_contracts.insert(contract.type_id.as_str()) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': contract type '{}' is declared twice.",
+                    contract.type_id
+                ),
+            });
+        }
+        if let Some(family) = &contract.subject_family {
+            if !ENTITY_FAMILIES.contains(&family.as_str()) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract '{}' has subject_family '{family}', which is not one of {}.",
+                        contract.type_id,
+                        ENTITY_FAMILIES.join(", ")
+                    ),
+                });
+            }
+        }
+    }
+
+    // A relation reads from both ends, so both ends have to name a family that
+    // exists, and the inverse is what makes the other direction sayable.
+    for relation in &ontology.relations {
+        for (label, family) in [
+            ("from_family", &relation.from_family),
+            ("to_family", &relation.to_family),
+        ] {
+            if !ENTITY_FAMILIES.contains(&family.as_str()) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': relation '{}' has {label} '{family}', which is not one of {}.",
+                        relation.relation_id,
+                        ENTITY_FAMILIES.join(", ")
+                    ),
+                });
+            }
+        }
+        if relation.inverse.trim().is_empty() {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': relation '{}' declares no inverse. Every relation reads from both ends.",
+                    relation.relation_id
+                ),
+            });
+        }
+    }
+
+    Ok(ontology)
+}
+
+/// Every contract type must name a lowering rule that exists, and every rule
+/// must have a type.
+///
+/// This is the join that keeps the vocabulary and the arithmetic from drifting.
+/// A type with no rule is a contract a model can declare and get no cash from;
+/// a rule with no type is cash with no counterparties and no place in the
+/// ontology. Both are silent today, which is how the drift happened.
+fn validate_ontology_against_rules(
+    ontology: &PackOntology,
+    rules: &[LoweringRule],
+    source: &str,
+) -> Result<(), PackLoadError> {
+    if ontology.contracts.is_empty() {
+        return Ok(());
+    }
+    let rule_names: BTreeSet<&str> = rules.iter().map(|r| r.contract_name.as_str()).collect();
+
+    for contract in &ontology.contracts {
+        // An election names no rule by design; there is nothing to join.
+        let Some(rule_name) = contract.contract_name.as_deref() else {
+            continue;
+        };
+        if !rule_names.contains(rule_name) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': contract type '{}' names lowering rule '{rule_name}', which the pack does not declare.",
+                    contract.type_id
+                ),
+            });
+        }
+    }
+
+    let typed: BTreeSet<&str> = ontology
+        .contracts
+        .iter()
+        .filter_map(|c| c.contract_name.as_deref())
+        .collect();
+    let untyped: Vec<&str> = rule_names
+        .into_iter()
+        .filter(|name| !typed.contains(name))
+        .collect();
+    if !untyped.is_empty() {
+        return Err(PackLoadError {
+            message: format!(
+                "Ontology '{source}': lowering rules with no contract type: {}. A rule with no type has no counterparties and no place in the ontology.",
+                untyped.join(", ")
+            ),
+        });
+    }
+    Ok(())
 }
 
 fn load_validations(
@@ -2103,5 +2752,283 @@ term = "rent_year"
             .expect("lease rule");
         assert!(lease.applies_to("cre.lease"));
         assert!(!lease.applies_to("cre.lease.primary"));
+    }
+}
+
+#[cfg(test)]
+mod ontology_tests {
+    use super::*;
+
+    const MINIMAL: &str = r#"
+[[entities]]
+type_id = "T.Asset.Thing"
+family = "asset"
+class = "real"
+lifecycle = "t.thing"
+
+[[lifecycles]]
+lifecycle_id = "t.thing"
+initial = "idle"
+states = ["idle", "running"]
+[[lifecycles.transitions]]
+from = "idle"
+to = "running"
+
+[[contracts]]
+type_id = "T.Contract.Deal"
+contract_name = "t.deal"
+parties = ["buyer", "seller"]
+
+# An election: a contract whose cash is a payoff the holder takes, so it names
+# no lowering rule and is exempt from the rule join.
+[[contracts]]
+type_id = "T.Contract.Call"
+parties = ["grantor", "holder"]
+"#;
+
+    /// Built through the real parser rather than a struct literal, so these
+    /// tests break if a rule's required shape changes.
+    fn rule(name: &str) -> LoweringRule {
+        let raw = format!(
+            r#"
+[[rules]]
+id = "r"
+contract_name = "{name}"
+stream_name = "t.stream"
+owner_entity = "${{subject}}"
+direction = "inflow"
+amount_expr = "1"
+schedule_kind = "every"
+schedule_from = "2026-01"
+schedule_to = "2026-01"
+"#
+        );
+        parse_lowering_rules(&raw, "test")
+            .expect("minimal rule parses")
+            .remove(0)
+    }
+
+    #[test]
+    fn parses_a_coherent_ontology() {
+        let o = parse_ontology(MINIMAL, "test", "t").expect("parses");
+        assert_eq!(o.entities.len(), 1);
+        assert_eq!(o.contract_for_rule("t.deal").unwrap().parties.len(), 2);
+        assert!(o.lifecycle("t.thing").unwrap().permits("idle", "running"));
+        // The relation is declared one way only, so the reverse is not a legal move.
+        assert!(!o.lifecycle("t.thing").unwrap().permits("running", "idle"));
+    }
+
+    #[test]
+    fn an_asset_must_declare_a_class() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Thing"
+family = "asset"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("class is required on an asset");
+        assert!(err.message.contains("declares no class"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_party_has_no_class_to_give() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Party.Someone"
+family = "party"
+class = "real"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("a party has no class");
+        assert!(
+            err.message.contains("Only assets have a class"),
+            "{}",
+            err.message
+        );
+    }
+
+    /// The whole point of declaring a state space is that an entity is always
+    /// in exactly one of its states. An initial state outside the set would
+    /// leave it starting nowhere.
+    #[test]
+    fn initial_state_must_be_one_of_the_declared_states() {
+        let raw = r#"
+[[lifecycles]]
+lifecycle_id = "t.thing"
+initial = "somewhere_else"
+states = ["idle", "running"]
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("initial must be declared");
+        assert!(
+            err.message.contains("not one of its states"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn a_transition_cannot_name_an_undeclared_state() {
+        let raw = r#"
+[[lifecycles]]
+lifecycle_id = "t.thing"
+initial = "idle"
+states = ["idle"]
+[[lifecycles.transitions]]
+from = "idle"
+to = "typo"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("transition target must exist");
+        assert!(err.message.contains("`to` is 'typo'"), "{}", err.message);
+    }
+
+    #[test]
+    fn an_entity_cannot_name_an_undeclared_lifecycle() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Thing"
+family = "asset"
+class = "real"
+lifecycle = "t.missing"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("lifecycle must exist");
+        assert!(err.message.contains("not declared"), "{}", err.message);
+    }
+
+    #[test]
+    fn ontology_id_must_match_the_pack_it_lives_in() {
+        let raw = "[pack]\nontology_id = \"cre\"\n";
+        let err = parse_ontology(raw, "test", "energy").expect_err("id must match the pack");
+        assert!(
+            err.message.contains("belongs to pack 'energy'"),
+            "{}",
+            err.message
+        );
+    }
+
+    /// The join that keeps the vocabulary and the arithmetic from drifting.
+    #[test]
+    fn every_contract_type_must_name_a_rule_that_exists() {
+        let o = parse_ontology(MINIMAL, "test", "t").unwrap();
+        let err = validate_ontology_against_rules(&o, &[rule("t.something_else")], "test")
+            .expect_err("a type with no rule produces no cash");
+        assert!(
+            err.message.contains("which the pack does not declare"),
+            "{}",
+            err.message
+        );
+    }
+
+    /// An election is exempt from the join by design — it has no rule to name.
+    #[test]
+    fn an_election_needs_no_lowering_rule() {
+        let o = parse_ontology(MINIMAL, "test", "t").unwrap();
+        assert_eq!(o.elections().count(), 1);
+        validate_ontology_against_rules(&o, &[rule("t.deal")], "test")
+            .expect("an election is not a missing rule");
+    }
+
+    #[test]
+    fn every_rule_must_have_a_contract_type() {
+        let o = parse_ontology(MINIMAL, "test", "t").unwrap();
+        let err = validate_ontology_against_rules(&o, &[rule("t.deal"), rule("t.orphan")], "test")
+            .expect_err("a rule with no type has no counterparties");
+        assert!(err.message.contains("t.orphan"), "{}", err.message);
+    }
+
+    /// A pack that declares no ontology keeps loading exactly as before.
+    #[test]
+    fn no_ontology_is_not_an_error() {
+        let empty = PackOntology::default();
+        assert!(empty.is_empty());
+        assert!(validate_ontology_against_rules(&empty, &[rule("anything")], "test").is_ok());
+    }
+}
+
+#[cfg(test)]
+mod ontology_shipped_packs {
+    use super::*;
+
+    /// The shipped packs must load with a coherent ontology. This is the test
+    /// that would have caught the drift the ontology exists to fix: every
+    /// contract type joined to a rule, every lifecycle total, every entity
+    /// typed.
+    #[test]
+    fn every_shipped_pack_has_a_coherent_ontology() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|p| p.parent())
+            .expect("workspace root")
+            .join("packs");
+        let registry = PackRegistry::load_from_dir(&root).expect("packs load");
+
+        for name in ["cre", "energy", "credit", "opco"] {
+            let pack = registry.pack(name).unwrap_or_else(|| panic!("{name} pack"));
+            let ontology = &pack.ontology;
+            assert!(
+                !ontology.is_empty(),
+                "{name} declares no ontology; every shipped pack should say what it models"
+            );
+            assert!(
+                ontology.entities.iter().any(|e| e.family == "asset"),
+                "{name} declares no asset"
+            );
+            assert!(
+                ontology.entities.iter().any(|e| e.family == "party"),
+                "{name} declares no party — a contract needs someone to be between"
+            );
+            // Every rule is joined to a type and back; load would have failed
+            // otherwise, so this asserts the join is non-trivial.
+            // Lowered contract types are one-to-one with rules; elections
+            // (options) name no rule and are counted separately.
+            let lowered = ontology
+                .contracts
+                .iter()
+                .filter(|c| c.contract_name.is_some())
+                .count();
+            assert_eq!(
+                lowered,
+                pack.lowering_rules
+                    .iter()
+                    .map(|r| r.contract_name.as_str())
+                    .collect::<BTreeSet<_>>()
+                    .len(),
+                "{name}: lowered contract types and lowering rules should be one-to-one"
+            );
+            assert!(
+                ontology.elections().next().is_some(),
+                "{name} declares no option type — every pack has at least one election"
+            );
+        }
+    }
+}
+
+#[cfg(all(test, feature = "embedded-packs"))]
+mod ontology_embedded_parity {
+    use super::*;
+
+    /// Embedded packs list their files explicitly, so a new pack file is
+    /// invisible to the embedded build until someone remembers to add it —
+    /// and the failure is silent, because a missing entrypoint loads as empty
+    /// rather than erroring. The ontology was missing exactly this way.
+    ///
+    /// This pins the two loaders to agree, so the next file added cannot
+    /// diverge quietly.
+    #[test]
+    fn embedded_and_filesystem_packs_carry_the_same_ontology() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|p| p.parent())
+            .expect("workspace root")
+            .join("packs");
+        let from_disk = PackRegistry::load_from_dir(&root).expect("packs load from disk");
+        let embedded = PackRegistry::load_embedded().expect("packs load embedded");
+
+        for name in ["cre", "energy", "credit", "opco"] {
+            let disk = from_disk.ontology(name).expect("disk ontology");
+            let emb = embedded.ontology(name).expect("embedded ontology");
+            assert!(
+                !emb.is_empty(),
+                "{name}: embedded pack carries no ontology — is it missing from the include list?"
+            );
+            assert_eq!(disk, emb, "{name}: embedded and on-disk ontologies differ");
+        }
     }
 }

@@ -2,17 +2,17 @@ version 0.1
 model "phase-schedule-smoke"
 time calendar monthly from 2025-01 for 24
 
-entity legal property
+entity asset property : Asset.Real
 
 phase construction from 2025-01 to 2025-12
 phase operations from 2026-01 to 2026-12
 
-stream legal.construction_draw on entity legal.property outflow {
+stream development.construction_draw on entity asset.property outflow {
   schedule on phase_enter("construction")
   amount = 500000
 }
 
-stream legal.operating_revenue on entity legal.property inflow {
+stream operations.revenue on entity asset.property inflow {
   schedule every month from phase_start("operations") to phase_end("operations")
   amount = 10000
 }

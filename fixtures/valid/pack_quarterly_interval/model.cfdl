@@ -3,12 +3,12 @@ model "pack-quarterly-interval"
 use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 // A lowering rule may declare its own interval, so a pack can express a
 // quarterly coupon on a monthly model. Rules that omit it pay at the
 // calendar cadence, which is what every shipped rule does.
-contract test.coupon_contract on entity legal.borrower {
+contract test.coupon_contract on entity asset.borrower {
   term 2026-01..2027-12
   terms { note = "quarterly" }
 }

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1301_UNRESOLVED_ENTITY_REF",
+    "severity": "error",
+    "message": "Event 'refi' references unknown entity 'asset.ghost'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 1,
+      "end_line": 25,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E1302_UNRESOLVED_STREAM_REF",
+    "severity": "error",
+    "message": "Event 'refi' references unknown stream 'loan.dbt_service'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 1,
+      "end_line": 25,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

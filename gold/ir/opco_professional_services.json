@@ -12,16 +12,16 @@
   "phases": [],
   "entities": [
     {
-      "id": "c8a0e29fceb1968de573b5c6ff20e674",
-      "symbol": "capital.equity",
-      "type": "core.Entity",
+      "id": "31134b4ed5186f202725850f1caa03f6",
+      "symbol": "asset.equity",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "a20a4741d0424c9939ea0d95dec1a647",
-      "symbol": "operating.firm",
-      "type": "core.Entity",
+      "id": "165e0f5488a119883e1200ab749a411b",
+      "symbol": "asset.firm",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -36,7 +36,7 @@
       "id": "03c89a0fe3a8d667365b13f9282442d6",
       "name": "exit.pe_sale",
       "owner": {
-        "symbol": "capital.equity"
+        "symbol": "asset.equity"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -66,7 +66,7 @@
       "id": "48389836bca32e4085259dae3f3be5b1",
       "name": "opex.compensation",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -98,7 +98,7 @@
       "id": "c5a6a5d46a8bacd5d3f60a6d8f6fdb09",
       "name": "opex.facilities",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -130,7 +130,7 @@
       "id": "58e463189631f1e4b3eed77e733ff3fc",
       "name": "opex.ga",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -162,7 +162,7 @@
       "id": "9cc03cc13d12146a617d2579d52387a7",
       "name": "opex.sales_marketing",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -194,7 +194,7 @@
       "id": "96b4349de50590c42869af8f37b3c70e",
       "name": "opex.working_capital",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -226,7 +226,7 @@
       "id": "80258d2eaa6a4d3defead8c0a6997266",
       "name": "rev.licensing",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -258,7 +258,7 @@
       "id": "99e3a717492aa3c30861faf93a3a83b3",
       "name": "rev.project_fees",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -290,7 +290,7 @@
       "id": "8bd474e3af14a982464f7213a7b3235c",
       "name": "rev.retainers",
       "owner": {
-        "symbol": "operating.firm"
+        "symbol": "asset.firm"
       },
       "direction": "inflow",
       "currency": "USD",

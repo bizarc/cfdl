@@ -22,7 +22,7 @@ model "tutorial-with-pack"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-entity operating business
+entity asset business : OpCo.Asset.Enterprise
 
 contract opco.revenue_line {
   term 2026-01..2030-12

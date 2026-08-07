@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "8141b5577a9401ac6a28823336d272e8",
-      "symbol": "legal.firm",
-      "type": "core.Entity",
+      "id": "471076055446ce1641fbc7a06755119e",
+      "symbol": "asset.firm",
+      "type": "OpCo.Asset.Enterprise",
       "attrs": {},
       "state": {}
     }
@@ -136,7 +136,7 @@
       "name": "opco.exit_perpetuity",
       "type": "core.Contract",
       "subject": {
-        "symbol": "legal.firm"
+        "symbol": "asset.firm"
       },
       "term": {
         "start": "2026-01-01",
@@ -163,7 +163,7 @@
       "id": "e7addc37ccdb22285de09905779e3a87",
       "name": "firm.fcff",
       "owner": {
-        "symbol": "legal.firm"
+        "symbol": "asset.firm"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -196,7 +196,7 @@
       "id": "68a053c286d318f630a8a75344c37aa2",
       "name": "opco.exit.value",
       "owner": {
-        "symbol": "legal.firm"
+        "symbol": "asset.firm"
       },
       "direction": "inflow",
       "currency": "USD",

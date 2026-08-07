@@ -2,7 +2,7 @@ version 0.1
 model "state-cadence"
 time calendar monthly from 2026-01 for 24
 
-entity legal co
+entity asset co : Asset.Financial
 
 // A STATE'S CLOCK IS ITS OWN, exactly as a stream's is.
 //
@@ -38,12 +38,12 @@ state monthly_idx {
 //
 // So the payments below must be 1, 2, 4, 8 ... — F(0), F(1), F(2) at payment
 // indices 0, 1, 2.
-stream co.quarterly on entity legal.co inflow currency USD {
+stream co.quarterly on entity asset.co inflow currency USD {
   schedule every quarter from 2026-01 to 2027-12
   amount = state.quarterly_idx
 }
 
-stream co.monthly on entity legal.co inflow currency USD {
+stream co.monthly on entity asset.co inflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = state.monthly_idx
 }

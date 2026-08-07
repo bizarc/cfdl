@@ -1,0 +1,41 @@
+version 0.1
+model "transition-log"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 5
+
+// Entity state used to be UNOBSERVABLE in results. Nothing distinguished "the
+// event fired and its target was misspelled" from "the event never fired", and
+// a case could not assert that a transition happened at all. The transition
+// log is that audit trail: period, entity, field, from, to, and the event that
+// caused it.
+//
+// The building opens in its lifecycle's declared initial state, so the first
+// transition has a real `from` rather than a null — before the ontology,
+// `status` did not exist until an event wrote one.
+entity asset tower : CRE.Asset.RealProperty {
+  asset_class = "office"
+  state operating
+}
+
+event start_repositioning when time.t >= 2 {
+  set entity asset.tower.status = "repositioning"
+}
+
+// WHEN A WRITE BECOMES VISIBLE, which is two rules and not one:
+//
+//   - an EVENT or OPTION guard reads the state as the period OPENED, so every
+//     guard in a period sees the same thing and declaration order cannot
+//     change an answer;
+//   - a STREAM reads the state as the period CLOSED, so a transition takes
+//     effect in the period it fires.
+//
+// That is the synchronous discipline: transitions all evaluate against the
+// current state, the state commits, then outputs read the committed result.
+// Rent therefore stops in the SAME period the event fires, which is what the
+// model reads as saying.
+stream cre.rent on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  category operating.revenue.base_rent
+  amount = 100
+  active when entity.state.status != "repositioning"
+}

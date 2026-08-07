@@ -1,0 +1,29 @@
+version 0.1
+model "hierarchy-rollup"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+entity asset tower : CRE.Asset.RealProperty { asset_class = "office" }
+entity asset suite_a : CRE.Asset.Unit { rentable_area = 10000  part of asset.tower }
+entity asset suite_b : CRE.Asset.Unit { rentable_area = 5000   part of asset.tower }
+
+// Rent sits on the SUITES. The building's cash is its suites' cash because
+// they are its suites — not because the stream names share a prefix.
+stream cre.rent.suite_a on entity asset.suite_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+stream cre.rent.suite_b on entity asset.suite_b inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 50
+}
+
+// A building-level cost sits on the building itself.
+stream cre.opex.building on entity asset.tower outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense.opex
+  amount = 30
+}

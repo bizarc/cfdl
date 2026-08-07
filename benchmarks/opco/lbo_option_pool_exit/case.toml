@@ -20,14 +20,17 @@
 # Taken together the two cases make a sharper claim than either alone: neither
 # of the two circularities a sponsor LBO is famous for actually needs a solver.
 #
-# THE CASE'S PRINCIPAL FINDING IS AN ENGINE GAP, not a number. An option's
-# `exercise when` is evaluated in the discrete event/option pre-pass, whose
-# environment exposes `inputs.` but NOT `state.`. Referencing state there does
-# not fail the build: it warns and evaluates to FALSE, so every option silently
-# fails to exercise and its value silently disappears from the model. That is a
-# silent-wrong-answer path in a shipped feature, and it is why the resolved
-# value per share has to be restated as an assumption for the options to read.
-# NOTES.md, "Finding 1".
+# THE CASE FOUND AN ENGINE DEFECT, AND THE FIX IS NOW ITS PROOF. An option's
+# `exercise when` was evaluated in a pre-pass whose environment carried no
+# declared state, so `state.value_per_share` warned and evaluated FALSE: every
+# option silently declined to exercise and $12.9mm of intrinsic value vanished
+# from a model that still ran clean. The resolved value had to be restated as
+# an assumption for the options to read.
+#
+# States are now computed before events and options, so the options test the
+# value the model DERIVES. The restated constant is gone, and every figure
+# below is unchanged — which is the strongest available evidence that the
+# workaround and the fix agree, since only the fix derives the number.
 #
 # Asserted at the 8.0x exit multiple — the multiple the deal was entered at, so
 # the sponsor's return comes from deleveraging and growth rather than from

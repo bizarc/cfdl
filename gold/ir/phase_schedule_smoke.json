@@ -29,9 +29,9 @@
   ],
   "entities": [
     {
-      "id": "a7bbd8fe393cafdeca3ad7b7c969479a",
-      "symbol": "legal.property",
-      "type": "core.Entity",
+      "id": "25e2dcf6b842bdfd68d77edc067f5580",
+      "symbol": "asset.property",
+      "type": "Asset.Real",
       "attrs": {},
       "state": {}
     }
@@ -43,10 +43,10 @@
   "contracts": [],
   "streams": [
     {
-      "id": "de5cd821ee32aaa89ae372c255cc5d07",
-      "name": "legal.construction_draw",
+      "id": "522b7f413116dad2ebb7bea2fbbe1127",
+      "name": "development.construction_draw",
       "owner": {
-        "symbol": "legal.property"
+        "symbol": "asset.property"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -74,10 +74,10 @@
       }
     },
     {
-      "id": "f79d2345148edd9e7a3403620eaccd2a",
-      "name": "legal.operating_revenue",
+      "id": "29d5dd46be7b60a4842c69a8e5511a88",
+      "name": "operations.revenue",
       "owner": {
-        "symbol": "legal.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",

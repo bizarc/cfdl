@@ -3,10 +3,10 @@ model "exit-cap-smoke"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity real_estate property
+entity asset property : CRE.Asset.RealProperty
 
 // Exit via cap rate: terminal value = noi_value / exit_cap = 100000 / 0.05 = 2000000
-contract cre.exit_cap on entity real_estate.property {
+contract cre.exit_cap on entity asset.property {
   term 2026-12..2026-12
   terms {
     exit_cap = 0.05

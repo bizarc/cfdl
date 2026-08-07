@@ -2,7 +2,7 @@ version 0.1
 model "stream-unknown-category"
 use pack "cre" version "0.1.0"
 time calendar annual from 2026-01 for 3
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // A category has to name one of the closed set the pack declares, because a
 // category is what a fold aggregates on. An unlisted one is worse than a

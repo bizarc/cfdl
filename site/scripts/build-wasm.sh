@@ -38,7 +38,24 @@ OUT_DIR="${SITE_DIR}/public/wasm"
 # site/DEPLOY.md — build the bundle in CI and stop committing it, which makes
 # the budget a CI concern rather than something a developer trips over. Until
 # that lands, raise it deliberately and keep noticing.
-BUDGET_KB=680
+#
+# 680 -> 740 when the ontology landed. THIRD raise, and the tripwire is again
+# doing its job rather than being defeated: it forced this note.
+#
+# What added the ~37 KB gzipped is CODE, not prose. All four pack ontologies
+# together are 35 KB raw and 7 KB gzipped, so the documentation is not the
+# lever — the same finding the 640 -> 680 note recorded. The weight is the
+# ontology loader and its coherence checks, fifteen new diagnostics, typed
+# entities and party bindings, the transition record, and the hierarchy
+# rollup: real surface, each piece with a fixture behind it.
+#
+# The structural answer the last note asked for HAS since landed — the bundle
+# is built in CI and no longer committed — so this is a CI gate rather than
+# something a developer trips over locally. That makes the number a statement
+# about download size for the playground, which is the thing actually worth
+# protecting. 740 leaves ~23 KB of headroom: enough that a small change does
+# not trip it, tight enough that the next feature has to look again.
+BUDGET_KB=740
 
 if [[ "${SKIP_WASM:-0}" == "1" ]]; then
   echo "build-wasm: SKIP_WASM=1 — using the committed bundle"

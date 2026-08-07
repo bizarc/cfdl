@@ -12,23 +12,23 @@
   "phases": [],
   "entities": [
     {
-      "id": "59fa593bf3f3c496d4a50ceb82b9dafa",
-      "symbol": "loan.construction",
-      "type": "core.Entity",
+      "id": "9b355928620539c3baff065350caf5d9",
+      "symbol": "asset.construction",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "dd5d2abbacaa6efda562e68f296e50ad",
-      "symbol": "loan.permanent",
-      "type": "core.Entity",
+      "id": "18fe63421326a92186837c40f51aff5f",
+      "symbol": "asset.permanent",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "c9715dfdb3d8598a820644336b510453",
-      "symbol": "real_estate.property",
-      "type": "core.Entity",
+      "id": "ad1f1c6e084f2c4fe189bf227f7438cc",
+      "symbol": "asset.property",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     }
@@ -109,7 +109,7 @@
       "name": "cre.construction_stub",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -135,7 +135,7 @@
       "name": "cre.exit_cap",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -161,7 +161,7 @@
       "name": "cre.lease",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -187,7 +187,7 @@
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -213,7 +213,7 @@
       "name": "cre.ops_revenue",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "term": {
         "start": "2026-01-01",
@@ -240,7 +240,7 @@
       "id": "190aad30dd61540fab9a1fc0b117a031",
       "name": "cre.construction.draws",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -280,7 +280,7 @@
       "id": "ccbe675e2cc82d28901cd5ffc15baa5b",
       "name": "cre.exit.sale",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -319,7 +319,7 @@
       "id": "48e53a86a43842aba7f55e30a8bc5632",
       "name": "cre.lease.base_rent",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -359,7 +359,7 @@
       "id": "1bd47f99d3ab874531b239cd0d473bd1",
       "name": "cre.ops.expense",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -399,7 +399,7 @@
       "id": "1af4c0280526ec8f5a487e5aba2b6481",
       "name": "cre.ops.revenue",
       "owner": {
-        "symbol": "real_estate.property"
+        "symbol": "asset.property"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -439,7 +439,7 @@
       "id": "0ea8770c814f310f68e541ea8489a379",
       "name": "loan.construction_interest",
       "owner": {
-        "symbol": "loan.construction"
+        "symbol": "asset.construction"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -472,7 +472,7 @@
       "id": "00eac3c33f0e563774fa12b8d9bb76ea",
       "name": "loan.permanent_debt_service",
       "owner": {
-        "symbol": "loan.permanent"
+        "symbol": "asset.permanent"
       },
       "direction": "outflow",
       "currency": "USD",

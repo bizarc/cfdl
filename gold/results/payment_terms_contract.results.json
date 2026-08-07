@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "f36500d725b3be3682349ce8d9f2c48b910765c99163ca723032e2a01a23e2b7",
-  "ledger_hash": "47a9d3a5b699e3a769ab00b01088709f081fe01ea3e089d3aa0d2eab45773574",
+  "model_hash": "05a840d575e939883044b6e1970ef41f0bbee77f0f9fefbe3cdeb9254af29a4b",
+  "ledger_hash": "458d0e4d1906e49b6144ec8f5e8001732e69eb228691cd0b061d660d8087d4f3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -25,7 +25,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.project.plant.total": {
+      "entity.asset.plant.total": {
         "amount": 18000000.0,
         "currency": "USD"
       },
@@ -500,6 +500,111 @@
         ]
       },
       "domain.energy.revenue": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.plant.net_cash_flow": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",

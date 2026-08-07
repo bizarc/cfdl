@@ -3,7 +3,7 @@ model "pack-cadence-cre-monthly"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2025-01 for 36 project 12
 
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // One lease on three calendars: 480,000/yr, five months free at the start,
 // 3% anniversary escalation, recoveries above a 300,000 stop at 40%.

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1318_ENTITY_HIERARCHY_CYCLE",
+    "severity": "error",
+    "message": "Entity hierarchy forms a cycle: asset.a -> asset.b -> asset.c -> asset.a.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 6,
+      "start_col": 1,
+      "end_line": 6,
+      "end_col": 47
+    },
+    "path": null,
+    "hint": "An entity aggregates its children, so a cycle has no bottom to sum from.",
+    "notes": []
+  }
+]

@@ -35,9 +35,9 @@ model "cre-development-with-financing"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 72
 
-entity real_estate property
-entity loan construction
-entity loan permanent
+entity asset property : CRE.Asset.RealProperty
+entity asset construction : Asset.Financial
+entity asset permanent : Asset.Financial
 
 // CRE pack: property-level lifecycle (construction stub, lease, ops, exit)
 contract cre.construction_stub {
@@ -55,12 +55,12 @@ contract cre.lease {
 }
 
 // Ops as standalone streams (individual revenue/expense items per guidance)
-stream real_estate.ops_revenue on entity real_estate.property inflow currency USD {
+stream real_estate.ops_revenue on entity asset.property inflow currency USD {
   schedule every month from 2028-01 to 2031-12
   amount = 30000
 }
 
-stream real_estate.ops_expense on entity real_estate.property outflow currency USD {
+stream real_estate.ops_expense on entity asset.property outflow currency USD {
   schedule every month from 2028-01 to 2031-12
   amount = 12000
 }
@@ -74,13 +74,13 @@ contract cre.exit_cap {
 }
 
 // Construction-phase financing: interest-only stream (fixed dates, no events)
-stream loan.construction_interest on entity loan.construction outflow currency USD {
+stream loan.construction_interest on entity asset.construction outflow currency USD {
   schedule every month from 2026-01 to 2027-06
   amount = 40000
 }
 
 // Permanent financing: debt service stream starts when construction period ends (hardcoded transition)
-stream loan.permanent_debt_service on entity loan.permanent outflow currency USD {
+stream loan.permanent_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2027-07 to 2031-12
   amount = 55000
 }

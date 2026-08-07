@@ -3,7 +3,7 @@ model "pack-day-count-act360"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 13
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // Actual/360, the USD credit convention. A nominal annual rate is divided by
 // the rule's accrual divisor, which the default reads as periods-per-year —
@@ -13,7 +13,7 @@ entity fund buyer
 // So interest is 6,200 in a 31-day January and 5,600 in a 28-day February,
 // against a flat 6,000 under 30/360, and 73,000 over a 365-day year rather
 // than 72,000. That 365/360 uplift is the point of the convention.
-contract credit.pool_io_bullet.p on entity fund.buyer {
+contract credit.pool_io_bullet.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
     balance = 1200000

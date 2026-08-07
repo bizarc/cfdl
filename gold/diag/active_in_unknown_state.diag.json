@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1332_UNKNOWN_ACTIVE_STATE",
+    "severity": "error",
+    "message": "Stream 'cre.rent' is active in state 'leasd', which lifecycle 'cre.unit' does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 26,
+      "start_col": 19,
+      "end_line": 26,
+      "end_col": 23
+    },
+    "path": null,
+    "hint": "Declared states: vacant, leased, holdover, downtime.",
+    "notes": []
+  }
+]

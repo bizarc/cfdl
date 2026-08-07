@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "1874a690d5085dbb278d7a1e82320dbf265f1f310c3aa114d0edfdd2c17b4715",
-  "ledger_hash": "477a19804c1192d6206e6bf9f54c13577a6e10bebbdd214e4fbd3be144d0a618",
+  "model_hash": "9f6c69de317e06e7a3235733c2e2341ff3bd78977d5d4c5546a811c9eab3d186",
+  "ledger_hash": "8c48a5763e47b50b2e3a80e4080eac44e3b25200dd20783c3a29d045a37bfce4",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -152,7 +152,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.lender.total": {
+      "entity.asset.lender.total": {
         "amount": 1200000.0,
         "currency": "USD"
       },
@@ -723,6 +723,63 @@
           },
           {
             "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.lender.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
             "currency": "USD"
           }
         ]

@@ -1,0 +1,32 @@
+version 0.1
+model "typed-entities"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// Old form still parses — every model written before types existed.
+entity asset legacy : CRE.Asset.RealProperty
+
+// Typed, with attributes.
+entity asset tower : CRE.Asset.RealProperty {
+  asset_class = "office"
+  rentable_area = 30000
+  state operating
+}
+
+// Optional hierarchy: a unit inside the building. Never required.
+entity asset suite_a : CRE.Asset.Unit {
+  rentable_area = 12000
+  part of asset.tower
+  state leased
+}
+
+// A party — someone to contract with.
+entity party acme : CRE.Party.Tenant {
+  name = "Acme Corp"
+}
+
+stream cre.rent on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 100000
+}

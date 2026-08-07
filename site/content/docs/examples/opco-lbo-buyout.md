@@ -21,12 +21,12 @@ model "lbo-buyout"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-entity operating target
+entity asset target : OpCo.Asset.Enterprise
 
 // $12M-revenue services business bought at 8.0x run-rate EBITDA with a
 // 5.0x term loan; sold after 5 years at 8.5x trailing-12 EBITDA.
 
-contract opco.revenue_line on entity operating.target {
+contract opco.revenue_line on entity asset.target {
   term 2026-01..2030-12
   terms {
     amount = 1000000
@@ -34,7 +34,7 @@ contract opco.revenue_line on entity operating.target {
   }
 }
 
-contract opco.opex_line on entity operating.target {
+contract opco.opex_line on entity asset.target {
   term 2026-01..2030-12
   terms {
     amount = 650000
@@ -43,7 +43,7 @@ contract opco.opex_line on entity operating.target {
 }
 
 // DSO 45 / DPO 30 / DIO 10; ending balance released at exit.
-contract opco.working_capital_policy on entity operating.target {
+contract opco.working_capital_policy on entity asset.target {
   term 2026-01..2030-12
   terms {
     ar_days = 45
@@ -54,7 +54,7 @@ contract opco.working_capital_policy on entity operating.target {
 }
 
 // Maintenance capex at 3% of revenue.
-contract opco.capex_line on entity operating.target {
+contract opco.capex_line on entity asset.target {
   term 2026-01..2030-12
   terms {
     pct_of_revenue = 0.03
@@ -63,7 +63,7 @@ contract opco.capex_line on entity operating.target {
 
 // 5.0x leverage: $21mm term loan, 8.5%, 12 months IO then 7-year
 // amortization, balloon at exit.
-contract opco.term_debt on entity operating.target {
+contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 21000000
@@ -74,7 +74,7 @@ contract opco.term_debt on entity operating.target {
 }
 
 // Cash taxes at 26% on EBITDA - D&A - interest (no NOL carryforward).
-contract opco.cash_taxes on entity operating.target {
+contract opco.cash_taxes on entity asset.target {
   term 2026-01..2030-12
   terms {
     tax_rate = 0.26
@@ -83,7 +83,7 @@ contract opco.cash_taxes on entity operating.target {
 }
 
 // Entry at 8.0x annualized run-rate EBITDA = 8.0 * (350k * 12) = $33.6mm.
-contract opco.acquisition on entity operating.target {
+contract opco.acquisition on entity asset.target {
   term 2026-01..2026-01
   terms {
     price = 33600000
@@ -91,7 +91,7 @@ contract opco.acquisition on entity operating.target {
 }
 
 // Exit at 8.5x trailing-12 EBITDA net of 1.5% selling costs.
-contract opco.exit_ebitda on entity operating.target {
+contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
   terms {
     exit_multiple = 8.5

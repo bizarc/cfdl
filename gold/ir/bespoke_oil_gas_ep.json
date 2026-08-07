@@ -37,23 +37,23 @@
   ],
   "entities": [
     {
-      "id": "e364eebc2f510e9cafdb190a94bef5ee",
-      "symbol": "capital.drillco",
-      "type": "core.Entity",
+      "id": "cc60d93bfdcc5054cb8513f608005ac8",
+      "symbol": "asset.asset",
+      "type": "Asset.Real",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "224df5ae0009c4f4c42f366ccb310208",
-      "symbol": "operations.opco",
-      "type": "core.Entity",
+      "id": "32bcad207ab9cf3e4a9cb4cee9745f0e",
+      "symbol": "asset.drillco",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "9b31b72bed8983d0a684111fa8ef705b",
-      "symbol": "wellbore.asset",
-      "type": "core.Entity",
+      "id": "4b1145954af2a1fcd4e2523d3ccab8c7",
+      "symbol": "asset.opco",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -68,7 +68,7 @@
       "id": "0c8b55a0fc0f8faf7dfdc86e84d51ec2",
       "name": "capital.drilling_costs",
       "owner": {
-        "symbol": "capital.drillco"
+        "symbol": "asset.drillco"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -100,7 +100,7 @@
       "id": "0a85452a88b168506a7057de84c0bcf9",
       "name": "capital.well_capex",
       "owner": {
-        "symbol": "capital.drillco"
+        "symbol": "asset.drillco"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -131,7 +131,7 @@
       "id": "58e463189631f1e4b3eed77e733ff3fc",
       "name": "opex.ga",
       "owner": {
-        "symbol": "operations.opco"
+        "symbol": "asset.opco"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -163,7 +163,7 @@
       "id": "f7eefc983f91d840366f3c9000ac555b",
       "name": "opex.loe",
       "owner": {
-        "symbol": "operations.opco"
+        "symbol": "asset.opco"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -195,7 +195,7 @@
       "id": "921d968d89cd0f92fff4f110207a6529",
       "name": "rev.gross_production",
       "owner": {
-        "symbol": "wellbore.asset"
+        "symbol": "asset.asset"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -227,7 +227,7 @@
       "id": "0f4a68791cb9c142da744155be802a6c",
       "name": "rev.royalty_burden",
       "owner": {
-        "symbol": "wellbore.asset"
+        "symbol": "asset.asset"
       },
       "direction": "outflow",
       "currency": "USD",

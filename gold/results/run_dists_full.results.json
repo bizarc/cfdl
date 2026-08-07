@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "a07d44c126ddfde1d80c0e563be057273bd616604f83c26e04c1e57fff2785a6",
-  "ledger_hash": "4beb1a0c70223a21168b51a214c26dbe8434a7a0983c6b833afd030c4a4def30",
+  "model_hash": "9f7be9303ac3c3eb6dc80a710ae51ae11e56175dee6867f6e56c68c958ba9379",
+  "ledger_hash": "719f656b2a2b6b1a46fdfcc4713a5db83c52daac23bcb57405211ca283a5c396",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -23,7 +23,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.project.plant.total": {
+      "entity.asset.plant.total": {
         "amount": 0.0,
         "currency": "USD"
       },
@@ -44,6 +44,63 @@
       }
     },
     "series": {
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

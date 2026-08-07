@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "9b6bf7169c5ce4fe1c9bd8cb71ab4121ae9e207d7ef57b876f34f72a3f401193",
-  "ledger_hash": "9466ca9cb5a3fda4eebb0a42dd2fe17d9a5101b6e886ef8dd9f289c26d51ab28",
+  "model_hash": "0d5a8e2fdd0135e04f2b1fc0bfc812a60a6caf28079d20d6d8e7fabb71623ea4",
+  "ledger_hash": "02c70a80980a931a10522de9baff1a7943626175b27e075d0d216638e0e5b17f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -146,7 +146,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.fund.buyer.total": {
+      "entity.asset.buyer.total": {
         "amount": 1273000.0,
         "currency": "USD"
       },
@@ -750,6 +750,67 @@
           },
           {
             "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.buyer.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5600.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1206200.0,
             "currency": "USD"
           },
           {

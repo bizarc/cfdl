@@ -3,7 +3,7 @@ model "mbs-pool-conventions"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // A 30-year agency-MBS pool at the market-standard prepayment and default
 // conventions, reconciled against the published industry reference schedule.
@@ -21,7 +21,7 @@ entity fund buyer
 // having to do this by hand is itself a small gap.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
-contract credit.pool_level_pay.a on entity fund.buyer {
+contract credit.pool_level_pay.a on entity asset.buyer {
   term 2026-01..2056-12
   terms {
     balance = 100000000

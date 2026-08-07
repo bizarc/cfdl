@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "5aaf690eec768282e056de165354fb73",
-      "symbol": "project.plant",
-      "type": "core.Entity",
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "Asset.Real",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "id": "327dcd0f0062ecf38e6786c7a3ca1246",
       "name": "plant.revenue",
       "owner": {
-        "symbol": "project.plant"
+        "symbol": "asset.plant"
       },
       "direction": "inflow",
       "currency": "USD",

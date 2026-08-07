@@ -31,13 +31,13 @@ curve sofr {
   2028-01: 0.0385
 }
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // $15mm floating IO bridge pool: SOFR + 275, coupon floored at 7.00% (binds
 // once SOFR + margin falls below it) and capped at 9.00% (never binds),
 // 36-month bullet, 10 CPR, 2.5 CDR, 45% severity, 5-month recovery lag.
 // Contract term spans term_months + recovery_lag_months.
-contract credit.pool_float_io_bullet.bridge_f on entity fund.buyer {
+contract credit.pool_float_io_bullet.bridge_f on entity asset.buyer {
   term 2026-01..2029-05
   terms {
     balance = 15000000
@@ -53,7 +53,7 @@ contract credit.pool_float_io_bullet.bridge_f on entity fund.buyer {
   }
 }
 
-contract credit.purchase.bridge_f on entity fund.buyer {
+contract credit.purchase.bridge_f on entity asset.buyer {
   term 2026-01..2026-01
   terms {
     price = 15000000

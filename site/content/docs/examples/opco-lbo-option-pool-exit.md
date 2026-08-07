@@ -63,7 +63,7 @@ use pack "opco" version "0.1.0"
 // waterfall, not a cash flow schedule, and the schedule is the other case.
 time calendar annual from 2021-01 for 1
 
-entity legal target
+entity asset target : OpCo.Asset.Enterprise
 
 // ---------------------------------------------------------------------------
 // Exit. LTM adjusted EBITDA at the end of the five-year hold, at 8.0x, less
@@ -80,20 +80,6 @@ assume preferred_shares = 23.353133120640006
 // Management rollover: $36mm at $10.00/share.
 assume rollover_shares  = 3.6
 
-// THE SAME NUMBER AS `state.value_per_share` BELOW, AND IT SHOULD NOT HAVE TO
-// BE. An option's `exercise when` is evaluated in the discrete event/option
-// pre-pass, whose environment exposes `inputs.` but NOT `state.` — so an
-// option cannot test against anything the model computes as state. Writing
-// `state.value_per_share` there does not error the build: it warns and
-// evaluates to FALSE, so every option silently fails to exercise and its value
-// silently vanishes.
-//
-// So the resolved value is restated here for the options to read. The two are
-// tied by the test rather than by the model: expected.csv asserts
-// `state.value_per_share` against the published figure, so if the derivation
-// below drifts from this constant the case fails. That is a workaround for an
-// engine gap, and NOTES.md records it as the case's principal finding.
-assume resolved_value_per_share = 20.877119011136774
 
 // ---------------------------------------------------------------------------
 // The option pool. Seven tranches, laddered by strike ($mm of proceeds and
@@ -145,48 +131,49 @@ state value_per_share {
 
 // ---------------------------------------------------------------------------
 // The options themselves. Each tests its own strike against the resolved value
-// per share — which is the economically real test, and is only expressible
-// because the value above is resolved first.
+// per share — the economically real test, and now expressible directly:
+// `exercise when` reads `state.value_per_share`, the value the model derives
+// above, rather than a constant restated for the engine's benefit.
 //
 // The payoff is the tranche's intrinsic value at exit: shares * (value - strike).
 // ---------------------------------------------------------------------------
 
 option mgmt_options_12_50 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 12.50
-  payoff 0.50 * (inputs.resolved_value_per_share - 12.50)
+  exercise when state.value_per_share > 12.50
+  payoff 0.50 * (state.value_per_share - 12.50)
 }
 
 option mgmt_options_14_00 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 14.00
-  payoff 0.50 * (inputs.resolved_value_per_share - 14.00)
+  exercise when state.value_per_share > 14.00
+  payoff 0.50 * (state.value_per_share - 14.00)
 }
 
 option mgmt_options_15_00 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 15.00
-  payoff 0.50 * (inputs.resolved_value_per_share - 15.00)
+  exercise when state.value_per_share > 15.00
+  payoff 0.50 * (state.value_per_share - 15.00)
 }
 
 option mgmt_options_17_50 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 17.50
-  payoff 0.50 * (inputs.resolved_value_per_share - 17.50)
+  exercise when state.value_per_share > 17.50
+  payoff 0.50 * (state.value_per_share - 17.50)
 }
 
 option mgmt_options_20_00 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 20.00
-  payoff 0.75 * (inputs.resolved_value_per_share - 20.00)
+  exercise when state.value_per_share > 20.00
+  payoff 0.75 * (state.value_per_share - 20.00)
 }
 
 // Out of the money at 8.0x: the value per share resolves to $20.88, below both
 // remaining strikes. Included precisely so the case asserts a NON-exercise as
 // well as an exercise — an option model that only ever fires is not tested.
 option mgmt_options_22_50 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 22.50
-  payoff 1.25 * (inputs.resolved_value_per_share - 22.50)
+  exercise when state.value_per_share > 22.50
+  payoff 1.25 * (state.value_per_share - 22.50)
 }
 
 option mgmt_options_25_00 type Option.Equity {
-  exercise when inputs.resolved_value_per_share > 25.00
-  payoff 1.25 * (inputs.resolved_value_per_share - 25.00)
+  exercise when state.value_per_share > 25.00
+  payoff 1.25 * (state.value_per_share - 25.00)
 }
 
 // ---------------------------------------------------------------------------
@@ -195,20 +182,20 @@ option mgmt_options_25_00 type Option.Equity {
 
 // Total cash to shareholders: exit equity plus the strike proceeds the
 // exercised tranches pay in.
-stream opco.exit.equity_value on entity legal.target inflow currency USD {
+stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = state.exit_equity
 }
 
-stream opco.exit.option_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = 44.500
 }
 
 // The sponsor's share: its converted preferred shares at the resolved value.
-stream opco.exit.sponsor_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.sponsor_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = 23.353133120640006 * state.value_per_share
@@ -218,7 +205,7 @@ stream opco.exit.sponsor_proceeds on entity legal.target inflow currency USD {
 // at the resolved value. GROSS of the strikes paid in — those are already
 // inside total cash to shareholders, so netting them here would double-count.
 // Sponsor 487.546 + management 132.570 = 620.116, the published total.
-stream opco.exit.management_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.management_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = (3.6 + 2.75) * state.value_per_share

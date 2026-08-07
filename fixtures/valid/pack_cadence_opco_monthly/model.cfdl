@@ -3,7 +3,7 @@ model "pack-cadence-opco-monthly"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2025-01 for 36
 
-entity operating business
+entity asset business : OpCo.Asset.Enterprise
 
 // One operating business on three calendars. Stated with the ANNUAL siblings
 // (`amount_year`), which is what makes the deal grid-independent: the bare

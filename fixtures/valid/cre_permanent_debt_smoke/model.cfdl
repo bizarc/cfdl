@@ -3,7 +3,7 @@ model "cre-permanent-debt-smoke"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // A commercial mortgage in its three phases, all in one contract:
 //

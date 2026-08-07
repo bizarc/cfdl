@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
-      "symbol": "legal.borrower",
-      "type": "core.Entity",
+      "id": "a891aa65cc648d1159772a587ea85620",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -51,10 +51,10 @@
   "contracts": [],
   "streams": [
     {
-      "id": "7f7c44cfd86694bcdd6f61d368e127e7",
-      "name": "legal.fee",
+      "id": "04c7ce9fc8c39829cee26d7f67ceddcd",
+      "name": "fee.management",
       "owner": {
-        "symbol": "legal.borrower"
+        "symbol": "asset.borrower"
       },
       "direction": "inflow",
       "currency": "USD",

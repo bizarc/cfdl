@@ -3,12 +3,12 @@ model "opco-exit-perpetuity-smoke"
 use pack "opco" version "0.1.0"
 time calendar annual from 2026-01 for 5
 
-entity legal firm
+entity asset firm : OpCo.Asset.Enterprise
 
 // A five-year forecast ending in a growing perpetuity — the shape every
 // intrinsic valuation takes, and one the pack could not express before:
 // exit_multiple and exit_ebitda both apply a MULTIPLE to something.
-stream firm.fcff on entity legal.firm inflow currency USD {
+stream firm.fcff on entity asset.firm inflow currency USD {
   schedule every year from 2026-01 to 2030-01
   category operating.revenue.recurring
   amount = 1000 * pow(1.04, time.t)
@@ -21,7 +21,7 @@ stream firm.fcff on entity legal.firm inflow currency USD {
 //
 // The exit settles at the END of its period, so it discounts the full five
 // years. `on_date` alone would place it a year early on an annual model.
-contract opco.exit_perpetuity on entity legal.firm {
+contract opco.exit_perpetuity on entity asset.firm {
   term 2030-01..2030-01
   terms {
     base_value = 1169.858560

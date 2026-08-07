@@ -2,7 +2,7 @@ version 0.1
 model "tutorial-uncertainty"
 time calendar monthly from 2026-01 for 24
 
-entity legal co
+entity asset co : Asset.Financial
 
 // A fixed assumption names a number once.
 assume monthly_cost = 18000
@@ -12,12 +12,12 @@ assume monthly_cost = 18000
 // reproduces exactly.
 assume growth ~ Normal(mean=0.02, stdev=0.008, clip=[0.0, 0.05])
 
-stream co.revenue on entity legal.co inflow currency USD {
+stream co.revenue on entity asset.co inflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 40000 * pow(1 + inputs.growth, time.t / 12.0)
 }
 
-stream co.cost on entity legal.co outflow currency USD {
+stream co.cost on entity asset.co outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = inputs.monthly_cost
 }

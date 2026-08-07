@@ -3,13 +3,13 @@ model "level-pay-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 126
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // $25mm homogeneous level-pay pool, 6.5% note rate, 10-year amortization,
 // 8 CPR, 2 CDR, 35% severity, 6-month recovery lag, 50bp servicing strip,
 // 1% prepayment penalty. The contract term spans term_months +
 // recovery_lag_months so recoveries have periods to land in.
-contract credit.pool_level_pay.auto_a on entity fund.buyer {
+contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
     balance = 25000000
@@ -25,7 +25,7 @@ contract credit.pool_level_pay.auto_a on entity fund.buyer {
 }
 
 // Purchased at a 1-point discount (99.0) at close.
-contract credit.purchase.auto_a on entity fund.buyer {
+contract credit.purchase.auto_a on entity asset.buyer {
   term 2026-01..2026-01
   terms {
     price = 24750000

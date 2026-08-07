@@ -6,11 +6,11 @@ phase ramp   from 2026-01 to 2026-06
 phase growth from 2026-07 to 2027-12
 phase scale  from 2028-01 to 2028-12
 
-entity saas product
-entity ops  team
+entity asset product : Asset.Financial
+entity asset venture : Asset.Financial
 
 // Seed: one-time outflow at phase entry (t=0)
-stream ops.seed_investment on entity ops.team outflow currency USD {
+stream ops.seed_investment on entity asset.venture outflow currency USD {
   schedule on phase_enter("ramp")
   amount = 500000
 }
@@ -19,13 +19,13 @@ stream ops.seed_investment on entity ops.team outflow currency USD {
 // Uses concrete date range (2026-07 to 2028-12) for full growth+scale span.
 // t=6  => 50000 * pow(1.15, 6/12.0)  ~= 53619
 // t=24 => 50000 * pow(1.15, 24/12.0) = 66125
-stream saas.mrr on entity saas.product inflow currency USD {
+stream saas.mrr on entity asset.product inflow currency USD {
   schedule every month from 2026-07 to 2028-12
   amount = 50000 * pow(1.15, time.t / 12.0)
 }
 
 // Team cost: fixed $30k/month for all 36 months
-stream ops.team_cost on entity ops.team outflow currency USD {
+stream ops.team_cost on entity asset.venture outflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 30000
 }
@@ -33,7 +33,7 @@ stream ops.team_cost on entity ops.team outflow currency USD {
 // Infra cost: linearly growing, suppressed during ramp (t < 6)
 // t=6  => 2000 + 6*50  = 2300
 // t=24 => 2000 + 24*50 = 3200
-stream saas.infra_cost on entity saas.product outflow currency USD {
+stream saas.infra_cost on entity asset.product outflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 2000 + time.t * 50
   active when time.t >= 6

@@ -40,7 +40,7 @@ model "banker-dcf-conventions"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2024-10 for 60
 
-entity legal target
+entity asset target : OpCo.Asset.Enterprise
 
 // Cumulative dilution from equity awards, applied as a haircut on each flow.
 // The filing states ~2% cumulative over the projection, ramping 0.5%/yr.
@@ -60,37 +60,37 @@ assume terminal_year_ufcf    = 891.0
 // Unlevered free cash flow, as disclosed ($mm). One flow per fiscal period.
 // ---------------------------------------------------------------------------
 
-stream opco.ufcf.stub_fy25 on entity legal.target inflow currency USD {
+stream opco.ufcf.stub_fy25 on entity asset.target inflow currency USD {
   schedule every month mid from 2025-02 to 2025-02
   category operating.revenue.recurring
   amount = 367
 }
 
-stream opco.ufcf.fy26 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy26 on entity asset.target inflow currency USD {
   schedule every month from 2025-12 to 2025-12
   category operating.revenue.recurring
   amount = 481 * (1 - inputs.dilution_fy26)
 }
 
-stream opco.ufcf.fy27 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy27 on entity asset.target inflow currency USD {
   schedule every month from 2026-12 to 2026-12
   category operating.revenue.recurring
   amount = 502 * (1 - inputs.dilution_fy27)
 }
 
-stream opco.ufcf.fy28 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy28 on entity asset.target inflow currency USD {
   schedule every month from 2027-12 to 2027-12
   category operating.revenue.recurring
   amount = 639 * (1 - inputs.dilution_fy28)
 }
 
-stream opco.ufcf.fy29 on entity legal.target inflow currency USD {
+stream opco.ufcf.fy29 on entity asset.target inflow currency USD {
   schedule every month from 2028-12 to 2028-12
   category operating.revenue.recurring
   amount = 736 * (1 - inputs.dilution_fy29)
 }
 
-stream opco.exit.value on entity legal.target inflow currency USD {
+stream opco.exit.value on entity asset.target inflow currency USD {
   schedule every month from 2029-06 to 2029-06
   category investing.exit
   amount = inputs.terminal_year_ufcf * inputs.terminal_ntm_multiple

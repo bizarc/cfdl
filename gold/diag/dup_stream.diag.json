@@ -2,13 +2,13 @@
   {
     "code": "E1003_DUPLICATE_STREAM",
     "severity": "error",
-    "message": "Duplicate stream 'legal.principal'.",
+    "message": "Duplicate stream 'debt.principal'.",
     "file": "model.cfdl",
     "span": {
       "start_line": 6,
       "start_col": 1,
       "end_line": 6,
-      "end_col": 47
+      "end_col": 46
     },
     "path": null,
     "hint": null,
