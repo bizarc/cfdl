@@ -1,0 +1,56 @@
+# Benchmark case: a sponsor LBO debt schedule with "circular" interest.
+#
+# WHAT THIS CASE ESTABLISHES. The reference model solves this schedule BY
+# ITERATION — it ships a `CIRC` switch that turns Excel's iterative calculation
+# on, because interest is charged on the average debt balance, the average
+# balance depends on how much cash swept the debt down, and the cash available
+# to sweep depends on interest.
+#
+# CFDL has no solver and no iteration. It reproduces the schedule anyway,
+# because the loop is LINEAR and therefore has an exact algebraic solution:
+# collect the ending balance on one side and it appears only to the first
+# power. The derivation is in model.cfdl at the state that uses it.
+#
+# Agreement is to 2.8e-14 — machine epsilon — across every balance and every
+# interest line, all four years. Not "within tolerance": the closed form and
+# the iterated answer are the same number.
+#
+# This matters beyond one benchmark. "You need an iterative solver for an LBO"
+# is the standard argument for why a declarative, loop-free engine cannot model
+# leveraged finance. For the average-balance convention that argument is simply
+# wrong, and this case is the demonstration.
+#
+# THE PIK TRANCHE IS A SECOND CLOSED FIXED POINT. Subordinated notes accrue
+# payment-in-kind interest on their own average balance, so the balance is on
+# both sides again — but nothing external enters, so it collapses to a constant
+# growth factor, (1 + r/2) / (1 - r/2), the bilinear transform. Three years of
+# accretion, then the coupon turns cash and the balance holds flat.
+#
+# WHERE THE CLOSED FORM WOULD STOP WORKING is documented in NOTES.md and is the
+# honest limit of the claim: it depends on no constraint binding. This deal
+# never draws its revolver and never fully repays the term loan, so the
+# recursion stays linear throughout. A deal that hit either would be piecewise
+# linear, and a `min`/`max` in the recursion is a different problem.
+#
+# There is deliberately no reference_gen.py. Every figure asserted here is the
+# reference workbook's own cached output.
+#
+# The reference is "All Rights Reserved" and is neither vendored nor in CI. It
+# was downloaded once outside this repo and only its OUTPUT NUMBERS carried
+# across — the same handling the CREST and national-laboratory cases get.
+#
+# period_tolerance = 1e-6, which is the ENGINE'S PUBLISHED PRECISION and not a
+# judgement about this deal. Results JSON carries money to six decimal places,
+# so half of that — 5e-7 — is the tightest any case here can assert.
+#
+# The worst disagreement across all 33 asserted figures is 4.5e-7, on the
+# repayment line in the final year, and it is that publication rounding rather
+# than arithmetic. Computed against the workbook's own unrounded cached values
+# — outside the engine's printing — the closed form agrees to 2.8e-14.
+#
+# Period 0 is the transaction year and carries only the funded balances, so
+# every state `init` is a real input rather than a first-year answer copied
+# back in. Units are $mm.
+summary = "A leveraged buyout's debt schedule, where interest accrues on the average balance and every dollar of free cash flow sweeps against the term loan."
+pack = "opco"
+period_tolerance = 1e-6
