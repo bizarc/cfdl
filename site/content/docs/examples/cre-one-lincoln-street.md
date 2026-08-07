@@ -1,11 +1,11 @@
 ---
 id: benchmark-cre-one-lincoln-street
-title: "cre: one lincoln street"
+title: "CRE: office development joint venture"
 slug: "/docs/examples/cre-one-lincoln-street"
 source: benchmarks/cre/one_lincoln_street
 ---
 
-# cre: one lincoln street
+# CRE: office development joint venture
 
 A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing.
 

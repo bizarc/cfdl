@@ -1,11 +1,11 @@
 ---
 id: benchmark-opco-damodaran-fcff
-title: "opco: damodaran fcff"
+title: "OpCo: free cash flow to firm"
 slug: "/docs/examples/opco-damodaran-fcff"
 source: benchmarks/opco/damodaran_fcff
 ---
 
-# opco: damodaran fcff
+# OpCo: free cash flow to firm
 
 A free cash flow to firm valuation following Damodaran's published method, with reinvestment driven by growth and return on capital.
 

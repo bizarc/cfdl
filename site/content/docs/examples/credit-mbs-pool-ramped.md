@@ -1,11 +1,11 @@
 ---
 id: benchmark-credit-mbs-pool-ramped
-title: "credit: mbs pool ramped"
+title: "Credit: mortgage pool on a prepayment ramp"
 slug: "/docs/examples/credit-mbs-pool-ramped"
 source: benchmarks/credit/mbs_pool_ramped
 ---
 
-# credit: mbs pool ramped
+# Credit: mortgage pool on a prepayment ramp
 
 A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off.
 

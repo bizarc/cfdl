@@ -1,11 +1,11 @@
 ---
 id: benchmark-opco-saas-sbc-convention-fork
-title: "opco: saas sbc convention fork"
+title: "OpCo: SaaS DCF and the stock-compensation fork"
 slug: "/docs/examples/opco-saas-sbc-convention-fork"
 source: benchmarks/opco/saas_sbc_convention_fork
 ---
 
-# opco: saas sbc convention fork
+# OpCo: SaaS DCF and the stock-compensation fork
 
 A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it.
 

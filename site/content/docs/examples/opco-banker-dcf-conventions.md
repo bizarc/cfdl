@@ -1,11 +1,11 @@
 ---
 id: benchmark-opco-banker-dcf-conventions
-title: "opco: banker dcf conventions"
+title: "OpCo: banker DCF conventions"
 slug: "/docs/examples/opco-banker-dcf-conventions"
 source: benchmarks/opco/banker_dcf_conventions
 ---
 
-# opco: banker dcf conventions
+# OpCo: banker DCF conventions
 
 An operating company discounted cash flow built to standard banking conventions, from revenue through unlevered free cash flow to enterprise value.
 

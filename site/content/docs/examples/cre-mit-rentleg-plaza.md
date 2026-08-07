@@ -1,11 +1,11 @@
 ---
 id: benchmark-cre-mit-rentleg-plaza
-title: "cre: mit rentleg plaza"
+title: "CRE: rent-regulated plaza"
 slug: "/docs/examples/cre-mit-rentleg-plaza"
 source: benchmarks/cre/mit_rentleg_plaza
 ---
 
-# cre: mit rentleg plaza
+# CRE: rent-regulated plaza
 
 A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 

@@ -1,11 +1,11 @@
 ---
 id: benchmark-credit-mbs-pool-conventions
-title: "credit: mbs pool conventions"
+title: "Credit: mortgage pool conventions"
 slug: "/docs/examples/credit-mbs-pool-conventions"
 source: benchmarks/credit/mbs_pool_conventions
 ---
 
-# credit: mbs pool conventions
+# Credit: mortgage pool conventions
 
 A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector.
 

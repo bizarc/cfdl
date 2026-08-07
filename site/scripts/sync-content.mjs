@@ -529,14 +529,31 @@ if (fs.existsSync(benchRoot)) {
 // none — without inventing models that nothing validates.
 
 const benchmarkTitles = {
+  "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
+  "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
   "cre/office_two_tenant": "CRE: two-tenant office",
+  "cre/one_lincoln_street": "CRE: office development joint venture",
   "cre/retail_strip": "CRE: retail strip with expense stops",
-  "credit/level_pay_pool": "Credit: level-pay auto pool",
-  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
+  "credit/auto_abs_speed_150": "Credit: auto ABS at 1.5x prepayment speed",
+  "credit/auto_abs_wal": "Credit: auto ABS weighted average life",
   "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
+  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/level_pay_pool": "Credit: level-pay auto pool",
+  "credit/mbs_pool_conventions": "Credit: mortgage pool conventions",
+  "credit/mbs_pool_ramped": "Credit: mortgage pool on a prepayment ramp",
+  "energy/crest_solar_cost_based": "Energy: cost-based solar feed-in tariff",
+  "energy/merchant_capacity": "Energy: merchant generator with capacity revenue",
   "energy/solar_ppa_microgrid": "Energy: solar PPA microgrid",
+  "energy/utility_pv_singleowner": "Energy: utility-scale PV, single owner",
   "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
-  "opco/lbo_buyout": "OpCo: leveraged buyout"
+  "opco/banker_dcf_conventions": "OpCo: banker DCF conventions",
+  "opco/damodaran_fcff": "OpCo: free cash flow to firm",
+  "opco/gordon_growth_coned": "OpCo: stable-growth dividend discount",
+  "opco/lbo_buyout": "OpCo: leveraged buyout",
+  "opco/lbo_circular_interest": "OpCo: LBO debt schedule with average-balance interest",
+  "opco/lbo_option_pool_exit": "OpCo: LBO exit waterfall with an option pool",
+  "opco/saas_sbc_convention_fork": "OpCo: SaaS DCF and the stock-compensation fork"
 };
 
 /** The description a case states in the leading comments of case.toml. */
@@ -565,6 +582,20 @@ function benchmarkSummary(caseDir) {
     );
   }
   return match[1].trim();
+}
+
+// The published description of a case: what the deal is, what the reference is,
+// what the case exercises, how well it matched, and what any residual means.
+//
+// A separate file from `case.toml` because it is prose, and separate from
+// NOTES.md because NOTES is maintainer narrative and is deliberately not
+// published — the same split `summary` and this file's comments already keep.
+// Optional while the set is being written; `check-benchmark-cases.py` is what
+// requires it.
+function benchmarkCase(caseDir) {
+  const file = path.resolve(caseDir, "CASE.md");
+  if (!fs.existsSync(file)) return null;
+  return fs.readFileSync(file, "utf8").trimEnd();
 }
 
 function formatMetricValue(value) {
@@ -605,6 +636,7 @@ for (const { pack, name } of benchCases) {
       "implementation on every commit — period by period, and on each metric,",
       "inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).",
       "",
+      ...(benchmarkCase(caseDir) ? [benchmarkCase(caseDir), ""] : []),
       "## The model",
       "",
       cfdlFence(caseDir),

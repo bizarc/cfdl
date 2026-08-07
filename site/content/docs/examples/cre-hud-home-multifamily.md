@@ -1,11 +1,11 @@
 ---
 id: benchmark-cre-hud-home-multifamily
-title: "cre: hud home multifamily"
+title: "CRE: HOME-funded affordable multifamily"
 slug: "/docs/examples/cre-hud-home-multifamily"
 source: benchmarks/cre/hud_home_multifamily
 ---
 
-# cre: hud home multifamily
+# CRE: HOME-funded affordable multifamily
 
 A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends.
 

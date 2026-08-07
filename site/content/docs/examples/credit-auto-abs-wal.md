@@ -1,11 +1,11 @@
 ---
 id: benchmark-credit-auto-abs-wal
-title: "credit: auto abs wal"
+title: "Credit: auto ABS weighted average life"
 slug: "/docs/examples/credit-auto-abs-wal"
 source: benchmarks/credit/auto_abs_wal
 ---
 
-# credit: auto abs wal
+# Credit: auto ABS weighted average life
 
 An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back.
 

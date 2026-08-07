@@ -1,11 +1,11 @@
 ---
 id: benchmark-energy-merchant-capacity
-title: "energy: merchant capacity"
+title: "Energy: merchant generator with capacity revenue"
 slug: "/docs/examples/energy-merchant-capacity"
 source: benchmarks/energy/merchant_capacity
 ---
 
-# energy: merchant capacity
+# Energy: merchant generator with capacity revenue
 
 A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake.
 
