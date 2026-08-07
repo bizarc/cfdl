@@ -1,0 +1,184 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "transition-log",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "121876c85ba64d3a28b2875e9e107d71",
+      "symbol": "asset.tower",
+      "type": "CRE.Asset.RealProperty",
+      "attrs": {
+        "asset_class": "office"
+      },
+      "state": {},
+      "initial_state": "operating"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service",
+        "financing.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt_service, financing.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "507cea886aa3f732100904f6a7f9c53d",
+      "name": "cre.rent",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "entity.state.status != \"repositioning\""
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.tower"
+          },
+          "field": "status",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "\"repositioning\""
+          }
+        }
+      ],
+      "id": "fc3be9a54b2a18395a1e1e26416469b4",
+      "name": "start_repositioning",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 22,
+          "start_col": 1,
+          "start_line": 20
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "time.t >= 2"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

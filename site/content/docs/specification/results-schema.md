@@ -253,6 +253,48 @@ against it by `make results-schema`.
         },
         "annual_rollup": {
           "$ref": "#/$defs/AnnualRollupSection"
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Every state change an event made, in the order it happened — the audit trail for whether and when something occurred. Entity state is otherwise unobservable: nothing else distinguishes an event that fired against a misspelled target from an event that never fired, and without this a case cannot assert a transition. Recorded even when the value does not change, because the question the log answers is whether the event fired. Omitted when a model has no events. Visibility is two rules, not one: an event or option guard reads the state as the period OPENED, so declaration order cannot change an answer; a stream reads it as the period CLOSED, so a transition takes effect in the period it fires.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "date",
+              "entity",
+              "field",
+              "to",
+              "event"
+            ],
+            "properties": {
+              "period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "date": {
+                "type": "string"
+              },
+              "entity": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "from": {
+                "type": "string",
+                "description": "The value before. Absent when the field had none — which, for a typed entity with a lifecycle, should not happen, because it opens in its declared initial state."
+              },
+              "to": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string",
+                "description": "The event that fired. A transition always has a cause."
+              }
+            }
+          }
         }
       }
     },

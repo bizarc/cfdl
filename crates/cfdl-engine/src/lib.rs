@@ -369,6 +369,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         status: "ok".to_string(),
         metrics: base_run.metrics.clone(),
         series: base_run.series,
+        transitions: base_run.transitions.clone(),
         annual_rollup: base_run.annual_rollup,
         errors: None,
     };
@@ -625,6 +626,7 @@ struct DeterministicRunOutput {
     series: BTreeMap<String, Series>,
     npv: f64,
     annual_rollup: Option<AnnualRollupSection>,
+    transitions: Vec<TransitionRecord>,
 }
 
 /// Output of the discrete event/option pre-pass over the master timeline.
@@ -635,6 +637,30 @@ struct EventSim {
     stream_active: BTreeMap<String, Vec<bool>>,
     /// Option payoff cash flows: option name -> per-period amounts.
     option_cash: BTreeMap<String, Vec<f64>>,
+    /// Every state change an event made, in the order it happened.
+    ///
+    /// Entity state was UNOBSERVABLE in results: nothing distinguished "the
+    /// event fired and its target was misspelled" from "the event never fired",
+    /// and a case could not assert that a transition happened at all. The
+    /// audit trail is the point — if and when something occurred.
+    transitions: Vec<TransitionRecord>,
+}
+
+/// One state change: when, to what, from what, and what caused it.
+#[derive(Debug, Clone, Serialize)]
+pub struct TransitionRecord {
+    pub period: usize,
+    pub date: String,
+    pub entity: String,
+    pub field: String,
+    /// The value before. Absent when the field had none — which, for a typed
+    /// entity with a lifecycle, should not happen, because it opens in its
+    /// declared initial state.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    pub to: String,
+    /// The event that fired. A transition always has a cause.
+    pub event: String,
 }
 
 /// Evaluate events and options discretely at each time step (spec §12/§13).
@@ -669,6 +695,7 @@ fn simulate_events(
     let mut current_active: BTreeMap<String, bool> = BTreeMap::new();
     let mut stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
     let mut option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut transitions: Vec<TransitionRecord> = Vec::new();
     let mut event_fired = vec![false; ir.events.len()];
     let mut option_exercised = vec![false; ir.options.len()];
     let mut forced_exercise: Vec<String> = Vec::new();
@@ -750,10 +777,22 @@ fn simulate_events(
                             .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
                         {
                             Ok(v) => {
-                                current_state
-                                    .entry(entity.symbol.clone())
-                                    .or_default()
-                                    .insert(field.clone(), v);
+                                let slot = current_state.entry(entity.symbol.clone()).or_default();
+                                let before = slot.get(field).map(describe_value);
+                                let after = describe_value(&v);
+                                slot.insert(field.clone(), v);
+                                // Recorded even when the value does not change:
+                                // the log answers "did this event fire", and a
+                                // set that wrote the same value still fired.
+                                transitions.push(TransitionRecord {
+                                    period: t,
+                                    date: date.to_string(),
+                                    entity: entity.symbol.clone(),
+                                    field: field.clone(),
+                                    from: before,
+                                    to: after,
+                                    event: event.name.clone(),
+                                });
                             }
                             Err(err) => warnings.push(format!(
                                 "Event '{}' set {}.{} failed [{}]: {}; skipped.",
@@ -884,6 +923,7 @@ fn simulate_events(
         entity_state,
         stream_active,
         option_cash,
+        transitions,
     }
 }
 
@@ -1524,6 +1564,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         ))
     };
 
+    let transitions = event_sim.transitions.clone();
     Ok(DeterministicRunOutput {
         warnings,
         resolved_inputs: base_inputs,
@@ -1531,6 +1572,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         series: series_map,
         npv,
         annual_rollup,
+        transitions,
     })
 }
 
@@ -2124,6 +2166,21 @@ fn series_references(src: &str) -> Vec<String> {
         }
     }
     out
+}
+
+/// Render a state value for the transition log.
+///
+/// A lifecycle state is text; a numeric or boolean field is rendered as
+/// written. The log is for reading and for asserting on, so the rendering is
+/// stable rather than clever.
+fn describe_value(value: &ExprValue) -> String {
+    match value {
+        ExprValue::String(text) => text.clone(),
+        ExprValue::Bool(flag) => flag.to_string(),
+        ExprValue::Int(n) => n.to_string(),
+        ExprValue::Decimal(n) => round_amount(*n).to_string(),
+        other => format!("{other:?}"),
+    }
 }
 
 fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
@@ -3613,6 +3670,10 @@ pub struct DeterministicSection {
     pub status: String,
     pub metrics: BTreeMap<String, Scalar>,
     pub series: BTreeMap<String, Series>,
+    /// Every state change an event made, in the order it happened. Omitted when
+    /// the model has none, so a model without events is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub transitions: Vec<TransitionRecord>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub annual_rollup: Option<AnnualRollupSection>,
     #[serde(skip_serializing_if = "Option::is_none")]

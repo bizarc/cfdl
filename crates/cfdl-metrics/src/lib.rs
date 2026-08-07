@@ -340,6 +340,7 @@ mod tests {
                 status: "ok".to_string(),
                 metrics,
                 series: BTreeMap::new(),
+                transitions: Vec::new(),
                 annual_rollup: None,
                 errors: None,
             },
