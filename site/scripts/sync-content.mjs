@@ -578,6 +578,7 @@ const benchmarkTitles = {
   "opco/gordon_growth_coned": "OpCo: stable-growth dividend discount",
   "opco/lbo_buyout": "OpCo: leveraged buyout",
   "opco/lbo_circular_interest": "OpCo: LBO debt schedule with average-balance interest",
+  "opco/lbo_financing_cases": "OpCo: one buyout at three capital structures",
   "opco/lbo_option_pool_exit": "OpCo: LBO exit waterfall with an option pool",
   "opco/saas_sbc_convention_fork": "OpCo: SaaS DCF and the stock-compensation fork"
 };

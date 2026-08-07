@@ -2771,8 +2771,52 @@
       {
         "name": "base",
         "metrics": {
+          "entity.asset.asset.total": {
+            "amount": 2312450.604355,
+            "currency": "USD"
+          },
+          "entity.asset.drillco.total": {
+            "amount": -5000000.0,
+            "currency": "USD"
+          },
+          "entity.asset.opco.total": {
+            "amount": -2232000.0,
+            "currency": "USD"
+          },
+          "model.moic": 0.159388,
           "model.npv": {
             "amount": -4809720.485533,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -4919549.395645,
+            "currency": "USD"
+          },
+          "model.wal_years": 1.56709,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.capital.drilling_costs.total": {
+            "amount": -1500000.0,
+            "currency": "USD"
+          },
+          "stream.capital.well_capex.total": {
+            "amount": -3500000.0,
+            "currency": "USD"
+          },
+          "stream.opex.ga.total": {
+            "amount": -720000.0,
+            "currency": "USD"
+          },
+          "stream.opex.loe.total": {
+            "amount": -1512000.0,
+            "currency": "USD"
+          },
+          "stream.rev.gross_production.total": {
+            "amount": 2846093.051514,
+            "currency": "USD"
+          },
+          "stream.rev.royalty_burden.total": {
+            "amount": -533642.447159,
             "currency": "USD"
           }
         }
@@ -2780,8 +2824,53 @@
       {
         "name": "low_production",
         "metrics": {
+          "entity.asset.asset.total": {
+            "amount": 4212000.0,
+            "currency": "USD"
+          },
+          "entity.asset.drillco.total": {
+            "amount": -5000000.0,
+            "currency": "USD"
+          },
+          "entity.asset.opco.total": {
+            "amount": -2232000.0,
+            "currency": "USD"
+          },
+          "model.irr": -0.237992,
+          "model.moic": 0.431476,
           "model.npv": {
             "amount": -3526030.528641,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -3020000.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 3.041667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.capital.drilling_costs.total": {
+            "amount": -1500000.0,
+            "currency": "USD"
+          },
+          "stream.capital.well_capex.total": {
+            "amount": -3500000.0,
+            "currency": "USD"
+          },
+          "stream.opex.ga.total": {
+            "amount": -720000.0,
+            "currency": "USD"
+          },
+          "stream.opex.loe.total": {
+            "amount": -1512000.0,
+            "currency": "USD"
+          },
+          "stream.rev.gross_production.total": {
+            "amount": 5184000.0,
+            "currency": "USD"
+          },
+          "stream.rev.royalty_burden.total": {
+            "amount": -972000.0,
             "currency": "USD"
           }
         }

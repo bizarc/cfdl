@@ -4465,8 +4465,43 @@
       {
         "name": "base",
         "metrics": {
+          "entity.asset.property.total": {
+            "amount": 5244000.0,
+            "currency": "USD"
+          },
+          "model.irr": 1.759989,
+          "model.moic": 20.422222,
           "model.npv": {
             "amount": 3241680.868717,
+            "currency": "USD"
+          },
+          "model.payback_periods": 16.0,
+          "model.payback_years": 1.416667,
+          "model.total": {
+            "amount": 5244000.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.882708,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.cre.construction.draws.total": {
+            "amount": -270000.0,
+            "currency": "USD"
+          },
+          "stream.cre.exit.sale.total": {
+            "amount": 3000000.0,
+            "currency": "USD"
+          },
+          "stream.cre.lease.base_rent.total": {
+            "amount": 1650000.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.expense.total": {
+            "amount": -576000.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.revenue.total": {
+            "amount": 1440000.0,
             "currency": "USD"
           }
         }
@@ -4474,8 +4509,43 @@
       {
         "name": "stress",
         "metrics": {
+          "entity.asset.property.total": {
+            "amount": 4592828.571429,
+            "currency": "USD"
+          },
+          "model.irr": 1.59179,
+          "model.moic": 18.010476,
           "model.npv": {
             "amount": 2838387.020764,
+            "currency": "USD"
+          },
+          "model.payback_periods": 17.0,
+          "model.payback_years": 1.5,
+          "model.total": {
+            "amount": 4592828.571429,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.848186,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.cre.construction.draws.total": {
+            "amount": -270000.0,
+            "currency": "USD"
+          },
+          "stream.cre.exit.sale.total": {
+            "amount": 2571428.571429,
+            "currency": "USD"
+          },
+          "stream.cre.lease.base_rent.total": {
+            "amount": 1485000.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.expense.total": {
+            "amount": -633600.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.revenue.total": {
+            "amount": 1440000.0,
             "currency": "USD"
           }
         }

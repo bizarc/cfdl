@@ -3366,8 +3366,59 @@
       {
         "name": "base",
         "metrics": {
+          "entity.asset.equity.total": {
+            "amount": 36300000.0,
+            "currency": "USD"
+          },
+          "entity.asset.firm.total": {
+            "amount": 12489395.718323,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 29730203.029275,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 48789395.718323,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.441515,
+          "run.annual_discount_rate": 0.12,
+          "run.periods_per_year": 12.0,
+          "stream.exit.pe_sale.total": {
+            "amount": 36300000.0,
+            "currency": "USD"
+          },
+          "stream.opex.compensation.total": {
+            "amount": -13800000.0,
+            "currency": "USD"
+          },
+          "stream.opex.facilities.total": {
+            "amount": -1320000.0,
+            "currency": "USD"
+          },
+          "stream.opex.ga.total": {
+            "amount": -2700000.0,
+            "currency": "USD"
+          },
+          "stream.opex.sales_marketing.total": {
+            "amount": -1080000.0,
+            "currency": "USD"
+          },
+          "stream.opex.working_capital.total": {
+            "amount": -840000.0,
+            "currency": "USD"
+          },
+          "stream.rev.licensing.total": {
+            "amount": 4172472.885867,
+            "currency": "USD"
+          },
+          "stream.rev.project_fees.total": {
+            "amount": 7632420.730781,
+            "currency": "USD"
+          },
+          "stream.rev.retainers.total": {
+            "amount": 20424502.101674,
             "currency": "USD"
           }
         }
@@ -3375,8 +3426,59 @@
       {
         "name": "downside",
         "metrics": {
+          "entity.asset.equity.total": {
+            "amount": 25500000.0,
+            "currency": "USD"
+          },
+          "entity.asset.firm.total": {
+            "amount": 12489395.718323,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 23543843.671369,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 37989395.718323,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.306435,
+          "run.annual_discount_rate": 0.12,
+          "run.periods_per_year": 12.0,
+          "stream.exit.pe_sale.total": {
+            "amount": 25500000.0,
+            "currency": "USD"
+          },
+          "stream.opex.compensation.total": {
+            "amount": -13800000.0,
+            "currency": "USD"
+          },
+          "stream.opex.facilities.total": {
+            "amount": -1320000.0,
+            "currency": "USD"
+          },
+          "stream.opex.ga.total": {
+            "amount": -2700000.0,
+            "currency": "USD"
+          },
+          "stream.opex.sales_marketing.total": {
+            "amount": -1080000.0,
+            "currency": "USD"
+          },
+          "stream.opex.working_capital.total": {
+            "amount": -840000.0,
+            "currency": "USD"
+          },
+          "stream.rev.licensing.total": {
+            "amount": 4172472.885867,
+            "currency": "USD"
+          },
+          "stream.rev.project_fees.total": {
+            "amount": 7632420.730781,
+            "currency": "USD"
+          },
+          "stream.rev.retainers.total": {
+            "amount": 20424502.101674,
             "currency": "USD"
           }
         }
@@ -3384,8 +3486,59 @@
       {
         "name": "upside",
         "metrics": {
+          "entity.asset.equity.total": {
+            "amount": 47000000.0,
+            "currency": "USD"
+          },
+          "entity.asset.firm.total": {
+            "amount": 12489395.718323,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 35859281.282016,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 59489395.718323,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.526978,
+          "run.annual_discount_rate": 0.12,
+          "run.periods_per_year": 12.0,
+          "stream.exit.pe_sale.total": {
+            "amount": 47000000.0,
+            "currency": "USD"
+          },
+          "stream.opex.compensation.total": {
+            "amount": -13800000.0,
+            "currency": "USD"
+          },
+          "stream.opex.facilities.total": {
+            "amount": -1320000.0,
+            "currency": "USD"
+          },
+          "stream.opex.ga.total": {
+            "amount": -2700000.0,
+            "currency": "USD"
+          },
+          "stream.opex.sales_marketing.total": {
+            "amount": -1080000.0,
+            "currency": "USD"
+          },
+          "stream.opex.working_capital.total": {
+            "amount": -840000.0,
+            "currency": "USD"
+          },
+          "stream.rev.licensing.total": {
+            "amount": 4172472.885867,
+            "currency": "USD"
+          },
+          "stream.rev.project_fees.total": {
+            "amount": 7632420.730781,
+            "currency": "USD"
+          },
+          "stream.rev.retainers.total": {
+            "amount": 20424502.101674,
             "currency": "USD"
           }
         }

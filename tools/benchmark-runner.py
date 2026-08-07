@@ -6,7 +6,8 @@ Each case directory (benchmarks/<pack>/<case>/) contains:
   run.json              run configuration
   case.toml             pack name + per-period tolerance
   expected.csv          per-period expectations from an independent reference
-  expected_metrics.json metric -> {value, tolerance}
+  expected_metrics.json  metric -> {value, tolerance}
+  expected_scenarios.json  scenario -> metric -> {value, tolerance}   (optional)
 
 The harness compiles and runs each case with the cfdl CLI and fails if any
 period-level value or summary metric drifts outside its tolerance.
@@ -191,6 +192,32 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
                     if len(failures) > 5:
                         failures.append("... (truncated)")
                         return failures
+
+    # Scenario metrics, when the case declares them. A scenario is a full
+    # deterministic run under different parameters, so a case whose subject is
+    # how a number moves with an input asserts it here rather than needing one
+    # case directory per variant.
+    expected_scenarios_path = case_dir / "expected_scenarios.json"
+    if expected_scenarios_path.exists():
+        summaries = {
+            s["name"]: s["metrics"]
+            for s in (results.get("scenarios") or {}).get("summaries", [])
+        }
+        expected_scenarios = json.loads(expected_scenarios_path.read_text(encoding="utf-8"))
+        for name, wanted in expected_scenarios.items():
+            if name not in summaries:
+                failures.append(f"scenario {name!r}: not in results")
+                continue
+            for key, spec in wanted.items():
+                if key not in summaries[name]:
+                    failures.append(f"scenario {name}: metric {key} missing from results")
+                    continue
+                got = scalar(summaries[name][key])
+                if abs(got - spec["value"]) > spec["tolerance"]:
+                    failures.append(
+                        f"scenario {name} metric {key}: {got} vs expected "
+                        f"{spec['value']} (tolerance {spec['tolerance']})"
+                    )
 
     metrics = dict(results["deterministic"]["metrics"])
     domain = results.get("domain_metrics") or {}

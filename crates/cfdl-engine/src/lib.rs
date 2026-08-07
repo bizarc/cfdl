@@ -392,7 +392,16 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
             },
         )?;
         warnings.extend(scenario_run.warnings);
-        let mut scenario_metrics = BTreeMap::new();
+        // A scenario is a FULL deterministic run — `run_deterministic` above
+        // computed every metric the base run computes. Publishing only NPV
+        // threw the rest away: a stress case could not report its IRR, its
+        // MoIC, or any per-stream total, and a model whose whole subject is
+        // how returns move with leverage had nothing to show for the scenario
+        // that varied it.
+        //
+        // The base run's own metrics are the same map, so scenarios and the
+        // deterministic block cannot report different metric sets.
+        let mut scenario_metrics = scenario_run.metrics;
         scenario_metrics.insert(
             "model.npv".to_string(),
             Scalar::Money(Money {

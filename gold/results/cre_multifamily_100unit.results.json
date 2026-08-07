@@ -3475,8 +3475,35 @@
       {
         "name": "base",
         "metrics": {
+          "entity.asset.property.total": {
+            "amount": 34703307.69,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 25175934.304146,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 34703307.69,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.492725,
+          "run.annual_discount_rate": 0.075,
+          "run.periods_per_year": 12.0,
+          "stream.ancillary.income.total": {
+            "amount": 432000.0,
+            "currency": "USD"
+          },
+          "stream.cre.exit.sale.total": {
+            "amount": 27542307.69,
+            "currency": "USD"
+          },
+          "stream.cre.ops.expense.total": {
+            "amount": -3816000.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.revenue.total": {
+            "amount": 10545000.0,
             "currency": "USD"
           }
         }
@@ -3484,8 +3511,35 @@
       {
         "name": "downside",
         "metrics": {
+          "entity.asset.property.total": {
+            "amount": 28814922.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 20972553.103426,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 28814922.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.451052,
+          "run.annual_discount_rate": 0.075,
+          "run.periods_per_year": 12.0,
+          "stream.ancillary.income.total": {
+            "amount": 432000.0,
+            "currency": "USD"
+          },
+          "stream.cre.exit.sale.total": {
+            "amount": 22380522.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.expense.total": {
+            "amount": -4197600.0,
+            "currency": "USD"
+          },
+          "stream.cre.ops.revenue.total": {
+            "amount": 10200000.0,
             "currency": "USD"
           }
         }
