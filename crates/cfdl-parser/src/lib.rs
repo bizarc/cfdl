@@ -148,6 +148,21 @@ pub struct StreamStmt {
     pub schedule: Option<ScheduleSpec>,
     pub amount: Option<ExprSlot>,
     pub active_when: Option<ExprSlot>,
+    /// `active in state leased, holdover` — the lifecycle states this stream
+    /// runs in.
+    ///
+    /// Kept as NAMES rather than desugared here, because the point of the form
+    /// is that the state is checked against the owner's declared lifecycle. A
+    /// string comparison cannot be: `entity.state.status != "refinancd"` is
+    /// true forever and says nothing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub active_in_states: Vec<StateGuard>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StateGuard {
+    pub state: String,
     pub span: Span,
 }
 
@@ -158,6 +173,7 @@ struct StreamBlock {
     schedule: Option<ScheduleSpec>,
     amount: Option<ExprSlot>,
     active_when: Option<ExprSlot>,
+    active_in_states: Vec<StateGuard>,
     category: Option<String>,
     end_span: Span,
 }
@@ -1335,6 +1351,7 @@ impl<'a> Parser<'a> {
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
         let mut end_span = entity_ref_tok.span;
 
@@ -1343,6 +1360,7 @@ impl<'a> Parser<'a> {
             schedule = block.schedule;
             amount = block.amount;
             active_when = block.active_when;
+            active_in_states = block.active_in_states;
             category = block.category;
             end_span = block.end_span;
         }
@@ -1356,6 +1374,7 @@ impl<'a> Parser<'a> {
             schedule,
             amount,
             active_when,
+            active_in_states,
             span: merge_spans(start.span, end_span),
         })
     }
@@ -1365,6 +1384,7 @@ impl<'a> Parser<'a> {
         let mut schedule = None;
         let mut amount = None;
         let mut active_when = None;
+        let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
         let mut end_span = lbrace.span;
 
@@ -1402,11 +1422,24 @@ impl<'a> Parser<'a> {
                     }
                 }
                 TokenKind::Keyword(Keyword::Active) => {
-                    if let Some(expr) = self.parse_active_stmt() {
-                        end_span = expr.span;
-                        active_when = Some(expr);
-                    } else {
-                        end_span = self.consume_stream_item();
+                    // Two forms share the keyword: `active when <expr>` and
+                    // `active in state <name>, <name>`.
+                    match self.peek_at(1).kind {
+                        TokenKind::Keyword(Keyword::In) => match self.parse_active_in_state() {
+                            Some((states, span)) => {
+                                end_span = span;
+                                active_in_states.extend(states);
+                            }
+                            None => end_span = self.consume_stream_item(),
+                        },
+                        _ => {
+                            if let Some(expr) = self.parse_active_stmt() {
+                                end_span = expr.span;
+                                active_when = Some(expr);
+                            } else {
+                                end_span = self.consume_stream_item();
+                            }
+                        }
                     }
                 }
                 TokenKind::Ident(ref ident) if ident == "category" => {
@@ -1474,6 +1507,7 @@ impl<'a> Parser<'a> {
             schedule,
             amount,
             active_when,
+            active_in_states,
             category,
             end_span,
         }
@@ -1572,6 +1606,42 @@ impl<'a> Parser<'a> {
             }
             _ => None,
         }
+    }
+
+    /// `active in state <name>[, <name>]*`
+    fn parse_active_in_state(&mut self) -> Option<(Vec<StateGuard>, Span)> {
+        let active_tok = self.bump();
+        let _ = self.expect_keyword(Keyword::In, "'in'")?;
+        let _ = self.expect_keyword(Keyword::State, "'state'")?;
+        let mut states = Vec::new();
+        let end;
+        loop {
+            let name_tok = self.bump();
+            match name_tok.kind {
+                TokenKind::Ident(ref name) => states.push(StateGuard {
+                    state: name.clone(),
+                    span: name_tok.span,
+                }),
+                TokenKind::String(ref name) => states.push(StateGuard {
+                    state: name.clone(),
+                    span: name_tok.span,
+                }),
+                _ => {
+                    self.push_expected(
+                        name_tok.span,
+                        "Expected a lifecycle state after 'active in state'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                let _ = self.bump();
+                continue;
+            }
+            end = name_tok.span;
+            break;
+        }
+        Some((states, merge_spans(active_tok.span, end)))
     }
 
     fn parse_active_stmt(&mut self) -> Option<ExprSlot> {
@@ -2839,8 +2909,14 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&self) -> &Token {
+        self.peek_at(0)
+    }
+
+    /// Look `offset` tokens ahead. `active` starts two different clauses, and
+    /// which one is decided by the token after it.
+    fn peek_at(&self, offset: usize) -> &Token {
         self.tokens
-            .get(self.idx)
+            .get(self.idx + offset)
             .unwrap_or_else(|| self.tokens.last().expect("token stream has EOF"))
     }
 

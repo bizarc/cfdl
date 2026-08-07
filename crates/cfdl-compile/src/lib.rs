@@ -681,6 +681,116 @@ struct IrProvenance {
 /// the declared options ARE known. Without it a misspelled name matched
 /// nothing and the action was silently inert — the option never fired and
 /// nothing said so.
+/// Lower `active in state a, b` to the comparison it means.
+fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
+    states
+        .iter()
+        .map(|guard| format!("entity.state.status == \"{}\"", guard.state))
+        .collect::<Vec<_>>()
+        .join(" or ")
+}
+
+/// Check every `active in state` names a state its owner's lifecycle declares.
+///
+/// This is the whole reason the form exists. A string comparison against a
+/// status field cannot be checked — a misspelling is simply a comparison that
+/// is never true — so the state space has to be declared and the name resolved
+/// against it.
+fn check_state_guards(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+) -> Result<(), Vec<Diagnostic>> {
+    let entity_type: BTreeMap<String, Option<String>> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(entity) => Some((entity.symbol(), entity.type_name.clone())),
+            _ => None,
+        })
+        .collect();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        if stream.active_in_states.is_empty() {
+            continue;
+        }
+        if stream.active_when.is_some() {
+            diagnostics.push(Diagnostic {
+                code: "E1330_CONFLICTING_ACTIVE_CLAUSES".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' declares both 'active when' and 'active in state'.",
+                    stream.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(stream.span)),
+                path: None,
+                hint: Some(
+                    "Use one: 'active in state' for a lifecycle state, 'active when' for anything else."
+                        .to_string(),
+                ),
+                notes: vec![],
+            });
+            continue;
+        }
+
+        let owner = &stream.attached_entity;
+        let lifecycle = entity_type
+            .get(owner)
+            .and_then(|ty| ty.as_deref())
+            .and_then(|ty| ontology.entity(ty))
+            .and_then(|ty| ty.lifecycle.as_deref())
+            .and_then(|id| ontology.lifecycle(id));
+
+        let Some(lifecycle) = lifecycle else {
+            diagnostics.push(Diagnostic {
+                code: "E1331_OWNER_HAS_NO_LIFECYCLE".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' is active in a lifecycle state, but its owner '{owner}' has no lifecycle.",
+                    stream.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(stream.span)),
+                path: None,
+                hint: Some(
+                    "Give the owner a type whose lifecycle declares the states, or use 'active when'."
+                        .to_string(),
+                ),
+                notes: vec![],
+            });
+            continue;
+        };
+
+        for guard in &stream.active_in_states {
+            if !lifecycle.has_state(&guard.state) {
+                diagnostics.push(Diagnostic {
+                    code: "E1332_UNKNOWN_ACTIVE_STATE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' is active in state '{}', which lifecycle '{}' does not declare.",
+                        stream.name, guard.state, lifecycle.lifecycle_id
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(guard.span)),
+                    path: None,
+                    hint: Some(format!("Declared states: {}.", lifecycle.states.join(", "))),
+                    notes: vec![],
+                });
+            }
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_exercise_targets(
     resolve_output: &cfdl_resolver::ResolveOutput,
 ) -> Result<(), Vec<Diagnostic>> {
@@ -1196,6 +1306,7 @@ fn build_ir(
     check_entity_types(resolve_output, &ontology)?;
     check_party_bindings(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
+    check_state_guards(resolve_output, &ontology)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
@@ -1406,11 +1517,19 @@ fn build_ir(
                     .as_ref()
                     .map(|expr| expr.lang.clone())
                     .unwrap_or_else(|| "cfdl".to_string()),
-                src: stream
-                    .active_when
-                    .as_ref()
-                    .map(|expr| expr.src.clone())
-                    .unwrap_or_else(|| "true".to_string()),
+                // `active in state a, b` lowers to the comparison it means. The
+                // form exists so the state NAME is checked against the owner's
+                // lifecycle — a string comparison cannot be, and
+                // `entity.state.status != "refinancd"` is true forever.
+                src: if !stream.active_in_states.is_empty() {
+                    state_guard_expr(&stream.active_in_states)
+                } else {
+                    stream
+                        .active_when
+                        .as_ref()
+                        .map(|expr| expr.src.clone())
+                        .unwrap_or_else(|| "true".to_string())
+                },
             },
             provenance: IrNodeProvenance {
                 source_file: source_stmt.file.clone(),

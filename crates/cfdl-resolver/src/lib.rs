@@ -772,6 +772,7 @@ mod tests {
                         schedule: None,
                         amount: None,
                         active_when: None,
+                        active_in_states: vec![],
                         span: span(),
                     }),
                 },
