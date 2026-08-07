@@ -1,17 +1,62 @@
 ---
 id: benchmark-credit-auto-abs-speed-050
-title: "credit: auto abs speed 050"
+title: "Credit: auto ABS at 0.5x prepayment speed"
 slug: "/docs/examples/credit-auto-abs-speed-050"
 source: benchmarks/credit/auto_abs_speed_050
 ---
 
-# credit: auto abs speed 050
+# Credit: auto ABS at 0.5x prepayment speed
 
 An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The case
+
+The same subprime auto receivables as the zero-speed case, prepaying at
+**0.50% ABS**. Under the absolute prepayment speed convention, prepayments are a
+constant share of the *original* pool each month, so the balance follows a
+running product rather than a constant hazard — and the collection profile
+shortens as the speed rises.
+
+## The reference
+
+An issuer's own prepayment-speed exhibit, filed publicly with a securities
+regulator. It tabulates the Class A-2 percent-outstanding at every monthly
+distribution date, for each of seven prepayment speeds.
+
+**Not redistributable.** Public filings are freely readable and citable, but the
+filer retains copyright, so figures are asserted against rather than reproduced.
+
+## What it exercises
+
+| | |
+|---|---|
+| Pack | `credit` |
+| Contract types | `credit.pool_level_pay`, 43 instances |
+| Language features | many instances of one contract type; a per-period pool factor carried as state |
+| Conventions | absolute prepayment speed, level-pay amortisation, a promotional 0% rate |
+
+This column was unreachable until the pool factor became per-period state. Every
+pool factor in the pack computed `pow(k, p)`, which is correct only for a
+constant hazard and wrong under a ramp.
+
+## The result
+
+Principal collections reproduce the exhibit's published percent-outstanding
+column at every distribution date, worst **0.0048 percentage points** against a
+source that rounds to 0.01.
+
+The aggregate pool balance is asserted directly:
+`domain.credit.principal` = **537,640,787.96**.
+
+## The delta
+
+The 0.0048-point residual is inside the exhibit's own rounding: it publishes to
+two decimal places, so a difference smaller than 0.01 cannot be distinguished
+from the printed figure.
 
 ## The model
 
@@ -609,6 +654,12 @@ contract credit.pool_level_pay.p50 on entity asset.trust {
 ```
 
 ## Verified results
+
+Checked period by period: **1 series** across **14 periods**, each within ±0.01 of the reference.
+
+- `net_cash_flow`
+
+Summary metrics:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

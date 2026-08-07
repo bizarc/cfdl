@@ -1,6 +1,10 @@
 # Site information architecture — design
 
-Status: **proposal.**
+Status: **implemented.** `site/content/nav.ts` carries the shipped
+structure; this file records the analysis behind it. The section names differ
+from the proposal: "Learn the Language" became "Learn the language" and holds
+the object model, the language guide and the eight lessons; "Guides" became
+"How-to guides"; "All examples" moved out of the tutorial into Examples.
 
 The current site is a port. `site/content/nav.ts` says so in its own header
 comment — *"Ported from the previous sidebar so the information architecture
@@ -21,8 +25,8 @@ Named explicitly so the rewrite does not churn them:
 - **The homepage, design system, and logo.** Not in scope here.
 - **The playground, and reaching it fast.** The strongest single asset. A
   visitor can run a model without installing anything.
-- **The eight-section spine** — Introduction, Install & Setup, Learn the
-  Language, Surfaces, Guides, Domain Packs, Reference, Project. The *shape* is
+- **The eight-section spine** — Introduction, Install and setup, Learn the
+  Language, Surfaces, Guides, Domain packs, Reference, Project. The *shape* is
   sound. What is wrong is what sits inside the sections, not the sections.
 
 This proposal therefore **re-cuts contents and adds two sections**. It does not
@@ -39,7 +43,7 @@ Four distinct readers are interleaved throughout, and none of them has a path:
 | Reader | Comes to | Currently must visit |
 |---|---|---|
 | **Evaluator** | decide whether CFDL is real | Project (bottom of the nav) |
-| **Modeller** | write a `.cfdl` model | Learn the Language, Guides, Domain Packs, Examples |
+| **Modeller** | write a `.cfdl` model | Learn the Language, Guides, Domain packs, Examples |
 | **Pack author** | extend CFDL to a new domain | one Reference page |
 | **Integrator** | embed the engine | Install, Surfaces, Reference |
 
@@ -107,7 +111,7 @@ figures from HUD's Sample workbook (public domain, committed in-repo), MIT's
 Real Estate Finance model, Damodaran, and GNMA pool conventions. Published
 source beside CFDL's output, with a *run it* button.
 
-### 2. Install & Setup — *integrator, modeller*
+### 2. Install and setup — *integrator, modeller*
 
 Unchanged, minus the duplicate. Choose a surface → CLI, Python, API server,
 VS Code & LSP, Playground.
@@ -129,7 +133,7 @@ The eight **benchmark models** currently listed here move out. They are
 reference deals, not lessons; a reader on lesson three does not want a
 leveraged buyout.
 
-### 4. Model with a Pack — *modeller* (was Domain Packs)
+### 4. Model with a Pack — *modeller* (was Domain packs)
 
 ```
 Choosing a pack
@@ -144,19 +148,19 @@ contracts it offers, its category vocabulary, and a worked deal.
 The existing eight, plus the one the engine now needs:
 
 ```
-Schedules & calendars
-Contracts & packs
+Schedules and calendars
+Contracts and packs
 Multi-file models
-Scenarios & run configs
+Scenarios and run configs
 Stochastic modeling
 Curves
 Metrics
-Statements & reporting        ← NEW
-Reading results & IR
+Statements and reporting        ← NEW
+Reading results and IR
 Troubleshooting               ← MOVED from Project
 ```
 
-**Statements & reporting is a genuine gap.** Subtotals, statements, categories,
+**Statements and reporting is a genuine gap.** Subtotals, statements, categories,
 reporting grain and the annual rollup all shipped, and no guide explains them.
 It should cover: what a category is, how a subtotal folds one, why an annual
 coverage ratio is recomputed rather than averaged, and how to read the
@@ -286,7 +290,7 @@ beside the prose.
    entirely. The header comment records why.
 3. **Write Authoring a Pack** — the largest writing task, and the one that
    unblocks external pack authors.
-4. **Write Statements & reporting** — the shipped-but-undocumented capability.
+4. **Write Statements and reporting** — the shipped-but-undocumented capability.
 5. **Build the Examples index** — filterable, replacing 40 sidebar entries.
 6. **Extend the doc-examples gate** to every snippet.
 7. **Generate the pack and diagnostics reference.**

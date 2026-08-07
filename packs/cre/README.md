@@ -136,7 +136,7 @@ Scenario knobs currently demonstrated:
 
 Example:
 
-`./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.results.json --config fixtures/valid/cre_developer_scenarios/run.json --packs packs`
+`cfdl run cre.ir.json --out cre.results.json --config run.json --packs packs`
 
 ## Provenance
 
@@ -216,7 +216,8 @@ of the period containing it rather than the end. On a monthly model that is one
 month of discounting; on an annual model it is a full year, and a reversion is
 usually taken at period end. If that matters to your model, express the sale as
 a one-period stream on an ordinary schedule instead — see
-`benchmarks/cre/mit_rentleg_plaza`, which does exactly that and documents why.
+the [rent-regulated plaza benchmark](/docs/examples/cre-mit-rentleg-plaza), which
+does exactly that and says why.
 
 ### Simple whole-property contracts
 
@@ -331,12 +332,14 @@ contract cre.property_opex on entity asset.tower {
 ```
 
 **Stochastic rollover** — draw the renew/re-lease outcome per trial instead
-of expected-value blending; see `fixtures/valid/cre_stochastic_rollover/`
-and the stochastic-modeling docs.
+of expected-value blending; see the
+[stochastic modeling guide](/docs/stochastic-modeling).
 
-Full worked models: `benchmarks/cre/office_two_tenant/` (full institutional-parity
-case), `benchmarks/cre/retail_strip/` (base-year gross-up + percentage
-rent), and the CRE office notebook in `examples/notebooks/`.
+Full worked models: the [two-tenant office](/docs/examples/cre-office-two-tenant)
+(full institutional-parity case), the
+[retail strip](/docs/examples/cre-retail-strip) (base-year gross-up and
+percentage rent), and the
+[CRE office notebook](/docs/notebooks/cre-office-acquisition).
 
 ## Stream categories
 
@@ -378,7 +381,8 @@ the expense ratio meaningless.
 
 A hand-written stream may declare a category too, which is how a model expresses
 something the pack has no contract for and still has it counted. This is exactly
-what `benchmarks/cre/mit_rentleg_plaza` does with its abatement line:
+what the [rent-regulated plaza benchmark](/docs/examples/cre-mit-rentleg-plaza)
+does with its abatement line:
 
     stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
       schedule every year from 2001-01 to 2006-01

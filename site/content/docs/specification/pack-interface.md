@@ -1,6 +1,6 @@
 ---
 id: pack-interface
-title: "Pack Interface (v0.1)"
+title: "Pack interface (v0.1)"
 slug: "/docs/specification/pack-interface"
 source: docs/07_pack_interface.md
 generated: full
@@ -9,7 +9,7 @@ layer: specification
 
 **CFDL Domain Pack Interface v0.1**
 
-Domain Packs provide *additions and overrides* on top of a single core language: each pack adds contract types, lowering rules, metrics, and validations without forking the language itself.
+Domain packs provide *additions and overrides* on top of a single core language: each pack adds contract types, lowering rules, metrics, and validations without forking the language itself.
 
 Core principle: **Packs may extend validation and provide defaults/templates, but MUST NOT change core language semantics.**
 

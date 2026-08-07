@@ -1,10 +1,10 @@
 ---
 id: getting-started
-title: Getting Started
+title: Getting started
 generated: none
 ---
 
-# Getting Started
+# Getting started
 
 Ten minutes from nothing to a running model with a probability distribution
 around its NPV. No install needed for the first half.
@@ -18,11 +18,11 @@ version 0.1
 model "first-model"
 time calendar monthly from 2026-01 for 24
 
-entity legal company
+entity asset company : Asset.Financial
 
 assume growth ~ Normal(mean=0.02, stdev=0.01, clip=[0.0, 0.05])
 
-stream legal.revenue on entity legal.company inflow currency USD {
+stream company.revenue on entity asset.company inflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 10000 * pow(1 + inputs.growth, time.t / 12.0)
 }
@@ -34,7 +34,9 @@ What each line does:
 
 - `time calendar monthly from 2026-01 for 24` — every stream lands on this
   24-month grid.
-- `entity legal company` — the thing that owns the cash flow.
+- `entity asset company : Asset.Financial` — the thing that owns the cash flow.
+  `asset` is its family and `Asset.Financial` its type. See [the object
+  model](/docs/object-model).
 - `assume growth ~ Normal(...)` — a stochastic assumption: a growth rate
   drawn from a (clipped) normal distribution. Swap `~ Normal(...)` for
   `= 0.02` and it becomes a plain constant.
@@ -45,7 +47,7 @@ What each line does:
 ## Run it with the CLI
 
 Install the CLI (see [Install the CLI](/docs/install/cli) — from a release binary,
-or `cargo build -p cfdl-cli` from a checkout). Put the model in
+or `cargo build -p cfdl-cli` from a checkout). Put the model in  <!-- site-allow: install and support still route through the public repository; revisit when it goes private -->
 `first-model/model.cfdl`, then:
 
 ```bash
@@ -90,8 +92,9 @@ byte-reproducible on any machine.
 
 **Modeling a deal** (analyst path):
 
-1. Work through the [Language Guide](/docs/language-guide) and the five
-   progressive [tutorial examples](/docs/examples).
+1. Read [the object model](/docs/object-model), then work through the
+   [Language guide](/docs/language-guide) and the eight
+   [lessons](/docs/examples).
 2. Pick your domain's [pack guide](/docs/packs) — energy, CRE, credit, or opco —
    and start from its quickstart.
 3. Set up [VS Code](/docs/install/vscode) for diagnostics and hover docs.
@@ -102,4 +105,4 @@ byte-reproducible on any machine.
    [notebooks](/docs/python-sdk#notebooks).
 2. Or run the [API server](/docs/install/api-server) and hit
    `POST /v1/run`.
-3. Read [How CFDL Works](/docs/concepts) for the IR/Results contract.
+3. Read [How CFDL works](/docs/concepts) for the IR/Results contract.

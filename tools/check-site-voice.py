@@ -52,6 +52,75 @@ PATTERNS = [
     (re.compile(r"\bSUPERSEDED\b"), "carries a supersession banner"),
     (re.compile(r"\boriginally (said|gave|stated|claimed)\b", re.I), "narrates a past mistake"),
     (re.compile(r"\bTODO\b|\bFIXME\b"), "carries a TODO"),
+    # A reader does not know or care how a reference was produced. Several
+    # sources cannot be redistributed, so the reference is recreated from them —
+    # naming the file that does the recreating describes our workshop instead of
+    # the case, and reads as though the number were invented here.
+    (
+        re.compile(r"\breference_gen(\.py)?\b"),
+        "names the internal reference generator",
+    ),
+    (
+        re.compile(r"\bin-house\b", re.I),
+        "describes where the reference was written rather than what it is",
+    ),
+    (
+        re.compile(r"\bpending practitioner (review|Excel review)\b", re.I),
+        "carries an internal review status",
+    ),
+    # Documentation states what the software does. Calling a statement honest
+    # implies the others are not, and it is a claim about the authors rather
+    # than about the product.
+    (re.compile(r"\b(dis)?honest(ly|y)?\b", re.I), "vouches for its own candour"),
+    # Development narrative: what was tried, what was rejected, what a page
+    # used to say. All of it belongs in the repository.
+    (
+        re.compile(
+            r"\bwe (chose|decided|considered|rejected|opted|originally|used to)\b", re.I
+        ),
+        "narrates a decision instead of stating the outcome",
+    ),
+    (
+        re.compile(r"\bthis (page|section|file) (used to|previously)\b", re.I),
+        "describes an earlier version of itself",
+    ),
+    # THE SITE DOES NOT POINT INTO THE REPOSITORY. cfdl.dev is the product's
+    # documentation and stands alone; the repository is not something a reader
+    # has, and will not stay public. A page that says "generated from
+    # examples/foo/" or "see crates/cfdl-server/src/limits.rs" offers a
+    # destination that does not exist for them.
+    #
+    # A path the READER creates — `packs/` beside their own model, their own
+    # `model.cfdl` — is not this, which is why the pattern is anchored to the
+    # repository's own top-level directories.
+    (
+        re.compile(
+            r"\bgenerated from `?(examples|benchmarks|crates|fixtures|tools|docs)/", re.I
+        ),
+        "publishes a repository path as provenance",
+    ),
+    (
+        re.compile(
+            r"`(crates|fixtures|tools|benchmarks)/[A-Za-z0-9_./<>-]*`"
+        ),
+        "cites a file in the repository, which a reader does not have",
+    ),
+    (
+        re.compile(r"\bin (this|the) repositor(y|ies)\b|\bthe repo's\b|\bfrom a checkout\b", re.I),
+        "assumes the reader has the repository",
+    ),
+    (re.compile(r"https://github\.com/"), "links into the repository"),
+    # Ornament. Each of these is a claim the reader should be left to make.
+    (
+        re.compile(
+            r"\b(blazing(ly)?|lightning[- ]fast|world[- ]class|cutting[- ]edge"
+            r"|state[- ]of[- ]the[- ]art|revolutionary|seamless(ly)?|effortless(ly)?"
+            r"|game[- ]chang(er|ing)|best[- ]in[- ]class|unparalleled|robust and"
+            r"|powerful and|simply put|crown jewel)\b",
+            re.I,
+        ),
+        "reads as marketing rather than documentation",
+    ),
 ]
 
 
@@ -61,6 +130,7 @@ def sources() -> list[pathlib.Path]:
     found += sorted(REPO_ROOT.glob("packs/*/README.md"))
     found += sorted(REPO_ROOT.glob("benchmarks/*/*/model.cfdl"))
     found += sorted(REPO_ROOT.glob("benchmarks/*/*/case.toml"))
+    found += sorted(REPO_ROOT.glob("benchmarks/*/*/CASE.md"))
     found += sorted(REPO_ROOT.glob("examples/*/README.md"))
     found += sorted(REPO_ROOT.glob("examples/language_tutorial/*/README.md"))
     # The diagnostic register feeds a generated table on an authored Reference
@@ -68,6 +138,17 @@ def sources() -> list[pathlib.Path]:
     # specification. The rest of docs/08 is published as Specification, where an
     # internal cross-reference is legitimate — only the register is read here.
     found.append(REPO_ROOT / "docs" / "08_diagnostics.md")
+    # Authored site pages. These are not generated from anywhere, so nothing
+    # else was checking them — the gate was reading every source that reaches a
+    # page except the pages themselves.
+    # A generated page is a copy: fixing it there would be overwritten on the
+    # next sync, and its source is already in this list. Only authored pages
+    # are read.
+    found += [
+        p
+        for p in sorted((REPO_ROOT / "site" / "content").rglob("*.md"))
+        if "generated: full" not in p.read_text(encoding="utf-8")[:400]
+    ]
     return [p for p in found if p.exists()]
 
 
@@ -77,7 +158,16 @@ def check_text_file(path: pathlib.Path) -> list[str]:
     # A case.toml's COMMENTS are maintainer's notes and are no longer published;
     # only its declared `summary` reaches a page.
     only_summary = path.name == "case.toml"
+    # A fenced block is a command the reader runs, not prose written at them.
+    # `git clone …` in an install page is the instruction; flagging it as
+    # narrative would mean deleting the only documented way to install.
+    in_fence = False
     for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if path.suffix == ".md" and line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         if ALLOW.search(line):
             continue
         if only_summary and not line.lstrip().startswith("summary"):

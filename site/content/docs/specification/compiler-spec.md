@@ -1,6 +1,6 @@
 ---
 id: compiler-spec
-title: "Compiler Spec (v0.1)"
+title: "Compiler spec (v0.1)"
 slug: "/docs/specification/compiler-spec"
 source: docs/04_compiler_spec.md
 generated: full

@@ -64,4 +64,4 @@ cfdl --json validate examples/language_tutorial/minimal_model
 cfdl pack list --path packs
 ```
 
-Next: [Getting Started](../getting-started) · [CLI usage in the Language Guide](../language-guide)
+Next: [Getting started](../getting-started) · [CLI usage in the Language guide](../language-guide)

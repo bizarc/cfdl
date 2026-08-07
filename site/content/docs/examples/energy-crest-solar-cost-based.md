@@ -1,17 +1,85 @@
 ---
 id: benchmark-energy-crest-solar-cost-based
-title: "energy: crest solar cost based"
+title: "Energy: cost-based solar feed-in tariff"
 slug: "/docs/examples/energy-crest-solar-cost-based"
 source: benchmarks/energy/crest_solar_cost_based
 ---
 
-# energy: crest solar cost based
+# Energy: cost-based solar feed-in tariff
 
 A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The case
+
+A 2 MW-dc distributed solar project paid a cost-based feed-in tariff. It
+generates 3,161,597 kWh in its first year — 2,000 kW at an 18.0456% net capacity
+factor over 8,760 hours — degrading 0.5% a year across a 25-year life, and is
+paid a flat 23.15 c/kWh.
+
+Five operating expense lines run against it, and they do not share an escalator:
+fixed operations and maintenance, insurance and a land lease each inflate at
+1.6%; a payment in lieu of property tax **abates 10% a year** on a stated
+schedule; and a royalty takes 3% of tariff revenue. $3.15mm of level-pay debt
+runs 18 years at 7%, maturing seven years before the asset does.
+
+## The reference
+
+A cost-based renewable energy tariff model published by a national laboratory as
+a spreadsheet, and independently ported to Python by a third party. Both were
+run; the comparison is three-way.
+
+It publishes a complete annual cash flow, so every line is checkable period by
+period rather than at an endpoint.
+
+**Not redistributable.** The spreadsheet states no licence and the port declares
+none, which means default copyright. Neither is vendored or wired into the test
+suite: the port was cloned outside the repository, run once, and only its output
+numbers carried across.
+
+## What it exercises
+
+| | |
+|---|---|
+| Pack | `energy` |
+| Contract types | `energy.ppa`, `energy.om` (four instances), `energy.debt_service` |
+| Language features | contracts with per-instance suffixes, one native stream, term units |
+| Conventions | production degradation, three escalation rates including a **negative** one, level-pay amortisation |
+
+The four operating expense contracts are the same type at different escalators,
+which is why they are asserted as separate lines rather than as one total.
+
+## The result
+
+**Exact on every individual line.** All seven stream columns agree with the
+reference across all 25 periods with zero disagreement — not "within tolerance",
+identical at the engine's published precision.
+
+Asserted: seven stream columns across 25 periods, plus `domain.energy.opex` — the
+reference's own published expense total — which is what makes the four
+decomposed lines evidence rather than assertion. The reference publishes
+operating expenses as a single figure, so the decomposition has to sum back to it
+in every period.
+
+## The delta
+
+One non-zero figure: **5.0e-7**, on the summed expense column at period 19.
+
+It is not arithmetic. Results carry money to six decimal places, and the engine
+rounds a subtotal it computed from *unrounded* components — which is a different
+operation from summing five *already-rounded* components, and the two differ by
+up to half of the last published place. 5e-7 is exactly that half. It is the
+floor any case here can assert to, which is why the tolerance is
+set to the engine's precision rather than to anything about this deal.
+
+One thing the case does **not** validate: the reference's actual purpose is to
+solve the tariff that clears a target equity return, sweeping the rate until net
+present value crosses zero. CFDL has no solve-to-target construct, so the solved
+rate — 23.15 c/kWh — is carried across as a constant. Everything downstream of
+the tariff is checked period by period; the solve itself is not.
 
 ## The model
 
@@ -31,10 +99,9 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 // to solve the tariff that clears a target equity return — it sweeps the rate
 // until net present value crosses zero. CFDL has no solve-to-target construct,
 // so the solved rate is carried across as a constant and the CASH FLOW at that
-// rate is what gets asserted. That is the honest scope: everything downstream
-// of the tariff is validated period by period, and the solve itself is a
-// documented engine gap rather than a silently-skipped line. NOTES.md, "What
-// this case does not validate".
+// rate is what gets asserted. Everything downstream of the tariff is validated
+// period by period; the solve itself is not. NOTES.md, "What this case does not
+// validate".
 //
 // Period 0 is operating year 1. There is no construction period: the reference
 // treats installed cost as a year-zero equity outlay outside the operating
@@ -160,5 +227,14 @@ contract energy.debt_service on entity asset.plant {
 
 ## Verified results
 
-| Metric | Value | Tolerance |
-|---|---:|---:|
+Checked period by period: **8 series** across **25 periods**, each within ±1e-6 of the reference.
+
+- `energy.ppa.revenue`
+- `energy.om.expense.fixed`
+- `energy.om.expense.insurance`
+- `energy.om.expense.land_lease`
+- `energy.om.expense.pilot`
+- `energy.royalty.expense`
+- `domain.energy.opex`
+- `energy.debt.service`
+

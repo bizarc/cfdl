@@ -12,85 +12,96 @@ gated by a parity suite: each model is diffed against an **independent
 reference**, period by period and on summary metrics, inside a tolerance the
 case declares. A drift outside that tolerance fails the build.
 
-## Two kinds of reference, and the difference matters
+## Where the references come from
 
-Most cases carry a `reference_gen.py` — a second implementation written against
-the same specification. That catches arithmetic and lowering errors.
+Every case is checked against an external benchmark: a published model, an
+issuer's own schedule, a filed valuation, a course problem set with its answer
+printed.
 
-Some are reconciled instead against an **external** model or published
-schedule, and carry no generator. Those are the ones that count. Two of your
-own implementations agreeing is not evidence when both came from the same
-assumption, and every convention defect found so far has come from the external
-kind.
+What differs is whether the source can be shown. Most cannot — a workbook is
+licensed, a filing is copyrighted, an industry standard forbids reproduction. Two
+approaches follow from that.
 
-The clearest example is HUD's HOME Multifamily template — a US federal work in
-the public domain, so the workbook itself is committed to the repository. A
-reader can open the source and check the reconciliation rather than take it on
-trust.
+**Where the source publishes its figures**, those figures are asserted directly
+and the case carries a `NOTES.md` recording the reconciliation: what was
+compared, what diverged, and how to repeat it.
+
+**Where it does not, or where the source cannot be redistributed**, the case
+carries a `reference_gen.py` — the source's conventions implemented  <!-- site-allow: this page is where the method is explained -->
+independently of the model, so the two are compared line by line without the
+source being vendored. The reference is written from the source's conventions,
+not from the model.
+
+A few sources carry an explicit reuse grant. Those ship with the case, so every
+number can be marked against the original — the HOME Multifamily template and
+the MIT OpenCourseWare problem sets among them.
+
+Each case below states what its source publishes and whether it can ship.
 
 ## What a case contains
 
-Each `benchmarks/<pack>/<case>/` directory holds:
+Every case is made of the same parts:
 
-- `model.cfdl` — the model
-- `run.json` — the run configuration
-- `case.toml` — the pack, a one-line summary, and the per-period tolerance
-- `expected.csv` — period-level expectations from the reference: the model
-  total, or each stream in its own column
-- `expected_metrics.json` — summary metrics, each with its own tolerance
-- either `reference_gen.py`, the independent implementation that produces those
-  files, or `NOTES.md`, recording the external reconciliation — what was
-  compared, what diverged, and how to repeat it
+- the model, and the run configuration it is run with
+- the period-level expectations taken from the reference — the model total, or
+  each stream in its own column — and the per-period tolerance
+- summary metrics, each with its own tolerance
+- a write-up: what the deal is, what the reference is, what the case exercises,
+  how closely it matched, and what any remaining difference means
+- either an independent implementation of the source's conventions, or a
+  record of the reconciliation against the source's published figures
 
-`tools/benchmark-runner.py` compiles and runs each case with the CLI and fails
-if any period or metric drifts outside tolerance. Schedule arithmetic is held
+Every case is compiled and run on each commit, and the build fails if any
+period or metric drifts outside tolerance. Schedule arithmetic is held
 decimal-exact; IRR-class iteratives carry a basis-point tolerance.
 
-## Tolerance is a claim, not a cushion
+## How tolerances are set
 
-A tolerance says how close the two implementations are expected to be, and why.
-A workbook that prints whole dollars cannot be matched closer than half a
-dollar, so those cases carry `0.5` and say so. A ratio quoted to sixteen
-significant figures carries `1e-4`. Where a case needs both, tolerances are set
-per column rather than one loose number covering everything — a single value
-that satisfied the money lines would assert nothing about the ratio.
+A tolerance states how close the two are expected to be, and why. It is set by
+what the source can support, not by what the model happens to achieve.
+
+A workbook that prints whole dollars cannot be matched closer than half a dollar,
+so those cases carry `0.5`. A ratio quoted to sixteen significant figures carries
+`1e-4`. Where a case needs both, tolerances are set per column rather than one
+value covering everything: a single number loose enough for the money lines would
+assert nothing about the ratio.
 
 ## The cases
 
+Each links to the full model, its run configuration, the series that were
+checked, and a write-up of the reference and the residual.
+
 <!-- cfdl:generated benchmark-cases -->
-| Pack | Case |
+| Case | What it is |
 |---|---|
-| cre | `hud_home_multifamily` |
-| cre | `mit_rentleg_plaza` |
-| cre | `office_two_tenant` |
-| cre | `one_lincoln_street` |
-| cre | `retail_strip` |
-| credit | `auto_abs_speed_050` |
-| credit | `auto_abs_speed_150` |
-| credit | `auto_abs_wal` |
-| credit | `float_bridge_pool` |
-| credit | `io_bullet_loan` |
-| credit | `level_pay_pool` |
-| credit | `mbs_pool_conventions` |
-| credit | `mbs_pool_ramped` |
-| energy | `crest_solar_cost_based` |
-| energy | `merchant_capacity` |
-| energy | `solar_ppa_microgrid` |
-| energy | `utility_pv_singleowner` |
-| energy | `wind_ptc_macrs` |
-| opco | `banker_dcf_conventions` |
-| opco | `damodaran_fcff` |
-| opco | `gordon_growth_coned` |
-| opco | `lbo_buyout` |
-| opco | `lbo_circular_interest` |
-| opco | `lbo_option_pool_exit` |
-| opco | `saas_sbc_convention_fork` |
+| [Energy: cost-based solar feed-in tariff](/docs/examples/energy-crest-solar-cost-based) | A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty. |
+| [Energy: merchant generator with capacity revenue](/docs/examples/energy-merchant-capacity) | A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake. |
+| [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid) | A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price. |
+| [Energy: utility-scale PV, single owner](/docs/examples/energy-utility-pv-singleowner) | A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor. |
+| [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs) | A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule. |
+| [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) | A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends. |
+| [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) | A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate. |
+| [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) | An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years. |
+| [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing. |
+| [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
+| [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance. |
+| [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) | The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens. |
+| [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) | An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back. |
+| [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) | A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination. |
+| [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) | An interest-only loan repaying its entire principal in a single balloon at maturity. |
+| [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) | A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal. |
+| [Credit: mortgage pool conventions](/docs/examples/credit-mbs-pool-conventions) | A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector. |
+| [Credit: mortgage pool on a prepayment ramp](/docs/examples/credit-mbs-pool-ramped) | A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off. |
+| [OpCo: banker DCF conventions](/docs/examples/opco-banker-dcf-conventions) | An operating company discounted cash flow built to standard banking conventions, from revenue through unlevered free cash flow to enterprise value. |
+| [OpCo: free cash flow to firm](/docs/examples/opco-damodaran-fcff) | A free cash flow to firm valuation following Damodaran's published method, with reinvestment driven by growth and return on capital. |
+| [OpCo: stable-growth dividend discount](/docs/examples/opco-gordon-growth-coned) | A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form. |
+| [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout) | A leveraged buyout: entry at a stated multiple, debt paid down out of operating cash flow, and an exit that returns the sponsor's equity. |
+| [OpCo: LBO debt schedule with average-balance interest](/docs/examples/opco-lbo-circular-interest) | A leveraged buyout's debt schedule, where interest accrues on the average balance and every dollar of free cash flow sweeps against the term loan. |
+| [OpCo: LBO exit waterfall with an option pool](/docs/examples/opco-lbo-option-pool-exit) | A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool. |
+| [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 
 *25 cases.*
 <!-- /cfdl:generated benchmark-cases -->
-
-Each case declares in its `case.toml` where its figures came from, and which are
-still awaiting practitioner verification.
 
 ## Beyond the suite
 

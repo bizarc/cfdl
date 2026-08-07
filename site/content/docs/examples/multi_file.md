@@ -1,10 +1,8 @@
 ---
 id: example-multi_file
-title: "Multi-File Model"
+title: "Multi-file model"
 slug: "/docs/examples/multi_file"
 ---
-
-> Generated from `examples/language_tutorial/multi_file/`.
 
 This example demonstrates splitting model content by concern:
 

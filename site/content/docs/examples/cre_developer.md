@@ -1,10 +1,10 @@
 ---
 id: example-cre-developer
-title: "CRE: Developer Lifecycle"
+title: "CRE: developer lifecycle"
 slug: "/docs/examples/cre_developer"
 ---
 
-This example uses the `cre` pack (`0.1.0`) for the formal lease and construction stub and exit; **standalone streams** for ops revenue and ops expense (per guidance: individual revenue/expense items → stream). It mirrors `fixtures/valid/cre_developer_smoke`.
+This example uses the `cre` pack (`0.1.0`) for the formal lease and construction stub and exit; **standalone streams** for ops revenue and ops expense (per guidance: individual revenue/expense items → stream).
 
 ## Run
 
@@ -29,8 +29,6 @@ The provided run configs demonstrate deterministic override testing with:
 - `stream.cre.exit.sale.amount`
 
 ---
-
-> Generated from `examples/cre_developer/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

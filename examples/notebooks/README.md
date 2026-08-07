@@ -2,7 +2,7 @@
 
 Industry walkthroughs of the CFDL Python SDK, one per pack. Each notebook loads
 the corresponding **benchmark** model (validated to the penny against an
-independent reference in `benchmarks/`), compiles and runs it, and explores the
+independent reference), compiles and runs it, and explores the
 results with the pandas accessors.
 
 | Notebook | Pack | Model | Published page |
@@ -27,12 +27,12 @@ Each notebook locates the repo root itself, so it also runs headless:
 jupyter nbconvert --to notebook --execute examples/notebooks/01_energy_solar_microgrid.ipynb
 ```
 
-They read their model from `benchmarks/` and their pack definitions from
-`packs/`, so they need a checkout — run one from elsewhere and it says so
-rather than failing obscurely.
+Each reads its model and its pack definitions from the source tree, so run it
+from there — run one from elsewhere and it says so rather than failing
+obscurely.
 
-CI executes all four on every push (Linux) to keep them honest as the SDK and
-packs evolve.
+CI executes all four on every push (Linux), so they cannot drift from the SDK
+and packs.
 
 ## Committing
 

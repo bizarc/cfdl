@@ -14,7 +14,7 @@ byte-identical to the CLI's.
 
 ## Install
 
-See [Install for Python](/docs/install/python). Short version, from a checkout:
+See [Install for Python](/docs/install/python). Short version, from a checkout:  <!-- site-allow: install and support still route through the public repository; revisit when it goes private -->
 `pip install -e "python/[dev,viz]"`.
 
 ## Quickstart
@@ -46,10 +46,9 @@ Compile problems raise `CompileError` with structured `.diagnostics`
 
 ## Notebooks
 
-Four industry notebooks are built on the benchmark models — the same models
-CFDL validates against an independent reference. Each is published here with
-the outputs and chart it actually produced, so you can read the SDK's DataFrame
-surface on a realistic model before installing anything:
+Four notebooks, one per domain, built on the benchmark models. Each is
+published here with the outputs and chart it produced, so you can read the
+SDK's DataFrame surface on a real model before installing anything:
 
 - [Solar PPA microgrid](/docs/notebooks/energy-solar-microgrid)
 - [CRE office acquisition](/docs/notebooks/cre-office-acquisition)

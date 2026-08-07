@@ -1,11 +1,11 @@
 ---
 id: guide-reading-results
-title: Reading Results & IR
+title: Reading results and IR
 slug: /docs/guides/reading-results
 generated: none
 ---
 
-# Reading Results & IR
+# Reading results and IR
 
 Two JSON documents come out of the pipeline; both have published schemas
 and stable, additive-intent shapes.
@@ -47,12 +47,12 @@ declarations — deterministically ordered with stable IDs. Useful habits:
 
 ## Schemas
 
-Machine-readable schemas ship with the repo and the docs site:
+Machine-readable schemas are published here:
 [IR schema](/docs/specification/ir-schema) ·
 [Results schema](/docs/specification/results-schema). Both freeze as v1 at
 launch with an additive-only policy after that.
 
 ## Reference links
 
-- [Run-Config Reference](/docs/reference/run-config)
+- [Run-config reference](/docs/reference/run-config)
 - [Python SDK](/docs/python-sdk)

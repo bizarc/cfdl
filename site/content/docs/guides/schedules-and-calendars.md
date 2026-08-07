@@ -1,11 +1,11 @@
 ---
 id: guide-schedules
-title: Schedules & Calendars
+title: Schedules and calendars
 slug: /docs/guides/schedules-and-calendars
 generated: none
 ---
 
-# Schedules & Calendars
+# Schedules and calendars
 
 Every model has one master timeline; every stream occurrence lands on it.
 
@@ -39,14 +39,14 @@ schedule on 2026-06
 Recurring:
 
 ```cfdl
-schedule every monthly from 2026-01 to 2026-12
+schedule every month from 2026-01 to 2026-12
 ```
 
 Day rules:
 
 ```cfdl
-schedule every monthly on day 15 from 2026-01 to 2026-12
-schedule every month on eom
+schedule every month on day 15 from 2026-01 to 2026-12
+schedule every month on eom from 2026-01 to 2026-12
 ```
 
 `YYYY-MM` dates normalize to first-of-month; `from` must be ≤ `to`, and

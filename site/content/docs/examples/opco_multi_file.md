@@ -1,6 +1,6 @@
 ---
 id: example-opco-multi-file
-title: "OpCo: Multi-File Model"
+title: "OpCo: multi-file model"
 slug: "/docs/examples/opco_multi_file"
 ---
 
@@ -21,8 +21,6 @@ Full OpCo valuation (revenue, opex, working capital, exit multiple) split across
 ```
 
 ---
-
-> Generated from `examples/opco_multi_file/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

@@ -1,17 +1,60 @@
 ---
 id: benchmark-opco-gordon-growth-coned
-title: "opco: gordon growth coned"
+title: "OpCo: stable-growth dividend discount"
 slug: "/docs/examples/opco-gordon-growth-coned"
 source: benchmarks/opco/gordon_growth_coned
 ---
 
-# opco: gordon growth coned
+# OpCo: stable-growth dividend discount
 
 A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The case
+
+A stable-growth dividend discount valuation of a regulated utility — the
+constant-growth perpetuity, where value is next year's dividend divided by the
+difference between the discount rate and the growth rate.
+
+The whole model is two drivers and one formula, which is why it is a precise
+test: there is nowhere for an error to hide.
+
+## The reference
+
+A widely used academic valuation spreadsheet, published free by its author with
+an explicit grant to download and modify. It publishes a nine-point sensitivity
+grid over growth rates alongside the base case.
+
+**Redistributable**, and the workbook is committed under `reference/`.
+
+## What it exercises
+
+| | |
+|---|---|
+| Pack | `opco` |
+| Contract types | `opco.exit_perpetuity` |
+| Language features | a single pack contract carrying a closed-form perpetuity |
+| Conventions | constant-growth perpetuity, a value derived from stated drivers rather than supplied directly |
+
+The perpetuity value is **derived** by the model from two stated drivers — a
+current dividend and a growth rate — rather than entered. Supplying the answer
+would test nothing.
+
+## The result
+
+The base case reproduces, and so does the source's own nine-point growth
+sensitivity grid.
+
+The tolerance is **1e-6**, the tightest in the suite: a closed-form perpetuity on
+exactly stated inputs has no rounding to absorb, so anything looser would accept
+an error.
+
+## The delta
+
+None.
 
 ## The model
 
@@ -151,5 +194,15 @@ contract opco.exit_perpetuity.gm039 on entity asset.utility {
 
 ## Verified results
 
-| Metric | Value | Tolerance |
-|---|---:|---:|
+Checked period by period: **9 series** across **1 periods**, each within ±1e-6 of the reference.
+
+- `opco.exit.value.g041`
+- `opco.exit.value.g031`
+- `opco.exit.value.g021`
+- `opco.exit.value.g011`
+- `opco.exit.value.g001`
+- `opco.exit.value.gm009`
+- `opco.exit.value.gm019`
+- `opco.exit.value.gm029`
+- `opco.exit.value.gm039`
+

@@ -1,10 +1,8 @@
 ---
 id: example-minimal_model
-title: "Minimal Model"
+title: "Minimal model"
 slug: "/docs/examples/minimal_model"
 ---
-
-> Generated from `examples/language_tutorial/minimal_model/`.
 
 This is the smallest practical CFDL model:
 

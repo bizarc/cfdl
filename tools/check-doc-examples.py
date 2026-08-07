@@ -78,9 +78,19 @@ def _authored_site_pages() -> list[pathlib.Path]:
     return pages
 
 
-SOURCES = sorted(REPO_ROOT.glob("packs/*/README.md")) + _authored_site_pages()
+SOURCES = (
+    sorted(REPO_ROOT.glob("packs/*/README.md"))
+    + _authored_site_pages()
+    # The landing page's model, which is not markdown and so was reached by
+    # nothing. It sat on the front page with `every monthly` and an untyped
+    # entity — neither valid — for as long as it took someone to try it.
+    + [p for p in [REPO_ROOT / "site/components/landing/hero-demo-data.ts"] if p.exists()]
+)
 
 FENCE = re.compile(r"```cfdl\n(.*?)```", re.S)
+# A model held in a TypeScript template literal, e.g. `export const heroModel =
+# \`version 0.1 … \`;`. Same contract as a fence: it must start with `version`.
+TEMPLATE_MODEL = re.compile(r"=\s*`(version\s.*?)`;", re.S)
 ALLOW = re.compile(r"//\s*examples-allow:\s*(\S+)")
 USE_PACK = re.compile(r'^\s*use\s+pack\s+"([^"]+)"', re.M)
 
@@ -93,7 +103,8 @@ def complete_models(path: pathlib.Path) -> list[tuple[int, str]]:
     """
     text = path.read_text(encoding="utf-8")
     found = []
-    for match in FENCE.finditer(text):
+    pattern = TEMPLATE_MODEL if path.suffix == ".ts" else FENCE
+    for match in pattern.finditer(text):
         body = match.group(1)
         if not re.match(r"\s*version\s", body):
             continue
@@ -106,6 +117,99 @@ def complete_models(path: pathlib.Path) -> list[tuple[int, str]]:
         line = text[: match.start()].count("\n") + 1
         found.append((line, body))
     return found
+
+
+def fragments(path: pathlib.Path) -> list[tuple[int, str]]:
+    """Fenced cfdl blocks that are NOT whole models.
+
+    Most snippets on the site are fragments — one stream, one contract, one
+    schedule line. They cannot be compiled, because they reference entities and
+    packs they do not declare, so nothing was checking them at all: `every
+    monthly` sat in four guides, and three pack guides declared entities in a
+    vocabulary the language had moved off.
+
+    Parsing is the part that does not need the rest of the model. It catches
+    every syntax error and says nothing about resolution, which is the correct
+    division for a snippet.
+    """
+    if path.suffix == ".ts":
+        return []
+    text = path.read_text(encoding="utf-8")
+    found = []
+    for match in FENCE.finditer(text):
+        body = match.group(1)
+        if re.match(r"\s*version\s", body):
+            continue
+        found.append((text[: match.start()].count("\n") + 1, body))
+    return found
+
+
+# The four families an entity can be declared in. A snippet naming anything
+# else still parses — the untyped form is open — but it teaches a vocabulary
+# the language does not use, which is how `entity real_estate tower` outlived
+# the ontology it predates.
+ENTITY_DECL = re.compile(r"^\s*entity\s+(\w+)\s+\w+", re.M)
+FAMILIES = {"asset", "party", "contract", "reference"}
+
+
+def hostable(source: str) -> list[str]:
+    """One parseable unit per clause the snippet shows.
+
+    Some snippets are smaller than a declaration — a bare `schedule …` line, a
+    bare `amount = …`. Those are the clauses a reader is most likely to copy,
+    and `every monthly` lived in exactly that kind of snippet, so they are put
+    in the smallest host that makes them a declaration rather than skipped.
+
+    A snippet that already starts with a top-level keyword is passed through as
+    written.
+    """
+    body = source.strip()
+    if not body:
+        return []
+    if re.match(r"(entity|stream|contract|option|event|state|curve|assume|use|time|statement|scenario)\b", body):
+        return [body]
+
+    def host(schedule: str, amount: str) -> str:
+        return (
+            "stream doc.snippet on entity asset.subject inflow currency USD {\n"
+            f"  {schedule}\n  {amount}\n}}"
+        )
+
+    units = []
+    for clause in body.splitlines():
+        clause = clause.strip()
+        if not clause or clause.startswith("//"):
+            continue
+        if clause.startswith("schedule "):
+            units.append(host(clause, "amount = 1"))
+        elif clause.startswith("amount ="):
+            units.append(host("schedule every month from 2026-01 to 2026-12", clause))
+    return units
+
+
+def check_fragment(path: pathlib.Path, line: int, source: str) -> list[str]:
+    rel = f"{path.relative_to(REPO_ROOT)}:{line}"
+    problems = []
+    for unit in hostable(source):
+        with tempfile.TemporaryDirectory() as tmp:
+            workdir = pathlib.Path(tmp)
+            (workdir / "model.cfdl").write_text(unit, encoding="utf-8")
+            done = subprocess.run(
+                [str(CLI), "parse", str(workdir)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            if done.returncode != 0:
+                problems.append(
+                    f"{rel} does not parse:\n{indent(done.stdout or done.stderr)}"
+                )
+    for match in ENTITY_DECL.finditer(source):
+        family = match.group(1)
+        if family not in FAMILIES:
+            problems.append(
+                f"{rel} declares `entity {family} …`; the families are "
+                + ", ".join(sorted(FAMILIES))
+            )
+    return problems
 
 
 def run_model(source: str, workdir: pathlib.Path) -> tuple[dict, dict]:
@@ -321,12 +425,18 @@ def main() -> int:
 
     problems: list[str] = []
     checked = 0
+    snippets = 0
     for path in SOURCES:
         for line, source in complete_models(path):
             checked += 1
             if args.verbose:
                 print(f"  {path.relative_to(REPO_ROOT)}:{line}")
             problems += check(path, line, source, args.verbose)
+        for line, source in fragments(path):
+            snippets += 1
+            if args.verbose:
+                print(f"  {path.relative_to(REPO_ROOT)}:{line} (snippet)")
+            problems += check_fragment(path, line, source)
 
     if problems:
         print(f"\ncheck-doc-examples: {len(problems)} problem(s) in {checked} example(s):\n",
@@ -341,7 +451,7 @@ def main() -> int:
         return 1
 
     print(f"check-doc-examples: OK ({checked} documentation examples compile, run, "
-          "and exercise every stream they declare)")
+          f"and exercise every stream they declare; {snippets} snippets parse)")
     return 0
 
 

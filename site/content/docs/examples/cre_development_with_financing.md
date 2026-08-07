@@ -1,6 +1,6 @@
 ---
 id: example-cre-development-with-financing
-title: "CRE: Development with Financing"
+title: "CRE: development with financing"
 slug: "/docs/examples/cre_development_with_financing"
 ---
 
@@ -24,8 +24,6 @@ Property-side: CRE pack for construction stub, lease, and exit; **standalone str
 ```
 
 ---
-
-> Generated from `examples/cre_development_with_financing/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

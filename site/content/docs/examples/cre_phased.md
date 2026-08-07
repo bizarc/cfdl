@@ -1,6 +1,6 @@
 ---
 id: example-cre-phased
-title: "CRE: Phased Development"
+title: "CRE: phased development"
 slug: "/docs/examples/cre_phased"
 ---
 
@@ -21,8 +21,6 @@ Full developer lifecycle with **phases** aligning to industry stages: `construct
 ```
 
 ---
-
-> Generated from `examples/cre_phased/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

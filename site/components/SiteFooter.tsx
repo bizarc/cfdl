@@ -23,7 +23,7 @@ const COLUMNS = [
   {
     title: "Reference",
     links: [
-      { href: "/docs/specification", label: "Specs & schemas" },
+      { href: "/docs/specification", label: "Specs and schemas" },
       { href: "/docs/reference/cli", label: "CLI reference" },
       { href: "/docs/benchmarks", label: "Benchmarks" },
       { href: "/docs/licensing", label: "Licensing" },
@@ -38,8 +38,8 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-secondary">
-            A deterministic, source-available language for cash-flow models —
-            with the distribution around every number.
+            A deterministic language for cash-flow models — with the
+            distribution around every number.
           </p>
         </div>
 
@@ -77,7 +77,7 @@ export function SiteFooter() {
 
       <div className="border-t border-subtle">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>© {new Date().getFullYear()} Matthew McCrea. Source available under BUSL-1.1.</p>
+          <p>© {new Date().getFullYear()} Matthew McCrea. All rights reserved.</p>
           <p>Pre-1.0 — interfaces may change until 1.0 freezes the schemas.</p>
         </div>
       </div>

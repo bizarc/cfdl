@@ -1,11 +1,11 @@
 ---
 id: install-index
-title: Install & Setup
+title: Install and setup
 slug: /docs/install
 generated: none
 ---
 
-# Install & Setup
+# Install and setup
 
 CFDL runs the same compiler and engine everywhere — pick the surface that
 matches how you work.
@@ -20,10 +20,9 @@ matches how you work.
 
 ## Pre-launch note
 
-CFDL is pre-1.0 and the repository is currently private. Until launch,
-installs come **from source or from GitHub Release assets**; the pages here
-mark the channels that open at launch (Homebrew, PyPI, VS Code Marketplace,
-`ghcr.io`) as *at launch*.
+CFDL is pre-1.0. Until launch, installs come from release assets or from
+source; the pages here mark the channels that open at launch (Homebrew, PyPI,
+VS Code Marketplace, `ghcr.io`) as *at launch*.
 
 ## Versions and compatibility
 

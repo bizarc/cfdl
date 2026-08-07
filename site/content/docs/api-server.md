@@ -1,11 +1,11 @@
 ---
 id: api-server
-title: API Server
+title: API server
 slug: /docs/api-server
 generated: none
 ---
 
-# API Server
+# API server
 
 `cfdl-server` is a small, self-hostable HTTP API over the CFDL compiler and
 engine. It is filesystem-free: sources arrive in the request body and packs
@@ -37,6 +37,5 @@ embedded pack's domain metrics.
 
 ## Run it
 
-See [Run the API Server](/docs/install/api-server) for Docker and from-source
-setup, configuration, and verification. Details also live in
-`crates/cfdl-server/README.md` in the repository.
+See [Run the API server](/docs/install/api-server) for Docker and from-source
+setup, configuration, and verification.

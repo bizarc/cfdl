@@ -156,7 +156,7 @@ curve sofr linear {
   2027-01: 0.038
 }
 
-stream loan.interest on entity fund.buyer inflow currency USD {
+stream loan.interest on entity asset.buyer inflow currency USD {
   schedule every month from 2026-01 to 2026-12
   amount = 1000000 * (curve_value("sofr", time.date) + 0.0275) / 12
 }

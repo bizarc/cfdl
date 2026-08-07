@@ -1,22 +1,18 @@
 /**
- * Docs navigation, cut by READER rather than by which file exists.
+ * Docs navigation.
  *
- * This was a port — the previous sidebar carried over unchanged, and the shape
- * it carried was a repository's docs/ tree. `docs/16_site_information_architecture.md`
- * has the analysis; two of its findings are applied here.
+ * Sections are cut by what the reader is doing, in the order they usually do
+ * it: understand it, install it, learn it, look something up, read a worked
+ * model, check the normative text.
  *
- * VALIDATION LEADS. It was the last entry of the last section. It answers the
- * first question a professional asks, and it is the one page no competitor can
- * copy: 21 benchmark cases reconciling to published figures from HUD, MIT,
- * Damodaran and GNMA conventions.
+ * "Learn the language" teaches in order and is meant to be read through.
+ * "How-to guides" answer one question each and are meant to be dipped into.
+ * "Examples" holds complete models, including the benchmark set. Nothing
+ * appears in two sections.
  *
- * "PROJECT" IS DISSOLVED. It held five pages for five different readers —
- * benchmarks (evaluator), implementation status (internal), troubleshooting
- * (modeller), FAQ (mixed), licensing (buyer). A bin, not a section. Each page
- * now sits with its reader, and the internal one is off the site entirely.
- *
- * Slugs here must match the frontmatter slugs under content/docs; the docs
- * page build fails loudly if one doesn't resolve.
+ * Titles here are sentence case, matching the frontmatter `title` of the page
+ * they point at. Slugs must match those frontmatter slugs; the docs page build
+ * fails loudly if one does not resolve.
  */
 export interface NavItem {
   title: string;
@@ -41,21 +37,21 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    title: "Install & Setup",
+    title: "Install and setup",
     items: [
       { title: "Choose a surface", slug: "/docs/install" },
       { title: "CLI", slug: "/docs/install/cli" },
       { title: "Python", slug: "/docs/install/python" },
       { title: "API server", slug: "/docs/install/api-server" },
-      { title: "VS Code & LSP", slug: "/docs/install/vscode" },
+      { title: "VS Code and LSP", slug: "/docs/install/vscode" },
       { title: "Playground", slug: "/docs/install/playground" },
     ],
   },
   {
-    title: "Learn the Language",
+    title: "Learn the language",
     items: [
+      { title: "The object model", slug: "/docs/object-model" },
       { title: "Language guide", slug: "/docs/language-guide" },
-      { title: "All examples", slug: "/docs/examples" },
       { title: "Minimal model", slug: "/docs/examples/minimal_model" },
       { title: "Your first stream", slug: "/docs/examples/first_stream" },
       { title: "A simple contract", slug: "/docs/examples/simple_contract" },
@@ -66,9 +62,6 @@ export const NAV: NavSection[] = [
       { title: "Events and options", slug: "/docs/examples/options_events" },
     ],
   },
-  // Surfaces sits directly after the language material: the notebooks inside
-  // it are worked examples, and burying them below Guides and Domain Packs
-  // left them ~1000px down a sidebar that does not scroll independently.
   {
     title: "Surfaces",
     items: [
@@ -77,22 +70,22 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    title: "Guides",
+    title: "How-to guides",
     items: [
-      { title: "Schedules & calendars", slug: "/docs/guides/schedules-and-calendars" },
-      { title: "Contracts & packs", slug: "/docs/guides/contracts-and-packs" },
+      { title: "Schedules and calendars", slug: "/docs/guides/schedules-and-calendars" },
+      { title: "Contracts and packs", slug: "/docs/guides/contracts-and-packs" },
       { title: "Multi-file models", slug: "/docs/guides/multi-file-models" },
-      { title: "Scenarios & run configs", slug: "/docs/guides/scenarios-and-run-configs" },
+      { title: "Scenarios and run configs", slug: "/docs/guides/scenarios-and-run-configs" },
       { title: "Stochastic modeling", slug: "/docs/stochastic-modeling" },
       { title: "Curves", slug: "/docs/guides/curves" },
       { title: "Metrics", slug: "/docs/guides/metrics" },
-      { title: "Statements & reporting", slug: "/docs/guides/statements" },
-      { title: "Reading results & IR", slug: "/docs/guides/reading-results" },
+      { title: "Statements and reporting", slug: "/docs/guides/statements" },
+      { title: "Reading results and IR", slug: "/docs/guides/reading-results" },
       { title: "Troubleshooting", slug: "/docs/troubleshooting" },
     ],
   },
   {
-    title: "Domain Packs",
+    title: "Domain packs",
     items: [
       { title: "Overview", slug: "/docs/packs" },
       { title: "Energy", slug: "/docs/packs/energy" },
@@ -103,11 +96,12 @@ export const NAV: NavSection[] = [
   },
   // Examples is its own section rather than a tail on the tutorial. A reader on
   // lesson three does not want a leveraged buyout, and someone looking for a
-  // worked deal should not have to know it lives under "Learn the Language".
+  // worked deal should not have to know it lives under a section about
+  // learning the language.
   {
     title: "Examples",
     items: [
-      { title: "Browse all", slug: "/docs/examples" },
+      { title: "Browse all examples", slug: "/docs/examples" },
       { title: "Energy: solar PPA microgrid", slug: "/docs/examples/energy-solar-ppa-microgrid" },
       { title: "Energy: wind PTC + MACRS", slug: "/docs/examples/energy-wind-ptc-macrs" },
       { title: "CRE: two-tenant office", slug: "/docs/examples/cre-office-two-tenant" },
@@ -176,7 +170,7 @@ export const FLAT_NAV: NavItem[] = NAV.flatMap((s) =>
  * Neighbours for page-foot navigation, scoped to the current section.
  *
  * Chaining all 51 pages into one sequence implied a reading order that does
- * not exist: the last Guide ran on into Domain Packs, and reference pages
+ * not exist: the last Guide ran on into Domain packs, and reference pages
  * offered a "next" nobody wants to follow. Within a section the sequence is
  * real — the tutorial and the guides are meant to be read in order — so
  * pagination stops at the section boundary instead of inventing a path.

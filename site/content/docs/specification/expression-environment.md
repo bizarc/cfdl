@@ -1,6 +1,6 @@
 ---
 id: expression-environment
-title: "Expression Environment (v0.1)"
+title: "Expression environment (v0.1)"
 slug: "/docs/specification/expression-environment"
 source: docs/03_expression_environment.md
 generated: full

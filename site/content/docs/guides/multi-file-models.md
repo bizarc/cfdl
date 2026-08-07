@@ -1,11 +1,11 @@
 ---
 id: guide-multi-file
-title: Multi-File Models
+title: Multi-file models
 slug: /docs/guides/multi-file-models
 generated: none
 ---
 
-# Multi-File Models
+# Multi-file models
 
 Split a growing model by concern:
 
@@ -46,9 +46,9 @@ Point the CLI at the directory; it starts from `model.cfdl`:
 cfdl compile my-deal --packs packs --out my-deal/ir.json
 ```
 
-Worked example: `examples/language_tutorial/multi_file/` and the larger
-[CRE multi-file example](/docs/examples/cre_multi_file).
+Worked examples: the [multi-file model](/docs/examples/multi_file) lesson and
+the larger [CRE multi-file example](/docs/examples/cre_multi_file).
 
 ## Reference links
 
-- [Language Guide — multi-file models](/docs/language-guide)
+- [Language guide — multi-file models](/docs/language-guide)

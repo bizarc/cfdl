@@ -1,6 +1,6 @@
 ---
 id: example-cre-lease-up
-title: "CRE: Lease-Up"
+title: "CRE: lease-up"
 slug: "/docs/examples/cre_lease_up"
 ---
 
@@ -21,8 +21,6 @@ Single lease with explicit **lease-up ramp** terms: `lease_up.start_period`, `le
 ```
 
 ---
-
-> Generated from `examples/cre_lease_up/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

@@ -44,8 +44,8 @@ function normalizeLinks(markdown) {
       '"When to use streams vs contracts" in `docs/09_user_guide.md`',
       "[When to use streams vs contracts](/docs/language-guide#when-to-use-streams-vs-contracts)"
     )
-    .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language Guide](/docs/language-guide)")
-    .replaceAll("`docs/09_user_guide.md`", "[Language Guide](/docs/language-guide)")
+    .replaceAll("`docs/LANGUAGE_GUIDE.md`", "[Language guide](/docs/language-guide)")
+    .replaceAll("`docs/09_user_guide.md`", "[Language guide](/docs/language-guide)")
     .replaceAll("`docs/01_language_spec.md`", "[Language Spec](/docs/specification/language-spec)")
     .replaceAll("`docs/02_grammar.md`", "[Grammar](/docs/specification/grammar)")
     .replaceAll("`docs/04_compiler_spec.md`", "[Compiler Spec](/docs/specification/compiler-spec)")
@@ -80,10 +80,10 @@ function normalizeLinks(markdown) {
       "`examples/language_tutorial/`",
       "[language tutorial examples](/docs/examples)"
     )
-    .replaceAll(
-      "`docs/USER_GUIDE.md`",
-      "[SDK User Guide](https://github.com/bizarc/cfdl/blob/main/docs/USER_GUIDE.md)"
-    ));
+    // The site does not link into the repository. Every rewrite above points
+    // at a page on this site; a source that cites a repository file that has
+    // no published counterpart is rewritten to the nearest page instead.
+    .replaceAll("`docs/USER_GUIDE.md`", "[Python SDK](/docs/python-sdk)"));
 }
 
 function toPosix(p) {
@@ -209,27 +209,47 @@ function writeGenerated(relativePath, content) {
   fs.writeFileSync(targetPath, content, "utf8");
 }
 
+/**
+ * Titles are SENTENCE CASE. Capitalise the first word and proper nouns; leave
+ * the rest lower. `CRE`, `PPA`, `MACRS`, `IO` and pack names keep their case
+ * because they are names, not emphasis.
+ *
+ * The set had drifted three ways at once — Title Case on the older tutorial
+ * pages, sentence case on the newer benchmark pages, and bare slug text
+ * ("credit: auto abs speed 050") wherever a page had no entry here at all. A
+ * missing entry now fails rather than falling through to the slug, because
+ * the fallback was invisible: it produced a plausible-looking title and only
+ * looked wrong next to its neighbours.
+ */
 const exampleTitles = {
-  minimal_model: "Minimal Model",
-  first_stream: "Your First Stream",
-  simple_contract: "A Simple Contract",
-  with_pack: "Using an Industry Pack",
-  multi_file: "Multi-File Model",
+  minimal_model: "Minimal model",
+  first_stream: "Your first stream",
+  simple_contract: "A simple contract",
+  with_pack: "Using an industry pack",
+  multi_file: "Multi-file model",
   curves: "Curves",
   uncertainty: "Uncertainty and Monte Carlo",
-  options_events: "Events and Options",
-  cre_lease_up: "CRE: Lease-Up",
-  cre_developer: "CRE: Developer Lifecycle",
-  cre_phased: "CRE: Phased Development",
-  cre_multi_file: "CRE: Multi-File Model",
-  cre_development_with_financing: "CRE: Development with Financing",
-  opco_basic: "OpCo: Basic Operating Model",
-  opco_with_growth: "OpCo: Growth via Expressions",
-  opco_multi_file: "OpCo: Multi-File Model"
+  options_events: "Events and options",
+  cre_lease_up: "CRE: lease-up",
+  cre_developer: "CRE: developer lifecycle",
+  cre_phased: "CRE: phased development",
+  cre_multi_file: "CRE: multi-file model",
+  cre_development_with_financing: "CRE: development with financing",
+  opco_basic: "OpCo: basic operating model",
+  opco_with_growth: "OpCo: growth via expressions",
+  opco_multi_file: "OpCo: multi-file model"
 };
 
 function exampleTitle(name) {
-  return exampleTitles[name] ?? name.replaceAll("_", " ");
+  const title = exampleTitles[name];
+  if (!title) {
+    throw new Error(
+      `examples/${name}: no title in exampleTitles (site/scripts/sync-content.mjs).\n` +
+        `Add one in sentence case — a slug read as a title is how ` +
+        `"credit: auto abs speed 050" reached the site.`,
+    );
+  }
+  return title;
 }
 
 const docSpecs = [
@@ -248,7 +268,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "language-spec",
-      title: '"Language Spec (v0.1)"',
+      title: '"Language spec (v0.1)"',
       slug: '"/docs/specification/language-spec"'
     }
   },
@@ -268,7 +288,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "compiler-spec",
-      title: '"Compiler Spec (v0.1)"',
+      title: '"Compiler spec (v0.1)"',
       slug: '"/docs/specification/compiler-spec"'
     },
     digestOnly: true
@@ -279,7 +299,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "diagnostics",
-      title: '"Diagnostics Reference"',
+      title: '"Diagnostics reference"',
       slug: '"/docs/specification/diagnostics"'
     }
   },
@@ -289,7 +309,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "pack-interface",
-      title: '"Pack Interface (v0.1)"',
+      title: '"Pack interface (v0.1)"',
       slug: '"/docs/specification/pack-interface"'
     }
   },
@@ -299,7 +319,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "expression-environment",
-      title: '"Expression Environment (v0.1)"',
+      title: '"Expression environment (v0.1)"',
       slug: '"/docs/specification/expression-environment"'
     }
   },
@@ -309,7 +329,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "ir-schema",
-      title: '"IR Schema (v0.1)"',
+      title: '"IR schema (v0.1)"',
       slug: '"/docs/specification/ir-schema"'
     }
   },
@@ -319,7 +339,7 @@ const docSpecs = [
     layer: "specification",
     frontmatter: {
       id: "results-schema",
-      title: '"Results Schema (v0.1)"',
+      title: '"Results schema (v0.1)"',
       slug: '"/docs/specification/results-schema"'
     }
   }
@@ -363,9 +383,14 @@ const exampleIndexLines = [
   'slug: "/docs/examples"',
   "---",
   "",
-  "Use these examples to learn the language and run real models.",
+  "Every example on this page is a complete model that runs. They come in three",
+  "kinds: eight short lessons that build the language one construct at a time,",
+  "a few longer domain models, and twenty-five benchmark models checked against",
+  "published references.",
   "",
-  "## Tutorial (language_tutorial)",
+  "## Lessons",
+  "",
+  "Read in order. Each adds one construct to the model before it.",
   ""
 ];
 
@@ -386,8 +411,6 @@ for (const name of exampleDirs) {
     `slug: "/docs/examples/${name}"`,
     "---",
     "",
-    `> Generated from \`examples/language_tutorial/${name}/\`.`,
-    "",
     readme.trimEnd(),
     "",
     "## model.cfdl",
@@ -403,10 +426,12 @@ for (const name of exampleDirs) {
 }
 
 exampleIndexLines.push("");
-exampleIndexLines.push("## Domain examples");
+exampleIndexLines.push("## Domain models");
 exampleIndexLines.push("");
-exampleIndexLines.push("- [CRE examples](/docs/examples/cre-examples) — Commercial Real Estate: lease-up, full lifecycle, phased, multi-file, development with financing.");
-exampleIndexLines.push("- [Operating Business examples](/docs/examples/operating-business-examples) — OpCo: revenue, opex, working capital, exit multiple, growth, multi-file.");
+exampleIndexLines.push("Longer models that put the constructs together.");
+exampleIndexLines.push("");
+exampleIndexLines.push("- [CRE examples](/docs/examples/cre-examples) — lease-up, developer lifecycle, phased development, multi-file, development with financing.");
+exampleIndexLines.push("- [Operating business examples](/docs/examples/operating-business-examples) — revenue, opex, working capital, exit multiple, growth, multi-file.");
 exampleIndexLines.push("");
 
 // Domain examples (CRE and OpCo): generate pages that embed code so the site shows structure without repo access
@@ -435,10 +460,10 @@ for (const name of domainExampleOrder) {
     if (fs.existsSync(path.resolve(dir, f))) cfdlFiles.push(f);
   }
 
-  const body = [
-    `> Generated from \`examples/${name}/\`. Code is shown below so you can see structure and elements without repo access.`,
-    ""
-  ];
+  // No provenance banner. The site is the product's documentation and stands
+  // on its own: a reader has no repository to look in, and naming one implies
+  // a place to go that does not exist for them.
+  const body = [];
 
   for (const file of cfdlFiles) {
     const content = fs.readFileSync(path.resolve(dir, file), "utf8").trimEnd();
@@ -497,8 +522,8 @@ const referenceIndex = [
   "",
   "## Tools and data contracts",
   "",
-  "- [CLI Reference](/docs/reference/cli)",
-  "- [Run-Config Reference](/docs/reference/run-config)",
+  "- [CLI reference](/docs/reference/cli)",
+  "- [Run-config reference](/docs/reference/run-config)",
   "- [IR Schema](/docs/specification/ir-schema)",
   "- [Results Schema](/docs/specification/results-schema)",
   ""
@@ -529,14 +554,31 @@ if (fs.existsSync(benchRoot)) {
 // none — without inventing models that nothing validates.
 
 const benchmarkTitles = {
+  "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
+  "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
   "cre/office_two_tenant": "CRE: two-tenant office",
+  "cre/one_lincoln_street": "CRE: office development joint venture",
   "cre/retail_strip": "CRE: retail strip with expense stops",
-  "credit/level_pay_pool": "Credit: level-pay auto pool",
-  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
+  "credit/auto_abs_speed_150": "Credit: auto ABS at 1.5x prepayment speed",
+  "credit/auto_abs_wal": "Credit: auto ABS weighted average life",
   "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
+  "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
+  "credit/level_pay_pool": "Credit: level-pay auto pool",
+  "credit/mbs_pool_conventions": "Credit: mortgage pool conventions",
+  "credit/mbs_pool_ramped": "Credit: mortgage pool on a prepayment ramp",
+  "energy/crest_solar_cost_based": "Energy: cost-based solar feed-in tariff",
+  "energy/merchant_capacity": "Energy: merchant generator with capacity revenue",
   "energy/solar_ppa_microgrid": "Energy: solar PPA microgrid",
+  "energy/utility_pv_singleowner": "Energy: utility-scale PV, single owner",
   "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
-  "opco/lbo_buyout": "OpCo: leveraged buyout"
+  "opco/banker_dcf_conventions": "OpCo: banker DCF conventions",
+  "opco/damodaran_fcff": "OpCo: free cash flow to firm",
+  "opco/gordon_growth_coned": "OpCo: stable-growth dividend discount",
+  "opco/lbo_buyout": "OpCo: leveraged buyout",
+  "opco/lbo_circular_interest": "OpCo: LBO debt schedule with average-balance interest",
+  "opco/lbo_option_pool_exit": "OpCo: LBO exit waterfall with an option pool",
+  "opco/saas_sbc_convention_fork": "OpCo: SaaS DCF and the stock-compensation fork"
 };
 
 /** The description a case states in the leading comments of case.toml. */
@@ -567,6 +609,68 @@ function benchmarkSummary(caseDir) {
   return match[1].trim();
 }
 
+// The published description of a case: what the deal is, what the reference is,
+// what the case exercises, how well it matched, and what any residual means.
+//
+// A separate file from `case.toml` because it is prose, and separate from
+// NOTES.md because NOTES is maintainer narrative and is deliberately not
+// published — the same split `summary` and this file's comments already keep.
+// Optional while the set is being written; `check-benchmark-cases.py` is what
+// requires it.
+function benchmarkCase(caseDir) {
+  const file = path.resolve(caseDir, "CASE.md");
+  if (!fs.existsSync(file)) return null;
+  return fs.readFileSync(file, "utf8").trimEnd();
+}
+
+/**
+ * What the case actually checks, whichever form that takes.
+ *
+ * Eight of the twenty-five cases assert no summary metric: their reference
+ * publishes a full cash-flow table, so the assertion is the table itself,
+ * every line in every period. Rendering only the metric table left those pages
+ * with a "Verified results" heading and nothing under it, which reads as
+ * nothing having been verified — the opposite of the truth. The period-level
+ * assertion is stated first for every case, and the metric table follows when
+ * the case has one.
+ */
+function verifiedResults(caseDir, metrics) {
+  const lines = [];
+  const csv = path.resolve(caseDir, "expected.csv");
+  if (fs.existsSync(csv)) {
+    const rows = fs
+      .readFileSync(csv, "utf8")
+      .split("\n")
+      .filter((line) => line.trim() !== "");
+    const columns = rows[0].split(",").slice(1);
+    const tolerance = (
+      fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8")
+        .match(/^period_tolerance\s*=\s*(\S+)/m) ?? []
+    )[1];
+    lines.push(
+      `Checked period by period: **${columns.length} series** across ` +
+        `**${rows.length - 1} periods**` +
+        (tolerance ? `, each within ±${tolerance} of the reference.` : "."),
+      "",
+      ...columns.map((column) => `- \`${column.trim()}\``),
+      ""
+    );
+  }
+  if (Object.keys(metrics).length > 0) {
+    lines.push(
+      "Summary metrics:",
+      "",
+      "| Metric | Value | Tolerance |",
+      "|---|---:|---:|",
+      ...Object.entries(metrics).map(
+        ([metric, spec]) =>
+          `| \`${metric}\` | ${formatMetricValue(spec.value)} | ±${spec.tolerance} |`
+      )
+    );
+  }
+  return lines;
+}
+
 function formatMetricValue(value) {
   return Math.abs(value) >= 1000
     ? value.toLocaleString("en-US", { maximumFractionDigits: 2 })
@@ -579,7 +683,13 @@ for (const { pack, name } of benchCases) {
   const caseDir = path.resolve(benchRoot, pack, name);
   const key = `${pack}/${name}`;
   const slug = `${pack}-${name.replaceAll("_", "-")}`;
-  const title = benchmarkTitles[key] ?? `${pack}: ${name.replaceAll("_", " ")}`;
+  const title = benchmarkTitles[key];
+  if (!title) {
+    throw new Error(
+      `benchmarks/${key}: no title in benchmarkTitles (site/scripts/sync-content.mjs).\n` +
+        `Add one in sentence case, prefixed by the pack — "OpCo: leveraged buyout".`,
+    );
+  }
 
   const model = fs.readFileSync(path.resolve(caseDir, "model.cfdl"), "utf8").trimEnd();
   const runConfig = fs.readFileSync(path.resolve(caseDir, "run.json"), "utf8").trimEnd();
@@ -605,6 +715,7 @@ for (const { pack, name } of benchCases) {
       "implementation on every commit — period by period, and on each metric,",
       "inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).",
       "",
+      ...(benchmarkCase(caseDir) ? [benchmarkCase(caseDir), ""] : []),
       "## The model",
       "",
       cfdlFence(caseDir),
@@ -619,31 +730,44 @@ for (const { pack, name } of benchCases) {
       "",
       "## Verified results",
       "",
-      "| Metric | Value | Tolerance |",
-      "|---|---:|---:|",
-      ...Object.entries(metrics).map(
-        ([metric, spec]) =>
-          `| \`${metric}\` | ${formatMetricValue(spec.value)} | ±${spec.tolerance} |`
-      ),
+      ...verifiedResults(caseDir, metrics),
       ""
     ].join("\n")
   );
 
-  (benchmarkExampleLinks[pack] ??= []).push([title, `/docs/examples/${slug}`]);
+  (benchmarkExampleLinks[pack] ??= []).push({
+    title,
+    href: `/docs/examples/${slug}`,
+    summary: benchmarkSummary(caseDir),
+  });
 }
+
+const packLabels = {
+  energy: "Energy",
+  cre: "Commercial real estate",
+  credit: "Credit",
+  opco: "Operating businesses",
+};
 
 exampleIndexLines.push("");
 exampleIndexLines.push("## Benchmark models");
 exampleIndexLines.push("");
 exampleIndexLines.push(
-  "Complete models for every pack, each checked period-by-period against an " +
-    "independent reference implementation. These are the most detailed examples " +
-    "on the site, and their numbers are verified rather than asserted."
+  "Complete models for every pack, each checked period by period against an " +
+    "independent reference implementation. These detailed examples have been " +
+    "verified. How that is done is on the [validation](/docs/benchmarks) page."
 );
-exampleIndexLines.push("");
+// Grouped by pack, each with the line the case declares about itself. A flat
+// list of twenty-five titles asked the reader to guess from a title alone
+// which model was the one they wanted.
 for (const pack of ["energy", "cre", "credit", "opco"]) {
-  for (const [label, href] of benchmarkExampleLinks[pack] ?? []) {
-    exampleIndexLines.push(`- [${label}](${href})`);
+  const cases = benchmarkExampleLinks[pack] ?? [];
+  if (cases.length === 0) continue;
+  exampleIndexLines.push("");
+  exampleIndexLines.push(`### ${packLabels[pack]}`);
+  exampleIndexLines.push("");
+  for (const { title, href, summary } of cases) {
+    exampleIndexLines.push(`- [${title}](${href}) — ${summary}`);
   }
 }
 writeGenerated("examples/index.md", exampleIndexLines.join("\n"));
@@ -1090,15 +1214,54 @@ const dataRegions = [
   {
     page: "benchmarks.md",
     key: "benchmark-cases",
+    // Names alone told a reader nothing — `mbs_pool_ramped` is a directory,
+    // not a description. Each row now says what the deal is and links to the
+    // full write-up: the reference, what the case exercises, how closely it
+    // matched, and what any residual means.
     body: [
-      "| Pack | Case |",
+      "| Case | What it is |",
       "|---|---|",
-      ...benchCases.map((c) => `| ${c.pack} | \`${c.name}\` |`),
+      ...["energy", "cre", "credit", "opco"].flatMap((pack) =>
+        (benchmarkExampleLinks[pack] ?? []).map(
+          ({ title, href, summary }) => `| [${title}](${href}) | ${summary} |`,
+        ),
+      ),
       "",
       `*${benchCases.length} cases.*`,
     ],
   },
 ];
+
+// --- Homepage counts -------------------------------------------------------
+//
+// The landing page stated "8 benchmark cases" and "59 golden fixtures" long
+// after both had roughly tripled. Hand-typed numbers on a page nobody
+// regenerates go stale silently and understate the thing they exist to state,
+// so they are counted from the repository here and read from this file.
+const stats = {
+  packs: packGuides.length,
+  benchmarkCases: benchCases.length,
+  // Both halves: a model that must compile and run to a fixed output, and a
+  // model that must be REJECTED with a named diagnostic. The second half is
+  // half the fixtures and is the part that keeps error messages from rotting.
+  goldenFixtures: ["valid", "invalid"].reduce((total, kind) => {
+    const dir = path.resolve(repoRoot, "fixtures", kind);
+    if (!fs.existsSync(dir)) return total;
+    return (
+      total +
+      fs.readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory()).length
+    );
+  }, 0),
+};
+const statsPath = path.resolve(siteDir, "content", "stats.json");
+const statsBody = JSON.stringify(stats, null, 2) + "\n";
+if (checkMode) {
+  if (!fs.existsSync(statsPath) || fs.readFileSync(statsPath, "utf8") !== statsBody) {
+    throw new Error("Generated file is stale: site/content/stats.json");
+  }
+} else {
+  fs.writeFileSync(statsPath, statsBody, "utf8");
+}
 
 const staleRegions = [];
 for (const { page, key, body } of dataRegions) {

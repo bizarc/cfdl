@@ -7,10 +7,9 @@ generated: none
 
 # Documentation
 
-CFDL is a deterministic, source-available language for cash-flow models
-across energy, real estate, credit, and operating businesses. Declare the
-deal in text; the engine derives the schedule, the metrics, and the
-uncertainty.
+CFDL is a deterministic language for cash-flow models across energy, real
+estate, credit, and operating businesses. Declare the deal in text; the engine
+derives the schedule, the metrics, and the uncertainty.
 
 ## Start here
 
@@ -18,15 +17,17 @@ uncertainty.
 |---|---|
 | **[How CFDL works](/docs/concepts)** | The pipeline, the model anatomy, and what determinism buys you. Two minutes. |
 | **[Getting started](/docs/getting-started)** | Your first model in the browser, then with the CLI, then with a distribution around it. |
-| **[Install & setup](/docs/install)** | Pick a surface — CLI, Python, API server, VS Code, or the zero-install playground. |
+| **[Install and setup](/docs/install)** | Pick a surface — CLI, Python, API server, VS Code, or the zero-install playground. |
 
 ## Learn the language
 
+- [The object model](/docs/object-model) — assets, parties, contracts and
+  references; lifecycles, events and options.
 - [Language guide](/docs/language-guide) — the complete tour: time,
   entities, streams, contracts, expressions, assumptions, curves.
-- [Examples](/docs/examples) — five progressive tutorial models, then
-  worked domain models.
-- [Guides](/docs/guides/schedules-and-calendars) — task-oriented how-tos for
+- [Examples](/docs/examples) — eight lessons in order, then worked domain
+  models and the benchmark set.
+- [How-to guides](/docs/guides/schedules-and-calendars) — one question each:
   schedules, packs, multi-file models, scenarios, curves, and metrics.
 
 ## Model your domain
@@ -41,7 +42,7 @@ models.
 ## Go deeper
 
 - [Stochastic modeling](/docs/stochastic-modeling) — assumptions, seeded
-  Monte Carlo, percentile outputs. The headline capability.
+  Monte Carlo, percentile outputs.
 - [Specification](/docs/specification) — authoritative specs,
   grammar, diagnostics, and JSON schemas.
 - [CLI reference](/docs/reference/cli) and

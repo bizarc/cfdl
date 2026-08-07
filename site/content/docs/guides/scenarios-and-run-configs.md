@@ -1,11 +1,11 @@
 ---
 id: guide-scenarios
-title: Scenarios & Run Configs
+title: Scenarios and run configs
 slug: /docs/guides/scenarios-and-run-configs
 generated: none
 ---
 
-# Scenarios & Run Configs
+# Scenarios and run configs
 
 A compiled model (IR) is evaluated under a **run config** — so the same
 model answers base case, stress case, and sensitivity questions without
@@ -53,10 +53,10 @@ scenario as a DataFrame row.
 
 The `monte_carlo` section (trials, seed, optional distribution overrides)
 turns the same IR into a distribution — see
-[Stochastic Modeling](/docs/stochastic-modeling) and the
+[Stochastic modeling](/docs/stochastic-modeling) and the
 [run-config reference](/docs/reference/run-config).
 
 ## Reference links
 
-- [Run-Config Reference](/docs/reference/run-config)
-- [CLI Reference — cfdl run](/docs/reference/cli)
+- [Run-config reference](/docs/reference/run-config)
+- [CLI reference — cfdl run](/docs/reference/cli)

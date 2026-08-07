@@ -13,8 +13,8 @@ JSON schemas the toolchain reads and writes.
 
 These pages exist so that a second implementation could be written from them,
 and so that anything consuming CFDL's output has a contract to hold it to. They
-are precise rather than welcoming, and they describe behaviour that most people
-modelling a deal never need to think about.
+describe behaviour that most people modelling a deal never need to think
+about.
 
 **If you are building a model, you want [Reference](/docs/reference) instead.**
 It covers the same ground at the altitude of the work — what a thing does, when

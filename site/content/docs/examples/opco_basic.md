@@ -1,6 +1,6 @@
 ---
 id: example-opco-basic
-title: "OpCo: Basic Operating Model"
+title: "OpCo: basic operating model"
 slug: "/docs/examples/opco_basic"
 ---
 
@@ -19,8 +19,6 @@ Run stress:
 `./target/debug/cfdl run /tmp/opco.ir.json --out /tmp/opco.stress.results.json --config examples/opco_basic/run.stress.json --packs packs`
 
 ---
-
-> Generated from `examples/opco_basic/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

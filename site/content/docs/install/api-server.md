@@ -1,11 +1,11 @@
 ---
 id: install-api-server
-title: Run the API Server
+title: Run the API server
 slug: /docs/install/api-server
 generated: none
 ---
 
-# Run the API Server
+# Run the API server
 
 `cfdl-server` is a self-hostable HTTP API over the compiler and engine —
 filesystem-free, embedded packs only.
@@ -33,7 +33,7 @@ cargo run --release -p cfdl-server
 ## Configuration
 
 - `CFDL_SERVER_ADDR` — bind address (default `0.0.0.0:8080`).
-- Built-in limits (see `crates/cfdl-server/src/limits.rs`): 1 MiB request
+- Built-in limits: 1 MiB request
   body, 10 s request timeout, Monte Carlo trials capped at 1000 (rejected,
   never truncated).
 

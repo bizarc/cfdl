@@ -14,7 +14,7 @@ generated: full
 
 A homogeneous level-pay loan pool with CPR prepayments, CDR defaults, loss severity, a recovery lag, a servicing strip and prepayment penalties — priced at a discount to par.
 
-This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+This notebook uses one of the benchmark models, which CFDL validates against an independent reference to the penny.
 
 ```python
 # On Colab, install the SDK and fetch the models this notebook reads.

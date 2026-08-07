@@ -1,6 +1,6 @@
 ---
 id: language-spec
-title: "Language Spec (v0.1)"
+title: "Language spec (v0.1)"
 slug: "/docs/specification/language-spec"
 source: docs/01_language_spec.md
 generated: full
@@ -280,7 +280,7 @@ Rules:
 
 ## 8. Contracts (Behavior container)
 
-For when to use contracts vs standalone streams, see the **Language Guide** ("When to use streams vs contracts").
+For when to use contracts vs standalone streams, see the **Language guide** ("When to use streams vs contracts").
 
 ### 8.1 Contract declaration (canonical form)
 Syntax (normative):
@@ -371,7 +371,7 @@ Pack interaction:
 
 ## 9. Streams (cash flow vectors)
 
-For when to use standalone streams vs contracts, see the **Language Guide** ("When to use streams vs contracts").
+For when to use standalone streams vs contracts, see the **Language guide** ("When to use streams vs contracts").
 
 ### 9.1 Stream declaration (standalone)
 Syntax:

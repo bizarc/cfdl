@@ -1,17 +1,62 @@
 ---
 id: benchmark-cre-mit-rentleg-plaza
-title: "cre: mit rentleg plaza"
+title: "CRE: rent-regulated plaza"
 slug: "/docs/examples/cre-mit-rentleg-plaza"
 source: benchmarks/cre/mit_rentleg_plaza
 ---
 
-# cre: mit rentleg plaza
+# CRE: rent-regulated plaza
 
 A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
+
+## The case
+
+A 30,000 rentable square foot office building with two suites, acquired and held
+for five years. The two suites sit at different expense stops, so recoveries
+differ between them; the stop resets to a new base year when a suite re-lets.
+Operating expenses vary with occupancy, rollover at expiry is
+probability-weighted, market rent spikes once during the hold, and the building
+is sold at ten times forward net operating income net of a 5% commission.
+
+## The reference
+
+Problem Set 1 from MIT OpenCourseWare's real estate finance and investment
+course. It publishes the full pro forma table **and** the answer: a present
+value at 12% of **$2,292,810**.
+
+**Redistributable.** Released under CC BY-NC-SA 4.0, which is the only content
+in the source catalogue with an unambiguous reuse grant.
+
+Unusually, this source publishes both the working and the answer, so the case
+checks every intermediate line as well as the result.
+
+## What it exercises
+
+| | |
+|---|---|
+| Pack | `cre` |
+| Contract types | `cre.exit_forward` |
+| Declared | seven native streams |
+| Language features | native streams alongside a pack contract |
+| Conventions | two expense stops at different levels, a base-year stop reset on re-lease, occupancy-varying operating expenses, probability-weighted rollover, a forward-NOI reversion |
+
+## The result
+
+Every pro forma line reproduces, and so does the published answer:
+`model.npv` = **2,292,810.18** against the problem set's $2,292,810.
+
+Asserted: eight stream columns across the five-year table, plus the present
+value and the undiscounted total.
+
+## The delta
+
+The 18 cents is the source's rounding, not the engine's — the problem set states
+its answer to the dollar. Every per-period line agrees inside a one-cent
+tolerance.
 
 ## The model
 
@@ -241,15 +286,14 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 
 // MIT fn 11 — the reversion, as a CRE pack contract.
 //
-// This is the acceptance test for the whole cadence programme. Reaching it
-// took three fixes, each of which this file used to document as a blocker:
+// This is the acceptance test for annual-calendar lowering, and it depends on
+// three behaviours at once:
 //
-//   the CRE pack refused to lower on a non-monthly calendar at all;
-//   E2103 measured a native stream against the cash horizon, so the operating
-//     streams could not reach the `project 1` tail this contract reads;
-//   `cre.exit_forward` settled on its stated date, discounting from the start
-//     of 2005 rather than its end — four years instead of five, worth
-//     $207,783 here. Disposals now settle at period end.
+//   the CRE pack lowers on any calendar it declares, not monthly alone;
+//   a native stream is measured against the projection horizon, so the
+//     operating streams reach the `project 1` tail this contract reads;
+//   a disposal settles at period end, so the exit discounts from the end of
+//     2005 rather than its start — five years, not four, worth $207,783 here.
 //
 // `exit_cap = 0.10` is MIT's "10 times the following year's NOI"; the 5%
 // selling commission is fn 11. The forward NOI is derived from the modelled
@@ -274,6 +318,23 @@ contract cre.exit_forward on entity asset.rentleg {
 ```
 
 ## Verified results
+
+Checked period by period: **12 series** across **5 periods**, each within ±0.01 of the reference.
+
+- `cre.abatement.suite_200`
+- `cre.capex`
+- `cre.exit.proceeds`
+- `cre.property.opex`
+- `cre.unit.base_rent.suite_100`
+- `cre.unit.base_rent.suite_200`
+- `cre.unit.recoveries.suite_100`
+- `cre.unit.recoveries.suite_200`
+- `cre.unit.ti_lc.suite_100`
+- `cre.unit.ti_lc.suite_200`
+- `cre.vacancy.loss`
+- `net_cash_flow`
+
+Summary metrics:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

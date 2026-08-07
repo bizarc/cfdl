@@ -1,11 +1,11 @@
 ---
 id: cre-examples
-title: "CRE Examples"
+title: "CRE examples"
 slug: "/docs/examples/cre-examples"
 generated: none
 ---
 
-Commercial Real Estate (CRE) examples show construction → lease-up → stabilized lifecycle, NOI, exit cap rate, and optional construction-to-permanent financing. All use the CRE pack (`use pack "cre"`). For when to use **streams vs contracts** (e.g. formal lease → contract; individual ops items → stream), see the [Language Guide](/docs/language-guide#when-to-use-streams-vs-contracts).
+Commercial Real Estate (CRE) examples show construction → lease-up → stabilized lifecycle, NOI, exit cap rate, and optional construction-to-permanent financing. All use the CRE pack (`use pack "cre"`). For when to use **streams vs contracts** (e.g. formal lease → contract; individual ops items → stream), see the [Language guide](/docs/language-guide#when-to-use-streams-vs-contracts).
 
 ## Example ladder
 
@@ -30,4 +30,4 @@ Each example directory includes a `run.json` (and/or `run.base.json`, `run.stres
 ## Structure
 
 - **Entities:** Examples use one or more entities (e.g. `real_estate property`, `loan construction`, `loan permanent`). Streams are owned by an entity.
-- **Pack contracts:** `cre_construction_stub`, `cre_lease`, `cre_ops_revenue`, `cre_ops_expense`, `cre_exit_cap` — see [Packs](/docs/packs) and [CRE pack README](https://github.com/bizarc/cfdl/blob/main/packs/cre/README.md).
+- **Pack contracts:** `cre_construction_stub`, `cre_lease`, `cre_ops_revenue`, `cre_ops_expense`, `cre_exit_cap` — see [Packs](/docs/packs) and [the CRE pack guide](/docs/packs/cre).

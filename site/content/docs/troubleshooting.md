@@ -12,8 +12,8 @@ Organized by surface. Diagnostic codes (`E….`) are cataloged in the
 ## CLI
 
 - **`use pack` fails to resolve** — pass `--packs <dir>` pointing at a packs
-  directory (the repo's `packs/` from a checkout, or an extracted
-  `cfdl-packs-<version>.tar.gz`). Check what's visible with
+  directory: an extracted `cfdl-packs-<version>.tar.gz`, or a `packs/`
+  directory beside your model. Check what's visible with
   `cfdl pack list --path <dir>`.
 - **Domain metrics missing from results** — `cfdl run` needs `--pack <name>`
   (e.g. `--pack cre`) to apply a pack's metric set; core metrics

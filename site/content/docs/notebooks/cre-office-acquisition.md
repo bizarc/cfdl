@@ -14,7 +14,7 @@ generated: full
 
 A two-tenant office acquisition modeled lease-by-lease: free rent, anniversary escalations, expense recoveries over stops, TI/LC, probability-weighted rollover, and an exit on forward NOI.
 
-This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+This notebook uses one of the benchmark models, which CFDL validates against an independent reference to the penny.
 
 ```python
 # On Colab, install the SDK and fetch the models this notebook reads.

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  Boxes,
   Braces,
   GitCompare,
   Layers,
@@ -17,6 +18,8 @@ import { HeroDemo } from "@/components/landing/HeroDemo";
 import { EnginePrefetch } from "@/components/playground/EnginePrefetch";
 import { heroModel } from "@/components/landing/hero-demo-data";
 import { highlight } from "@/lib/shiki";
+// Counted from the repository by `npm run sync:content`, not typed here.
+import stats from "@/content/stats.json";
 
 const FEATURES = [
   {
@@ -26,13 +29,18 @@ const FEATURES = [
   },
   {
     icon: ShieldCheck,
-    title: "Parity you can check",
+    title: "Checked against references",
     body: "Every domain pack is gated by benchmark suites diffed against independent reference models, held decimal-exact on schedule math.",
   },
   {
     icon: Layers,
     title: "Domain packs",
     body: "Energy, real estate, credit, and operating businesses ship as contract templates with validated terms and industry metrics.",
+  },
+  {
+    icon: Boxes,
+    title: "Assets, parties, contracts",
+    body: "Declare what exists and how it relates. Assets carry lifecycles, events move them between states, and options are contracts with an election.",
   },
   {
     icon: GitCompare,
@@ -92,7 +100,7 @@ export default async function HomePage() {
           <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:py-24">
             <div className="flex flex-col justify-center">
               <Badge tone="accent" className="w-fit">
-                Source available · pre-1.0
+                Pre-1.0
               </Badge>
               <h1 className="mt-5 text-4xl font-semibold leading-[1.1] tracking-tight text-primary sm:text-5xl">
                 Cash-flow models that give you the number{" "}
@@ -127,7 +135,7 @@ export default async function HomePage() {
 
         <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
           <h2 className="text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-            Built like a compiler, not a spreadsheet
+            Built like a compiler
           </h2>
           <p className="mt-3 max-w-2xl text-base leading-relaxed text-secondary">
             Underwriting models decide real money. They deserve the tooling
@@ -173,7 +181,7 @@ export default async function HomePage() {
           <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
             <div>
               <h2 className="text-2xl font-semibold tracking-tight text-primary sm:text-3xl">
-                Parity is proven, not claimed
+                Every number is checked against a reference
               </h2>
               <p className="mt-4 text-base leading-relaxed text-secondary">
                 Every pack ships with a benchmark suite: the CFDL model is
@@ -191,9 +199,9 @@ export default async function HomePage() {
             </div>
             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2">
               {[
-                ["4", "domain packs"],
-                ["8", "benchmark cases"],
-                ["59", "golden fixtures"],
+                [String(stats.packs), "domain packs"],
+                [String(stats.benchmarkCases), "benchmark cases"],
+                [String(stats.goldenFixtures), "golden fixtures"],
                 ["3", "operating systems in CI"],
               ].map(([n, label]) => (
                 <div

@@ -1,11 +1,11 @@
 ---
 id: guide-contracts-packs
-title: Contracts & Packs
+title: Contracts and packs
 slug: /docs/guides/contracts-and-packs
 generated: none
 ---
 
-# Contracts & Packs
+# Contracts and packs
 
 Streams are the raw building block; contracts are how models stay readable.
 
@@ -20,8 +20,8 @@ Streams are the raw building block; contracts are how models stay readable.
 A stream is explicit about everything:
 
 ```cfdl
-stream ops.revenue on entity operating.company inflow currency USD {
-  schedule every monthly from 2026-01 to 2027-12
+stream ops.revenue on entity asset.company inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
   amount = 30000
 }
 ```
@@ -43,10 +43,10 @@ contract cre.lease on entity asset.tower {
 ## What the pack does with it
 
 At compile time the pack's lowering rules fill in schedule and amount
-expressions from the terms (with validated defaults), producing ordinary
-streams in the IR — there is no runtime magic, and `cfdl compile` output
-shows exactly what was generated. Missing or malformed terms fail
-compilation with named diagnostics.
+expressions from the terms, with validated defaults, producing ordinary streams
+in the IR. Nothing is deferred to run time: the `cfdl compile` output shows the
+streams that were generated. Missing or malformed terms fail compilation with
+named diagnostics.
 
 ## Instances
 
@@ -67,5 +67,5 @@ contract cre.lease_unit.tenant_b on entity asset.tower { ... }
 
 ## Reference links
 
-- [Domain Packs overview](/docs/packs) and the four pack guides
-- [Pack Interface spec](/docs/specification/pack-interface)
+- [Domain packs overview](/docs/packs) and the four pack guides
+- [Pack interface](/docs/specification/pack-interface) — the normative format

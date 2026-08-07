@@ -4,8 +4,6 @@ title: "Curves"
 slug: "/docs/examples/curves"
 ---
 
-> Generated from `examples/language_tutorial/curves/`.
-
 A **curve** is a dated series — a forward price, an index, a rate path —
 declared once and read by date.
 

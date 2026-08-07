@@ -4,8 +4,6 @@ title: "Uncertainty and Monte Carlo"
 slug: "/docs/examples/uncertainty"
 ---
 
-> Generated from `examples/language_tutorial/uncertainty/`.
-
 An assumption can be a **distribution** rather than a number, which is what
 turns one model into a range of outcomes.
 
@@ -18,7 +16,7 @@ The results carry percentiles alongside the deterministic figures.
 
 ## model.cfdl
 
-```cfdl run={"deterministic":{"annual_discount_rate":0.1},"monte_carlo":{"trials":500,"seed":42}}
+```cfdl run={"deterministic":{"annual_discount_rate":0.1},"monte_carlo":{"trial_count":500,"seed":42}}
 version 0.1
 model "tutorial-uncertainty"
 time calendar monthly from 2026-01 for 24
