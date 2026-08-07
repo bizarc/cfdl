@@ -1,0 +1,301 @@
+# Energy pack ontology — the vocabulary of things a model may declare.
+#
+# A pack's lowering rules say how a contract becomes cash. THIS file says what
+# the model is ABOUT: which assets exist, which parties can be counterparties,
+# what lifecycle an asset moves through, and how those things relate.
+#
+# THE FOUR FAMILIES are fixed by the language; a pack fills them in:
+#
+#   asset        a thing that produces or consumes cash
+#   party        someone who contracts, owns, lends or invests
+#   contract     an agreement between parties, attached to an asset
+#   reference    a market observable — a price curve, an index, a rate
+#
+# An asset also carries a CLASS — `real`, `financial` or `intangible` — which
+# is the split every asset taxonomy starts from and the one that decides how an
+# asset is underwritten. A turbine is real; a tax-equity interest in it is
+# financial.
+#
+# HIERARCHY IS OPTIONAL, ALWAYS. A wind farm may be one asset or a collection
+# of turbines; a portfolio may be one asset or many projects. The modeller
+# chooses the grain, and the language supports either without preferring one.
+# Nothing here requires a parent.
+
+[pack]
+ontology_id = "energy"
+version = "0.1.0"
+
+# ---------------------------------------------------------------------------
+# Assets
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "Energy.Asset.GenerationFacility"
+family = "asset"
+class = "real"
+lifecycle = "energy.facility"
+description = "A plant that converts a resource into electricity or heat."
+
+[[entities.fields]]
+name = "technology"
+field_type = "string"
+required = true
+description = "solar_pv | wind | storage | geothermal | thermal | hybrid"
+
+[[entities.fields]]
+name = "nameplate_capacity"
+field_type = "decimal"
+required = true
+unit = "kW"
+
+[[entities.fields]]
+name = "capacity_factor"
+field_type = "decimal"
+required = false
+unit = "ratio"
+
+[[entities.fields]]
+name = "commercial_operation_date"
+field_type = "date"
+required = false
+
+[[entities]]
+type_id = "Energy.Asset.Portfolio"
+family = "asset"
+class = "real"
+description = "A grouping of facilities modelled as one. Use only when the grain is the portfolio; a facility needs no parent to exist."
+
+# A tax-equity or sponsor interest is a claim on the project, not the plant
+# itself — so it is financial even though what it claims is real.
+[[entities]]
+type_id = "Energy.Asset.ProjectInterest"
+family = "asset"
+class = "financial"
+description = "An equity interest in a project's cash and tax attributes."
+
+[[entities.fields]]
+name = "interest_type"
+field_type = "string"
+required = true
+description = "sponsor | tax_equity | preferred"
+
+# ---------------------------------------------------------------------------
+# Parties
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "Energy.Party.Sponsor"
+family = "party"
+description = "Develops and owns the project."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Energy.Party.Offtaker"
+family = "party"
+description = "Buys the output — a utility, a corporate buyer, or the market."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities.fields]]
+name = "credit_rating"
+field_type = "string"
+required = false
+
+[[entities]]
+type_id = "Energy.Party.Lender"
+family = "party"
+description = "Provides project debt."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Energy.Party.TaxEquityInvestor"
+family = "party"
+description = "Invests for the tax attributes — credits and depreciation."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Energy.Party.ServiceProvider"
+family = "party"
+description = "Operations and maintenance counterparty, or a landowner under a site lease."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+# ---------------------------------------------------------------------------
+# Lifecycles
+#
+# Every asset with a lifecycle is ALWAYS in exactly one of its states, starting
+# at `initial`. There is no null state and no undeclared state: a transition
+# naming a state not listed here is a compile error, which is what makes a
+# misspelled status impossible rather than merely unlikely.
+# ---------------------------------------------------------------------------
+
+[[lifecycles]]
+lifecycle_id = "energy.facility"
+initial = "development"
+states = ["development", "construction", "commissioning", "operating", "curtailed", "decommissioned"]
+
+[[lifecycles.transitions]]
+from = "development"
+to = "construction"
+description = "Notice to proceed."
+
+[[lifecycles.transitions]]
+from = "construction"
+to = "commissioning"
+description = "Mechanical completion."
+
+[[lifecycles.transitions]]
+from = "commissioning"
+to = "operating"
+description = "Commercial operation. Revenue contracts commonly activate here."
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "curtailed"
+description = "Output curtailed by the offtaker or the grid; capacity payments may continue."
+
+[[lifecycles.transitions]]
+from = "curtailed"
+to = "operating"
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "decommissioned"
+
+# ---------------------------------------------------------------------------
+# Contracts
+#
+# `contract_name` binds a type to the lowering rule that turns it into cash, so
+# the ontology and the arithmetic cannot drift apart: a type with no rule
+# produces nothing, and a rule with no type has no counterparties.
+# ---------------------------------------------------------------------------
+
+[[contracts]]
+type_id = "Energy.Contract.PPA"
+contract_name = "energy.ppa"
+subject_family = "asset"
+parties = ["seller", "offtaker"]
+description = "Power purchase agreement: contracted price for delivered energy."
+
+[[contracts]]
+type_id = "Energy.Contract.MerchantSale"
+contract_name = "energy.merchant"
+subject_family = "asset"
+parties = ["seller"]
+description = "Uncontracted sale into the market. The counterparty is the market, so only the seller is named."
+
+[[contracts]]
+type_id = "Energy.Contract.StorageArbitrage"
+contract_name = "energy.storage_arbitrage"
+subject_family = "asset"
+parties = ["seller"]
+
+[[contracts]]
+type_id = "Energy.Contract.CapacityPayment"
+contract_name = "energy.capacity"
+subject_family = "asset"
+parties = ["seller", "offtaker"]
+
+[[contracts]]
+type_id = "Energy.Contract.OperationsAndMaintenance"
+contract_name = "energy.om"
+subject_family = "asset"
+parties = ["owner", "service_provider"]
+
+[[contracts]]
+type_id = "Energy.Contract.ProjectDebt"
+contract_name = "energy.debt_service"
+subject_family = "asset"
+parties = ["borrower", "lender"]
+
+[[contracts]]
+type_id = "Energy.Contract.Capex"
+contract_name = "energy.capex"
+subject_family = "asset"
+parties = ["owner"]
+
+# Tax attributes are agreements with a revenue authority rather than a
+# commercial counterparty, so they name only the claimant.
+[[contracts]]
+type_id = "Energy.Contract.InvestmentTaxCredit"
+contract_name = "energy.itc"
+subject_family = "asset"
+parties = ["claimant"]
+
+[[contracts]]
+type_id = "Energy.Contract.ProductionTaxCredit"
+contract_name = "energy.ptc"
+subject_family = "asset"
+parties = ["claimant"]
+
+[[contracts]]
+type_id = "Energy.Contract.DepreciationShield"
+contract_name = "energy.macrs_shield"
+subject_family = "asset"
+parties = ["claimant"]
+
+# ---------------------------------------------------------------------------
+# References — market observables. Declared in the model today; the shape
+# admits an external source later without the model changing.
+# ---------------------------------------------------------------------------
+
+[[references]]
+reference_id = "energy.power_price"
+kind = "price_curve"
+unit = "USD/MWh"
+description = "Forward or projected wholesale power price."
+
+[[references]]
+reference_id = "energy.base_rate"
+kind = "rate_curve"
+unit = "ratio"
+description = "Floating base rate for project debt."
+
+[[references]]
+reference_id = "energy.inflation"
+kind = "index"
+unit = "ratio"
+
+# ---------------------------------------------------------------------------
+# Relations — typed links, with an inverse so either end reads naturally.
+# ---------------------------------------------------------------------------
+
+[[relations]]
+relation_id = "owns"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "owned_by"
+
+[[relations]]
+relation_id = "operates"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "operated_by"
+
+[[relations]]
+relation_id = "part_of"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_one"
+inverse = "contains"
+description = "Optional hierarchy — a facility within a portfolio. Never required: an asset stands alone unless the modeller groups it."

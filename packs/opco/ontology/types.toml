@@ -1,0 +1,314 @@
+# OpCo pack ontology — the vocabulary of things a model may declare.
+#
+# See packs/energy/ontology/types.toml for what the four families mean.
+#
+# WHY AN OPERATING BUSINESS IS A FINANCIAL ASSET. What a model values is not
+# the machines — it is the claim on a going concern's cash. The machines are
+# real assets the business happens to own, and a model that needed them would
+# declare them separately. So `Enterprise` is `financial`: it is an equity
+# claim, which is also why it carries a capital structure and the real assets
+# beneath it usually do not appear at all.
+#
+# HIERARCHY IS OPTIONAL. A group can be one enterprise or a parent with
+# segments; a roll-up can be one business or the platform plus its
+# acquisitions. The modeller chooses the grain.
+
+[pack]
+ontology_id = "opco"
+version = "0.1.0"
+
+# ---------------------------------------------------------------------------
+# Assets
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "OpCo.Asset.Enterprise"
+family = "asset"
+class = "financial"
+lifecycle = "opco.enterprise"
+description = "A going concern valued on its cash flows."
+
+[[entities.fields]]
+name = "industry"
+field_type = "string"
+required = false
+
+[[entities.fields]]
+name = "fiscal_year_end"
+field_type = "string"
+required = false
+description = "Month of the fiscal year end. Matters because a valuation date that is not a year end produces a stub period."
+
+[[entities]]
+type_id = "OpCo.Asset.BusinessSegment"
+family = "asset"
+class = "financial"
+description = "A division modelled separately. Use only when the grain is the segment; a consolidated model needs none."
+
+[[entities]]
+type_id = "OpCo.Asset.EquityInterest"
+family = "asset"
+class = "financial"
+description = "A claim on the enterprise's equity — sponsor, rollover, preferred, or an option pool."
+
+[[entities.fields]]
+name = "interest_type"
+field_type = "string"
+required = true
+description = "sponsor | management_rollover | preferred | option_pool | common"
+
+[[entities.fields]]
+name = "shares"
+field_type = "decimal"
+required = false
+unit = "shares"
+
+# Intangibles are the third class, and this is where they arise: a royalty
+# stream or a licence is neither a real thing nor a claim on a balance sheet.
+[[entities]]
+type_id = "OpCo.Asset.IntangibleRight"
+family = "asset"
+class = "intangible"
+description = "A royalty, licence or contractual right valued on its own cash flows."
+
+[[entities.fields]]
+name = "right_type"
+field_type = "string"
+required = true
+description = "royalty | licence | franchise | patent"
+
+[[entities.fields]]
+name = "expiry"
+field_type = "date"
+required = false
+
+# ---------------------------------------------------------------------------
+# Parties
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "OpCo.Party.Sponsor"
+family = "party"
+description = "Acquires and controls the business."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "OpCo.Party.Management"
+family = "party"
+description = "Runs the business; commonly rolls equity and holds options."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "OpCo.Party.Lender"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities.fields]]
+name = "tranche_role"
+field_type = "string"
+required = false
+description = "revolver | term_loan | senior_notes | subordinated_notes"
+
+[[entities]]
+type_id = "OpCo.Party.Shareholder"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "OpCo.Party.Counterparty"
+family = "party"
+description = "A customer or supplier named when a contract depends on one."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+# ---------------------------------------------------------------------------
+# Lifecycles
+# ---------------------------------------------------------------------------
+
+[[lifecycles]]
+lifecycle_id = "opco.enterprise"
+initial = "operating"
+states = ["operating", "under_offer", "acquired", "levered", "deleveraged", "exited"]
+description = "Initial state is `operating` because a valuation starts with a business that already runs; a buyout model transitions it."
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "under_offer"
+
+[[lifecycles.transitions]]
+from = "under_offer"
+to = "acquired"
+description = "Transaction closes; sources and uses land."
+
+[[lifecycles.transitions]]
+from = "acquired"
+to = "levered"
+
+[[lifecycles.transitions]]
+from = "levered"
+to = "deleveraged"
+description = "Debt paid down to a target — commonly what makes an exit possible."
+
+[[lifecycles.transitions]]
+from = "levered"
+to = "exited"
+
+[[lifecycles.transitions]]
+from = "deleveraged"
+to = "exited"
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "exited"
+
+# ---------------------------------------------------------------------------
+# Contracts
+# ---------------------------------------------------------------------------
+
+[[contracts]]
+type_id = "OpCo.Contract.RevenueLine"
+contract_name = "opco.revenue_line"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "OpCo.Contract.OperatingExpenseLine"
+contract_name = "opco.opex_line"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "OpCo.Contract.CapexLine"
+contract_name = "opco.capex_line"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "OpCo.Contract.WorkingCapital"
+contract_name = "opco.working_capital"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "OpCo.Contract.WorkingCapitalPolicy"
+contract_name = "opco.working_capital_policy"
+subject_family = "asset"
+parties = ["owner"]
+description = "Days-based policy — receivables, payables, inventory — rather than a stated movement."
+
+[[contracts]]
+type_id = "OpCo.Contract.TermDebt"
+contract_name = "opco.term_debt"
+subject_family = "asset"
+parties = ["borrower", "lender"]
+
+[[contracts]]
+type_id = "OpCo.Contract.CashTaxes"
+contract_name = "opco.cash_taxes"
+subject_family = "asset"
+parties = ["taxpayer"]
+
+[[contracts]]
+type_id = "OpCo.Contract.Acquisition"
+contract_name = "opco.acquisition"
+subject_family = "asset"
+parties = ["buyer", "seller"]
+
+[[contracts]]
+type_id = "OpCo.Contract.ExitAtMultiple"
+contract_name = "opco.exit_multiple"
+subject_family = "asset"
+parties = ["seller"]
+
+[[contracts]]
+type_id = "OpCo.Contract.ExitAtEbitdaMultiple"
+contract_name = "opco.exit_ebitda"
+subject_family = "asset"
+parties = ["seller"]
+
+[[contracts]]
+type_id = "OpCo.Contract.ExitAtPerpetuity"
+contract_name = "opco.exit_perpetuity"
+subject_family = "asset"
+parties = ["seller"]
+
+# ---------------------------------------------------------------------------
+# References
+# ---------------------------------------------------------------------------
+
+[[references]]
+reference_id = "opco.base_rate"
+kind = "rate_curve"
+unit = "ratio"
+description = "Floating base rate a debt tranche prices off."
+
+[[references]]
+reference_id = "opco.inflation"
+kind = "index"
+unit = "ratio"
+
+[[references]]
+reference_id = "opco.exit_multiple"
+kind = "index"
+unit = "turns"
+description = "Exit multiple path, where the model treats it as varying rather than fixed."
+
+# ---------------------------------------------------------------------------
+# Relations
+# ---------------------------------------------------------------------------
+
+[[relations]]
+relation_id = "owns"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "owned_by"
+
+[[relations]]
+relation_id = "manages"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "managed_by"
+
+[[relations]]
+relation_id = "lends_to"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "borrows_from"
+
+[[relations]]
+relation_id = "part_of"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_one"
+inverse = "contains"
+description = "Optional hierarchy — a segment within an enterprise, an acquisition under a platform. Never required."
+
+[[relations]]
+relation_id = "claim_on"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_one"
+inverse = "claimed_by"
+description = "An equity interest's claim on the enterprise it is an interest in."

@@ -1,0 +1,295 @@
+# Credit pack ontology — the vocabulary of things a model may declare.
+#
+# See packs/energy/ontology/types.toml for what the four families mean.
+#
+# HIERARCHY IS OPTIONAL, AND CREDIT IS THE CASE THAT PROVES IT MATTERS. A
+# mortgage-backed security can be modelled as ONE pool asset carrying
+# collective behaviour — CPR, CDR, severity, recovery lag — or as a COLLECTION
+# of individual loans. The pool form is right for pricing and for convention
+# work; the loan form is right when the question needs loan-level behaviour,
+# such as individual default simulation or a scenario that acts on one
+# borrower. Both are first-class here. `part_of` exists so a model can be
+# built either way, and nothing requires it.
+
+[pack]
+ontology_id = "credit"
+version = "0.1.0"
+
+# ---------------------------------------------------------------------------
+# Assets
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "Credit.Asset.LoanPool"
+family = "asset"
+class = "financial"
+lifecycle = "credit.pool"
+description = "A pool of loans modelled by its collective behaviour. Needs no children: the pool IS the grain."
+
+[[entities.fields]]
+name = "collateral_type"
+field_type = "string"
+required = true
+description = "residential_mortgage | commercial_mortgage | auto | consumer | student | corporate"
+
+[[entities.fields]]
+name = "original_balance"
+field_type = "decimal"
+required = true
+unit = "USD"
+
+[[entities.fields]]
+name = "weighted_average_coupon"
+field_type = "decimal"
+required = false
+unit = "ratio"
+
+[[entities.fields]]
+name = "weighted_average_maturity"
+field_type = "integer"
+required = false
+unit = "months"
+
+[[entities]]
+type_id = "Credit.Asset.Loan"
+family = "asset"
+class = "financial"
+lifecycle = "credit.loan"
+description = "A single loan. Use when the model needs loan-level behaviour — individual default paths, borrower-level scenarios — otherwise model the pool."
+
+[[entities.fields]]
+name = "original_balance"
+field_type = "decimal"
+required = true
+unit = "USD"
+
+[[entities.fields]]
+name = "coupon"
+field_type = "decimal"
+required = true
+unit = "ratio"
+
+[[entities.fields]]
+name = "term"
+field_type = "integer"
+required = false
+unit = "months"
+
+[[entities]]
+type_id = "Credit.Asset.Tranche"
+family = "asset"
+class = "financial"
+description = "A claim of stated seniority on a pool's cash."
+
+[[entities.fields]]
+name = "seniority"
+field_type = "integer"
+required = true
+description = "1 is most senior. Ordering, not a rating."
+
+[[entities.fields]]
+name = "original_balance"
+field_type = "decimal"
+required = true
+unit = "USD"
+
+# ---------------------------------------------------------------------------
+# Parties
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "Credit.Party.Issuer"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Credit.Party.Servicer"
+family = "party"
+description = "Collects, advances and works out the collateral."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Credit.Party.Investor"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "Credit.Party.Borrower"
+family = "party"
+description = "Owes under a loan. Named when the model is at loan grain; a pool model has no single borrower."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+# ---------------------------------------------------------------------------
+# Lifecycles
+#
+# A pool never defaults as a whole — it amortises and its collateral decays, so
+# its lifecycle is about the pool's life, not its credit. A LOAN has credit
+# states, which is one more reason the two are different types rather than one
+# type at two grains.
+# ---------------------------------------------------------------------------
+
+[[lifecycles]]
+lifecycle_id = "credit.pool"
+initial = "amortising"
+states = ["warehouse", "amortising", "called", "retired"]
+
+[[lifecycles.transitions]]
+from = "warehouse"
+to = "amortising"
+description = "Securitisation closes."
+
+[[lifecycles.transitions]]
+from = "amortising"
+to = "called"
+description = "Clean-up call exercised."
+
+[[lifecycles.transitions]]
+from = "amortising"
+to = "retired"
+
+[[lifecycles.transitions]]
+from = "called"
+to = "retired"
+
+[[lifecycles]]
+lifecycle_id = "credit.loan"
+initial = "current"
+states = ["current", "delinquent", "default", "foreclosure", "liquidated", "prepaid", "matured"]
+
+[[lifecycles.transitions]]
+from = "current"
+to = "delinquent"
+
+[[lifecycles.transitions]]
+from = "delinquent"
+to = "current"
+description = "Cure."
+
+[[lifecycles.transitions]]
+from = "delinquent"
+to = "default"
+
+[[lifecycles.transitions]]
+from = "default"
+to = "foreclosure"
+
+[[lifecycles.transitions]]
+from = "foreclosure"
+to = "liquidated"
+description = "Recovery lands, net of severity and after the recovery lag."
+
+[[lifecycles.transitions]]
+from = "current"
+to = "prepaid"
+
+[[lifecycles.transitions]]
+from = "current"
+to = "matured"
+
+# ---------------------------------------------------------------------------
+# Contracts
+# ---------------------------------------------------------------------------
+
+[[contracts]]
+type_id = "Credit.Contract.LevelPayPool"
+contract_name = "credit.pool_level_pay"
+subject_family = "asset"
+parties = ["holder"]
+description = "Amortising pool with prepayment, default, severity and recovery lag."
+
+[[contracts]]
+type_id = "Credit.Contract.InterestOnlyPool"
+contract_name = "credit.pool_io_bullet"
+subject_family = "asset"
+parties = ["holder"]
+
+[[contracts]]
+type_id = "Credit.Contract.FloatingInterestOnlyPool"
+contract_name = "credit.pool_float_io_bullet"
+subject_family = "asset"
+parties = ["holder"]
+description = "Coupon resets off a declared reference rather than being fixed at origination."
+
+[[contracts]]
+type_id = "Credit.Contract.Purchase"
+contract_name = "credit.purchase"
+subject_family = "asset"
+parties = ["buyer", "seller"]
+
+# ---------------------------------------------------------------------------
+# References
+# ---------------------------------------------------------------------------
+
+[[references]]
+reference_id = "credit.base_rate"
+kind = "rate_curve"
+unit = "ratio"
+description = "Floating base rate a coupon resets off."
+
+[[references]]
+reference_id = "credit.prepayment_speed"
+kind = "index"
+unit = "ratio"
+description = "Prepayment path — a constant speed or a ramp."
+
+[[references]]
+reference_id = "credit.default_rate"
+kind = "index"
+unit = "ratio"
+
+# ---------------------------------------------------------------------------
+# Relations
+# ---------------------------------------------------------------------------
+
+[[relations]]
+relation_id = "holds"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "held_by"
+
+[[relations]]
+relation_id = "services"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "serviced_by"
+
+[[relations]]
+relation_id = "owes"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "owed_by"
+
+[[relations]]
+relation_id = "part_of"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_one"
+inverse = "contains"
+description = "Optional hierarchy — loans within a pool, or a tranche's claim on one. Never required: a pool models collective behaviour perfectly well with no children."
+
+[[relations]]
+relation_id = "secured_by"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "secures"
+description = "A loan against the collateral behind it — which may be an asset from another pack, such as a property."

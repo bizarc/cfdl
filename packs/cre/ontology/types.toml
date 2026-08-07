@@ -1,0 +1,348 @@
+# CRE pack ontology — the vocabulary of things a model may declare.
+#
+# See packs/energy/ontology/types.toml for what the four families mean. The
+# short version: `asset` produces or consumes cash, `party` contracts and owns,
+# `contract` is an agreement between parties attached to an asset, `reference`
+# is a market observable.
+#
+# HIERARCHY IS OPTIONAL, AND CRE IS THE CLEAREST CASE FOR WHY. The same
+# building can be modelled as one asset with a blended rent roll, as a set of
+# unit types, as individual suites, or by use (retail podium, office tower).
+# All four are correct; which is right depends on what the model is for. So
+# `part_of` exists and nothing requires it.
+
+[pack]
+ontology_id = "cre"
+version = "0.1.0"
+
+# ---------------------------------------------------------------------------
+# Assets
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "CRE.Asset.RealProperty"
+family = "asset"
+class = "real"
+lifecycle = "cre.property"
+description = "An income-producing property."
+
+[[entities.fields]]
+name = "asset_class"
+field_type = "string"
+required = true
+description = "office | retail | industrial | multifamily | hospitality | mixed_use"
+
+[[entities.fields]]
+name = "rentable_area"
+field_type = "decimal"
+required = false
+unit = "sf"
+
+[[entities.fields]]
+name = "year_built"
+field_type = "integer"
+required = false
+
+# A suite is a property modelled at a finer grain. It is the same class of
+# thing as the building, which is why it is not a separate family.
+[[entities]]
+type_id = "CRE.Asset.Unit"
+family = "asset"
+class = "real"
+lifecycle = "cre.unit"
+description = "A leasable unit or suite. Use when the model needs lease-by-lease detail; a property modelled at the building level needs none."
+
+[[entities.fields]]
+name = "rentable_area"
+field_type = "decimal"
+required = true
+unit = "sf"
+
+[[entities.fields]]
+name = "use"
+field_type = "string"
+required = false
+
+[[entities]]
+type_id = "CRE.Asset.Portfolio"
+family = "asset"
+class = "real"
+description = "A grouping of properties modelled as one."
+
+[[entities]]
+type_id = "CRE.Asset.EquityInterest"
+family = "asset"
+class = "financial"
+description = "A partnership or joint-venture interest in a property's cash."
+
+[[entities.fields]]
+name = "interest_type"
+field_type = "string"
+required = true
+description = "sponsor | limited_partner | preferred"
+
+# ---------------------------------------------------------------------------
+# Parties
+# ---------------------------------------------------------------------------
+
+[[entities]]
+type_id = "CRE.Party.Sponsor"
+family = "party"
+description = "Acquires, develops and operates the property."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "CRE.Party.Investor"
+family = "party"
+description = "Provides equity without operating the asset."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "CRE.Party.Lender"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities]]
+type_id = "CRE.Party.Tenant"
+family = "party"
+description = "Occupies space under a lease."
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+[[entities.fields]]
+name = "credit_rating"
+field_type = "string"
+required = false
+
+[[entities]]
+type_id = "CRE.Party.PropertyManager"
+family = "party"
+
+[[entities.fields]]
+name = "name"
+field_type = "string"
+required = true
+
+# ---------------------------------------------------------------------------
+# Lifecycles
+# ---------------------------------------------------------------------------
+
+[[lifecycles]]
+lifecycle_id = "cre.property"
+initial = "operating"
+states = ["predevelopment", "construction", "lease_up", "operating", "repositioning", "disposed"]
+description = "Initial state is `operating` because most models start with a stabilised asset; a development model declares `predevelopment` explicitly."
+
+[[lifecycles.transitions]]
+from = "predevelopment"
+to = "construction"
+
+[[lifecycles.transitions]]
+from = "construction"
+to = "lease_up"
+description = "Certificate of occupancy."
+
+[[lifecycles.transitions]]
+from = "lease_up"
+to = "operating"
+description = "Stabilisation — commonly an occupancy threshold."
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "repositioning"
+
+[[lifecycles.transitions]]
+from = "repositioning"
+to = "lease_up"
+
+[[lifecycles.transitions]]
+from = "operating"
+to = "disposed"
+
+# The unit lifecycle is what rollover modelling is really about: a suite is
+# occupied, then it rolls, then it is either renewed or re-let after downtime.
+[[lifecycles]]
+lifecycle_id = "cre.unit"
+initial = "vacant"
+states = ["vacant", "leased", "holdover", "downtime"]
+
+[[lifecycles.transitions]]
+from = "vacant"
+to = "leased"
+description = "Lease commencement."
+
+[[lifecycles.transitions]]
+from = "leased"
+to = "holdover"
+description = "Term expired, tenant in place, terms not yet reset."
+
+[[lifecycles.transitions]]
+from = "leased"
+to = "downtime"
+description = "Expiry without renewal."
+
+[[lifecycles.transitions]]
+from = "holdover"
+to = "leased"
+description = "Renewal."
+
+[[lifecycles.transitions]]
+from = "downtime"
+to = "leased"
+description = "Re-let to a new tenant."
+
+# ---------------------------------------------------------------------------
+# Contracts
+# ---------------------------------------------------------------------------
+
+[[contracts]]
+type_id = "CRE.Contract.Lease"
+contract_name = "cre.lease"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+
+[[contracts]]
+type_id = "CRE.Contract.UnitLease"
+contract_name = "cre.lease_unit"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+description = "A lease modelled at unit grain, with recoveries and expense stops."
+
+[[contracts]]
+type_id = "CRE.Contract.Rollover"
+contract_name = "cre.rollover"
+subject_family = "asset"
+parties = ["landlord"]
+description = "The probability-weighted outcome at expiry. Names only the landlord: the renewing or replacing tenant is not known when the model is written."
+
+[[contracts]]
+type_id = "CRE.Contract.PercentageRent"
+contract_name = "cre.percentage_rent"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+
+[[contracts]]
+type_id = "CRE.Contract.VacancyAllowance"
+contract_name = "cre.vacancy_loss"
+subject_family = "asset"
+parties = ["landlord"]
+
+[[contracts]]
+type_id = "CRE.Contract.PropertyOperatingExpense"
+contract_name = "cre.property_opex"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "CRE.Contract.OperatingRevenue"
+contract_name = "cre.ops_revenue"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "CRE.Contract.OperatingExpense"
+contract_name = "cre.ops_expense"
+subject_family = "asset"
+parties = ["owner"]
+
+[[contracts]]
+type_id = "CRE.Contract.PermanentDebt"
+contract_name = "cre.permanent_debt"
+subject_family = "asset"
+parties = ["borrower", "lender"]
+
+[[contracts]]
+type_id = "CRE.Contract.ConstructionFunding"
+contract_name = "cre.construction_stub"
+subject_family = "asset"
+parties = ["owner", "lender"]
+
+[[contracts]]
+type_id = "CRE.Contract.Disposition"
+contract_name = "cre.exit"
+subject_family = "asset"
+parties = ["seller"]
+
+[[contracts]]
+type_id = "CRE.Contract.DispositionAtCap"
+contract_name = "cre.exit_cap"
+subject_family = "asset"
+parties = ["seller"]
+
+[[contracts]]
+type_id = "CRE.Contract.DispositionAtForwardCap"
+contract_name = "cre.exit_forward"
+subject_family = "asset"
+parties = ["seller"]
+
+# ---------------------------------------------------------------------------
+# References
+# ---------------------------------------------------------------------------
+
+[[references]]
+reference_id = "cre.market_rent"
+kind = "price_curve"
+unit = "USD/sf/yr"
+
+[[references]]
+reference_id = "cre.base_rate"
+kind = "rate_curve"
+unit = "ratio"
+
+[[references]]
+reference_id = "cre.cap_rate"
+kind = "rate_curve"
+unit = "ratio"
+
+[[references]]
+reference_id = "cre.inflation"
+kind = "index"
+unit = "ratio"
+
+# ---------------------------------------------------------------------------
+# Relations
+# ---------------------------------------------------------------------------
+
+[[relations]]
+relation_id = "owns"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "owned_by"
+
+[[relations]]
+relation_id = "manages"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "managed_by"
+
+[[relations]]
+relation_id = "occupies"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "occupied_by"
+
+[[relations]]
+relation_id = "part_of"
+from_family = "asset"
+to_family = "asset"
+cardinality = "many_to_one"
+inverse = "contains"
+description = "Optional hierarchy — a unit within a building, a building within a portfolio. Never required."

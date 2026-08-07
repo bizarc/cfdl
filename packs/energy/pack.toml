@@ -15,6 +15,10 @@ categories = [
 
 
 [entrypoints]
+# What the model may be ABOUT — assets, parties, contracts, lifecycles,
+# references and the relations between them. Read before lowering, because a
+# contract type names the rule that turns it into cash.
+ontology = "ontology/types.toml"
 aliases = "aliases.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
