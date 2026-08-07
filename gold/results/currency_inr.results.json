@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "83c9c82965c947ca7bb879c5e9c3974f4656f09c7fc19ccb1c7b1e4b1edb221b",
-  "ledger_hash": "7df7baf5059ffca7b230d1b7383bd2845c95ce9b19a16820c4f3e3b1244cb3fb",
+  "ledger_hash": "9b5d8f89f45a0b875df72e33e123dc876a1f61a93a2dc51317017baa97794189",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -35,6 +35,63 @@
       }
     },
     "series": {
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1300000.0,
+            "currency": "INR"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

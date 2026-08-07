@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "5bbad81ac8a8d4d7e4e10f623bec17ff541bc7ab72ed804f8e0df5da8dd64562",
-  "ledger_hash": "c1feef48aac6012ef3e087ed0c666a72a522c287a4829272eaba020790b6ea56",
+  "ledger_hash": "56c5e47ea54268aab4395a78356d5b73cb66b738cc82e1c734f1a6b04ee3a004",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,8 +10,20 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
+      "entity.asset.legacy.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "entity.asset.suite_a.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "entity.asset.tower.total": {
         "amount": 300000.0,
+        "currency": "USD"
+      },
+      "entity.party.acme.total": {
+        "amount": 0.0,
         "currency": "USD"
       },
       "model.npv": {
@@ -165,6 +177,90 @@
           },
           {
             "amount": 100000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.legacy.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite_a.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.acme.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]

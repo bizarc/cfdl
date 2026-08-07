@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "f5fe45f7fd33f6e85c08f90a9f6b0d1af789cf377ef53ec91074c00c6a2ebe47",
-  "ledger_hash": "434f7455706051b153e40f6c249a7d926b5d3558b4de6d620146b4ead3e72fa2",
+  "ledger_hash": "c009a8795a6f144bededda11fb072f90e61d3557d98cf7df081caff6101db739",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -30,6 +30,39 @@
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

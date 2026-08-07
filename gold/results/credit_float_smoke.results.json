@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "6ba4c50437ba722ab80cba2a6501a6a721e1701bf7889ee377cdfa3a2a3ac894",
-  "ledger_hash": "f5d8264a77e792c2f58a0f822073082ee71c1ded45a7bcf78f1a6725541b02cd",
+  "ledger_hash": "667ca027267ceee5fe83fb61ac512d38e9a86b014d7f1be84a456ede18285032",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -546,6 +546,75 @@
           },
           {
             "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.buyer.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -1181530.347243,
+            "currency": "USD"
+          },
+          {
+            "amount": 18160.863708,
+            "currency": "USD"
+          },
+          {
+            "amount": 17866.307601,
+            "currency": "USD"
+          },
+          {
+            "amount": 19087.605559,
+            "currency": "USD"
+          },
+          {
+            "amount": 18778.344121,
+            "currency": "USD"
+          },
+          {
+            "amount": 18470.531757,
+            "currency": "USD"
+          },
+          {
+            "amount": 18170.33729,
+            "currency": "USD"
+          },
+          {
+            "amount": 17871.535364,
+            "currency": "USD"
+          },
+          {
+            "amount": 17621.71116,
+            "currency": "USD"
+          },
+          {
+            "amount": 17422.997122,
+            "currency": "USD"
+          },
+          {
+            "amount": 17226.523915,
+            "currency": "USD"
+          },
+          {
+            "amount": 1064350.547068,
+            "currency": "USD"
+          },
+          {
+            "amount": 1373.442939,
+            "currency": "USD"
+          },
+          {
+            "amount": 1357.955091,
+            "currency": "USD"
+          },
+          {
+            "amount": 1342.641894,
             "currency": "USD"
           }
         ]

@@ -961,7 +961,6 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // the engine reported. `stream_series` is keyed by bare name; so is this.
     let mut stream_offsets: BTreeMap<String, f64> = BTreeMap::new();
     let mut stream_totals: BTreeMap<String, f64> = BTreeMap::new();
-    let mut entity_totals: BTreeMap<String, f64> = BTreeMap::new();
     let mut model_series = vec![0.0_f64; cash_periods];
     // Each stream's series paired with where in its period the cash falls;
     // valuation needs both, while reported cash uses model_series alone.
@@ -1012,7 +1011,6 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             cash_periods,
             &mut model_series,
             &mut stream_totals,
-            &mut entity_totals,
             &mut stream_series,
         );
         full_series.insert(stream.name.clone(), values);
@@ -1074,7 +1072,6 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             cash_periods,
             &mut model_series,
             &mut stream_totals,
-            &mut entity_totals,
             &mut stream_series,
         );
     }
@@ -1263,6 +1260,92 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         ),
     );
 
+    // ------------------------------------------------------------------
+    // Per-entity cash, AGGREGATED BY RELATION rather than by string glob.
+    //
+    // A cross-stream read matches series by NAME (`series_sum("cre.rent.*")`),
+    // which works only when the modeller encoded the hierarchy into the names.
+    // The `part_of` relation says it directly, so a building's cash is its
+    // units' cash because they are its units — not because someone prefixed
+    // them consistently.
+    //
+    // AN ENTITY WITH NO CHILDREN IS UNAFFECTED: its series is its own streams,
+    // which is the pool that models collective behaviour directly. The grain
+    // stays the modeller's choice.
+    //
+    // Like a subtotal, this is a fold OF the cash and never counts AS cash: it
+    // is excluded from model.net_cash_flow, model.total and NPV, because
+    // counting a parent and its children would double what it touches.
+    // ------------------------------------------------------------------
+    let mut entity_own: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let mut add_owned = |symbol: &str, values: &[f64]| {
+        let slot = entity_own
+            .entry(symbol.to_string())
+            .or_insert_with(|| vec![0.0; periods]);
+        for (idx, value) in values.iter().enumerate().take(periods) {
+            slot[idx] += value;
+        }
+    };
+    for stream in &ir.streams {
+        if let Some(values) = stream_series.get(&stream.name) {
+            add_owned(&stream.owner.symbol, values);
+        }
+    }
+    // An option is a contract, so its payoff belongs to the asset it is
+    // written on — which is why options gained an owner.
+    for option in &ir.options {
+        if let (Some(owner), Some(values)) = (
+            option.owner.as_ref(),
+            stream_series.get(&format!("option.{}", option.name)),
+        ) {
+            add_owned(&owner.symbol, values);
+        }
+    }
+
+    let parent_of: BTreeMap<&str, &str> = ir
+        .entities
+        .iter()
+        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+        .collect();
+    let mut entity_rollup: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for entity in &ir.entities {
+        entity_rollup
+            .entry(entity.symbol.clone())
+            .or_insert_with(|| vec![0.0; periods]);
+    }
+    for (symbol, own) in &entity_own {
+        // Walk from the owner up to the root, adding its cash to every
+        // ancestor. `visited` bounds the walk even though a cycle is rejected
+        // at compile time — this reads IR that may not have come from there.
+        let mut visited: BTreeSet<&str> = BTreeSet::new();
+        let mut cursor: Option<&str> = Some(symbol.as_str());
+        while let Some(current) = cursor {
+            if !visited.insert(current) {
+                break;
+            }
+            let slot = entity_rollup
+                .entry(current.to_string())
+                .or_insert_with(|| vec![0.0; periods]);
+            for (idx, value) in own.iter().enumerate().take(periods) {
+                slot[idx] += value;
+            }
+            cursor = parent_of.get(current).copied();
+        }
+    }
+    for (symbol, values) in &entity_rollup {
+        series_map.insert(
+            format!("entity.{symbol}.net_cash_flow"),
+            Series::from_values(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &ir.model.currency,
+                None,
+                values,
+            ),
+        );
+    }
+
     let mut metrics = BTreeMap::new();
     for (stream_name, total) in stream_totals {
         metrics.insert(
@@ -1273,11 +1356,13 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             }),
         );
     }
-    for (entity_symbol, total) in entity_totals {
+    // Rolled up, so the lifetime total agrees with the series above rather
+    // than disagreeing with it for any entity that has children.
+    for (entity_symbol, values) in &entity_rollup {
         metrics.insert(
             format!("entity.{entity_symbol}.total"),
             Scalar::Money(Money {
-                amount: round_amount(total),
+                amount: round_amount(values.iter().sum::<f64>()),
                 currency: ir.model.currency.clone(),
             }),
         );
@@ -1814,7 +1899,6 @@ fn record_stream(
     cash_periods: usize,
     model_series: &mut [f64],
     stream_totals: &mut BTreeMap<String, f64>,
-    entity_totals: &mut BTreeMap<String, f64>,
     stream_series: &mut BTreeMap<String, Vec<f64>>,
 ) {
     let cash = &values[..cash_periods.min(values.len())];
@@ -1823,10 +1907,6 @@ fn record_stream(
     }
     let total = cash.iter().sum::<f64>();
     stream_totals.insert(stream.name.clone(), total);
-    entity_totals
-        .entry(stream.owner.symbol.clone())
-        .and_modify(|sum| *sum += total)
-        .or_insert(total);
     stream_series.insert(stream.name.clone(), cash.to_vec());
 }
 
@@ -3209,6 +3289,11 @@ struct IrEntityDecl {
     /// no lifecycle, which is most entities.
     #[serde(default)]
     initial_state: Option<String>,
+    /// The entity this one is part of, when the model groups it. Absent for
+    /// most entities: hierarchy is available at every grain and required at
+    /// none.
+    #[serde(default)]
+    parent: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

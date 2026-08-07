@@ -212,6 +212,7 @@ State declarations:
 - `E1313_UNKNOWN_ENTITY_FIELD` — an entity sets a field its type does not declare. The declared fields are listed.
 - `E1314_UNKNOWN_PARENT_ENTITY` — `part of` names an entity that is not declared. Hierarchy is optional; a declared parent is not.
 - `E1315_ENTITY_PART_OF_ITSELF` — an entity is its own parent.
+- `E1318_ENTITY_HIERARCHY_CYCLE` — `part of` forms a cycle. Reported once, from the cycle's lexicographically first entity, rather than once per member. An entity aggregates its children, so a cycle has no bottom to sum from.
 - `E1316_UNKNOWN_LIFECYCLE_STATE` — an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely.
 - `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.
 - `E1320_UNKNOWN_PARTY_ENTITY` — a contract or option binds a role to an entity that is not declared.

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "7847c23942dd9460985cdc2b089622e4d9e5974c2d7d09fba08b52112e8d45b2",
-  "ledger_hash": "0eb23d324ca260763973a605615fc5fc1bf951a7b2348d7c6262b7be3111e0e6",
+  "ledger_hash": "7a2ca5b847139e377ec770ac09f54b1952230a9c9a95c2f597d6b5216d106144",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -11,7 +11,11 @@
     "status": "ok",
     "metrics": {
       "entity.asset.plant.total": {
-        "amount": 40.0,
+        "amount": 41.0,
+        "currency": "USD"
+      },
+      "entity.party.holder.total": {
+        "amount": 0.0,
         "currency": "USD"
       },
       "model.npv": {
@@ -39,6 +43,56 @@
       }
     },
     "series": {
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.holder.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "annual",

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "87de0de47cc3d4515a56a07640594b7abba1093a8bde1daa1888365c67a5f0a4",
-  "ledger_hash": "a366acbe377c874752dde4e0d276b1a82a9a15bef2b13543e0185c0f28e6a87a",
+  "ledger_hash": "9565787c1260a533e5cfeae8c99050788c4e560c0290b53cb36dd00265d355a8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -605,6 +605,111 @@
         ]
       },
       "domain.cre.pgr": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1388.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 2777.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 5555.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 6944.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 8333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 9722.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 11111.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 12500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 13888.888889,
+            "currency": "USD"
+          },
+          {
+            "amount": 15277.777778,
+            "currency": "USD"
+          },
+          {
+            "amount": 16666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 18055.555556,
+            "currency": "USD"
+          },
+          {
+            "amount": 19444.444444,
+            "currency": "USD"
+          },
+          {
+            "amount": 20833.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 22222.222222,
+            "currency": "USD"
+          },
+          {
+            "amount": 23611.111111,
+            "currency": "USD"
+          },
+          {
+            "amount": 25000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.property.net_cash_flow": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",

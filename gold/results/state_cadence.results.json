@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "16b1a612e507d59262375ebafe72d45d536fec58b99a959985d42928c075748f",
-  "ledger_hash": "721cf9576b5306119cbc07784889b0804b0baa0ab28025cc4cd4f6ab06e01945",
+  "ledger_hash": "2780dc34443ba5ed240d7a6876d9cd54da6f1b097194aad9c6ac442bad965a38",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -35,6 +35,111 @@
       }
     },
     "series": {
+      "entity.asset.co.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 1.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 8.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 16.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 34.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 64.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 128.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 260.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 512.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1024.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2056.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4096.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 8192.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 16400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 32768.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 65536.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 131104.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 262144.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 524288.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1048640.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2097152.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4194304.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 8388736.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

@@ -722,6 +722,57 @@ fn check_exercise_targets(
             }
         }
     }
+    // A LONGER CYCLE IS THE SAME MISTAKE AS SELF-PARENTING, and it matters more
+    // now that a parent aggregates its children: a cycle would be an unbounded
+    // walk rather than merely a nonsense.
+    let parents: BTreeMap<String, (String, Option<Span>, String)> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(e) => e.parent.as_ref().map(|p| {
+                (
+                    e.symbol(),
+                    (p.clone(), Some(map_span(e.span)), s.file.clone()),
+                )
+            }),
+            _ => None,
+        })
+        .collect();
+    for start in parents.keys() {
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        let mut cursor = start.as_str();
+        let mut chain: Vec<&str> = vec![cursor];
+        while let Some((parent, span, file)) = parents.get(cursor) {
+            if !seen.insert(cursor) {
+                break;
+            }
+            chain.push(parent.as_str());
+            if parent == start {
+                // One cycle, one diagnostic. Every member sees the same cycle,
+                // so it is reported from its lexicographically first entity
+                // rather than three times for one problem.
+                if chain.iter().any(|member| *member < start.as_str()) {
+                    break;
+                }
+                diagnostics.push(Diagnostic {
+                    code: "E1318_ENTITY_HIERARCHY_CYCLE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("Entity hierarchy forms a cycle: {}.", chain.join(" -> ")),
+                    file: Some(file.clone()),
+                    span: span.clone(),
+                    path: None,
+                    hint: Some(
+                        "An entity aggregates its children, so a cycle has no bottom to sum from."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                });
+                break;
+            }
+            cursor = parent.as_str();
+        }
+    }
+
     if diagnostics.is_empty() {
         Ok(())
     } else {

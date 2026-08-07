@@ -119,7 +119,7 @@ cf.head()
 ```
 
 ```
-shape: (60, 25)
+shape: (60, 26)
 ```
 
 ```
@@ -211,7 +211,7 @@ period
 2026-04                           -5.863220e+03  
 2026-05                           -5.894004e+03  
 
-[5 rows x 25 columns]
+[5 rows x 26 columns]
 ```
 
 ```python

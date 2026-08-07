@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "aa956c2df90ad545d77e10f42725f2bbf76eb4248695864bf3558a26c59144ce",
-  "ledger_hash": "7ffeb9de61373e74be180261aae7990068ce3d2f5e5717969cc9ef943a86e44f",
+  "ledger_hash": "f8fe61ac203eef77b893b949ee21ade1ce7b77cd799c63b8c71e2cb9f4e444e9",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -11,7 +11,15 @@
     "status": "ok",
     "metrics": {
       "entity.asset.target.total": {
-        "amount": 2000.0,
+        "amount": 2250.0,
+        "currency": "USD"
+      },
+      "entity.party.mgmt.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "entity.party.sponsor.total": {
+        "amount": 0.0,
         "currency": "USD"
       },
       "model.npv": {
@@ -212,6 +220,57 @@
           },
           {
             "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.target.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1250.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.mgmt.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.sponsor.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]

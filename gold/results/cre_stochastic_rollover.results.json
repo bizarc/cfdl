@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "db3a9f5f445bd84fb8006a72032f8686dbda2a02382915a44e2bb1ec73015aa1",
-  "ledger_hash": "d3dfec49bbf67ffb415aba0358520d273973637eb27c597057aef6e0a7815c0f",
+  "ledger_hash": "c20d64a97e697e09680c13a1db88329722fa1bfbfb171d946be763a7ebd6dfd7",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -48,6 +48,111 @@
       }
     },
     "series": {
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2031-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": -56666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 43333.333333,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

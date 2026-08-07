@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "bd66da5636a54305616464fde9bdd8412bd1c8bad41756398ebe3fc07994c2ad",
-  "ledger_hash": "1564d24aac3d5c2712740488c16857f3e0463873eb4f94c80f2c803590ea1cd7",
+  "ledger_hash": "ffa21c5ca1c1688d4295694b621a344788737d4ef930916b54778f0acf162b86",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -374,6 +374,63 @@
           },
           {
             "amount": 106929.464393,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.microgrid.net_cash_flow": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 92250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 92250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 92250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 92250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 93279.825,
+            "currency": "USD"
+          },
+          {
+            "amount": 93279.825,
+            "currency": "USD"
+          },
+          {
+            "amount": 93279.825,
+            "currency": "USD"
+          },
+          {
+            "amount": 93279.825,
+            "currency": "USD"
+          },
+          {
+            "amount": 94321.964393,
+            "currency": "USD"
+          },
+          {
+            "amount": 94321.964393,
+            "currency": "USD"
+          },
+          {
+            "amount": 94321.964393,
+            "currency": "USD"
+          },
+          {
+            "amount": 94321.964393,
             "currency": "USD"
           }
         ]

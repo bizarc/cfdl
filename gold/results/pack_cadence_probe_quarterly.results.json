@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "987af9830992059565e71ad782fdf16f0ccc0cd3963a07d6a6a7cd5f762e5fd9",
-  "ledger_hash": "49e0309fde5c518be7deab2b38125053fea2920094526629667af2a897aa969c",
+  "ledger_hash": "7f70e293f1ff3f5ac6ad607c7a875f3eb9b2df891ea782518a7ad20ce34732f0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -22,6 +22,10 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
+      "entity.asset.borrower.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "entity.legal.borrower.total": {
         "amount": 347199.999999,
         "currency": "USD"
@@ -43,6 +47,120 @@
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.legal.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9999.999999,
+            "currency": "USD"
+          },
+          {
+            "amount": 30000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 33000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 33000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 33000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 33000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 36300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 36300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 36300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 36300.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "quarterly",

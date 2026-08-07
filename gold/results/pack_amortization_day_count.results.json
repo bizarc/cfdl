@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "e2d49e808f543f1c4e058ad25924ef6580e5ac5ea0b90aadb35f3fc2bd2c51ca",
-  "ledger_hash": "ac0748093eb07abf606ced80748fd8f68fa3ed8624f761229fd83467a732568d",
+  "ledger_hash": "ced97957f68f823d1a139e0b20eef87a8672d290bc3b0fc5a89497ee0832581c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -489,6 +489,67 @@
           },
           {
             "amount": 683631.438936,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.buyer.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
+            "currency": "USD"
+          },
+          {
+            "amount": 733764.573879,
             "currency": "USD"
           },
           {

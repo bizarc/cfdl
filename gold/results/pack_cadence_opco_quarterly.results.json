@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "ccb20a4866e65ffc177f88b4f38befa1525d0b42145d4c4e1e026e02b903ea3f",
-  "ledger_hash": "fae71d79701ff1fc921afdafe694e4b4103de8df4c5a63ea56207149071e3ad2",
+  "ledger_hash": "1d79f9a8a6ff7fe395447417c3a40bb5e56fa021379e90ffc8089fcfbec983cc",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -642,6 +642,63 @@
         ]
       },
       "domain.opco.ufcf_periodic": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 97800.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.business.net_cash_flow": {
         "index": {
           "calendar": "quarterly",
           "start": "2025-01-01",

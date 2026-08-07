@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "0d4f97979693c587e06a374cb3f532376d883907a4f9b0b55ec40daf0d77edfa",
-  "ledger_hash": "268b590981c016ab3ea502ef0b571659e9586a4d995ed6d375b6529fa5f9e7e7",
+  "ledger_hash": "afb68a1a9850476d56d5e21d6fcb55a51515c54fabc39802302c7f8f00c37470",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -22,6 +22,10 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
+      "entity.asset.borrower.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "entity.legal.borrower.total": {
         "amount": 347200.0,
         "currency": "USD"
@@ -43,6 +47,312 @@
       }
     },
     "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 36
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.legal.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 36
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12100.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "model.net_cash_flow": {
         "index": {
           "calendar": "monthly",

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "6585fcc2be7d853f29160dfb3f6429d08bebd36d86a5d260d9ba9ea7b1ca1f30",
-  "ledger_hash": "4ef8427484e92ece7b64ec52c6ae3c8de729dd79bd41bba1e27c27b78a92e1f2",
+  "ledger_hash": "717825d2571b9daf36d93b86f793f718b501afef5057e8c20a0aa9d9d2c8c4c4",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1001,6 +1001,171 @@
           },
           {
             "amount": 121.811202,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.buyer.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "values": [
+          {
+            "amount": 46637.038355,
+            "currency": "USD"
+          },
+          {
+            "amount": 45846.142786,
+            "currency": "USD"
+          },
+          {
+            "amount": 45065.844043,
+            "currency": "USD"
+          },
+          {
+            "amount": 45583.874159,
+            "currency": "USD"
+          },
+          {
+            "amount": 44770.473287,
+            "currency": "USD"
+          },
+          {
+            "amount": 43968.140763,
+            "currency": "USD"
+          },
+          {
+            "amount": 43176.739768,
+            "currency": "USD"
+          },
+          {
+            "amount": 42396.135099,
+            "currency": "USD"
+          },
+          {
+            "amount": 41626.193155,
+            "currency": "USD"
+          },
+          {
+            "amount": 40866.781915,
+            "currency": "USD"
+          },
+          {
+            "amount": 40117.770923,
+            "currency": "USD"
+          },
+          {
+            "amount": 39379.031267,
+            "currency": "USD"
+          },
+          {
+            "amount": 38650.435563,
+            "currency": "USD"
+          },
+          {
+            "amount": 37931.857937,
+            "currency": "USD"
+          },
+          {
+            "amount": 37223.174006,
+            "currency": "USD"
+          },
+          {
+            "amount": 36524.260863,
+            "currency": "USD"
+          },
+          {
+            "amount": 35834.997058,
+            "currency": "USD"
+          },
+          {
+            "amount": 35155.262583,
+            "currency": "USD"
+          },
+          {
+            "amount": 34484.938854,
+            "currency": "USD"
+          },
+          {
+            "amount": 33823.908692,
+            "currency": "USD"
+          },
+          {
+            "amount": 33172.056314,
+            "currency": "USD"
+          },
+          {
+            "amount": 32529.267308,
+            "currency": "USD"
+          },
+          {
+            "amount": 31895.428624,
+            "currency": "USD"
+          },
+          {
+            "amount": 31270.428555,
+            "currency": "USD"
+          },
+          {
+            "amount": 30654.15672,
+            "currency": "USD"
+          },
+          {
+            "amount": 30046.504054,
+            "currency": "USD"
+          },
+          {
+            "amount": 29447.362787,
+            "currency": "USD"
+          },
+          {
+            "amount": 28856.62643,
+            "currency": "USD"
+          },
+          {
+            "amount": 28274.189765,
+            "currency": "USD"
+          },
+          {
+            "amount": 27699.948825,
+            "currency": "USD"
+          },
+          {
+            "amount": 27133.800878,
+            "currency": "USD"
+          },
+          {
+            "amount": 26575.644421,
+            "currency": "USD"
+          },
+          {
+            "amount": 26025.379158,
+            "currency": "USD"
+          },
+          {
+            "amount": 25482.905987,
+            "currency": "USD"
+          },
+          {
+            "amount": 24979.240545,
+            "currency": "USD"
+          },
+          {
+            "amount": 24484.051676,
             "currency": "USD"
           },
           {

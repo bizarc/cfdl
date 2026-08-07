@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "dc01a2ef1709e9e655809e56fab052b679338bd65789e84713a1951c9115e8ff",
-  "ledger_hash": "07b01717ac9f37dd26f0488f244a8c344409a5f8b0a82a61ea8a4c85a747364d",
+  "ledger_hash": "849fd718a621c5dbbefc1c1abe234b5f375ed6adae69a9ffdb894dd4203cdcfe",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1047,6 +1047,111 @@
         ]
       },
       "domain.opco.ufcf_periodic": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 40000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40948.879293,
+            "currency": "USD"
+          },
+          {
+            "amount": 41906.762306,
+            "currency": "USD"
+          },
+          {
+            "amount": 42873.734472,
+            "currency": "USD"
+          },
+          {
+            "amount": 43849.882037,
+            "currency": "USD"
+          },
+          {
+            "amount": 44835.292064,
+            "currency": "USD"
+          },
+          {
+            "amount": 45830.052443,
+            "currency": "USD"
+          },
+          {
+            "amount": 46834.251896,
+            "currency": "USD"
+          },
+          {
+            "amount": 47847.979991,
+            "currency": "USD"
+          },
+          {
+            "amount": 48871.327142,
+            "currency": "USD"
+          },
+          {
+            "amount": 49904.384621,
+            "currency": "USD"
+          },
+          {
+            "amount": 50947.24457,
+            "currency": "USD"
+          },
+          {
+            "amount": 52000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 53062.744809,
+            "currency": "USD"
+          },
+          {
+            "amount": 54135.573783,
+            "currency": "USD"
+          },
+          {
+            "amount": 55218.582609,
+            "currency": "USD"
+          },
+          {
+            "amount": 56311.867881,
+            "currency": "USD"
+          },
+          {
+            "amount": 57415.527112,
+            "currency": "USD"
+          },
+          {
+            "amount": 58529.658736,
+            "currency": "USD"
+          },
+          {
+            "amount": 59654.362124,
+            "currency": "USD"
+          },
+          {
+            "amount": 60789.73759,
+            "currency": "USD"
+          },
+          {
+            "amount": 61935.886399,
+            "currency": "USD"
+          },
+          {
+            "amount": 63092.910776,
+            "currency": "USD"
+          },
+          {
+            "amount": 64260.913918,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.business.net_cash_flow": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",

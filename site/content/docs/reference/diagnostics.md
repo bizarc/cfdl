@@ -90,6 +90,7 @@ register, so it cannot fall behind the language.
 | `E1313_UNKNOWN_ENTITY_FIELD` | Symbols and references | an entity sets a field its type does not declare. The declared fields are listed. |
 | `E1314_UNKNOWN_PARENT_ENTITY` | Symbols and references | `part of` names an entity that is not declared. Hierarchy is optional; a declared parent is not. |
 | `E1315_ENTITY_PART_OF_ITSELF` | Symbols and references | an entity is its own parent. |
+| `E1318_ENTITY_HIERARCHY_CYCLE` | Symbols and references | `part of` forms a cycle. Reported once, from the cycle's lexicographically first entity, rather than once per member. An entity aggregates its children, so a cycle has no bottom to sum from. |
 | `E1316_UNKNOWN_LIFECYCLE_STATE` | Symbols and references | an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely. |
 | `E1317_TYPE_HAS_NO_LIFECYCLE` | Symbols and references | an entity declares a starting state but its type has no lifecycle. |
 | `E1320_UNKNOWN_PARTY_ENTITY` | Symbols and references | a contract or option binds a role to an entity that is not declared. |
@@ -200,7 +201,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*149 codes.*
+*150 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related

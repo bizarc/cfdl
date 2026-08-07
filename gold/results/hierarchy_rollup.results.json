@@ -1,102 +1,56 @@
 {
   "results_version": "0.3",
-  "model_hash": "a34d2f3bc6cbc8296c3267fc0fe20332fc54973583f6005e34e2d07031e9a89d",
-  "ledger_hash": "d90552ef68b658a4eb50f86ebb385d07f308b26718f7c79fa10746e1e4365e6b",
+  "model_hash": "655e31e3845d6fe233b5b7287eede85a216e036b42b371d0bea989cd38b3c226",
+  "ledger_hash": "3bbff86a1ea1e7557d85f72033bb1b19763ac089708f86ab1250c6c984f1967c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
-  "inputs": {
-    "streams": [
-      {
-        "contract": "energy.ppa",
-        "defaults_applied": [
-          "availability"
-        ],
-        "stream": "energy.ppa.revenue",
-        "terms": {
-          "availability": "1",
-          "degradation": "0.005",
-          "escalation": "0.02",
-          "mwh_year": "4200",
-          "ppa_price": "85"
-        }
-      },
-      {
-        "contract": "energy.om",
-        "stream": "energy.om.expense",
-        "terms": {
-          "escalation": "0.025",
-          "om_year": "48000"
-        }
-      },
-      {
-        "contract": "energy.capacity",
-        "stream": "energy.capacity.revenue",
-        "terms": {
-          "payment_year": "60000"
-        }
-      }
-    ]
-  },
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.asset.microgrid.total": {
-        "amount": 1119407.15757,
+      "entity.asset.suite_a.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.asset.suite_b.total": {
+        "amount": 150.0,
+        "currency": "USD"
+      },
+      "entity.asset.tower.total": {
+        "amount": 360.0,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 927279.554899,
+        "amount": 326.789764,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 1119407.15757,
+        "amount": 360.0,
         "currency": "USD"
       },
-      "model.wal_years": 2.007404,
-      "run.annual_discount_rate": 0.1,
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.05,
       "run.periods_per_year": 1.0,
-      "stream.energy.capacity.revenue.total": {
-        "amount": 180000.0,
+      "stream.cre.opex.building.total": {
+        "amount": -90.0,
         "currency": "USD"
       },
-      "stream.energy.om.expense.total": {
-        "amount": -147630.0,
+      "stream.cre.rent.suite_a.total": {
+        "amount": 300.0,
         "currency": "USD"
       },
-      "stream.energy.ppa.revenue.total": {
-        "amount": 1087037.15757,
+      "stream.cre.rent.suite_b.total": {
+        "amount": 150.0,
         "currency": "USD"
       }
     },
     "series": {
-      "domain.energy.cfads": {
+      "domain.cre.debt_service": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          {
-            "amount": 369000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 373119.3,
-            "currency": "USD"
-          },
-          {
-            "amount": 377287.85757,
-            "currency": "USD"
-          }
-        ]
-      },
-      "domain.energy.debt_service_periodic": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
@@ -114,10 +68,10 @@
           }
         ]
       },
-      "domain.energy.dscr_periodic": {
+      "domain.cre.dscr": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
@@ -126,86 +80,170 @@
           null
         ]
       },
-      "domain.energy.ebitda": {
+      "domain.cre.egi": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
           {
-            "amount": 369000.0,
+            "amount": 150.0,
             "currency": "USD"
           },
           {
-            "amount": 373119.3,
+            "amount": 150.0,
             "currency": "USD"
           },
           {
-            "amount": 377287.85757,
+            "amount": 150.0,
             "currency": "USD"
           }
         ]
       },
-      "domain.energy.opex": {
+      "domain.cre.leasing_costs": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
           {
-            "amount": 48000.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 49200.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 50430.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "domain.energy.revenue": {
+      "domain.cre.noi": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
           {
-            "amount": 417000.0,
+            "amount": 120.0,
             "currency": "USD"
           },
           {
-            "amount": 422319.3,
+            "amount": 120.0,
             "currency": "USD"
           },
           {
-            "amount": 427717.85757,
+            "amount": 120.0,
             "currency": "USD"
           }
         ]
       },
-      "entity.asset.microgrid.net_cash_flow": {
+      "domain.cre.opex_total": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
           {
-            "amount": 369000.0,
+            "amount": -30.0,
             "currency": "USD"
           },
           {
-            "amount": 373119.3,
+            "amount": -30.0,
             "currency": "USD"
           },
           {
-            "amount": 377287.85757,
+            "amount": -30.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite_a.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite_b.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
             "currency": "USD"
           }
         ]
@@ -213,86 +251,86 @@
       "model.net_cash_flow": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "values": [
           {
-            "amount": 369000.0,
+            "amount": 120.0,
             "currency": "USD"
           },
           {
-            "amount": 373119.3,
+            "amount": 120.0,
             "currency": "USD"
           },
           {
-            "amount": 377287.85757,
+            "amount": 120.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.energy.capacity.revenue": {
+      "stream.cre.opex.building": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": 60000.0,
+            "amount": -30.0,
             "currency": "USD"
           },
           {
-            "amount": 60000.0,
+            "amount": -30.0,
             "currency": "USD"
           },
           {
-            "amount": 60000.0,
+            "amount": -30.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.energy.om.expense": {
+      "stream.cre.rent.suite_a": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": -48000.0,
+            "amount": 100.0,
             "currency": "USD"
           },
           {
-            "amount": -49200.0,
+            "amount": 100.0,
             "currency": "USD"
           },
           {
-            "amount": -50430.0,
+            "amount": 100.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.energy.ppa.revenue": {
+      "stream.cre.rent.suite_b": {
         "index": {
           "calendar": "annual",
-          "start": "2025-01-01",
+          "start": "2026-01-01",
           "periods": 3
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": 357000.0,
+            "amount": 50.0,
             "currency": "USD"
           },
           {
-            "amount": 362319.3,
+            "amount": 50.0,
             "currency": "USD"
           },
           {
-            "amount": 367717.85757,
+            "amount": 50.0,
             "currency": "USD"
           }
         ]

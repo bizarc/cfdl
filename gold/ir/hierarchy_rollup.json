@@ -1,0 +1,238 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "hierarchy-rollup",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "4b3815af6f8727aa5e6a0802a277ce2e",
+      "symbol": "asset.suite_a",
+      "type": "CRE.Asset.Unit",
+      "attrs": {
+        "rentable_area": "10000"
+      },
+      "state": {},
+      "parent": "asset.tower"
+    },
+    {
+      "id": "f11ec01144af67f60335bed1ecd8751d",
+      "symbol": "asset.suite_b",
+      "type": "CRE.Asset.Unit",
+      "attrs": {
+        "rentable_area": "5000"
+      },
+      "state": {},
+      "parent": "asset.tower"
+    },
+    {
+      "id": "121876c85ba64d3a28b2875e9e107d71",
+      "symbol": "asset.tower",
+      "type": "CRE.Asset.RealProperty",
+      "attrs": {
+        "asset_class": "office"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service",
+        "financing.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt_service, financing.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "1afe29c741797787251f817352bc2f3c",
+      "name": "cre.opex.building",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.opex",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "30.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "634c305fe51d18341e980e0877829903",
+      "name": "cre.rent.suite_a",
+      "owner": {
+        "symbol": "asset.suite_a"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 12,
+          "start_col": 1,
+          "end_line": 16,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e6301702e5b053335c6b7092a1417b0e",
+      "name": "cre.rent.suite_b",
+      "owner": {
+        "symbol": "asset.suite_b"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "50.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

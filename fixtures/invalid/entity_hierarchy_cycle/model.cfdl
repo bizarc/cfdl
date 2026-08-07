@@ -1,0 +1,10 @@
+version 0.1
+model "hierarchy-cycle"
+time calendar annual from 2026-01 for 2
+entity asset a : Asset.Real { part of asset.b }
+entity asset b : Asset.Real { part of asset.c }
+entity asset c : Asset.Real { part of asset.a }
+stream x.y on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}

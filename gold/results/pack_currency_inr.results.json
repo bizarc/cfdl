@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "57393265bd894f54f9a0f6ece0677d846be73de2b13e3d7ed509f0d83308a459",
-  "ledger_hash": "7dd5f1605d66bb27b8773021365325da2c22c5be4459bf74955a303a10742027",
+  "ledger_hash": "51673c05c5ed9f746e3ad5a1d066ddd6e6ceab6374f7e38a2e93cf008c7922d3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -296,6 +296,63 @@
         ]
       },
       "domain.energy.revenue": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          },
+          {
+            "amount": 1250000.0,
+            "currency": "INR"
+          }
+        ]
+      },
+      "entity.asset.plant.net_cash_flow": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
