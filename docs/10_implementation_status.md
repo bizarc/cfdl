@@ -28,7 +28,13 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `assume <name> = <expr>` | ✅ | evaluated into `inputs.*` |
 | `assume <name> ~ Normal/LogNormal/Uniform/Triangular(..., clip=[..])` | ✅ | per-assumption seeded Monte Carlo; central values in deterministic runs |
 | `curve <name> [step\|linear] { <date>: <num>, ... }` | ✅ | date-indexed value curves; `curve_value(name, date)` lookup (step = flat-forward, linear = calendar-day interpolation) |
+| `state <name> { init <expr> next <expr> }` | ✅ | a named number per period, published as `state.<name>`. `init` is mandatory; `next` sees `prev`, `prev.<name>`, `time.*`, `inputs.*` and curves — never a same-period value, which is what keeps cycles impossible by construction. Read from stream amounts, guards, events and options. See 14_state_and_recurrence.md |
+| — pack-side (`state_name` / `state_init` / `state_next` on a lowering rule) | ✅ | a rule may declare its own state; names must be a single identifier, so per-instance states use `{{contract.suffix_ident}}` |
+| `entity <ns> <name> : <Type> { <field> = <lit>, part of <ref>, state <name> }` | ✅ | typed against the active ontology, or the language's base vocabulary when no pack is active. `part of` is optional at every grain. `state` sets the lifecycle state the entity opens in |
 | `contract` (subject, `term A..B`, `terms { k = v }`) | ✅ | terms feed `{{contract.*}}` lowering templates |
+| `contract ... parties { <role> = <party> }` | ✅ | roles are declared by the contract TYPE, not the entity — the same party is lessor in one agreement and lender in another |
+| `terms { k = v <unit> }` | ✅ | an optional unit is an ASSERTION about what the number means; the rule declares the truth and a mismatch is `E5024`. Units are never converted |
+| `stream ... active in state <name>[, <name>]` | ✅ | lowers to a comparison on the lifecycle state, with the name checked against the owner's declared lifecycle — which a string comparison cannot be |
 | `contract effects { ... }` | 🟡 | the block is **required** (`E2002`) but its contents are block-skipped: a stream declared inside is never emitted. Declare streams at top level or via a pack |
 | `contract parties` / `tags` blocks | 🟡 | accepted and discarded; absent from the IR |
 | `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions. An unrecognised item in the body is rejected (`E0004`); it used to be bumped and discarded, so `payment net 60 days` on its own line — and every typo'd key — compiled clean and did nothing |
@@ -46,12 +52,12 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `schedule ... calendar "<name>"` | ✅ | weekend, us, target, uk (computed holidays) |
 | `schedule ... except [dates]` / `also [dates]` | ✅ | roll-adjusted point dates |
 | `schedule ... stub <policy>` | ❌ | rejected with a diagnostic and removed from the grammar. It was previously accepted and discarded, so a model could ask for a stub period and silently get a full one |
-| `event <name> when <expr> { actions }` | ✅ | latch semantics: fires once, declaration order |
-| — `set entity <ref>.<field> = <expr>` | ✅ | state visible as `entity.<field>` / `entity.state.*` (null before set) |
+| `event <name> when <expr> { actions }` | 🟡 | latch semantics: fires once, at the first period its condition holds, in declaration order — there is no repeating or level-triggered form. The guard reads `state.<name>` and entity state by qualified path (`entity.asset.tower.status`), as the period OPENED; it cannot read a stream |
+| — `set entity <ref>.<field> = <expr>` | ✅ | visible as `entity.<field>` / `entity.state.*`. An entity whose type declares a lifecycle opens in its declared initial state rather than null. Every write is published in `deterministic.transitions` |
 | — `activate/deactivate stream` | ✅ | persists forward |
 | — `activate/deactivate contract` | 🟡 | parsed + lowered; engine warns-and-skips (no contract runtime yet) |
-| — `exercise option` | ✅ | forces exercise at the firing period |
-| `option <name> type <t> [exercisable in <phase>] { exercise when / payoff }` | ✅ | rule-based exercise only (optimal-exercise out of scope for v0.1) |
+| — `exercise option` | ✅ | forces the option's own ELECTION at the firing period. It does not bypass `exercisable in`: an option outside its window is not one anyone holds, and forcing one warns and declines |
+| `option <name> [on entity <ref>] type <t> [exercisable in <phase>] { parties / exercise when / payoff }` | 🟡 | an option is a contract with an election, so it carries an owner and parties. `exercise when` reads `state.<name>` and its owner's entity state, as the period OPENED; it cannot read a stream. Rule-based exercise only — optimal exercise is out of scope for v0.1. Every declared option publishes a series, zero where it did not exercise |
 | `run deterministic` / `run monte_carlo trials N seed N` | ✅ | honoured by the engine; an explicit run config still wins |
 | Literals: `money_lit` (`42000 USD`), `list`, `map_inline` | ❌ | rejected |
 | `terms { k = <literal> }` | ✅ | one literal per term; trailing tokens are rejected (`E0004`) rather than discarded |

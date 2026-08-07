@@ -24,9 +24,9 @@ version 0.1
 model "minimal-model"
 time calendar monthly from 2026-01 for 12
 
-entity legal borrower
+entity asset building : Asset.Real
 
-stream legal.rent on entity legal.borrower {
+stream lease.rent on entity asset.building {
   schedule every month from 2026-01 to 2026-12
   amount = 1000
 }
