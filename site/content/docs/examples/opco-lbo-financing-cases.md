@@ -337,7 +337,14 @@ Checked period by period: **2 series** across **6 periods**, each within ±1e-6 
 - `state.tlb_balance`
 - `state.sub_balance`
 
-Summary metrics:
+Checked per scenario, each a full run under its own parameters:
+
+| Scenario | `model.moic` | `model.irr` |
+|---|---:|---:|
+| `high_leverage` | 5.479046249577944 | 0.40520922846134866 |
+| `low_leverage` | 2.2718751295780626 | 0.178357014624281 |
+
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

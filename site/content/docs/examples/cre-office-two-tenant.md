@@ -185,7 +185,7 @@ Checked period by period: **5 series** across **120 periods**, each within ±0.0
 - `domain.cre.debt_service`
 - `domain.cre.dscr`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

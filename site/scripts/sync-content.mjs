@@ -658,9 +658,35 @@ function verifiedResults(caseDir, metrics) {
       ""
     );
   }
+  // Scenario assertions, when the case declares them. A case whose whole
+  // subject is how a number moves with an input published only its base column
+  // — the two variants that make the point were checked on every commit and
+  // shown nowhere.
+  const scenariosPath = path.resolve(caseDir, "expected_scenarios.json");
+  if (fs.existsSync(scenariosPath)) {
+    const scenarios = JSON.parse(fs.readFileSync(scenariosPath, "utf8"));
+    const names = Object.keys(scenarios);
+    const columns = [...new Set(names.flatMap((n) => Object.keys(scenarios[n])))];
+    lines.push(
+      "Checked per scenario, each a full run under its own parameters:",
+      "",
+      `| Scenario | ${columns.map((c) => `\`${c}\``).join(" | ")} |`,
+      `|---|${columns.map(() => "---:").join("|")}|`,
+      ...names.map(
+        (n) =>
+          `| \`${n}\` | ` +
+          columns
+            .map((c) => (scenarios[n][c] ? formatMetricValue(scenarios[n][c].value) : "—"))
+            .join(" | ") +
+          " |",
+      ),
+      "",
+    );
+  }
+
   if (Object.keys(metrics).length > 0) {
     lines.push(
-      "Summary metrics:",
+      "Summary metrics for the base run:",
       "",
       "| Metric | Value | Tolerance |",
       "|---|---:|---:|",

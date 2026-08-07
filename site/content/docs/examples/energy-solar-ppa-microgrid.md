@@ -125,7 +125,7 @@ Checked period by period: **1 series** across **300 periods**, each within ±0.0
 
 - `net_cash_flow`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

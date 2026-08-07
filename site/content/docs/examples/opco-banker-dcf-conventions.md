@@ -187,7 +187,7 @@ Checked period by period: **6 series** across **8 periods**, each within ±0.001
 - `opco.ufcf.fy29`
 - `opco.exit.value`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
