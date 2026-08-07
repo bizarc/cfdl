@@ -1066,8 +1066,23 @@
       {
         "name": "p10_high",
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 34108800.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 30935741.928881,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 34108800.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 1.04033,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.energy.ppa.revenue.plant_a.total": {
+            "amount": 34108800.0,
             "currency": "USD"
           }
         }
@@ -1075,8 +1090,23 @@
       {
         "name": "p50_base",
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 29920000.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 27136615.727089,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 29920000.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 1.04033,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.energy.ppa.revenue.plant_a.total": {
+            "amount": 29920000.0,
             "currency": "USD"
           }
         }
@@ -1084,8 +1114,23 @@
       {
         "name": "p90_low",
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 25731200.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 23337489.525296,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 25731200.0,
+            "currency": "USD"
+          },
+          "model.wal_years": 1.04033,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.energy.ppa.revenue.plant_a.total": {
+            "amount": 25731200.0,
             "currency": "USD"
           }
         }

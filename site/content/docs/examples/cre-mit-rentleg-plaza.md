@@ -334,7 +334,7 @@ Checked period by period: **12 series** across **5 periods**, each within ±0.01
 - `cre.vacancy.loss`
 - `net_cash_flow`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

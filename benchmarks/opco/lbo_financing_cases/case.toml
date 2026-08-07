@@ -1,0 +1,43 @@
+# Benchmark case: one sponsor buyout at three capital structures.
+#
+# WHAT MAKES THIS DIFFERENT FROM `lbo_circular_interest`. That case asserts the
+# Base debt schedule line by line — it is a claim about the circularity. This
+# one asserts the ENDPOINT, at three leverage levels, and the reference
+# publishes intermediate figures for only one of them.
+#
+# So for High Leverage and Low Leverage nothing between the inputs and the
+# answer is anchored. The operating build, the tranche sizing, the sweep, the
+# PIK accrual, the exit and the returns arithmetic all have to be right to land
+# on a published multiple. A single convention error anywhere moves it.
+#
+# THE SIZES ARE NOT INPUTS. The reference sizes each tranche as its leverage
+# multiple times LTM EBITDA rounded to a $25mm increment, and the sponsor's
+# cheque is the plug that balances sources against uses. Both rules are
+# reproduced in the model, which is why the three cases differ only in leverage
+# and pricing. The rule is checked by Base, whose sizes the source publishes:
+# 3.0x, 2.0x and 1.0x of $90mm round to $275mm, $175mm and $100mm.
+#
+# The Base debt schedule is asserted period by period in expected.csv because
+# it is published; the other two are asserted on returns alone in
+# expected_scenarios.json, because that is all the source publishes for them.
+#
+# period_tolerance = 1e-6 — the engine's published money precision. The term
+# loan agrees to it exactly.
+#
+# The subordinated balance carries 1e-4, and the reason is the REFERENCE, not
+# this model. Its PIK accrual is self-referential, and the source solves it by
+# switching on iterative calculation; the closed form solves it exactly. Checked
+# against the reference's own equation, B = B0 + avg(B0,B) * r:
+#
+#   closed form   residual  -1.4e-14
+#   reference     residual  +3.7e-05
+#
+# The source stopped iterating while its own equation still had a residual, so
+# 1e-4 is what its convergence supports. The same pattern `lbo_circular_interest`
+# found at 2.8e-14 on a shorter hold.
+summary = "One sponsor buyout run at three capital structures, with the published five-year multiple and return reproduced for each."
+pack = "opco"
+period_tolerance = 1e-6
+
+[tolerance]
+"state.sub_balance" = 1e-4

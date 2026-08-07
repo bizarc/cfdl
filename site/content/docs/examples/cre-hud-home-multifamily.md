@@ -306,7 +306,7 @@ Checked period by period: **13 series** across **11 periods**, each within ±0.5
 - `domain.cre.noi`
 - `domain.cre.dscr`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

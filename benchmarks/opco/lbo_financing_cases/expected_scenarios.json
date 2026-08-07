@@ -1,0 +1,22 @@
+{
+ "high_leverage": {
+  "model.moic": {
+   "value": 5.479046249577944,
+   "tolerance": 1e-05
+  },
+  "model.irr": {
+   "value": 0.40520922846134866,
+   "tolerance": 1e-05
+  }
+ },
+ "low_leverage": {
+  "model.moic": {
+   "value": 2.2718751295780626,
+   "tolerance": 1e-05
+  },
+  "model.irr": {
+   "value": 0.178357014624281,
+   "tolerance": 1e-05
+  }
+ }
+}

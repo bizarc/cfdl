@@ -98,10 +98,11 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: stable-growth dividend discount](/docs/examples/opco-gordon-growth-coned) | A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form. |
 | [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout) | A leveraged buyout: entry at a stated multiple, debt paid down out of operating cash flow, and an exit that returns the sponsor's equity. |
 | [OpCo: LBO debt schedule with average-balance interest](/docs/examples/opco-lbo-circular-interest) | A leveraged buyout's debt schedule, where interest accrues on the average balance and every dollar of free cash flow sweeps against the term loan. |
+| [OpCo: one buyout at three capital structures](/docs/examples/opco-lbo-financing-cases) | One sponsor buyout run at three capital structures, with the published five-year multiple and return reproduced for each. |
 | [OpCo: LBO exit waterfall with an option pool](/docs/examples/opco-lbo-option-pool-exit) | A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool. |
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 
-*26 cases.*
+*27 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

@@ -244,7 +244,7 @@ Checked period by period: **11 series** across **8 periods**, each within ±0.00
 - `opco.exit.value`
 - `model.net_cash_flow`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

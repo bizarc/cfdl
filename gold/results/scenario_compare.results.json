@@ -168,8 +168,22 @@
       {
         "name": "base",
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": -5836.041034,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": -6000.0,
             "currency": "USD"
           }
         }
@@ -177,8 +191,22 @@
       {
         "name": "downside",
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": -5836.041034,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": -6000.0,
             "currency": "USD"
           }
         }
@@ -186,8 +214,22 @@
       {
         "name": "upside",
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": -5836.041034,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -6000.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": -6000.0,
             "currency": "USD"
           }
         }

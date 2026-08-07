@@ -1,0 +1,41 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0,
+    "parameters": {
+      "cfg.tlb_size": 275.0,
+      "cfg.senior_size": 175.0,
+      "cfg.sub_size": 100.0,
+      "cfg.tlb_spread": 0.03,
+      "cfg.senior_rate": 0.07,
+      "cfg.sub_rate": 0.085,
+      "cfg.fee_amort": 1.3604166666666666,
+      "cfg.sponsor_equity": 158.9375
+    }
+  },
+  "scenarios": {
+    "high_leverage": {
+      "parameters": {
+        "cfg.tlb_size": 275.0,
+        "cfg.senior_size": 225.0,
+        "cfg.sub_size": 175.0,
+        "cfg.tlb_spread": 0.035,
+        "cfg.senior_rate": 0.07,
+        "cfg.sub_rate": 0.1,
+        "cfg.fee_amort": 1.6729166667,
+        "cfg.sponsor_equity": 36.8125
+      }
+    },
+    "low_leverage": {
+      "parameters": {
+        "cfg.tlb_size": 275.0,
+        "cfg.senior_size": 125.0,
+        "cfg.sub_size": 0.0,
+        "cfg.tlb_spread": 0.0275,
+        "cfg.senior_rate": 0.06,
+        "cfg.sub_rate": 0.085,
+        "cfg.fee_amort": 0.9854166667,
+        "cfg.sponsor_equity": 305.4375
+      }
+    }
+  }
+}

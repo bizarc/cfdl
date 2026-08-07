@@ -1,0 +1,12 @@
+{
+ "model.moic": {
+  "value": 2.952822546525116,
+  "tolerance": 1e-05,
+  "source": "published 5-year MoIC grid, Base at 8.0x entry / 8.0x exit"
+ },
+ "model.irr": {
+  "value": 0.24178803124249515,
+  "tolerance": 1e-05,
+  "source": "published 5-year IRR grid, Base at 8.0x entry / 8.0x exit"
+ }
+}

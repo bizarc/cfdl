@@ -1,0 +1,165 @@
+version 0.1
+model "lbo-financing-cases"
+use pack "opco" version "0.1.0"
+time calendar annual from 2016-01 for 6
+
+// A sponsor buyout of a mid-market business, run at THREE capital structures.
+//
+// The operating case is identical in all three — same revenue path, same
+// margin, same capex, same working capital. Only the financing changes, which
+// is what the reference's own "financing case" switch does. Here that switch is
+// the run config: the deterministic run is Base, and two scenarios override the
+// tranche sizes and coupons.
+//
+// WHAT IS ASSERTED IS THE ENDPOINT. The reference publishes a period-by-period
+// debt schedule for Base only, but it publishes MoIC and IRR for all three. So
+// this case asserts returns, and nothing in between is anchored: the operating
+// build, the debt schedule, the sweep, the PIK accrual and the exit all have to
+// be right to land on a published multiple.
+//
+// Sizes are not stated as inputs. The reference sizes each tranche as its
+// leverage multiple times LTM EBITDA, rounded to a $25mm increment, and the
+// sponsor's cheque is the plug that balances sources against uses. Both rules
+// are reproduced below, which is why the three cases differ only in leverage
+// and pricing.
+
+entity asset target : OpCo.Asset.Enterprise
+entity party sponsor : OpCo.Party.Sponsor { name = "Sponsor" }
+entity party mgmt : OpCo.Party.Management { name = "Management" }
+
+// --- The operating case, identical across financing cases -------------------
+// EBIT, D&A, capex and the working-capital movement the reference derives from
+// its revenue build. Held as curves because they are inputs to the recursion
+// below, not outputs of it.
+
+curve ebitda step {
+  2017-01: 94.5
+  2018-01: 100.17
+  2019-01: 107.1819
+  2020-01: 113.612814
+  2021-01: 119.2934547
+}
+
+curve ebit step {
+  2017-01: 76.65
+  2018-01: 81.249
+  2019-01: 86.93643
+  2020-01: 92.1526158
+  2021-01: 96.76024659
+}
+
+curve dna step {
+  2017-01: 17.85
+  2018-01: 18.921
+  2019-01: 20.24547
+  2020-01: 21.4601982
+  2021-01: 22.53320811
+}
+
+curve capex step {
+  2017-01: 17.85
+  2018-01: 18.921
+  2019-01: 20.24547
+  2020-01: 21.4601982
+  2021-01: 22.53320811
+}
+
+curve delta_nwc step {
+  2017-01: -2.9
+  2018-01: -3.654
+  2019-01: -4.51878
+  2020-01: -4.1443668
+  2021-01: -3.66085734
+}
+
+curve libor step {
+  2017-01: 0.005
+  2018-01: 0.011
+  2019-01: 0.015
+  2020-01: 0.0215
+  2021-01: 0.025
+}
+
+// --- The financing case ------------------------------------------------------
+// Every knob a scenario overrides. The deterministic run is Base at 6.0x.
+
+assume ltm_ebitda        = 90.0
+assume debt_increment    = 25.0
+assume tax_rate          = 0.35
+assume purchase_equity   = 720.0        // 8.0x entry
+assume transaction_costs = 15.0
+assume rollover          = 36.0         // 5% management rollover
+assume exit_multiple     = 8.0
+assume cash_at_exit      = 5.0          // the minimum cash balance
+
+// Tranche sizes, coupons, the annual fee amortisation and the sponsor's cheque
+// all arrive from the run config, because they are what a financing case IS.
+// The deterministic run is Base; the two scenarios are the other structures.
+
+
+assume commitment_fee = 0.35   // 0.35% on a $100mm undrawn revolver
+assume interest_income = 0.0125 // 0.25% on the $5mm minimum cash balance
+
+// --- The debt schedule -------------------------------------------------------
+// Subordinated notes pay in kind for three years. A PIK coupon on an average
+// balance is self-referential and collapses to a constant growth factor:
+//
+//     B = B0 + r (B0 + B) / 2   ->   B = B0 (1 + r/2) / (1 - r/2)
+
+state sub_balance {
+  init cfg.sub_size
+  next if(time.t <= 3,
+          prev * (1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2),
+          prev)
+}
+
+state sub_balance_open {
+  init 0.0
+  next prev.sub_balance
+}
+
+// Term Loan B, in closed form. Every dollar of free cash flow after the 1%
+// mandatory amortisation sweeps against it, and interest accrues on the average
+// balance — so the balance depends on the interest that depends on the balance.
+// Collecting terms solves it in one substitution.
+state tlb_balance {
+  init cfg.tlb_size
+  next max(0.0,
+       (prev * (1 + (1 - inputs.tax_rate) * (curve_value("libor", time.date) + cfg.tlb_spread) / 2)
+        - (1 - inputs.tax_rate) * (curve_value("ebit", time.date)
+             - (inputs.commitment_fee + cfg.senior_size * cfg.senior_rate
+                + if(time.t <= 3,
+                     prev.sub_balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
+                     cfg.sub_rate * prev.sub_balance)
+                + cfg.fee_amort - inputs.interest_income))
+        - (curve_value("dna", time.date)
+           + if(time.t <= 3,
+                prev.sub_balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
+                0.0)
+           + cfg.fee_amort
+           + curve_value("delta_nwc", time.date)
+           - curve_value("capex", time.date)))
+       / (1 - (1 - inputs.tax_rate) * (curve_value("libor", time.date) + cfg.tlb_spread) / 2))
+}
+
+// --- The sponsor's cash flows ------------------------------------------------
+// Two points: the cheque at close, and the proceeds at exit. MoIC and IRR fall
+// out of them, which is what the reference publishes for all three cases.
+
+stream opco.sponsor.investment on entity asset.target outflow currency USD {
+  schedule on 2016-01
+  category investing.acquisition
+  amount = cfg.sponsor_equity
+}
+
+// Exit enterprise value less net debt is the equity; the sponsor's preferred
+// converts one-for-one at this exit level, so sponsor and management divide it
+// in proportion to what each put in.
+stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
+  schedule on 2021-01
+  category investing.exit
+  amount = (inputs.exit_multiple * curve_value("ebitda", time.date)
+            - (state.tlb_balance + cfg.senior_size + state.sub_balance
+               - inputs.cash_at_exit))
+           * cfg.sponsor_equity / (cfg.sponsor_equity + inputs.rollover)
+}

@@ -157,7 +157,7 @@ Checked period by period: **3 series** across **84 periods**, each within ±0.01
 - `domain.cre.egi`
 - `domain.cre.noi`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|

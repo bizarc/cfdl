@@ -186,7 +186,7 @@ Checked period by period: **3 series** across **16 periods**, each within ±500.
 - `loan.construction_draw`
 - `loan.construction_interest`
 
-Summary metrics:
+Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
