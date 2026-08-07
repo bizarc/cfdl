@@ -1197,6 +1197,50 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 }
                 subtotal_money.insert(spec.id.clone(), acc);
             }
+            // A RUNNING TOTAL, which a per-period fold cannot express.
+            //
+            // Percent-of-pool-outstanding is cumulative principal over the
+            // original balance, and that shape appears wherever a stock is
+            // derived from a flow: principal paid to date, cumulative capital
+            // called, drawn-to-date on a facility. Every other op answers "what
+            // happened in this period"; this one answers "how much so far".
+            //
+            // Built from the per-period fold rather than beside it, so a
+            // cumulative subtotal and the periodic one it accumulates cannot
+            // disagree about what they are summing.
+            "cumulative" | "negated_cumulative" => {
+                let sign = if spec.op == "negated_cumulative" {
+                    -1.0
+                } else {
+                    1.0
+                };
+                let mut acc = vec![0.0_f64; cash_periods];
+                for (name, values) in &stream_series {
+                    let by_category = stream_category
+                        .get(name.as_str())
+                        .is_some_and(|c| cfdl_expr::selector_matches_any(&spec.categories, c));
+                    let by_name = cfdl_expr::selector_matches_any(&spec.streams, name);
+                    if !(by_category || by_name) {
+                        continue;
+                    }
+                    for (t, v) in values.iter().take(cash_periods).enumerate() {
+                        acc[t] += sign * v;
+                    }
+                }
+                for referenced in &spec.subtotals {
+                    if let Some(src) = subtotal_money.get(referenced) {
+                        for (t, v) in src.iter().enumerate() {
+                            acc[t] += sign * v;
+                        }
+                    }
+                }
+                let mut running = 0.0;
+                for v in acc.iter_mut() {
+                    running += *v;
+                    *v = round_amount(running);
+                }
+                subtotal_money.insert(spec.id.clone(), acc);
+            }
             "ratio" => {
                 let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
                     continue;

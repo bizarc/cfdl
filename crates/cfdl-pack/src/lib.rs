@@ -2122,18 +2122,18 @@ fn parse_subtotal_specs(raw: &str, source: &str) -> Result<Vec<SubtotalSpec>, Pa
             return Err(err(format!("unknown kind '{}'.", spec.kind)));
         }
         match spec.op.as_str() {
-            "sum" | "negated_sum" => {
+            "sum" | "negated_sum" | "cumulative" | "negated_cumulative" => {
                 if spec.categories.is_empty()
                     && spec.streams.is_empty()
                     && spec.subtotals.is_empty()
                 {
                     return Err(err(
-                        "op 'sum' needs at least one of categories, streams or subtotals."
+                        "this op needs at least one of categories, streams or subtotals."
                             .to_string(),
                     ));
                 }
                 if spec.kind != "money" {
-                    return Err(err("a sum is money.".to_string()));
+                    return Err(err("a sum or cumulative is money.".to_string()));
                 }
             }
             "ratio" => {
@@ -2175,7 +2175,7 @@ fn parse_metric_specs(raw: &str, source: &str) -> Result<Vec<MetricSpec>, PackLo
     })?;
     for spec in &parsed.metrics {
         match spec.op.as_str() {
-            "sum" | "negated_sum" => {}
+            "sum" | "negated_sum" | "cumulative" | "negated_cumulative" => {}
             "subtotal_total" => {
                 if spec.subtotal.is_none() {
                     return Err(PackLoadError {

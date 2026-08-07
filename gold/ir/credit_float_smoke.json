@@ -114,6 +114,51 @@
       "formula": "sum(operating.*)"
     },
     {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.purchase"
+      ],
+      "formula": "-cumulative(investing.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
       "id": "domain.credit.total_investment_income",
       "kind": "money",
       "op": "sum",
