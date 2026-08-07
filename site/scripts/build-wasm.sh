@@ -17,45 +17,40 @@ SITE_DIR="$(pwd)"
 REPO_ROOT="$(cd .. && pwd)"
 OUT_DIR="${SITE_DIR}/public/wasm"
 
-# Gzipped budget for the engine module. Raise deliberately, with a note in the
-# commit message explaining what grew.
+# THE BUNDLE IS SERVED TO EVERY PLAYGROUND VISITOR, so its size is worth
+# watching. What is NOT worth doing is failing the deploy every time the
+# language legitimately grows.
 #
-# 600 -> 640 when stream categories landed. The bundle had been sitting at
-# exactly 600/600, so the next addition of any kind was going to trip this;
-# categories added ~9 KB raw / 3 KB gzipped between the category data itself,
-# the load-time validation and the parser arm.
+# An absolute ceiling was tried and did not hold: 640 -> 680 -> 740, on top of
+# four earlier raises. Every one was deliberate and documented, which is the
+# tripwire working exactly as designed — and is also the evidence that the
+# number cannot stay right in a language still gaining surface. A ceiling that
+# always moves is a speed bump, not a limit, and each move cost a failed deploy
+# and a commit.
 #
-# Worth recording what did NOT work, since it is the obvious first guess: the
-# pack TOMLs are include_str!-embedded, so their comments do ship — but cutting
-# ~2 KB of comment prose out of them recovered 0 KB gzipped, because gzip was
-# already collapsing repetitive text. If this needs shrinking for real, the
-# lever is the module, not the documentation.
+# It also aimed at the wrong risk. Steady growth from real work — an ontology
+# loader, fifteen diagnostics, a transition log — is expected and fine. The
+# failure worth catching is a JUMP: a large table embedded by accident, or a
+# dependency that quietly pulls in something huge. An absolute number cannot
+# tell those apart. A delta can.
 #
-# 640 -> 680 when statement declarations landed. That is the SECOND raise in one
-# working session, which is the tripwire doing its job: the reporting work has
-# added ~50 KB gzipped across categories, subtotals, provenance and statements,
-# and raising the number each time is not a strategy. The structural answer is
-# site/DEPLOY.md — build the bundle in CI and stop committing it, which makes
-# the budget a CI concern rather than something a developer trips over. Until
-# that lands, raise it deliberately and keep noticing.
+# So: record the size, compare against the recorded baseline, and fail only on
+# a jump. Steady growth passes with the number printed every time.
 #
-# 680 -> 740 when the ontology landed. THIRD raise, and the tripwire is again
-# doing its job rather than being defeated: it forced this note.
+# THE COMPARISON IS CI-ONLY, and that is not caution — it is a measurement
+# fact. The same commit built here and on the runner differs by ~8% gzipped
+# (778 KB local against 717 KB in CI), because rustc, binaryen and the debug
+# info they emit vary by machine. That is over half the jump threshold before
+# anything has changed. A local build therefore REPORTS its size and stops; the
+# baseline is a CI number and only CI is entitled to compare against it.
 #
-# What added the ~37 KB gzipped is CODE, not prose. All four pack ontologies
-# together are 35 KB raw and 7 KB gzipped, so the documentation is not the
-# lever — the same finding the 640 -> 680 note recorded. The weight is the
-# ontology loader and its coherence checks, fifteen new diagnostics, typed
-# entities and party bindings, the transition record, and the hierarchy
-# rollup: real surface, each piece with a fixture behind it.
-#
-# The structural answer the last note asked for HAS since landed — the bundle
-# is built in CI and no longer committed — so this is a CI gate rather than
-# something a developer trips over locally. That makes the number a statement
-# about download size for the playground, which is the thing actually worth
-# protecting. 740 leaves ~23 KB of headroom: enough that a small change does
-# not trip it, tight enough that the next feature has to look again.
-BUDGET_KB=740
+# Worth recording what does NOT shrink it, since it is the obvious first guess:
+# the pack TOMLs are include_str!-embedded, so their comments do ship — but
+# cutting ~2 KB of comment prose recovered 0 KB gzipped, because gzip was
+# already collapsing repetitive text, and all four pack ontologies together are
+# only 7 KB gzipped. The lever is the module, not the documentation.
+JUMP_PCT=15
+BASELINE_FILE="${REPO_ROOT}/site/.wasm-size-baseline"
 
 if [[ "${SKIP_WASM:-0}" == "1" ]]; then
   echo "build-wasm: SKIP_WASM=1 — using the committed bundle"
@@ -142,10 +137,36 @@ node "${SITE_DIR}/scripts/wasm-stamp.mjs" --write
 
 RAW_KB=$(( $(wc -c < "${WASM_FILE}") / 1024 ))
 GZIP_KB=$(( $(gzip -c "${WASM_FILE}" | wc -c) / 1024 ))
-echo "build-wasm: cfdl_wasm_bg.wasm  ${RAW_KB} KB raw / ${GZIP_KB} KB gzipped (budget ${BUDGET_KB} KB)"
+BASELINE_KB=""
+if [[ -f "${BASELINE_FILE}" ]]; then
+  BASELINE_KB="$(tr -cd '0-9' < "${BASELINE_FILE}")"
+fi
 
-if (( GZIP_KB > BUDGET_KB )); then
-  echo "build-wasm: OVER BUDGET — ${GZIP_KB} KB gzipped exceeds ${BUDGET_KB} KB." >&2
-  echo "  Shrink the module, or raise BUDGET_KB deliberately in this script." >&2
+if [[ "${CI:-}" != "true" ]]; then
+  echo "build-wasm: cfdl_wasm_bg.wasm  ${RAW_KB} KB raw / ${GZIP_KB} KB gzipped (local build; baseline ${BASELINE_KB:-unset} KB is a CI figure and not comparable)"
+  exit 0
+fi
+
+if [[ -z "${BASELINE_KB}" ]]; then
+  # First run, or the baseline was removed. Record and carry on rather than
+  # failing on a comparison there is nothing to compare against.
+  echo "${GZIP_KB}" > "${BASELINE_FILE}"
+  echo "build-wasm: cfdl_wasm_bg.wasm  ${RAW_KB} KB raw / ${GZIP_KB} KB gzipped (baseline recorded)"
+  exit 0
+fi
+
+DELTA_KB=$(( GZIP_KB - BASELINE_KB ))
+# Integer percentage, rounded toward zero; the threshold is coarse on purpose.
+DELTA_PCT=$(( DELTA_KB * 100 / BASELINE_KB ))
+SIGN=""
+if (( DELTA_KB >= 0 )); then SIGN="+"; fi
+
+echo "build-wasm: cfdl_wasm_bg.wasm  ${RAW_KB} KB raw / ${GZIP_KB} KB gzipped (baseline ${BASELINE_KB} KB, ${SIGN}${DELTA_PCT}%)"
+
+if (( DELTA_PCT > JUMP_PCT )); then
+  echo "build-wasm: SIZE JUMP — ${GZIP_KB} KB gzipped is ${SIGN}${DELTA_PCT}% over the ${BASELINE_KB} KB baseline (threshold ${JUMP_PCT}%)." >&2
+  echo "  A jump this size is usually an accident: a large table embedded by" >&2
+  echo "  mistake, or a dependency pulling something in. Check what grew." >&2
+  echo "  If it is deliberate, update site/.wasm-size-baseline in the same commit." >&2
   exit 1
 fi
