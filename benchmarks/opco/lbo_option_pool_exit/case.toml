@@ -1,0 +1,51 @@
+# Benchmark case: an LBO exit waterfall with a seven-tranche management option
+# pool, an accruing convertible preferred and a management rollover.
+#
+# COMPANION TO lbo_circular_interest, AND THE OTHER KIND OF CIRCULARITY. That
+# case showed the debt schedule's loop is LINEAR and collects into a closed
+# form. Its notes named the case it could not reach: one where a constraint
+# binds and the recursion goes piecewise. This is that case.
+#
+# An option tranche exercises if it is in the money, but exercising adds both
+# its strike proceeds and its shares to the pool, which MOVES the value per
+# share. The unknown is a SET, not a number, so no algebra collects it.
+#
+# IT IS STILL CLOSED, BECAUSE THE STRIKES ARE ORDERED. Any exercising set must
+# be a prefix of the tranches sorted by strike, which reduces 2^7 subsets to 8
+# candidate prefixes — and exactly one is self-consistent. So the discrete
+# fixed point is resolved by a finite ordered test rather than by iterating.
+# Verified against all six published exit multiples; the consistent prefix is
+# unique at every one.
+#
+# Taken together the two cases make a sharper claim than either alone: neither
+# of the two circularities a sponsor LBO is famous for actually needs a solver.
+#
+# THE CASE'S PRINCIPAL FINDING IS AN ENGINE GAP, not a number. An option's
+# `exercise when` is evaluated in the discrete event/option pre-pass, whose
+# environment exposes `inputs.` but NOT `state.`. Referencing state there does
+# not fail the build: it warns and evaluates to FALSE, so every option silently
+# fails to exercise and its value silently disappears from the model. That is a
+# silent-wrong-answer path in a shipped feature, and it is why the resolved
+# value per share has to be restated as an assumption for the options to read.
+# NOTES.md, "Finding 1".
+#
+# Asserted at the 8.0x exit multiple — the multiple the deal was entered at, so
+# the sponsor's return comes from deleveraging and growth rather than from
+# multiple expansion. Two tranches are deliberately OUT of the money there: an
+# option model that only ever fires is not tested. The other five published
+# columns are reconciled in NOTES.md.
+#
+# There is deliberately no reference_gen.py. Every figure asserted here is the
+# reference workbook's own cached output.
+#
+# The reference is "All Rights Reserved" and is neither vendored nor in CI. It
+# was downloaded once outside this repo and only its OUTPUT NUMBERS carried
+# across, the same handling lbo_circular_interest gives the same workbook.
+#
+# period_tolerance = 1e-6, the engine's published money precision.
+#
+# Units are $mm, except per-share values and strikes, which are dollars, and
+# share counts, which are millions.
+summary = "A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool."
+pack = "opco"
+period_tolerance = 1e-6
