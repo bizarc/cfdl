@@ -244,7 +244,7 @@ results.metrics_frame()
 6                            domain.opco.revenue  6.948579e+07      USD   
 7                              domain.opco.taxes  2.648405e+06      USD   
 8                    domain.opco.working_capital -0.000000e+00      USD   
-9                  entity.operating.target.total  3.335678e+07      USD   
+9                      entity.asset.target.total  3.335678e+07      USD   
 10                                     model.irr  3.076380e-01     None   
 11                                    model.moic  3.467004e+00     None   
 12                                     model.npv  1.388314e+07      USD   

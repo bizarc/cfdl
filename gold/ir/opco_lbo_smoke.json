@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "96ff091ce1629e3034be053d85cda6f5",
-      "symbol": "operating.target",
-      "type": "core.Entity",
+      "id": "8d4daf0aed594d76e3f13af8e7a2587d",
+      "symbol": "asset.target",
+      "type": "OpCo.Asset.Enterprise",
       "attrs": {},
       "state": {}
     }
@@ -171,7 +171,7 @@
       "name": "opco.acquisition",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -197,7 +197,7 @@
       "name": "opco.capex_line",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -223,7 +223,7 @@
       "name": "opco.cash_taxes",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -249,7 +249,7 @@
       "name": "opco.exit_ebitda",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -275,7 +275,7 @@
       "name": "opco.opex_line",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -301,7 +301,7 @@
       "name": "opco.revenue_line",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -327,7 +327,7 @@
       "name": "opco.term_debt",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -353,7 +353,7 @@
       "name": "opco.working_capital_policy",
       "type": "core.Contract",
       "subject": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "term": {
         "start": "2026-01-01",
@@ -380,7 +380,7 @@
       "id": "7a470d0ee68a5ed47dbc4dfa40bb40a4",
       "name": "opco.acquisition.price",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -418,7 +418,7 @@
       "id": "e395e791b206a3c302f162ecfbbb2702",
       "name": "opco.capex",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -458,7 +458,7 @@
       "id": "27e56e84dc447ba139898ee752adaa43",
       "name": "opco.debt.interest",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -498,7 +498,7 @@
       "id": "2ba4b5f9ac07f4cf114473d779918fa3",
       "name": "opco.debt.principal",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -538,7 +538,7 @@
       "id": "07524a3ec5c88f9296d0606b75367a46",
       "name": "opco.debt.proceeds",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -576,7 +576,7 @@
       "id": "060bc7a90f81ae71ec9651d908daea48",
       "name": "opco.exit.value",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -615,7 +615,7 @@
       "id": "4eec156f295fcddc4e6642e887288376",
       "name": "opco.opex.recurring",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -655,7 +655,7 @@
       "id": "cf1275cc300972e467c3732a37056442",
       "name": "opco.revenue.recurring",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -695,7 +695,7 @@
       "id": "ef50f4b10beba460a31f8e4121012d65",
       "name": "opco.taxes",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -735,7 +735,7 @@
       "id": "f852da02fbabe91ee57158cc97fd8235",
       "name": "opco.working_capital.adjustment",
       "owner": {
-        "symbol": "operating.target"
+        "symbol": "asset.target"
       },
       "direction": "outflow",
       "currency": "USD",

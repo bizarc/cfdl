@@ -45,7 +45,7 @@ model "mit-rentleg-plaza"
 use pack "cre" version "0.1.0"
 time calendar annual from 2001-01 for 5 project 1
 
-entity asset rentleg
+entity asset rentleg : CRE.Asset.RealProperty
 
 // ---------------------------------------------------------------------------
 // Inputs — every figure below is stated in the problem set.

@@ -37,7 +37,7 @@ model "damodaran-fcff"
 use pack "opco" version "0.1.0"
 time calendar annual from 2026-01 for 10
 
-entity legal firm
+entity asset firm : OpCo.Asset.Enterprise
 
 // Revenue growth: 5% while the firm is growing, decaying to the riskfree rate
 // by the terminal year.
@@ -68,7 +68,7 @@ curve tax_rate linear {
   2035-01: 0.2500000000
 }
 
-contract opco.revenue_line.core on entity legal.firm {
+contract opco.revenue_line.core on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 22853.6700000000
@@ -78,7 +78,7 @@ contract opco.revenue_line.core on entity legal.firm {
 
 // Operating margin is flat at 14.063%, so operating cost is the complement of
 // revenue and follows the same path.
-contract opco.opex_line.operating on entity legal.firm {
+contract opco.opex_line.operating on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 19639.7250000000
@@ -88,7 +88,7 @@ contract opco.opex_line.operating on entity legal.firm {
 
 // Cash taxes on EBIT. The rule reads revenue and opex from phase-1 streams and
 // opex is signed negative, so their sum is EBIT; no debt and no D&A here.
-contract opco.cash_taxes.federal on entity legal.firm {
+contract opco.cash_taxes.federal on entity asset.firm {
   term 2026-01..2035-01
   terms {
     tax_rate_curve = "tax_rate"
@@ -98,7 +98,7 @@ contract opco.cash_taxes.federal on entity legal.firm {
 // Reinvestment = revenue * growth / sales-to-capital, which funds NEXT year's
 // growth. With a flat growth rate it is itself a geometric series on the same
 // curve.
-contract opco.capex_line.reinvestment on entity legal.firm {
+contract opco.capex_line.reinvestment on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 668.8079047797

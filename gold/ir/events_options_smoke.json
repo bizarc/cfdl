@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "b70c78e983b0b0daea0b67905f60455b",
-      "symbol": "loan.senior",
-      "type": "core.Entity",
+      "id": "972cf2aa048ecab4133b6577cca17e6f",
+      "symbol": "asset.senior",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "id": "54b1d519fa528cc10211c64805fd9cea",
       "name": "loan.debt_service",
       "owner": {
-        "symbol": "loan.senior"
+        "symbol": "asset.senior"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -63,7 +63,7 @@
       "actions": [
         {
           "entity": {
-            "symbol": "loan.senior"
+            "symbol": "asset.senior"
           },
           "field": "status",
           "kind": "SetEntityField",

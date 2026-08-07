@@ -242,7 +242,7 @@ results.metrics_frame()
 6                          domain.credit.recoveries  1.167320e+06      USD   
 7                           domain.credit.servicing  4.999919e+05      USD   
 8                           domain.credit.wal_years  4.056967e+00     None   
-9                           entity.fund.buyer.total  5.477491e+06      USD   
+9                          entity.asset.buyer.total  5.477491e+06      USD   
 10                                       model.moic  1.225381e+00     None   
 11                                        model.npv -2.959752e+05      USD   
 12                            model.payback_periods  8.000000e+01     None   

@@ -29,13 +29,13 @@ description = "A pool of loans modelled by its collective behaviour. Needs no ch
 [[entities.fields]]
 name = "collateral_type"
 field_type = "string"
-required = true
+required = false
 description = "residential_mortgage | commercial_mortgage | auto | consumer | student | corporate"
 
 [[entities.fields]]
 name = "original_balance"
 field_type = "decimal"
-required = true
+required = false
 unit = "USD"
 
 [[entities.fields]]
@@ -60,13 +60,13 @@ description = "A single loan. Use when the model needs loan-level behaviour — 
 [[entities.fields]]
 name = "original_balance"
 field_type = "decimal"
-required = true
+required = false
 unit = "USD"
 
 [[entities.fields]]
 name = "coupon"
 field_type = "decimal"
-required = true
+required = false
 unit = "ratio"
 
 [[entities.fields]]
@@ -84,13 +84,13 @@ description = "A claim of stated seniority on a pool's cash."
 [[entities.fields]]
 name = "seniority"
 field_type = "integer"
-required = true
+required = false
 description = "1 is most senior. Ordering, not a rating."
 
 [[entities.fields]]
 name = "original_balance"
 field_type = "decimal"
-required = true
+required = false
 unit = "USD"
 
 # ---------------------------------------------------------------------------
@@ -104,7 +104,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Credit.Party.Servicer"
@@ -114,7 +114,7 @@ description = "Collects, advances and works out the collateral."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Credit.Party.Investor"
@@ -123,7 +123,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Credit.Party.Borrower"
@@ -133,7 +133,7 @@ description = "Owes under a loan. Named when the model is at loan grain; a pool 
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 # ---------------------------------------------------------------------------
 # Lifecycles

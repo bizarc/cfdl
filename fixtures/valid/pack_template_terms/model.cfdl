@@ -3,7 +3,7 @@ model "pack-template-terms"
 use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 6
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 // rate comes from the contract; units falls back to the rule default (10).
 contract test.fee_contract {

@@ -3,7 +3,7 @@ model "cre-unit-invalid-bounds"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 36
 
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // Per-tenant contracts carry a suffix. Before instance matching, suffixed
 // contracts escaped domain validation entirely.

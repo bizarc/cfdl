@@ -25,7 +25,7 @@ version 0.1
 model "tutorial-curves"
 time calendar monthly from 2026-01 for 36
 
-entity project solar
+entity asset solar : Asset.Real
 
 // A curve is a dated series: a forward price, an index, a rate.
 // `linear` says how to find a value between two stated points.
@@ -37,12 +37,12 @@ curve power_price linear {
 
 // Read it with curve_value(name, date). The value tracks the curve period
 // by period, so revenue follows the price without the model restating it.
-stream solar.energy_revenue on entity project.solar inflow currency USD {
+stream solar.energy_revenue on entity asset.solar inflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 1200 * curve_value("power_price", time.date)
 }
 
-stream solar.om on entity project.solar outflow currency USD {
+stream solar.om on entity asset.solar outflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 9000
 }

@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "b933de7ea95456421b7dd7023be6785dfb58db547681f7b0e95a35849cfc08ee",
+  "model_hash": "eac858a3592873964e3994d471ccc0924ac2f48200a31bf761f3aa3b41b5dd08",
   "ledger_hash": "fa3cfea4e20ebeae979dfa371e11eec3ff5abc0f61ab1ca52152c0023eef1c5c",
   "engine": {
     "name": "cfdl-engine",
@@ -36,7 +36,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.real_estate.property.total": {
+      "entity.asset.property.total": {
         "amount": 34703307.692308,
         "currency": "USD"
       },

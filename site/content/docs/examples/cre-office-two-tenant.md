@@ -21,7 +21,7 @@ model "office-two-tenant"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 120 project 12
 
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // Tenant A: 5-year lease, 3 months free, 3% anniversary escalations,
 // recoveries above a full stop at 40% pro-rata, $200k TI/LC.

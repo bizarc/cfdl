@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "53f3a08bf504a1d527418300006bd6abfcf4ba60ab4cb198b83d4d64758f5bc9",
+  "model_hash": "bd66da5636a54305616464fde9bdd8412bd1c8bad41756398ebe3fc07994c2ad",
   "ledger_hash": "1564d24aac3d5c2712740488c16857f3e0463873eb4f94c80f2c803590ea1cd7",
   "engine": {
     "name": "cfdl-engine",
@@ -43,7 +43,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.project.microgrid.total": {
+      "entity.asset.microgrid.total": {
         "amount": 1119407.15757,
         "currency": "USD"
       },

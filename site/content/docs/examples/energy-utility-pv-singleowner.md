@@ -34,16 +34,16 @@ use pack "energy" version "0.1.0"
 // coincide exactly. See NOTES.md — the conversion is additive, not compounded.
 time calendar annual from 2025-01 for 26
 
-entity project pv
+entity asset pv : Energy.Asset.GenerationFacility
 
 // 100 MW-AC / 250 GWh year one — a 28.5% net capacity factor.
-contract energy.capex on entity project.pv {
+contract energy.capex on entity asset.pv {
   term 2025-01..2025-01
   terms { amount = 100000000 }
 }
 
 // $45/MWh (4.5 c/kWh) escalating 2%/yr; 0.5%/yr module degradation.
-contract energy.ppa on entity project.pv {
+contract energy.ppa on entity asset.pv {
   term 2026-01..2050-01
   terms {
     mwh_year = 250000
@@ -54,7 +54,7 @@ contract energy.ppa on entity project.pv {
 }
 
 // $15/kW-yr fixed O&M on 100,000 kW, escalating 2%/yr.
-contract energy.om on entity project.pv {
+contract energy.om on entity asset.pv {
   term 2026-01..2050-01
   terms {
     om_year = 1500000
@@ -63,7 +63,7 @@ contract energy.om on entity project.pv {
 }
 
 // 60% debt at 6% over 18 years, level annual payments.
-contract energy.debt_service on entity project.pv {
+contract energy.debt_service on entity asset.pv {
   term 2026-01..2043-01
   terms {
     rate = 0.06
@@ -73,7 +73,7 @@ contract energy.debt_service on entity project.pv {
 }
 
 // 30% ITC on the full installed cost, taken in the first operating year.
-contract energy.itc on entity project.pv {
+contract energy.itc on entity asset.pv {
   term 2026-01..2026-01
   terms { credit = 30000000 }
 }
@@ -82,7 +82,7 @@ contract energy.itc on entity project.pv {
 // depreciable basis by half the credit (100m - 0.5 * 30m). The pack takes
 // `basis` as an input rather than deriving it, so the reduction is stated
 // here — see NOTES.md.
-contract energy.macrs_shield on entity project.pv {
+contract energy.macrs_shield on entity asset.pv {
   term 2026-01..2050-01
   terms {
     basis = 85000000

@@ -32,7 +32,7 @@ model "hud-home-multifamily"
 use pack "cre" version "0.1.0"
 time calendar annual from 2024-01 for 29
 
-entity asset home_project
+entity asset home_project : CRE.Asset.RealProperty
 
 // ---------------------------------------------------------------------------
 // Stated in the Sample workbook's Pro Forma Assumptions tab.

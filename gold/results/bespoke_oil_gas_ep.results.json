@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "70c3560da6a884eb15426b6a166b5666e75dd83295e30a25c7eb86213ff06064",
+  "model_hash": "b6f37ba451e1d5aa3c502cb92ff404f3acf5eff82380de1667ea8c5209760b0a",
   "ledger_hash": "1f72594ca9a091f43ffb33b401f3f10b5fcf82a2e1cac503476861b1ad2fa041",
   "engine": {
     "name": "cfdl-engine",
@@ -10,16 +10,16 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.capital.drillco.total": {
+      "entity.asset.asset.total": {
+        "amount": 2312450.604355,
+        "currency": "USD"
+      },
+      "entity.asset.drillco.total": {
         "amount": -5000000.0,
         "currency": "USD"
       },
-      "entity.operations.opco.total": {
+      "entity.asset.opco.total": {
         "amount": -2232000.0,
-        "currency": "USD"
-      },
-      "entity.wellbore.asset.total": {
-        "amount": 2312450.604355,
         "currency": "USD"
       },
       "model.moic": 0.159388,

@@ -3,12 +3,12 @@ model "pack-reserved-term-prefix"
 use pack "testpack" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 // Lowering rules resolve cadence placeholders before contract terms, so a term
 // under a reserved prefix would never be read. Term keys may legitimately be
 // dotted, so this is reachable by accident, not only by perversity.
-contract test.cadence_probe on entity legal.borrower {
+contract test.cadence_probe on entity asset.borrower {
   term 2026-01..2026-12
   terms {
     amount_year = 120000

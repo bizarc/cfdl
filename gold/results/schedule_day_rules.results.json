@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "3cb4a61c5766491930bc9455468b160047d8cd11747e46c9950cb31152a93dcb",
+  "model_hash": "b1cb140867a1abcd545be165c2c1314f099cde9e5f9046016a82ba941eb4eaf5",
   "ledger_hash": "9fc13fbaf29a3c7e192d2adc0ee18a7022bcd97bb58bbaca53e71d57665468bc",
   "engine": {
     "name": "cfdl-engine",
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.co.total": {
+      "entity.asset.co.total": {
         "amount": 150.0,
         "currency": "USD"
       },

@@ -3,7 +3,7 @@ model "pack-cadence-probe-quarterly"
 use pack "testpack" version "0.1.0"
 time calendar quarterly from 2026-01 for 12
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 // One deal, three grids. 120,000/yr with five months free at the start, a
 // three-year term and 10% annual escalation, expressed identically each time —
@@ -11,7 +11,7 @@ entity legal borrower
 // that is the cadence-neutrality invariant, and the five free months have to
 // pro-rate (5 periods monthly, 1.667 quarterly, 0.417 annually) for year one
 // to come out at 70,000 = 120,000 x 7/12 on all three.
-contract test.cadence_probe on entity legal.borrower {
+contract test.cadence_probe on entity asset.borrower {
   term 2026-01..2028-10
   terms {
     amount_year = 120000

@@ -3,13 +3,13 @@ model "payment-terms-contract"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity project plant
+entity asset plant : Energy.Asset.GenerationFacility
 
 // A contract states its payment terms once, and every stream it lowers
 // settles on them — the commercial reality that this clause exists to
 // express. The amount is still evaluated in the period that earned it; only
 // the cash moves.
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   payment net 45
   terms {

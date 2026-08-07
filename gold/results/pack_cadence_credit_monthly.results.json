@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "bbe8311f739a4de0b6c7bc27f400b5db366fe0c146dcb7f067245af246175718",
+  "model_hash": "6585fcc2be7d853f29160dfb3f6429d08bebd36d86a5d260d9ba9ea7b1ca1f30",
   "ledger_hash": "4ef8427484e92ece7b64ec52c6ae3c8de729dd79bd41bba1e27c27b78a92e1f2",
   "engine": {
     "name": "cfdl-engine",
@@ -151,7 +151,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.fund.buyer.total": {
+      "entity.asset.buyer.total": {
         "amount": 1267589.993121,
         "currency": "USD"
       },

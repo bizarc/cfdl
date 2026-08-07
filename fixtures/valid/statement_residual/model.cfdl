@@ -12,7 +12,7 @@ version 0.1
 model "residual-probe"
 use pack "cre" version "0.1.0"
 time calendar annual from 2026-01 for 3
-entity asset tower
+entity asset tower : CRE.Asset.RealProperty
 
 // Classified: lands in the statement's revenue row.
 stream cre.unit.base_rent.a on entity asset.tower inflow currency USD {

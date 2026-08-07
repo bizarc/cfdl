@@ -2,9 +2,9 @@ version 0.1
 model "obs-smoke"
 time calendar monthly from 2026-01 for 3
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
-stream legal.rate_payment on entity legal.borrower {
+stream debt.rate_payment on entity asset.borrower {
   schedule every month from 2026-01 to 2026-03
   amount = obs.rate
 }

@@ -48,7 +48,7 @@ phase perm from 2028-01 to 2031-12
 ## structure.cfdl
 
 ```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
-entity real_estate property
+entity asset property : CRE.Asset.RealProperty
 ```
 
 ## contracts.cfdl
@@ -69,12 +69,12 @@ contract cre.lease {
 }
 
 // Ops as standalone streams (individual revenue/expense items per guidance)
-stream real_estate.ops_revenue on entity real_estate.property inflow currency USD {
+stream real_estate.ops_revenue on entity asset.property inflow currency USD {
   schedule every month from 2028-01 to 2031-12
   amount = 30000
 }
 
-stream real_estate.ops_expense on entity real_estate.property outflow currency USD {
+stream real_estate.ops_expense on entity asset.property outflow currency USD {
   schedule every month from 2028-01 to 2031-12
   amount = 12000
 }

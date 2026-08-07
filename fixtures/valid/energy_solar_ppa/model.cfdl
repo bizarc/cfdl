@@ -3,20 +3,20 @@ model "solar-ppa-microgrid"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 300
 
-entity project microgrid
+entity asset microgrid : Energy.Asset.GenerationFacility
 
 // 2 MW solar + storage microgrid, 25-year PPA.
-contract energy.capex on entity project.microgrid {
+contract energy.capex on entity asset.microgrid {
   term 2026-01..2026-01
   terms { amount = 2400000 }
 }
 
-contract energy.itc on entity project.microgrid {
+contract energy.itc on entity asset.microgrid {
   term 2026-12..2026-12
   terms { credit = 720000 }
 }
 
-contract energy.ppa on entity project.microgrid {
+contract energy.ppa on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
     mwh_year = 4200
@@ -26,7 +26,7 @@ contract energy.ppa on entity project.microgrid {
   }
 }
 
-contract energy.storage_arbitrage on entity project.microgrid {
+contract energy.storage_arbitrage on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
     mwh_cycled_year = 500
@@ -34,12 +34,12 @@ contract energy.storage_arbitrage on entity project.microgrid {
   }
 }
 
-contract energy.capacity on entity project.microgrid {
+contract energy.capacity on entity asset.microgrid {
   term 2026-01..2050-12
   terms { payment_year = 60000 }
 }
 
-contract energy.om on entity project.microgrid {
+contract energy.om on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
     om_year = 70000
@@ -47,7 +47,7 @@ contract energy.om on entity project.microgrid {
   }
 }
 
-contract energy.debt_service on entity project.microgrid {
+contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
   terms {
     rate = 0.06

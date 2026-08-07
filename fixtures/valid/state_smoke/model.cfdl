@@ -2,7 +2,7 @@ version 0.1
 model "state-smoke"
 time calendar annual from 2026-01 for 5
 
-entity legal co
+entity asset co : Asset.Financial
 
 // A rate that decays, which is exactly what pow(1 + g, t) cannot compound:
 // it would apply one period's rate as though it had held from the start.
@@ -31,7 +31,7 @@ state lagged_index {
   next prev.revenue_index
 }
 
-stream co.revenue on entity legal.co inflow currency USD {
+stream co.revenue on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2030-01
   amount = 1000 * state.revenue_index
 }

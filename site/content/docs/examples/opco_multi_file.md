@@ -39,19 +39,19 @@ import "contracts.cfdl"
 ## structure.cfdl
 
 ```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
-entity operating business
+entity asset business : OpCo.Asset.Enterprise
 ```
 
 ## contracts.cfdl
 
 ```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 // Revenue and opex as standalone streams (individual items per guidance)
-stream operating.revenue on entity operating.business inflow currency USD {
+stream operating.revenue on entity asset.business inflow currency USD {
   schedule every month from 2026-01 to 2031-12
   amount = 120000
 }
 
-stream operating.opex on entity operating.business outflow currency USD {
+stream operating.opex on entity asset.business outflow currency USD {
   schedule every month from 2026-01 to 2031-12
   amount = 70000
 }

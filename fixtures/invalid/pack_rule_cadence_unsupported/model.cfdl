@@ -3,13 +3,13 @@ model "pack-rule-cadence-unsupported"
 use pack "testpack" version "0.1.0"
 time calendar quarterly from 2026-01 for 8
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 // testpack is unconstrained, but this one rule divides by a literal 12 and so
 // declares itself monthly-only. The per-rule gate is what lets a pack ship a
 // mix of neutral and month-locked rules mid-migration rather than being
 // blocked wholesale.
-contract test.monthly_only_contract on entity legal.borrower {
+contract test.monthly_only_contract on entity asset.borrower {
   term 2026-01..2027-10
   terms {
     amount_year = 120000

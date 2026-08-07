@@ -39,13 +39,13 @@ description = "A plant that converts a resource into electricity or heat."
 [[entities.fields]]
 name = "technology"
 field_type = "string"
-required = true
+required = false
 description = "solar_pv | wind | storage | geothermal | thermal | hybrid"
 
 [[entities.fields]]
 name = "nameplate_capacity"
 field_type = "decimal"
-required = true
+required = false
 unit = "kW"
 
 [[entities.fields]]
@@ -76,7 +76,7 @@ description = "An equity interest in a project's cash and tax attributes."
 [[entities.fields]]
 name = "interest_type"
 field_type = "string"
-required = true
+required = false
 description = "sponsor | tax_equity | preferred"
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ description = "Develops and owns the project."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Energy.Party.Offtaker"
@@ -101,7 +101,7 @@ description = "Buys the output — a utility, a corporate buyer, or the market."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities.fields]]
 name = "credit_rating"
@@ -116,7 +116,7 @@ description = "Provides project debt."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Energy.Party.TaxEquityInvestor"
@@ -126,7 +126,7 @@ description = "Invests for the tax attributes — credits and depreciation."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "Energy.Party.ServiceProvider"
@@ -136,7 +136,7 @@ description = "Operations and maintenance counterparty, or a landowner under a s
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 # ---------------------------------------------------------------------------
 # Lifecycles

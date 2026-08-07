@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
-      "symbol": "legal.co",
-      "type": "core.Entity",
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "id": "a81b65b8d4eae944a7fc3516bb3fb834",
       "name": "co.true_up",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "outflow",
       "currency": "USD",

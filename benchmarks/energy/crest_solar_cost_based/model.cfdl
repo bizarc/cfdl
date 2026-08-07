@@ -28,7 +28,7 @@ model "crest-solar-cost-based"
 use pack "energy" version "0.1.0"
 time calendar annual from 2026-01 for 25
 
-entity project plant
+entity asset plant : Energy.Asset.GenerationFacility
 
 // 2,000 kW-dc at an 18.0456% net capacity factor over 8,760 hours gives
 // 3,161,597.15 kWh in year one — 3,161.59715 MWh. The capacity factor is the
@@ -38,7 +38,7 @@ entity project plant
 // The tariff is 23.15 c/kWh = $231.50/MWh, flat: this is a cost-based tariff
 // with a 0% escalator, so the year-one rate IS the nominal levelized rate.
 // 0.5%/yr module degradation.
-contract energy.ppa on entity project.plant {
+contract energy.ppa on entity asset.plant {
   term 2026-01..2050-01
   terms {
     mwh_year    = 3161.59715
@@ -57,7 +57,7 @@ contract energy.ppa on entity project.plant {
 // ---------------------------------------------------------------------------
 
 // Fixed O&M: $6.50/kW-dc-yr on 2,000 kW.
-contract energy.om.fixed on entity project.plant {
+contract energy.om.fixed on entity asset.plant {
   term 2026-01..2050-01
   terms {
     om_year    = 13000
@@ -66,7 +66,7 @@ contract energy.om.fixed on entity project.plant {
 }
 
 // Insurance: 0.4% of the $7,000,000 of hard cost.
-contract energy.om.insurance on entity project.plant {
+contract energy.om.insurance on entity asset.plant {
   term 2026-01..2050-01
   terms {
     om_year    = 28000
@@ -75,7 +75,7 @@ contract energy.om.insurance on entity project.plant {
 }
 
 // Land lease.
-contract energy.om.land_lease on entity project.plant {
+contract energy.om.land_lease on entity asset.plant {
   term 2026-01..2050-01
   terms {
     om_year    = 5000
@@ -87,7 +87,7 @@ contract energy.om.land_lease on entity project.plant {
 // term — the pack's `pow(1 + escalation, t)` carries it with no special case,
 // which is worth pinning: an escalator implemented as a growth-only ratchet
 // would silently hold this flat.
-contract energy.om.pilot on entity project.plant {
+contract energy.om.pilot on entity asset.plant {
   term 2026-01..2050-01
   terms {
     om_year    = 50000
@@ -111,7 +111,7 @@ contract energy.om.pilot on entity project.plant {
 // `operating.expense.*` — but it does mean the pack cannot tell these lines
 // apart in a statement. Second finding, also in NOTES.md.
 // ---------------------------------------------------------------------------
-stream energy.royalty.expense on entity project.plant outflow currency USD {
+stream energy.royalty.expense on entity asset.plant outflow currency USD {
   schedule every year from 2026-01 to 2050-01
   category operating.expense.om
   amount = 3161.59715 * 231.50 * pow(1 - 0.005, time.t) * 0.03
@@ -120,7 +120,7 @@ stream energy.royalty.expense on entity project.plant outflow currency USD {
 // 45% of the $7,000,000 of hard cost, 18 years at 7%, level annual payments.
 // Ends in period 17 (2043), leaving seven unlevered years — the cliff is
 // asserted at periods 17 and 18.
-contract energy.debt_service on entity project.plant {
+contract energy.debt_service on entity asset.plant {
   term 2026-01..2043-01
   terms {
     rate        = 0.07

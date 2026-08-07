@@ -43,7 +43,7 @@ model "lbo-circular-interest"
 use pack "opco" version "0.1.0"
 time calendar annual from 2016-01 for 5
 
-entity legal target
+entity asset target : OpCo.Asset.Enterprise
 
 // Floating base rate, on the reference's own published path. The term loan
 // reprices off it annually, which is why it is a curve and not a constant.
@@ -152,7 +152,7 @@ state tlb_balance_open {
 
 // Term loan interest on the average balance — the quantity the closed form
 // exists to make computable without iterating.
-stream opco.interest.term_loan on entity legal.target outflow currency USD {
+stream opco.interest.term_loan on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = (curve_value("libor", time.date) + 0.03)
@@ -162,7 +162,7 @@ stream opco.interest.term_loan on entity legal.target outflow currency USD {
 // Subordinated coupon. While it is PIK it IS the balance increase, which is
 // why it is written as a difference rather than recomputed — the two cannot
 // disagree. Once PIK ends it is cash interest on a flat balance.
-stream opco.interest.sub_notes on entity legal.target outflow currency USD {
+stream opco.interest.sub_notes on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = if(time.t <= 3,
@@ -171,7 +171,7 @@ stream opco.interest.sub_notes on entity legal.target outflow currency USD {
 }
 
 // $175 of senior notes at a fixed 7.0%.
-stream opco.interest.senior_notes on entity legal.target outflow currency USD {
+stream opco.interest.senior_notes on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = 12.25
@@ -179,7 +179,7 @@ stream opco.interest.senior_notes on entity legal.target outflow currency USD {
 
 // $100 of undrawn revolver commitment at 0.35%. Never drawn in this deal, so
 // the line is the commitment fee alone.
-stream opco.interest.undrawn_revolver on entity legal.target outflow currency USD {
+stream opco.interest.undrawn_revolver on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = 0.35
@@ -187,7 +187,7 @@ stream opco.interest.undrawn_revolver on entity legal.target outflow currency US
 
 // Levered free cash flow, which in this structure is exactly the fall in the
 // term loan balance: all of it sweeps, mandatory amortisation included.
-stream opco.debt.repayment on entity legal.target outflow currency USD {
+stream opco.debt.repayment on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.debt_principal
   amount = state.tlb_balance_open - state.tlb_balance

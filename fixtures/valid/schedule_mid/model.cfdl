@@ -1,30 +1,30 @@
 version 0.1
 model "schedule-mid"
 time calendar annual from 2026-01 for 4
-entity legal co
+entity asset co : Asset.Financial
 
 // Mid-period: cash summarised at the midpoint of the period that earned it.
 // Half a period on every calendar, because it is a convention and not a date.
-stream co.flow_mid on entity legal.co inflow currency USD {
+stream co.flow_mid on entity asset.co inflow currency USD {
   schedule every year mid from 2026-01 to 2029-01
   amount = 100
 }
 
 // The default is the period's end — the same series, discounted further.
-stream co.flow_end on entity legal.co inflow currency USD {
+stream co.flow_end on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2029-01
   amount = 100
 }
 
 // `due` is the other end of the axis: the period's start.
-stream co.flow_due on entity legal.co inflow currency USD {
+stream co.flow_due on entity asset.co inflow currency USD {
   schedule every year due from 2026-01 to 2029-01
   amount = 100
 }
 
 // A one-shot takes the same modifier. A price struck at a point in time would
 // not use it; a lump treated as arriving across its period does.
-stream co.oneshot_mid on entity legal.co inflow currency USD {
+stream co.oneshot_mid on entity asset.co inflow currency USD {
   schedule on 2028-01 mid
   amount = 1000
 }

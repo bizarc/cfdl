@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "81cfa81df02465c1c5c67340d0327b80d5f57005ddc2292c1a07df0dfafc0110",
-  "ledger_hash": "248275b2e5acbf6d9af36dd39ee7d55627138011216bd013a044272103145a61",
+  "model_hash": "1d94a6c87ed09beac9fafbd5afff84e2e6d3807fc4cd6f4a04127923c08c517c",
+  "ledger_hash": "abb73e0e9e239a50250bb0382dec1cd4c1598ddf390a8d570580539377dfb1ae",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.borrower.total": {
+      "entity.asset.borrower.total": {
         "amount": -12000.0,
         "currency": "USD"
       },
@@ -24,7 +24,7 @@
       },
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.legal.rent.total": {
+      "stream.lease.rent.total": {
         "amount": -12000.0,
         "currency": "USD"
       }
@@ -87,7 +87,7 @@
           }
         ]
       },
-      "stream.legal.rent": {
+      "stream.lease.rent": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -161,7 +161,7 @@
             }
           ]
         },
-        "stream.legal.rent": {
+        "stream.lease.rent": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

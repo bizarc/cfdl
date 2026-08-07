@@ -63,7 +63,7 @@ use pack "opco" version "0.1.0"
 // waterfall, not a cash flow schedule, and the schedule is the other case.
 time calendar annual from 2021-01 for 1
 
-entity legal target
+entity asset target : OpCo.Asset.Enterprise
 
 // ---------------------------------------------------------------------------
 // Exit. LTM adjusted EBITDA at the end of the five-year hold, at 8.0x, less
@@ -182,20 +182,20 @@ option mgmt_options_25_00 type Option.Equity {
 
 // Total cash to shareholders: exit equity plus the strike proceeds the
 // exercised tranches pay in.
-stream opco.exit.equity_value on entity legal.target inflow currency USD {
+stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = state.exit_equity
 }
 
-stream opco.exit.option_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = 44.500
 }
 
 // The sponsor's share: its converted preferred shares at the resolved value.
-stream opco.exit.sponsor_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.sponsor_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = 23.353133120640006 * state.value_per_share
@@ -205,7 +205,7 @@ stream opco.exit.sponsor_proceeds on entity legal.target inflow currency USD {
 // at the resolved value. GROSS of the strikes paid in — those are already
 // inside total cash to shareholders, so netting them here would double-count.
 // Sponsor 487.546 + management 132.570 = 620.116, the published total.
-stream opco.exit.management_proceeds on entity legal.target inflow currency USD {
+stream opco.exit.management_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
   amount = (3.6 + 2.75) * state.value_per_share

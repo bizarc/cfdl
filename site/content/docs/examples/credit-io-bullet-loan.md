@@ -21,12 +21,12 @@ model "io-bullet-loan"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 64
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // $10mm interest-only pool, 7.25%, 60-month bullet, 5 CPR, 1.5 CDR,
 // 40% severity, 4-month recovery lag. Contract term spans
 // term_months + recovery_lag_months for the recovery tail.
-contract credit.pool_io_bullet.bridge_a on entity fund.buyer {
+contract credit.pool_io_bullet.bridge_a on entity asset.buyer {
   term 2026-01..2031-04
   terms {
     balance = 10000000
@@ -39,7 +39,7 @@ contract credit.pool_io_bullet.bridge_a on entity fund.buyer {
   }
 }
 
-contract credit.purchase.bridge_a on entity fund.buyer {
+contract credit.purchase.bridge_a on entity asset.buyer {
   term 2026-01..2026-01
   terms {
     price = 10000000

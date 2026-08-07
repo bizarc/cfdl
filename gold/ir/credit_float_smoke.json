@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "a14d0ee52b2812f4856211fc4d53634a",
-      "symbol": "fund.buyer",
-      "type": "core.Entity",
+      "id": "c8726c9577f18720c017fefa34ac122b",
+      "symbol": "asset.buyer",
+      "type": "Credit.Asset.LoanPool",
       "attrs": {},
       "state": {}
     }
@@ -130,7 +130,7 @@
       "name": "credit.pool_float_io_bullet.smoke",
       "type": "core.Contract",
       "subject": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "term": {
         "start": "2026-01-01",
@@ -156,7 +156,7 @@
       "name": "credit.purchase.smoke",
       "type": "core.Contract",
       "subject": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "term": {
         "start": "2026-01-01",
@@ -183,7 +183,7 @@
       "id": "b36b529138728dff14e6e898a38d19de",
       "name": "credit.pool.bullet.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -223,7 +223,7 @@
       "id": "a76fc5d3c9a8978c9c7e313137096501",
       "name": "credit.pool.interest.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -263,7 +263,7 @@
       "id": "253e69737102a5d8f1d2be99c2a47091",
       "name": "credit.pool.penalty.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -303,7 +303,7 @@
       "id": "bc18ff66a2455501c275f0276d108550",
       "name": "credit.pool.prepay.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -343,7 +343,7 @@
       "id": "667b9045dcd22823f47837f4b6e204f1",
       "name": "credit.pool.recoveries.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -383,7 +383,7 @@
       "id": "089b23019e56ec3c8b7d9eaff8014d7a",
       "name": "credit.pool.servicing.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -423,7 +423,7 @@
       "id": "ec0887479cc8613f391ba9b4d46e8b92",
       "name": "credit.purchase.price.smoke",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "outflow",
       "currency": "USD",

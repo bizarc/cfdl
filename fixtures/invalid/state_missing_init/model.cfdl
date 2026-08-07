@@ -1,7 +1,7 @@
 version 0.1
 model "state-missing-init"
 time calendar annual from 2026-01 for 3
-entity legal co
+entity asset co : Asset.Financial
 
 // Every way a state declaration can be wrong, in one fixture.
 //
@@ -27,7 +27,7 @@ state reads_now { init 1  next state.dup + prev }
 // Neither name is declared.
 state unknown_ref { init 1  next prev + prev.nowhere }
 
-stream co.x on entity legal.co inflow currency USD {
+stream co.x on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = state.also_nowhere
 }
@@ -35,7 +35,7 @@ stream co.x on entity legal.co inflow currency USD {
 // `prev` in a stream. A stream reads the current period, and its environment
 // carries no `prev` map at all — so before E1123 covered streams this compiled
 // clean and the engine evaluated the whole stream to zero.
-stream co.y on entity legal.co inflow currency USD {
+stream co.y on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = 100 * prev.dup
 }

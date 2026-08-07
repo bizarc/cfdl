@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
-      "symbol": "legal.co",
-      "type": "core.Entity",
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -59,7 +59,7 @@
       "id": "8fa6f2aa1f9548db290deba2a1566423",
       "name": "co.monthly",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -91,7 +91,7 @@
       "id": "38b0056d28ca1cd0ac54588e8d50941e",
       "name": "co.quarterly",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",

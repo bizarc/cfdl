@@ -29,7 +29,7 @@ description = "An income-producing property."
 [[entities.fields]]
 name = "asset_class"
 field_type = "string"
-required = true
+required = false
 description = "office | retail | industrial | multifamily | hospitality | mixed_use"
 
 [[entities.fields]]
@@ -78,7 +78,7 @@ description = "A partnership or joint-venture interest in a property's cash."
 [[entities.fields]]
 name = "interest_type"
 field_type = "string"
-required = true
+required = false
 description = "sponsor | limited_partner | preferred"
 
 # ---------------------------------------------------------------------------
@@ -93,7 +93,7 @@ description = "Acquires, develops and operates the property."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "CRE.Party.Investor"
@@ -103,7 +103,7 @@ description = "Provides equity without operating the asset."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "CRE.Party.Lender"
@@ -112,7 +112,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "CRE.Party.Tenant"
@@ -122,7 +122,7 @@ description = "Occupies space under a lease."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities.fields]]
 name = "credit_rating"
@@ -136,7 +136,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 # ---------------------------------------------------------------------------
 # Lifecycles

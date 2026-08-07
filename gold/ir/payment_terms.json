@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
-      "symbol": "legal.co",
-      "type": "core.Entity",
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "id": "1ffc3bbac1de853fa5c721808e131b5c",
       "name": "co.net0",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -62,7 +62,7 @@
       "id": "a2cc0206101f035e271106f4a98d3b96",
       "name": "co.net2m",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -95,7 +95,7 @@
       "id": "b9f8dc71f4b6b5e3b43aa2bed87250a1",
       "name": "co.net30",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -128,7 +128,7 @@
       "id": "9a9126dd7b97881a91987f70e1e53682",
       "name": "co.net45",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -161,7 +161,7 @@
       "id": "7e1838069d7c4b6ba4640fc682a4874c",
       "name": "co.on_time",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",

@@ -3,7 +3,7 @@ model "pack-cadence-credit-daily_monthly_pay"
 use pack "credit" version "0.1.0"
 time calendar daily from 2025-01 for 1186
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
 // The SAME pool: a 36-month level-pay loan with a 3-month recovery lag, once
 // on a monthly grid and once on a DAILY book that still pays monthly.
@@ -16,7 +16,7 @@ entity fund buyer
 // So these two must agree EXACTLY on annual totals: they are literally the
 // same 36 payments. That is the sharpest available proof that the payment
 // grid and the model grid are separated correctly.
-contract credit.pool_level_pay.book on entity fund.buyer {
+contract credit.pool_level_pay.book on entity asset.buyer {
   term 2025-01..2028-03
   terms {
     balance = 1200000

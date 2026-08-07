@@ -22,7 +22,7 @@ model "tutorial-simple-contract"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 48
 
-entity real_estate property
+entity asset property : CRE.Asset.RealProperty
 
 contract cre.lease {
   term 2026-01..2029-12

@@ -2,13 +2,13 @@ version 0.1
 model "assume-smoke"
 time calendar monthly from 2026-01 for 6
 
-entity legal borrower
+entity asset borrower : Asset.Financial
 
 assume base_fee = 200 + 50
 assume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])
 
 // Deterministic run: growth resolves to its central value (the mean, 0.03).
-stream legal.fee on entity legal.borrower inflow currency USD {
+stream fee.management on entity asset.borrower inflow currency USD {
   schedule every month from 2026-01 to 2026-06
   amount = inputs.base_fee * (1 + inputs.growth)
 }

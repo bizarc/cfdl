@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "48db3e1d76e61f264fa901369bdc7e14535464211eff592e0a0a4b6141c959bc",
-  "ledger_hash": "4a9722113aef321b864c521ed959e1969372f7c58f1c7602836248e2ad175a15",
+  "model_hash": "504d37fae8d6fa0df4aeb828ae6bc97eeb25ae0e3fc625a03da7b04417c562e0",
+  "ledger_hash": "c6068da51b67276d835fabf611b6413d63edee0ea065ff9ef96707cc52c312b6",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.property.total": {
+      "entity.asset.property.total": {
         "amount": -380000.0,
         "currency": "USD"
       },
@@ -27,11 +27,11 @@
       "model.wal_years": 1.541667,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.legal.construction_draw.total": {
+      "stream.development.construction_draw.total": {
         "amount": -500000.0,
         "currency": "USD"
       },
-      "stream.legal.operating_revenue.total": {
+      "stream.operations.revenue.total": {
         "amount": 120000.0,
         "currency": "USD"
       }
@@ -142,7 +142,7 @@
           }
         ]
       },
-      "stream.legal.construction_draw": {
+      "stream.development.construction_draw": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -248,7 +248,7 @@
           }
         ]
       },
-      "stream.legal.operating_revenue": {
+      "stream.operations.revenue": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -374,7 +374,7 @@
             }
           ]
         },
-        "stream.legal.construction_draw": {
+        "stream.development.construction_draw": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -391,7 +391,7 @@
             }
           ]
         },
-        "stream.legal.operating_revenue": {
+        "stream.operations.revenue": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",

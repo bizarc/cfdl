@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "d3943c06e208fc677a9bab1d7b30692cdcf34192664e6685431d214fb5274964",
-  "ledger_hash": "c958adee069b16d6e94cf765219db65de61b82b7abd79a892b10c5225317c87f",
+  "model_hash": "bbed11f18688b764e7914aea2280ecc258ada9558eb8ff95954d3d5e8fc5288b",
+  "ledger_hash": "9586186ab2c036325bb525de926746214f94e638e1f52eac283357d849a67d81",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -16,7 +16,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.borrower.total": {
+      "entity.asset.borrower.total": {
         "amount": 1545.0,
         "currency": "USD"
       },
@@ -31,7 +31,7 @@
       "model.wal_years": 0.291667,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.legal.fee.total": {
+      "stream.fee.management.total": {
         "amount": 1545.0,
         "currency": "USD"
       }
@@ -70,7 +70,7 @@
           }
         ]
       },
-      "stream.legal.fee": {
+      "stream.fee.management": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -120,7 +120,7 @@
             }
           ]
         },
-        "stream.legal.fee": {
+        "stream.fee.management": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

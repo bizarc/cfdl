@@ -14,7 +14,7 @@
     {
       "id": "7853fc246dad4a4bd91dfae5a5c2c82d",
       "symbol": "asset.legacy",
-      "type": "core.Entity",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     },

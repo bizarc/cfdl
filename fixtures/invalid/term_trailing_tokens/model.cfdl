@@ -3,11 +3,11 @@ model "term-trailing-tokens"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity project plant
+entity asset plant : Energy.Asset.GenerationFacility
 
 // A term takes one value. Arithmetic here used to be discarded in silence,
 // so this compiled as mwh_year = 1000.
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
     mwh_year = 1000 + 500

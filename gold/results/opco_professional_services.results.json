@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "eee1630086a19c9e4bee33fc2bd334669c283ac9a1b13b7fac416da70da6c912",
+  "model_hash": "dc2d62d579d20ed8154d8b3fb169d1f1c319498c17be08c9d4ccfb976e46a4d3",
   "ledger_hash": "735cdccf23b99df62229437d09c108b23520905c43ef3c136ffe6aa6d3ae0d12",
   "engine": {
     "name": "cfdl-engine",
@@ -10,11 +10,11 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.capital.equity.total": {
+      "entity.asset.equity.total": {
         "amount": 36300000.0,
         "currency": "USD"
       },
-      "entity.operating.firm.total": {
+      "entity.asset.firm.total": {
         "amount": 12489395.718323,
         "currency": "USD"
       },

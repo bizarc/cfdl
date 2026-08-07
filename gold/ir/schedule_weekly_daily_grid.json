@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
-      "symbol": "legal.co",
-      "type": "core.Entity",
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -29,7 +29,7 @@
       "id": "3c53a27fa98340a1a9d0db61c4c4c1ef",
       "name": "co.payroll",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "outflow",
       "currency": "USD",

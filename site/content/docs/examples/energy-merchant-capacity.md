@@ -43,15 +43,15 @@ use pack "energy" version "0.1.0"
 
 time calendar annual from 2025-01 for 26
 
-entity project wind
+entity asset wind : Energy.Asset.GenerationFacility
 
-contract energy.capex on entity project.wind {
+contract energy.capex on entity asset.wind {
   term 2025-01..2025-01
   terms { amount = 100000000 }
 }
 
 // Merchant energy: $45/MWh escalating 2%/yr, 0.5%/yr degradation.
-contract energy.merchant on entity project.wind {
+contract energy.merchant on entity asset.wind {
   term 2026-01..2050-01
   terms {
     mwh_year = 250000
@@ -62,7 +62,7 @@ contract energy.merchant on entity project.wind {
 }
 
 // A flat capacity contract — no escalation, which is what the rule supports.
-contract energy.capacity on entity project.wind {
+contract energy.capacity on entity asset.wind {
   term 2026-01..2050-01
   terms { payment_year = 4000000 }
 }
@@ -70,7 +70,7 @@ contract energy.capacity on entity project.wind {
 // Production tax credit: $27.50/MWh base, 2.5%/yr inflation adjustment, ten
 // years statutory. round_step = 0.10 is the rule's default and is the
 // statutory 0.1 c/kWh tick stated on this rule's $/MWh basis.
-contract energy.ptc on entity project.wind {
+contract energy.ptc on entity asset.wind {
   term 2026-01..2035-01
   terms {
     mwh_year = 250000
@@ -80,7 +80,7 @@ contract energy.ptc on entity project.wind {
   }
 }
 
-contract energy.om on entity project.wind {
+contract energy.om on entity asset.wind {
   term 2026-01..2050-01
   terms {
     om_year = 1500000
@@ -88,7 +88,7 @@ contract energy.om on entity project.wind {
   }
 }
 
-contract energy.debt_service on entity project.wind {
+contract energy.debt_service on entity asset.wind {
   term 2026-01..2043-01
   terms {
     rate = 0.06
@@ -98,7 +98,7 @@ contract energy.debt_service on entity project.wind {
 }
 
 // Full basis: no investment credit was taken, so nothing reduces it.
-contract energy.macrs_shield on entity project.wind {
+contract energy.macrs_shield on entity asset.wind {
   term 2026-01..2050-01
   terms {
     basis = 100000000

@@ -12,16 +12,16 @@
   "phases": [],
   "entities": [
     {
-      "id": "c7544124b51b01d1e9e582c1330e554c",
-      "symbol": "real_estate.first_entity",
-      "type": "core.Entity",
+      "id": "3c6c11fda23792a65856906e29379f24",
+      "symbol": "asset.first_entity",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     },
     {
-      "id": "6ae18598bf14243380e14c3dfd5c9e4f",
-      "symbol": "real_estate.second_entity",
-      "type": "core.Entity",
+      "id": "e369834caa5dddbd823414e32a780d4b",
+      "symbol": "asset.second_entity",
+      "type": "CRE.Asset.RealProperty",
       "attrs": {},
       "state": {}
     }
@@ -102,7 +102,7 @@
       "name": "cre.ops_expense",
       "type": "core.Contract",
       "subject": {
-        "symbol": "real_estate.first_entity"
+        "symbol": "asset.first_entity"
       },
       "term": {
         "start": "2026-01-01",
@@ -129,7 +129,7 @@
       "id": "1bd47f99d3ab874531b239cd0d473bd1",
       "name": "cre.ops.expense",
       "owner": {
-        "symbol": "real_estate.first_entity"
+        "symbol": "asset.first_entity"
       },
       "direction": "outflow",
       "currency": "USD",

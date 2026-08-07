@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "57063cb6c8a383fbdfaa2dd1b6fb09fa",
-      "symbol": "legal.co",
-      "type": "core.Entity",
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -80,7 +80,7 @@
       "id": "524d75cafbfdc6f5447733004926a4aa",
       "name": "co.revenue",
       "owner": {
-        "symbol": "legal.co"
+        "symbol": "asset.co"
       },
       "direction": "inflow",
       "currency": "USD",

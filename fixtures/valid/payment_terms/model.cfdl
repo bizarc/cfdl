@@ -2,36 +2,36 @@ version 0.1
 model "payment-terms"
 time calendar monthly from 2026-01 for 18
 
-entity legal co
+entity asset co : Asset.Financial
 
 // Cash arrives when the contract says it does, not when the activity happened.
 // Billing is at period close, so January's is invoiced 31 January and net-45
 // falls in mid-March.
-stream co.on_time on entity legal.co inflow currency USD {
+stream co.on_time on entity asset.co inflow currency USD {
   schedule every month from 2026-01 to 2026-06
   amount = 1000
 }
 
 // net 0 is the historical behaviour, stated explicitly.
-stream co.net0 on entity legal.co inflow currency USD {
+stream co.net0 on entity asset.co inflow currency USD {
   schedule every month net 0 from 2026-01 to 2026-06
   amount = 1000
 }
 
 // Under net-30 January and February both settle in March; their amounts sum
 // rather than one displacing the other.
-stream co.net30 on entity legal.co inflow currency USD {
+stream co.net30 on entity asset.co inflow currency USD {
   schedule every month net 30 from 2026-01 to 2026-06
   amount = 1000
 }
 
-stream co.net45 on entity legal.co inflow currency USD {
+stream co.net45 on entity asset.co inflow currency USD {
   schedule every month net 45 from 2026-01 to 2026-06
   amount = 1000
 }
 
 // Months step by the calendar, not by 30 days.
-stream co.net2m on entity legal.co inflow currency USD {
+stream co.net2m on entity asset.co inflow currency USD {
   schedule every month net 2 months from 2026-01 to 2026-06
   amount = 1000
 }

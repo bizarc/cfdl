@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "4ba58ef72a0b502b4b28acbe01ae675a614cd5c7a9bbb58348f9aac4174a0ee2",
-  "ledger_hash": "17fc6ce8ac430298905f452d1c967535e987240f58b724e3f2076d0990ca9030",
+  "model_hash": "0a575d94a30e2b123a7a4970b18976b732e039277c9dade14dff4ce52d63658c",
+  "ledger_hash": "bfa40ea10812463e6ea8daa705d691a8f703cc5201182d45269ee909f7cc6e11",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,7 +10,7 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.legal.borrower.total": {
+      "entity.asset.borrower.total": {
         "amount": -3000.0,
         "currency": "USD"
       },
@@ -24,7 +24,7 @@
       },
       "run.annual_discount_rate": 0.0,
       "run.periods_per_year": 12.0,
-      "stream.legal.rate_payment.total": {
+      "stream.debt.rate_payment.total": {
         "amount": -3000.0,
         "currency": "USD"
       }
@@ -51,7 +51,7 @@
           }
         ]
       },
-      "stream.legal.rate_payment": {
+      "stream.debt.rate_payment": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -89,7 +89,7 @@
             }
           ]
         },
-        "stream.legal.rate_payment": {
+        "stream.debt.rate_payment": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

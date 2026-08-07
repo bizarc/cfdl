@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "a14d0ee52b2812f4856211fc4d53634a",
-      "symbol": "fund.buyer",
-      "type": "core.Entity",
+      "id": "c8726c9577f18720c017fefa34ac122b",
+      "symbol": "asset.buyer",
+      "type": "Credit.Asset.LoanPool",
       "attrs": {},
       "state": {}
     }
@@ -114,7 +114,7 @@
       "name": "credit.pool_level_pay.book",
       "type": "core.Contract",
       "subject": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "term": {
         "start": "2025-01-01",
@@ -141,7 +141,7 @@
       "id": "fff18624a7073585b85ba5e58fc35eb4",
       "name": "credit.pool.interest.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -181,7 +181,7 @@
       "id": "bb535ef15bcdb72c5bfe213d76a51dc4",
       "name": "credit.pool.penalty.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -221,7 +221,7 @@
       "id": "1c56514e36da054a62431229c3c7db9a",
       "name": "credit.pool.prepay.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -261,7 +261,7 @@
       "id": "a6663135fa4e880941385918c1d8e048",
       "name": "credit.pool.recoveries.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -301,7 +301,7 @@
       "id": "3121716324013d0f6446e0e3e132d1a2",
       "name": "credit.pool.sched_principal.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -341,7 +341,7 @@
       "id": "df682b917942c8e28b69a036fcc9997f",
       "name": "credit.pool.servicing.book",
       "owner": {
-        "symbol": "fund.buyer"
+        "symbol": "asset.buyer"
       },
       "direction": "outflow",
       "currency": "USD",

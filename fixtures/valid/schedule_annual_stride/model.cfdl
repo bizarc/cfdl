@@ -1,9 +1,9 @@
 version 0.1
 model "schedule-annual-stride"
 time calendar monthly from 2026-01 for 24
-entity legal co
+entity asset co : Asset.Financial
 
-stream co.true_up on entity legal.co outflow currency USD {
+stream co.true_up on entity asset.co outflow currency USD {
   schedule every year from 2026-01 to 2027-12
   amount = 5000
 }

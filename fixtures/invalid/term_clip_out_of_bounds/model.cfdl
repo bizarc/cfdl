@@ -3,12 +3,12 @@ model "term-clip-out-of-bounds"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity project plant
+entity asset plant : Energy.Asset.GenerationFacility
 
 // degradation must be a fraction between 0 and 1; this clip reaches 1.4.
 assume degr ~ Normal(mean=0.005, stdev=0.2, clip=[0.0, 1.4])
 
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
     mwh_year = 5000

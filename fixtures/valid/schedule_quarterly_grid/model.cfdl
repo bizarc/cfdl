@@ -2,20 +2,20 @@ version 0.1
 model "schedule-quarterly-grid"
 time calendar quarterly from 2026-01 for 8
 
-entity legal co
+entity asset co : Asset.Financial
 
 // No pack, no domain logic: this fixture exists so that a regression on a
 // quarterly calendar is attributable to the calendar itself rather than to
 // pack lowering. Until the cadence work there was no quarterly model in the
 // repo at all, so nothing exercised quarterly period stepping end to end.
-stream co.rent on entity legal.co inflow currency USD {
+stream co.rent on entity asset.co inflow currency USD {
   schedule every quarter from 2026-01 to 2027-10
   amount = 30000
 }
 
 // An annual true-up on a quarterly grid: coarser than the calendar, which is
 // allowed, and lands once per four periods.
-stream co.true_up on entity legal.co outflow currency USD {
+stream co.true_up on entity asset.co outflow currency USD {
   schedule every year from 2026-01 to 2027-01
   amount = 5000
 }

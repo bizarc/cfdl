@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "3c1d3b1a2b5af96f4f586b28cf2cb9d9",
-      "symbol": "legal.borrower",
-      "type": "core.Entity",
+      "id": "a891aa65cc648d1159772a587ea85620",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
       "attrs": {},
       "state": {}
     }
@@ -26,10 +26,10 @@
   "contracts": [],
   "streams": [
     {
-      "id": "80b06f3d64658231af4a3a025b9a3579",
-      "name": "legal.daily_fee",
+      "id": "bfdf2aadb647bc06386f258d4da0403e",
+      "name": "fee.daily",
       "owner": {
-        "symbol": "legal.borrower"
+        "symbol": "asset.borrower"
       },
       "direction": "outflow",
       "currency": "USD",
@@ -64,10 +64,10 @@
       }
     },
     {
-      "id": "3604211aaf621ac5618f1127ccafc917",
-      "name": "legal.rolled_payment",
+      "id": "c65abacba7eb9ab0773acb3951700619",
+      "name": "fee.rolled_payment",
       "owner": {
-        "symbol": "legal.borrower"
+        "symbol": "asset.borrower"
       },
       "direction": "inflow",
       "currency": "USD",

@@ -21,16 +21,16 @@ model "wind-ptc-macrs"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2027-01 for 240
 
-entity project windfarm
+entity asset windfarm : Energy.Asset.GenerationFacility
 
 // 30 MW wind: merchant revenue with availability, 10-year PTC,
 // 5-year MACRS shield, level-pay debt.
-contract energy.capex on entity project.windfarm {
+contract energy.capex on entity asset.windfarm {
   term 2027-01..2027-01
   terms { amount = 42000000 }
 }
 
-contract energy.merchant on entity project.windfarm {
+contract energy.merchant on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
     mwh_year = 105000
@@ -41,7 +41,7 @@ contract energy.merchant on entity project.windfarm {
   }
 }
 
-contract energy.ptc on entity project.windfarm {
+contract energy.ptc on entity asset.windfarm {
   term 2027-01..2036-12
   terms {
     mwh_year = 105000
@@ -52,7 +52,7 @@ contract energy.ptc on entity project.windfarm {
   }
 }
 
-contract energy.macrs_shield on entity project.windfarm {
+contract energy.macrs_shield on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
     basis = 42000000
@@ -61,7 +61,7 @@ contract energy.macrs_shield on entity project.windfarm {
   }
 }
 
-contract energy.om on entity project.windfarm {
+contract energy.om on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
     om_year = 1300000
@@ -69,7 +69,7 @@ contract energy.om on entity project.windfarm {
   }
 }
 
-contract energy.debt_service on entity project.windfarm {
+contract energy.debt_service on entity asset.windfarm {
   term 2027-01..2041-12
   terms {
     rate = 0.055

@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "e87099c672c8159a4ac330854d1d6b3a",
-      "symbol": "project.plant",
-      "type": "core.Entity",
+      "id": "f5160f6d699abe84dd287f28e2a63842",
+      "symbol": "asset.plant",
+      "type": "Energy.Asset.GenerationFacility",
       "attrs": {},
       "state": {}
     }
@@ -85,7 +85,7 @@
       "name": "energy.ppa.plant_a",
       "type": "core.Contract",
       "subject": {
-        "symbol": "project.plant"
+        "symbol": "asset.plant"
       },
       "term": {
         "start": "2026-01-01",
@@ -112,7 +112,7 @@
       "id": "01e75b37cd2aa7955e2572e2062927c0",
       "name": "energy.ppa.revenue.plant_a",
       "owner": {
-        "symbol": "project.plant"
+        "symbol": "asset.plant"
       },
       "direction": "inflow",
       "currency": "INR",

@@ -54,7 +54,7 @@ description = "A claim on the enterprise's equity — sponsor, rollover, preferr
 [[entities.fields]]
 name = "interest_type"
 field_type = "string"
-required = true
+required = false
 description = "sponsor | management_rollover | preferred | option_pool | common"
 
 [[entities.fields]]
@@ -74,7 +74,7 @@ description = "A royalty, licence or contractual right valued on its own cash fl
 [[entities.fields]]
 name = "right_type"
 field_type = "string"
-required = true
+required = false
 description = "royalty | licence | franchise | patent"
 
 [[entities.fields]]
@@ -94,7 +94,7 @@ description = "Acquires and controls the business."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "OpCo.Party.Management"
@@ -104,7 +104,7 @@ description = "Runs the business; commonly rolls equity and holds options."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "OpCo.Party.Lender"
@@ -113,7 +113,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities.fields]]
 name = "tranche_role"
@@ -128,7 +128,7 @@ family = "party"
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 [[entities]]
 type_id = "OpCo.Party.Counterparty"
@@ -138,7 +138,7 @@ description = "A customer or supplier named when a contract depends on one."
 [[entities.fields]]
 name = "name"
 field_type = "string"
-required = true
+required = false
 
 # ---------------------------------------------------------------------------
 # Lifecycles

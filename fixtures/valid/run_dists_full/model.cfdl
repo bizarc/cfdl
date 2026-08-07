@@ -2,11 +2,11 @@ version 0.1
 model "run-dists-full"
 time calendar monthly from 2026-01 for 12
 
-entity project plant
+entity asset plant : Asset.Real
 
 // Drivers supplied entirely by run.json, exercising every distribution kind
 // the language offers plus clip.
-stream plant.revenue on entity project.plant inflow currency USD {
+stream plant.revenue on entity asset.plant inflow currency USD {
   schedule every month from 2026-01 to 2026-12
   amount = inputs.n + inputs.u + inputs.t + inputs.l + inputs.f
 }

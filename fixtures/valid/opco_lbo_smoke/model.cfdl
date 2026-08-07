@@ -3,9 +3,9 @@ model "opco-lbo-smoke"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity operating target
+entity asset target : OpCo.Asset.Enterprise
 
-contract opco.revenue_line on entity operating.target {
+contract opco.revenue_line on entity asset.target {
   term 2026-01..2027-12
   terms {
     amount = 200000
@@ -13,7 +13,7 @@ contract opco.revenue_line on entity operating.target {
   }
 }
 
-contract opco.opex_line on entity operating.target {
+contract opco.opex_line on entity asset.target {
   term 2026-01..2027-12
   terms {
     amount = 120000
@@ -21,7 +21,7 @@ contract opco.opex_line on entity operating.target {
   }
 }
 
-contract opco.working_capital_policy on entity operating.target {
+contract opco.working_capital_policy on entity asset.target {
   term 2026-01..2027-12
   terms {
     ar_days = 40
@@ -31,7 +31,7 @@ contract opco.working_capital_policy on entity operating.target {
   }
 }
 
-contract opco.capex_line on entity operating.target {
+contract opco.capex_line on entity asset.target {
   term 2026-01..2027-12
   terms {
     amount = 5000
@@ -40,7 +40,7 @@ contract opco.capex_line on entity operating.target {
 }
 
 // 6-month IO, then amortizing over 36 months, balloon at maturity.
-contract opco.term_debt on entity operating.target {
+contract opco.term_debt on entity asset.target {
   term 2026-01..2027-12
   terms {
     principal = 3000000
@@ -50,7 +50,7 @@ contract opco.term_debt on entity operating.target {
   }
 }
 
-contract opco.cash_taxes on entity operating.target {
+contract opco.cash_taxes on entity asset.target {
   term 2026-01..2027-12
   terms {
     tax_rate = 0.25
@@ -58,14 +58,14 @@ contract opco.cash_taxes on entity operating.target {
   }
 }
 
-contract opco.acquisition on entity operating.target {
+contract opco.acquisition on entity asset.target {
   term 2026-01..2026-01
   terms {
     price = 5000000
   }
 }
 
-contract opco.exit_ebitda on entity operating.target {
+contract opco.exit_ebitda on entity asset.target {
   term 2027-12..2027-12
   terms {
     exit_multiple = 7.0

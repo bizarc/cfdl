@@ -12,9 +12,9 @@
   "phases": [],
   "entities": [
     {
-      "id": "0240759f1637be60afc01d685efc9615",
-      "symbol": "legal.lender",
-      "type": "core.Entity",
+      "id": "95d2e935baff9181191f1d8e3239c019",
+      "symbol": "asset.lender",
+      "type": "Credit.Asset.LoanPool",
       "attrs": {},
       "state": {}
     }
@@ -114,7 +114,7 @@
       "name": "credit.pool_level_pay",
       "type": "core.Contract",
       "subject": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "term": {
         "start": "2026-01-01",
@@ -141,7 +141,7 @@
       "id": "c3706987a5762352e57d4fcd7cc09fcc",
       "name": "credit.pool.interest",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -181,7 +181,7 @@
       "id": "9957c5f8090ca1f250d5500ecae91d16",
       "name": "credit.pool.penalty",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -221,7 +221,7 @@
       "id": "dc12004e55ee826c75e8a9c004cb66af",
       "name": "credit.pool.prepay",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -261,7 +261,7 @@
       "id": "4659e7bffe6123da777ea72abd0f8112",
       "name": "credit.pool.recoveries",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -301,7 +301,7 @@
       "id": "dcd15bd9999039660a565a05eaa9445b",
       "name": "credit.pool.sched_principal",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "inflow",
       "currency": "USD",
@@ -341,7 +341,7 @@
       "id": "060f4e374d455d2a7d0008576074aedb",
       "name": "credit.pool.servicing",
       "owner": {
-        "symbol": "legal.lender"
+        "symbol": "asset.lender"
       },
       "direction": "outflow",
       "currency": "USD",
