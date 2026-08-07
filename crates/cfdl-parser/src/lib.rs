@@ -1598,6 +1598,25 @@ impl<'a> Parser<'a> {
                     let clause_tok = self.bump();
                     // `init <expr>` — no '=', matching the clause style of
                     // `schedule` and `active when` rather than `amount =`.
+                    //
+                    // `init = <expr>` used to parse and evaluate to ZERO. Every
+                    // other block in the language assigns with '=', so it is the
+                    // form a reader reaches for — the language guide taught it —
+                    // and a state that silently holds zero takes every stream
+                    // reading it down with it, with nothing to see. Rejected
+                    // here, naming the form that works.
+                    if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                        let span = self.current_span();
+                        let clause = if is_init { "init" } else { "next" };
+                        self.push_expected(
+                            span,
+                            format!(
+                                "`{clause}` takes an expression directly, with no '='. \
+                                 Write `{clause} <expr>`, as `schedule` and `active when` do."
+                            ),
+                        );
+                        return None;
+                    }
                     let slot = self.parse_expr_slot(clause_tok.span)?;
                     if is_init {
                         init = Some(slot);

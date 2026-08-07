@@ -189,12 +189,14 @@ A `state` says so directly.
 
 ```cfdl
 state balance {
-  init = 1000000
-  next = prev * (1 - 0.01)
+  init 1000000
+  next prev * (1 - 0.01)
 }
 ```
 
-`init` is period zero; `next` computes each later period from `prev`. A state is
+`init` is period zero; `next` computes each later period from `prev`. Both take
+an expression directly, with no `=`, the way `schedule` and `active when` do. A
+state is
 **not cash** — it never reaches the model's total. It exists so a stream can
 read it:
 

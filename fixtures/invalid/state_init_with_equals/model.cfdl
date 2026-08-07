@@ -1,0 +1,19 @@
+version 0.1
+model "state-init-with-equals"
+time calendar annual from 2026-01 for 4
+
+entity asset a : Asset.Real
+
+// `init` and `next` take an expression directly. Writing them with '=' — the
+// form every other block in the language uses, and the form the language guide
+// taught — used to PARSE and evaluate to zero, taking every stream that read
+// the state down with it and showing nothing.
+state cum {
+  init = 100
+  next = prev + 100
+}
+
+stream x.y on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = state.cum
+}

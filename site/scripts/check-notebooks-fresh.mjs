@@ -17,13 +17,25 @@
  * Usage: node scripts/check-notebooks-fresh.mjs <base-ref>   (default: origin/main)
  */
 import { execSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 const base = process.argv[2] || "origin/main";
 
-/** Inputs whose change can alter what a rendered page shows. */
+/**
+ * Inputs whose change can alter what a rendered page shows.
+ *
+ * `benchmarks/` is not here as a whole directory. The notebooks read four
+ * specific benchmark models, and a case in another pack cannot change what
+ * they print — but a directory-wide input made every new benchmark demand a
+ * full notebook re-render, which is a false alarm on the action this
+ * repository takes most often. The models actually read are discovered from
+ * the notebooks below and appended, so the list cannot go stale.
+ *
+ * Kept in step with STAMP_INPUTS in tools/render-notebooks.py.
+ */
 const SOURCE_PATHS = [
   "examples/notebooks/",
-  "benchmarks/",
   "packs/",
   "python/cfdl_sdk/",
   "crates/cfdl-py/",
@@ -39,6 +51,22 @@ const SOURCE_PATHS = [
   "tools/render-notebooks.py",
 ];
 const RENDER_PATHS = ["site/content/docs/notebooks/", "site/public/notebooks/"];
+
+// The benchmark models the notebooks read, taken from the notebooks themselves.
+// This script runs from site/, but SOURCE_PATHS are repo-relative because they
+// are matched against git output.
+const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
+const notebookDir = path.join(repoRoot, "examples", "notebooks");
+for (const notebook of fs.readdirSync(notebookDir).sort()) {
+  if (!notebook.endsWith(".ipynb")) continue;
+  const text = fs.readFileSync(path.join(notebookDir, notebook), "utf8");
+  for (const [, pack, name] of text.matchAll(/benchmarks\/([a-z_]+)\/([a-z_0-9]+)/g)) {
+    const dir = `benchmarks/${pack}/${name}/`;
+    if (fs.existsSync(path.join(repoRoot, dir)) && !SOURCE_PATHS.includes(dir)) {
+      SOURCE_PATHS.push(dir);
+    }
+  }
+}
 
 let changed;
 try {

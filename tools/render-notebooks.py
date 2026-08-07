@@ -251,13 +251,34 @@ def index_page(toc: list[tuple[str, str, str]]) -> str:
 
 # Paths whose contents can change what a rendered notebook page says. Kept in
 # step with SOURCE_PATHS in site/scripts/check-notebooks-fresh.mjs.
+#
+# `benchmarks` is NOT here as a whole directory. The notebooks read four
+# specific benchmark models, and a case in another pack cannot change what they
+# print — but a directory-wide input made every new benchmark demand a full
+# notebook re-render, which is a false alarm on the action this repository takes
+# most often. A gate that cries wolf gets disabled, so it is narrowed to the
+# models actually read, discovered from the notebooks rather than listed here
+# where the list would go stale.
 STAMP_INPUTS = [
-    "examples/notebooks", "benchmarks", "packs", "python/cfdl_sdk",
+    "examples/notebooks", "packs", "python/cfdl_sdk",
     "crates/cfdl-py", "crates/cfdl-compile", "crates/cfdl-engine",
     "crates/cfdl-metrics", "crates/cfdl-pack", "crates/cfdl-calc",
     "crates/cfdl-parser", "crates/cfdl-lexer", "crates/cfdl-resolver",
     "crates/cfdl-validate", "tools/render-notebooks.py",
 ]
+
+BENCHMARK_REF = re.compile(r"benchmarks/([a-z_]+)/([a-z_0-9]+)")
+
+
+def benchmark_inputs(repo_root: pathlib.Path) -> list[str]:
+    """The benchmark directories the notebooks actually read."""
+    found = set()
+    for notebook in sorted((repo_root / "examples" / "notebooks").glob("*.ipynb")):
+        text = notebook.read_text(encoding="utf-8")
+        for pack, case in BENCHMARK_REF.findall(text):
+            if (repo_root / "benchmarks" / pack / case).is_dir():
+                found.add(f"benchmarks/{pack}/{case}")
+    return sorted(found)
 
 
 def write_render_stamp(repo_root: pathlib.Path) -> None:
@@ -271,7 +292,7 @@ def write_render_stamp(repo_root: pathlib.Path) -> None:
     asserted.
     """
     digest = hashlib.sha256()
-    for rel in sorted(STAMP_INPUTS):
+    for rel in sorted(STAMP_INPUTS + benchmark_inputs(repo_root)):
         target = repo_root / rel
         files = sorted(target.rglob("*")) if target.is_dir() else [target]
         for f in files:
