@@ -91,6 +91,36 @@ pub struct TimeStmt {
 pub struct EntityStmt {
     pub namespace: String,
     pub name: String,
+    /// The ontology type this entity is an instance of — `CRE.Asset.RealProperty`.
+    ///
+    /// Optional so every model written before types existed still parses. When
+    /// present it is checked against the active ontology, which is what makes
+    /// an entity a described thing rather than a two-part name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub type_name: Option<String>,
+    /// Attributes declared in the entity's block, as raw source. Checked
+    /// against the type's declared fields.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<EntityAttribute>,
+    /// The parent this entity belongs to, if the model groups it.
+    ///
+    /// ALWAYS OPTIONAL. A pool models collective behaviour perfectly well with
+    /// no loans under it; a building needs no units. The modeller chooses the
+    /// grain and the language does not prefer one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+    /// The lifecycle state this entity starts in, overriding the type's
+    /// declared initial state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial_state: Option<String>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct EntityAttribute {
+    pub name: String,
+    /// Raw source of the value expression.
+    pub value: String,
     pub span: Span,
 }
 
@@ -745,10 +775,183 @@ impl<'a> Parser<'a> {
             }
         };
 
+        // `entity <family> <name>` is the whole statement unless a type follows.
+        // The typed form has been in the grammar since v0.1
+        // (`entity_stmt = "entity" IDENT IDENT ":" qname entity_block`) and was
+        // never implemented; an entity was a two-part name, and the first
+        // identifier was doing informal typing badly.
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::Colon)) {
+            return Some(EntityStmt {
+                namespace,
+                name,
+                type_name: None,
+                attributes: Vec::new(),
+                parent: None,
+                initial_state: None,
+                span: merge_spans(start.span, name_tok.span),
+            });
+        }
+        let _ = self.bump(); // ':'
+
+        let type_tok = self.bump();
+        let type_name = match type_tok.kind {
+            TokenKind::Qname(ref qname) => qname.clone(),
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    type_tok.span,
+                    "Expected an ontology type after ':' (e.g. CRE.Asset.RealProperty)."
+                        .to_string(),
+                );
+                return None;
+            }
+        };
+
+        // The block is optional: a type alone is a complete statement, because
+        // a type with no required fields needs nothing said about it.
+        if !matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
+            return Some(EntityStmt {
+                namespace,
+                name,
+                type_name: Some(type_name),
+                attributes: Vec::new(),
+                parent: None,
+                initial_state: None,
+                span: merge_spans(start.span, type_tok.span),
+            });
+        }
+        let _ = self.bump(); // '{'
+
+        let mut attributes: Vec<EntityAttribute> = Vec::new();
+        let mut parent: Option<String> = None;
+        let mut initial_state: Option<String> = None;
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+                // `part of <entity>` — optional hierarchy. Never required: a
+                // pool models collective behaviour with no loans under it, and
+                // a building needs no units. The modeller chooses the grain.
+                TokenKind::Ident(ref ident) if ident == "part" => {
+                    let part_tok = self.bump();
+                    let of_tok = self.bump();
+                    if !matches!(of_tok.kind, TokenKind::Ident(ref s) if s == "of") {
+                        self.push_expected(
+                            of_tok.span,
+                            "Expected 'of' after 'part' in entity block.".to_string(),
+                        );
+                        return None;
+                    }
+                    let parent_tok = self.bump();
+                    match parent_tok.kind {
+                        TokenKind::Qname(ref qname) => parent = Some(qname.clone()),
+                        TokenKind::Ident(ref ident) => parent = Some(ident.clone()),
+                        _ => {
+                            self.push_expected(
+                                merge_spans(part_tok.span, parent_tok.span),
+                                "Expected the parent entity after 'part of' (e.g. asset.tower)."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                // `state <name>` — the lifecycle state this entity STARTS in,
+                // overriding the type's declared initial. Every entity with a
+                // lifecycle is always in exactly one state, so this sets which.
+                TokenKind::Keyword(Keyword::State) => {
+                    let state_tok = self.bump();
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Ident(ref ident) => initial_state = Some(ident.clone()),
+                        TokenKind::String(ref s) => initial_state = Some(s.clone()),
+                        _ => {
+                            self.push_expected(
+                                merge_spans(state_tok.span, value_tok.span),
+                                "Expected a lifecycle state after 'state' (e.g. state operating)."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                // `key = <literal>`, one token, exactly as a contract's `terms`
+                // block reads. An attribute describes the thing; it is not an
+                // expression, and letting it be one made the value swallow the
+                // rest of the block.
+                TokenKind::Ident(_) => {
+                    let key_tok = self.bump();
+                    let TokenKind::Ident(ref key) = key_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    let key = key.clone();
+                    let _ = self.expect_punct(Punct::Equal, "'='")?;
+                    // A signed number lexes as a sign punct then the number.
+                    let sign = match self.peek().kind {
+                        TokenKind::Punct(Punct::Minus) => {
+                            let _ = self.bump();
+                            "-"
+                        }
+                        TokenKind::Punct(Punct::Plus) => {
+                            let _ = self.bump();
+                            ""
+                        }
+                        _ => "",
+                    };
+                    let value_tok = self.bump();
+                    let value = match value_tok.kind {
+                        TokenKind::String(ref s) => s.clone(),
+                        TokenKind::Number(ref n) => format!("{sign}{n}"),
+                        TokenKind::Date(ref d) => d.clone(),
+                        TokenKind::Ident(ref ident) => ident.clone(),
+                        TokenKind::Qname(ref qname) => qname.clone(),
+                        TokenKind::Keyword(Keyword::True) => "true".to_string(),
+                        TokenKind::Keyword(Keyword::False) => "false".to_string(),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                format!("Expected a literal value for entity attribute '{key}'."),
+                            );
+                            return None;
+                        }
+                    };
+                    attributes.push(EntityAttribute {
+                        name: key,
+                        value,
+                        span: merge_spans(key_tok.span, value_tok.span),
+                    });
+                }
+                _ => {
+                    let bad = self.bump();
+                    self.push_expected(
+                        bad.span,
+                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+
         Some(EntityStmt {
             namespace,
             name,
-            span: merge_spans(start.span, name_tok.span),
+            type_name: Some(type_name),
+            attributes,
+            parent,
+            initial_state,
+            span: merge_spans(start.span, end.span),
         })
     }
 

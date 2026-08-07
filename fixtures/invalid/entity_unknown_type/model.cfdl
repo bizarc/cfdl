@@ -1,0 +1,17 @@
+version 0.1
+model "entity-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 1
+
+// Every failure here was silently accepted before entities had types: the
+// type, the field and the state are all misspelled, and the model still ran.
+entity asset tower : CRE.Asset.RealProprty {
+  asset_clas = "office"
+  state stabilised
+}
+
+stream cre.rent on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2026-01
+  category operating.revenue.base_rent
+  amount = 1
+}

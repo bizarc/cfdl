@@ -136,6 +136,132 @@ pub struct PackOntology {
 }
 
 impl PackOntology {
+    /// The vocabulary EVERY model has, pack or no pack.
+    ///
+    /// An ontology is a LANGUAGE capability that packs supply defaults for, not
+    /// one they own — the same argument the category vocabulary already makes:
+    /// rejecting it with no pack active is circular, because nothing reads it
+    /// only so long as nothing may declare it. A model with no pack can still
+    /// say that a thing is an asset, that the asset is real rather than
+    /// financial, who the parties are, and what belongs to what. What it cannot
+    /// do without a pack is name a CONTRACT type, because a contract type binds
+    /// to a lowering rule and lowering rules are what packs are.
+    ///
+    /// A pack's own types are added to these; a pack cannot remove them.
+    pub fn language_base() -> Self {
+        fn asset(type_id: &str, class: &str, description: &str) -> OntologyEntity {
+            OntologyEntity {
+                type_id: type_id.to_string(),
+                family: "asset".to_string(),
+                class: Some(class.to_string()),
+                lifecycle: None,
+                description: Some(description.to_string()),
+                fields: Vec::new(),
+            }
+        }
+        fn relation(
+            id: &str,
+            from: &str,
+            to: &str,
+            card: &str,
+            inverse: &str,
+            d: &str,
+        ) -> OntologyRelation {
+            OntologyRelation {
+                relation_id: id.to_string(),
+                from_family: from.to_string(),
+                to_family: to.to_string(),
+                cardinality: card.to_string(),
+                inverse: inverse.to_string(),
+                description: Some(d.to_string()),
+            }
+        }
+        Self {
+            entities: vec![
+                asset(
+                    "Asset.Real",
+                    "real",
+                    "A physical thing — land, a building, plant, equipment, a reserve.",
+                ),
+                asset(
+                    "Asset.Financial",
+                    "financial",
+                    "A claim on cash — a loan, a pool, a security, an equity interest, a going concern.",
+                ),
+                asset(
+                    "Asset.Intangible",
+                    "intangible",
+                    "A right without a physical form — a royalty, a licence, a patent.",
+                ),
+                OntologyEntity {
+                    type_id: "Party".to_string(),
+                    family: "party".to_string(),
+                    class: None,
+                    lifecycle: None,
+                    description: Some(
+                        "Someone who contracts, owns, lends or invests. A pack names roles more precisely; this is the generic one."
+                            .to_string(),
+                    ),
+                    fields: vec![OntologyField {
+                        name: "name".to_string(),
+                        field_type: "string".to_string(),
+                        required: false,
+                        unit: None,
+                        description: None,
+                    }],
+                },
+            ],
+            contracts: Vec::new(),
+            lifecycles: Vec::new(),
+            references: Vec::new(),
+            relations: vec![
+                relation(
+                    "part_of",
+                    "asset",
+                    "asset",
+                    "many_to_one",
+                    "contains",
+                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped.",
+                ),
+                relation(
+                    "owns",
+                    "party",
+                    "asset",
+                    "many_to_many",
+                    "owned_by",
+                    "Who holds the asset.",
+                ),
+            ],
+        }
+    }
+
+    /// A pack's vocabulary on top of the language's. Pack types win on a
+    /// collision, so a pack may refine `Asset.Real` into `CRE.Asset.RealProperty`
+    /// without the base disappearing.
+    pub fn merged_with_base(&self) -> Self {
+        let mut merged = Self::language_base();
+        let pack_types: BTreeSet<&str> = self.entities.iter().map(|e| e.type_id.as_str()).collect();
+        merged
+            .entities
+            .retain(|e| !pack_types.contains(e.type_id.as_str()));
+        merged.entities.extend(self.entities.iter().cloned());
+
+        let pack_relations: BTreeSet<&str> = self
+            .relations
+            .iter()
+            .map(|r| r.relation_id.as_str())
+            .collect();
+        merged
+            .relations
+            .retain(|r| !pack_relations.contains(r.relation_id.as_str()));
+        merged.relations.extend(self.relations.iter().cloned());
+
+        merged.contracts = self.contracts.clone();
+        merged.lifecycles = self.lifecycles.clone();
+        merged.references = self.references.clone();
+        merged
+    }
+
     pub fn is_empty(&self) -> bool {
         self.entities.is_empty() && self.contracts.is_empty()
     }

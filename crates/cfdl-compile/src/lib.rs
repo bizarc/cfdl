@@ -317,6 +317,10 @@ struct ActivePackContext {
     subtotal_specs: Vec<cfdl_pack::SubtotalSpec>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
     validations: Vec<cfdl_pack::PackValidation>,
+    /// What a model using this pack may be ABOUT, merged over the language's
+    /// own base vocabulary. A pack adds types; it cannot remove the ones every
+    /// model has.
+    ontology: cfdl_pack::PackOntology,
 }
 
 struct PackLoweringOutput {
@@ -466,6 +470,15 @@ struct IrEntity {
     r#type: String,
     attrs: BTreeMap<String, serde_json::Value>,
     state: BTreeMap<String, serde_json::Value>,
+    /// The parent this entity belongs to, when the model groups it. Absent for
+    /// an entity that stands alone, which is most of them: hierarchy is always
+    /// available and never required.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    parent: Option<String>,
+    /// The lifecycle state this entity starts in. Absent when its type
+    /// declares no lifecycle.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    initial_state: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -649,6 +662,211 @@ struct IrProvenance {
     compiler: IrProvenanceCompiler,
 }
 
+/// Check every typed entity against the active ontology.
+///
+/// THE POINT IS THAT A TYPO IS AN ERROR. An entity was a two-part name with no
+/// declared type, no declared fields and no declared states, so a misspelled
+/// anything was accepted and produced a wrong answer with no signal. Each check
+/// below closes one of those.
+fn check_entity_types(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let declared: BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(entity) => Some(entity.symbol()),
+            _ => None,
+        })
+        .collect();
+
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        let file = Some(source_stmt.file.clone());
+        let span = Some(map_span(entity.span));
+
+        let Some(type_name) = entity.type_name.as_deref() else {
+            // Untyped entities stay legal: every model written before types
+            // existed still compiles. The type is what unlocks the checks, not
+            // a condition of being an entity.
+            if entity.parent.is_some() || entity.initial_state.is_some() {
+                diagnostics.push(Diagnostic {
+                    code: "E1310_ENTITY_BLOCK_WITHOUT_TYPE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' uses a block but declares no type. Add ': <Type>' so the block can be checked.",
+                        entity.symbol()
+                    ),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: Some(
+                        "An untyped entity has no declared fields, parent or states to check a block against."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                });
+            }
+            continue;
+        };
+
+        let Some(ty) = ontology.entity(type_name) else {
+            let mut known: Vec<&str> = ontology
+                .entities
+                .iter()
+                .map(|e| e.type_id.as_str())
+                .collect();
+            known.sort_unstable();
+            diagnostics.push(Diagnostic {
+                code: "E1311_UNKNOWN_ENTITY_TYPE".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Entity '{}' declares type '{type_name}', which the active ontology does not define.",
+                    entity.symbol()
+                ),
+                file: file.clone(),
+                span: span.clone(),
+                path: None,
+                hint: Some(format!("Known types: {}.", known.join(", "))),
+                notes: vec![],
+            });
+            continue;
+        };
+
+        // A required field is required because the type cannot be underwritten
+        // without it.
+        let given: BTreeSet<&str> = entity.attributes.iter().map(|a| a.name.as_str()).collect();
+        for field in ty.fields.iter().filter(|f| f.required) {
+            if !given.contains(field.name.as_str()) {
+                diagnostics.push(Diagnostic {
+                    code: "E1312_MISSING_REQUIRED_FIELD".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' of type '{type_name}' is missing required field '{}'.",
+                        entity.symbol(),
+                        field.name
+                    ),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: field.description.clone().or_else(|| {
+                        field
+                            .unit
+                            .as_ref()
+                            .map(|unit| format!("Expected {} in {unit}.", field.field_type))
+                    }),
+                    notes: vec![],
+                });
+            }
+        }
+        for attr in &entity.attributes {
+            if !ty.fields.iter().any(|f| f.name == attr.name) {
+                let mut known: Vec<&str> = ty.fields.iter().map(|f| f.name.as_str()).collect();
+                known.sort_unstable();
+                diagnostics.push(Diagnostic {
+                    code: "E1313_UNKNOWN_ENTITY_FIELD".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' of type '{type_name}' sets '{}', which the type does not declare.",
+                        entity.symbol(),
+                        attr.name
+                    ),
+                    file: file.clone(),
+                    span: Some(map_span(attr.span)),
+                    path: None,
+                    hint: Some(if known.is_empty() {
+                        format!("'{type_name}' declares no fields.")
+                    } else {
+                        format!("Declared fields: {}.", known.join(", "))
+                    }),
+                    notes: vec![],
+                });
+            }
+        }
+
+        // Hierarchy is optional, but a parent that does not exist is a typo,
+        // not a choice of grain.
+        if let Some(parent) = &entity.parent {
+            if !declared.contains(parent) {
+                diagnostics.push(Diagnostic {
+                    code: "E1314_UNKNOWN_PARENT_ENTITY".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' is part of '{parent}', which is not declared.",
+                        entity.symbol()
+                    ),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: Some("Hierarchy is optional; a declared parent is not.".to_string()),
+                    notes: vec![],
+                });
+            } else if parent == &entity.symbol() {
+                diagnostics.push(Diagnostic {
+                    code: "E1315_ENTITY_PART_OF_ITSELF".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("Entity '{}' is part of itself.", entity.symbol()),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                });
+            }
+        }
+
+        // The state space is declared so that a misspelled status is
+        // impossible rather than merely unlikely.
+        match (&entity.initial_state, ty.lifecycle.as_deref()) {
+            (Some(state), Some(lifecycle_id)) => {
+                if let Some(lifecycle) = ontology.lifecycle(lifecycle_id) {
+                    if !lifecycle.has_state(state) {
+                        diagnostics.push(Diagnostic {
+                            code: "E1316_UNKNOWN_LIFECYCLE_STATE".to_string(),
+                            severity: "error".to_string(),
+                            message: format!(
+                                "Entity '{}' starts in state '{state}', which lifecycle '{lifecycle_id}' does not declare.",
+                                entity.symbol()
+                            ),
+                            file: file.clone(),
+                            span: span.clone(),
+                            path: None,
+                            hint: Some(format!("Declared states: {}.", lifecycle.states.join(", "))),
+                            notes: vec![],
+                        });
+                    }
+                }
+            }
+            (Some(state), None) => {
+                diagnostics.push(Diagnostic {
+                    code: "E1317_TYPE_HAS_NO_LIFECYCLE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' starts in state '{state}', but type '{type_name}' declares no lifecycle.",
+                        entity.symbol()
+                    ),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                });
+            }
+            _ => {}
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn build_ir(
     resolve_output: &cfdl_resolver::ResolveOutput,
     active_pack: Option<&ActivePackContext>,
@@ -725,6 +943,17 @@ fn build_ir(
         })
         .collect();
 
+    // What the model may be about. With a pack, its vocabulary over the
+    // language's; with no pack, the language's alone — because an ontology is a
+    // LANGUAGE capability that packs supply defaults for, not one they own.
+    // This is the same argument the category vocabulary already makes: refusing
+    // it when no pack is active is circular, since nothing reads it only so
+    // long as nothing may declare it.
+    let ontology = active_pack
+        .map(|pack| pack.ontology.clone())
+        .unwrap_or_else(cfdl_pack::PackOntology::language_base);
+    check_entity_types(resolve_output, &ontology)?;
+
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
         .iter()
@@ -734,12 +963,30 @@ fn build_ir(
             };
             let symbol = entity.symbol();
             let stable_key = stable_key(&source_stmt.file, &symbol);
+            // An untyped entity keeps `core.Entity`, so every model written
+            // before types existed lowers exactly as it did.
+            let type_name = entity
+                .type_name
+                .clone()
+                .unwrap_or_else(|| "core.Entity".to_string());
+            let attrs = entity
+                .attributes
+                .iter()
+                .map(|attr| {
+                    (
+                        attr.name.clone(),
+                        serde_json::Value::String(attr.value.clone()),
+                    )
+                })
+                .collect();
             let ir_entity = IrEntity {
                 id: deterministic_id("Entity", &stable_key, &id_seed),
                 symbol: symbol.clone(),
-                r#type: "core.Entity".to_string(),
-                attrs: BTreeMap::new(),
+                r#type: type_name,
+                attrs,
                 state: BTreeMap::new(),
+                parent: entity.parent.clone(),
+                initial_state: entity.initial_state.clone(),
             };
             Some(((symbol, source_stmt.file.clone()), ir_entity))
         })
@@ -1200,6 +1447,10 @@ fn resolve_active_pack_inner(
         subtotal_specs: registry.subtotal_specs(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
         validations: registry.validations(&active.name),
+        ontology: registry
+            .ontology(&active.name)
+            .map(|o| o.merged_with_base())
+            .unwrap_or_else(cfdl_pack::PackOntology::language_base),
     }))
 }
 
@@ -3579,6 +3830,10 @@ mod pack_validation_parity_tests {
             subtotal_specs: registry.subtotal_specs(pack),
             lowering_rules: registry.lowering_rules(pack),
             validations: registry.validations(pack),
+            ontology: registry
+                .ontology(pack)
+                .map(|o| o.merged_with_base())
+                .unwrap_or_else(cfdl_pack::PackOntology::language_base),
         }
     }
 

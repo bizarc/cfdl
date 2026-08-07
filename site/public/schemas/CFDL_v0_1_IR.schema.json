@@ -335,7 +335,7 @@
         },
         "attrs": {
           "type": "object",
-          "description": "Ontology-validated when pack is present; otherwise minimally typed",
+          "description": "Attribute values declared in the entity's block, checked against the declared fields of its ontology type. Literals, not expressions: an attribute describes the thing rather than computing anything.",
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
@@ -346,6 +346,14 @@
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
+        },
+        "parent": {
+          "type": "string",
+          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behaviour with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
+        },
+        "initial_state": {
+          "type": "string",
+          "description": "The lifecycle state this entity starts in, overriding its type's declared initial. Absent when the type declares no lifecycle. An entity WITH a lifecycle is always in exactly one of its states — there is no null state and no undeclared state, which is what makes a misspelled status a compile error rather than a wrong answer."
         }
       }
     },

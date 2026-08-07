@@ -706,6 +706,10 @@ mod tests {
                     statement: Stmt::Entity(cfdl_parser::EntityStmt {
                         namespace: "legal".to_string(),
                         name: "borrower".to_string(),
+                        type_name: None,
+                        attributes: vec![],
+                        parent: None,
+                        initial_state: None,
                         span: span(),
                     }),
                 },
@@ -746,6 +750,10 @@ mod tests {
                     statement: Stmt::Entity(cfdl_parser::EntityStmt {
                         namespace: "legal".to_string(),
                         name: "borrower".to_string(),
+                        type_name: None,
+                        attributes: vec![],
+                        parent: None,
+                        initial_state: None,
                         span: span(),
                     }),
                 },
