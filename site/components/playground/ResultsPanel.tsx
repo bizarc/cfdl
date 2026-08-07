@@ -1,19 +1,34 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AlertCircle, AlertTriangle, Info } from "lucide-react";
-import { LineChart, type LineSeries } from "./charts/LineChart";
+import { Fragment, useMemo, useState } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  Copy,
+  Download,
+  Info,
+  Maximize2,
+} from "lucide-react";
 import { CashFlowChart, type CashFlowBand } from "./charts/CashFlowChart";
 import { Tabs } from "@/components/ds/Tabs";
 import { Distribution } from "./charts/Distribution";
+import { ExpandOverlay } from "./ExpandOverlay";
+import { JsonTree } from "./JsonTree";
 import { cn } from "@/lib/cn";
+import { copyText, downloadText, toDelimited, type Cell } from "@/lib/playground/export";
 import {
+  currencyOf,
   formatValue,
   histogram,
   percentilesFromTrials,
   periodLabels,
   toNumber,
+  type MoneyOrNumber,
   type Results,
+  type Statement,
+  type StatementRow,
 } from "@/lib/playground/results";
 import type { Diagnostic } from "@/lib/playground/protocol";
 
@@ -27,6 +42,15 @@ const TABS = [
   "JSON",
 ] as const;
 type Tab = (typeof TABS)[number];
+
+/**
+ * Tabs that scroll their own body.
+ *
+ * A sticky table header only sticks against the scroll container it lives in,
+ * so a tab with a header worth pinning has to own its scrolling — the panel
+ * cannot scroll on its behalf.
+ */
+const SELF_SCROLL: readonly Tab[] = ["Statement", "Cash flows", "JSON"];
 
 export function ResultsPanel({
   results,
@@ -44,6 +68,26 @@ export function ResultsPanel({
   modelDeclaredPack?: string;
 }) {
   const [tab, setTab] = useState<Tab>("Metrics");
+  const [expanded, setExpanded] = useState(false);
+
+  // Per-tab view state lives here rather than in the tab components, so that
+  // expanding to full screen keeps the collapsed sections, the chosen column
+  // grain and the series selection. Moving a subtree to a different parent
+  // remounts it, and remounting would silently reset all of that.
+  const [stmt, setStmt] = useState<StatementView>({
+    id: null,
+    grain: null,
+    collapsed: new Set<number>(),
+    drill: null,
+  });
+  const [cash, setCash] = useState<CashView>({
+    annual: false,
+    cumulative: false,
+    series: null,
+    showAll: false,
+  });
+  const [mcMetric, setMcMetric] = useState<string | null>(null);
+  const [jsonRaw, setJsonRaw] = useState(false);
 
   const counts = {
     diagnostics: diagnostics.length,
@@ -51,55 +95,177 @@ export function ResultsPanel({
     mc: results?.monte_carlo?.status === "ok" ? results.monte_carlo.trials ?? 0 : 0,
   };
 
+  const selfScroll = SELF_SCROLL.includes(tab);
+
+  const body = engineError ? (
+    <Empty tone="err">{engineError}</Empty>
+  ) : tab === "Metrics" ? (
+    <MetricsTab
+      results={results}
+      selectedPack={selectedPack}
+      modelDeclaredPack={modelDeclaredPack}
+    />
+  ) : tab === "Statement" ? (
+    <StatementTab results={results} view={stmt} onView={setStmt} />
+  ) : tab === "Cash flows" ? (
+    <CashFlowsTab results={results} view={cash} onView={setCash} />
+  ) : tab === "Scenarios" ? (
+    <ScenariosTab results={results} />
+  ) : tab === "Monte Carlo" ? (
+    <MonteCarloTab results={results} metric={mcMetric} onMetric={setMcMetric} />
+  ) : tab === "Diagnostics" ? (
+    <DiagnosticsTab diagnostics={diagnostics} onJumpTo={onJumpTo} />
+  ) : (
+    <JsonTab results={results} raw={jsonRaw} onRaw={setJsonRaw} />
+  );
+
+  const bodyClass = selfScroll ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-auto p-4";
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <Tabs
-        className="shrink-0"
-        value={tab}
-        onValueChange={(id) => setTab(id as Tab)}
-        items={TABS.map((t) => ({
-          id: t,
-          label: t,
-          badge:
-            t === "Diagnostics"
-              ? counts.diagnostics
-              : t === "Scenarios"
-                ? counts.scenarios
-                : undefined,
-          badgeTone: t === "Diagnostics" ? ("err" as const) : ("neutral" as const),
-        }))}
-      />
-
-      <div className="min-h-0 flex-1 overflow-auto p-4">
-        {engineError ? (
-          <Empty tone="err">{engineError}</Empty>
-        ) : tab === "Metrics" ? (
-          <MetricsTab
-            results={results}
-            selectedPack={selectedPack}
-            modelDeclaredPack={modelDeclaredPack}
+      <div className="flex shrink-0 items-stretch border-b border-subtle bg-surface-sunken">
+        {/* The bar has always scrolled, but with nothing to say so — JSON sat
+            clipped off the right edge at 1280 and read as missing. The fade is
+            the affordance; the action buttons are pulled out of the scroll
+            area so they cannot be scrolled away from. */}
+        <div className="relative min-w-0 flex-1">
+          <Tabs
+            className="border-b-0 bg-transparent"
+            value={tab}
+            onValueChange={(id) => setTab(id as Tab)}
+            items={TABS.map((t) => ({
+              id: t,
+              label: t,
+              badge:
+                t === "Diagnostics"
+                  ? counts.diagnostics
+                  : t === "Scenarios"
+                    ? counts.scenarios
+                    : undefined,
+              badgeTone: t === "Diagnostics" ? ("err" as const) : ("neutral" as const),
+            }))}
           />
-        ) : tab === "Statement" ? (
-          <StatementTab results={results} />
-        ) : tab === "Cash flows" ? (
-          <CashFlowsTab results={results} />
-        ) : tab === "Scenarios" ? (
-          <ScenariosTab results={results} />
-        ) : tab === "Monte Carlo" ? (
-          <MonteCarloTab results={results} />
-        ) : tab === "Diagnostics" ? (
-          <DiagnosticsTab diagnostics={diagnostics} onJumpTo={onJumpTo} />
-        ) : (
-          <JsonTab results={results} />
-        )}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface-sunken to-transparent" />
+        </div>
+
+        <div className="flex shrink-0 items-center border-l border-subtle px-1.5">
+          <ToolButton
+            label="Expand"
+            title="Expand to full screen"
+            onClick={() => setExpanded(true)}
+            icon={<Maximize2 className="size-3.5" />}
+          />
+        </div>
       </div>
+
+      {expanded ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center p-4">
+          <p className="text-sm text-muted">{tab} is open in the expanded view.</p>
+        </div>
+      ) : (
+        <div className={bodyClass}>{body}</div>
+      )}
+
+      <ExpandOverlay open={expanded} onOpenChange={setExpanded} title={`${tab} · CFDL playground`}>
+        <div className={cn("flex h-full min-h-0 flex-col", !selfScroll && "overflow-auto p-4")}>
+          {body}
+        </div>
+      </ExpandOverlay>
     </div>
   );
 }
 
 function Empty({ children, tone }: { children: React.ReactNode; tone?: "err" }) {
+  return <p className={cn("text-sm", tone === "err" ? "text-err" : "text-muted")}>{children}</p>;
+}
+
+/** Empty state for a tab that owns its own scrolling, and so its own padding. */
+function PaddedEmpty({ children }: { children: React.ReactNode }) {
   return (
-    <p className={cn("text-sm", tone === "err" ? "text-err" : "text-muted")}>{children}</p>
+    <div className="p-4">
+      <Empty>{children}</Empty>
+    </div>
+  );
+}
+
+/** Small icon/label button used across the tab toolbars. */
+function ToolButton({
+  label,
+  title,
+  onClick,
+  icon,
+  showLabel = false,
+}: {
+  label: string;
+  title?: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+  showLabel?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title ?? label}
+      aria-label={label}
+      className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted transition-colors hover:bg-surface-raised hover:text-primary"
+    >
+      {icon}
+      {showLabel ? label : null}
+    </button>
+  );
+}
+
+/** A copy button that reports success rather than assuming it. */
+function CopyButton({ text, label = "Copy" }: { text: () => string; label?: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <ToolButton
+      label={label}
+      showLabel
+      icon={done ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      onClick={async () => {
+        if (await copyText(text())) {
+          setDone(true);
+          setTimeout(() => setDone(false), 1500);
+        }
+      }}
+    />
+  );
+}
+
+/** Segmented control — two or three mutually exclusive view options. */
+function Segmented<T extends string | boolean>({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: [string, T][];
+  label?: string;
+}) {
+  return (
+    <div className="flex items-center gap-1" role="group" aria-label={label}>
+      {label ? <span className="mr-0.5 text-[11px] text-muted">{label}</span> : null}
+      {options.map(([text, v]) => (
+        <button
+          key={String(v)}
+          type="button"
+          onClick={() => onChange(v)}
+          aria-pressed={value === v}
+          className={cn(
+            "rounded-md px-2.5 py-1 text-xs transition-colors",
+            value === v
+              ? "bg-accent-soft text-accent-text"
+              : "text-muted hover:text-secondary",
+          )}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -145,8 +311,7 @@ function MetricsTab({
 
   // A pack the model doesn't declare produces metrics that match no streams —
   // a column of 0.00 that reads as a broken calculation. Say what happened.
-  const packMismatch =
-    Boolean(selectedPack) && selectedPack !== modelDeclaredPack;
+  const packMismatch = Boolean(selectedPack) && selectedPack !== modelDeclaredPack;
 
   return (
     <div className="space-y-6">
@@ -225,19 +390,30 @@ function MetricTable({
   );
 }
 
-function CashFlowsTab({ results }: { results: Results | null }) {
-  const [annual, setAnnual] = useState(false);
-  // Grain and accumulation are independent questions, so they are two controls
-  // rather than three buttons in one row.
-  //
-  // CUMULATIVE EXISTS BECAUSE OF SCALE. A reversion is routinely 70x a month's
-  // rent, and on a per-period axis that one bar compresses every operating
-  // period into the zero line. No drawing fixes that — the range is real. What
-  // changes is the question: accumulated, the same spike is the moment the
-  // curve crosses back over, and the trough before it is the capital at risk.
-  // It is the J-curve every RE and PE reader already knows how to read, and it
-  // makes `model.payback_years` visible rather than merely reported.
-  const [cumulative, setCumulative] = useState(false);
+// ---------------------------------------------------------------------------
+// Cash flows
+// ---------------------------------------------------------------------------
+
+interface CashView {
+  annual: boolean;
+  cumulative: boolean;
+  /** null means "the six largest movers, chosen for you". */
+  series: string[] | null;
+  showAll: boolean;
+}
+
+const CASH_ROWS_PREVIEW = 60;
+
+function CashFlowsTab({
+  results,
+  view,
+  onView,
+}: {
+  results: Results | null;
+  view: CashView;
+  onView: (v: CashView) => void;
+}) {
+  const { annual, cumulative, series, showAll } = view;
   const source = annual
     ? results?.deterministic?.annual_rollup?.series
     : results?.deterministic?.series;
@@ -253,18 +429,13 @@ function CashFlowsTab({ results }: { results: Results | null }) {
     // zero. A ratio carries no currency, which is exactly how it is detected
     // here — a money value is `{ amount, currency }`, a ratio is a bare number.
     //
-    // FOLDS BEFORE STREAMS. The picker took the first six names
-    // alphabetically, and `domain` sorts before `stream` — so the moment
-    // subtotals were published, every actual stream was evicted from the
-    // default chart by aggregates OF those streams. Charting both double-counts
-    // the same cash anyway. Streams rank first now; folds fill the remainder.
+    // FOLDS ARE NOT COMPONENTS. `domain.*` are aggregates OF the streams, so
+    // stacking both draws the same cash twice. They are excluded from the bars
+    // outright rather than ranked below them.
     const isMoney = (name: string) =>
       source[name].values.some((v) => v !== null && typeof v === "object");
     const vals = (name: string) => source[name].values.map((v) => toNumber(v) ?? 0);
 
-    // FOLDS ARE NOT COMPONENTS. `domain.*` are aggregates OF the streams, so
-    // stacking both draws the same cash twice. They are excluded from the bars
-    // outright rather than ranked below them.
     const componentNames = Object.keys(source).filter(
       (k) => isMoney(k) && k !== "model.net_cash_flow" && !k.startsWith("domain."),
     );
@@ -272,10 +443,17 @@ function CashFlowsTab({ results }: { results: Results | null }) {
 
     // Ranked by how much cash each moves, not by name. Alphabetical order put
     // whatever happened to sort first in front of whatever mattered.
-    const weight = (name: string) =>
-      vals(name).reduce((acc, v) => acc + Math.abs(v), 0);
+    const weight = (name: string) => vals(name).reduce((acc, v) => acc + Math.abs(v), 0);
     const ranked = [...componentNames].sort((a, b) => weight(b) - weight(a));
-    const shown = ranked.slice(0, 6);
+
+    // Auto mode keeps the old top-six behaviour and folds the tail into one
+    // band so the stack still sums to the net line. An explicit selection is
+    // taken literally — a reader who picked three streams means three.
+    const auto = series === null;
+    const shown = auto ? ranked.slice(0, 6) : ranked.filter((n) => series.includes(n));
+    if (shown.length === 0) {
+      return { bands: [], net: undefined, labels: [], hidden: 0, ranked, auto, empty: true };
+    }
 
     const bands: CashFlowBand[] = shown.map((name, i) => ({
       name: name.replace(/^(stream|option)\./, ""),
@@ -283,10 +461,7 @@ function CashFlowsTab({ results }: { results: Results | null }) {
       values: vals(name),
     }));
 
-    // Everything past the sixth is summed into one band rather than dropped, so
-    // the stack still sums to the net line and the chart cannot quietly
-    // misrepresent the period.
-    const remainder = ranked.slice(6);
+    const remainder = auto ? ranked.slice(6) : [];
     if (remainder.length > 0) {
       const n = Math.max(...shown.map((s) => source[s].values.length));
       const acc = new Array(n).fill(0);
@@ -298,6 +473,8 @@ function CashFlowsTab({ results }: { results: Results | null }) {
       bands.push({ name: `${remainder.length} others`, colorIndex: 6, values: acc });
     }
 
+    // The net line is the reference every band is read against, so it stays
+    // regardless of which components are selected.
     let net = source["model.net_cash_flow"] ? vals("model.net_cash_flow") : undefined;
 
     if (cumulative) {
@@ -310,125 +487,256 @@ function CashFlowsTab({ results }: { results: Results | null }) {
     }
 
     const labels = periodLabels(source[shown[0]].index);
-    return { bands, net, labels, hidden: remainder.length, names: ranked, cumulative };
-  }, [source, cumulative]);
+    return { bands, net, labels, hidden: remainder.length, ranked, auto, empty: false };
+  }, [source, cumulative, series]);
 
-  if (!chart) return <Empty>Run a model to see cash flows.</Empty>;
+  if (!chart) return <PaddedEmpty>Run a model to see cash flows.</PaddedEmpty>;
 
   const hasAnnual = Boolean(results?.deterministic?.annual_rollup?.series);
+  const visibleRows = showAll ? chart.labels.length : Math.min(CASH_ROWS_PREVIEW, chart.labels.length);
+
+  const csv = () => {
+    const rows: Cell[][] = [
+      ["Period", ...chart.bands.map((b) => b.name), ...(chart.net ? ["net"] : [])],
+    ];
+    chart.labels.forEach((label, i) => {
+      rows.push([
+        label,
+        ...chart.bands.map((b) => b.values[i] ?? ""),
+        ...(chart.net ? [chart.net[i] ?? ""] : []),
+      ]);
+    });
+    return rows;
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        {hasAnnual && (
-          <div className="flex gap-1">
-            {[
-              ["Periodic", false],
-              ["Annual", true],
-            ].map(([label, value]) => (
-              <button
-                key={String(label)}
-                type="button"
-                onClick={() => setAnnual(value as boolean)}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-xs transition-colors",
-                  annual === value
-                    ? "bg-accent-soft text-accent-text"
-                    : "text-muted hover:text-secondary",
-                )}
-              >
-                {label}
-              </button>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 space-y-3 p-4 pb-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {hasAnnual && (
+            <Segmented
+              label="Grain"
+              value={annual}
+              onChange={(v) => onView({ ...view, annual: v })}
+              options={[
+                ["Periodic", false],
+                ["Annual", true],
+              ]}
+            />
+          )}
+          {/* Grain and accumulation are independent questions, so they are two
+              controls rather than three buttons in one row.
+
+              CUMULATIVE EXISTS BECAUSE OF SCALE. A reversion is routinely 70x a
+              month's rent, and on a per-period axis that one bar compresses
+              every operating period into the zero line. Accumulated, the same
+              spike is the moment the curve crosses back over, and the trough
+              before it is the capital at risk — the J-curve every RE and PE
+              reader already knows how to read. */}
+          <Segmented
+            label="Basis"
+            value={cumulative}
+            onChange={(v) => onView({ ...view, cumulative: v })}
+            options={[
+              ["Per period", false],
+              ["Cumulative", true],
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-1">
+            <CopyButton label="Copy TSV" text={() => toDelimited(csv(), "\t")} />
+            <ToolButton
+              label="CSV"
+              title="Download cash flows as CSV"
+              showLabel
+              icon={<Download className="size-3.5" />}
+              onClick={() =>
+                downloadText("cfdl-cash-flows.csv", toDelimited(csv(), ","), "text/csv")
+              }
+            />
+          </div>
+        </div>
+
+        <SeriesPicker
+          ranked={chart.ranked}
+          selected={series}
+          onChange={(next) => onView({ ...view, series: next })}
+        />
+      </div>
+
+      {chart.empty ? (
+        <PaddedEmpty>No series selected. Pick at least one above.</PaddedEmpty>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
+          <CashFlowChart bands={chart.bands} net={chart.net} labels={chart.labels} />
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+            {chart.net && (
+              <span className="text-secondary">
+                <span className="mr-1 inline-block h-px w-3 align-middle bg-current" />
+                net cash flow
+              </span>
+            )}
+            {chart.bands.map((b) => (
+              <span key={b.name} className="text-muted">
+                <span
+                  className="mr-1 inline-block size-1.5 rounded-full align-middle"
+                  style={{ background: `var(--cfdl-chart-series-${b.colorIndex})` }}
+                />
+                {b.name}
+              </span>
             ))}
           </div>
+          {chart.hidden > 0 ? (
+            <p className="mt-2 text-xs text-muted">
+              The six largest movers are shown separately; the remaining {chart.hidden} are
+              summed into one band, so the bars still total the net line. Choose them
+              individually above, or read every series in the JSON tab.
+            </p>
+          ) : null}
+
+          <div className="mt-4 overflow-x-auto rounded-lg border border-default">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-surface-sunken">
+                  <th className="sticky left-0 z-30 whitespace-nowrap border-b border-default bg-surface-sunken px-3 py-2 text-left font-semibold text-primary">
+                    Period
+                  </th>
+                  {chart.bands.map((b) => (
+                    <th
+                      key={b.name}
+                      className="whitespace-nowrap border-b border-default px-3 py-2 text-right font-mono font-medium text-secondary"
+                    >
+                      {b.name}
+                    </th>
+                  ))}
+                  {chart.net && (
+                    <th className="whitespace-nowrap border-b border-default px-3 py-2 text-right font-mono font-semibold text-primary">
+                      net
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {chart.labels.slice(0, visibleRows).map((label, i) => (
+                  <tr key={label} className="group border-b border-subtle last:border-0 hover:bg-surface-raised">
+                    <td className="sticky left-0 z-10 whitespace-nowrap bg-surface-page px-3 py-1.5 font-mono text-muted group-hover:bg-surface-raised">
+                      {label}
+                    </td>
+                    {chart.bands.map((b) => (
+                      <td
+                        key={b.name}
+                        className="px-3 py-1.5 text-right font-mono tabular-nums text-secondary"
+                      >
+                        {b.values[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
+                      </td>
+                    ))}
+                    {chart.net && (
+                      <td className="px-3 py-1.5 text-right font-mono font-medium tabular-nums text-primary">
+                        {chart.net[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {chart.labels.length > CASH_ROWS_PREVIEW ? (
+            <div className="mt-2 flex items-center gap-3 text-xs text-muted">
+              <span>
+                Showing {visibleRows} of {chart.labels.length} periods.
+              </span>
+              <button
+                type="button"
+                onClick={() => onView({ ...view, showAll: !showAll })}
+                className="text-accent-text hover:underline"
+              >
+                {showAll ? `Show first ${CASH_ROWS_PREVIEW}` : "Show all periods"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Which series to draw.
+ *
+ * The top-six-by-magnitude default is a good guess and a bad rule: a reader
+ * checking one small stream against their own model had no way to isolate it,
+ * because it was inside the "N others" band by construction.
+ */
+function SeriesPicker({
+  ranked,
+  selected,
+  onChange,
+}: {
+  ranked: string[];
+  selected: string[] | null;
+  onChange: (next: string[] | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const isOn = (name: string) =>
+    selected === null ? ranked.indexOf(name) < 6 : selected.includes(name);
+
+  const toggle = (name: string) => {
+    const base = selected ?? ranked.slice(0, 6);
+    onChange(base.includes(name) ? base.filter((n) => n !== name) : [...base, name]);
+  };
+
+  return (
+    <div className="rounded-lg border border-default">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left"
+      >
+        <ChevronRight className={cn("size-3 text-muted transition-transform", open && "rotate-90")} />
+        <span className="text-xs font-medium text-secondary">Series</span>
+        <span className="text-[11px] text-muted">
+          {selected === null
+            ? `top ${Math.min(6, ranked.length)} of ${ranked.length}, chosen automatically`
+            : `${selected.length} of ${ranked.length} selected`}
+        </span>
+        {selected !== null && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.stopPropagation();
+                onChange(null);
+              }
+            }}
+            className="ml-auto text-[11px] text-accent-text hover:underline"
+          >
+            Reset
+          </span>
         )}
-        <div className="flex gap-1">
-          {[
-            ["Per period", false],
-            ["Cumulative", true],
-          ].map(([label, value]) => (
-            <button
-              key={String(label)}
-              type="button"
-              onClick={() => setCumulative(value as boolean)}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs transition-colors",
-                cumulative === value
-                  ? "bg-accent-soft text-accent-text"
-                  : "text-muted hover:text-secondary",
-              )}
-            >
-              {label}
-            </button>
+      </button>
+      {open && (
+        <div className="@container/picker grid gap-x-4 gap-y-1 border-t border-subtle p-3 @xl/picker:grid-cols-2 @4xl/picker:grid-cols-3">
+          {ranked.map((name) => (
+            <label key={name} className="flex min-w-0 items-center gap-2 text-[11px]">
+              <input
+                type="checkbox"
+                checked={isOn(name)}
+                onChange={() => toggle(name)}
+                className="size-3 shrink-0 accent-[var(--cfdl-accent-solid)]"
+              />
+              <span className="truncate font-mono text-secondary" title={name}>
+                {name}
+              </span>
+            </label>
           ))}
         </div>
-      </div>
-
-      <CashFlowChart bands={chart.bands} net={chart.net} labels={chart.labels} />
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-        {chart.net && (
-          <span className="text-secondary">
-            <span className="mr-1 inline-block h-px w-3 align-middle bg-current" />
-            net cash flow
-          </span>
-        )}
-        {chart.bands.map((b) => (
-          <span key={b.name} className="text-muted">
-            <span
-              className="mr-1 inline-block size-1.5 rounded-full align-middle"
-              style={{ background: `var(--cfdl-chart-series-${b.colorIndex})` }}
-            />
-            {b.name}
-          </span>
-        ))}
-      </div>
-      {chart.hidden > 0 ? (
-        <p className="text-xs text-muted">
-          The six largest movers are shown separately; the remaining {chart.hidden} are
-          summed into one band, so the bars still total the net line. Every series is in
-          the JSON tab.
-        </p>
-      ) : null}
-
-      <div className="overflow-x-auto rounded-lg border border-default">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-default bg-surface-sunken">
-              <th className="px-3 py-2 text-left font-semibold text-primary">Period</th>
-              {chart.bands.map((b) => (
-                <th key={b.name} className="px-3 py-2 text-right font-mono font-medium text-secondary">
-                  {b.name}
-                </th>
-              ))}
-              {chart.net && (
-                <th className="px-3 py-2 text-right font-mono font-semibold text-primary">
-                  net
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {chart.labels.slice(0, 60).map((label, i) => (
-              <tr key={label} className="border-b border-subtle last:border-0">
-                <td className="px-3 py-1.5 font-mono text-muted">{label}</td>
-                {chart.bands.map((b) => (
-                  <td key={b.name} className="px-3 py-1.5 text-right font-mono tabular-nums text-secondary">
-                    {b.values[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
-                  </td>
-                ))}
-                {chart.net && (
-                  <td className="px-3 py-1.5 text-right font-mono font-medium tabular-nums text-primary">
-                    {chart.net[i]?.toLocaleString("en-US", { maximumFractionDigits: 0 }) ?? "—"}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {chart.labels.length > 60 ? (
-        <p className="text-xs text-muted">First 60 periods shown.</p>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -478,9 +786,16 @@ function ScenariosTab({ results }: { results: Results | null }) {
   );
 }
 
-function MonteCarloTab({ results }: { results: Results | null }) {
+function MonteCarloTab({
+  results,
+  metric,
+  onMetric,
+}: {
+  results: Results | null;
+  metric: string | null;
+  onMetric: (m: string) => void;
+}) {
   const mc = results?.monte_carlo;
-  const [metric, setMetric] = useState<string | null>(null);
 
   const metricNames = useMemo(() => Object.keys(mc?.metrics ?? {}).sort(), [mc]);
   const active = metric ?? (metricNames.includes("model.npv") ? "model.npv" : metricNames[0]);
@@ -518,7 +833,7 @@ function MonteCarloTab({ results }: { results: Results | null }) {
         {metricNames.length > 1 ? (
           <select
             value={active}
-            onChange={(e) => setMetric(e.target.value)}
+            onChange={(e) => onMetric(e.target.value)}
             aria-label="Metric"
             className="rounded-md border border-default bg-surface-raised px-2 py-1 font-mono text-xs text-primary"
           >
@@ -620,20 +935,148 @@ function DiagnosticsTab({
   );
 }
 
-function JsonTab({ results }: { results: Results | null }) {
-  if (!results) return <Empty>Run a model to see the raw Results JSON.</Empty>;
+// ---------------------------------------------------------------------------
+// JSON
+// ---------------------------------------------------------------------------
+
+/**
+ * The raw Results document, and the provenance that goes with it.
+ *
+ * The identifying facts — schema version, engine build, model hash, seed —
+ * were one line of 11px muted text above a wall of JSON, which is an odd place
+ * to put the values that decide whether two runs are the same run. They are
+ * the header now, and the hash is selectable and copyable in full rather than
+ * elided to twelve characters.
+ */
+function JsonTab({
+  results,
+  raw,
+  onRaw,
+}: {
+  results: Results | null;
+  raw: boolean;
+  onRaw: (v: boolean) => void;
+}) {
+  // Stringifying a 500-trial document on every render was megabytes of work
+  // per keystroke elsewhere in the panel.
+  const text = useMemo(() => (results ? JSON.stringify(results, null, 2) : ""), [results]);
+
+  if (!results) return <PaddedEmpty>Run a model to see the raw Results JSON.</PaddedEmpty>;
+
+  const hash = results.model_hash ?? "";
+  const filename = `cfdl-results${hash ? `-${hash.slice(0, 8)}` : ""}.json`;
+  const mc = results.monte_carlo;
+
+  const facts: [string, string | undefined][] = [
+    ["Results schema", results.results_version],
+    ["Engine", [results.engine?.name, results.engine?.version].filter(Boolean).join(" ") || undefined],
+    ["Pack", results.statements?.pack],
+    ["Deterministic", results.deterministic?.status],
+    ["Scenarios", results.scenarios?.summaries?.length?.toString()],
+    [
+      "Monte Carlo",
+      mc?.status === "ok" ? `${mc.trials?.toLocaleString()} trials · seed ${mc.seed}` : mc?.status,
+    ],
+  ];
+
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted">
-        Results schema {results.results_version} · engine {results.engine?.version} · model hash{" "}
-        <code className="font-mono">{results.model_hash?.slice(0, 12)}…</code>
-      </p>
-      <pre className="overflow-x-auto rounded-lg border border-default bg-surface-code p-3 font-mono text-[11px] leading-relaxed text-secondary">
-        {JSON.stringify(results, null, 2)}
-      </pre>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 space-y-3 p-4 pb-3">
+        {/* Container queries, not viewport ones: this card is inside a pane
+            whose width the reader controls with the splitter, and a three-column
+            grid keyed off a 1280px viewport truncated "cfdl-engine 0.1.0" to
+            "cfdl-engi…" in a 476px pane. */}
+        <div className="@container rounded-lg border border-default bg-surface-raised p-3">
+          <dl className="grid gap-x-6 gap-y-2 @md:grid-cols-2 @3xl:grid-cols-3">
+            {facts
+              .filter(([, v]) => v)
+              .map(([k, v]) => (
+                <div key={k} className="min-w-0">
+                  <dt className="text-[10px] uppercase tracking-wider text-muted">{k}</dt>
+                  <dd className="truncate font-mono text-xs text-primary" title={v}>
+                    {v}
+                  </dd>
+                </div>
+              ))}
+          </dl>
+          {hash ? (
+            <div className="mt-3 flex items-center gap-2 border-t border-subtle pt-2.5">
+              <span className="shrink-0 text-[11px] uppercase tracking-wider text-muted">
+                Model hash
+              </span>
+              <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-secondary" title={hash}>
+                {hash}
+              </code>
+              <CopyButton label="Copy hash" text={() => hash} />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Segmented
+            value={raw}
+            onChange={onRaw}
+            label="View"
+            options={[
+              ["Tree", false],
+              ["Raw", true],
+            ]}
+          />
+          <div className="ml-auto flex items-center gap-1">
+            <CopyButton label="Copy JSON" text={() => text} />
+            <ToolButton
+              label="Download"
+              title={`Download ${filename}`}
+              showLabel
+              icon={<Download className="size-3.5" />}
+              onClick={() => downloadText(filename, text, "application/json")}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto px-4 pb-4">
+        {raw ? (
+          <pre className="overflow-x-auto rounded-lg border border-default bg-surface-code p-3 font-mono text-[11px] leading-relaxed text-secondary">
+            {text}
+          </pre>
+        ) : (
+          <div className="rounded-lg border border-default bg-surface-code p-3">
+            <JsonTree value={results} name="results" defaultOpenDepth={1} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Statement
+// ---------------------------------------------------------------------------
+
+type Grain = "native" | "quarter" | "year";
+
+interface StatementView {
+  id: string | null;
+  /** null = "not chosen yet", so the default can depend on the statement. */
+  grain: Grain | null;
+  collapsed: Set<number>;
+  drill: number | null;
+}
+
+/**
+ * The label column, sized against the PANE rather than the viewport.
+ *
+ * A fixed 16rem is right when the statement is expanded to full screen and
+ * absurd in a half-width pane, where it spends more than half the available
+ * width on row labels that are then scrolled away from their numbers. These
+ * are container queries, so the same table narrows its labels in the pane and
+ * widens them in the overlay with no state to keep in sync.
+ */
+const LABEL_COL =
+  "w-40 min-w-40 max-w-40 @2xl:w-56 @2xl:min-w-56 @2xl:max-w-56 @4xl:w-72 @4xl:min-w-72 @4xl:max-w-72";
+/** Must track LABEL_COL exactly — it is the Total column's sticky offset. */
+const TOTAL_LEFT = "left-40 @2xl:left-56 @4xl:left-72";
 
 /**
  * A pack's declared statement, rendered as a pro forma.
@@ -646,178 +1089,347 @@ function JsonTab({ results }: { results: Results | null }) {
  * Column labels come from `statement.grain.labels` rather than `periodLabels`.
  * They have to: an annual statement over a monthly model has ten columns where
  * the model has 120, and a SeriesIndex cannot say which ten.
+ *
+ * COLUMNS ARE ROLLED UP HERE, NOT IN THE ENGINE. A monthly statement over a
+ * six-year hold is 72 period columns — about 6,500px of table, of which a
+ * half-width pane shows one. Summing them into years is not a different
+ * statement, it is the same statement read at the grain a human asks for
+ * first; the engine's monthly numbers are one click away and the export
+ * follows whatever is on screen.
  */
-function StatementTab({ results }: { results: Results | null }) {
+function StatementTab({
+  results,
+  view,
+  onView,
+}: {
+  results: Results | null;
+  view: StatementView;
+  onView: (v: StatementView) => void;
+}) {
   const statements = results?.statements?.statements;
-  const [selected, setSelected] = useState<string | null>(null);
-  const [drill, setDrill] = useState<number | null>(null);
 
   const active = useMemo(() => {
     if (!statements?.length) return null;
     return (
-      statements.find((s) => s.id === selected) ??
+      statements.find((s) => s.id === view.id) ??
       statements.find((s) => s.default) ??
       statements[0]
     );
-  }, [statements, selected]);
+  }, [statements, view.id]);
+
+  // Memoised only so the `?? []` fallback doesn't hand `groupColumns` a fresh
+  // array identity on every render.
+  const labels = useMemo(() => active?.grain?.labels ?? [], [active]);
+  const calendar = active?.grain?.calendar ?? "monthly";
+  // Twenty-four columns is roughly where a half-width pane stops showing the
+  // shape of the deal and starts showing a scrollbar.
+  const grain: Grain = view.grain ?? (labels.length > 24 && canRollUp(calendar) ? "year" : "native");
+
+  const cols = useMemo(
+    () => groupColumns(labels, calendar, grain),
+    [labels, calendar, grain],
+  );
+
+  const groups = useMemo(
+    () => (active ? subtotalGroups(active.rows) : new Map<number, [number, number]>()),
+    [active],
+  );
+  const hidden = useMemo(() => hiddenRows(groups, view.collapsed), [groups, view.collapsed]);
 
   if (!statements?.length) {
     return (
-      <Empty>
-        Run a model with a pack that declares statements to see a pro forma.
-      </Empty>
+      <PaddedEmpty>Run a model with a pack that declares statements to see a pro forma.</PaddedEmpty>
     );
   }
-  if (!active) return <Empty>No statement to show.</Empty>;
+  if (!active) return <PaddedEmpty>No statement to show.</PaddedEmpty>;
 
-  const labels = active.grain?.labels ?? [];
   const recon = active.reconciliation;
   // Published always and asserted rather than corrected: if the rows do not add
   // up to the model's cash, the number saying so is on screen.
   const residual = recon?.residual ?? 0;
   const reconciles = Math.abs(residual) < 0.01;
+  const currency = statementCurrency(active);
+
+  const table = () => {
+    const rows: Cell[][] = [["Line", "Total", ...cols.map((c) => c.label)]];
+    for (const row of active.rows) {
+      if (row.kind === "spacer") continue;
+      const sign = row.display_sign ?? 1;
+      rows.push([
+        `${"  ".repeat(row.depth)}${row.label ?? ""}`,
+        row.total === undefined ? "" : row.total * sign,
+        ...cols.map((c) => {
+          const v = aggregate(row, c.idx);
+          return v === undefined ? "" : row.kind === "ratio" ? v : v * sign;
+        }),
+      ]);
+    }
+    return rows;
+  };
 
   return (
-    <div className="space-y-4">
-      {statements.length > 1 && (
-        <div className="flex flex-wrap gap-1">
-          {statements.map((s) => (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 space-y-3 p-4 pb-3">
+        {statements.length > 1 && (
+          <div className="flex flex-wrap gap-1">
+            {statements.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() =>
+                  onView({ ...view, id: s.id, drill: null, collapsed: new Set(), grain: null })
+                }
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs transition-colors",
+                  s.id === active.id
+                    ? "bg-accent-soft text-accent-text"
+                    : "text-muted hover:text-secondary",
+                )}
+              >
+                {s.label}
+                <span className="ml-1.5 opacity-60">{s.grain?.calendar}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {canRollUp(calendar) && (
+            <Segmented<Grain>
+              label="Columns"
+              value={grain}
+              onChange={(g) => onView({ ...view, grain: g })}
+              options={
+                calendar === "monthly"
+                  ? [
+                      ["Monthly", "native"],
+                      ["Quarterly", "quarter"],
+                      ["Annual", "year"],
+                    ]
+                  : [
+                      ["Quarterly", "native"],
+                      ["Annual", "year"],
+                    ]
+              }
+            />
+          )}
+
+          {groups.size > 0 && (
             <button
-              key={s.id}
               type="button"
-              onClick={() => {
-                setSelected(s.id);
-                setDrill(null);
-              }}
-              className={cn(
-                "rounded-md px-2.5 py-1 text-xs transition-colors",
-                s.id === active.id
-                  ? "bg-accent-soft text-accent-text"
-                  : "text-muted hover:text-secondary",
-              )}
+              onClick={() =>
+                onView({
+                  ...view,
+                  collapsed:
+                    view.collapsed.size > 0 ? new Set() : new Set(groups.keys()),
+                })
+              }
+              className="rounded-md px-2 py-1 text-xs text-muted transition-colors hover:bg-surface-raised hover:text-primary"
             >
-              {s.label}
-              <span className="ml-1.5 opacity-60">{s.grain?.calendar}</span>
+              {view.collapsed.size > 0 ? "Expand all" : "Collapse detail"}
             </button>
-          ))}
-        </div>
-      )}
+          )}
 
-      {active.diagnostics?.map((d, i) => (
-        <div
-          key={i}
-          className="flex items-start gap-2 rounded-md border border-warn/40 bg-warn/5 p-2 text-xs text-secondary"
-        >
-          <AlertTriangle className="mt-px size-3.5 shrink-0 text-warn" />
-          <span>
-            {d.code ? <span className="font-mono opacity-70">{d.code} </span> : null}
-            {d.message}
-          </span>
+          <div className="ml-auto flex items-center gap-1">
+            <CopyButton label="Copy TSV" text={() => toDelimited(table(), "\t")} />
+            <ToolButton
+              label="CSV"
+              title="Download this statement as CSV"
+              showLabel
+              icon={<Download className="size-3.5" />}
+              onClick={() =>
+                downloadText(
+                  `cfdl-${active.id.replace(/[^a-z0-9._-]+/gi, "-")}.csv`,
+                  toDelimited(table(), ","),
+                  "text/csv",
+                )
+              }
+            />
+          </div>
         </div>
-      ))}
 
-      <div className="overflow-x-auto rounded-lg border border-default">
+        {active.diagnostics?.map((d, i) => (
+          <div
+            key={i}
+            className="flex items-start gap-2 rounded-md border border-warn/40 bg-warn/5 p-2 text-xs text-secondary"
+          >
+            <AlertTriangle className="mt-px size-3.5 shrink-0 text-warn" />
+            <span>
+              {d.code ? <span className="font-mono opacity-70">{d.code} </span> : null}
+              {d.message}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="@container mx-4 min-h-0 flex-1 overflow-auto rounded-lg border border-default">
         <table className="w-full border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-default bg-surface-raised">
-              <th className="sticky left-0 z-10 bg-surface-raised px-3 py-2 text-left font-medium text-secondary">
-                {active.label}
+          <thead className="sticky top-0 z-30">
+            <tr>
+              <th
+                className={cn(
+                  "sticky left-0 z-40 border-b border-default bg-surface-raised px-3 py-2 text-left font-medium text-secondary",
+                  LABEL_COL,
+                )}
+              >
+                <div className="flex items-baseline gap-1.5 overflow-hidden">
+                  <span className="truncate">{active.label}</span>
+                  {currency ? <span className="font-normal text-muted">({currency})</span> : null}
+                </div>
               </th>
-              <th className="px-3 py-2 text-right font-medium text-secondary">Total</th>
-              {labels.map((l) => (
+              <th
+                className={cn(
+                  "sticky z-40 whitespace-nowrap border-b border-l border-default bg-surface-raised px-3 py-2 text-right font-medium text-secondary",
+                  TOTAL_LEFT,
+                )}
+              >
+                Total
+              </th>
+              {cols.map((c) => (
                 <th
-                  key={l}
-                  className="whitespace-nowrap px-3 py-2 text-right font-normal text-muted"
+                  key={c.label}
+                  className="whitespace-nowrap border-b border-default bg-surface-raised px-3 py-2 text-right font-normal text-muted"
                 >
-                  {l}
+                  {c.label}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {active.rows.map((row, i) => {
+              if (hidden.has(i)) return null;
               if (row.kind === "spacer") {
                 return (
                   <tr key={i}>
-                    <td colSpan={labels.length + 2} className="h-3" />
+                    <td colSpan={cols.length + 2} className="h-3" />
                   </tr>
                 );
               }
               const emphasis =
                 row.kind === "subtotal" || row.kind === "ratio" || row.kind === "residual";
               const canDrill = Boolean(row.streams?.length);
+              const group = groups.get(i);
+              const isCollapsed = view.collapsed.has(i);
+              const sign = row.display_sign ?? 1;
+              const bg = emphasis || view.drill === i ? "bg-surface-raised" : "bg-surface-page";
+
               return (
-                <tr
-                  key={i}
-                  onClick={() => canDrill && setDrill(drill === i ? null : i)}
-                  className={cn(
-                    "border-b border-default/50",
-                    emphasis && "font-medium text-primary",
-                    row.kind === "residual" && "text-warn",
-                    canDrill && "cursor-pointer hover:bg-surface-raised",
-                    drill === i && "bg-surface-raised",
-                  )}
-                >
-                  <td
+                <Fragment key={i}>
+                  <tr
+                    onClick={() =>
+                      canDrill && onView({ ...view, drill: view.drill === i ? null : i })
+                    }
                     className={cn(
-                      "sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-1.5 text-left",
-                      emphasis && "bg-surface-raised",
-                      drill === i && "bg-surface-raised",
+                      "group border-b border-default/50",
+                      emphasis && "font-medium text-primary",
+                      row.kind === "residual" && "text-warn",
+                      canDrill && "cursor-pointer",
+                      "hover:bg-surface-raised",
+                      view.drill === i && "bg-surface-raised",
                     )}
-                    style={{ paddingLeft: `${0.75 + row.depth * 0.85}rem` }}
                   >
-                    {row.label}
-                    {canDrill && (
-                      <span className="ml-1.5 text-[10px] opacity-40">
-                        {row.streams!.length}
-                      </span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">
-                    {row.total === undefined
-                      ? ""
-                      : fmtSigned(row.total * (row.display_sign ?? 1))}
-                  </td>
-                  {labels.map((l, t) => {
-                    const v = row.values?.[t];
-                    const n = v === null || v === undefined ? undefined : toNumber(v);
-                    return (
-                      <td
-                        key={l}
-                        className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-secondary"
-                      >
-                        {n === undefined
-                          ? "—"
-                          : row.kind === "ratio"
-                            ? n.toFixed(4)
-                            : fmtSigned(n * (row.display_sign ?? 1))}
+                    <td
+                      className={cn(
+                        "sticky left-0 z-10 px-3 py-1.5 text-left group-hover:bg-surface-raised",
+                        LABEL_COL,
+                        bg,
+                      )}
+                      style={{ paddingLeft: `${0.75 + row.depth * 0.85}rem` }}
+                      title={row.label}
+                    >
+                      {/* Truncation lives on the inner span, not the cell. A
+                          `white-space: nowrap` cell has a min-content width of
+                          the whole label, which an auto-layout table honours —
+                          the column then grows past the width the sticky Total
+                          offset was computed from, and the two overlap. */}
+                      <div className="flex items-center overflow-hidden">
+                        {group ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const next = new Set(view.collapsed);
+                              if (next.has(i)) next.delete(i);
+                              else next.add(i);
+                              onView({ ...view, collapsed: next });
+                            }}
+                            aria-expanded={!isCollapsed}
+                            aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${row.label ?? "section"}`}
+                            className="mr-1 -ml-1 shrink-0 rounded p-0.5 text-muted hover:bg-surface-sunken hover:text-primary"
+                          >
+                            <ChevronRight
+                              className={cn("size-3 transition-transform", !isCollapsed && "rotate-90")}
+                            />
+                          </button>
+                        ) : null}
+                        <span className="truncate">{row.label}</span>
+                        {isCollapsed && group ? (
+                          <span className="ml-1.5 shrink-0 text-[10px] text-muted">
+                            +{group[1] - group[0] + 1}
+                          </span>
+                        ) : null}
+                        {canDrill && (
+                          <span className="ml-1.5 shrink-0 text-[10px] opacity-40">
+                            {row.streams!.length}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td
+                      className={cn(
+                        "sticky z-10 whitespace-nowrap border-l border-default/50 px-3 py-1.5 text-right tabular-nums group-hover:bg-surface-raised",
+                        TOTAL_LEFT,
+                        bg,
+                      )}
+                    >
+                      {row.total === undefined ? "" : fmtSigned(row.total * sign)}
+                    </td>
+                    {cols.map((c) => {
+                      const n = aggregate(row, c.idx);
+                      return (
+                        <td
+                          key={c.label}
+                          className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-secondary"
+                        >
+                          {n === undefined
+                            ? "—"
+                            : row.kind === "ratio"
+                              ? n.toFixed(4)
+                              : fmtSigned(n * sign)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {view.drill === i && row.streams?.length ? (
+                    <tr className="border-b border-default/50 bg-surface-sunken">
+                      <td colSpan={cols.length + 2} className="px-3 py-2">
+                        <p className="mb-1 text-[11px] text-muted">
+                          {row.label} draws from {row.streams.length} stream
+                          {row.streams.length === 1 ? "" : "s"}
+                        </p>
+                        <ul className="flex flex-wrap gap-x-4 gap-y-0.5">
+                          {row.streams.map((s) => (
+                            <li key={s} className="font-mono text-[11px] text-secondary">
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
                       </td>
-                    );
-                  })}
-                </tr>
+                    </tr>
+                  ) : null}
+                </Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
 
-      {drill !== null && active.rows[drill]?.streams?.length ? (
-        <div className="rounded-lg border border-default p-3">
-          <p className="mb-2 text-xs font-medium text-secondary">
-            {active.rows[drill].label} draws from
-          </p>
-          <ul className="space-y-1">
-            {active.rows[drill].streams!.map((s) => (
-              <li key={s} className="font-mono text-xs text-muted">
-                {s}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
       {recon && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-muted">
+        // Pinned outside the scroll container: this is the line that says
+        // whether the statement adds up, and it used to sit past 6,500px of
+        // table where nobody scrolled to find it.
+        <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-1 border-t border-subtle px-4 py-2 text-xs text-muted">
           <span>
             Bottom line{" "}
             <span className="tabular-nums text-secondary">{fmtSigned(recon.bottom_line ?? 0)}</span>
@@ -833,6 +1445,128 @@ function StatementTab({ results }: { results: Results | null }) {
       )}
     </div>
   );
+}
+
+/** Only calendars with a defined number of periods per year can be rolled up. */
+function canRollUp(calendar: string): boolean {
+  return calendar === "monthly" || calendar === "quarterly";
+}
+
+interface ColGroup {
+  label: string;
+  idx: number[];
+}
+
+/**
+ * Period columns chunked to the requested grain.
+ *
+ * Labels are the engine's, and are parsed rather than recomputed: the engine
+ * knows which periods a statement's columns correspond to and the UI does not.
+ * A label that doesn't parse falls back to naming the chunk by its endpoints,
+ * which is wrong-looking rather than silently wrong.
+ */
+function groupColumns(labels: string[], calendar: string, grain: Grain): ColGroup[] {
+  const size =
+    grain === "native" || !canRollUp(calendar)
+      ? 1
+      : calendar === "monthly"
+        ? grain === "quarter"
+          ? 3
+          : 12
+        : grain === "quarter"
+          ? 1
+          : 4;
+
+  if (size <= 1) return labels.map((label, i) => ({ label, idx: [i] }));
+
+  const out: ColGroup[] = [];
+  for (let i = 0; i < labels.length; i += size) {
+    const idx = Array.from({ length: Math.min(size, labels.length - i) }, (_, k) => i + k);
+    out.push({ label: chunkLabel(labels, idx, grain), idx });
+  }
+  return out;
+}
+
+function chunkLabel(labels: string[], idx: number[], grain: Grain): string {
+  const first = labels[idx[0]] ?? "";
+  const m = /^(\d{4})(?:-(\d{2}))?/.exec(first);
+  if (!m) return idx.length === 1 ? first : `${first}–${labels[idx[idx.length - 1]] ?? ""}`;
+  if (grain === "year") return m[1];
+  const month = Number(m[2] ?? "1");
+  return `${m[1]} Q${Math.floor((month - 1) / 3) + 1}`;
+}
+
+/**
+ * One column's value for a row.
+ *
+ * Flows sum across the chunk. Ratios cannot — a DSCR is not the sum of three
+ * monthly DSCRs — so they take the last period in the chunk, which is the
+ * convention a quarterly debt test already uses.
+ */
+function aggregate(row: StatementRow, idx: number[]): number | undefined {
+  if (row.kind === "ratio") {
+    for (let k = idx.length - 1; k >= 0; k--) {
+      const n = toNumber(row.values?.[idx[k]] ?? undefined);
+      if (n !== undefined) return n;
+    }
+    return undefined;
+  }
+  let sum = 0;
+  let seen = false;
+  for (const i of idx) {
+    const n = toNumber(row.values?.[i] ?? undefined);
+    if (n !== undefined) {
+      sum += n;
+      seen = true;
+    }
+  }
+  return seen ? sum : undefined;
+}
+
+/**
+ * Which rows each subtotal owns.
+ *
+ * A pro forma puts detail ABOVE its subtotal, so a subtotal's children are the
+ * run of deeper rows immediately preceding it. Spacers end the run — they are
+ * how a statement separates sections.
+ */
+function subtotalGroups(rows: StatementRow[]): Map<number, [number, number]> {
+  const out = new Map<number, [number, number]>();
+  rows.forEach((row, i) => {
+    if (row.kind !== "subtotal") return;
+    let start = i;
+    for (let j = i - 1; j >= 0; j--) {
+      const r = rows[j];
+      if (r.kind === "spacer" || r.depth <= row.depth) break;
+      start = j;
+    }
+    if (start < i) out.set(i, [start, i - 1]);
+  });
+  return out;
+}
+
+function hiddenRows(
+  groups: Map<number, [number, number]>,
+  collapsed: Set<number>,
+): Set<number> {
+  const hidden = new Set<number>();
+  for (const i of collapsed) {
+    const g = groups.get(i);
+    if (!g) continue;
+    for (let j = g[0]; j <= g[1]; j++) hidden.add(j);
+  }
+  return hidden;
+}
+
+/** The currency the statement is denominated in, shown once in the header. */
+function statementCurrency(statement: Statement): string | undefined {
+  for (const row of statement.rows) {
+    for (const v of row.values ?? []) {
+      const c = currencyOf((v ?? undefined) as MoneyOrNumber | undefined);
+      if (c) return c;
+    }
+  }
+  return undefined;
 }
 
 /** Thousands-separated, two decimals, parenthesised when negative. */

@@ -30,6 +30,8 @@ import { cn } from "@/lib/cn";
 // two-series chart — not the most advanced example in the set.
 const DEFAULT_EXAMPLE = EXAMPLES.find((e) => e.id === "first-stream") ?? EXAMPLES[0];
 
+const SPLIT_KEY = "cfdl.playground.split";
+
 const DEFAULT_CONFIG: RunConfig = {
   deterministic: { annual_discount_rate: 0.08 },
   monte_carlo: { trial_count: 500, seed: 42 },
@@ -75,7 +77,22 @@ export function Playground() {
   const [newFileName, setNewFileName] = useState("contracts.cfdl");
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
   const autoRan = useRef(false);
+
+  // Editor/results split, as a percentage given to the editor. A statement or
+  // a JSON document wants far more than half the window; a reader who is
+  // writing wants the opposite. Persisted, because it is a workspace
+  // preference and not a per-run one.
+  const wide = useMediaQuery("(min-width: 1024px)");
+  const [split, setSplit] = useState<number>(() => {
+    if (typeof window === "undefined") return 50;
+    const stored = Number(window.localStorage.getItem(SPLIT_KEY));
+    return Number.isFinite(stored) && stored >= 20 && stored <= 80 ? stored : 50;
+  });
+  useEffect(() => {
+    window.localStorage.setItem(SPLIT_KEY, String(Math.round(split)));
+  }, [split]);
 
   const execute = useCallback(
     async (override?: {
@@ -196,7 +213,14 @@ export function Playground() {
   const busy = status === "running";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    // Height-locked rather than `flex-1`. The body is `min-h-full`, so a flex
+    // child sizes to its content and the whole document scrolls once the panes
+    // are taller than the viewport — which took the tab bar and the Run button
+    // off screen at 1280x720. An IDE's chrome does not scroll away; the panes
+    // inside it scroll instead. 3.5rem is the sticky SiteHeader, and the 1px is
+    // its bottom border — without it the page is exactly one pixel too tall and
+    // grows a scrollbar that scrolls nothing.
+    <div className="flex h-[calc(100dvh-3.5rem-1px)] min-h-0 flex-col overflow-hidden">
       <header className="flex shrink-0 flex-wrap items-center gap-2 border-b border-subtle px-3 py-2">
         <button
           type="button"
@@ -258,8 +282,25 @@ export function Playground() {
           />
         </aside>
 
-        <main className="grid min-h-0 flex-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
-          <section className="min-h-0 border-b border-subtle lg:border-b-0 lg:border-r">
+        <main
+          ref={mainRef}
+          className={cn(
+            "grid min-h-0 flex-1 grid-rows-2 lg:grid-rows-1",
+            !wide && "lg:grid-cols-2",
+          )}
+          // minmax(0, …) rather than a bare `fr`: an `fr` track has an `auto`
+          // minimum, so a wide statement table pushes the results column past
+          // its share and squeezes the editor to a sliver. Zero minimum makes
+          // the split mean what it says and the table scroll instead.
+          style={
+            wide
+              ? {
+                  gridTemplateColumns: `minmax(0, ${split}fr) 5px minmax(0, ${100 - split}fr)`,
+                }
+              : undefined
+          }
+        >
+          <section className="min-h-0 border-b border-subtle lg:border-b-0">
             <EditorPane
               files={files}
               activeFile={activeFile}
@@ -286,6 +327,8 @@ export function Playground() {
               onRun={() => void execute()}
             />
           </section>
+
+          {wide ? <Splitter onDrag={setSplit} onReset={() => setSplit(50)} mainRef={mainRef} /> : null}
 
           <section className="min-h-0">
             <ResultsPanel
@@ -315,6 +358,105 @@ export function Playground() {
       />
     </div>
   );
+}
+
+/** Matches a CSS media query, without assuming one on the server. */
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const update = () => setMatches(mql.matches);
+    update();
+    mql.addEventListener("change", update);
+    return () => mql.removeEventListener("change", update);
+  }, [query]);
+  return matches;
+}
+
+/**
+ * Drag handle between the editor and the results.
+ *
+ * Pointer capture rather than window listeners: the pointer routinely leaves
+ * the 5px handle mid-drag, and over Monaco — which would otherwise swallow the
+ * move events and drop the drag.
+ */
+function Splitter({
+  onDrag,
+  onReset,
+  mainRef,
+}: {
+  onDrag: (pct: number) => void;
+  onReset: () => void;
+  mainRef: React.RefObject<HTMLElement | null>;
+}) {
+  const [dragging, setDragging] = useState(false);
+
+  const move = (clientX: number) => {
+    const rect = mainRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return;
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    onDrag(Math.min(80, Math.max(20, pct)));
+  };
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize editor and results"
+      tabIndex={0}
+      onPointerDown={(e) => {
+        // Capture is an optimisation, not the mechanism — a pointer id the
+        // browser doesn't recognise throws, and the drag should still start.
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          /* no capture; the drag still tracks while the button is down */
+        }
+        setDragging(true);
+      }}
+      // Gated on the button being held, not on the `dragging` state: a fast
+      // drag can deliver pointermove before React has re-rendered with
+      // `dragging === true`, and those first moves were being dropped.
+      // `dragging` is for the highlight only.
+      onPointerMove={(e) => {
+        if (e.buttons & 1) move(e.clientX);
+      }}
+      onPointerUp={(e) => {
+        try {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch {
+          /* never captured */
+        }
+        setDragging(false);
+      }}
+      onDoubleClick={onReset}
+      onKeyDown={(e) => {
+        const rect = mainRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const step = (rect.width * 0.02);
+        if (e.key === "ArrowLeft") move(rect.left + rect.width * (splitFrom(mainRef) / 100) - step);
+        else if (e.key === "ArrowRight")
+          move(rect.left + rect.width * (splitFrom(mainRef) / 100) + step);
+        else return;
+        e.preventDefault();
+      }}
+      className={cn(
+        "group relative hidden cursor-col-resize touch-none border-x border-subtle bg-surface-sunken lg:block",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring",
+        dragging && "bg-accent",
+      )}
+    >
+      <span className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-accent/30" />
+    </div>
+  );
+}
+
+/** Current split read back off the DOM, so arrow keys nudge from where it is. */
+function splitFrom(mainRef: React.RefObject<HTMLElement | null>): number {
+  const first = mainRef.current?.firstElementChild as HTMLElement | undefined;
+  const rect = mainRef.current?.getBoundingClientRect();
+  if (!first || !rect || rect.width === 0) return 50;
+  return (first.getBoundingClientRect().width / rect.width) * 100;
 }
 
 /**
