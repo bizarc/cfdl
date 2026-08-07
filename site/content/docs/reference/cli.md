@@ -1,11 +1,11 @@
 ---
 id: reference-cli
-title: CLI Reference
+title: CLI reference
 slug: /docs/reference/cli
 generated: none
 ---
 
-# CLI Reference
+# CLI reference
 
 <!-- Keep in sync with crates/cfdl-cli/src/main.rs (clap definitions). -->
 

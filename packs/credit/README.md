@@ -2,7 +2,7 @@
 
 Credit / lending pack: fixed-rate loan pools with CPR prepayments, CDR
 defaults, loss severity and a recovery lag. Benchmarked in
-`benchmarks/credit/` against independent month-by-month reference
+the [credit benchmarks](/docs/benchmarks) against independent month-by-month reference
 implementations.
 
 > **Supported calendars: all of them.** Two distinct daily shapes both work,
@@ -93,7 +93,7 @@ parity against the published industry reference schedule.
 - CPR and CDR are effective annual rates and convert by a root
   (`cpr_to_periodic`); note rates are nominal and convert by division.
 
-`benchmarks/credit/mbs_pool_conventions` asserts anchor figures across the life
+The [mortgage pool conventions benchmark](/docs/examples/credit-mbs-pool-conventions) asserts anchor figures across the life
 of a 30-year pool and passes, including recoveries — a level-pay pool's
 defaulted balance keeps amortising in foreclosure, so what is liquidated is the
 amortised balance rather than face. One limitation remains: age-varying
@@ -242,9 +242,9 @@ model "my-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 126
 
-entity fund buyer
+entity asset buyer : Credit.Asset.LoanPool
 
-contract credit.pool_level_pay.auto_a on entity fund.buyer {
+contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
     balance = 25000000
@@ -259,7 +259,7 @@ contract credit.pool_level_pay.auto_a on entity fund.buyer {
   }
 }
 
-contract credit.purchase.auto_a on entity fund.buyer {
+contract credit.purchase.auto_a on entity asset.buyer {
   term 2026-01..2026-01
   terms { price = 24750000 }
 }
@@ -293,7 +293,7 @@ curve sofr linear {
   2027-01: 0.038
 }
 
-contract credit.pool_float_io_bullet.bridge on entity fund.buyer {
+contract credit.pool_float_io_bullet.bridge on entity asset.buyer {
   term 2026-01..2028-12
   terms {
     balance = 15000000
@@ -313,7 +313,7 @@ contract credit.pool_float_io_bullet.bridge on entity fund.buyer {
 **IO pool with bullet maturity**: `credit.pool_io_bullet` — same loss
 vocabulary, interest-only until the balloon.
 
-Full worked models: `benchmarks/credit/level_pay_pool/`,
+Full worked models: the [level-pay auto pool](/docs/examples/credit-level-pay-pool),
 `io_bullet_loan/`, `float_bridge_pool/`, and the loan-pool notebook in
 `examples/notebooks/`.
 

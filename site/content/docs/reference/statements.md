@@ -98,7 +98,7 @@ double-count while looking plausible.
 ## Related
 
 - [Domain packs](/docs/packs) — the categories and contracts each pack provides.
-- [Reading results & IR](/docs/guides/reading-results) — the shape of the
+- [Reading results and IR](/docs/guides/reading-results) — the shape of the
   results document.
 - [Pack interface](/docs/specification/pack-interface) — declaring subtotals and
   statements, for pack authors.

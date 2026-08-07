@@ -21,10 +21,10 @@ Three ways. **Declarative and deterministic**: a CFDL model is a text file
 that always produces the same IR and results — diffable, hashable,
 CI-testable. **Natively stochastic**: swap a constant for a distribution
 and the same model yields percentile bands around every metric, with seeded,
-reproducible draws ([Stochastic Modeling](/docs/stochastic-modeling)). **Parity
-is proven, not claimed**: every domain pack is gated by
-[benchmark suites](/docs/benchmarks) diffed against independent Excel-grade
-references — schedule math held decimal-exact.
+reproducible draws ([Stochastic modeling](/docs/stochastic-modeling)).
+**Checked against references**: every domain pack is gated by
+[benchmark suites](/docs/benchmarks) diffed against independent reference
+models, with schedule math held decimal-exact.
 
 ## Will my results match Excel?
 
@@ -37,7 +37,7 @@ float64 to reproduce Excel's artifacts exactly where that matters.
 
 External pull requests are not accepted — CFDL is maintained by a small
 internal team. Bug reports are welcome via
-[GitHub issues](https://github.com/bizarc/cfdl/issues).
+[GitHub issues](https://github.com/bizarc/cfdl/issues).  <!-- site-allow: install and support still route through the public repository; revisit when it goes private -->
 
 ## How stable is the language?
 

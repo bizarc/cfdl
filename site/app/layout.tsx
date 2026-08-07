@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s · CFDL",
   },
   description:
-    "A deterministic, source-available language for cash-flow models across energy, real estate, credit, and operating businesses. The same model file gives you the number and the distribution around it.",
+    "A deterministic language for cash-flow models across energy, real estate, credit, and operating businesses. The same model file gives you the number and the distribution around it.",
   openGraph: {
     type: "website",
     url: SITE_URL,

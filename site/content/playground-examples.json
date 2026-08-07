@@ -102,10 +102,71 @@
     }
   },
   {
+    "id": "curves",
+    "title": "Curves",
+    "category": "Tutorial",
+    "order": 6,
+    "summary": "A rate or price path declared once and read by date.",
+    "tryThis": "Add a point to the curve and watch the amounts between it move.",
+    "docsHref": "/docs/examples/curves",
+    "source": "examples/language_tutorial/curves",
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"tutorial-curves\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset solar : Asset.Real\n\n// A curve is a dated series: a forward price, an index, a rate.\n// `linear` says how to find a value between two stated points.\ncurve power_price linear {\n  2026-01: 42.10\n  2027-01: 44.75\n  2028-01: 46.20\n}\n\n// Read it with curve_value(name, date). The value tracks the curve period\n// by period, so revenue follows the price without the model restating it.\nstream solar.energy_revenue on entity asset.solar inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 1200 * curve_value(\"power_price\", time.date)\n}\n\nstream solar.om on entity asset.solar outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 9000\n}\n"
+    }
+  },
+  {
+    "id": "uncertainty",
+    "title": "Uncertainty and Monte Carlo",
+    "category": "Tutorial",
+    "order": 7,
+    "summary": "Swap a constant for a distribution and get bands around every metric.",
+    "tryThis": "Open the Monte Carlo tab for the distribution around NPV.",
+    "docsHref": "/docs/examples/uncertainty",
+    "source": "examples/language_tutorial/uncertainty",
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.1
+      },
+      "monte_carlo": {
+        "trial_count": 500,
+        "seed": 42
+      }
+    },
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"tutorial-uncertainty\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset co : Asset.Financial\n\n// A fixed assumption names a number once.\nassume monthly_cost = 18000\n\n// A stochastic assumption names a DISTRIBUTION. A deterministic run uses\n// its mean; a Monte Carlo run samples it, seeded, so the same run\n// reproduces exactly.\nassume growth ~ Normal(mean=0.02, stdev=0.008, clip=[0.0, 0.05])\n\nstream co.revenue on entity asset.co inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 40000 * pow(1 + inputs.growth, time.t / 12.0)\n}\n\nstream co.cost on entity asset.co outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = inputs.monthly_cost\n}\n"
+    }
+  },
+  {
+    "id": "options-events",
+    "title": "Events and options",
+    "category": "Tutorial",
+    "order": 8,
+    "summary": "A condition that changes an asset's state, and a contract with an election.",
+    "tryThis": "Move the event's trigger period and watch the streams switch with it.",
+    "docsHref": "/docs/examples/options_events",
+    "source": "examples/language_tutorial/options_events",
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"tutorial-options-events\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset senior : Asset.Financial\n\n// An EVENT fires when its condition first becomes true. It can change\n// entity state, switch streams off, and exercise an option.\nevent refinance when time.t >= 12 {\n  set entity asset.senior.status = \"refinanced\"\n  deactivate stream loan.debt_service\n  exercise option refi_fee\n}\n\n// The stream stops two ways: the event deactivates it, and its own\n// `active when` reads the state the event set. Either alone is enough.\nstream loan.debt_service on entity asset.senior outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 4200\n  active when entity.state.status != \"refinanced\"\n}\n\n// An OPTION is a payoff that only lands if it is exercised.\noption refi_fee type Option.Refinance {\n  exercise when false\n  payoff 15000\n}\n"
+    }
+  },
+  {
     "id": "cre-developer",
     "title": "CRE: developer lifecycle",
     "category": "Real deals",
-    "order": 6,
+    "order": 9,
     "summary": "Construction, lease-up, operations, and an exit cap valuation.",
     "tryThis": "Adjust the discount rate and watch NPV and IRR respond.",
     "docsHref": "/docs/examples/cre_developer",
@@ -130,7 +191,7 @@
     "id": "opco-basic",
     "title": "OpCo: operating model",
     "category": "Real deals",
-    "order": 7,
+    "order": 10,
     "summary": "Revenue and opex with working capital and an exit multiple.",
     "tryThis": "Change the exit multiple in the contract terms.",
     "docsHref": "/docs/examples/opco_basic",
@@ -150,7 +211,7 @@
     "id": "cre-multi-file",
     "title": "CRE: multi-file deal",
     "category": "Real deals",
-    "order": 8,
+    "order": 11,
     "summary": "A realistic deal organised across four files.",
     "tryThis": "Follow a lease from contracts.cfdl through to the cash-flow table.",
     "docsHref": "/docs/examples/cre_multi_file",
@@ -178,7 +239,7 @@
     "id": "stochastic-rollover",
     "title": "Stochastic lease rollover",
     "category": "Stochastic",
-    "order": 9,
+    "order": 12,
     "summary": "Each trial either renews or re-lets — the two-humped outcome an average hides.",
     "tryThis": "Open the Monte Carlo tab: two clusters, not one blended number.",
     "docsHref": "/docs/stochastic-modeling",

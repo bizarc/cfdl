@@ -1,6 +1,6 @@
 ---
 id: diagnostics
-title: "Diagnostics Reference"
+title: "Diagnostics reference"
 slug: "/docs/specification/diagnostics"
 source: docs/08_diagnostics.md
 generated: full
@@ -214,7 +214,7 @@ State declarations:
 - `E1315_ENTITY_PART_OF_ITSELF` — an entity is its own parent.
 - `E1330_CONFLICTING_ACTIVE_CLAUSES` — a stream declares both `active when` and `active in state`. Use one: `active in state` for a lifecycle state, `active when` for anything else.
 - `E1331_OWNER_HAS_NO_LIFECYCLE` — a stream is active in a lifecycle state but its owner's type declares no lifecycle.
-- `E1332_UNKNOWN_ACTIVE_STATE` — a stream is active in a state its owner's lifecycle does not declare. This is the whole reason the form exists: a string comparison against a status field cannot be checked, so `entity.state.status == "leasd"` is simply false forever and says nothing.
+- `E1332_UNKNOWN_ACTIVE_STATE` — a stream is active in a state its owner's lifecycle does not declare. A state name is checked against the lifecycle; a string comparison such as `entity.state.status == "leasd"` is not, and stays false for every period.
 - `E1318_ENTITY_HIERARCHY_CYCLE` — `part of` forms a cycle. Reported once, from the cycle's lexicographically first entity, rather than once per member. An entity aggregates its children, so a cycle has no bottom to sum from.
 - `E1316_UNKNOWN_LIFECYCLE_STATE` — an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely.
 - `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.
@@ -299,7 +299,7 @@ Warnings:
   `state_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
   Identical definitions collapse instead, which is what several contracts
   sharing one curve should do.
-Statement completeness (`crates/cfdl-statement`). These are warnings rather
+Statement completeness. These are warnings rather
 than errors: the statement still renders, and the point is that the reader can
 see what is wrong with it.
 
@@ -339,7 +339,7 @@ see what is wrong with it.
   literal 12 assumes one period is one month; on any other grid the *schedule*
   adapts correctly and only the *amount* does not, so the model produces
   plausible figures out by a factor of twelve. Refusing to lower is the only
-  honest option. Use a calendar the pack supports, or a pack that supports the
+  safe option. Use a calendar the pack supports, or a pack that supports the
   calendar.
 - `E5014_RULE_CADENCE_UNSUPPORTED` — as above, but declared by one lowering
   rule rather than the whole pack. This exists so a pack can carry neutral and
@@ -517,7 +517,7 @@ For invalid fixtures, store expected diagnostics as:
 
 Rules:
 - Assert `code`, `severity`, `file`, and `span`.
-- Messages are asserted in FULL. `tools/golden-runner` compares canonical JSON
+- Messages are asserted in FULL. The golden runner compares canonical JSON
   and diffs it, so rewording a message changes a golden and must be re-blessed
   with `CFDL_GOLD_UPDATE=1`.
 

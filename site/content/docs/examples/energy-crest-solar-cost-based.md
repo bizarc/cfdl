@@ -72,7 +72,7 @@ It is not arithmetic. Results carry money to six decimal places, and the engine
 rounds a subtotal it computed from *unrounded* components — which is a different
 operation from summing five *already-rounded* components, and the two differ by
 up to half of the last published place. 5e-7 is exactly that half. It is the
-floor any case in this repository can assert to, which is why the tolerance is
+floor any case here can assert to, which is why the tolerance is
 set to the engine's precision rather than to anything about this deal.
 
 One thing the case does **not** validate: the reference's actual purpose is to
@@ -99,10 +99,9 @@ the tariff is checked period by period; the solve itself is not.
 // to solve the tariff that clears a target equity return — it sweeps the rate
 // until net present value crosses zero. CFDL has no solve-to-target construct,
 // so the solved rate is carried across as a constant and the CASH FLOW at that
-// rate is what gets asserted. That is the honest scope: everything downstream
-// of the tariff is validated period by period, and the solve itself is a
-// documented engine gap rather than a silently-skipped line. NOTES.md, "What
-// this case does not validate".
+// rate is what gets asserted. Everything downstream of the tariff is validated
+// period by period; the solve itself is not. NOTES.md, "What this case does not
+// validate".
 //
 // Period 0 is operating year 1. There is no construction period: the reference
 // treats installed cost as a year-zero equity outlay outside the operating
@@ -228,5 +227,14 @@ contract energy.debt_service on entity asset.plant {
 
 ## Verified results
 
-| Metric | Value | Tolerance |
-|---|---:|---:|
+Checked period by period: **8 series** across **25 periods**, each within ±1e-6 of the reference.
+
+- `energy.ppa.revenue`
+- `energy.om.expense.fixed`
+- `energy.om.expense.insurance`
+- `energy.om.expense.land_lease`
+- `energy.om.expense.pilot`
+- `energy.royalty.expense`
+- `domain.energy.opex`
+- `energy.debt.service`
+

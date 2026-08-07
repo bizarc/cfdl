@@ -14,7 +14,7 @@ generated: full
 
 A five-year services buyout: revenue/opex growth, DSO/DPO/DIO working capital, %-of-revenue capex, a term loan (IO then amortizing with a balloon), cash taxes, and an exit on trailing-twelve EBITDA.
 
-This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+This notebook uses one of the benchmark models, which CFDL validates against an independent reference to the penny.
 
 ```python
 # On Colab, install the SDK and fetch the models this notebook reads.

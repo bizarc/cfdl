@@ -1,6 +1,6 @@
 ---
 id: results-schema
-title: "Results Schema (v0.1)"
+title: "Results schema (v0.1)"
 slug: "/docs/specification/results-schema"
 source: docs/06_results_schema.md
 generated: full

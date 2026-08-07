@@ -1,11 +1,11 @@
 ---
 id: operating-business-examples
-title: "Operating Business Examples"
+title: "Operating business examples"
 slug: "/docs/examples/operating-business-examples"
 generated: none
 ---
 
-Operating Business (OpCo) examples show revenue, opex, working capital, and exit multiple for DCF-style valuation. All use the OpCo pack (`use pack "opco"`). For when to use **streams vs contracts** (e.g. individual revenue/opex items → stream), see the [Language Guide](/docs/language-guide#when-to-use-streams-vs-contracts).
+Operating Business (OpCo) examples show revenue, opex, working capital, and exit multiple for DCF-style valuation. All use the OpCo pack (`use pack "opco"`). For when to use **streams vs contracts** (e.g. individual revenue/opex items → stream), see the [Language guide](/docs/language-guide#when-to-use-streams-vs-contracts).
 
 ## Example ladder
 
@@ -28,4 +28,4 @@ Each example directory includes a `run.json` for deterministic runs. Example:
 ## Structure
 
 - **Entities:** Examples use `operating business`; multi-entity (e.g. company + LOBs) can be added when needed.
-- **Pack contracts:** `opco_revenue_line`, `opco_opex_line`, `opco_working_capital`, `opco_exit_multiple` — see [Packs](/docs/packs) and [OpCo pack README](https://github.com/bizarc/cfdl/blob/main/packs/opco/README.md).
+- **Pack contracts:** `opco_revenue_line`, `opco_opex_line`, `opco_working_capital`, `opco_exit_multiple` — see [Packs](/docs/packs) and [the OpCo pack guide](/docs/packs/opco).

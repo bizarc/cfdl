@@ -1,10 +1,8 @@
 ---
 id: example-simple_contract
-title: "A Simple Contract"
+title: "A simple contract"
 slug: "/docs/examples/simple_contract"
 ---
-
-> Generated from `examples/language_tutorial/simple_contract/`.
 
 This example uses the CRE pack with a single **contract** for a formal lease agreement (lease = formal agreement with another party).
 

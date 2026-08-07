@@ -298,5 +298,13 @@ stream opco.debt.repayment on entity asset.target outflow currency USD {
 
 ## Verified results
 
-| Metric | Value | Tolerance |
-|---|---:|---:|
+Checked period by period: **7 series** across **5 periods**, each within ±1e-6 of the reference.
+
+- `state.tlb_balance`
+- `state.sub_balance`
+- `opco.interest.term_loan`
+- `opco.interest.sub_notes`
+- `opco.interest.senior_notes`
+- `opco.interest.undrawn_revolver`
+- `opco.debt.repayment`
+

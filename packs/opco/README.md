@@ -2,7 +2,7 @@
 
 Operating-company / LBO pack: recurring operating lines, policy-driven
 working capital, capex, scheduled term debt, cash taxes, and entry/exit —
-benchmarked in `benchmarks/opco/` against an independent month-by-month
+benchmarked against an independent month-by-month
 reference. All lowering is template-driven.
 
 > **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
@@ -59,7 +59,7 @@ Growth is annual-compound stepped continuously on the model clock:
 > period. A cumulative-index curve would be exact
 > today and was deliberately not chosen — it would hide the gap in every model
 > that used it. The drift is measured year by year in
-> `benchmarks/opco/damodaran_fcff/NOTES.md`.
+> the [free cash flow to firm benchmark](/docs/examples/opco-damodaran-fcff).
 >
 > `tax_rate` defaults to 0 so a curve can stand alone; stating neither it nor
 > the curve is `E7012_OPCO_TAXES_MISSING_RATE`, not a silent zero-tax model.
@@ -140,7 +140,7 @@ neutral about which `base_value` is, and cannot detect a mismatch.
 `E7025` guards the one thing that must hold: `discount_rate > growth_rate`. The
 exit settles at the end of its period and carries no `mid` — a terminal value is
 a price struck at a point in time and discounts whole, unlike the flows around
-it (see `benchmarks/opco/banker_dcf_conventions`, Finding 6).
+it (see the [banker DCF conventions benchmark](/docs/examples/opco-banker-dcf-conventions)).
 
 ## Metrics
 
@@ -185,14 +185,14 @@ model "my-buyout"
 use pack "opco" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-entity operating target
+entity asset target : OpCo.Asset.Enterprise
 
-contract opco.revenue_line on entity operating.target {
+contract opco.revenue_line on entity asset.target {
   term 2026-01..2030-12
   terms { amount = 1000000 growth_rate = 0.06 }
 }
 
-contract opco.opex_line on entity operating.target {
+contract opco.opex_line on entity asset.target {
   term 2026-01..2030-12
   terms { amount = 650000 growth_rate = 0.04 }
 }
@@ -201,17 +201,17 @@ contract opco.opex_line on entity operating.target {
 // release_at_end returns the investment at exit — that is the point of the
 // term, not an inert stream.
 // examples-allow: working_capital.adjustment — released in full at exit
-contract opco.working_capital_policy on entity operating.target {
+contract opco.working_capital_policy on entity asset.target {
   term 2026-01..2030-12
   terms { ar_days = 45 ap_days = 30 inv_days = 10 release_at_end = 1 }
 }
 
-contract opco.capex_line on entity operating.target {
+contract opco.capex_line on entity asset.target {
   term 2026-01..2030-12
   terms { amount = 40000 pct_of_revenue = 0.01 }
 }
 
-contract opco.term_debt on entity operating.target {
+contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms { principal = 20000000 rate = 0.09 amort_months = 84 }
 }
@@ -230,7 +230,7 @@ cfdl run my-buyout/ir.json --packs packs --pack opco --out my-buyout/results.jso
 `ipmt`/`ppmt`, balloon at maturity, proceeds at close):
 
 ```cfdl
-contract opco.term_debt on entity operating.target {
+contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 14000000
@@ -245,13 +245,13 @@ contract opco.term_debt on entity operating.target {
 forward):
 
 ```cfdl
-contract opco.exit_ebitda on entity operating.target {
+contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
   terms { exit_multiple = 8.5 }
 }
 ```
 
-Full worked model: `benchmarks/opco/lbo_buyout/` (validated against an
+Full worked model: the [leveraged buyout](/docs/examples/opco-lbo-buyout) (validated against an
 independent recursive reference) and the LBO notebook in
 `examples/notebooks/`.
 

@@ -1,6 +1,6 @@
 ---
 id: example-cre-multi-file
-title: "CRE: Multi-File Model"
+title: "CRE: multi-file model"
 slug: "/docs/examples/cre_multi_file"
 ---
 
@@ -21,8 +21,6 @@ Full developer lifecycle split across files: `time.cfdl` (phases), `structure.cf
 ```
 
 ---
-
-> Generated from `examples/cre_multi_file/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

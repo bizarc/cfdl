@@ -1,6 +1,6 @@
 ---
 id: example-opco-with-growth
-title: "OpCo: Growth via Expressions"
+title: "OpCo: growth via expressions"
 slug: "/docs/examples/opco_with_growth"
 ---
 
@@ -21,8 +21,6 @@ Revenue line with **growth_rate** > 0 (e.g. 3%). Demonstrates the industry lever
 ```
 
 ---
-
-> Generated from `examples/opco_with_growth/`. Code is shown below so you can see structure and elements without repo access.
 
 ## model.cfdl
 

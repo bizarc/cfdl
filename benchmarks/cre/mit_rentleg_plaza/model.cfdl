@@ -223,15 +223,14 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 
 // MIT fn 11 — the reversion, as a CRE pack contract.
 //
-// This is the acceptance test for the whole cadence programme. Reaching it
-// took three fixes, each of which this file used to document as a blocker:
+// This is the acceptance test for annual-calendar lowering, and it depends on
+// three behaviours at once:
 //
-//   the CRE pack refused to lower on a non-monthly calendar at all;
-//   E2103 measured a native stream against the cash horizon, so the operating
-//     streams could not reach the `project 1` tail this contract reads;
-//   `cre.exit_forward` settled on its stated date, discounting from the start
-//     of 2005 rather than its end — four years instead of five, worth
-//     $207,783 here. Disposals now settle at period end.
+//   the CRE pack lowers on any calendar it declares, not monthly alone;
+//   a native stream is measured against the projection horizon, so the
+//     operating streams reach the `project 1` tail this contract reads;
+//   a disposal settles at period end, so the exit discounts from the end of
+//     2005 rather than its start — five years, not four, worth $207,783 here.
 //
 // `exit_cap = 0.10` is MIT's "10 times the following year's NOI"; the 5%
 // selling commission is fn 11. The forward NOI is derived from the modelled

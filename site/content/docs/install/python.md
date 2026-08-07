@@ -16,7 +16,7 @@ module) — no separate binary or server.
 pip install cfdl-sdk
 ```
 
-## From a checkout (current pre-launch path)
+## From a checkout (current pre-launch path)  <!-- site-allow: install and support still route through the public repository; revisit when it goes private -->
 
 ```bash
 git clone https://github.com/bizarc/cfdl

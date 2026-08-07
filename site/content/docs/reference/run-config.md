@@ -1,11 +1,11 @@
 ---
 id: reference-run-config
-title: Run-Config Reference
+title: Run-config reference
 slug: /docs/reference/run-config
 generated: none
 ---
 
-# Run-Config Reference
+# Run-config reference
 
 The run-config JSON controls how compiled IR is evaluated — discount rate,
 as-of date, parameter overrides, named scenarios, and Monte Carlo. Pass it

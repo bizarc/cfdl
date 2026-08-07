@@ -72,6 +72,36 @@ const EXAMPLES = [
     tryThis: "Open the structure.cfdl tab and add a second entity.",
     docsHref: "/docs/examples/multi_file",
   },
+  // The tutorial stopped at five here while the docs taught eight, so curves,
+  // Monte Carlo and events were the three lessons a reader could not open in
+  // the one place they can run something without installing anything.
+  {
+    id: "curves",
+    title: "Curves",
+    category: "Tutorial",
+    dir: "examples/language_tutorial/curves",
+    summary: "A rate or price path declared once and read by date.",
+    tryThis: "Add a point to the curve and watch the amounts between it move.",
+    docsHref: "/docs/examples/curves",
+  },
+  {
+    id: "uncertainty",
+    title: "Uncertainty and Monte Carlo",
+    category: "Tutorial",
+    dir: "examples/language_tutorial/uncertainty",
+    summary: "Swap a constant for a distribution and get bands around every metric.",
+    tryThis: "Open the Monte Carlo tab for the distribution around NPV.",
+    docsHref: "/docs/examples/uncertainty",
+  },
+  {
+    id: "options-events",
+    title: "Events and options",
+    category: "Tutorial",
+    dir: "examples/language_tutorial/options_events",
+    summary: "A condition that changes an asset's state, and a contract with an election.",
+    tryThis: "Move the event's trigger period and watch the streams switch with it.",
+    docsHref: "/docs/examples/options_events",
+  },
   {
     id: "cre-developer",
     title: "CRE: developer lifecycle",

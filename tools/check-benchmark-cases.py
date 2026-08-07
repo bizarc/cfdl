@@ -78,10 +78,10 @@ def main() -> int:
     if problems:
         return 1
     if missing:
-        # Not yet a failure: the set is being written. It becomes one when the
-        # last case lands, and the count above is the remaining work.
-        print(f"check-benchmark-cases: {len(cases) - len(missing)} of {len(cases)} described.")
-        return 0
+        # A hard failure now that every case is described: a new benchmark
+        # arrives with its description or it does not arrive.
+        print("  Every case describes itself. Add CASE.md with the headings above.")
+        return 1
 
     print(f"check-benchmark-cases: OK ({len(cases)} cases, each to the same outline)")
     return 0

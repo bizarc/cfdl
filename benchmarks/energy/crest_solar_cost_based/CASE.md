@@ -57,7 +57,7 @@ It is not arithmetic. Results carry money to six decimal places, and the engine
 rounds a subtotal it computed from *unrounded* components — which is a different
 operation from summing five *already-rounded* components, and the two differ by
 up to half of the last published place. 5e-7 is exactly that half. It is the
-floor any case in this repository can assert to, which is why the tolerance is
+floor any case here can assert to, which is why the tolerance is
 set to the engine's precision rather than to anything about this deal.
 
 One thing the case does **not** validate: the reference's actual purpose is to

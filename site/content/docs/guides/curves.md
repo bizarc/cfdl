@@ -16,8 +16,8 @@ curve sofr linear {
   2027-01: 0.038
 }
 
-stream loan.interest on entity fund.buyer inflow currency USD {
-  schedule every monthly from 2026-01 to 2026-12
+stream loan.interest on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
   amount = 1000000 * (curve_value("sofr", time.date) + 0.0275) / 12
 }
 ```
@@ -37,7 +37,7 @@ The credit pack's floating-rate pools read their coupon index from a named
 curve with margin, floor, and cap:
 
 ```cfdl
-contract credit.pool_float_io_bullet.bridge on entity fund.buyer {
+contract credit.pool_float_io_bullet.bridge on entity asset.buyer {
   term 2026-01..2029-05
   terms {
     balance = 15000000

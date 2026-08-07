@@ -22,9 +22,9 @@ for it, and how to get a particular result.
 
 ## Related
 
-- [Guides](/docs/guides/schedules-and-calendars) — task-oriented how-tos.
+- [How-to guides](/docs/guides/schedules-and-calendars) — one question each.
 - [Domain packs](/docs/packs) — the contracts, categories and metrics each pack
   provides.
 - [Specification](/docs/specification) — the normative definition of the
-  language, its schemas and its diagnostics. Precise, complete, and pitched at
-  someone implementing against CFDL rather than modelling with it.
+  language, its schemas and its diagnostics, written for someone implementing
+  against CFDL rather than modelling with it.

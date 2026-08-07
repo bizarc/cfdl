@@ -1,10 +1,8 @@
 ---
 id: example-first_stream
-title: "Your First Stream"
+title: "Your first stream"
 slug: "/docs/examples/first_stream"
 ---
-
-> Generated from `examples/language_tutorial/first_stream/`.
 
 This example expands from minimal model by adding:
 

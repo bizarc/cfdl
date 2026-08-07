@@ -234,13 +234,13 @@ def index_page(toc: list[tuple[str, str, str]]) -> str:
         "",
         "One worked notebook per domain pack, each walking a benchmark model "
         "through the Python SDK — compile, run, cash flows, metrics, and a "
-        "what-if. The outputs and charts on these pages are real: every page "
-        "is produced by executing its notebook against the packs and engine "
-        "in this repository.",
+        "what-if. The outputs and charts on these pages are real: each page "
+        "is produced by executing its notebook against the released packs "
+        "and engine.",
         "",
     ]
-    for title, slug, filename in toc:
-        lines.append(f"- [{title}](/docs/notebooks/{slug}) — `examples/notebooks/{filename}`")
+    for title, slug, _filename in toc:
+        lines.append(f"- [{title}](/docs/notebooks/{slug})")
     lines += [
         "",
         "To run them yourself, see [the Python SDK guide](/docs/python-sdk).",

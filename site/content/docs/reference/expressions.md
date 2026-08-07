@@ -17,8 +17,7 @@ stream tower.rent on entity asset.tower inflow currency USD {
 ```
 
 Expressions are pure and total. There are no statements, no assignment, and no
-loops — the same inputs always produce the same number, which is what makes a
-run reproducible.
+loops, so the same inputs always produce the same number.
 
 ## What is in scope
 
@@ -76,7 +75,7 @@ current build accepts.
 ## Related
 
 - [Curves](/docs/guides/curves) — feeding observed series into `obs.*`.
-- [Scenarios & run configs](/docs/guides/scenarios-and-run-configs) — where
+- [Scenarios and run configs](/docs/guides/scenarios-and-run-configs) — where
   `inputs.*` and `cfg.*` come from.
 - [Expression environment](/docs/specification/expression-environment) — the
   normative definition: types, coercion, and evaluation order.

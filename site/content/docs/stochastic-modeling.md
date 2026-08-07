@@ -1,16 +1,14 @@
 ---
 id: stochastic-modeling
-title: Stochastic Modeling
+title: Stochastic modeling
 slug: /docs/stochastic-modeling
 generated: none
 ---
 
-# Stochastic Modeling
+# Stochastic modeling
 
-Spreadsheet and appraisal tools underwrite on point estimates and
-expected-value blends. CFDL models are **natively stochastic**: the same
-model file gives you the deterministic number *and* the distribution around
-it — deterministically seeded and byte-reproducible.
+A CFDL model gives you the deterministic number and the distribution around
+it from the same file. Draws are seeded, so a run reproduces byte for byte.
 
 ## Declaring uncertainty
 
@@ -35,7 +33,7 @@ run monte_carlo trials 20000 seed 42
 Every Monte Carlo run declares an explicit seed. Each assumption gets its own
 deterministic draw stream, so **adding a new assumption never reshuffles
 another assumption's draws** — results are reproducible byte-for-byte across
-machines and runs. Run-config JSON can override or add distributions without
+machines and runs. The run config can override or add distributions without
 touching the model.
 
 ## Scenario-consistent branching

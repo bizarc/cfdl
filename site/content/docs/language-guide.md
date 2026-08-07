@@ -1,11 +1,11 @@
 ---
 id: language-guide
-title: "Language Guide"
+title: "Language guide"
 slug: "/docs/language-guide"
 generated: none
 ---
 
-# Language Guide
+# Language guide
 
 CFDL is a language for saying what a deal *is*. You declare the terms — who the
 parties are, what money moves, when, and on what basis — and the engine derives
@@ -66,12 +66,23 @@ An entity is something that holds cash: a property, a borrower, a project, a
 fund.
 
 ```cfdl
-entity asset tower
-entity legal borrower
+entity asset tower : CRE.Asset.RealProperty
+entity party acme  : CRE.Party.Tenant
 ```
 
-The first word is the entity's type, the second its name. Every stream belongs
-to one, so cash totals per entity as well as per model.
+The first word is the entity's **family** — `asset` for something that produces
+or consumes cash, `party` for someone who contracts, owns or lends. The second
+is its name, and what follows the colon is its **type**, checked against the
+active pack's vocabulary. A model with no pack still has the base types:
+`Asset.Real`, `Asset.Financial`, `Asset.Intangible` and `Party`.
+
+Every stream belongs to an entity, so cash totals per entity as well as per
+model. Where a model declares hierarchy with `part of`, a parent's total
+includes its children.
+
+An asset's type may carry a **lifecycle** — a closed set of states it moves
+through, with events that move it between them, and contracts and streams that
+switch on where it is. See [the object model](/docs/object-model).
 
 ## Streams
 
@@ -261,7 +272,7 @@ JSON. See [Reading results](/docs/guides/reading-results).
 
 | | |
 |---|---|
-| [Examples](/docs/examples) | Five short lessons, then worked deals reconciled against published sources |
-| [Guides](/docs/guides/schedules-and-calendars) | Schedules, packs, scenarios, curves, metrics |
+| [Examples](/docs/examples) | Eight short lessons, then worked deals checked against published sources |
+| [How-to guides](/docs/guides/schedules-and-calendars) | Schedules, packs, scenarios, curves, metrics |
 | [Reference](/docs/reference) | Expressions, contracts, metrics, statements, diagnostics |
 | [Specification](/docs/specification) | The normative definition, for implementers |

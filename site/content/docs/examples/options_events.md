@@ -1,10 +1,8 @@
 ---
 id: example-options_events
-title: "Events and Options"
+title: "Events and options"
 slug: "/docs/examples/options_events"
 ---
-
-> Generated from `examples/language_tutorial/options_events/`.
 
 An **event** fires when its condition first becomes true. It can set entity
 state, deactivate a stream, and exercise an option.

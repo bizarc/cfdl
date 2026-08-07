@@ -38,6 +38,6 @@ page disagrees with it.
 
 CFDL is maintained by a small internal team. **External pull requests are not
 accepted** at this time. Bug reports are welcome via
-[GitHub issues](https://github.com/bizarc/cfdl/issues). Security issues should
+[GitHub issues](https://github.com/bizarc/cfdl/issues). Security issues should  <!-- site-allow: install and support still route through the public repository; revisit when it goes private -->
 be reported privately through GitHub Security Advisories rather than a public
 issue.

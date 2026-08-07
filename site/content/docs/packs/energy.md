@@ -39,7 +39,7 @@ stay separable in the results.
 
 ## Reporting
 
-A project operating statement down to cash flow available for debt service, with coverage tested every period — the covenant a project lender actually holds.
+A project operating statement down to cash flow available for debt service, with coverage tested every period, which is the covenant a project lender holds.
 
 ## Related
 

@@ -8,9 +8,9 @@ no hardcoded amounts.
 > **Supported calendars: all of them** — `daily`, `monthly`, `quarterly`,
 > `annual`. Every rule divides annual quantities by the rule's own
 > periods-per-year rather than a literal 12, so the same deal produces the same
-> annual figures on any grid. `tools/cadence-parity.py` asserts it.
+> annual figures on any grid, and a gate asserts it.
 >
-> One honest caveat, on daily only. An annual quantity is spread as
+> One caveat, on daily only. An annual quantity is spread as
 > `X_year / 365` every day — the Act/365-Fixed convention — so a **leap year
 > pays 366/365** of the annual amount, about 0.27% more. That is the convention
 > behaving correctly, not drift, and it is why the daily parity fixture uses a
@@ -33,7 +33,7 @@ no hardcoded amounts.
 > assumption, and at least one widely used model combines the two **additively**
 > — 2.5% inflation plus 2.0% real escalation is 4.5%/yr, not 4.55%/yr. Moving a
 > deal across means entering `escalation = inflation + real`, and the difference
-> compounds. Verified in `benchmarks/energy/utility_pv_singleowner`.
+> compounds. Verified in the [utility-scale PV benchmark](/docs/examples/energy-utility-pv-singleowner).
 >
 > **The ITC reduces the depreciable basis, and this pack will not do it for
 > you.** `energy.macrs_shield` takes `basis` as an input rather than deriving
@@ -82,14 +82,14 @@ model "my-microgrid"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 300
 
-entity project microgrid
+entity asset microgrid : Energy.Asset.GenerationFacility
 
-contract energy.capex on entity project.microgrid {
+contract energy.capex on entity asset.microgrid {
   term 2026-01..2026-01
   terms { amount = 2400000 }
 }
 
-contract energy.ppa on entity project.microgrid {
+contract energy.ppa on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
     mwh_year = 4200
@@ -99,7 +99,7 @@ contract energy.ppa on entity project.microgrid {
   }
 }
 
-contract energy.om on entity project.microgrid {
+contract energy.om on entity asset.microgrid {
   term 2026-01..2050-12
   terms { om_year = 70000 escalation = 0.025 }
 }
@@ -124,7 +124,7 @@ cfdl run my-microgrid/ir.json --packs packs --pack energy --out my-microgrid/res
 under tax benefits, not EBITDA):
 
 ```cfdl
-contract energy.itc on entity project.microgrid {
+contract energy.itc on entity asset.microgrid {
   term 2026-12..2026-12
   terms { credit = 720000 }
 }
@@ -133,7 +133,7 @@ contract energy.itc on entity project.microgrid {
 **Level-pay project debt** (decimal-exact `pmt()`, Excel sign conventions):
 
 ```cfdl
-contract energy.debt_service on entity project.microgrid {
+contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
   terms { rate = 0.06 term_months = 240 principal = 1600000 }
 }
@@ -141,10 +141,10 @@ contract energy.debt_service on entity project.microgrid {
 
 **Wind with PTC and MACRS**: pair `energy.ptc` (per-MWh credit over the
 credit window) with `energy.macrs_shield` (IRS Pub 946 GDS tables via
-`macrs_rate()`); see `benchmarks/energy/wind_ptc_macrs/`.
+`macrs_rate()`); see the [wind PTC and MACRS benchmark](/docs/examples/energy-wind-ptc-macrs).
 
-Full worked models: `benchmarks/energy/solar_ppa_microgrid/` and the solar
-microgrid notebook in `examples/notebooks/`.
+Full worked models: the [solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid)
+benchmark and the [solar microgrid notebook](/docs/notebooks/energy-solar-microgrid).
 
 ## Stream categories
 

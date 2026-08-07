@@ -3,7 +3,7 @@
     "annual_discount_rate": 0.1
   },
   "monte_carlo": {
-    "trials": 500,
+    "trial_count": 500,
     "seed": 42
   }
 }

@@ -118,5 +118,5 @@ statement.
 
 - [Statements](/docs/reference/statements) — how the streams a contract emits
   become a pro forma.
-- [Contracts & packs](/docs/guides/contracts-and-packs) — a walkthrough.
+- [Contracts and packs](/docs/guides/contracts-and-packs) — a walkthrough.
 - [Pack interface](/docs/specification/pack-interface) — authoring a pack.

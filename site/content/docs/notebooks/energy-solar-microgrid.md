@@ -14,7 +14,7 @@ generated: full
 
 A solar-plus-storage microgrid with a PPA revenue contract, degradation, O&M escalation, ITC/PTC tax attributes and MACRS depreciation, financed with sculpted debt.
 
-This notebook uses the benchmark model that CFDL validates against an independent reference to the penny (see `benchmarks/`).
+This notebook uses one of the benchmark models, which CFDL validates against an independent reference to the penny.
 
 ```python
 # On Colab, install the SDK and fetch the models this notebook reads.

@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -89,7 +89,7 @@ bench:
 # there. A release build of the whole engine used to be required just to satisfy
 # a freshness stamp on a 2 MB artifact only the website consumes, which was the
 # single largest cost in this loop.
-ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice rule-fragments doc-examples benchmark-cases
+ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice rule-fragments doc-examples shipped-examples benchmark-cases
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
@@ -184,6 +184,12 @@ benchmark-cases:
 doc-examples:
 	cargo build -p cfdl-cli
 	$(PYGATE) tools/check-doc-examples.py
+
+# A shipped example must run the way a reader will run it: with its own
+# run.json. The Monte Carlo lesson shipped a config the engine rejected.
+shipped-examples:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/check-shipped-examples.py
 
 py-develop:
 	pip install -e "python/[dev,viz]"

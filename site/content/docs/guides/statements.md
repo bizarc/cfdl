@@ -1,11 +1,11 @@
 ---
 id: guide-statements
-title: "Statements & reporting"
+title: "Statements and reporting"
 slug: "/docs/guides/statements"
 generated: none
 ---
 
-# Statements & reporting
+# Statements and reporting
 
 How to get a pro forma out of a model, put your own lines on it, and read it at
 the grain you report in.
@@ -14,8 +14,8 @@ For what the pieces are, see [Statements](/docs/reference/statements).
 
 ## Get a statement
 
-Use a pack. That is the whole requirement — a pack classifies the streams its
-contracts emit, and declares the statement they roll into.
+Use a pack. A pack classifies the streams its contracts emit, and declares the
+statement they roll into. Nothing else is required.
 
 ```cfdl
 version 0.1
@@ -23,7 +23,7 @@ model "statement-walkthrough"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity real_estate tower
+entity asset tower : CRE.Asset.RealProperty
 
 contract cre.lease {
   term 2026-01..2027-12
@@ -49,7 +49,7 @@ A stream that carries no category is not on the statement — it appears in an
 `category` and it joins the right line and every subtotal above it:
 
 ```cfdl
-stream cre.parking on entity real_estate.tower inflow currency USD {
+stream cre.parking on entity asset.tower inflow currency USD {
   schedule every month from 2026-01 to 2027-12
   category operating.revenue.other
   amount = 3000

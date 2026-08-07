@@ -1,11 +1,11 @@
 ---
 id: concepts
-title: How CFDL Works
+title: How CFDL works
 slug: /docs/concepts
 generated: none
 ---
 
-# How CFDL Works
+# How CFDL works
 
 CFDL (Cash Flow Domain Language) is a small, declarative language for
 modeling cash flows. You declare *what* the deal is — entities, contracts,
@@ -38,13 +38,21 @@ Both documents have published JSON Schemas — see the
 
 - **Time** — one calendar declaration (`time calendar monthly from 2026-01
   for 72`) defines the period grid everything else lands on.
-- **Entities** — the things that own cash flows (`entity legal borrower`,
-  `entity real_estate property`).
+- **Entities** — the things a model is about. An `asset` produces or consumes
+  cash (`entity asset tower : CRE.Asset.RealProperty`); a `party` contracts,
+  owns or lends (`entity party acme : CRE.Party.Tenant`). A type is checked
+  against the active pack's vocabulary, and may carry a lifecycle — a closed set
+  of states the asset moves through. See [the object
+  model](/docs/object-model).
 - **Streams** — dated cash flow series with a schedule and an amount
   expression. The lowest-level building block.
 - **Contracts** — pack-templated bundles of streams declared with business
   terms (`contract cre.lease { terms { base_rent = 25000 } }`). The compiler
   expands them into streams using the pack's rules.
+- **Events and options** — an event is a condition and a state change
+  (`event expiry when time.t >= 24 { set entity asset.suite.status = "downtime" }`);
+  an option is a contract with an exercise condition and a payoff. Both are
+  recorded in results as a transition log.
 - **Assumptions** — named inputs, fixed (`assume rate = 0.10`) or stochastic
   (`assume growth ~ Normal(mean=0.02, stdev=0.01)`), referenced from
   expressions as `inputs.<name>`.
@@ -82,4 +90,4 @@ sheets instead of formula collections. Every pack is gated by a
 | [API server](/docs/api-server) | integrating CFDL into another product | [Run the server](/docs/install/api-server) |
 | VS Code | authoring models with diagnostics + hover | [VS Code and LSP](/docs/install/vscode) |
 
-Next: [Getting Started](/docs/getting-started) walks you through your first model.
+Next: [Getting started](/docs/getting-started) walks you through your first model.
