@@ -1004,7 +1004,7 @@ gate only fires for codes someone remembered to document. Extracting from Rust
 needs to exclude the deliberately corrupted codes inside parser tests
 (`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.
 
-### 7.12 A pool's amortisation state is not exposed — PARTIAL
+### 7.12 A pool's amortisation state is not exposed — RESOLVED
 
 **Not resolved.** An earlier plan recorded this as closed by the fold layer; it
 was not, and the correction is worth keeping. The fold layer shipped for CRE
@@ -1016,11 +1016,23 @@ only, and `benchmarks/credit/auto_abs_speed_050` still asserts one column,
 prepayments folded together. That is the input this item was missing, and
 `tools/benchmark-runner.py` accepts a verbatim series key, so it is assertable.
 
-**What is still missing.** Percent-outstanding is cumulative principal over the
-ORIGINAL balance, and neither the running sum nor the original balance is
-expressible as a subtotal — a subtotal folds one period, and this needs a
-cumulative one. That is the remaining work: either a `cumulative` op, or a pool
-factor computed where the balance state already lives.
+**Resolved with a `cumulative` op.** Percent-outstanding is a STOCK derived from
+a FLOW, which every other subtotal op structurally cannot express — they all
+answer "what happened this period" and this asks "how much so far".
+
+`packs/credit/statements.toml` now publishes the chain: principal paid to date,
+the original balance from the pool purchase, the balance still outstanding, and
+`domain.credit.pool_factor` as the ratio of the last two. Verified on
+`benchmarks/credit/level_pay_pool`, which amortises 0.9871, 0.9742, 0.9615 down
+to 0.0716 against a 24,750,000 pool.
+
+Subtraction is expressed as a sum of a negated cumulative rather than as a new
+op — adding a negative is the same arithmetic with one fewer concept in the
+language.
+
+A model with no purchase stream reports a null pool factor rather than a
+misleading 1.0: `benchmarks/credit/auto_abs_speed_050` models the pool without
+its acquisition, so the original balance is genuinely unknown there.
 
 #### Original entry: 7.12 A pool's amortisation state is not exposed
 

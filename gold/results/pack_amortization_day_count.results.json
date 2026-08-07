@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "2990e157529128dafd8fcba407b9f730ce3e82acb3f791e3a1cc760c27a44f19",
+  "model_hash": "7d3d0c127926027092c388e942c65baff1c7d5f891269ad1f4add35f17641c62",
   "ledger_hash": "ac0748093eb07abf606ced80748fd8f68fa3ed8624f761229fd83467a732568d",
   "engine": {
     "name": "cfdl-engine",
@@ -192,6 +192,67 @@
       }
     },
     "series": {
+      "domain.credit.balance_outstanding": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": -44875.68499,
+            "currency": "USD"
+          },
+          {
+            "amount": -156835.534736,
+            "currency": "USD"
+          },
+          {
+            "amount": -202638.761315,
+            "currency": "USD"
+          },
+          {
+            "amount": -271087.59294,
+            "currency": "USD"
+          },
+          {
+            "amount": -317830.769553,
+            "currency": "USD"
+          },
+          {
+            "amount": -387195.294437,
+            "currency": "USD"
+          },
+          {
+            "amount": -434890.995526,
+            "currency": "USD"
+          },
+          {
+            "amount": -483067.72675,
+            "currency": "USD"
+          },
+          {
+            "amount": -553828.811288,
+            "currency": "USD"
+          },
+          {
+            "amount": -602977.244763,
+            "currency": "USD"
+          },
+          {
+            "amount": -674684.955365,
+            "currency": "USD"
+          },
+          {
+            "amount": -724818.090308,
+            "currency": "USD"
+          },
+          {
+            "amount": -724818.090308,
+            "currency": "USD"
+          }
+        ]
+      },
       "domain.credit.gross_collections": {
         "index": {
           "calendar": "monthly",
@@ -314,6 +375,89 @@
           }
         ]
       },
+      "domain.credit.original_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.pool_factor": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ]
+      },
       "domain.credit.principal_collections": {
         "index": {
           "calendar": "monthly",
@@ -371,6 +515,128 @@
           },
           {
             "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_negated": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": -44875.68499,
+            "currency": "USD"
+          },
+          {
+            "amount": -156835.534736,
+            "currency": "USD"
+          },
+          {
+            "amount": -202638.761315,
+            "currency": "USD"
+          },
+          {
+            "amount": -271087.59294,
+            "currency": "USD"
+          },
+          {
+            "amount": -317830.769553,
+            "currency": "USD"
+          },
+          {
+            "amount": -387195.294437,
+            "currency": "USD"
+          },
+          {
+            "amount": -434890.995526,
+            "currency": "USD"
+          },
+          {
+            "amount": -483067.72675,
+            "currency": "USD"
+          },
+          {
+            "amount": -553828.811288,
+            "currency": "USD"
+          },
+          {
+            "amount": -602977.244763,
+            "currency": "USD"
+          },
+          {
+            "amount": -674684.955365,
+            "currency": "USD"
+          },
+          {
+            "amount": -724818.090308,
+            "currency": "USD"
+          },
+          {
+            "amount": -724818.090308,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_to_date": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          {
+            "amount": 44875.68499,
+            "currency": "USD"
+          },
+          {
+            "amount": 156835.534736,
+            "currency": "USD"
+          },
+          {
+            "amount": 202638.761315,
+            "currency": "USD"
+          },
+          {
+            "amount": 271087.59294,
+            "currency": "USD"
+          },
+          {
+            "amount": 317830.769553,
+            "currency": "USD"
+          },
+          {
+            "amount": 387195.294437,
+            "currency": "USD"
+          },
+          {
+            "amount": 434890.995526,
+            "currency": "USD"
+          },
+          {
+            "amount": 483067.72675,
+            "currency": "USD"
+          },
+          {
+            "amount": 553828.811288,
+            "currency": "USD"
+          },
+          {
+            "amount": 602977.244763,
+            "currency": "USD"
+          },
+          {
+            "amount": 674684.955365,
+            "currency": "USD"
+          },
+          {
+            "amount": 724818.090308,
+            "currency": "USD"
+          },
+          {
+            "amount": 724818.090308,
             "currency": "USD"
           }
         ]
@@ -977,6 +1243,23 @@
     },
     "annual_rollup": {
       "series": {
+        "domain.credit.balance_outstanding": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -4854731.461971,
+              "currency": "USD"
+            },
+            {
+              "amount": -724818.090308,
+              "currency": "USD"
+            }
+          ]
+        },
         "domain.credit.gross_collections": {
           "index": {
             "calendar": "annual",
@@ -1011,6 +1294,34 @@
             }
           ]
         },
+        "domain.credit.original_balance": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.pool_factor": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            null,
+            null
+          ]
+        },
         "domain.credit.principal_collections": {
           "index": {
             "calendar": "annual",
@@ -1024,6 +1335,40 @@
             },
             {
               "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_negated": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -4854731.461971,
+              "currency": "USD"
+            },
+            {
+              "amount": -724818.090308,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_to_date": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 4854731.461971,
+              "currency": "USD"
+            },
+            {
+              "amount": 724818.090308,
               "currency": "USD"
             }
           ]

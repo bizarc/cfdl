@@ -56,6 +56,67 @@ op = "sum"
 categories = ["operating.*"]
 formula = "sum(operating.*)"
 
+# --- Pool factor -----------------------------------------------------------
+#
+# Percent of the pool still outstanding is what an ABS exhibit publishes, and
+# it is a STOCK derived from a FLOW: cumulative principal against the original
+# balance. Every other subtotal here answers "what happened this period"; these
+# answer "how much so far", which is why they need the `cumulative` op.
+#
+# Until they existed, `benchmarks/credit/auto_abs_speed_050` reconciled its
+# published percent-outstanding column in prose, because there was no per-period
+# series to assert against.
+
+# Principal returned to date, scheduled and unscheduled together.
+[[subtotals]]
+id = "domain.credit.principal_paid_to_date"
+kind = "money"
+op = "cumulative"
+subtotals = ["domain.credit.principal_collections"]
+formula = "running total of principal collections"
+
+# What was advanced to acquire the pool. `negated_cumulative` because a purchase
+# is an outflow and stored negative; the original balance is a positive number.
+# Cumulative rather than per-period so it stays available in every later period,
+# not only the one the pool was bought in.
+[[subtotals]]
+id = "domain.credit.original_balance"
+kind = "money"
+op = "negated_cumulative"
+categories = ["investing.purchase"]
+formula = "-cumulative(investing.purchase)"
+
+# Principal paid to date, negated, so the subtraction below is a sum. `sum`
+# adds its referenced subtotals; there is no subtracting op, and adding a
+# negative is the same arithmetic with one fewer concept in the language.
+[[subtotals]]
+id = "domain.credit.principal_paid_negated"
+kind = "money"
+op = "negated_cumulative"
+subtotals = ["domain.credit.principal_collections"]
+formula = "-cumulative(principal collections)"
+
+# Still outstanding: what was advanced, less what has come back.
+[[subtotals]]
+id = "domain.credit.balance_outstanding"
+kind = "money"
+op = "sum"
+subtotals = [
+  "domain.credit.original_balance",
+  "domain.credit.principal_paid_negated",
+]
+formula = "original balance less principal paid to date"
+
+# The published figure. Undefined before the pool is bought, which is a zero
+# denominator and so a null rather than a misleading 1.0.
+[[subtotals]]
+id = "domain.credit.pool_factor"
+kind = "number"
+op = "ratio"
+numerator = "domain.credit.balance_outstanding"
+denominator = "domain.credit.original_balance"
+formula = "domain.credit.balance_outstanding / domain.credit.original_balance"
+
 # ---------------------------------------------------------------------------
 
 [[statements]]
