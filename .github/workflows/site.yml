@@ -227,13 +227,17 @@ jobs:
       # freshness gates were approximating.
       #
       # What remains is what freshness never covered: that it reports the engine
-      # version it was built from, runs, and is within budget.
+      # version it was built from, and that it runs.
+      #
+      # SIZE IS CHECKED BY THE BUILD STEP ABOVE, not here. `check-wasm-budget`
+      # existed to catch a COMMITTED bundle drifting from the budget between
+      # rebuilds; no bundle is committed now, so it was re-checking the bytes
+      # build-wasm.sh had just checked, one step earlier, in the same job.
       - name: Check the bundle
         working-directory: site
         run: |
           node scripts/check-wasm-version.mjs
           node scripts/check-wasm-smoke.mjs
-          node scripts/check-wasm-budget.mjs
 
       # From the REPO ROOT, not site/. The Vercel project sets rootDirectory to
       # `site` in its own settings, so running from site/ makes the CLI resolve

@@ -309,8 +309,30 @@ Then delete what is now dead weight:
 - the `crates/**` and `Cargo.toml` path filters in `site.yml`, which existed
   only so the freshness gate would run
 
-Keep `BUDGET_KB` in `build-wasm.sh`. It now runs in CI on every deploy, which is
-a better place for it than a developer's laptop.
+## Bundle size: a delta alarm, not a ceiling
+
+`build-wasm.sh` compares the gzipped bundle against `site/.wasm-size-baseline`
+and fails only on a **jump** — more than 15% over the recorded figure.
+
+The absolute ceiling it replaced did not hold. It went 640 -> 680 -> 740 on top
+of four earlier raises; every one was deliberate and documented, which is the
+tripwire working as designed and also the evidence that a fixed number cannot
+stay right in a language still gaining surface. A ceiling that always moves is a
+speed bump, and each move cost a failed deploy and a commit.
+
+It also aimed at the wrong risk. Steady growth from real work is expected. The
+failure worth catching is a large table embedded by accident or a dependency
+pulling something in — a jump, which an absolute number cannot distinguish from
+a feature.
+
+**The comparison runs in CI only**, and that is a measurement fact rather than
+caution: the same commit built on a laptop and on the runner differs by ~8%
+gzipped (778 KB against 717 KB), because rustc, binaryen and the debug info they
+emit vary by machine. That is over half the threshold before anything has
+changed. A local build reports its size and stops.
+
+To move the baseline deliberately, edit `site/.wasm-size-baseline` in the same
+commit as the change that grew it.
 
 
 ---
