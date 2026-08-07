@@ -2,13 +2,8 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ds/Button";
-
-const NAV = [
-  { href: "/docs/getting-started", label: "Docs" },
-  { href: "/docs/packs", label: "Packs" },
-  { href: "/docs/benchmarks", label: "Benchmarks" },
-  { href: "/docs/specification", label: "Reference" },
-];
+import { MobileNav } from "@/components/MobileNav";
+import { NAV } from "@/lib/nav";
 
 /** lucide-react dropped brand marks, so the GitHub glyph lives here. */
 
@@ -37,6 +32,7 @@ export function SiteHeader() {
             <Link href="/playground">Playground</Link>
           </Button>
           <ThemeToggle />
+          <MobileNav />
         </div>
       </div>
     </header>

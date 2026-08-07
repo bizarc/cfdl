@@ -58,6 +58,7 @@ Complete models for every pack, each checked period by period against an indepen
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) — A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination.
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) — An interest-only loan repaying its entire principal in a single balloon at maturity.
 - [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) — A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal.
+- [Credit: a mortgage pool modelled loan by loan](/docs/examples/credit-mbs-pool-by-loan) — The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children.
 - [Credit: mortgage pool conventions](/docs/examples/credit-mbs-pool-conventions) — A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector.
 - [Credit: mortgage pool on a prepayment ramp](/docs/examples/credit-mbs-pool-ramped) — A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off.
 

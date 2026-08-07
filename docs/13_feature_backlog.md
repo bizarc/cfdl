@@ -1406,3 +1406,39 @@ a transition is recorded even when the value does not change, because the
 question is whether the event fired; and visibility is two rules, not one — an
 event or option guard reads the state as the period opened, a stream reads it as
 the period closed.
+
+### 7.19 An ontology field named after a keyword cannot be written
+
+*Belongs with language and packs (section 5).*
+
+`Credit.Asset.Loan` declares three fields — `original_balance`, `coupon` and
+`term`. The third cannot be set by any model:
+
+```
+entity asset loan_a : Credit.Asset.Loan {
+  term = 360          // ERROR[E0004_EXPECTED_TOKEN]
+}
+```
+
+`term` is a keyword, so the lexer never offers it as an attribute name and the
+entity block will not accept it. The ontology declares a field that is
+unreachable from the language, and nothing says so — the pack loads, the type
+validates, and the failure appears only when someone writes the attribute.
+
+Two ways to close it, and they are not equivalent:
+
+1. **Accept keyword-shaped identifiers in attribute position.** The parser knows
+   it is reading an attribute name there, so the ambiguity is local. Larger
+   change, and it makes the grammar's keyword set position-dependent.
+2. **Reject the collision at pack load.** `validate_ontology_against_rules`
+   already walks every field; adding a check against the keyword set turns this
+   into a pack error with a name and a line, caught once by whoever writes the
+   pack rather than repeatedly by whoever writes a model. Then rename the field.
+
+The second is smaller and catches the next one at the right moment. It does cost
+the pack a name it wanted, which is the argument for the first.
+
+Found building `benchmarks/credit/mbs_pool_by_loan`, the first case to declare
+typed attributes on loan-level assets. The case is unaffected — the term its
+schedule uses is the contract's `term_months` — so it states the balance and
+coupon and leaves `term` out.
