@@ -129,14 +129,12 @@ a payee. That keeps statements, metrics and the results schema unchanged.
 3. **How is a shortfall published?** Per step, per period, in results. It is the
    thing an analyst reads first, so it should not have to be derived by
    differencing.
-4. **Does `down to` need to see other steps' effects?** Steps 7, 10, 13 and 16
-   each say "after giving effect to any payments made under clauses 4, 5 …".
-   That is satisfied if `measuring` reads the balance as it stands mid-waterfall
-   rather than as it stood at period open — which means a waterfall mutates the
-   balances it measures. That is a real departure from the stream model and is
-   the single hardest question here.
+4. **Does `down to` need to see other steps' effects?** **Settled in §12: yes,
+   and it costs nothing.** The clause is a read of prior steps' payments, which
+   an ordered evaluation already has. No model state is mutated and the stream
+   model is untouched.
 
-Question 4 is the one to settle first. Questions 2 and 3 follow from it.
+Questions 2 and 3 remain open, and no longer depend on question 4.
 
 ## 6. Validating it
 
@@ -223,20 +221,11 @@ then at portfolio level. So a waterfall's output must be able to be another
 waterfall's pot, which makes composition a requirement rather than a
 convenience.
 
-**There are two kinds of "pay until a target", and §2 only found the easy one.**
-
-- *Monotone and closed-form*: pay down to a balance, an OC ratio, capital
-  returned. `min(remaining, max(0, current − target))`. No iteration.
-- *Root-finding*: pay until the LP's **cumulative IRR** reaches 8%, or until a
-  **cumulative MOIC** crosses a ratchet threshold. IRR is a root of a polynomial
-  in the cash flows, so the payment that achieves it cannot be written in closed
-  form.
-
-§2 concluded that solve-to-target is not a solver. That holds for securitisation
-and is wrong in general. The primitive needs both, and they should be
-syntactically distinct so a reader can see which one a model is paying for —
-one is arithmetic, the other is a bounded numeric search with a tolerance and a
-failure mode.
+**Cumulative targets are a second shape**, measured since inception rather than
+for the period: capital returned, a compounded preferred return, a MOIC
+threshold, an IRR hurdle. §12 works through whether any of them needs a solver.
+The answer is no, but the reasoning is not obvious and it is the difference
+between a primitive and a numerical library.
 
 **Regime change is a lifecycle, not a waterfall feature.** An aircraft ABS
 trigger that permanently reorders priority is an asset changing state, which
@@ -287,7 +276,7 @@ a cumulative series, not just the current period.
 
 ## 11. Revised sequence
 
-1. Settle §5 question 4 — whether a waterfall mutates the balances it measures.
+1. ~~Settle §5 question 4~~ — **done, §12**. No mutation; no solver.
 2. Fix the primitive's shape against **four** structures, not one: the ABS deal
    (ordering and caps), a fund carry tier (cumulative root-find target), a
    nested split (composition), and an exit waterfall (once-at-end schedule,
@@ -297,3 +286,89 @@ a cumulative series, not just the current period.
 3. Implement, with the ABS deal as the expressiveness fixture.
 4. Pack templates on top, each with a test that it lowers to the primitive and
    produces what the hand-written steps produce.
+
+## 12. Question 4, settled — and the solver question
+
+### Question 4 does not require mutation
+
+Steps 7, 10, 13 and 16 read "to the extent necessary, **after giving effect to
+any payments made under clauses 4, 5 …**, to reduce the combined principal
+balance of the Class A and Class B Notes to the pool balance".
+
+Written out, step 7's payment is:
+
+    min(remaining, max(0, (A_open − p4 − p5) + B_open − pool_balance))
+
+where `p4` and `p5` are the amounts steps 4 and 5 paid. Those are known by the
+time step 7 evaluates, because the waterfall is ordered. So the clause is a
+**read of prior steps' payments**, not a mutation of anything a stream can see.
+
+Two implementations are available and they produce the same number: carry the
+prior payments and subtract them, or have the waterfall keep a running ledger of
+each payee's balance. The ledger reads better for an author, and it is internal
+to the waterfall's own evaluation either way.
+
+**So there is no departure from the stream model.** A waterfall reads
+period-close state, allocates a pot, and emits streams. Nothing it does is
+visible to a stream in the same period, and `docs/14` §5's boundary holds
+unchanged. Question 4 is closed, and questions 2 and 3 no longer depend on a
+contested answer.
+
+The remaining design choice is presentational: whether the surface exposes
+`paid(step_name)` or a running `balance_of(payee)`. Both are expressible; the
+ledger is the recommendation, because every one of these clauses is written
+about a balance rather than about a payment.
+
+### No solver — and the reason is not the one I expected
+
+The tempting conclusion from §9 was that cumulative tiers need root-finding,
+because IRR is a root of a polynomial in the cash flows. Worked through, every
+tier is **linear in the payment**:
+
+| tier | solve for the payment X | |
+|---|---|---|
+| return of capital | `X = min(pot, unreturned_balance)` | a balance |
+| compounded preferred | `X = min(pot, accrued_pref_balance)` | an accrual, i.e. state |
+| GP catch-up to 20% of profit | `X / (pref + X) = 0.20` → `X = pref / 4` | closed form |
+| 80/20 split | `X = 0.20 × remaining` | arithmetic |
+| MOIC ratchet threshold | `(D + X) / C = m` → `X = m·C − D` | closed form |
+| IRR hurdle | see below | closed form |
+
+**An IRR hurdle is not an IRR calculation.** The tier says *pay until the LP has
+achieved an 8% IRR*. The hurdle rate is **given**, so nothing solves for a rate.
+What is wanted is the payment that makes the present value of all distributions,
+discounted at that known rate, equal the capital contributed — and present value
+is linear in a payment at a fixed rate. One division:
+
+    X = (C − PV(distributions so far at h)) × (1 + h)^t
+
+Checked: capital 100, an 8% hurdle, distributions of 10, 15 and 20 at years 1–3,
+and a final distribution at year 5 gives `X = 91.104238`, at which the present
+value of every flow at 8% is exactly 100.
+
+The engine already carries a bisection solver for `model.irr`, and that is the
+right tool for its job — *reporting* an IRR when the rate is the unknown. It is
+not needed here, where the rate is an input.
+
+### Where a search does remain, and what to use
+
+One roadmap item is genuinely a search: the tax-equity **yield flip**, where the
+flip date is whenever the investor's after-tax return crosses a target. That is
+a search over **dates**, which are discrete and ordered — the same shape as the
+option ladder in `benchmarks/opco/lbo_option_pool_exit`, which enumerates over
+prefixes and needs no solver either.
+
+If a continuous root find is ever unavoidable, it should be **bisection or
+Brent, not Newton-Raphson**, and the reason is this language's central promise.
+Newton needs a derivative, can diverge or oscillate on a polynomial with several
+sign changes, and its iterate path depends on floating-point detail — so the
+same model could converge differently on two machines. Byte-reproducibility is
+the property everything else here is built on. A bracketed method converges
+deterministically or fails deterministically, which is the behaviour to want,
+and it is what `irr_with_offsets` already does with a fixed bracket and a fixed
+iteration count.
+
+**Recommendation: build no solver for the waterfall.** Closed forms cover every
+tier catalogued. If one is later found that does not reduce, add a bracketed
+search with a declared tolerance and a named failure, and make it visible in the
+syntax so a reader can see that a model is paying for iteration.
