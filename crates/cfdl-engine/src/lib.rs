@@ -642,12 +642,25 @@ fn simulate_events(
     config: &RunConfig,
     timeline: &[Date],
     base_inputs: &BTreeMap<String, f64>,
+    states: &BTreeMap<String, Vec<f64>>,
     warnings: &mut Vec<String>,
 ) -> EventSim {
     let periods = timeline.len();
     let mut entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>> =
         Vec::with_capacity(periods);
     let mut current_state: BTreeMap<String, BTreeMap<String, ExprValue>> = BTreeMap::new();
+    // AN ENTITY WITH A LIFECYCLE IS ALWAYS IN EXACTLY ONE STATE, from period 0.
+    // Before the ontology there was no declared state space, so a status was
+    // null until an event wrote one and `entity.status == "x"` was false for
+    // reasons that had nothing to do with the deal.
+    for entity in &ir.entities {
+        if let Some(initial) = &entity.initial_state {
+            current_state
+                .entry(entity.symbol.clone())
+                .or_default()
+                .insert("status".to_string(), ExprValue::String(initial.clone()));
+        }
+    }
     let mut current_active: BTreeMap<String, bool> = BTreeMap::new();
     let mut stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
     let mut option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
@@ -689,7 +702,22 @@ fn simulate_events(
         .collect();
 
     for (t, date) in timeline.iter().enumerate() {
-        let env = build_base_env(ir, config, t, date, base_inputs);
+        // THE SYNCHRONOUS RULE, MADE EXPLICIT.
+        //
+        // Every guard in this period reads the SAME frozen pre-state — the
+        // entity state as it stood when the period opened. Writes accumulate
+        // in `current_state` and become visible at t+1, never at t.
+        //
+        // That is the Esterel/SCADE discipline the engine already had by
+        // accident: `env` was built once before the loop, so nothing could
+        // race. It held vacuously, because guards could read no state at all.
+        // Now that they can, the property has to be deliberate — otherwise the
+        // value of a guard would depend on which event happened to be declared
+        // first, and declaration order would become semantics.
+        let pre_state = current_state.clone();
+        let mut env = build_base_env(ir, config, t, date, base_inputs);
+        bind_states(&mut env, states, t);
+        bind_all_entity_state(&mut env, &pre_state);
         for (event_idx, event) in ir.events.iter().enumerate() {
             if event_fired[event_idx] {
                 continue;
@@ -792,15 +820,23 @@ fn simulate_events(
                     continue;
                 }
             }
+            // An option HAS an owner, so `entity.<field>` in its guard means
+            // the owner's field — the same thing it means in a stream. Events
+            // have no owner and use the qualified path instead.
+            let mut option_env = env.clone();
+            if let Some(owner) = &option.owner {
+                apply_entity_state(&mut option_env, &pre_state, &owner.symbol);
+            }
+            let env = &option_env;
             let forced = forced_exercise.iter().any(|name| name == &option.name);
             let triggered =
-                forced || eval_bool_expr(when, &env, &option.name, "exercise when", warnings);
+                forced || eval_bool_expr(when, env, &option.name, "exercise when", warnings);
             if !triggered {
                 continue;
             }
             option_exercised[option_idx] = true;
             let mut payoff_values = vec![0.0_f64; periods];
-            match cfdl_expr::eval(payoff, &env) {
+            match cfdl_expr::eval(payoff, env) {
                 Ok(ExprValue::Decimal(v)) => payoff_values[t] = v,
                 Ok(ExprValue::Int(v)) => payoff_values[t] = v as f64,
                 Ok(other) => warnings.push(format!(
@@ -892,10 +928,28 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
-    let event_sim = simulate_events(ir, config, &timeline, &base_inputs, &mut warnings);
     // States are recurrences: every period is computed from the completed
-    // previous one, so the whole column exists before any stream is evaluated.
+    // previous one, so the whole column exists before anything reads it.
+    //
+    // THIS RUNS BEFORE EVENTS AND OPTIONS, which is the fix for a defect that
+    // made options nearly useless: an `exercise when` could not read
+    // `state.<name>` because no state existed yet when it was evaluated, and
+    // the failure was silent — a warning and `false`, so the option quietly
+    // never exercised and its value vanished.
+    //
+    // The reorder is sound because the dependency graph is a strict DAG. A
+    // state's `next` reads only `prev`, curves, inputs and time — never a
+    // stream, never an event, never an option — so nothing an event or option
+    // does can reach back into a state.
     let state_values = compute_states(ir, config, &timeline, &base_inputs, &mut warnings);
+    let event_sim = simulate_events(
+        ir,
+        config,
+        &timeline,
+        &base_inputs,
+        &state_values,
+        &mut warnings,
+    );
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     // Each stream's placement in its period, published on the series so a
     // consumer holding results.json can recompute the time-weighted metrics
@@ -1673,17 +1727,7 @@ fn evaluate_stream(
             let mut env =
                 build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
             apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
-            // `state.<name>` at THIS period. `prev_states`/`prev_self` are left
-            // empty, so `prev` is not merely rejected in a stream — it is not
-            // there to be found. See docs/14_state_and_recurrence.md.
-            env.states = states
-                .iter()
-                .filter_map(|(name, values)| {
-                    values
-                        .get(idx)
-                        .map(|v| (name.clone(), ExprValue::Decimal(*v)))
-                })
-                .collect();
+            bind_states(&mut env, states, idx);
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
@@ -1896,6 +1940,52 @@ fn build_base_env(
 
 /// Expose an entity's event-driven state to expressions, both as
 /// `entity.state.<field>` and directly as `entity.<field>` (spec §12.3).
+/// Bind `state.<name>` to each declared state's value AT period `idx`.
+///
+/// Extracted so a stream and an option bind the SAME period by construction
+/// rather than by two copies agreeing. `prev_states`/`prev_self` are left
+/// empty, so `prev` is not merely rejected outside a recurrence — it is not
+/// there to be found. See docs/14_state_and_recurrence.md.
+fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
+    env.states = states
+        .iter()
+        .filter_map(|(name, values)| {
+            values
+                .get(idx)
+                .map(|v| (name.clone(), ExprValue::Decimal(*v)))
+        })
+        .collect();
+}
+
+/// Bind every entity's state under its qualified path — `entity.asset.tower.status`.
+///
+/// A stream reads `entity.<field>` relative to its owner, which works because a
+/// stream HAS one. An event does not, so the qualified form is how an event
+/// guard names the thing it is asking about. An option has an owner (it is a
+/// contract), so it gets both.
+fn bind_all_entity_state(
+    env: &mut ExprEnv,
+    state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
+) {
+    for (symbol, fields) in state_by_entity {
+        let Some((namespace, name)) = symbol.split_once('.') else {
+            continue;
+        };
+        let inner = ExprValue::Map(fields.clone());
+        match env.entity.get_mut(namespace) {
+            Some(ExprValue::Map(ns_map)) => {
+                ns_map.insert(name.to_string(), inner);
+            }
+            _ => {
+                let mut ns_map = BTreeMap::new();
+                ns_map.insert(name.to_string(), inner);
+                env.entity
+                    .insert(namespace.to_string(), ExprValue::Map(ns_map));
+            }
+        }
+    }
+}
+
 fn apply_entity_state(
     env: &mut ExprEnv,
     state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
@@ -2932,6 +3022,10 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(default)]
     states: Vec<IrState>,
+    /// Declared entities. Read so an entity's lifecycle STARTS where the model
+    /// says rather than at null — the totality the ontology exists to give.
+    #[serde(default)]
+    entities: Vec<IrEntityDecl>,
     /// Run modes the model declares for itself. A `run monte_carlo trials N
     /// seed S` in source used to be parsed, lowered, and then dropped here, so
     /// the model asked for trials and got a single deterministic pass.
@@ -3001,6 +3095,20 @@ struct IrOption {
     payoff: IrExpr,
     #[serde(default)]
     exercisable_in_phase: Option<String>,
+    /// The asset the option is written on. An option is a contract, so it has
+    /// one; with it, `entity.<field>` in a guard means the same thing it means
+    /// in a stream.
+    #[serde(default)]
+    owner: Option<IrEntityRef>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrEntityDecl {
+    symbol: String,
+    /// The lifecycle state this entity opens in. `None` when its type declares
+    /// no lifecycle, which is most entities.
+    #[serde(default)]
+    initial_state: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

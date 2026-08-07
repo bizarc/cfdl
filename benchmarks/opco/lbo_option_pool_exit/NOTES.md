@@ -54,54 +54,53 @@ alone: **neither of the two circularities a sponsor LBO is famous for actually
 requires a solver.** One is linear and collects; the other is discrete but
 ordered, and enumerates.
 
-## Finding 1 — options cannot see model state, and fail silently
+## Finding 1 — options could not see model state, and failed silently
 
-**This is the important finding, and it is a defect rather than a number.**
+**This case found a defect, and the fix is now part of the case.**
 
-An option's `exercise when` is evaluated in the engine's discrete event/option
-pre-pass. That pass builds its own environment, and the environment exposes
-`inputs.` but **not** `state.`. So an option cannot test against anything the
-model computes as state.
-
-The failure mode is what makes it serious. Writing `state.value_per_share` in
-an `exercise when` does **not** fail the build. The engine emits a warning and
-**evaluates the condition to false**:
+An option's `exercise when` was evaluated in the engine's discrete event/option
+pre-pass. That pass built its own environment, and the environment carried
+`inputs.` but **not** `state.`. Writing `state.value_per_share` in an
+`exercise when` did **not** fail the build — the engine warned and evaluated the
+condition to **false**:
 
 ```
 Stream 'mgmt_options_12_50' exercise when evaluation failed [EXPR_EVAL]:
 unknown variable `state.value_per_share`; using false.
 ```
 
-so every option silently declines to exercise and its entire value disappears
-from the model. A valuation that should carry $12.9mm of intrinsic option value
-simply reports zero, with the model still "running clean" to anyone not reading
-warnings. This case found it because the reference publishes the answer;
-without an external number it would have looked like a plausible result.
+so every option silently declined to exercise and **$12.9mm of intrinsic value
+disappeared** from a model that still ran clean to anyone not reading warnings.
+This case only caught it because the reference publishes the answer.
 
-Three things worth separating:
+**Fixed by computing states before events and options.** The reorder is sound
+because the graph is a strict DAG: a state's `next` reads only `prev`, curves,
+inputs and time — never a stream, an event or an option — so nothing an option
+does can reach back into a state. The options now read
+`state.value_per_share` directly, the constant that stood in for it is gone,
+and **every figure below is unchanged**. That is the strongest evidence
+available that the two agree, because only one of them derives the number.
 
-1. **The asymmetry itself** — `inputs.` yes, `state.` no — is undocumented. The
-   language spec says v0.1 "supports only deterministic exercise triggers",
-   which reads as a restriction on *search*, not on which variables resolve.
-2. **The severity of the failure.** A missing variable in a stream `amount` is a
-   compile error (`E5010_TERM_UNKNOWN_INPUT` exists precisely for this). In an
-   `exercise when` it degrades to a warning and a wrong answer. These should
-   agree, and the strict one is right.
-3. **The diagnostic calls an option a "Stream".** Cosmetic next to the above,
-   but it sends a reader looking for a stream that does not exist.
+Three things the defect separated out, all now closed:
 
-The workaround here is to restate the resolved value as an `assume` for the
-options to read. The two are tied by the **test** rather than by the model:
-`expected.csv` asserts `state.value_per_share` against the published figure, so
-if the derivation drifts from the constant the case fails.
+1. The asymmetry (`inputs.` yes, `state.` no) was undocumented, and the spec's
+   "deterministic exercise triggers" reads as a restriction on *search*, not on
+   which variables resolve.
+2. **The severity was wrong.** A missing variable in a stream `amount` is a
+   compile error; in an `exercise when` it degraded to a warning and a wrong
+   answer.
+3. The diagnostic called an option a "Stream".
 
-## Finding 2 — a non-exercised option is absent, not zero
+## Finding 2 — a non-exercised option was absent, not zero
 
 The $22.50 and $25.00 tranches are out of the money at 8.0x, and the engine
-publishes **no series at all** for them — not a zero series. So they cannot be
-asserted as zero; their non-exercise is established by the value per share
-(20.8771, below both strikes) and by the proceeds and share totals, which only
-reconcile if exactly five tranches exercised.
+published **no series at all** for them — not a zero series. A consumer could
+not tell "did not exercise" from "does not exist", and the case could not
+assert a non-exercise, which is half of what an option model has to prove.
+
+Also fixed: every declared option now publishes a series, zero where it did not
+exercise. `expected.csv` asserts both tranches at 0, which is the regression
+test.
 
 Both are deliberately kept in the model. An option model in which every option
 fires is not tested, and the boundary at $20.00 (in, by $0.88) against $22.50
