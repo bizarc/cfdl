@@ -195,7 +195,21 @@ State declarations:
 - `E1005_DUPLICATE_ASSUME` — two assumptions share a name.
 - `E1006_DUPLICATE_OPTION` — two options share a name.
 - `E1007_DUPLICATE_EVENT` — two events share a name.
-- `E1301_UNRESOLVED_ENTITY_REF` — a stream or contract names an entity that is not declared.
+- `E1301_UNRESOLVED_ENTITY_REF` — a stream, contract or event action names an entity that is not declared.
+- `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning.
+- `E1303_UNRESOLVED_CONTRACT_REF` — an event activates or deactivates a contract that is not declared.
+- `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
+- `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
+- `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
+- `E1312_MISSING_REQUIRED_FIELD` — an entity omits a field its type requires.
+- `E1313_UNKNOWN_ENTITY_FIELD` — an entity sets a field its type does not declare. The declared fields are listed.
+- `E1314_UNKNOWN_PARENT_ENTITY` — `part of` names an entity that is not declared. Hierarchy is optional; a declared parent is not.
+- `E1315_ENTITY_PART_OF_ITSELF` — an entity is its own parent.
+- `E1316_UNKNOWN_LIFECYCLE_STATE` — an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely.
+- `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.
+- `E1320_UNKNOWN_PARTY_ENTITY` — a contract or option binds a role to an entity that is not declared.
+- `E1321_NOT_A_PARTY` — a role is bound to an asset. A contract is between parties.
+- `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity.
 - `E1302_UNRESOLVED_STREAM_REF` — something names a stream that is not declared — often an event deactivating one.
 - `E1303_UNRESOLVED_CONTRACT_REF` — something names a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.

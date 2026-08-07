@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -14,6 +14,10 @@ pub enum EngineError {
     InvalidDate(String),
     InvalidRunConfig(String),
     Schedule(String),
+    /// A cross-stream read that can never resolve. The phase split is an engine
+    /// concept, so the check lives with the split rather than being restated in
+    /// the compiler where the two could drift.
+    PhaseReference(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -21,6 +25,7 @@ impl std::fmt::Display for EngineError {
         match self {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
+            EngineError::PhaseReference(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
             EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
@@ -725,7 +730,7 @@ fn simulate_events(
             let Some(when) = &compiled_events[event_idx] else {
                 continue;
             };
-            if !eval_bool_expr(when, &env, &event.name, "event when", warnings) {
+            if !eval_bool_expr(when, &env, "Event", &event.name, "when", warnings) {
                 continue;
             }
             event_fired[event_idx] = true;
@@ -829,8 +834,8 @@ fn simulate_events(
             }
             let env = &option_env;
             let forced = forced_exercise.iter().any(|name| name == &option.name);
-            let triggered =
-                forced || eval_bool_expr(when, env, &option.name, "exercise when", warnings);
+            let triggered = forced
+                || eval_bool_expr(when, env, "Option", &option.name, "exercise when", warnings);
             if !triggered {
                 continue;
             }
@@ -967,9 +972,21 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut phase2: Vec<&IrStream> = Vec::new();
     for stream in &ir.streams {
-        let phase2_stream = cfdl_expr::compile_expr(&stream.amount.src)
-            .map(|compiled| cfdl_expr::uses_series(&compiled))
-            .unwrap_or(false);
+        // A STREAM IS PHASE 2 IF *ANY* OF ITS EXPRESSIONS READS A SERIES, not
+        // just its amount. `active when series_sum(...) > 0` on a stream whose
+        // amount happens not to use one was classified phase 1, handed an empty
+        // series map, and its guard then failed — warned, evaluated FALSE, and
+        // the stream silently produced nothing at all.
+        let uses = |src: &str| {
+            cfdl_expr::compile_expr(src)
+                .map(|compiled| cfdl_expr::uses_series(&compiled))
+                .unwrap_or(false)
+        };
+        let phase2_stream = uses(&stream.amount.src)
+            || stream
+                .active_when
+                .as_ref()
+                .is_some_and(|guard| uses(&guard.src));
         if phase2_stream {
             phase2.push(stream);
             continue;
@@ -999,6 +1016,35 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             &mut stream_series,
         );
         full_series.insert(stream.name.clone(), values);
+    }
+
+    // A PHASE-2 STREAM CANNOT READ ANOTHER PHASE-2 STREAM, and saying so is
+    // the difference between a wrong number and a diagnostic.
+    //
+    // `full_series` is sealed here and never grows, so a phase-2 stream naming
+    // another one matches nothing — and `series_aggregate` returns 0 for an
+    // unmatched name, deliberately, because a pack rule that lowered no stream
+    // should contribute nothing. That default is right for an absent stream and
+    // wrong for a present one: the reference can NEVER work, and it reported a
+    // plausible zero instead of saying so.
+    let phase2_names: BTreeSet<&str> = phase2.iter().map(|s| s.name.as_str()).collect();
+    for stream in &phase2 {
+        let mut sources = vec![stream.amount.src.as_str()];
+        if let Some(guard) = &stream.active_when {
+            sources.push(guard.src.as_str());
+        }
+        for src in sources {
+            for referenced in series_references(src) {
+                if let Some(other) = phase2_names.get(referenced.as_str()) {
+                    return Err(EngineError::PhaseReference(format!(
+                        "Stream '{}' reads series '{other}', which itself reads a series. A \
+                         cross-stream read can only see streams that read none, so this would \
+                         always aggregate to zero.",
+                        stream.name
+                    )));
+                }
+            }
+        }
     }
 
     // Wrapped once, not per accrual: every phase-2 env shares this one map.
@@ -1731,8 +1777,14 @@ fn evaluate_stream(
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
-            let active_value =
-                eval_bool_expr(&active_expr, &env, &stream.name, "active_when", warnings);
+            let active_value = eval_bool_expr(
+                &active_expr,
+                &env,
+                "Stream",
+                &stream.name,
+                "active_when",
+                warnings,
+            );
             if !active_value {
                 continue;
             }
@@ -1778,10 +1830,18 @@ fn record_stream(
     stream_series.insert(stream.name.clone(), cash.to_vec());
 }
 
+/// Evaluate a boolean guard, reporting a failure against the thing that owns it.
+///
+/// `subject_kind` exists because this is called from three places with three
+/// different kinds of subject — a stream's `active when`, an event's `when`,
+/// and an option's `exercise when` — and it used to hardcode "Stream". An
+/// option that failed to evaluate was reported as a stream, sending a reader
+/// looking for something that does not exist.
 fn eval_bool_expr(
     expr: &CompiledExpr,
     env: &ExprEnv,
-    stream_name: &str,
+    subject_kind: &str,
+    subject_name: &str,
     slot: &str,
     warnings: &mut Vec<String>,
 ) -> bool {
@@ -1789,15 +1849,15 @@ fn eval_bool_expr(
         Ok(ExprValue::Bool(value)) => value,
         Ok(other) => {
             warnings.push(format!(
-                "Stream '{}' {} expression returned non-bool '{other:?}'; using false.",
-                stream_name, slot
+                "{subject_kind} '{}' {} expression returned non-bool '{other:?}'; using false.",
+                subject_name, slot
             ));
             false
         }
         Err(err) => {
             warnings.push(format!(
-                "Stream '{}' {} evaluation failed [{}]: {}; using false.",
-                stream_name, slot, err.code, err.message
+                "{subject_kind} '{}' {} evaluation failed [{}]: {}; using false.",
+                subject_name, slot, err.code, err.message
             ));
             false
         }
@@ -1946,6 +2006,46 @@ fn build_base_env(
 /// rather than by two copies agreeing. `prev_states`/`prev_self` are left
 /// empty, so `prev` is not merely rejected outside a recurrence — it is not
 /// there to be found. See docs/14_state_and_recurrence.md.
+/// The series names an expression reads, as written.
+///
+/// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
+/// cross-stream read is. A computed name is not addressed here and is left to
+/// the runtime, where it still returns 0 for an unmatched name.
+fn series_references(src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = src.as_bytes();
+    for func in ["series_sum", "series_avg"] {
+        let mut from = 0usize;
+        while let Some(rel) = src[from..].find(func) {
+            let after = from + rel + func.len();
+            from = after;
+            let mut i = after;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'(' {
+                continue;
+            }
+            i += 1;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'"' {
+                continue;
+            }
+            i += 1;
+            let start = i;
+            while i < bytes.len() && bytes[i] != b'"' {
+                i += 1;
+            }
+            if i <= bytes.len() {
+                out.push(src[start..i].to_string());
+            }
+        }
+    }
+    out
+}
+
 fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
     env.states = states
         .iter()
@@ -4467,5 +4567,81 @@ mod tests {
     fn irr_undefined_all_positive() {
         // No sign change → IRR undefined
         assert!(super::irr_with_offsets(&[(vec![100.0, 200.0], 0.0)]).is_none());
+    }
+}
+
+#[cfg(test)]
+mod phase_reference_tests {
+    use super::*;
+
+    #[test]
+    fn extracts_literal_series_names() {
+        assert_eq!(
+            series_references(r#"series_sum("base.revenue", 0, time.t) * 0.1"#),
+            vec!["base.revenue"]
+        );
+        assert_eq!(
+            series_references(r#"series_avg( "a.b" , 0, 1) + series_sum("c.d", 0, 1)"#),
+            vec!["c.d", "a.b"]
+        );
+        // A computed name is not addressed here; the runtime still returns 0
+        // for an unmatched name, which is right for a stream that never lowered.
+        assert!(series_references("series_sum(name_var, 0, 1)").is_empty());
+        assert!(series_references("amount * 2").is_empty());
+    }
+
+    /// A phase-2 stream reading another phase-2 stream can never resolve —
+    /// `full_series` is sealed before phase 2 runs and never grows — so it
+    /// would always aggregate to zero. That is a wrong number reported as a
+    /// plausible one, which is the failure this rejects.
+    #[test]
+    fn phase2_reading_phase2_is_an_error_not_a_zero() {
+        let ir_json = serde_json::json!({
+            "model": { "name": "m", "currency": "USD" },
+            "time": { "calendar": "annual", "start": "2026-01-01", "periods": 3 },
+            "entities": [{ "symbol": "asset.co" }],
+            "streams": [
+                {
+                    "name": "base.revenue",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl", "src": "100" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                },
+                {
+                    "name": "derived.a",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl",
+                                "src": "series_sum(\"base.revenue\", 0, time.t)" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                },
+                {
+                    "name": "derived.b",
+                    "owner": { "symbol": "asset.co" },
+                    "direction": "inflow",
+                    "currency": "USD",
+                    "amount": { "lang": "cfdl",
+                                "src": "series_sum(\"derived.a\", 0, time.t)" },
+                    "schedule": { "kind": "Every", "every": "annual",
+                                  "from": "2026-01-01", "to": "2028-01-01" }
+                }
+            ]
+        });
+        let ir: Ir = serde_json::from_value(ir_json).expect("ir parses");
+        let err = run_deterministic(&ir, &RunConfig::default())
+            .expect_err("a read that can never resolve is an error");
+        match err {
+            EngineError::PhaseReference(msg) => {
+                assert!(msg.contains("derived.b"), "{msg}");
+                assert!(msg.contains("derived.a"), "{msg}");
+                assert!(msg.contains("always aggregate to zero"), "{msg}");
+            }
+            other => panic!("expected PhaseReference, got {other:?}"),
+        }
     }
 }

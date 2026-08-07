@@ -674,6 +674,61 @@ struct IrProvenance {
 /// A role belongs to the AGREEMENT, not to the entity — the same party is
 /// lessor in one contract and lender in another — so the role list comes from
 /// the contract type and the entity only has to be a party.
+/// Check that every `exercise option` names an option that exists.
+///
+/// The other event-action targets are resolved in `cfdl-resolver`, which has
+/// the symbol tables. Options are not in them, so this one check lives where
+/// the declared options ARE known. Without it a misspelled name matched
+/// nothing and the action was silently inert — the option never fired and
+/// nothing said so.
+fn check_exercise_targets(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Result<(), Vec<Diagnostic>> {
+    let declared: BTreeSet<&str> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Option(option) => Some(option.name.as_str()),
+            _ => None,
+        })
+        .collect();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Event(event) = &source_stmt.statement else {
+            continue;
+        };
+        for action in &event.actions {
+            let cfdl_parser::EventAction::ExerciseOption(name) = action else {
+                continue;
+            };
+            if !declared.contains(name.as_str()) {
+                let mut known: Vec<&str> = declared.iter().copied().collect();
+                known.sort_unstable();
+                diagnostics.push(Diagnostic {
+                    code: "E1304_UNRESOLVED_OPTION_REF".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("Event '{}' exercises unknown option '{name}'.", event.name),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(event.span)),
+                    path: None,
+                    hint: Some(if known.is_empty() {
+                        "The model declares no options.".to_string()
+                    } else {
+                        format!("Declared options: {}.", known.join(", "))
+                    }),
+                    notes: vec![],
+                });
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_party_bindings(
     resolve_output: &cfdl_resolver::ResolveOutput,
     ontology: &cfdl_pack::PackOntology,
@@ -1089,6 +1144,7 @@ fn build_ir(
         .unwrap_or_else(cfdl_pack::PackOntology::language_base);
     check_entity_types(resolve_output, &ontology)?;
     check_party_bindings(resolve_output, &ontology)?;
+    check_exercise_targets(resolve_output)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements

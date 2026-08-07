@@ -80,10 +80,21 @@ register, so it cannot fall behind the language.
 | `E1005_DUPLICATE_ASSUME` | Symbols and references | two assumptions share a name. |
 | `E1006_DUPLICATE_OPTION` | Symbols and references | two options share a name. |
 | `E1007_DUPLICATE_EVENT` | Symbols and references | two events share a name. |
-| `E1301_UNRESOLVED_ENTITY_REF` | Symbols and references | a stream or contract names an entity that is not declared. |
-| `E1302_UNRESOLVED_STREAM_REF` | Symbols and references | something names a stream that is not declared — often an event deactivating one. |
-| `E1303_UNRESOLVED_CONTRACT_REF` | Symbols and references | something names a contract that is not declared. |
-| `E1304_UNRESOLVED_OPTION_REF` | Symbols and references | an event exercises an option that is not declared. |
+| `E1301_UNRESOLVED_ENTITY_REF` | Symbols and references | a stream, contract or event action names an entity that is not declared. |
+| `E1302_UNRESOLVED_STREAM_REF` | Symbols and references | an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. |
+| `E1303_UNRESOLVED_CONTRACT_REF` | Symbols and references | an event activates or deactivates a contract that is not declared. |
+| `E1304_UNRESOLVED_OPTION_REF` | Symbols and references | an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables. |
+| `E1310_ENTITY_BLOCK_WITHOUT_TYPE` | Symbols and references | an entity uses a block but declares no type, so there is nothing to check the block against. |
+| `E1311_UNKNOWN_ENTITY_TYPE` | Symbols and references | an entity declares a type the active ontology does not define. The known types are listed. |
+| `E1312_MISSING_REQUIRED_FIELD` | Symbols and references | an entity omits a field its type requires. |
+| `E1313_UNKNOWN_ENTITY_FIELD` | Symbols and references | an entity sets a field its type does not declare. The declared fields are listed. |
+| `E1314_UNKNOWN_PARENT_ENTITY` | Symbols and references | `part of` names an entity that is not declared. Hierarchy is optional; a declared parent is not. |
+| `E1315_ENTITY_PART_OF_ITSELF` | Symbols and references | an entity is its own parent. |
+| `E1316_UNKNOWN_LIFECYCLE_STATE` | Symbols and references | an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely. |
+| `E1317_TYPE_HAS_NO_LIFECYCLE` | Symbols and references | an entity declares a starting state but its type has no lifecycle. |
+| `E1320_UNKNOWN_PARTY_ENTITY` | Symbols and references | a contract or option binds a role to an entity that is not declared. |
+| `E1321_NOT_A_PARTY` | Symbols and references | a role is bound to an asset. A contract is between parties. |
+| `E1322_UNKNOWN_PARTY_ROLE` | Symbols and references | a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity. |
 | `E1305_UNRESOLVED_PHASE_REF` | Symbols and references | a schedule names a phase that is not declared. |
 | `E1306_INVALID_ENTITY_REF_FORMAT` | Symbols and references | entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy). |
 | `E2001_CONTRACT_MISSING_TERM` | Contracts and streams | a contract omits a term its pack requires. The message names it; see the pack's contract table. |
@@ -189,7 +200,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*138 codes.*
+*149 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related
