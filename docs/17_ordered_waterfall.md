@@ -159,3 +159,141 @@ project-finance cascades. It also retires two existing workarounds — the LBO
 exit waterfall built by hand in `benchmarks/opco/lbo_option_pool_exit`, and the
 equity-first construction draw in `benchmarks/cre/one_lincoln_street` that the
 CRE pack cannot express.
+
+## 8. Templates or freeform
+
+Both, layered — and the layering already exists in this language.
+
+A **stream** is the primitive; a **contract** is a pack template that lowers to
+streams. The user guide states the rule that falls out of it: *use contracts for
+what the pack understands and streams for everything else*, and the two mix
+freely in one model. Waterfalls take the same shape:
+
+| layer | waterfall | precedent |
+|---|---|---|
+| primitive | ordered allocation over a pot | `stream` |
+| template | `credit.sequential_pay`, `opco.american_carry` | `contract` |
+| escape | write the steps out | a hand-written stream |
+
+Neither half works alone. **Templates only** fails on the first deal that
+reorders two steps, and reordering is exactly what an indenture does — the steps
+are bespoke per deal even though the rules are few. **Freeform only** means
+every ABS model is twenty-two hand-written steps, which is unreadable, and it
+abandons the pack's whole proposition: declare business terms, not mechanics.
+
+The design consequence is a bar, and it is stronger than "can it express the
+AmeriCredit deal":
+
+> **Every template must lower to the primitive with no escape hatch.** A
+> template that needs a special case in the engine is a sign the primitive is
+> wrong.
+
+A second rule follows from what the roadmap actually contains: **a template
+parameterises the ordering, it does not hide it.** `sequential_pay` taking an
+ordered list of classes is useful. A template that reduces the twenty-two steps
+to three terms is a trap, because the next deal differs in the ordering and
+nothing about it can be reused.
+
+## 9. What the ABS deal hides
+
+Encoding one deal was the right start and it is not sufficient. Across the
+roadmap there are **31 waterfall-shaped requirements**, and the consumer ABS
+deal is the easiest of them. Three generalisations do not appear in it at all:
+
+| structure | pot | target test | coupling |
+|---|---|---|---|
+| ABS sequential pay | cash | period ratio | none |
+| CLO | cash | period ratio | interest and principal |
+| CMBS | cash | per-loan status | shortfalls written up from the bottom |
+| Aircraft ABS | cash | DSCR/LTV | **permanent** regime change |
+| Private fund carry | cash | **cumulative IRR** | none |
+| GP-led continuation | cash | **cumulative MOIC** | none |
+| GP stakes | cash | — | **nested**: fund → firm → holder |
+| Film recoupment | cash | — | per title, then portfolio |
+| Water rights | **volume** | seniority | none |
+
+**The pot is not always money.** Water rights allocate a physical supply to
+senior rights first — the same primitive over a quantity, not a currency. That
+is cheap to decide now and expensive to retrofit: the construct should be
+generic in what it allocates, and money should be one instantiation.
+
+**Waterfalls nest.** GP stakes runs a fund waterfall, rolls its carry into a
+firm-level line, and splits that to a stakeholder. Film recoups per title and
+then at portfolio level. So a waterfall's output must be able to be another
+waterfall's pot, which makes composition a requirement rather than a
+convenience.
+
+**There are two kinds of "pay until a target", and §2 only found the easy one.**
+
+- *Monotone and closed-form*: pay down to a balance, an OC ratio, capital
+  returned. `min(remaining, max(0, current − target))`. No iteration.
+- *Root-finding*: pay until the LP's **cumulative IRR** reaches 8%, or until a
+  **cumulative MOIC** crosses a ratchet threshold. IRR is a root of a polynomial
+  in the cash flows, so the payment that achieves it cannot be written in closed
+  form.
+
+§2 concluded that solve-to-target is not a solver. That holds for securitisation
+and is wrong in general. The primitive needs both, and they should be
+syntactically distinct so a reader can see which one a model is paying for —
+one is arithmetic, the other is a bounded numeric search with a tolerance and a
+failure mode.
+
+**Regime change is a lifecycle, not a waterfall feature.** An aircraft ABS
+trigger that permanently reorders priority is an asset changing state, which
+this language already has. A waterfall gated with `active in state` reuses
+lifecycles, events and the transition log rather than inventing a parallel
+mechanism — and the transition log then records *when* the deal flipped to rapid
+amortisation, which is exactly what an analyst asks.
+
+## 10. When a waterfall runs
+
+A waterfall is a **post-free-cash-flow distribution**, and it happens on a
+cadence of its own. Two shapes cover the roadmap:
+
+- **Every period.** An ABS distribution date, a CLO payment date, a project
+  finance cash cascade, a fund's quarterly distribution.
+- **Once, at the end of a hold.** An LBO exit waterfall, a fund liquidation, a
+  film's final recoupment. `benchmarks/opco/lbo_option_pool_exit` is exactly
+  this, written by hand.
+
+So a waterfall takes a **`schedule`**, the same construct a stream takes, and
+the two shapes are `schedule every month …` and `schedule on <date>`. That is
+reuse rather than a new mechanism, and it settles a question §4 left vague by
+saying only "after streams and states are known":
+
+    waterfall opco.exit on entity asset.target {
+      schedule on 2021-01
+      from state.exit_equity
+      ...
+    }
+
+Three consequences.
+
+**Ordering within a period is now explicit.** Streams and states resolve, the
+period's free cash flow is known, and *then* waterfalls run in declaration
+order. A waterfall never feeds a stream in the same period, which is what keeps
+it out of the dependency graph — the boundary `docs/14` §5 drew.
+
+**A periodic waterfall and an exit waterfall can coexist in one model**, which
+is the normal case: a deal sweeps cash to lenders every period and splits the
+residual to equity once at exit. Two declarations on two schedules, no special
+case.
+
+**An end-of-hold waterfall is where the cumulative targets live.** A preferred
+return, a catch-up and a carry split are evaluated against cash flows *since
+inception*, not against this period's. That is why the root-finding targets in
+§9 cluster on the once-at-exit shape, and it means the primitive needs access to
+a cumulative series, not just the current period.
+
+## 11. Revised sequence
+
+1. Settle §5 question 4 — whether a waterfall mutates the balances it measures.
+2. Fix the primitive's shape against **four** structures, not one: the ABS deal
+   (ordering and caps), a fund carry tier (cumulative root-find target), a
+   nested split (composition), and an exit waterfall (once-at-end schedule,
+   cumulative targets). If one primitive expresses all four, it is probably
+   right. `benchmarks/opco/lbo_option_pool_exit` is the fourth, already written
+   by hand, so it doubles as the test that the construct earns its place.
+3. Implement, with the ABS deal as the expressiveness fixture.
+4. Pack templates on top, each with a test that it lowers to the primitive and
+   produces what the hand-written steps produce.
