@@ -28,8 +28,8 @@ contract energy.capex on entity asset.pv {
 contract energy.ppa on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000
-    ppa_price = 45
+    mwh_year = 250000 "MWh/yr"
+    ppa_price = 45 "USD/MWh"
     escalation = 0.02
     degradation = 0.005
   }

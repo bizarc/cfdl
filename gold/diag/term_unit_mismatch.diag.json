@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5024_TERM_UNIT_MISMATCH",
+    "severity": "error",
+    "message": "Contract 'energy.ptc' term 'credit_per_mwh' is stated in c/kWh, but the rule expresses it in USD/MWh.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 5,
+      "end_line": 20,
+      "end_col": 33
+    },
+    "path": null,
+    "hint": "Restate the value in USD/MWh. Units are not converted: the number in the model is the number the engine uses.",
+    "notes": []
+  }
+]

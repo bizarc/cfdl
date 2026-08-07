@@ -1,0 +1,15 @@
+version 0.1
+model "unit-annotations"
+use pack "energy" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+entity asset plant : Energy.Asset.GenerationFacility
+
+// The unit is an assertion about what the number means. It agrees here.
+contract energy.ptc on entity asset.plant {
+  term 2026-01..2028-01
+  terms {
+    mwh_year        = 250000 "MWh/yr"
+    credit_per_mwh  = 27.50 "USD/MWh"
+  }
+}

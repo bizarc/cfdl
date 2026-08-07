@@ -115,6 +115,10 @@ escalation = "0"
 # Base rent above is now GROSS and this is the offset, so the two still sum to
 # the rent actually collected. `domain.cre.noi` carries this family in its
 # denominator, which is what keeps NOI unchanged by the split.
+
+[rules.units]
+rent_year = "USD/yr"
+
 [[rules]]
 id = "cre_lease_unit_abatement"
 contract_name = "cre.lease_unit"

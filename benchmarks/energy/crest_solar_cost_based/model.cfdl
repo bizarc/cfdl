@@ -41,8 +41,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    mwh_year    = 3161.59715
-    ppa_price   = 231.50
+    mwh_year    = 3161.59715 "MWh/yr"
+    ppa_price   = 231.50 "USD/MWh"
     degradation = 0.005
     escalation  = 0
   }

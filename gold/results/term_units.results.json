@@ -1,0 +1,250 @@
+{
+  "results_version": "0.3",
+  "model_hash": "5c2af808990e5e55f72bfc249c6840795ccdc27a831ba538675ff5ad5cabba7c",
+  "ledger_hash": "01e4d7ed5adff215152ec1f66ea818e078892bc9ef0a516f711ae5832b0798f6",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "energy.ptc",
+        "defaults_applied": [
+          "availability",
+          "degradation",
+          "escalation",
+          "round_step"
+        ],
+        "stream": "energy.ptc.credit",
+        "terms": {
+          "availability": "1",
+          "credit_per_mwh": "27.50",
+          "degradation": "0",
+          "escalation": "0",
+          "mwh_year": "250000",
+          "round_step": "1.00"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.plant.total": {
+        "amount": 21000000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 19062736.205593,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 21000000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.energy.ptc.credit.total": {
+        "amount": 21000000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.energy.cfads": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.debt_service_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.dscr_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.energy.ebitda": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.opex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.energy.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.energy.ptc.credit": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7000000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
