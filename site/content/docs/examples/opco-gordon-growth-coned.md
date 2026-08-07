@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0}}
 // A stable-growth dividend discount valuation of a regulated utility, and the
 // nine-point growth sensitivity grid the source publishes alongside it.
 //

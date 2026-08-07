@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.12}}
 // A 2 MW-dc distributed solar project under a cost-based feed-in tariff,
 // reconciled against a national laboratory's cost-based-incentive model.
 //

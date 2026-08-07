@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.07}}
 version 0.1
 model "io-bullet-loan"
 use pack "credit" version "0.1.0"

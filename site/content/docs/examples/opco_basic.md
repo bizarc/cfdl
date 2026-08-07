@@ -24,7 +24,7 @@ Run stress:
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 version 0.1
 model "opco-basic-example"
 use pack "opco" version "0.1.0"

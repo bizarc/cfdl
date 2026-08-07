@@ -26,7 +26,7 @@ Full developer lifecycle split across files: `time.cfdl` (phases), `structure.cf
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
 version 0.1
 model "cre-multi-file-example"
 use pack "cre" version "0.1.0"
@@ -39,7 +39,7 @@ import "contracts.cfdl"
 
 ## time.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
 phase construction from 2026-01 to 2026-12
 phase lease_up from 2027-01 to 2027-12
 phase perm from 2028-01 to 2031-12
@@ -47,13 +47,13 @@ phase perm from 2028-01 to 2031-12
 
 ## structure.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
 entity real_estate property
 ```
 
 ## contracts.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
 contract cre.construction_stub {
   term 2026-01..2026-06
   terms {

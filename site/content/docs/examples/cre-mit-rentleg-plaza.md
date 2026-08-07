@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.12}}
 // Rentleg Plaza — MIT OCW 11.431J/15.426J Problem Set 1, Part C.
 //
 // External reference case. 30,000 NRSF office, two suites, 5-year annual

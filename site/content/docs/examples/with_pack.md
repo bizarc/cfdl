@@ -16,7 +16,7 @@ Compile:
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 version 0.1
 model "tutorial-with-pack"
 use pack "opco" version "0.1.0"

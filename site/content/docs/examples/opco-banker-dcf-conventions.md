@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.10375}}
 // A sell-side banker's DCF of an enterprise-software business, reconciled
 // against the disclosed analysis in a public merger filing.
 //

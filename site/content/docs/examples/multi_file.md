@@ -22,7 +22,7 @@ Compile:
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1}}
 version 0.1
 model "tutorial-multi-file"
 time calendar monthly from 2026-01 for 24

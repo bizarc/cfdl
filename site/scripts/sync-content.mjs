@@ -166,6 +166,30 @@ function buildCompilerSpecDigest() {
  */
 const generatedPages = new Set();
 
+/**
+ * A fence opener that carries the model's own run config.
+ *
+ * The playground applies a default rate to anything arriving without one, so a
+ * reader who clicks "open in playground" from a page stating an NPV would meet
+ * a different number — which reads as the engine disagreeing with the
+ * documentation rather than as two different assumptions.
+ *
+ * Emitted on one line because a fence's meta string is the only channel that
+ * survives markdown into the renderer.
+ */
+function cfdlFence(dir) {
+  const runPath = path.resolve(dir, "run.json");
+  if (!fs.existsSync(runPath)) return "```cfdl";
+  try {
+    const config = JSON.parse(fs.readFileSync(runPath, "utf8"));
+    return "```cfdl run=" + JSON.stringify(config);
+  } catch {
+    // A model whose run.json will not parse is a problem for the benchmark
+    // runner to report, not a reason to emit a broken page.
+    return "```cfdl";
+  }
+}
+
 function writeGenerated(relativePath, content) {
   generatedPages.add(toPosix(relativePath));
   const targetPath = path.resolve(docsOutputRoot, relativePath);
@@ -368,7 +392,7 @@ for (const name of exampleDirs) {
     "",
     "## model.cfdl",
     "",
-    "```cfdl",
+    cfdlFence(path.resolve(exampleRoot, name)),
     model,
     "```",
     ""
@@ -420,7 +444,7 @@ for (const name of domainExampleOrder) {
     const content = fs.readFileSync(path.resolve(dir, file), "utf8").trimEnd();
     body.push(`## ${file}`);
     body.push("");
-    body.push("```cfdl");
+    body.push(cfdlFence(dir));
     body.push(content);
     body.push("```");
     body.push("");
@@ -583,7 +607,7 @@ for (const { pack, name } of benchCases) {
       "",
       "## The model",
       "",
-      "```cfdl",
+      cfdlFence(caseDir),
       model,
       "```",
       "",

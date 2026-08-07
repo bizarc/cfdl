@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The model
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.064}}
 // 100 MW-AC merchant renewable project with a capacity contract and the
 // production tax credit, reconciled against the national laboratory's
 // open-source project-finance model.

@@ -18,7 +18,7 @@ The results carry percentiles alongside the deterministic figures.
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1},"monte_carlo":{"trials":500,"seed":42}}
 version 0.1
 model "tutorial-uncertainty"
 time calendar monthly from 2026-01 for 24

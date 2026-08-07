@@ -20,7 +20,7 @@ than declared in the model.
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.08}}
 version 0.1
 model "tutorial-curves"
 time calendar monthly from 2026-01 for 36

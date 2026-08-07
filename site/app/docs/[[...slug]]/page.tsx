@@ -26,11 +26,24 @@ type Params = { slug?: string[] };
  * Carries the original source and language onto the rendered element so a
  * code block can offer copy and open-in-playground without reconstructing
  * text from highlighted spans.
+ *
+ * A fence may also carry a run config in its meta string:
+ *
+ *     ```cfdl run={"deterministic":{"annual_discount_rate":0.075}}
+ *
+ * Generated pages emit it from the model's own `run.json`, so opening a
+ * benchmark in the playground values it at the rate its published figures were
+ * struck at rather than the playground's default. Without it a reader clicks
+ * through from a stated NPV and meets a different number, which reads as the
+ * engine disagreeing with the documentation.
  */
 const codeMetadataTransformer: ShikiTransformer = {
   pre(node) {
     node.properties["data-lang"] = this.options.lang;
     node.properties["data-code"] = this.source;
+    const meta = this.options.meta?.__raw ?? "";
+    const run = meta.match(/(?:^|\s)run=(\{.*\})\s*$/);
+    if (run) node.properties["data-run"] = run[1];
   },
 };
 

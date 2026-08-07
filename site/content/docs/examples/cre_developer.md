@@ -34,7 +34,7 @@ The provided run configs demonstrate deterministic override testing with:
 
 ## model.cfdl
 
-```cfdl
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"stream.cre.lease.base_rent:amount":25000,"stream.real_estate.ops_expense:amount":12000,"stream.cre.exit.sale:amount":3000000}}}
 version 0.1
 model "cre-developer-example"
 use pack "cre" version "0.1.0"
