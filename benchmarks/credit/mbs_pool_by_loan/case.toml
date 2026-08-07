@@ -1,0 +1,34 @@
+# Benchmark case: the same 30-year agency-MBS pool as `mbs_pool_conventions`,
+# declared as four loans that belong to a pool rather than as one pool.
+#
+# WHAT MAKES THIS A DIFFERENT CASE AND NOT A DUPLICATE. `mbs_pool_conventions`
+# asserts the published schedule against the contract that produced it. Here the
+# pool holds no contract at all: it has four children, and every figure asserted
+# against it is an aggregate the engine computed by walking `part of`. The
+# conventions are already proven by the other case; what this one proves is that
+# the rollup is real aggregation over the declared relation.
+#
+# THE ASSERTED COLUMNS ARE TWO DIFFERENT MECHANISMS.
+#   entity.asset.pool.net_cash_flow  — the HIERARCHY rollup: a parent's cash is
+#     its children's cash, because they are its children.
+#   domain.credit.gross_collections  — the CATEGORY subtotal: the pack folding
+#     four contract instances into one domain line.
+# Both must reproduce the same published figures. They agree here, and they are
+# computed by unrelated code, so a defect in either shows as a divergence.
+#
+# UNEVEN BALANCES ON PURPOSE: 40/30/20/10, not 25/25/25/25. Four equal loans
+# would agree with the pool under any aggregation that happened to divide by
+# four.
+#
+# The source is external and not redistributable, so it is not vendored and its
+# tables are not reproduced. There is deliberately no reference_gen.py: the
+# figures are the same published anchors the other case carries, summed across
+# the four columns the reference publishes. Addition is the only step taken.
+#
+# period_tolerance = 2.01. Each published figure is rounded to a whole dollar
+# and up to four are added, so two dollars bounds the residual arithmetically.
+# Not a judgement about this deal, and not loosened past it: the largest
+# observed difference is 1.76.
+summary = "The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children."
+pack = "credit"
+period_tolerance = 2.01
