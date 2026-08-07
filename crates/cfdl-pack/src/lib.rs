@@ -795,6 +795,19 @@ pub struct LoweringRule {
     /// prefix), e.g. `"lease_up.months" = "18"`.
     #[serde(default)]
     pub defaults: BTreeMap<String, String>,
+    /// The unit each term is expressed in — `"credit_per_mwh" = "USD/MWh"`.
+    ///
+    /// A quantity without a stated dimension is a number that means whatever
+    /// the reader assumes. The energy pack's own comments spend a paragraph
+    /// warning that 0.1 c/kWh is $1.00/MWh and that getting it wrong rounds to
+    /// a hundredth of a cent — indistinguishable from not rounding at all. This
+    /// is where that warning becomes checkable.
+    ///
+    /// A model may ANNOTATE a term with the unit it believes it is writing
+    /// (`credit_per_mwh = 27.50 USD/MWh`). The annotation is an assertion, and
+    /// the rule is the truth: they must agree.
+    #[serde(default)]
+    pub units: BTreeMap<String, String>,
 }
 
 /// Declarative domain-metric definition (metrics.toml). Metrics are

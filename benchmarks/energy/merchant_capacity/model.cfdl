@@ -55,8 +55,8 @@ contract energy.capacity on entity asset.wind {
 contract energy.ptc on entity asset.wind {
   term 2026-01..2035-01
   terms {
-    mwh_year = 250000
-    credit_per_mwh = 27.50
+    mwh_year = 250000 "MWh/yr"
+    credit_per_mwh = 27.50 "USD/MWh"
     escalation = 0.025
     degradation = 0.005
   }

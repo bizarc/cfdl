@@ -80,6 +80,10 @@ amount_year = "0"
 growth_rate = "0"
 growth_curve = ""
 
+
+[rules.units]
+amount_year = "USD/yr"
+
 [[rules]]
 id = "opco_opex_line"
 contract_name = "opco.opex_line"

@@ -1950,7 +1950,46 @@ fn lower_contract_streams(
         let Stmt::Contract(contract) = &source_stmt.statement else {
             continue;
         };
+        // A UNIT ANNOTATION IS AN ASSERTION, and the rule is the truth.
+        //
+        // The energy pack's own comments spend a paragraph warning that
+        // 0.1 c/kWh is $1.00/MWh and that getting it wrong rounds to a
+        // hundredth of a cent — indistinguishable from not rounding at all.
+        // That warning is now checkable: a model may state the unit it
+        // believes it is writing, and a disagreement is an error.
+        //
+        // The mismatch is NOT converted, and there is deliberately no
+        // conversion table. Rescaling would mean the number in the model text
+        // is not the number the engine used, so reading the model would require
+        // knowing a conversion had happened — and a wrong entry in a conversion
+        // table would be a new silent-wrong-answer path, which is the whole
+        // class of failure this work has been closing. The model restates the
+        // value in the unit the rule expects, and stays literal.
         for (key, term) in &contract.terms {
+            let matched = pack
+                .lowering_rules
+                .iter()
+                .find(|rule| rule_matches_contract(&rule.contract_name, &contract.name));
+            if let (Some(stated), Some(rule)) = (term.unit.as_deref(), matched) {
+                if let Some(declared) = rule.units.get(key.as_str()) {
+                    if !units_equal(stated, declared) {
+                        let mut diag = lowering_rule_diag(
+                            "E5024_TERM_UNIT_MISMATCH",
+                            &format!(
+                                "Contract '{}' term '{}' is stated in {stated}, but the rule expresses it in {declared}.",
+                                contract.name, key
+                            ),
+                            source_stmt,
+                            term.span,
+                        );
+                        diag.hint = Some(format!(
+                            "Restate the value in {declared}. Units are not converted: the number \
+                             in the model is the number the engine uses."
+                        ));
+                        diagnostics.push(diag);
+                    }
+                }
+            }
             if let Some(name) = term.input_name() {
                 if declared_inputs.contains(name) {
                     // The input exists; if it declares a clip and the pack
@@ -2840,6 +2879,23 @@ fn valid_contract_term_range(
 /// A rule matches its exact contract name, or any suffixed instance of it
 /// (`cre.lease_unit` matches `cre.lease_unit.tenant_a`) so one rule can lower
 /// many per-tenant/per-unit contracts.
+/// Compare two unit strings.
+///
+/// Case- and space-insensitive, because `USD/MWh` and `usd / mwh` are the same
+/// dimension written by two people. Deliberately NOT a dimensional algebra: it
+/// does not know that `c/kWh` and `USD/MWh` are related, and that is the point
+/// — a pack states one spelling and a model has to match it, which is a
+/// comparison that cannot itself be wrong.
+fn units_equal(a: &str, b: &str) -> bool {
+    let norm = |s: &str| {
+        s.chars()
+            .filter(|c| !c.is_whitespace())
+            .flat_map(|c| c.to_lowercase())
+            .collect::<String>()
+    };
+    norm(a) == norm(b)
+}
+
 fn rule_matches_contract(rule_contract: &str, contract_name: &str) -> bool {
     contract_name == rule_contract
         || contract_name
@@ -4171,6 +4227,7 @@ mod pack_validation_parity_tests {
                 (*key).to_string(),
                 cfdl_parser::ContractTerm {
                     value: (*value).to_string(),
+                    unit: None,
                     span: span(),
                 },
             );

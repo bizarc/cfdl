@@ -1,0 +1,22 @@
+version 0.1
+model "term-unit-mismatch"
+use pack "energy" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// THE TRAP THE PACK'S OWN COMMENT SPENDS A PARAGRAPH ON. The production credit
+// is expressed per MWh, and 0.1 c/kWh is $1.00/MWh — so a model that thinks in
+// cents states a number a hundred times too small, and the result is a
+// plausible-looking credit that is wrong by two orders of magnitude.
+//
+// Before units, nothing noticed. The unit annotation is an assertion about what
+// the number means, the rule declares the truth, and the two must agree.
+
+entity asset plant : Energy.Asset.GenerationFacility
+
+contract energy.ptc on entity asset.plant {
+  term 2026-01..2028-01
+  terms {
+    mwh_year       = 250000 "MWh/yr"
+    credit_per_mwh = 2.75 "c/kWh"
+  }
+}

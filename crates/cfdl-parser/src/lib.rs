@@ -292,6 +292,14 @@ pub enum PaymentTerms {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ContractTerm {
     pub value: String,
+    /// The unit the modeller states the value is in — `250000 MWh`.
+    ///
+    /// Optional, and an ASSERTION rather than a conversion instruction: the
+    /// pack's rule declares what the term is actually expressed in, and a
+    /// disagreement means the modeller is confused about the number, not that
+    /// the engine should rescale it. See E5024.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
     pub span: Span,
 }
 
@@ -1256,6 +1264,32 @@ impl<'a> Parser<'a> {
                     };
                     end_span = value_tok.span;
 
+                    // An optional unit follows the value: `250000 MWh`, or
+                    // `27.50 "USD/MWh"` when it is compound and would otherwise
+                    // lex as three tokens. It is an ASSERTION about what the
+                    // number means — the pack's rule declares the truth — so a
+                    // disagreement is a confused model rather than a rescale.
+                    //
+                    // Consumed before the single-value guard below, which would
+                    // otherwise read it as a stray token.
+                    let mut unit: Option<String> = None;
+                    match self.peek().kind {
+                        TokenKind::String(ref text) => {
+                            unit = Some(text.clone());
+                            end_span = self.bump().span;
+                        }
+                        TokenKind::Ident(ref name)
+                            if !matches!(
+                                self.peek_ahead(1).kind,
+                                TokenKind::Punct(Punct::Equal)
+                            ) =>
+                        {
+                            unit = Some(name.clone());
+                            end_span = self.bump().span;
+                        }
+                        _ => {}
+                    }
+
                     // A term holds exactly one value. Anything else before the
                     // next term or the closing brace used to be discarded in
                     // silence, so `mwh_year = 1000 + 500` compiled as 1000 and
@@ -1284,7 +1318,8 @@ impl<'a> Parser<'a> {
                         key.clone(),
                         ContractTerm {
                             value,
-                            span: merge_spans(tok.span, value_tok.span),
+                            unit,
+                            span: merge_spans(tok.span, end_span),
                         },
                     );
                 }

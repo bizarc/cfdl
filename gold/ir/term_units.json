@@ -1,0 +1,194 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "unit-annotations",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "f5160f6d699abe84dd287f28e2a63842",
+      "symbol": "asset.plant",
+      "type": "Energy.Asset.GenerationFacility",
+      "attrs": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.energy.revenue",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.energy.opex",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.ebitda",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.energy.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service"
+      ],
+      "formula": "-sum(financing.debt_service)"
+    },
+    {
+      "id": "domain.energy.dscr_periodic",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.energy.cfads",
+      "denominator": "domain.energy.debt_service_periodic",
+      "formula": "domain.energy.cfads / domain.energy.debt_service_periodic"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "8e13dfbacf180f443183fad14d3964f5",
+      "name": "energy.ptc",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.plant"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "558c844eabf656354ddf51472026deed",
+      "name": "energy.ptc.credit",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.tax_benefit",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(250000.0 / 1.0) * 1.0 * pow(1.0 - 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * if(1.00 > 0.0, round_to(27.50 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)), 1.00), 27.50 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 9,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ptc_credit"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ptc.credit",
+      "contract": "energy.ptc",
+      "terms": {
+        "availability": "1",
+        "credit_per_mwh": "27.50",
+        "degradation": "0",
+        "escalation": "0",
+        "mwh_year": "250000",
+        "round_step": "1.00"
+      },
+      "defaults_applied": [
+        "availability",
+        "degradation",
+        "escalation",
+        "round_step"
+      ]
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e37f7451351cef8ab4e58f32498a7a9f",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}

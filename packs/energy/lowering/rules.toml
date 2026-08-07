@@ -32,6 +32,11 @@ escalation = "0"
 degradation = "0"
 availability = "1"
 
+
+[rules.units]
+mwh_year = "MWh/yr"
+ppa_price = "USD/MWh"
+
 [[rules]]
 id = "energy_merchant_revenue"
 contract_name = "energy.merchant"
@@ -49,6 +54,11 @@ price_escalation = "0"
 degradation = "0"
 availability = "1"
 
+
+[rules.units]
+mwh_year = "MWh/yr"
+price = "USD/MWh"
+
 [[rules]]
 id = "energy_storage_arbitrage"
 contract_name = "energy.storage_arbitrage"
@@ -64,6 +74,11 @@ schedule_to = "{{contract.term_end}}"
 [rules.defaults]
 degradation = "0"
 
+
+[rules.units]
+mwh_cycled_year = "MWh/yr"
+spread = "USD/MWh"
+
 [[rules]]
 id = "energy_capacity_payment"
 contract_name = "energy.capacity"
@@ -75,6 +90,10 @@ amount_expr = "{{contract.payment_year}} / {{model.periods_per_year}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+
+[rules.units]
+payment_year = "USD/yr"
 
 [[rules]]
 id = "energy_om_expense"
@@ -91,6 +110,10 @@ schedule_to = "{{contract.term_end}}"
 [rules.defaults]
 escalation = "0"
 
+
+[rules.units]
+om_year = "USD/yr"
+
 [[rules]]
 id = "energy_itc_credit"
 contract_name = "energy.itc"
@@ -103,6 +126,10 @@ schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
+
+[rules.units]
+credit = "USD"
+
 [[rules]]
 id = "energy_capex"
 contract_name = "energy.capex"
@@ -114,6 +141,10 @@ amount_expr = "{{contract.amount}}"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
+
+
+[rules.units]
+amount = "USD"
 
 [[rules]]
 id = "energy_debt_service"
@@ -128,6 +159,11 @@ amount_expr = "-pmt({{contract.rate}} / {{model.accrual_divisor}}, {{whole_perio
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+
+[rules.units]
+principal = "USD"
+term_months = "months"
 
 [[rules]]
 id = "energy_ptc_credit"
@@ -168,6 +204,12 @@ escalation = "0"
 degradation = "0"
 availability = "1"
 
+
+[rules.units]
+mwh_year = "MWh/yr"
+credit_per_mwh = "USD/MWh"
+round_step = "USD/MWh"
+
 [[rules]]
 id = "energy_macrs_shield"
 contract_name = "energy.macrs_shield"
@@ -185,3 +227,8 @@ schedule_to = "{{contract.term_end}}"
 
 # `life` is required: the MACRS class life sets the whole depreciation
 # schedule (5 / 7 / 15 / 20), so the model states it.
+
+
+[rules.units]
+basis = "USD"
+life = "years"
