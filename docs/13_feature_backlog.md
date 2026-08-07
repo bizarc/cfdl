@@ -488,14 +488,24 @@ service — which is an instantaneous dependency. The right shape here is an
 pot, not a dependency graph to be solved, so it needs no cycle detection either.
 Design it separately; do not relax the stream reference rules to get it.
 
+**What is left, now that declared state has shipped.** The original entry said
+"no accumulator, no carryforward, no balance that a period can add to and a
+later period draw down", and listed six things needing it. That sentence is no
+longer true and contradicted the paragraph above it — a state IS an accumulator,
+and `next` reading `prev` IS a balance a period adds to and a later one draws
+down. The list splits:
 
-No accumulator, no carryforward, no balance that a period can add to and a
-later period draw down. Cash sweeps, revolver draws, FF&E reserves, escrow
-accounts, NOL carryforwards and construction-interest capitalisation all need
-it, and `packs/opco/lowering/rules.toml` says so in its header.
+- **Still blocked**, because they need SAME-PERIOD information: cash sweeps and
+  revolver draws. How much cash remains after this period's debt service is an
+  instantaneous dependency, and no backward-only construct reaches it. This is
+  the ordered allocation pass above, and it is what remains of 5.2.
+- **Now expressible** as backward recurrences: FF&E reserves, escrow accounts,
+  NOL carryforwards and construction-interest capitalisation.
+  `benchmarks/opco/lbo_circular_interest` carries an average-balance interest
+  schedule with no iteration, which is the shape all four take.
 
-Not discovered by this work — it is a known absence — but recorded here because
-5.1 is a strictly smaller version of it and the two should share a design.
+Not discovered by this work — it was a known absence — but recorded here because
+5.1 was a strictly smaller version of it and the two shared a design.
 
 ---
 

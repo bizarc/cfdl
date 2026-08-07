@@ -112,7 +112,7 @@ state revenue_index {
   next  prev * (1 + curve_value("growth", time.date))
 }
 
-stream firm.revenue on entity legal.firm inflow currency USD {
+stream firm.revenue on entity asset.firm inflow currency USD {
   schedule every year from 2026-01 to 2035-01
   amount = 21765.4 * state.revenue_index
 }

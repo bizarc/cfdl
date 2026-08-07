@@ -217,22 +217,64 @@ entity asset sunset
 ```
 
 Rules:
-- Declaration form: `entity <namespace> <name>` — two bare identifiers.
+- Declaration form: `entity <family> <name>` — two bare identifiers — optionally
+  followed by `: <Type>` and a block.
 - References use the qualified dotted form: `asset.sunset`
   (e.g. `on entity asset.sunset`).
-- Typed entity blocks (`entity asset sunset : CRE.Asset { city = "Austin" }`)
-  are **reserved**: declared in the grammar but not parsed in v0.1
-  (see `10_implementation_status.md`).
-
-### 7.2 Entity state
-- Entities MAY have mutable state values through events:
 
 ```cfdl
-set entity loan.senior.status = "refinanced"
+entity asset tower : CRE.Asset.RealProperty {
+  asset_class = "office"
+  state operating
+}
+
+entity asset suite_a : CRE.Asset.Unit {
+  rentable_area = 10000
+  part of asset.tower
+  state leased
+}
+
+entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
+```
+
+- The **family** is the first identifier: `asset` for something that produces or
+  consumes cash, `party` for someone who contracts, owns, lends or invests.
+- The **type** is checked against the active ontology. With no pack active a
+  model still has the language's own vocabulary — `Asset.Real`,
+  `Asset.Financial`, `Asset.Intangible`, `Party` — because an ontology is a
+  language capability that packs supply defaults for, not one they own. A pack's
+  types are added to those and cannot remove them.
+- Attribute values are **literals**, checked against the type's declared fields.
+- `part of` declares hierarchy and is **always optional, at every grain**. A
+  pool models collective behaviour perfectly well with no loans under it; a
+  building needs no units. The modeller chooses the grain and the language does
+  not prefer one. Where a parent does have children, its cash is aggregated from
+  them **by the relation**, not by a name prefix — published as
+  `entity.<symbol>.net_cash_flow`.
+- An untyped entity remains legal, so a model written before types existed still
+  compiles. The type is what unlocks the checks, not a condition of being an
+  entity.
+
+### 7.2 Entity state
+- An entity's type MAY declare a **lifecycle**: a closed set of states with a
+  mandatory initial one. An entity with a lifecycle is ALWAYS in exactly one of
+  its states, from period 0 — there is no null state and no undeclared state.
+- Events move it:
+
+```cfdl
+event refinance when time.t >= 12 {
+  set entity loan.senior.status = "refinanced"
+}
 ```
 
 Rules:
-- Entity state is the primary mechanism used to trigger/activate contractual behavior.
+- Entity state is the primary mechanism used to trigger/activate contractual
+  behavior. A stream may test it directly with `active in state <name>`, which
+  checks the name against the owner's declared lifecycle — a string comparison
+  cannot be checked, and `entity.state.status == "leasd"` is simply false
+  forever.
+- Every write is published in `deterministic.transitions`, so a transition is
+  observable and assertable rather than inferred from the cash.
 
 ---
 
@@ -574,6 +616,25 @@ event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
 Rules:
 - Events are evaluated **discretely** at each time step of the master timeline.
 - `when` MUST be a boolean expression.
+- **Events LATCH.** An event fires at most once per run, at the first period its
+  condition holds. It does not re-fire if the condition becomes true again, and
+  there is no repeating or level-triggered form. ("Evaluated discretely at each
+  time step" describes when the condition is TESTED, not how often the event may
+  fire — a distinction this spec previously left to be discovered.)
+- **Declaration order decides which event fires first** within a period, and
+  which write wins when two events set the same field.
+- **A guard reads the state as the period OPENED.** Every event and option in a
+  period evaluates against the same frozen pre-state; writes accumulate and are
+  visible at `t+1`. A STREAM, by contrast, reads the state as the period CLOSED,
+  so a transition takes effect in the period it fires. That is the synchronous
+  discipline: transitions all evaluate against the current state, the state
+  commits, then outputs read the committed result. It is what keeps declaration
+  order from changing the value of a guard.
+- A guard may read `state.<name>` and entity state (by qualified path, e.g.
+  `entity.asset.tower.status`, since an event has no owner). It may NOT read a
+  stream.
+- Every write is published in `deterministic.transitions` — period, entity,
+  field, from, to, and the firing event — so a transition is assertable.
 
 ### 12.2 Actions (v0.1 core)
 Supported actions:

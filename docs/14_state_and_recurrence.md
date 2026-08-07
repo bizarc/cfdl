@@ -1,8 +1,15 @@
 # State and recurrence — design
 
-Status: **proposal, not implemented.** Fills the gap noted in
-`docs/13_feature_backlog.md` 5.1/5.2 and referenced four times in
-`packs/opco/lowering/rules.toml` as "H3-style state" with no design written down.
+Status: **shipped.** The construct is `state <name> { init … next … }`; see
+`fixtures/valid/state_smoke` for the smallest example and `compute_states` in
+`crates/cfdl-engine/src/lib.rs` for the evaluation. This document is the design
+that produced it, kept because the reasoning is still the reasoning — with
+corrections appended in §8 and §9 rather than edited in, so a reader can see
+what was believed and what measurement changed.
+
+Filled the gap noted in `docs/13_feature_backlog.md` 5.1/5.2 and referenced four
+times in `packs/opco/lowering/rules.toml` as "H3-style state" with no design
+written down.
 
 ---
 
@@ -86,7 +93,7 @@ to revenue, to opco, or to a pack.
 Streams read it as an ordinary environment path:
 
 ```cfdl
-stream firm.revenue on entity legal.firm inflow currency USD {
+stream firm.revenue on entity asset.firm inflow currency USD {
   schedule every year from 2026-01 to 2035-01
   amount = 21765.4 * state.revenue_index
 }
@@ -318,3 +325,52 @@ The general lesson is the one this design already relies on elsewhere: when a
 construct borrows a concept from another, borrow the *mechanism* too. A state's
 cadence goes through the same `apply_schedule_indices` a stream's does, so the
 two cannot drift.
+
+## 9. Correction — not every fixed point needs iteration
+
+§5 says of genuine fixed points that they *"need iteration to convergence and
+cannot be by construction."* Two benchmarks falsified that as a general claim,
+and one of them is the very family §5 names as its example.
+
+**A linear loop collects.** `benchmarks/opco/lbo_circular_interest` reproduces a
+sponsor LBO's debt schedule, where interest accrues on the AVERAGE debt balance
+— so interest depends on the closing balance, the closing balance depends on the
+cash that swept it down, and that cash is net of interest. The reference model
+solves it by switching on Excel's iterative calculation; it ships a literal
+`CIRC` toggle.
+
+But every step is affine in the closing balance, so collecting terms solves it in
+one substitution. With `k = (1 - tax) * rate / 2`:
+
+    B(t) = [ B(t-1) * (1 + k) - (1 - tax) * (EBIT(t) - K(t)) - C(t) ] / (1 - k)
+
+That is an ordinary `next` clause. It agrees with the iterated answer to
+**2.8e-14** across every balance and every interest figure, and it compiled and
+reproduced the schedule on the first run.
+
+**An ordered discrete loop enumerates.** `benchmarks/opco/lbo_option_pool_exit`
+is the harder shape: a management option tranche exercises if it is in the
+money, but exercising adds both its strike proceeds and its shares to the pool,
+which MOVES the value per share. The unknown is a SET, not a number, so no
+algebra collects it.
+
+It is still closed, because the strikes are ORDERED: if a $20.00 option is in the
+money then so is every cheaper one, so any exercising set is a PREFIX. That
+reduces 2^7 subsets to 8 candidates, exactly one of which is self-consistent —
+a finite ordered test, verified unique at all six published exit multiples.
+
+**The claim as it should read.** Iteration is needed for fixed points that are
+neither linear nor ordered. A loop that is affine in its unknown collects; a
+discrete loop over an ordered set enumerates. Both are expressible today, and
+§5's own example — Damodaran's LBO re-pricing at post-LBO leverage — belongs in
+the first category rather than the third.
+
+Worth checking rather than assuming for the remaining examples: mining royalties
+levied on earnings *before* tax are circular with cost and depreciation, and may
+well be linear too.
+
+**The honest limit**, from `lbo_circular_interest/NOTES.md`: the collection holds
+because no constraint binds. That deal never draws its revolver and never fully
+repays its term loan, so the recursion stays linear throughout. A `min` or `max`
+in the loop makes it piecewise — solvable branch by branch, but not by the one
+substitution above, and CFDL cannot express the branch selection today.
