@@ -269,6 +269,22 @@ identity comes from the entity. Aggregation is free because it is the relation
 the parent already aggregates by. And the grain becomes the modeller's choice,
 which was the stated intent from the beginning.
 
+### The prerequisite was a MODEL change, not a pack change — done
+
+Measured: `auto_abs_wal` declared ONE entity and 43 contracts. The sub-pools did
+not exist as things at all, so there was nowhere for 43 factors to live without
+a name saying which child they belonged to. Every plan that moved the suffixed
+name to a different owner — onto the pool, onto the contract's subject — kept
+the suffix, and the suffix IS the flattened hierarchy.
+
+The three auto ABS cases now declare 43 sub-pool entities, each `part of` the
+trust, each carrying its own contract. Numbers unchanged: the issuer's stated
+aggregate of $537,640,787.96 to the cent, and both speed cases still inside the
+exhibit's own rounding.
+
+THE TRAP, written down: if the suffix has to survive into a field name, the
+hierarchy has not been expressed yet.
+
 ### What still has no answer
 
 `state_every = "{{contract.payment_frequency}}"` on all 18 scheduled rules.
