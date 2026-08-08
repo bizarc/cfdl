@@ -88,5 +88,50 @@
     },
     "pack": "",
     "solution": "version 0.1\nmodel \"exercise-assumption-page\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset cafe : Asset.Real\n\n// The assumption page: what this model believes, in one reviewable block.\nassume monthly_covers = 5200\nassume avg_ticket = 14.50\nassume food_cost_pct = 0.31\nassume rent = 6800\n\n// The expressions below now hold structure, not opinions.\nstream cafe.revenue on entity asset.cafe inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_covers * inputs.avg_ticket\n}\n\nstream cafe.food_cost on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_covers * inputs.avg_ticket * inputs.food_cost_pct\n}\n\nstream cafe.rent on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.rent\n}\n"
+  },
+  "07-curves/the-deck": {
+    "title": "Restore the deck",
+    "prompt": "The starter blended a three-point rising price deck into one average number. Put the deck back: a `linear` curve named `power_price` with the quoted points, read by `curve_value(\"power_price\", time.date)`.\n\nPredict the direction of two changes before running. The lifetime total: does restoring a rising deck raise or lower it versus the flat 44.35 blend? And the NPV: the deck's cheap megawatt-hours come early and its dear ones late — discounting cares about exactly that. After running, note the tail: 2028's months hold flat at 46.20, the curve's clamp at work.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-deck\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset solar : Asset.Real\n\n// The desk quoted a rising deck: 42.10 at Jan 2026, 44.75 at Jan 2027,\n// 46.20 at Jan 2028 — but this model flattened it to one blended number\n// no desk ever quoted. Restore the deck: declare a linear curve named\n// power_price with the three quoted points, and make revenue read it\n// with curve_value.\nstream solar.energy_revenue on entity asset.solar inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 1200 * 44.35\n}\n\nstream solar.om_expense on entity asset.solar outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 9000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-deck\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset solar : Asset.Real\n\n// The deck as quoted, at the dates it was quoted — a document within the\n// document, checkable against the desk's own screen.\ncurve power_price linear {\n  2026-01: 42.10\n  2027-01: 44.75\n  2028-01: 46.20\n}\n\nstream solar.energy_revenue on entity asset.solar inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 1200 * curve_value(\"power_price\", time.date)\n}\n\nstream solar.om_expense on entity asset.solar outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 9000\n}\n"
+  },
+  "08-fields-and-recurrence/the-balance": {
+    "title": "Match the method",
+    "prompt": "The published fee schedule rounds to the dollar each year and compounds on the rounded value. The starter's `pow()` compounds on unrounded values — close, and wrong, in the way that fails a reconciliation.\n\nMove the fee onto the entity that owns it: a rule field `fee_schedule` with `init 100000` and `next round_to(prev * 1.03, 1)`, read by the fee stream as `asset.co.fee_schedule`.\n\nBefore running the solution, run the starter and note the total. The rule's total differs — by about a dollar over six years here, and by real money over the thirty-year schedules where this pattern lives. That difference *is* \"matching the method\": in a reconciliation it is the residual you would otherwise chase for an afternoon.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-balance\"\ntime calendar annual from 2026-01 for 6\n\nentity asset co : Asset.Financial\n\n// The published fee schedule escalates 3% a year, ROUNDING TO THE DOLLAR\n// each year — and next year compounds on the rounded value. This pow()\n// version drifts from the published schedule. Move the fee onto the entity\n// as a rule field: fee_schedule with init 100000 and\n// next round_to(prev * 1.03, 1), then make the fee stream read\n// asset.co.fee_schedule.\nstream co.management_fee on entity asset.co inflow currency USD {\n  schedule every year from 2026-01 to 2031-01\n  amount = 100000 * pow(1.03, time.t)\n}\n\nstream co.admin_cost on entity asset.co outflow currency USD {\n  schedule every year from 2026-01 to 2031-01\n  amount = 20000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-balance\"\ntime calendar annual from 2026-01 for 6\n\n// The schedule is a fact about the company, so it lives on the company:\n// escalate, round to the dollar, and compound NEXT year on the ROUNDED\n// value — the published schedule's own method, which pow() cannot state.\nentity asset co : Asset.Financial {\n  fee_schedule init 100000\n               next round_to(prev * 1.03, 1)\n}\n\nstream co.management_fee on entity asset.co inflow currency USD {\n  schedule every year from 2026-01 to 2031-01\n  amount = asset.co.fee_schedule\n}\n\nstream co.admin_cost on entity asset.co outflow currency USD {\n  schedule every year from 2026-01 to 2031-01\n  amount = 20000\n}\n"
+  },
+  "09-growth-ramps-and-guards/the-kicker": {
+    "title": "The percentage-rent kicker",
+    "prompt": "Add the landlord's kicker: 7% of revenue above the 40,000 breakeven, only in months where revenue exceeds it. Use an `active when` guard for the condition and keep the economics in the amount; read revenue with a single-period `series_sum`.\n\nPredict before running: with revenue ramping from 0 to 52,000 over twelve months, in which month does the guard first come true? (Solve `52000 × t/12 > 40000` for t.) Check the series afterward — the kicker's first nonzero month is your answer, and its amount that month should be 7% of the small excess, not 7% of revenue.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-kicker\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset venue : Asset.Real\n\nassume monthly_revenue = 52000\nassume breakeven = 40000\n\n// Revenue ramps to stabilized over the first year.\nstream venue.revenue on entity asset.venue inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)\n}\n\nstream venue.opex on entity asset.venue outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 38000\n}\n\n// Your task: the landlord takes 7% of revenue ABOVE the breakeven, in any\n// month where revenue exceeds it. Add a percentage-rent stream: an\n// `active when` guard carrying the condition, and an amount carrying the\n// economics. Read revenue with series_sum(\"venue.revenue\", time.t, time.t).\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-kicker\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset venue : Asset.Real\n\nassume monthly_revenue = 52000\nassume breakeven = 40000\n\nstream venue.revenue on entity asset.venue inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)\n}\n\nstream venue.opex on entity asset.venue outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 38000\n}\n\n// The guard carries the condition — this claim exists only above breakeven —\n// and the amount carries the economics. During the ramp the guard is false\n// and the stream simply does not occur.\nstream venue.percentage_rent on entity asset.venue outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  active when series_sum(\"venue.revenue\", time.t, time.t) > inputs.breakeven\n  amount = (series_sum(\"venue.revenue\", time.t, time.t) - inputs.breakeven) * 0.07\n}\n"
   }
 }

@@ -1,0 +1,23 @@
+version 0.1
+model "exercise-the-deck"
+time calendar monthly from 2026-01 for 36
+
+entity asset solar : Asset.Real
+
+// The deck as quoted, at the dates it was quoted — a document within the
+// document, checkable against the desk's own screen.
+curve power_price linear {
+  2026-01: 42.10
+  2027-01: 44.75
+  2028-01: 46.20
+}
+
+stream solar.energy_revenue on entity asset.solar inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 1200 * curve_value("power_price", time.date)
+}
+
+stream solar.om_expense on entity asset.solar outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 9000
+}

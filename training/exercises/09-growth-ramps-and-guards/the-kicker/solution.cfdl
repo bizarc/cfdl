@@ -1,0 +1,27 @@
+version 0.1
+model "exercise-the-kicker"
+time calendar monthly from 2026-01 for 36
+
+entity asset venue : Asset.Real
+
+assume monthly_revenue = 52000
+assume breakeven = 40000
+
+stream venue.revenue on entity asset.venue inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)
+}
+
+stream venue.opex on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 38000
+}
+
+// The guard carries the condition — this claim exists only above breakeven —
+// and the amount carries the economics. During the ramp the guard is false
+// and the stream simply does not occur.
+stream venue.percentage_rent on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  active when series_sum("venue.revenue", time.t, time.t) > inputs.breakeven
+  amount = (series_sum("venue.revenue", time.t, time.t) - inputs.breakeven) * 0.07
+}

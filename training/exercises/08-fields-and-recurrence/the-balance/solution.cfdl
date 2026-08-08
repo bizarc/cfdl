@@ -1,0 +1,21 @@
+version 0.1
+model "exercise-the-balance"
+time calendar annual from 2026-01 for 6
+
+// The schedule is a fact about the company, so it lives on the company:
+// escalate, round to the dollar, and compound NEXT year on the ROUNDED
+// value — the published schedule's own method, which pow() cannot state.
+entity asset co : Asset.Financial {
+  fee_schedule init 100000
+               next round_to(prev * 1.03, 1)
+}
+
+stream co.management_fee on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = asset.co.fee_schedule
+}
+
+stream co.admin_cost on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 20000
+}

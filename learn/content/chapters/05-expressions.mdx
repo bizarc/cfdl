@@ -15,8 +15,7 @@ An expression evaluates inside a sealed environment. Every name it can read belo
 - **`time.*`** — the clock at this occurrence: `time.t` (the period index, starting at 0), `time.date` (the period's date), `time.phase` (the current phase's name). The workhorse: `time.t` is what growth compounds on.
 - **`inputs.*`** — the model's own declared assumptions (next chapter).
 - **`cfg.*`** and **`obs.*`** — values supplied by the run configuration at run time: parameters and observations. Also next chapter.
-- **`state.*`** and **`prev`** — the model's accumulated state (chapter 8).
-- **`entity.*`** — fields of the entity the stream is attached to.
+- **Entity fields** — facts and running quantities owned by the model's entities, read by path (`asset.tlb.balance`), with `prev.` reaching the prior period's value (chapter 8).
 
 And that is all. No file access, no wall-clock date, no environment variables, no randomness outside declared assumptions. The sealed environment is what makes a run reproducible, and it has a practical authoring consequence: if a number matters to the model, it must be *declared somewhere* — which is exactly where a reviewer will find it.
 
@@ -62,7 +61,7 @@ The library is small and chosen — every function earns its place in cash-flow 
 
 **Growth and decay.** `pow`, `exp`, `ln`. Compounding up (`pow(1.03, …)`) and decline curves down (`pow(0.94, time.t)` — a 6%-per-period decline).
 
-**Rounding.** `round`, `round_up`, `round_down`, `round_to(x, places)`. Two distinct uses: `round_down(time.t / 12, 0)` for step functions, and `round_to(…, 2)` for matching a source that rounds each period before summing — the reconciliation tool from chapter 3.
+**Rounding.** `round`, `round_up`, `round_down` take decimal places; `round_to(x, step)` rounds to the nearest multiple of a step — `round_to(x, 0.01)` is cents, `round_to(x, 1)` whole dollars, `round_to(x, 0.25)` a quarter-point. Two distinct uses: `round_down(time.t / 12, 0)` for step functions, and `round_to(…, 0.01)` for matching a source that rounds each period before summing — the reconciliation tool from chapter 3.
 
 **Dates.** `date`, `edate` (shift by months, the Excel EDATE), `eomonth`, `days_between`, `months_between`, `year_frac` (day-count-aware year fractions — the bridge between "a rate per annum" and "this period's accrual"), `is_business_day`, `add_business_days`, `roll`.
 
@@ -106,7 +105,7 @@ The examples above share a property worth making explicit, because it is the cha
 
 **Name what recurs.** The moment `0.072` appears in two expressions it belongs in an assumption (`assume loan_rate = 0.072`, next chapter) — one place to change, one place to review.
 
-**Split what compounds.** An expression juggling occupancy, escalation, and a fee cap is three claims in a trench coat. Three streams — or state, or a contract — each carrying one claim, total the same and *review* utterly differently. When an expression stops reading aloud cleanly, reach for a bigger construct, not a longer line. Part III's construct-choice chapter is that decision, systematized.
+**Split what compounds.** An expression juggling occupancy, escalation, and a fee cap is three claims in a trench coat. Three streams — or an entity field, or a contract — each carrying one claim, total the same and *review* utterly differently. When an expression stops reading aloud cleanly, reach for a bigger construct, not a longer line. Part III's construct-choice chapter is that decision, systematized.
 
 ## What can go wrong
 

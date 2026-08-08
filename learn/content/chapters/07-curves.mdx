@@ -1,0 +1,81 @@
+---
+title: "Curves"
+description: "Dated series as first-class inputs: rate curves, price decks, escalation paths — and the line between a curve, an assumption, and an observation."
+part: 2
+order: 7
+track: core
+---
+
+Some inputs are not one number but a number *per date*: a forward power price, an interest-rate curve, a market-rent path, a decline profile. Chapter 6 gave scalars a home on the assumption page; a **curve** is the home for a dated series, and it completes the model's input vocabulary. The test for which you need is simple — if the true answer to "what is the assumption?" begins "well, it depends when," it is a curve.
+
+## Declaring and reading a curve
+
+```cfdl
+version 0.1
+model "curves-solar"
+time calendar monthly from 2026-01 for 36
+
+entity asset solar : Asset.Real
+
+// A price deck: dollars per MWh, stated at the dates the desk stated them.
+curve power_price linear {
+  2026-01: 42.10
+  2027-01: 44.75
+  2028-01: 46.20
+}
+
+// Revenue follows the deck period by period, without restating it.
+stream solar.energy_revenue on entity asset.solar inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 1200 * curve_value("power_price", time.date)
+}
+
+stream solar.om_expense on entity asset.solar outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 9000
+}
+```
+
+A curve has a name, an interpolation mode, and dated points. Reads go through `curve_value(name, date)` — almost always with `time.date`, so the stream tracks the curve as the clock advances. The revenue line reads aloud as the deal actually works: "1,200 megawatt-hours a month, at the deck price prevailing that month."
+
+Notice what the curve replaced. Without it, the deck lives inside the amount as nested `if(time.date < …)` stanzas, or worse, as a pre-blended average price that no desk ever quoted. With it, the deck is a *document within the document* — five lines a trader can check against their own screen, separate from the operational claim of how many megawatt-hours you sell.
+
+## Interpolation is a claim, not a detail
+
+Between stated points, the mode decides the value, and the two modes are two different assertions about the world:
+
+- **`linear`** — the value glides between points, by calendar day. Right for prices, rents, and anything quoted as a trend: the deck above claims price rises smoothly through 2026, not that it jumps on New Year's Day.
+- **`step`** — the value holds flat until the next point (flat-forward). Right for administered and contractual rates: a central-bank rate *is* 4.25% until the meeting that changes it; a contractual escalator *is* this year's rent until the anniversary.
+
+Choose per curve, deliberately. A stepped price deck understates every mid-year sale in a rising market; a linear policy rate invents fifty basis points of drift no committee ever voted. Same five points, different economics — the mode is part of the claim, which is why the language makes you write it.
+
+Outside the stated range, a curve **clamps**: before the first point it returns the first value, after the last it returns the last. No extrapolation — a curve asserts nothing beyond what was stated, so a model that runs past its deck holds the last stated value rather than inventing a trend. If flat-forever is the wrong claim for your deal's tail, the fix is to make a claim: state more points.
+
+## Curve, assumption, or observation?
+
+Three homes now exist for market-shaped inputs, and the boundaries are worth one paragraph each.
+
+**Curve vs. scalar assumption.** `assume power_price = 44.00` claims one price for all time — fine for a model whose horizon is short or whose price genuinely is contracted flat. The moment the claim varies by date, the flat scalar is not a simplification but a different (and usually indefensible) claim. Promote it.
+
+**Curve vs. observation.** Both can carry market data. The line is when the data is *known*: a curve is written into the model — the deck as of the underwriting date, part of the reviewed document. An `obs.*` value arrives at run time — this morning's fixing, supplied by the pipeline. A forward curve you underwrote on is a curve; the fixing that resets this quarter's coupon is an observation. Many models carry both, and the reader learns something true from which is which.
+
+**Curve vs. expression.** Escalation you can state as a *rule* — 3% per year, forever — belongs in an expression (`pow`, chapter 5). Escalation that follows a *path someone quoted* — a consultant's rent forecast with specific values in specific years — belongs in a curve. The rule compresses; the path documents. When a reviewer asks "where did 46.20 come from," the answer "row three of the deck, dated 2028-01" is exactly the answer a curve preserves and an expression buries.
+
+One thing curves are *not*: stochastic. A curve is a deterministic input — the deck, not the distribution around the deck. Uncertainty about a curve's level is expressed the chapter-6 way, with a distributed assumption multiplying the read (`inputs.price_factor * curve_value(…)`), and chapter 12 makes that pattern do real Monte Carlo work.
+
+## What can go wrong
+
+**A duplicate point, or a duplicate curve name** — refused at compile. A curve with two values for one date is not a curve.
+
+**A missing interpolation mode** — refused. The mode is part of the claim; there is no default to inherit silently.
+
+**The silent clamp at the tail.** The one that bites: a 10-year model over a 3-year deck runs seven years flat at the last stated price, *by design*. Nothing warns you, because the behavior is correct — the curve is doing exactly what it asserts. The habit that catches it is chapter 3's: open the series, look at the shape, and ask whether the flat tail is a claim you are prepared to defend.
+
+## Exercises
+
+<Exercise id="07-curves/the-deck" />
+
+Then, on your own:
+
+1. Change the exercise's curve to `step` and predict which months change and in which direction before running. In one sentence: what does each mode claim happens between January and December?
+2. Extend the model's horizon past the deck's last point and look at the flat tail in the series. Then add one more curve point stating a real tail claim, and watch the revenue follow it.

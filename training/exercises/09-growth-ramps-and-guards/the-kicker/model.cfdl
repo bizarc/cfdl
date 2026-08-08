@@ -1,0 +1,24 @@
+version 0.1
+model "exercise-the-kicker"
+time calendar monthly from 2026-01 for 36
+
+entity asset venue : Asset.Real
+
+assume monthly_revenue = 52000
+assume breakeven = 40000
+
+// Revenue ramps to stabilized over the first year.
+stream venue.revenue on entity asset.venue inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)
+}
+
+stream venue.opex on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 38000
+}
+
+// Your task: the landlord takes 7% of revenue ABOVE the breakeven, in any
+// month where revenue exceeds it. Add a percentage-rent stream: an
+// `active when` guard carrying the condition, and an amount carrying the
+// economics. Read revenue with series_sum("venue.revenue", time.t, time.t).
