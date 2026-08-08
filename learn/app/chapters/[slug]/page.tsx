@@ -102,6 +102,7 @@ export default async function ChapterPage({
     order: c.order,
     track: c.track,
   }));
+  const position = chapters.findIndex((c) => c.slug === chapter.slug) + 1;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 gap-8 px-4 sm:px-6">
@@ -112,8 +113,21 @@ export default async function ChapterPage({
       </aside>
 
       <main className="min-w-0 flex-1 py-8">
+        {/* The sidebar is desktop-only, so a phone had prev/next and nothing
+            else — no way to jump parts or see where a chapter sits. A details
+            element carries the same navigation with no client state. */}
+        <details className="mb-6 rounded-lg border border-default lg:hidden">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-secondary">
+            All chapters
+          </summary>
+          <div className="border-t border-subtle px-3 py-3">
+            <ChaptersSidebar chapters={chapters} parts={PARTS} />
+          </div>
+        </details>
+
         <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-          Part {chapter.part} · {PARTS[chapter.part]}
+          Part {chapter.part} · {PARTS[chapter.part]} · Chapter {position} of{" "}
+          {chapters.length}
         </p>
         <article className="mt-2">
           <h1 className="text-3xl font-semibold tracking-tight">{chapter.title}</h1>

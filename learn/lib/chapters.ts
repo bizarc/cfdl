@@ -97,3 +97,40 @@ export function chapterNeighbours(slug: string): {
   if (idx === -1) return {};
   return { prev: all[idx - 1], next: all[idx + 1] };
 }
+
+/** The first chapter in reading order — where "start the course" points. */
+export function firstChapter(): ChapterMeta | undefined {
+  return getAllChapters()[0];
+}
+
+export interface PartGroup {
+  part: number;
+  title: string;
+  chapters: ChapterMeta[];
+}
+
+/**
+ * Chapters grouped by part, in reading order, with every declared part present
+ * even when it has no chapters yet.
+ *
+ * The home page and the sidebar both read this, so a new chapter file appears
+ * in the navigation by existing — there is no second list to update, which is
+ * how the old hand-maintained one drifted.
+ */
+export function partGroups(): PartGroup[] {
+  const all = getAllChapters();
+  return Object.entries(PARTS).map(([num, title]) => ({
+    part: Number(num),
+    title,
+    chapters: all
+      .filter((c) => c.part === Number(num))
+      .map((c) => ({
+        slug: c.slug,
+        title: c.title,
+        description: c.description,
+        part: c.part,
+        order: c.order,
+        track: c.track,
+      })),
+  }));
+}
