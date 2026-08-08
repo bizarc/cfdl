@@ -1,0 +1,34 @@
+version 0.1
+model "exercise-the-entitlement"
+time calendar quarterly from 2026-01 for 4
+
+// Collections shrink quarter by quarter: 60k, 50k, 40k, 30k.
+entity asset trust : Asset.Financial {
+  collections init 60000
+              next prev - 10000
+}
+
+entity party lender : Party
+entity party manager : Party
+entity party investor : Party
+
+stream trust.collections_in on entity asset.trust inflow currency USD {
+  schedule every quarter from 2026-01 to 2026-10
+  amount = asset.trust.collections
+}
+
+// The documents: senior debt 30,000, then a 15,000 management fee, with
+// any same-period fee shortfall claimable AFTER the fee (junior to it),
+// then everything remaining to the investor.
+//
+// The fee starves as collections shrink. Your task: complete the
+// waterfall — the deferred-fee step is missing. Write it with
+// owed.<step> - paid.<step>, ranked exactly where the documents put it.
+waterfall trust.distribution on entity asset.trust {
+  schedule every quarter from 2026-01 to 2026-10
+  from asset.trust.collections
+
+  pay senior_debt to party.lender  = 30000
+  pay mgmt_fee    to party.manager = 15000
+  pay residual    to party.investor = remaining
+}

@@ -1,0 +1,64 @@
+---
+title: "Stream, contract, field, event, option, or waterfall?"
+description: "The construct-choice framework: one question that sorts every claim, the paired examples that calibrate it, and the smells that say a claim is in the wrong construct."
+part: 3
+order: 17
+track: core
+---
+
+Part II gave you six ways to say things, and every working session now begins with the same silent decision: *which one is this claim?* Most modeling reviews that go badly go badly here — not wrong numbers but wrong *constructs*, economics that are technically computed and structurally illegible. This chapter makes the decision explicit: one sorting question, calibration through pairs, and the smells that tell you a claim has been poured into the wrong shape.
+
+## One question: what kind of claim is it?
+
+Ask what the sentence you would say aloud *is about*, and the construct follows:
+
+- *"Cash moves on this pattern."* → a **stream**. The atom; when nothing below applies, this is the answer.
+- *"This quantity persists and evolves."* → a **field** — a fact or rule on the entity that owns it. Not cash: memory.
+- *"At some point, the regime changes."* → an **event**. Once, at a condition — and streams state which regime they belong to.
+- *"Someone holds a right they may use."* → an **option**. The right's terms, apart from the prediction of its use.
+- *"A pot is divided by priority."* → a **waterfall**. Contested cash, document order.
+- *"This is a standard deal in a domain."* → a **contract** (next chapter): a pack's named economics, stated by its terms.
+
+The question is about the *claim*, never the computation — every construct here can be imitated with streams and arithmetic, which is precisely why the framework matters. The constructs exist to make the model say what kind of thing each claim is; choosing by computational convenience throws that information away.
+
+## Calibration pairs
+
+Frameworks calibrate on hard cases. Three pairs, each the same economics twice.
+
+**A declining balance: field, or stream arithmetic?** A loan balance *could* be an amount expression — `250000 - 4166.67 * time.t` — and for a strictly linear paydown the numbers even agree. But the expression version states "cash follows this formula," when the claim is "a quantity persists and moves by rule" — and the moment reality complicates (a sweep, a rate change, an event writing the balance), the formula version must be *re-derived* while the field's `next` absorbs the change in place. The tell that you chose wrong: an amount expression re-deriving history — anything shaped like `initial - payment * time.t` — is a recurrence flattened into a formula, and it breaks silently the first time any single period deviates.
+
+**A regime switch: event, or if-ladder?** Chapter 10's refinance could be written as `if(time.t < 12, 9500, 6200)` in one stream — same cash. The ladder buries the deal's most consequential moment inside arithmetic where no reviewer will find it, states no *reason* (the `12` is a naked number, not a condition), and cannot coordinate: when the switch also affects fees, covenants, and the exit, each expression carries its own copy of `time.t < 12`, and they drift. The event states the turning point once, with its trigger; guards subscribe. The tell: **the same condition appearing in two expressions** — a regime wearing an if-costume.
+
+**An entitlement: waterfall, or field-plus-paydown?** A deferred fee that accrues when cash is short and pays when cash allows *can* be built by hand: a field for the balance, a stream that pays `min(balance, available)`, careful ordering. Chapter 8 called this the smell it is. The waterfall's `owed.x - paid.x` states the entitlement *inside the priority structure that governs it* — who ranks where is visible, the pot cannot be double-spent, and the shortfall arithmetic is the construct's own guarantee rather than your reimplementation of it. The tell: **a field paired with a stream that tries to empty it, next to other claims on the same cash.** One claimant with no competition can stay a field; the moment cash is *contested*, priority is the claim, and priority is spelled waterfall.
+
+The pairs share a moral worth stating once: the wrong construct is rarely wrong *today* — it is wrong at the first amendment, when the imitation has to be re-derived while the right construct absorbs the change.
+
+## The smells, collected
+
+For review checklists — yours and your team's:
+
+1. **A naked number where a reason belongs.** `time.t < 12` gating economics: a date claim that should be a phase, or a turning point that should be an event.
+2. **The same condition twice.** A regime spread across expressions instead of declared once.
+3. **History re-derived in an amount.** `base - rate * time.t`, `pow` on something that rounds or resets: a recurrence flattened into a formula.
+4. **A field with a bailiff.** Balance field + paydown stream + implicit ordering against other claims: a waterfall built by hand.
+5. **Mirror streams.** Two streams that must always negate each other — one transfer written as two claims; usually one stream (or one waterfall step) attached to the right entities.
+6. **An expression that stops reading aloud.** The chapter-5 limit, which is really this chapter's question arriving early: three claims in a trench coat want three constructs.
+
+None of these is a compile error, and that is the point of Part III: the compiler guarantees the model computes what it says; only judgment guarantees it *says what the deal means*.
+
+## What can go wrong
+
+**Construct maximalism.** The framework cuts both ways: a one-off consulting invoice does not need an event and a lifecycle field — it is a stream with a date, and dressing it up is smell 6 inverted. The sorting question includes a null answer; most claims are streams.
+
+**Refactoring without an invariant.** Moving a claim between constructs must not move cash. The method from the exercises you have already done: run before, refactor, run after, compare to the penny. A construct refactor with a changed total is two changes pretending to be one.
+
+**Reviewing the shape and skipping the numbers.** A beautifully-constructed model can still claim the wrong rent. Construct choice is half of review; chapter 3's descent is the other half, and neither substitutes.
+
+## Exercises
+
+<Exercise id="17-choosing-constructs/the-entitlement" />
+
+Then, on your own:
+
+1. Return to the chapter-10 exercise and write its if-ladder twin: one stream, `if(time.t < 12, 9500, 6200)`, same totals. Now add a second consequence of the refinance — a 1% exit fee on the bridge, one time, at the switch. Implement it in both versions and notice how many places each required you to restate the trigger.
+2. Audit any Part II model of your own against the six smells. The most instructive finding is usually smell 3 — a formula you wrote fluently that is quietly a recurrence.

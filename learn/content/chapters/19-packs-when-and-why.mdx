@@ -1,0 +1,74 @@
+---
+title: "Packs: when and why"
+description: "What an industry pack adds — typed vocabulary, contracts, domain validation, statements — when packless is the better choice, and how to migrate without moving a dollar."
+part: 3
+order: 19
+track: core
+---
+
+Everything in this course so far has been **packless**: models built from the core constructs alone, every claim written by hand. That was deliberate — you now know what every pack-generated structure is made of. This chapter adds the last major decision: when to bring in an **industry pack**, what it buys, what it costs, and how to adopt one without changing a number.
+
+## What a pack is
+
+A pack is a domain's modeling knowledge, versioned and declared in one line:
+
+```cfdl
+use pack "cre" version "0.1.0"
+```
+
+Four things arrive with it.
+
+**A typed vocabulary.** The base ontology (`Asset.Real`, `Party`, …) extends with domain types — `CRE.Asset.RealProperty`, `CRE.Asset.Unit`, `Credit.Asset.Tranche` — each declaring the fields its kind of thing carries. Your entities become checkable against domain knowledge: a misspelled field on a typed entity is a compile error with the pack's vocabulary in the message, and a contract can require that it attaches to the kind of thing it makes sense on.
+
+**Contracts.** The construct this course has mentioned since chapter 2 and can finally show. A contract states a *standard piece of domain economics* by its terms, and the pack lowers it into the streams you would otherwise write by hand:
+
+```cfdl
+contract cre.lease {
+  term 2026-07..2031-12
+  terms {
+    base_rent = 25000
+  }
+}
+```
+
+Three lines. What they replace, you can write yourself by now: the rent stream, its monthly schedule over the term, the amount from the base rent. The pack's lowering does exactly that — visibly, in the IR, as ordinary streams — so a contract is *shorthand you can audit*, not a black box. Richer contracts carry richer terms: `cre.lease_up` states an occupancy ramp (the chapter-9 idiom, as terms), `cre.permanent_debt` a full amortizing loan, `credit.pool_level_pay` a pool that expands into six streams — interest, scheduled principal, prepayments, recoveries, servicing.
+
+**Domain validation.** The pack checks what the core language cannot know: a lease missing its base rent, an occupancy outside [0,1], an exit with no cap rate — refused at compile, in domain vocabulary, before any number exists. Your deal is reviewed against the domain's checklist every time it compiles.
+
+**Statements and metrics.** Because contracts declare what cash *is* — this stream is base rent, that one is debt service — the pack can categorize, subtotal, and derive: NOI, DSCR, EBITDA arrive in results as named metrics with lineage, and output organizes as the domain's statement rather than a flat list of streams. This is what your packless models' hand-designed name taxonomy was approximating; the pack makes it structural.
+
+Four packs ship — **cre** (leases, lease-up, vacancy, rollover, percentage rent, construction, permanent debt, three exit forms), **credit** (level-pay, IO-bullet, and floating pools; purchases), **energy** (PPA, merchant, storage, capacity, ITC/PTC, MACRS shields, debt), **opco** (revenue/opex/capex lines, working capital, term debt, cash taxes, three exit forms). The capstone lives in cre; the reference part tables its terms.
+
+## When packless is the better choice
+
+The decision is not "packs when available." Packless wins in three real situations. **The deal is genuinely novel** — a structure the pack's contract list does not describe; forcing it through the nearest contract misstates the deal, and the core constructs exist precisely for this. **The model is pedagogical or exploratory** — you are finding out what the deal even is, and writing claims by hand is the finding out. **The economics deviate from standard in ways that matter** — a lease with a bespoke kicker the contract does not carry; though here the answer is often *mixed*: contracts for the standard bones, hand streams beside them for the bespoke flesh. Packs and hand streams compose freely in one model, and most mature models are exactly that mixture.
+
+The real cost of a pack is a dependency on its judgment: its lowering is the standard treatment, its validations are the standard checklist, and where your deal disagrees with standard you must notice the disagreement. The pack makes standard cheap; it cannot make your deal standard.
+
+## Migration: the invariant refactor, again
+
+Adopting a pack in an existing model is chapter 17's discipline at larger scale — a refactor that must not move cash. The sequence:
+
+1. **Type the entities.** `entity asset tower : Asset.Real` becomes `: CRE.Asset.RealProperty`. Compile: the ontology now checks your fields.
+2. **Replace one storyline at a time.** Delete the hand-written rent stream; state the `cre.lease` with the same term and rent. Run. The totals must match your packless version — the contract lowers to the streams you deleted.
+3. **Compare in the results, not the source.** Stream names change (the pack's lowering names its streams); the *cash* must not. The annual rollup is the comparison surface.
+4. **Keep the bespoke.** Whatever the pack cannot state stays as your hand-written claims, now beside contracts instead of instead of them.
+
+The exercise below runs this migration on a small office model; the capstone then begins pack-first, because its deal is standard CRE and you now know exactly what its contracts expand into.
+
+## What can go wrong
+
+**A contract for a deal that is not that contract.** The lease with eighteen months free rent, stepped escalations, and a termination option is not `base_rent = 25000` — and stating it as one buries the deviations a reviewer most needs to see. When a contract's terms cannot state your deal's terms, that mismatch is information: write the claims by hand.
+
+**Fighting the validation.** A pack refusal that seems wrong usually means your deal and the pack disagree about what is standard — which is worth knowing, not suppressing. Read the refusal as domain review, then decide deliberately: fix the model, or take that storyline packless.
+
+**Migrating without the invariant.** Adopting a pack *and* correcting numbers in one pass produces a diff nobody can review. Two commits: the migration (cash identical), then the corrections (cash changed, on purpose, visibly).
+
+## Exercises
+
+<Exercise id="19-packs-when-and-why/first-contract" />
+
+Then, on your own:
+
+1. In the exercise's solution, misspell a term (`base_rnet`) and read the pack's refusal; then set the term on an entity typed as a `Party` and read that one. You are meeting the domain checklist you get on every future compile.
+2. From a deal you know, list its storylines and sort them: which are a pack contract verbatim, which are a contract plus a bespoke stream, which are irreducibly hand-written? That sorted list is a pack-adoption plan — and the fraction in the first bucket is a fair measure of how standard your deal really is.

@@ -197,5 +197,65 @@
     },
     "pack": "",
     "solution": "version 0.1\nmodel \"exercise-the-checklist\"\ntime calendar monthly from 2026-01 for 30\nphase fitout from 2026-01 to 2026-03\nphase operations from 2026-04 to 2028-06\n\nentity asset clinic : Asset.Real\n\n// The assumption page: what this model believes.\nassume visit_revenue = 21500\nassume staff_cost_ratio = 0.62\nassume fitout_cost = 30000\n\n// Every date now lives in the phase block; slide a phase and the model\n// re-derives itself.\nstream clinic.visit_revenue on entity asset.clinic inflow currency USD {\n  schedule every month from phase_start(\"operations\") to phase_end(\"operations\")\n  amount = inputs.visit_revenue\n}\n\nstream clinic.staff_cost on entity asset.clinic outflow currency USD {\n  schedule every month from phase_start(\"operations\") to phase_end(\"operations\")\n  amount = inputs.visit_revenue * inputs.staff_cost_ratio\n}\n\nstream clinic.fitout on entity asset.clinic outflow currency USD {\n  schedule on phase_enter(\"fitout\")\n  amount = inputs.fitout_cost\n}\n"
+  },
+  "16-choosing-grain/two-grains": {
+    "title": "The same deal, twice",
+    "prompt": "Run the monthly starter and note its NPV. Then rebuild it at annual grain: a two-period grid, each stream stating twelve-month totals (project fees exist only in year two).\n\nThe lifetime total must match exactly — 288,000, both ways. The NPVs will not: the annual model's cash sits at each year's end, discounted the full year, while the monthly model's arrives spread across it. Predict the direction of the gap before running, then measure it. That gap is what \"rolling up is free, slicing down is fabrication\" is worth in dollars on even this tiny deal — the annual model didn't simplify the timing, it *changed the claim*.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-two-grains\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset practice : Asset.Intangible\n\n// The monthly truth: retainers all year, project fees in year two only,\n// overhead throughout. Note the NPV at 8%, then rebuild this model at\n// ANNUAL grain — grid `annual from 2026-01 for 2`, each stream one\n// twelve-month total per year (project fees exist only in year two).\n// Same lifetime cash; compare the NPVs and explain the gap.\nstream practice.retainers on entity asset.practice inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 30000\n}\n\nstream practice.project_fees on entity asset.practice inflow currency USD {\n  schedule every month from 2027-01 to 2027-12\n  amount = 12000\n}\n\nstream practice.overhead on entity asset.practice outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 24000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-two-grains\"\ntime calendar annual from 2026-01 for 2\n\nentity asset practice : Asset.Intangible\n\n// The same claims at annual grain: totals identical, timing coarser.\n// Each year's cash now sits at the year's end, so discounting bites\n// harder than in the monthly version, where cash arrives all year long —\n// the annual NPV is lower on identical lifetime cash.\nstream practice.retainers on entity asset.practice inflow currency USD {\n  schedule every year from 2026-01 to 2027-01\n  amount = 30000 * 12\n}\n\nstream practice.project_fees on entity asset.practice inflow currency USD {\n  schedule every year from 2027-01 to 2027-01\n  amount = 12000 * 12\n}\n\nstream practice.overhead on entity asset.practice outflow currency USD {\n  schedule every year from 2026-01 to 2027-01\n  amount = 24000 * 12\n}\n"
+  },
+  "17-choosing-constructs/the-entitlement": {
+    "title": "Where the entitlement lives",
+    "prompt": "The management fee starves as collections shrink — 60, 50, 40, 30 against 30 of senior debt and 15 of fee. Add the missing deferred-fee step with `owed.mgmt_fee - paid.mgmt_fee`, ranked just after the fee itself.\n\nWork the quarters by hand first: when does the fee first fall short, and in that quarter, does the deferred step catch anything? (Careful — the deferral only receives what *survives* the steps above it.) Then run and read the owed-versus-paid columns against your arithmetic.\n\nThe construct lesson: you could build this with a balance field and a paydown stream — smell four from the chapter. Here the entitlement sits inside the priority structure that governs it, and the pot arithmetic is the engine's guarantee instead of yours.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-entitlement\"\ntime calendar quarterly from 2026-01 for 4\n\n// Collections shrink quarter by quarter: 60k, 50k, 40k, 30k.\nentity asset trust : Asset.Financial {\n  collections init 60000\n              next prev - 10000\n}\n\nentity party lender : Party\nentity party manager : Party\nentity party investor : Party\n\nstream trust.collections_in on entity asset.trust inflow currency USD {\n  schedule every quarter from 2026-01 to 2026-10\n  amount = asset.trust.collections\n}\n\n// The documents: senior debt 30,000, then a 15,000 management fee, with\n// any same-period fee shortfall claimable AFTER the fee (junior to it),\n// then everything remaining to the investor.\n//\n// The fee starves as collections shrink. Your task: complete the\n// waterfall — the deferred-fee step is missing. Write it with\n// owed.<step> - paid.<step>, ranked exactly where the documents put it.\nwaterfall trust.distribution on entity asset.trust {\n  schedule every quarter from 2026-01 to 2026-10\n  from asset.trust.collections\n\n  pay senior_debt to party.lender  = 30000\n  pay mgmt_fee    to party.manager = 15000\n  pay residual    to party.investor = remaining\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-entitlement\"\ntime calendar quarterly from 2026-01 for 4\n\nentity asset trust : Asset.Financial {\n  collections init 60000\n              next prev - 10000\n}\n\nentity party lender : Party\nentity party manager : Party\nentity party investor : Party\n\nstream trust.collections_in on entity asset.trust inflow currency USD {\n  schedule every quarter from 2026-01 to 2026-10\n  amount = asset.trust.collections\n}\n\n// The entitlement lives INSIDE the priority structure that governs it:\n// owed minus paid is the fee's same-period shortfall, ranked junior to\n// the current fee, exactly as the documents order it. No hand-built\n// balance, no bailiff stream — the construct carries the claim.\nwaterfall trust.distribution on entity asset.trust {\n  schedule every quarter from 2026-01 to 2026-10\n  from asset.trust.collections\n\n  pay senior_debt  to party.lender  = 30000\n  pay mgmt_fee     to party.manager = 15000\n  pay fee_deferred to party.manager = owed.mgmt_fee - paid.mgmt_fee\n  pay residual     to party.investor = remaining\n}\n"
+  },
+  "18-finance-semantics/the-pool": {
+    "title": "Divide or compound",
+    "prompt": "The starter converts 8 CPR to a monthly rate by dividing by twelve. Fix both streams: a `factor` field on the pool declining by `cpr_to_smm(0.08)` per month, read by interest and servicing.\n\nAnchor before running: after 12 months the factor must be exactly 0.92 — that is what CPR *means* — where the divided version leaves 0.9229. The gap looks tiny; it compounds across every month's interest, and on a real pool it is the difference between matching the servicer tape and writing a memo about why you don't. Same lesson as the discount-rate conversion in the reading-results chapter: annual rates meet monthly grids geometrically unless a document says otherwise.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-pool\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset pool : Asset.Financial\n\n// A 5,000,000 pool at 6.5%, quoted at 8 CPR. This version divides the\n// annual prepayment rate by twelve — the wrong conversion, in exactly the\n// way dividing a discount rate is wrong. Fix it:\n//   1. Give the pool a factor field: init 1.0,\n//      next prev * (1 - cpr_to_smm(0.08)).\n//   2. Make interest read the factor: 5000000 * factor * 0.065 / 12.\nstream pool.interest on entity asset.pool inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 5000000 * pow(1 - 0.08 / 12, time.t) * 0.065 / 12\n}\n\nstream pool.servicing on entity asset.pool outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 5000000 * pow(1 - 0.08 / 12, time.t) * 0.0025 / 12\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.06
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-pool\"\ntime calendar monthly from 2026-01 for 24\n\n// The factor is a fact about the pool, moved by the market-standard\n// conversion: SMM = 1 - (1 - CPR)^(1/12), so twelve months of decline\n// compound to exactly 8% — which 0.08/12 monthly does not.\nentity asset pool : Asset.Financial {\n  factor init 1.0\n         next prev * (1 - cpr_to_smm(0.08))\n}\n\nstream pool.interest on entity asset.pool inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 5000000 * asset.pool.factor * 0.065 / 12\n}\n\nstream pool.servicing on entity asset.pool outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 5000000 * asset.pool.factor * 0.0025 / 12\n}\n"
+  },
+  "19-packs-when-and-why/first-contract": {
+    "title": "The invariant migration",
+    "prompt": "Run the packless starter and note the total. Then migrate: declare the pack, retype the entity, and restate both streams as contracts — `cre.lease` with its `base_rent`, `cre.ops_expense` with its `amount` — over the same term.\n\nThe comparison surface is the results, not the source: stream names change (the pack's lowering names what it generates), the cash must not. If your totals differ, the migration changed a claim — find which before trusting either version.\n\nThen break it on purpose, once: delete the `base_rent` line and read the pack's refusal. That message — the domain's checklist speaking — is most of what the migration bought you.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-first-contract\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset office : Asset.Real\n\n// A packless office: rent and operating costs, written by hand. Migrate it\n// to the cre pack without moving a dollar:\n//   1. use pack \"cre\" version \"0.1.0\"  (in the header)\n//   2. retype the entity: CRE.Asset.RealProperty\n//   3. replace BOTH streams with contracts over the same term —\n//      cre.lease with base_rent = 42000, cre.ops_expense with amount = 15500.\n// The annual rollup must not change.\nstream office.rent on entity asset.office inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 42000\n}\n\nstream office.opex on entity asset.office outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 15500\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.07
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-first-contract\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset office : CRE.Asset.RealProperty\n\n// The same economics as claims in the domain's vocabulary. The lowering\n// expands each contract into the stream you deleted — audit it in the IR —\n// and the pack now validates terms and categorizes the cash.\ncontract cre.lease {\n  term 2026-01..2028-12\n  terms {\n    base_rent = 42000\n  }\n}\n\ncontract cre.ops_expense {\n  term 2026-01..2028-12\n  terms {\n    amount = 15500\n  }\n}\n"
   }
 }

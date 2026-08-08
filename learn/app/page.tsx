@@ -28,7 +28,7 @@ const PARTS: Part[] = [
     number: "Part II",
     title: "The core language",
     blurb:
-      "Streams, schedules, expressions, assumptions, curves, state, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
+      "Streams, schedules, expressions, assumptions, curves, fields, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
     chapters: [
       { label: "Streams and schedules", href: "/chapters/streams-and-schedules" },
       { label: "Expressions", href: "/chapters/expressions" },
@@ -51,12 +51,12 @@ const PARTS: Part[] = [
     blurb:
       "The decisions the syntax can't make for you: choosing grain, choosing constructs, the finance semantics the language encodes, and when a domain pack earns its keep.",
     chapters: [
-      { label: "Choosing grain" },
-      { label: "Stream, contract, state, event, option, or waterfall?" },
-      { label: "Finance semantics" },
-      { label: "Packs: when and why" },
+      { label: "Choosing grain", href: "/chapters/choosing-grain" },
+      { label: "Stream, contract, field, event, option, or waterfall?", href: "/chapters/choosing-constructs" },
+      { label: "Finance semantics", href: "/chapters/finance-semantics" },
+      { label: "Packs: when and why", href: "/chapters/packs-when-and-why" },
     ],
-    status: "planned",
+    status: "in-progress",
   },
   {
     number: "Part IV",
