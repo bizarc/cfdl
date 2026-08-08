@@ -1,0 +1,24 @@
+version 0.1
+model "exercise-two-grains"
+time calendar annual from 2026-01 for 2
+
+entity asset practice : Asset.Intangible
+
+// The same claims at annual grain: totals identical, timing coarser.
+// Each year's cash now sits at the year's end, so discounting bites
+// harder than in the monthly version, where cash arrives all year long —
+// the annual NPV is lower on identical lifetime cash.
+stream practice.retainers on entity asset.practice inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 30000 * 12
+}
+
+stream practice.project_fees on entity asset.practice inflow currency USD {
+  schedule every year from 2027-01 to 2027-01
+  amount = 12000 * 12
+}
+
+stream practice.overhead on entity asset.practice outflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 24000 * 12
+}

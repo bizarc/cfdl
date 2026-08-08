@@ -1,0 +1,21 @@
+version 0.1
+model "exercise-the-pool"
+time calendar monthly from 2026-01 for 24
+
+// The factor is a fact about the pool, moved by the market-standard
+// conversion: SMM = 1 - (1 - CPR)^(1/12), so twelve months of decline
+// compound to exactly 8% — which 0.08/12 monthly does not.
+entity asset pool : Asset.Financial {
+  factor init 1.0
+         next prev * (1 - cpr_to_smm(0.08))
+}
+
+stream pool.interest on entity asset.pool inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 5000000 * asset.pool.factor * 0.065 / 12
+}
+
+stream pool.servicing on entity asset.pool outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 5000000 * asset.pool.factor * 0.0025 / 12
+}
