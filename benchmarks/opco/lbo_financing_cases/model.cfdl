@@ -106,35 +106,30 @@ assume interest_income = 0.0125 // 0.25% on the $5mm minimum cash balance
 //
 //     B = B0 + r (B0 + B) / 2   ->   B = B0 (1 + r/2) / (1 - r/2)
 
-state sub_balance {
-  init cfg.sub_size
-  next if(time.t <= 3,
-          prev * (1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2),
-          prev)
-}
-
-state sub_balance_open {
-  init 0.0
-  next prev.sub_balance
+entity asset sub_notes : Asset.Financial {
+  balance init cfg.sub_size
+          next if(time.t <= 3,
+                  prev * (1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2),
+                  prev)
 }
 
 // Term Loan B, in closed form. Every dollar of free cash flow after the 1%
 // mandatory amortisation sweeps against it, and interest accrues on the average
 // balance — so the balance depends on the interest that depends on the balance.
 // Collecting terms solves it in one substitution.
-state tlb_balance {
-  init cfg.tlb_size
-  next max(0.0,
+entity asset tlb : Asset.Financial {
+  balance init cfg.tlb_size
+          next max(0.0,
        (prev * (1 + (1 - inputs.tax_rate) * (curve_value("libor", time.date) + cfg.tlb_spread) / 2)
         - (1 - inputs.tax_rate) * (curve_value("ebit", time.date)
              - (inputs.commitment_fee + cfg.senior_size * cfg.senior_rate
                 + if(time.t <= 3,
-                     prev.sub_balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
-                     cfg.sub_rate * prev.sub_balance)
+                     prev.asset.sub_notes.balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
+                     cfg.sub_rate * prev.asset.sub_notes.balance)
                 + cfg.fee_amort - inputs.interest_income))
         - (curve_value("dna", time.date)
            + if(time.t <= 3,
-                prev.sub_balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
+                prev.asset.sub_notes.balance * ((1 + cfg.sub_rate / 2) / (1 - cfg.sub_rate / 2) - 1),
                 0.0)
            + cfg.fee_amort
            + curve_value("delta_nwc", time.date)
@@ -159,7 +154,7 @@ stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
   schedule on 2021-01
   category investing.exit
   amount = (inputs.exit_multiple * curve_value("ebitda", time.date)
-            - (state.tlb_balance + cfg.senior_size + state.sub_balance
+            - (asset.tlb.balance + cfg.senior_size + asset.sub_notes.balance
                - inputs.cash_at_exit))
            * cfg.sponsor_equity / (cfg.sponsor_equity + inputs.rollover)
 }

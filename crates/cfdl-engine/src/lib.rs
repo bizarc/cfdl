@@ -2370,14 +2370,26 @@ fn bind_all_entity_state(
         let Some((namespace, name)) = symbol.split_once('.') else {
             continue;
         };
-        let inner = ExprValue::Map(fields.clone());
+        // MERGE, DO NOT REPLACE. An entity's field values are bound first and
+        // its lifecycle state second; overwriting the map here dropped the
+        // fields, so an event guard reading one saw a key that was not there.
+        // Under the open-world `entity` root that resolved to NULL rather than
+        // failing — the guard compared null to a number, went false forever,
+        // and the event never fired.
         match env.entity.get_mut(namespace) {
-            Some(ExprValue::Map(ns_map)) => {
-                ns_map.insert(name.to_string(), inner);
-            }
+            Some(ExprValue::Map(ns_map)) => match ns_map.get_mut(name) {
+                Some(ExprValue::Map(existing)) => {
+                    for (field, value) in fields {
+                        existing.insert(field.clone(), value.clone());
+                    }
+                }
+                _ => {
+                    ns_map.insert(name.to_string(), ExprValue::Map(fields.clone()));
+                }
+            },
             _ => {
                 let mut ns_map = BTreeMap::new();
-                ns_map.insert(name.to_string(), inner);
+                ns_map.insert(name.to_string(), ExprValue::Map(fields.clone()));
                 env.entity
                     .insert(namespace.to_string(), ExprValue::Map(ns_map));
             }
