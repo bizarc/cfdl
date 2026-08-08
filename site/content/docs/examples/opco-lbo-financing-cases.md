@@ -326,8 +326,8 @@ stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
 
 Checked period by period: **2 series** across **6 periods**, each within ±1e-6 of the reference.
 
-- `state.asset.tlb.balance`
-- `state.asset.sub_notes.balance`
+- `asset.tlb.balance`
+- `asset.sub_notes.balance`
 
 Checked per scenario, each a full run under its own parameters:
 

@@ -288,8 +288,8 @@ stream opco.debt.repayment on entity asset.target outflow currency USD {
 
 Checked period by period: **7 series** across **5 periods**, each within ±1e-6 of the reference.
 
-- `state.asset.tlb.balance`
-- `state.asset.sub_notes.balance`
+- `asset.tlb.balance`
+- `asset.sub_notes.balance`
 - `opco.interest.term_loan`
 - `opco.interest.sub_notes`
 - `opco.interest.senior_notes`
