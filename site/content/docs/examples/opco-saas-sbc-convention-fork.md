@@ -16,11 +16,11 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 ## The case
 
 A sponsor take-private of a subscription-software business. Stock-based
-compensation is the most contested convention in software valuation, and this
-case exists because the source discloses free cash flow **both ways** — before
-and after it — for the same company on the same page. The gap is not a rounding
-difference: $331mm before, $198mm after, in the first year alone. Two thirds of
-first-year cash flow turns on the convention.
+compensation is the most contested convention in software valuation, and the
+source discloses free cash flow **both ways** — before and after it — for the
+same company on the same page. The gap is not a rounding difference: $331mm
+before, $198mm after, in the first year alone. Two thirds of first-year cash
+flow turns on the convention.
 
 ## The reference
 
@@ -56,11 +56,11 @@ All twelve cells of the disclosed grid reconcile, worst **±0.50 on ~7,000** —
 
 ## The delta
 
-The filing **mixes the two conventions**, and reproducing the grid is what
-established it: the explicit-period flows are post-compensation while the
-terminal multiple is applied to a pre-compensation base. Nothing in the document
-says so. It is defensible — the multiple was calibrated on peers' pre-compensation
-cash flow — but it means one model has to carry both definitions at once.
+The filing **mixes the two conventions**: the explicit-period flows are
+post-compensation while the terminal multiple is applied to a pre-compensation
+base. Nothing in the document says so. It is defensible — the multiple was
+calibrated on peers' pre-compensation cash flow — but one model has to carry
+both definitions at once.
 
 One input is not disclosed. The filing states first-year cash flow as a full year
 and notes the valuation includes only the last three quarters, without publishing

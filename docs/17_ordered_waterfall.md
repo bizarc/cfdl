@@ -550,7 +550,67 @@ the first draft computed every vested share as zero and said nothing. The tier
 test belongs in the waterfall step, which reads period-close state — and next to
 the payment it decides, which is where it reads better anyway.
 
+### A nested split — `fixtures/valid/waterfall_nested_split`
+
+The last structure §9 asked for, and the one that needed a language change
+rather than a model.
+
+A GP stakes deal runs three waterfalls in a row. The fund pays its carry to the
+general partner; the management company splits that carry with the deal team;
+and what the firm keeps is split again between the founders and the passive
+minority investor holding a strip of it. Each pot only exists once the one above
+has run.
+
+**Composition was missing.** A waterfall's environment carried curves, inputs
+and states, but not the series map, so a second waterfall naming the first one's
+step matched nothing and took a zero — with the warning `series ... is not
+available in this context`. The rule now is DECLARATION ORDER: each waterfall's
+steps join the visible series as it finishes, so a later one may read an earlier
+one, exactly as a step may read the steps above it. An order, not a graph.
+
+The fund tier is `waterfall_fund_carry` unchanged, so the pot is already
+verified: its GP carry comes to exactly $4,000,000, which is 20% of the $20mm
+profit — the definition of a full catch-up. The rest is checkable by hand: a 40%
+team pool leaves the firm $2,400,000, and a 20% strip of that is $480,000 to the
+stakes investor and $1,920,000 to the founders.
+
+What this rules out is restating the second pot as an assumption. That number is
+the first waterfall's output, and an assumption holding a copy of it is a number
+that goes stale the first time a fee changes.
+
+### A partial catch-up — `fixtures/valid/waterfall_partial_catchup`
+
+The reference's last structure, and it needed nothing new.
+
+Under a full catch-up the GP takes every dollar above the preferred return
+until it holds its 20%. Under a 50/50 catch-up it takes half of each dollar,
+the tier runs twice as long, and the LPs keep receiving cash throughout it.
+
+The rate is an input, so the tier is still arithmetic. With P the preferred, k
+the carry rate and c the catch-up rate, the tier total is `g/c` and the tier
+ends when the GP holds k of everything distributed above capital:
+
+    g = k * (P + g/c)     ->     g = k*P*c / (c - k)
+
+At c = 1 that reduces to P/4, the full catch-up. So the two structures are one
+expression with a different argument, and the `full_catchup` scenario returns
+the same $4,000,000 / $26,000,000 split as `waterfall_fund_carry` — the model
+checks itself against a case already verified.
+
+**The step that makes it work** is the cap. The GP takes its share OF THE TIER,
+`remaining * c`, capped at what the tier owes it, so a pot that runs out
+mid-tier is split at the negotiated rate rather than handed to the GP whole.
+The LPs' side of the same tier reads `paid.gp_catchup` rather than recomputing
+its own, which keeps the two halves of one tier consistent when the step above
+clamps.
+
+**Where the rate changes the answer** is exactly there — which is why the number
+is negotiated at all. On $15.5mm of proceeds the full catch-up hands the GP the
+whole $806,719 above the preferred; the 50/50 catch-up splits it, and the GP
+takes $403,360. On $30mm both end at $4,000,000, because a catch-up that
+completes changes the path and not the destination.
+
 ### Still to build
 
-A nested split (composition), and the reference's remaining structure, a partial
-catch-up.
+Nothing from the reference. The five structures between them use one step form,
+three bindings and the composition rule.

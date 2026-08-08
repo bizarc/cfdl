@@ -53,9 +53,8 @@ Asserted: five per-period series across 120 months — effective gross income, n
 operating income, debt service, the coverage ratio and net cash flow — plus the
 four lifetime figures.
 
-The per-period assertions matter more than the totals. A lifetime coverage ratio
-of 1.4 can contain a year at 0.9 and report nothing, and offsetting per-period
-errors cancel in a sum.
+Assertion is per period rather than on the totals: a lifetime coverage ratio of
+1.4 can contain a year at 0.9.
 
 ## The delta
 

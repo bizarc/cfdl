@@ -3,8 +3,7 @@
 Subprime auto receivables backing a securitisation, measured at zero prepayment
 speed. The collateral is 43 level-pay sub-pools at 43 different rates and terms,
 four of them at a 0% promotional annual rate. Weighted average life is the
-standard summary of when principal actually comes back, and it is what a buyer
-prices against.
+standard summary of when principal comes back.
 
 ## The reference
 

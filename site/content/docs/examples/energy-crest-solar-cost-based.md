@@ -33,7 +33,7 @@ a spreadsheet, and independently ported to Python by a third party. Both were
 run; the comparison is three-way.
 
 It publishes a complete annual cash flow, so every line is checkable period by
-period rather than at an endpoint.
+period.
 
 **Not redistributable.** The spreadsheet states no licence and the port declares
 none, which means default copyright. Neither is vendored or wired into the test
@@ -55,13 +55,11 @@ which is why they are asserted as separate lines rather than as one total.
 ## The result
 
 **Exact on every individual line.** All seven stream columns agree with the
-reference across all 25 periods with zero disagreement — not "within tolerance",
-identical at the engine's published precision.
+reference across all 25 periods with zero disagreement.
 
-Asserted: seven stream columns across 25 periods, plus `domain.energy.opex` — the
-reference's own published expense total — which is what makes the four
-decomposed lines evidence rather than assertion. The reference publishes
-operating expenses as a single figure, so the decomposition has to sum back to it
+Asserted: seven stream columns across 25 periods, plus `domain.energy.opex`, the
+reference's own published expense total. The reference publishes operating
+expenses as a single figure, so the four decomposed lines have to sum back to it
 in every period.
 
 ## The delta
@@ -71,9 +69,8 @@ One non-zero figure: **5.0e-7**, on the summed expense column at period 19.
 It is not arithmetic. Results carry money to six decimal places, and the engine
 rounds a subtotal it computed from *unrounded* components — which is a different
 operation from summing five *already-rounded* components, and the two differ by
-up to half of the last published place. 5e-7 is exactly that half. It is the
-floor any case here can assert to, which is why the tolerance is
-set to the engine's precision rather than to anything about this deal.
+up to half of the last published place. 5e-7 is exactly that half, and the
+floor any case here can assert to.
 
 One thing the case does **not** validate: the reference's actual purpose is to
 solve the tariff that clears a target equity return, sweeping the rate until net

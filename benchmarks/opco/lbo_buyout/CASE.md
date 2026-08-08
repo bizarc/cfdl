@@ -24,8 +24,8 @@ recreated independently of the model and compared period by period.
 | Language features | pack contracts across an entry, a hold and an exit |
 | Conventions | entry at a multiple, days-based working capital, debt amortisation from operating cash flow, an exit on trailing EBITDA |
 
-The widest span of the opco pack's contract surface: the case covers the whole
-transaction rather than one mechanic.
+The widest span of the opco pack's contract surface: entry, hold and exit
+rather than one mechanic.
 
 ## The result
 

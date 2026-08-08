@@ -4,13 +4,10 @@ A $100mm agency mortgage pool — 8% weighted average coupon, 360-month term, 20
 loss severity, twelve-month recovery lag, prepaying at a flat 1% single monthly
 mortality against a 1% monthly default rate.
 
-It is the same pool as the mortgage pool conventions case, and that is the
-point. There it is one pool. Here it is **four loans of $40mm, $30mm, $20mm and
+It is the same pool as the mortgage pool conventions case, at a different
+grain. There it is one pool. Here it is **four loans of $40mm, $30mm, $20mm and
 $10mm that belong to a pool**, and the pool itself holds no contract. Every
 figure asserted against the pool is an aggregate.
-
-The balances are uneven on purpose. Four equal loans would agree with the pool
-under any aggregation that happened to divide by four.
 
 ## The reference
 
@@ -38,9 +35,8 @@ is the only step taken.
 
 Two aggregates are asserted, computed by unrelated code:
 
-- `entity.asset.pool.net_cash_flow` — the **hierarchy rollup**. A parent's cash
-  is its children's cash because they are its children, not because their names
-  share a prefix.
+- `entity.asset.pool.net_cash_flow` — the **hierarchy rollup**, aggregating the
+  children a `part of` relation names rather than a matching name prefix.
 - `domain.credit.gross_collections` — the **category subtotal**, the pack folding
   four contract instances into one domain line.
 
@@ -54,9 +50,8 @@ with the published schedule within the tolerance the source's rounding allows.
 
 The rollup is also exact against the single-pool model: over all 372 periods,
 `entity.asset.pool.net_cash_flow` here and `model.net_cash_flow` there agree to
-**zero** — not within a tolerance, bit for bit. Splitting $100mm into four
-unequal loans changes nothing about the pool's cash, which is what a correct
-rollup means.
+**zero** — not within a tolerance, exactly. Splitting $100mm into four unequal
+loans changes nothing about the pool's cash.
 
 ## The delta
 
@@ -64,11 +59,4 @@ Largest residual anywhere: **1.76 dollars**, against a tolerance of 2.01.
 
 It is the source's rounding, not arithmetic. Each published figure is given to
 the whole dollar and up to four are added, so two dollars bounds the difference
-before any model is run. The bound is arithmetic rather than a judgement about
-this deal, and the observed figure sits inside it.
-
-One thing the case surfaced rather than validated: `Credit.Asset.Loan` declares
-a field named `term`, and no model can set it, because `term` is a keyword. The
-loans here state a balance and a coupon and leave it out. The schedule is
-unaffected — the term it uses is the contract's `term_months` — but a declared
-field that cannot be written is a defect, and it is recorded as one.
+before any model is run.

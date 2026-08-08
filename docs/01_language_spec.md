@@ -193,7 +193,7 @@ Rules:
 - Phases are named ranges used for organization, scoping, and schedule helpers.
 
 ### 6.4 Phase boundary helpers
-The language provides schedule helpers (see §9) and event helpers (see §11):
+The language provides schedule helpers (see §11) and event helpers (see §13):
 - `phase_start("name")`
 - `phase_end("name")`
 - `phase_enter("name")` (an instant)
@@ -404,18 +404,91 @@ If omitted, streams are active for all scheduled occurrences.
 
 ---
 
-## 10. Schedules (important)
+## 10. Waterfalls (ordered allocation)
+
+Some cash is not earned, it is allocated. A waterfall declares a priority of
+payments: an ordered list of steps sharing out a pot.
+
+### 10.1 Waterfall declaration
+Syntax:
+
+```cfdl
+waterfall deal.distribution on entity asset.trust {
+  schedule every month from 2026-01 to 2030-12
+  from asset.trust.available_funds
+
+  pay servicing to party.servicer    = 12500.0
+  pay senior    to asset.class_a     = 6250.0
+  pay residual  to party.certificate = remaining
+}
+```
+
+Rules:
+- A waterfall MUST be owned by exactly one entity.
+- A waterfall MUST declare a `schedule` — the same construct a stream takes —
+  and a `from` expression, which is the pot.
+- Waterfall names MUST be qualified names with at least two segments.
+- A waterfall MUST declare at least one step.
+
+### 10.2 Steps (normative)
+A step is `pay <name> to <payee> = <expr>`. There is one form for every kind of
+payment; a fixed fee, a cap, a balance target and a shortfall are all
+arithmetic over the names in §10.3.
+
+- Step names MUST be unique within their waterfall.
+- Every step MUST declare an amount expression.
+- Steps are paid in **declaration order**.
+- A step pays `min(max(0, expr), remaining)`. A step asking for more than is
+  left takes what is left; a negative expression pays nothing rather than
+  clawing cash back.
+- At least one step MUST read `remaining`, so the residual has a named payee
+  instead of vanishing.
+
+### 10.3 What a step may read
+On top of the ordinary expression environment (§16):
+
+| binding | meaning |
+|---|---|
+| `remaining` | what is still in the pot at this step |
+| `paid.<step>` | what an earlier step actually paid |
+| `owed.<step>` | what an earlier step would have paid, unbounded |
+
+`owed` and `paid` differ exactly when a step could not be paid in full, so
+their difference is that step's shortfall.
+
+A step MUST NOT read a step declared after it. A priority of payments is an
+order, not a system of equations, so a forward reference is a compile error.
+
+### 10.4 Evaluation order (normative)
+A waterfall runs **after** the period's streams and states are evaluated, so it
+allocates cash that already exists. A waterfall MUST NOT feed a stream in the
+same period.
+
+### 10.5 Output and composition
+Each step publishes as a series named `stream.<waterfall>.<step>`, and its cash
+counts toward the payee's total. A waterfall is not a separate kind of output:
+statements, metrics and the results document read it as they read any stream.
+
+Because steps publish as series, a waterfall MAY draw on the output of a
+waterfall **declared before it** — a fund's carry becoming a management
+company's pot, and that company's own share becoming a third waterfall's.
+Composition follows declaration order, the same rule steps follow within a
+waterfall.
+
+---
+
+## 11. Schedules (important)
 
 Schedules define occurrence dates/times for streams.
 
-### 10.1 Core schedule grammar
+### 11.1 Core schedule grammar
 Schedules appear inside a stream block:
 
 ```cfdl
 schedule <schedule_expr>
 ```
 
-### 10.2 Schedule expressions
+### 11.2 Schedule expressions
 #### 10.2.1 One-time
 ```cfdl
 schedule on 2026-02-15
@@ -492,7 +565,7 @@ schedule on phase_enter("perm")
 schedule every quarter from phase_start("hold") to phase_end("hold")
 ```
 
-### 10.3 Schedule resolution rules (normative)
+### 11.3 Schedule resolution rules (normative)
 - A schedule MUST resolve to a set of dates.
 - If the master timeline is not daily, dates MUST be mapped deterministically to the nearest representable period boundary according to the schedule’s convention.
 - The compiler MUST either:
@@ -540,14 +613,14 @@ Recommended v0.1 rule (normative):
 
 ---
 
-## 11. Assumptions (deterministic and stochastic)
+## 12. Assumptions (deterministic and stochastic)
 
-### 11.1 Deterministic assumption
+### 12.1 Deterministic assumption
 ```cfdl
 assume discount_rate = 0.10
 ```
 
-### 11.2 Stochastic assumption (distribution)
+### 12.2 Stochastic assumption (distribution)
 ```cfdl
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
 ```
@@ -558,15 +631,15 @@ Supported distributions (v0.1 core):
 - `Uniform(min, max)`
 - `Triangular(min, mode, max)`
 
-### 11.3 Where distributions may appear
+### 12.3 Where distributions may appear
 - Distributions MUST be declared via `assume <name> ~ Dist(...)`.
 - Any term or expression can reference stochastic values via `inputs.<name>`.
 
-### 11.4 Reproducibility (normative)
+### 12.4 Reproducibility (normative)
 - Any Monte Carlo run MUST declare an explicit seed.
 - Engines MUST use this seed deterministically for sampling.
 
-### 11.5 Curves (date-indexed inputs)
+### 12.5 Curves (date-indexed inputs)
 
 Named date-indexed value series (forward rate curves, price decks):
 
@@ -594,9 +667,9 @@ curve power_price linear {
 
 ---
 
-## 12. Events (discrete model changes)
+## 13. Events (discrete model changes)
 
-### 12.1 Event declaration
+### 13.1 Event declaration
 Syntax:
 
 ```cfdl
@@ -629,7 +702,7 @@ Rules:
 - Every write is published in `deterministic.transitions` — period, entity,
   field, from, to, and the firing event — so a transition is assertable.
 
-### 12.2 Actions (v0.1 core)
+### 13.2 Actions (v0.1 core)
 Supported actions:
 - `set entity <EntityRef>.<field> = <value>`
 - `activate stream <StreamName>`
@@ -638,7 +711,7 @@ Supported actions:
 - `deactivate contract <ContractName>` (optional)
 - `exercise option <OptionName>`
 
-### 12.3 Entity-state-driven activation
+### 13.3 Entity-state-driven activation
 Contracts and streams SHOULD use entity state as the primary activation mechanism:
 
 ```cfdl
@@ -647,9 +720,9 @@ active when entity.status != "refinanced"
 
 ---
 
-## 13. Options (real options, minimal v0.1)
+## 14. Options (real options, minimal v0.1)
 
-### 13.1 Option declaration
+### 14.1 Option declaration
 Syntax:
 
 ```cfdl
@@ -666,9 +739,9 @@ Rules:
 
 ---
 
-## 14. Runs
+## 15. Runs
 
-### 14.1 Run declarations
+### 15.1 Run declarations
 ```cfdl
 run deterministic
 run monte_carlo trials 20000 seed 42
@@ -677,16 +750,16 @@ run monte_carlo trials 20000 seed 42
 Rules:
 - `monte_carlo` MUST provide `trials` and `seed`.
 
-### 14.2 Engine-computed outputs
+### 15.2 Engine-computed outputs
 Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification. CFDL models do not declare output metrics.
 
 See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
 ---
 
-## 15. Expressions (CFDL expression language)
+## 16. Expressions (CFDL expression language)
 
-### 15.1 Expression syntax
+### 16.1 Expression syntax
 Expressions are written as:
 
 ```cfdl
@@ -698,7 +771,7 @@ Expressions MUST be:
 - deterministic given the same inputs
 - terminating
 
-### 15.2 Namespaces and built-ins (normative)
+### 16.2 Namespaces and built-ins (normative)
 The expression environment MUST support:
 
 **Model/time**
@@ -733,7 +806,7 @@ The expression environment MUST support:
 - `curve_value`, `series_sum`, `series_avg`
 - The authoritative function catalog is `03_expression_environment.md`
 
-### 15.3 Currency literals
+### 16.3 Currency literals
 The language MAY support syntactic sugar:
 - `42000 USD` as Money
 - `10%` as Rate
@@ -742,41 +815,46 @@ These MUST compile to typed values in IR.
 
 ---
 
-## 16. Canonical JSON IR requirements (high level)
+## 17. Canonical JSON IR requirements (high level)
 
-### 16.1 Single IR
+### 17.1 Single IR
 - The compiler MUST emit one canonical JSON IR.
 
-### 16.2 Preserve provenance
+### 17.2 Preserve provenance
 - The IR MUST preserve:
   - all entities
   - all contracts (including terms)
   - all streams (explicit and derived)
   - provenance links from derived artifacts back to their contract source
 
-### 16.3 Required external inputs
+### 17.3 Required external inputs
 - The IR MUST include lists of required inputs inferred from expressions:
   - `required_observables`: list of ontology observable ids referenced via `obs.*()` calls
   - `required_refs`: list of ontology ref ids referenced via `ref.*`
 
-### 16.4 No correlation
+### 17.4 No correlation
 - The IR MUST NOT contain any correlation field/slot.
 
 ---
 
-## 17. Reserved keywords (v0.1)
+## 18. Reserved keywords (v0.1)
 
 `version`, `model`, `use`, `pack`, `import`, `as`, `time`, `calendar`, `from`, `for`, `phase`, `to`,
 `entity`, `contract`, `on`, `term`, `currency`, `terms`, `effects`, `stream`, `owner`, `direction`,
 `inflow`, `outflow`, `schedule`, `on`, `every`, `day`, `eom`, `week`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`,
 `convention`, `calendar`, `stub`, `except`, `also`,
 `assume`, `run`, `deterministic`, `monte_carlo`, `trials`, `seed`,
+`waterfall`,
 `event`, `when`, `set`, `activate`, `deactivate`,
 `option`, `type`, `exercisable`, `exercise`, `payoff`.
 
+`pay` is contextual — it introduces a waterfall step and is an ordinary
+identifier elsewhere. `remaining`, `paid` and `owed` are bindings the host
+provides inside a step expression (§10.3), not keywords.
+
 ---
 
-## 18. Minimal multi-file example (Core)
+## 19. Minimal multi-file example (Core)
 
 This example compiles and runs against the `cre` pack as written.
 
@@ -846,7 +924,7 @@ run monte_carlo trials 20000 seed 42
 
 ---
 
-## 19. Conformance
+## 20. Conformance
 An implementation conforms to CFDL v0.1 Core if it:
 1. Parses valid CFDL programs per this spec.
 2. Rejects invalid programs with actionable diagnostics.

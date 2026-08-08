@@ -15,6 +15,7 @@ statement       = version_stmt
                 | state_stmt
                 | contract_stmt
                 | stream_stmt
+                | waterfall_stmt
                 | event_stmt
                 | option_stmt
                 | run_stmt
@@ -136,6 +137,30 @@ stream_item     = schedule_stmt
 
 active_stmt     = "active" "when" expr ;
 amount_stmt     = "amount" expr ;
+
+(* --- waterfalls: an ordered priority of payments over a pot ---
+   `from` is the pot; each `pay` step takes min(max(0, expr), remaining) and
+   what survives passes down. Steps are paid in DECLARATION ORDER, and a step
+   may read the steps above it as `paid.<step>` and `owed.<step>` — what an
+   earlier step actually paid, and what it would have paid unbounded. Their
+   difference is that step's shortfall.
+
+   At least one step MUST read `remaining`, so the residual has a named payee
+   rather than vanishing.
+
+   Steps publish as series `stream.<waterfall>.<step>`, so a waterfall declared
+   later may draw on an earlier one's output as its own pot. Composition
+   follows declaration order, the same rule steps follow inside a waterfall.
+
+   A waterfall runs after the period's streams and states, so it allocates cash
+   that already exists and never feeds a stream in the same period.
+   See docs/17_ordered_waterfall.md. --- *)
+waterfall_stmt  = "waterfall" qname
+                  "on" "entity" entity_ref
+                  waterfall_block ;
+
+waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
+waterfall_step  = "pay" IDENT "to" entity_ref "=" expr ;
 
 (* --- schedules --- *)
 schedule_stmt   = "schedule" schedule_expr ;

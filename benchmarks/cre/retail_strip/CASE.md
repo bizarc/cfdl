@@ -25,9 +25,8 @@ compared against it period by period.
 | Language features | multiple instances of one contract type |
 | Conventions | a base-year expense stop with a 95% gross-up, percentage rent over a breakpoint, net leases, staggered rollover |
 
-The gross-up is the convention worth naming: it is the one most often
-implemented as a flat recovery, which understates income in every year the
-centre is below the gross-up threshold.
+A gross-up implemented as a flat recovery understates income in every year the
+centre sits below the gross-up threshold.
 
 ## The result
 
@@ -37,9 +36,9 @@ costs **340,000.00**.
 Asserted: effective gross income, net operating income and net cash flow per
 period across 120 months, plus the three lifetime figures.
 
-Per-period assertion is what makes the total meaningful. Percentage rent, the
-base-year gross-up and the recovery stop could each be wrong in offsetting ways
-and a lifetime NOI would still land.
+Percentage rent, the base-year gross-up and the recovery stop can each be wrong
+in offsetting ways that a lifetime NOI would not show, so assertion is per
+period.
 
 ## The delta
 

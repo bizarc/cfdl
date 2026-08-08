@@ -17,9 +17,9 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 A 30 MW wind project selling at merchant prices, claiming the production tax
 credit over its first ten years, and depreciating on the five-year MACRS
-schedule. Project debt runs underneath. The interaction is the point: the credit
-runs for ten years, depreciation for five, and the debt for longer than either —
-so the cash flow shape changes twice before the hold ends.
+schedule. Project debt runs underneath. The credit runs for ten years,
+depreciation for five and the debt for longer than either, so the cash flow
+shape changes twice before the hold ends.
 
 ## The reference
 

@@ -28,11 +28,10 @@ Problem Set 1 from MIT OpenCourseWare's real estate finance and investment
 course. It publishes the full pro forma table **and** the answer: a present
 value at 12% of **$2,292,810**.
 
-**Redistributable.** Released under CC BY-NC-SA 4.0, which is the only content
-in the source catalogue with an unambiguous reuse grant.
+**Redistributable.** Released under CC BY-NC-SA 4.0.
 
-Unusually, this source publishes both the working and the answer, so the case
-checks every intermediate line as well as the result.
+The source publishes both the working and the answer, so the case checks every
+intermediate line as well as the result.
 
 ## What it exercises
 

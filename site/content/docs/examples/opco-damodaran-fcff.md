@@ -19,9 +19,8 @@ A cross-industry operating company valued on free cash flow to the firm: revenue
 growing off a declining growth path, operating margins, cash taxes, capital
 expenditure and working capital, discounted to an enterprise value.
 
-The growth path is what makes it a useful check. The rate declines year on year,
-so revenue is a running product of ten different growth rates rather than one
-rate compounded — the case that a single-rate shortcut gets wrong.
+The rate declines year on year, so revenue is a running product of ten
+different growth rates rather than one rate compounded.
 
 ## The reference
 
@@ -42,26 +41,21 @@ can mark every figure against the original.
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
 | Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue |
 
-This case publishes the **drivers** rather than only the results, which is what a
-pack rule consumes — so it validates the pack's lowering rather than only the
+The reference publishes the **drivers** rather than only the results, which is
+what a pack rule consumes, so the pack's lowering is checked and not only the
 engine's arithmetic.
 
 ## The result
 
 All ten years reproduce exactly.
 
-Before declared state existed, revenue was 2.4% low by year 10 and years 6–10
-were left unasserted, because `pow(1 + g, t)` applies one year's growth rate as
-though it had held from the start. It is exact when the rate is constant and
-wrong the moment it moves.
+Revenue is carried as declared state because the growth rate moves:
+`pow(1 + g, t)` applies one year's rate as though it had held from the start,
+which is exact only while the rate is constant.
 
 ## The delta
 
 None.
-
-This case is what took the opco pack from no externally-checked contract types to
-some: it exercises four pack contracts against a published source rather than
-hand-written streams.
 
 ## The model
 

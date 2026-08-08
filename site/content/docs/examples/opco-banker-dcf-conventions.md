@@ -24,16 +24,15 @@ terminal value is not.
 
 ## The reference
 
-Banker's discussion materials filed as an exhibit to a merger document. Unusually
-complete for the genre: most fairness opinions disclose a value range and little
-else, while this one gives the unlevered free cash flow build-up line by line,
-the discount rate range, the terminal method and multiple, the discounting
-convention, the dilution assumption, and a 3×3 grid of implied enterprise values.
+Banker's discussion materials filed as an exhibit to a merger document. It
+gives the unlevered free cash flow build-up line by line, the discount rate
+range, the terminal method and multiple, the discounting convention, the
+dilution assumption, and a 3×3 grid of implied enterprise values — more than
+most fairness opinions, which disclose a value range and little else.
 
 **Not redistributable.** The filer retains copyright, so figures are asserted
 against and the document is not vendored. The exhibit uses code names for the
-parties, so the case describes the *analysis* rather than the company — the
-conventions are what is being validated and they belong to no one.
+parties, so the case describes the *analysis* rather than the company.
 
 ## What it exercises
 
@@ -50,8 +49,8 @@ conventions are what is being validated and they belong to no one.
 the disclosed grid — 10.375% discount rate, 25.0× terminal multiple.
 
 All nine cells of the grid reconcile; the worst is +1.17 on $19bn. The other
-eight need a different rate or multiple per run, so the asserted cell is the one
-that exercises every convention at once.
+eight need a different rate or multiple per run, so the asserted cell is the
+centre one.
 
 ## The delta
 
@@ -59,9 +58,9 @@ that exercises every convention at once.
 its build-up lines round the same way. The engine's own agreement on the asserted
 cell is +0.16.
 
-The convention this case pinned is the asymmetry — flows discounted mid-period,
-the terminal value discounted whole. A terminal value is a price struck at a
-point in time, and the filing's own figures confirm it.
+The convention is asymmetric: flows are discounted mid-period and the terminal
+value whole, a terminal value being a price struck at a point in time. The
+filing's own figures confirm it.
 
 ## The model
 

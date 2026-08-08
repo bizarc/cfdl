@@ -79,13 +79,12 @@ There is no arithmetic delta. The largest figure anywhere in the case is
 publication precision rather than a disagreement: results carry money to six
 decimal places, so half of that is the tightest any case here can assert.
 
-What the exactness establishes is narrower than "an LBO needs no solver". The
-loop is **linear** in the closing balance — every step is affine in it, with no
-products of unknowns and no thresholds — so collecting terms solves it in one
-substitution, which is what the model's `next` clause does. That holds because no
-constraint binds in this deal: the revolver is never drawn, the term loan never
-fully repays, and minimum cash is exactly met. A deal that hit any of those would
-be piecewise linear, which is a different problem.
+The loop is **linear** in the closing balance — every step affine in it, with
+no products of unknowns and no thresholds — so collecting terms solves it in one
+substitution, which is what the model's `next` clause does. That holds because
+no constraint binds in this deal: the revolver is never drawn, the term loan
+never fully repays, and minimum cash is exactly met. A deal that hit any of
+those would be piecewise linear, which is a different problem.
 
 ## The model
 

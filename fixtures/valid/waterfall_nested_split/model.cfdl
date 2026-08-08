@@ -1,0 +1,85 @@
+version 0.1
+model "waterfall-nested-split"
+time calendar annual from 2020-01 for 6
+
+// A NESTED SPLIT — one waterfall's output is the next one's pot.
+//
+// A GP stakes structure has three of them in a row. The fund pays its carry to
+// the general partner; the management company splits that carry with the deal
+// team; and what the firm keeps is split again between its founders and the
+// passive minority investor who bought a strip of it.
+//
+// Each of those is an ordered priority of payments over a pot that only exists
+// once the one above has run. That is COMPOSITION, and it is a requirement
+// rather than a convenience: without it the second waterfall's pot has to be
+// restated as an assumption, which is the number the first waterfall computes.
+//
+// The rule is DECLARATION ORDER. A waterfall may read the steps of any
+// waterfall declared before it, exactly as a step may read the steps above it.
+// It is an order, not a graph, so there is nothing to solve and nothing to
+// cycle.
+//
+// TIER ONE IS THE VERIFIED CASE. The fund waterfall is `waterfall_fund_carry`
+// unchanged — $10mm called, $30mm back after five years, an 8% compounding
+// preferred, a full catch-up, then 80/20 — and its GP carry comes to exactly
+// $4,000,000, which is 20% of the $20mm profit. A full catch-up is defined by
+// producing that number, so the pot the firm-level waterfalls draw on is
+// checkable by hand before any of them run.
+
+entity asset fund     : Asset.Financial
+entity asset mgmt_co  : Asset.Financial
+entity party lp       : Party { name = "Limited Partners" }
+entity party gp       : Party { name = "General Partner" }
+entity party team     : Party { name = "Deal team carry pool" }
+entity party founders : Party { name = "Founding partners" }
+entity party stakes   : Party { name = "GP stakes investor" }
+
+assume called_capital = 10000000.0
+assume pref_rate      = 0.08
+assume hold_years     = 5.0
+assume gp_carry       = 0.20
+assume proceeds       = 30000000.0
+
+assume team_pool_pct  = 0.40
+assume stakes_pct     = 0.20
+
+state lp_preference {
+  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+  next prev
+}
+
+// 1. THE FUND. Capital and preferred to the LPs, catch-up and promote to the
+//    general partner, residual to the LPs.
+waterfall fund.distribution on entity asset.fund {
+  schedule on 2025-01
+  from inputs.proceeds
+
+  pay lp_preference to party.lp = state.lp_preference
+  pay gp_catchup    to party.gp = 4693280.768
+                                   / (1.0 - inputs.gp_carry) * inputs.gp_carry
+  pay gp_promote    to party.gp = remaining * inputs.gp_carry
+  pay lp_residual   to party.lp = remaining
+}
+
+// 2. THE MANAGEMENT COMPANY. The pot is the carry the fund just paid — both
+//    tiers of it — and the deal team's pool comes off the top.
+waterfall firm.carry_allocation on entity asset.mgmt_co {
+  schedule on 2025-01
+  from series_sum("fund.distribution.gp_catchup", 0, 5)
+        + series_sum("fund.distribution.gp_promote", 0, 5)
+
+  pay team_pool  to party.team = remaining * inputs.team_pool_pct
+  pay firm_share to asset.mgmt_co = remaining
+}
+
+// 3. THE FIRM'S OWN CARRY, split a second time. The stakes investor's strip is
+//    on what the firm keeps, not on the fund's carry, so this pot is the step
+//    above rather than the one two levels up — which is the whole reason the
+//    structure needs three waterfalls instead of three lines in one.
+waterfall firm.owner_split on entity asset.mgmt_co {
+  schedule on 2025-01
+  from series_sum("firm.carry_allocation.firm_share", 0, 5)
+
+  pay stakes_strip   to party.stakes   = remaining * inputs.stakes_pct
+  pay founder_share  to party.founders = remaining
+}

@@ -5,17 +5,16 @@ generating 250 GWh in its first year. It sells under a 25-year power purchase
 agreement at $45/MWh escalating 2% a year, against 0.5% annual module
 degradation. $60mm of debt amortises over 18 years at 6%. A 30% investment tax
 credit lands in the first operating year, and the project depreciates on the
-five-year MACRS schedule — on a basis reduced by half the credit, which is the
-rule that catches people out.
+five-year MACRS schedule, on a basis reduced by half the credit.
 
 Single owner means the project carries its own tax position rather than
 allocating it to an investor.
 
 ## The reference
 
-A national laboratory's open-source project-finance model, the standard tool for
-this structure. Its being open source matters: a disagreement can be traced to a
-specific formula rather than argued about.
+A national laboratory's open-source project-finance model, the standard tool
+for this structure. Being open source, a disagreement can be traced to a
+specific formula.
 
 **Not vendored.** The tool was run once outside the repository and only its
 output numbers were carried across, so nothing about it is a build dependency.
@@ -47,7 +46,6 @@ because escalation and degradation compound: a convention error shows up in
 every period after the first and grows, so the anchors bracket where it would
 appear.
 
-One conversion the case had to make explicit: the reference states its
-operations and maintenance escalation as a *real* rate carried on top of an
-inflation assumption, while the pack's escalation term is nominal. The case runs
-at zero inflation, where the two coincide exactly.
+The reference states its operations and maintenance escalation as a *real* rate
+carried on top of an inflation assumption, while the pack's escalation term is
+nominal. The case runs at zero inflation, where the two coincide exactly.

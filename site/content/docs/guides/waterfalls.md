@@ -110,9 +110,34 @@ counts toward the payee's total. A waterfall is not a separate kind of output:
 statements, metrics and the results document read it the way they read anything
 else.
 
+## One waterfall's output as another's pot
+
+Because steps publish as series, a later waterfall can draw on an earlier one:
+
+```cfdl
+waterfall fund.distribution on entity asset.fund {
+  schedule on 2025-01
+  from inputs.proceeds
+  pay carry    to party.gp = remaining * 0.20
+  pay lp_share to party.lp = remaining
+}
+
+waterfall firm.carry_split on entity asset.mgmt_co {
+  schedule on 2025-01
+  from series_sum("fund.distribution.carry", 0, 5)
+  pay team_pool  to party.team     = remaining * 0.40
+  pay firm_share to party.founders = remaining
+}
+```
+
+The rule is the same order that governs steps: a waterfall may read any
+waterfall **declared before it**. That is what a fund carry rolling into a
+management company and out again to a stakeholder needs, and it keeps the second
+pot as a computed number rather than an assumption holding a stale copy of it.
+
 ## Worked structures
 
-Four real waterfalls are encoded in the test suite, and between them they use
+Six real waterfalls are encoded in the test suite, and between them they use
 only the rules above.
 
 **A 22-step consumer ABS priority of payments** — servicer and trustee ahead of
@@ -130,6 +155,15 @@ rollover and exercised options.
 
 **An IRR-hurdle waterfall** — three participants whose vested percentages step
 up as the LP's return crosses eight hurdles.
+
+**A GP stakes nested split** — a fund waterfall, then the management company's
+split with the deal team, then the founders against a passive minority investor.
+Three waterfalls, each drawing on the one above.
+
+**A partial catch-up** — the same fund waterfall where the GP takes half of each
+dollar above the preferred instead of all of it. Set the catch-up rate to 1 and
+it returns the full catch-up's numbers exactly; the two structures are one
+expression with a different argument.
 
 ### On hurdles and catch-ups
 

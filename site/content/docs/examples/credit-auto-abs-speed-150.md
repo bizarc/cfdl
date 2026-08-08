@@ -39,9 +39,9 @@ filer retains copyright, so figures are asserted against rather than reproduced.
 | Language features | many instances of one contract type; a per-period pool factor carried as state |
 | Conventions | absolute prepayment speed, level-pay amortisation, a promotional 0% rate |
 
-This column was unreachable until the pool factor became per-period state. Every
-pool factor in the pack computed `pow(k, p)`, which is correct only for a
-constant hazard and wrong under a ramp.
+The pool factor is carried as per-period state: under a speed that is a share
+of the original pool, the surviving balance is a running product, which a
+closed-form `pow(k, p)` gives only while the hazard is constant.
 
 ## The result
 

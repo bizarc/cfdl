@@ -71,6 +71,9 @@ The host (compiler or engine) provides values under these roots:
 | `inputs` | assumption values (`assume` statements) |
 | `state` | declared `state` values **at the current period** — present in stream expressions only |
 | `prev` | declared `state` values **at the previous period** — present inside a state's `next` only |
+| `remaining` | what is left in the pot — present in waterfall step expressions only (§3.2) |
+| `paid` | `paid.<step>`, what an earlier waterfall step actually paid — steps only |
+| `owed` | `owed.<step>`, what an earlier step would have paid, unbounded — steps only |
 
 Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
 
@@ -187,6 +190,36 @@ Three further properties, each the opposite of a defensible alternative:
 
 See `docs/14_state_and_recurrence.md` for the design and the prior art it
 follows.
+
+### 3.2 Waterfall steps: `remaining`, `paid` and `owed`
+
+A waterfall step is an expression like any other, with three extra names.
+
+`remaining` is what survives the steps above it. A step pays
+`min(max(0, expr), remaining)`, so `= remaining` means exactly what it says,
+a step asking for more than is left takes what is left, and a negative
+expression pays nothing rather than clawing cash back.
+
+`paid.<step>` and `owed.<step>` read a step declared **earlier in the same
+waterfall** — what it actually paid, and what it would have paid had the pot
+been deep enough. They differ exactly when a step could not be paid in full,
+so their difference is that step's shortfall:
+
+```
+amount = owed.trustee_fee - paid.trustee_fee
+```
+
+That is how a capped fee gets its overflow paid at a later priority, and how a
+step measures a balance "after giving effect to" the payments above it. Reading
+a step declared later is a compile error.
+
+A step also sees everything a stream sees, including `state.<name>` at the
+current period — a waterfall runs after states are evaluated, so the balances
+it tests are period-close values.
+
+Steps publish as series `stream.<waterfall>.<step>`, so `series_sum` reaches an
+earlier waterfall's output from a later one's `from` expression. That is how one
+waterfall's payment becomes another's pot.
 
 ## 4. Builtin functions
 

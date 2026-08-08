@@ -29,6 +29,16 @@ loops, so the same inputs always produce the same number.
 | `entity.*` | attributes of the entity the stream belongs to |
 | `cfg.*` | run configuration, such as the discount rate |
 | `obs.*` | observed series a curve provides |
+| `state.*` | declared states, at the current period |
+| `prev` | this state's previous value — inside a state's `next` only |
+
+Three more are bound inside a [waterfall](/docs/guides/waterfalls) step:
+
+| Binding | Holds |
+|---|---|
+| `remaining` | what is left in the pot at this step |
+| `paid.<step>` | what an earlier step actually paid |
+| `owed.<step>` | what an earlier step would have paid, unbounded |
 
 Inside a pack's lowering rule, `{{contract.*}}` placeholders are substituted
 before the expression is parsed — so by the time it evaluates, a contract term
