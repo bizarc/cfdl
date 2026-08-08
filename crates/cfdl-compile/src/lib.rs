@@ -721,7 +721,9 @@ struct IrProvenance {
 fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
     states
         .iter()
-        .map(|guard| format!("entity.state.status == \"{}\"", guard.state))
+        // `entity.status`, not `entity.state.status`: an entity's state IS its
+        // fields, and `status` is one of them. The second store is gone.
+        .map(|guard| format!("entity.status == \"{}\"", guard.state))
         .collect::<Vec<_>>()
         .join(" or ")
 }

@@ -132,7 +132,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 
 `active in state` names states from the lifecycle, so those names are checked
 too. This is the reason to prefer it over comparing a status string: a typo in
-`entity.state.status == "leasd"` is not an error, it is a condition that is
+`entity.status == "leasd"` is not an error, it is a condition that is
 false forever and says nothing.
 
 ### When a write becomes visible

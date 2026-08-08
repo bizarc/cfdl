@@ -236,7 +236,7 @@
           "payee": "party.tax_investor",
           "amount": {
             "lang": "cfdl",
-            "src": "remaining * if(entity.state.status == \"post_flip\",                        inputs.postflip_share,                        inputs.preflip_share)"
+            "src": "remaining * if(asset.interest.status == \"post_flip\",                        inputs.postflip_share,                        inputs.preflip_share)"
           }
         },
         {

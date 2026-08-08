@@ -53,7 +53,7 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `schedule ... except [dates]` / `also [dates]` | ✅ | roll-adjusted point dates |
 | `schedule ... stub <policy>` | ❌ | rejected with a diagnostic and removed from the grammar. It was previously accepted and discarded, so a model could ask for a stub period and silently get a full one |
 | `event <name> when <expr> { actions }` | 🟡 | latch semantics: fires once, at the first period its condition holds, in declaration order — there is no repeating or level-triggered form. The guard reads `state.<name>` and entity state by qualified path (`entity.asset.tower.status`), as the period OPENED; it cannot read a stream |
-| — `set entity <ref>.<field> = <expr>` | ✅ | visible as `entity.<field>` / `entity.state.*`. An entity whose type declares a lifecycle opens in its declared initial state rather than null. Every write is published in `deterministic.transitions` |
+| — `set entity <ref>.<field> = <expr>` | ✅ | visible as `entity.<field>` / `entity.<field>`. An entity whose type declares a lifecycle opens in its declared initial state rather than null. Every write is published in `deterministic.transitions` |
 | — `activate/deactivate stream` | ✅ | persists forward |
 | — `activate/deactivate contract` | 🟡 | parsed + lowered; engine warns-and-skips (no contract runtime yet) |
 | — `exercise option` | ✅ | forces the option's own ELECTION at the firing period. It does not bypass `exercisable in`: an option outside its window is not one anyone holds, and forcing one warns and declines |

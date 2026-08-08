@@ -7,7 +7,7 @@ entity asset senior : Asset.Financial
 // Both loans currently run for the full two years — which is wrong: the
 // deal refinances at month 12. Your task:
 //   1. Guard each loan with an `active when` on the lifecycle field
-//      entity.state.status ("refinanced" / not).
+//      entity.status ("refinanced" / not).
 //   2. Add an event that fires at time.t >= 12 and sets
 //      entity asset.senior.status = "refinanced".
 stream loan.bridge_interest on entity asset.senior outflow currency USD {

@@ -2009,6 +2009,13 @@ fn evaluate_stream(
                 build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
             apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
             bind_states(&mut env, states, idx);
+            // AN EVENT WRITES THE FIELD, so a stream must see what it wrote.
+            //
+            // Field values are bound first and event writes merged over them —
+            // the order a waterfall already uses. Without this a stream read
+            // the rule's value and a waterfall read the event's, so one field
+            // name answered differently depending on who asked.
+            bind_all_entity_state(&mut env, &event_sim.entity_state[idx]);
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
@@ -2408,8 +2415,11 @@ fn apply_entity_state(
     for (field, value) in state {
         env.entity.insert(field.clone(), value.clone());
     }
-    env.entity
-        .insert("state".to_string(), ExprValue::Map(state.clone()));
+    // `entity.state.<field>` IS GONE. It was a second store under a second
+    // name: an event's write lived there while the field's rule lived under the
+    // field's own path, so one name answered differently depending on who
+    // asked. An entity's state IS its fields, and lifecycle status is one of
+    // them.
 }
 
 /// Evaluate every declared state over the whole evaluation window.
@@ -2667,8 +2677,7 @@ fn build_expr_env(
         "name".to_string(),
         ExprValue::String(stream.map_or_else(String::new, |s| s.owner.symbol.clone())),
     );
-    env.entity
-        .insert("state".to_string(), ExprValue::Map(BTreeMap::new()));
+    // No `entity.state` map — see apply_entity_state.
     env.curves = ir_curve_defs(ir);
 
     for (name, value) in base_inputs {

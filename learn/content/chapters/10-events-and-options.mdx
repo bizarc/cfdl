@@ -21,14 +21,14 @@ entity asset senior : Asset.Financial
 stream loan.bridge_interest on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 9500
-  active when entity.state.status != "refinanced"
+  active when entity.status != "refinanced"
 }
 
 // Cheaper permanent debt, alive only after.
 stream loan.perm_interest on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 6200
-  active when entity.state.status == "refinanced"
+  active when entity.status == "refinanced"
 }
 
 stream ops.noi on entity asset.senior inflow currency USD {
@@ -46,7 +46,7 @@ An event has a **condition** and a block of **actions**. The condition is an ord
 
 The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is a stream with a guard.
 
-The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one: the event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it — `entity.state.status` being how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
+The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one: the event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it — `entity.status` being how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
 
 ## Options: the right, not the obligation
 

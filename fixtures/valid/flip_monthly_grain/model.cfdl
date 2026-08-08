@@ -129,7 +129,7 @@ waterfall interest.distribution on entity asset.interest {
               0.0) ) / 12.0
 
   pay investor to party.tax_investor =
-        remaining * if(entity.state.status == "post_flip",
+        remaining * if(asset.interest.status == "post_flip",
                        inputs.postflip_share,
                        inputs.preflip_share)
   pay sponsor  to party.sponsor = remaining

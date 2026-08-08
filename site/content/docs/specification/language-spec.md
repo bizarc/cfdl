@@ -271,7 +271,7 @@ Rules:
 - Entity state is the primary mechanism used to trigger/activate contractual
   behavior. A stream may test it directly with `active in state <name>`, which
   checks the name against the owner's declared lifecycle — a string comparison
-  cannot be checked, and `entity.state.status == "leasd"` is simply false
+  cannot be checked, and `entity.status == "leasd"` is simply false
   forever.
 - Every write is published in `deterministic.transitions`, so a transition is
   observable and assertable rather than inferred from the cash.
@@ -799,7 +799,7 @@ The expression environment MUST support:
 - `cfg.<name>` for run-config values
 
 **Entities**
-- `entity.<field>` / `entity.state.*` — entity fields and lifecycle state
+- `entity.<field>` / `entity.<field>` — entity fields and lifecycle state
   (set via events; null before first set)
 
 **Observables and curves**

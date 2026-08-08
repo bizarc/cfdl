@@ -45,7 +45,7 @@
       },
       "active_when": {
         "lang": "cfdl",
-        "src": "entity.state.status != \"refinanced\""
+        "src": "entity.status != \"refinanced\""
       },
       "provenance": {
         "source_file": "model.cfdl",

@@ -7,7 +7,7 @@ time calendar annual from 2026-01 for 3
 //
 // These were parsed, checked against the ontology — misspell one and E1313
 // rejects it — and carried into the IR, and then the engine deserialised past
-// them. `entity.state.rentable_area` was 0 in every expression that touched
+// them. `entity.<field>` was 0 in every expression that touched
 // it, so a rent struck per square foot came out as nothing at all.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class    = "office"
@@ -23,19 +23,19 @@ entity asset suite : CRE.Asset.Unit {
 stream cre.rent.tower on entity asset.tower inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.revenue.base_rent
-  amount = entity.state.rentable_area * 2.50
+  amount = asset.tower.rentable_area * 2.50
 }
 
 // And per entity: the suite reads its own area, not its parent's.
 stream cre.rent.suite on entity asset.suite inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.revenue.base_rent
-  amount = entity.state.rentable_area * 3.00
+  amount = asset.suite.rentable_area * 3.00
 }
 
 // A string attribute stays a string.
 stream cre.opex on entity asset.tower outflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.expense.opex
-  amount = if(entity.state.asset_class == "office", 1000.0, 500.0)
+  amount = if(asset.tower.asset_class == "office", 1000.0, 500.0)
 }

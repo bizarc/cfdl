@@ -121,7 +121,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(entity.state.asset_class == \"office\", 1000.0, 500.0)"
+        "src": "if(asset.tower.asset_class == \"office\", 1000.0, 500.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -154,7 +154,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "entity.state.rentable_area * 3.00"
+        "src": "asset.suite.rentable_area * 3.00"
       },
       "active_when": {
         "lang": "cfdl",
@@ -187,7 +187,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "entity.state.rentable_area * 2.50"
+        "src": "asset.tower.rentable_area * 2.50"
       },
       "active_when": {
         "lang": "cfdl",
