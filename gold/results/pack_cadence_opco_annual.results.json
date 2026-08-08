@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "838bc02aaf9cf91e15fea270308b6b307f1c5b95ae49e4f83787d90ef10b49ac",
-  "ledger_hash": "7f314c347dc1bfe5718098be1431f3ed9f90c0909b574f902861d56607127069",
+  "model_hash": "1a88606bc9aa7ca50c35d861fba74752333140be9ea7e76455970ed66934c80c",
+  "ledger_hash": "b4630ed5e489256d5c97fa3e9e0cf320cb4c3257cc8d2c234706ac5e0dfc02ac",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -107,6 +107,42 @@
       }
     },
     "series": {
+      "asset.business.opco_capex_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_opex_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_revenue_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "domain.opco.cfads": {
         "index": {
           "calendar": "annual",
@@ -369,42 +405,6 @@
             "amount": 391200.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.asset.business.opco_capex_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.asset.business.opco_opex_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.asset.business.opco_revenue_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
         ]
       },
       "stream.opco.capex": {

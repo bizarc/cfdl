@@ -1,4 +1,4 @@
-period,state.asset.tlb.balance,state.asset.sub_notes.balance,opco.interest.term_loan,opco.interest.sub_notes,opco.interest.senior_notes,opco.interest.undrawn_revolver,opco.debt.repayment
+period,asset.tlb.balance,asset.sub_notes.balance,opco.interest.term_loan,opco.interest.sub_notes,opco.interest.senior_notes,opco.interest.undrawn_revolver,opco.debt.repayment
 0,275.0,100.0,,,,,
 1,238.5174404433547,108.87728459530027,-8.986555207758705,-8.877284595300262,-12.250000000000002,-0.35000000000000003,-36.48255955664529
 2,199.519287768843,118.54263100846008,-8.97975292835005,-9.665346413159815,-12.250000000000002,-0.35000000000000003,-38.99815267451171

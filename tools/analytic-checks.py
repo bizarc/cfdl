@@ -791,7 +791,7 @@ def _pack_field(source: str, name: str, owner: str = "fund.buyer") -> list[float
     block = run_pack_model(source, 0.0, "credit")
     return [
         v if isinstance(v, (int, float)) else v["amount"]
-        for v in block["series"][f"state.{owner}.{name}"]["values"]
+        for v in block["series"][f"{owner}.{name}"]["values"]
     ]
 
 

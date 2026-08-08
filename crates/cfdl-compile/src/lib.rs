@@ -3207,8 +3207,12 @@ fn lower_contract_streams(
             // spelling; here it becomes the entity path the value now lives at.
             if !rule.state_name.is_empty() {
                 let from = format!("state.{}", rule.state_name);
+                // `entity.<owner>.<field>`, the long form. The bare alias covers
+                // the four declared families only, and a lowering rule may sit
+                // on any entity — so the spelling that always resolves is the
+                // one that goes through the entity root.
                 let to = format!(
-                    "{}.{}",
+                    "entity.{}.{}",
                     contract
                         .subject_entity
                         .clone()

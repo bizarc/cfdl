@@ -197,7 +197,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -237,7 +237,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / (360.0 / time.days_in_period)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / (360.0 / time.days_in_period)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -277,7 +277,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_p * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_p * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -317,7 +317,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_p * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_p * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -357,7 +357,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 + 0.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_lag_p * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 12.0 + 0.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_lag_p * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -397,7 +397,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / (360.0 / time.days_in_period)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 12.0, 1200000.0 * entity.asset.buyer.credit_io_bullet_survival_p * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / (360.0 / time.days_in_period)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

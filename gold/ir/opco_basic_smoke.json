@@ -315,7 +315,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(70000.0 + 0.0 / 12.0) * asset.business.opco_opex_growth"
+        "src": "(70000.0 + 0.0 / 12.0) * entity.asset.business.opco_opex_growth"
       },
       "active_when": {
         "lang": "cfdl",
@@ -355,7 +355,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(120000.0 + 0.0 / 12.0) * asset.business.opco_revenue_growth"
+        "src": "(120000.0 + 0.0 / 12.0) * entity.asset.business.opco_revenue_growth"
       },
       "active_when": {
         "lang": "cfdl",

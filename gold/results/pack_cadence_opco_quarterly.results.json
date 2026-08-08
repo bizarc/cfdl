@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "cf09f30133b772e313114d709c67206c46c7340e2667df1d20a607666a85e824",
-  "ledger_hash": "866c8ceb94058252bf797aba37a2d1794dff7bd756c39df61f1e6983f1e1e620",
+  "model_hash": "2c2924c5ed48874a98cbea11e78bfcc234dc6b9656f4631ef01cb5c8336a9dd5",
+  "ledger_hash": "3a0a99713ccd619bd4f664daae3879faa7a654827050cdfa9b2bf7ce9588eb95",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -107,6 +107,69 @@
       }
     },
     "series": {
+      "asset.business.opco_capex_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_opex_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_revenue_growth": {
+        "index": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "domain.opco.cfads": {
         "index": {
           "calendar": "quarterly",
@@ -810,69 +873,6 @@
             "amount": 97800.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.asset.business.opco_capex_growth": {
-        "index": {
-          "calendar": "quarterly",
-          "start": "2025-01-01",
-          "periods": 12
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.asset.business.opco_opex_growth": {
-        "index": {
-          "calendar": "quarterly",
-          "start": "2025-01-01",
-          "periods": 12
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.asset.business.opco_revenue_growth": {
-        "index": {
-          "calendar": "quarterly",
-          "start": "2025-01-01",
-          "periods": 12
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
         ]
       },
       "stream.opco.capex": {

@@ -1347,8 +1347,16 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // `stream_series`, and `model_series` was summed above from streams alone.
     // A state never enters model.total, model.npv or any domain metric.
     for (name, values) in &state_values {
+        // A FIELD PUBLISHES UNDER THE THING THAT OWNS IT. `state.` names a
+        // model-level state, and a field is not one — it is `asset.pool.balance`
+        // in the model and reads the same in the results.
+        let key = if name.matches('.').count() == 2 {
+            name.clone()
+        } else {
+            format!("state.{name}")
+        };
         series_map.insert(
-            format!("state.{name}"),
+            key,
             Series::from_plain(
                 &ir.time.calendar,
                 &ir.time.start,
