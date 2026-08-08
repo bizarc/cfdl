@@ -220,15 +220,23 @@ async fn run(Json(req): Json<RunRequest>) -> Response {
                 .as_ref()
                 .map(|reg| reg.statement_specs(&pack_name))
                 .unwrap_or_default();
-            let categories = serde_json::from_str::<serde_json::Value>(&ir_json)
-                .ok()
-                .map(|ir| cfdl_statement::stream_categories(&ir))
+            // Parsed once: the statement needs both what each stream is and
+            // which series are waterfall steps rather than cash.
+            let ir_value = serde_json::from_str::<serde_json::Value>(&ir_json).ok();
+            let categories = ir_value
+                .as_ref()
+                .map(cfdl_statement::stream_categories)
+                .unwrap_or_default();
+            let waterfall_series = ir_value
+                .as_ref()
+                .map(cfdl_statement::waterfall_series)
                 .unwrap_or_default();
             results.statements = cfdl_statement::compute(
                 &pack_name,
                 &statement_specs,
                 &subtotal_specs,
                 &categories,
+                &waterfall_series,
                 &results,
             );
         }
