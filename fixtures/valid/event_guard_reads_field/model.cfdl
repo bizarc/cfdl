@@ -1,0 +1,43 @@
+version 0.1
+model "event-guard-reads-field"
+time calendar annual from 2026-01 for 5
+
+// AN EVENT GUARD READS A FIELD, and a rule may read a constant one.
+//
+// Both were broken and neither failed loudly. `bind_states` bound an entity's
+// field values, then `bind_all_entity_state` REPLACED that entity's map with
+// one holding only lifecycle status — so a guard reading a field found a key
+// that was not there. Under the open-world entity root that is null, the guard
+// compared null to a number, and the event never fired.
+//
+// TWO THINGS DELIBERATELY NOT PROVEN HERE, both recorded rather than blessed:
+//
+//   * A RULE READING A LITERAL FIELD. The validator now allows it — a constant
+//     is readable at any period — but the engine's rule environment does not
+//     bind literals, so it resolves to nothing.
+//
+//   * A STREAM READING AN EVENT-WRITTEN FIELD. A waterfall sees the write; a
+//     stream does not, because a stream's environment binds field values and
+//     not event-written state. Until those agree, a stream reading a field an
+//     event writes would bless the wrong number.
+
+entity asset pool : Asset.Financial {
+  // Stated facts. Constants, so a rule may read them.
+  trigger_level = 60.0
+
+  balance init 100.0 next max(0.0, prev - 10.0)
+  fee_rate init 0.02
+}
+
+entity party lender : Party { name = "Lender" }
+
+// The guard reads a field that moves; the action writes one that does not.
+event covenant_breach when asset.pool.balance <= asset.pool.trigger_level {
+  set entity asset.pool.fee_rate = 0.05
+}
+
+// The balance is a field a rule moves, read by a stream at its own name.
+stream credit.amortisation on entity asset.pool outflow currency USD {
+  schedule every year from 2027-01 to 2030-01
+  amount = asset.pool.balance * 0.02
+}

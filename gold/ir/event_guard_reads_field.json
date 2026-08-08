@@ -1,0 +1,144 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "event-guard-reads-field",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a3e43afc90e34948d56b6d13a155c8fa",
+      "symbol": "asset.pool",
+      "type": "Asset.Financial",
+      "fields": {
+        "trigger_level": "60.0"
+      },
+      "rules": {
+        "balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "max(0.0, prev - 10.0)"
+          }
+        },
+        "fee_rate": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.02"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "1cf9f2f5ecdc0a62bc79ff3c05e92cb4",
+      "symbol": "party.lender",
+      "type": "Party",
+      "fields": {
+        "name": "Lender"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "db975c11ee1d5cca8de977993079d632",
+      "name": "credit.amortisation",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.pool.balance * 0.02"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 40,
+          "start_col": 1,
+          "end_line": 43,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.pool"
+          },
+          "field": "fee_rate",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "0.05"
+          }
+        }
+      ],
+      "id": "1452c249d456322f0e1536e31e3ab589",
+      "name": "covenant_breach",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 37,
+          "start_col": 1,
+          "start_line": 35
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "asset.pool.balance <= asset.pool.trigger_level"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
