@@ -117,4 +117,4 @@ Then, on your own:
 
 1. By hand, compute the original model's undiscounted total (shown above) and verify it against a run. Then lower the discount rate until NPV approaches the undiscounted total and explain, in one sentence, why they converge.
 2. Reproduce a "reconciliation gap" on purpose: compute year-one NPV at 8% annual with the compounding conversion, then with rate-divided-by-twelve, in any tool you like. The difference you find is the same third-digit gap you will someday be asked to explain in a meeting.
-3. Change the retainer amount to `round_to(30000 / 7, 2) * 7` (a contrived per-diem-style calculation). Look at what one period actually pays, and explain where the pennies went — you have just performed, in miniature, every rounding reconciliation you will ever do.
+3. Change the retainer amount to `round_to(30000 / 7, 0.01) * 7` (a contrived per-diem-style calculation). Look at what one period actually pays, and explain where the pennies went — you have just performed, in miniature, every rounding reconciliation you will ever do.

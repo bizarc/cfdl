@@ -62,7 +62,7 @@ The library is small and chosen — every function earns its place in cash-flow 
 
 **Growth and decay.** `pow`, `exp`, `ln`. Compounding up (`pow(1.03, …)`) and decline curves down (`pow(0.94, time.t)` — a 6%-per-period decline).
 
-**Rounding.** `round`, `round_up`, `round_down`, `round_to(x, places)`. Two distinct uses: `round_down(time.t / 12, 0)` for step functions, and `round_to(…, 2)` for matching a source that rounds each period before summing — the reconciliation tool from chapter 3.
+**Rounding.** `round`, `round_up`, `round_down` take decimal places; `round_to(x, step)` rounds to the nearest multiple of a step — `round_to(x, 0.01)` is cents, `round_to(x, 1)` whole dollars, `round_to(x, 0.25)` a quarter-point. Two distinct uses: `round_down(time.t / 12, 0)` for step functions, and `round_to(…, 0.01)` for matching a source that rounds each period before summing — the reconciliation tool from chapter 3.
 
 **Dates.** `date`, `edate` (shift by months, the Excel EDATE), `eomonth`, `days_between`, `months_between`, `year_frac` (day-count-aware year fractions — the bridge between "a rate per annum" and "this period's accrual"), `is_business_day`, `add_business_days`, `roll`.
 

@@ -1,0 +1,20 @@
+version 0.1
+model "exercise-the-deck"
+time calendar monthly from 2026-01 for 36
+
+entity asset solar : Asset.Real
+
+// The desk quoted a rising deck: 42.10 at Jan 2026, 44.75 at Jan 2027,
+// 46.20 at Jan 2028 — but this model flattened it to one blended number
+// no desk ever quoted. Restore the deck: declare a linear curve named
+// power_price with the three quoted points, and make revenue read it
+// with curve_value.
+stream solar.energy_revenue on entity asset.solar inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 1200 * 44.35
+}
+
+stream solar.om_expense on entity asset.solar outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 9000
+}

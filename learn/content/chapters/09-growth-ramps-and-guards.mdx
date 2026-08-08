@@ -1,0 +1,112 @@
+---
+title: "Growth, ramps, and guards"
+description: "The idiom kit: compounding and stepping, lease-up ramps, active-when guards, and phase gating — the five patterns that assemble into most real models."
+part: 2
+order: 9
+track: core
+---
+
+You now hold every core tool: schedules place cash, expressions compute it, assumptions and curves feed it, state remembers. This chapter adds no new construct. It is the *idiom kit* — the five patterns that recur in nearly every commercial model, each a one-liner once you have seen it, each a claim with finance content worth naming. Fluency here is what makes the difference between assembling a model and deriving one from scratch every time.
+
+## Compounding vs. stepping
+
+Two escalation claims wear the same "3% per year" label:
+
+```cfdl
+// Smooth: every month is 0.247% dearer than the last. CPI-style drift.
+amount = 4000 * pow(1.03, time.t / 12)
+
+// Stepped: flat for twelve months, then 3% on the anniversary. Lease-style.
+amount = 4000 * pow(1.03, round_down(time.t / 12, 0))
+```
+
+Most contracts *step* — rent bumps on anniversaries, wage scales revise annually — while most macro assumptions *drift*. The two produce the same year-end value and different cash within every year: the smooth version front-loads part of each year's increase, worth real money across a long lease. Read the contract, then write the claim it makes. When the escalation also *rounds* before compounding, neither one-liner survives and you reach back to chapter 8's state recurrence.
+
+## The ramp
+
+Nothing goes from zero to full instantly — buildings lease up, plants commission, products launch. The ramp idiom is `clamp` on a scaled clock:
+
+```cfdl
+// Linear lease-up: 0% at period 0, 100% at period 18, flat after.
+amount = inputs.stabilized_rent * clamp(time.t / 18.0, 0.0, 1.0)
+```
+
+Read the fraction as "months elapsed over months to stabilize." Variants are one edit each: a delayed ramp starts the clock later (`clamp((time.t - 6) / 18.0, 0.0, 1.0)` — nothing for six months, then the climb); a ramp *down* mirrors it (`1.0 - clamp(...)` — a sunset clause, a declining subsidy); an S-curve replaces the straight line when the deal justifies the sophistication. The ramp multiplies a *stabilized* claim, which keeps two assumptions a committee argues about separately — how much at full run-rate, and how long to get there — in two visibly separate places.
+
+## The guard: active when
+
+A stream can carry a condition that gates its existence, period by period:
+
+```cfdl
+version 0.1
+model "growth-guards"
+time calendar monthly from 2026-01 for 36
+
+entity asset venue : Asset.Real
+
+assume monthly_revenue = 52000
+assume breakeven = 40000
+
+stream venue.revenue on entity asset.venue inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)
+}
+
+stream venue.opex on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 38000
+}
+
+// A percentage rent kicker that exists only above the breakeven —
+// the guard carries the condition, the amount carries the economics.
+// series_sum over a single period reads that period's revenue.
+stream venue.percentage_rent on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  active when series_sum("venue.revenue", time.t, time.t) > inputs.breakeven
+  amount = (series_sum("venue.revenue", time.t, time.t) - inputs.breakeven) * 0.07
+}
+```
+
+`active when` is a boolean expression; in periods where it is false the stream simply does not occur. You could bury the same logic in the amount (`if(cond, x, 0)`), and the engine would agree — but the guard states something the `if` hides: *this claim conditionally exists*, versus *this claim is sometimes zero*. A percentage-rent kicker, a covenant-triggered fee, an incentive that switches on — these exist conditionally, and writing the condition as a guard puts it where a reviewer looks for conditions rather than inside arithmetic. Notice too how the guard reads another stream: `series_sum` over the single period `time.t` is that period's revenue, and a wider window is a rolling test (`series_sum("venue.revenue", 0, time.t)` is revenue to date — a cumulative trigger). Either way the kicker's trigger and the revenue it taxes cannot drift apart, because there is one revenue stream and everything reads it.
+
+## Phase gating
+
+Chapter 2 introduced phases as named spans; the idiom is letting them carry *all* date logic:
+
+```cfdl
+// The claim: management fees run during operations. No dates anywhere.
+schedule every month from phase_start("operations") to phase_end("operations")
+```
+
+Combined with `on phase_enter("…")` for one-shots (the demolition cost, the refinancing fee), a well-phased model concentrates every date into the phase declarations at the top. The payoff compounds with model size: when construction slips a quarter, a dateless model *re-derives itself* from one edited line — the schedules follow the phases, the ramps key off phase-relative clocks, and nothing else was ever told a date. The capstone's model is built this way from its first chapter, and slipping its timeline deliberately is one of that part's exercises.
+
+## Composing the kit
+
+The idioms are designed to multiply together, because each occupies its own slot in the anatomy you have known since chapter 2 — schedule, guard, amount:
+
+```cfdl
+stream venue.stabilized_kicker on entity asset.venue inflow currency USD {
+  schedule every month from phase_start("operations") to phase_end("operations")
+  active when time.t >= 18
+  amount = inputs.base_fee * pow(1.03, round_down(time.t / 12, 0)) * clamp((time.t - 6) / 12.0, 0.0, 1.0)
+}
+```
+
+Phase gating in the schedule, a maturity guard, and an amount that is *stepped escalation times a delayed ramp* — four idioms, one stream, still readable aloud clause by clause. That compositional style, rather than any single pattern, is the chapter's real skill. And its limit from chapter 5 still binds: when the amount stops reading aloud cleanly, the answer is decomposition — split streams, a state, a contract — never a longer line.
+
+## What can go wrong
+
+**A ramp clock in integer time.** `time.t / 18` and `time.t / 18.0` agree here — arithmetic is decimal throughout — but write the denominator with the decimal point anyway: the reviewer reading `18.0` knows instantly a fraction was intended, not integer bucketing with `round_down`. Legibility is the habit even where the engine forgives.
+
+**A guard that references what it gates.** `active when` on stream X cannot read X's own series — the condition would gate its own input. The refusal comes from the evaluation-order rule you will meet in the machinery chapter: streams that read other series evaluate in a second pass, and second-pass streams cannot read each other. The practical rule is simpler: guards and fees read *base* streams (revenue, collections), and base streams read no one.
+
+**Stepping on the wrong anniversary.** `round_down(time.t / 12, 0)` steps at periods 12, 24, 36 — anniversaries *of the model's origin*. A lease that bumps each January inside a model that starts in July steps at the wrong month. Phase-relative or date-based conditions fix it; the point is to notice that "annually" always means *from when*, and the model makes you answer.
+
+## Exercises
+
+<Exercise id="09-growth-ramps-and-guards/the-kicker" />
+
+Then, on your own:
+
+1. Convert the guarded model's percentage rent from a guard to an `if(…, …, 0)` amount, confirm identical totals, then convert it back. Write one sentence on which version you would want to review at 6 p.m. on a closing day, and why.
+2. Slip the composed example's operations phase by one quarter (edit only the phase line) and predict which streams move before running. The ones that *should* have moved and did not are date logic you failed to centralize — the exercise most worth repeating on your own models.

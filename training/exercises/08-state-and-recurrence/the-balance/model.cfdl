@@ -1,0 +1,20 @@
+version 0.1
+model "exercise-the-balance"
+time calendar annual from 2026-01 for 6
+
+entity asset co : Asset.Financial
+
+// The published fee schedule escalates 3% a year, ROUNDING TO THE DOLLAR
+// each year — and next year compounds on the rounded value. This pow()
+// version drifts from the published schedule by year six. Replace it with
+// a state recurrence (init 100000, next = round_to(prev * 1.03, 1)) and
+// make the fee stream read state.fee_schedule.
+stream co.management_fee on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 100000 * pow(1.03, time.t)
+}
+
+stream co.admin_cost on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 20000
+}
