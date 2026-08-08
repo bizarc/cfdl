@@ -72,7 +72,8 @@ register, so it cannot fall behind the language.
 | `E1122_STATE_DUPLICATE_NAME` | Global structure | two states share a name. |
 | `E1123_STATE_PREV_OUTSIDE_NEXT` | Global structure | `prev` appears in `init`. There is no period |
 | `E1127_FIELD_RULE_READS_FIELD` | Global structure | a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev <entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero. |
-| `E1128_FIELD_DECLARED_TWICE` | Global structure | a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win. before the first, so the initial value cannot depend on a previous one. |
+| `E1128_FIELD_DECLARED_TWICE` | Global structure | a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win. |
+| `E1129_PREV_IN_FIRST_PERIOD` | Global structure | a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. before the first, so the initial value cannot depend on a previous one. |
 | `E1124_STATE_SAME_PERIOD_READ` | Global structure | `state.<name>` appears inside a `next`. That path reads the **current** period, which is the same-period edge the design exists to prevent; `prev.<name>` reads another state's previous value. |
 | `E1126_STATE_INIT_READS_STATE` | Global structure | `state.<name>` appears inside an `init`. Every state is seeded at period 0 together, so there is no order in which one already holds a value for another to read: the expression evaluated to zero and said nothing. The same edge `next` rejects, one period earlier. Inline the expression, or read the state from a stream or waterfall, both of which see period-close values. |
 | `E1125_STATE_UNKNOWN_REFERENCE` | Global structure | a `state.<name>` or `prev.<name>` names a state that is not declared. Without this the reference reaches the engine, which warns and substitutes zero — so an entire series evaluates to nothing while the run still reports `status: ok`. |
@@ -207,7 +208,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*156 codes.*
+*157 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related
