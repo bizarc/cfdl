@@ -1,0 +1,167 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "waterfall-fund-carry",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2020-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "dd7840c10afd55a0cee86fe6c87325df",
+      "symbol": "asset.fund",
+      "type": "Asset.Financial",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "9f76a9014f8e67d2951a906b1cbf69c0",
+      "symbol": "party.gp",
+      "type": "Party",
+      "attrs": {
+        "name": "General Partner"
+      },
+      "state": {}
+    },
+    {
+      "id": "b9fe762e53b028203656d6135ae10893",
+      "symbol": "party.lp",
+      "type": "Party",
+      "attrs": {
+        "name": "Limited Partners"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "called_capital": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "10000000.0"
+        },
+        "name": "called_capital",
+        "type": "Decimal"
+      },
+      "gp_carry": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.20"
+        },
+        "name": "gp_carry",
+        "type": "Decimal"
+      },
+      "hold_years": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "5.0"
+        },
+        "name": "hold_years",
+        "type": "Decimal"
+      },
+      "pref_rate": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.08"
+        },
+        "name": "pref_rate",
+        "type": "Decimal"
+      },
+      "proceeds": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "30000000.0"
+        },
+        "name": "proceeds",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "states": [
+    {
+      "name": "lp_preference",
+      "init": {
+        "lang": "cfdl",
+        "src": "inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev"
+      }
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "fund.distribution",
+      "entity": "asset.fund",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2025-01-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "inputs.proceeds"
+      },
+      "steps": [
+        {
+          "name": "lp_preference",
+          "payee": "party.lp",
+          "amount": {
+            "lang": "cfdl",
+            "src": "state.lp_preference"
+          }
+        },
+        {
+          "name": "gp_catchup",
+          "payee": "party.gp",
+          "amount": {
+            "lang": "cfdl",
+            "src": "cfg.catchup_base                                   / (1.0 - inputs.gp_carry) * inputs.gp_carry"
+          }
+        },
+        {
+          "name": "gp_promote",
+          "payee": "party.gp",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining * inputs.gp_carry"
+          }
+        },
+        {
+          "name": "lp_residual",
+          "payee": "party.lp",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
