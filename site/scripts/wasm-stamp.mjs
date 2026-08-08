@@ -33,7 +33,12 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, relative, sep } from "node:path";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const STAMP = join(repoRoot, "site", "public", "wasm", ".build-stamp");
+// WASM_STAMP_DIR lets a sibling app's bundle (learn/public/wasm) carry its
+// own stamp; unset, the site's location is unchanged.
+const STAMP = join(
+  process.env.WASM_STAMP_DIR ?? join(repoRoot, "site", "public", "wasm"),
+  ".build-stamp",
+);
 
 /** Everything whose bytes end up inside the bundle. Keep in sync with
  *  ENGINE_PATHS in check-wasm-fresh.mjs. */

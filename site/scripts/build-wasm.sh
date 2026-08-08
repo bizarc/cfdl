@@ -135,7 +135,7 @@ fi
 # prefixes baked into the module all vary by machine, so byte-comparing two
 # honest builds produces false failures. Mirrors write_render_stamp in
 # tools/render-notebooks.py.
-node "${SITE_DIR}/scripts/wasm-stamp.mjs" --write
+WASM_STAMP_DIR="${OUT_DIR}" node "${SITE_DIR}/scripts/wasm-stamp.mjs" --write
 
 RAW_KB=$(( $(wc -c < "${WASM_FILE}") / 1024 ))
 GZIP_KB=$(( $(gzip -c "${WASM_FILE}" | wc -c) / 1024 ))
