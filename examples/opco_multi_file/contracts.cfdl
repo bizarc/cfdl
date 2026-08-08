@@ -1,12 +1,18 @@
-// Revenue and opex as standalone streams (individual items per guidance)
-stream operating.revenue on entity asset.business inflow currency USD {
-  schedule every month from 2026-01 to 2031-12
-  amount = 120000
+// Revenue and opex as pack contracts, so the pack classifies them and the
+// statements can claim them. Hand-written streams carry no category, and a
+// statement folds categories rather than stream names.
+contract opco.revenue_line {
+  term 2026-01..2031-12
+  terms {
+    amount = 120000
+  }
 }
 
-stream operating.opex on entity asset.business outflow currency USD {
-  schedule every month from 2026-01 to 2031-12
-  amount = 70000
+contract opco.opex_line {
+  term 2026-01..2031-12
+  terms {
+    amount = 70000
+  }
 }
 
 contract opco.working_capital {
