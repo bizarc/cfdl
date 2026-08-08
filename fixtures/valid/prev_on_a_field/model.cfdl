@@ -1,0 +1,41 @@
+version 0.1
+model "prev-on-a-field"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+// READING A FIELD ONE PERIOD BACK.
+//
+// `asset.senior.balance` is that field at period CLOSE.
+// `prev.asset.senior.balance` is the same field at the close before this one.
+//
+// THIS RETIRES THE `_open` PATTERN. A model that needed both ends of a period
+// used to declare the quantity twice — `tlb_balance` and `tlb_balance_open` —
+// where the second was not a quantity at all but a missing accessor wearing a
+// name. Average-balance interest, which is the standard convention in a debt
+// schedule, is the case that forced it.
+//
+// WHY DOTTED AND NOT `prev asset.senior.balance`. `prev` is an ordinary
+// identifier, so a prefix form would put two operands side by side — which is
+// exactly where an expression ENDS. Reusing the dot keeps one rule for where
+// expressions stop and one spelling for "the period before", the same
+// `prev.<name>` a declared state already uses.
+
+entity asset senior : Credit.Asset.Tranche {
+  seniority = 1
+  balance init 100.0 next max(0.0, prev - 10.0)
+}
+
+entity asset junior : Credit.Asset.Tranche {
+  seniority = 2
+  // The balance this period OPENED with: last period's close.
+  opening init 0.0 next prev.asset.senior.balance
+}
+
+entity party lender : Party { name = "Lender" }
+
+// Interest on the AVERAGE of the period's opening and closing balance — the
+// convention that needed two states before, and needs one field now.
+stream credit.interest on entity asset.senior outflow currency USD {
+  schedule every year from 2027-01 to 2029-01
+  amount = (asset.junior.opening + asset.senior.balance) / 2.0 * 0.06
+}

@@ -268,10 +268,25 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
             return self.env.states.get(name).and_then(domain_to_calc);
         }
         if root == "prev" {
-            return match parts.next() {
-                None => self.env.prev_self.as_ref().and_then(domain_to_calc),
-                Some(name) => self.env.prev_states.get(name).and_then(domain_to_calc),
-            };
+            // `prev` alone is this recurrence's own previous value.
+            // `prev.<name>` is another one's — and a FIELD's name is its entity
+            // path, so `prev.asset.tlb.balance` is the whole remainder rather
+            // than its first segment.
+            //
+            // The dotted spelling rather than a `prev <path>` prefix: `prev`
+            // is an ordinary identifier, so a prefix form would be two operands
+            // side by side, which is exactly where an expression ENDS. Reusing
+            // the dot keeps one rule for where expressions stop and one
+            // spelling for "the period before".
+            let rest: Vec<&str> = parts.collect();
+            if rest.is_empty() {
+                return self.env.prev_self.as_ref().and_then(domain_to_calc);
+            }
+            return self
+                .env
+                .prev_states
+                .get(&rest.join("."))
+                .and_then(domain_to_calc);
         }
         if root == "remaining" && parts.next().is_none() {
             return self.env.remaining.as_ref().and_then(domain_to_calc);
