@@ -108,9 +108,17 @@ time calendar annual from 2026-01 for 26
 // in a contract — it is a test, and when it lands depends on how the project
 // performs.
 //
-// So the flip is a LIFECYCLE, and the date is an output. The partnership
-// interest is declared with the `energy.flip_structure` lifecycle, opens in
-// `pre_flip`, and an event moves it when the test passes.
+// THE FLIP IS AN EVENT WRITING A NUMBER, and the date is an output. The
+// investor's share of cash and tax is a term of the contract between the
+// parties: stated at signing, changed when a condition is met. So it is a
+// field of the stake, and the event sets it.
+//
+// It was first built as a lifecycle, `pre_flip` -> `post_flip`, with the
+// percentages looked up from whichever state the stake was in. That is two
+// facts — a state name and the number it implies — kept in step by nobody. A
+// lifecycle earns its place when the phases differ in WHICH RULES APPLY, as a
+// building under construction differs from one in operation. Here they differ
+// by a number, and a number is a field.
 //
 // THE TEST NEEDS NO SOLVER. The criterion is an internal rate of return
 // reaching 8%, and this language cannot compute an IRR mid-model. It does not
@@ -133,11 +141,40 @@ entity asset project : Energy.Asset.GenerationFacility {
   state operating
 }
 
-// The lifecycle lives on the INTEREST, not the plant. The panels do not change
-// when the partnership flips; the claim on their cash does.
-entity asset interest : Energy.Asset.ProjectInterest {
+// THE PARTNERSHIP, which is the thing that allocates the project's cash. Not
+// the plant: when the flip happens nothing about the solar farm changes — same
+// panels, same output — only who has a right to the money.
+//
+// There is no separate "stake" object between the partnership and its terms.
+// The sharing percentage is a term of the partnership, so it is a field of the
+// partnership.
+entity asset partnership : Energy.Asset.ProjectInterest {
   interest_type = "tax_equity"
-  state pre_flip
+
+  // The investor's share of cash and of tax attributes, as the contract
+  // states it at signing.
+  investor_share init 0.98
+
+  // How far the investor is toward its target, as the discounted value of
+  // everything the partnership has returned it. The test that moves the share.
+  return_position init 0.0 - inputs.investor_equity
+                  next prev
+                     + if(time.t >= 2.0 and prev < 0.0,
+                     inputs.preflip_share
+                     * ( prev.project_cash
+                     - inputs.tax_rate
+                     * ( prev.project_cash
+                     + if(time.t - 1.0 <= inputs.debt_term,
+                     (0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount))
+                     + ipmt(inputs.debt_rate, time.t - 1.0, inputs.debt_term,
+                     inputs.debt_amount),
+                     0.0)
+                     - macrs_rate(time.t - 2.0, 5)
+                     * (inputs.installed_cost
+                     - 0.5 * inputs.itc_rate * inputs.installed_cost) )
+                     + if(time.t - 1.0 == 1.0, inputs.itc_rate * inputs.installed_cost, 0.0) )
+                     / pow(1.0 + inputs.hurdle, time.t - 1.0),
+                     0.0)
 }
 
 entity party sponsor      : Party { name = "Sponsor" }
@@ -212,29 +249,14 @@ state project_cash {
 // A balance state would hold the CLOSING figure, and interest is charged on
 // the opening one — an off-by-one this states outright rather than works
 // around.
-state investor_npv_closed {
-  init 0.0 - inputs.investor_equity
-  next prev
-       + if(time.t >= 2.0 and prev < 0.0,
-            inputs.preflip_share
-             * ( prev.project_cash
-                 - inputs.tax_rate
-                   * ( prev.project_cash
-                       + if(time.t - 1.0 <= inputs.debt_term,
-                            (0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount))
-                            + ipmt(inputs.debt_rate, time.t - 1.0, inputs.debt_term,
-                                   inputs.debt_amount),
-                            0.0)
-                       - macrs_rate(time.t - 2.0, 5)
-                         * (inputs.installed_cost
-                            - 0.5 * inputs.itc_rate * inputs.installed_cost) )
-                 + if(time.t - 1.0 == 1.0, inputs.itc_rate * inputs.installed_cost, 0.0) )
-             / pow(1.0 + inputs.hurdle, time.t - 1.0),
-            0.0)
-}
 
-event flip when state.investor_npv_closed >= 0.0 {
-  set entity asset.interest.status = "post_flip"
+
+// When the investor's return reaches its target, its share drops to 5% and the
+// sponsor takes the rest — from the following period, which is the deal's own
+// convention: the year's books close, the return is tested, the new split
+// applies to the year that follows.
+event flip when asset.partnership.return_position >= 0.0 {
+  set entity asset.partnership.investor_share = 0.05
 }
 
 // ---------------------------------------------------------------------------
@@ -245,14 +267,11 @@ event flip when state.investor_npv_closed >= 0.0 {
 // residual, which is what "the sponsor gets the rest" means.
 // ---------------------------------------------------------------------------
 
-waterfall interest.distribution on entity asset.interest {
+waterfall partnership.distribution on entity asset.partnership {
   schedule every year from 2027-01 to 2051-01
   from state.project_cash
 
-  pay investor to party.tax_investor =
-        remaining * if(entity.state.status == "post_flip",
-                       inputs.postflip_share,
-                       inputs.preflip_share)
+  pay investor to party.tax_investor = remaining * asset.partnership.investor_share
   pay sponsor  to party.sponsor = remaining
 }
 ```
@@ -267,6 +286,6 @@ waterfall interest.distribution on entity asset.interest {
 
 Checked period by period: **2 series** across **25 periods**, each within ±0.01 of the reference.
 
-- `interest.distribution.investor`
-- `interest.distribution.sponsor`
+- `partnership.distribution.investor`
+- `partnership.distribution.sponsor`
 
