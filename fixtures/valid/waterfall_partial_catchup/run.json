@@ -1,0 +1,29 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0,
+    "parameters": {
+      "cfg.catchup_rate": 0.5,
+      "cfg.proceeds": 30000000.0
+    }
+  },
+  "scenarios": {
+    "full_catchup": {
+      "parameters": {
+        "cfg.catchup_rate": 1.0,
+        "cfg.proceeds": 30000000.0
+      }
+    },
+    "early_exit_partial": {
+      "parameters": {
+        "cfg.catchup_rate": 0.5,
+        "cfg.proceeds": 15500000.0
+      }
+    },
+    "early_exit_full": {
+      "parameters": {
+        "cfg.catchup_rate": 1.0,
+        "cfg.proceeds": 15500000.0
+      }
+    }
+  }
+}

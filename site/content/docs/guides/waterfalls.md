@@ -137,7 +137,7 @@ pot as a computed number rather than an assumption holding a stale copy of it.
 
 ## Worked structures
 
-Five real waterfalls are encoded in the test suite, and between them they use
+Six real waterfalls are encoded in the test suite, and between them they use
 only the rules above.
 
 **A 22-step consumer ABS priority of payments** — servicer and trustee ahead of
@@ -159,6 +159,11 @@ up as the LP's return crosses eight hurdles.
 **A GP stakes nested split** — a fund waterfall, then the management company's
 split with the deal team, then the founders against a passive minority investor.
 Three waterfalls, each drawing on the one above.
+
+**A partial catch-up** — the same fund waterfall where the GP takes half of each
+dollar above the preferred instead of all of it. Set the catch-up rate to 1 and
+it returns the full catch-up's numbers exactly; the two structures are one
+expression with a different argument.
 
 ### On hurdles and catch-ups
 

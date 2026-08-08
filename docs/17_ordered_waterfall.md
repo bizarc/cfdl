@@ -578,6 +578,39 @@ What this rules out is restating the second pot as an assumption. That number is
 the first waterfall's output, and an assumption holding a copy of it is a number
 that goes stale the first time a fee changes.
 
+### A partial catch-up — `fixtures/valid/waterfall_partial_catchup`
+
+The reference's last structure, and it needed nothing new.
+
+Under a full catch-up the GP takes every dollar above the preferred return
+until it holds its 20%. Under a 50/50 catch-up it takes half of each dollar,
+the tier runs twice as long, and the LPs keep receiving cash throughout it.
+
+The rate is an input, so the tier is still arithmetic. With P the preferred, k
+the carry rate and c the catch-up rate, the tier total is `g/c` and the tier
+ends when the GP holds k of everything distributed above capital:
+
+    g = k * (P + g/c)     ->     g = k*P*c / (c - k)
+
+At c = 1 that reduces to P/4, the full catch-up. So the two structures are one
+expression with a different argument, and the `full_catchup` scenario returns
+the same $4,000,000 / $26,000,000 split as `waterfall_fund_carry` — the model
+checks itself against a case already verified.
+
+**The step that makes it work** is the cap. The GP takes its share OF THE TIER,
+`remaining * c`, capped at what the tier owes it, so a pot that runs out
+mid-tier is split at the negotiated rate rather than handed to the GP whole.
+The LPs' side of the same tier reads `paid.gp_catchup` rather than recomputing
+its own, which keeps the two halves of one tier consistent when the step above
+clamps.
+
+**Where the rate changes the answer** is exactly there — which is why the number
+is negotiated at all. On $15.5mm of proceeds the full catch-up hands the GP the
+whole $806,719 above the preferred; the 50/50 catch-up splits it, and the GP
+takes $403,360. On $30mm both end at $4,000,000, because a catch-up that
+completes changes the path and not the destination.
+
 ### Still to build
 
-The reference's remaining structure, a partial catch-up.
+Nothing from the reference. The five structures between them use one step form,
+three bindings and the composition rule.

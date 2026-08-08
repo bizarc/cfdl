@@ -1,0 +1,457 @@
+{
+  "results_version": "0.3",
+  "model_hash": "9df0aae319901fcdcab7b4e0effae8e6a2d61390f113d2d7804e2f43870a9e38",
+  "ledger_hash": "6c64f3932ff4d9acdece25b429e249f6f745534a98db79aa2f87c3dc0951d748",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "called_capital": 10000000.0,
+      "gp_carry": 0.2,
+      "hold_years": 5.0,
+      "pref_rate": 0.08,
+      "proceeds": 30000000.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.fund.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "entity.party.gp.total": {
+        "amount": 4000000.0,
+        "currency": "USD"
+      },
+      "entity.party.lp.total": {
+        "amount": 26000000.0,
+        "currency": "USD"
+      },
+      "model.irr": 4.50005,
+      "model.npv": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0
+    },
+    "series": {
+      "entity.asset.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.gp.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.lp.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 26000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "state.lp_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768
+        ]
+      },
+      "stream.fund.distribution.gp_catchup": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1564426.922667,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.gp_promote": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2435573.077333,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.lp_catchup": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1564426.922667,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.lp_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 14693280.768,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.lp_residual": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9742292.309333,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "ok",
+    "summaries": [
+      {
+        "name": "early_exit_full",
+        "metrics": {
+          "entity.asset.fund.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "entity.party.gp.total": {
+            "amount": 806719.232,
+            "currency": "USD"
+          },
+          "entity.party.lp.total": {
+            "amount": 14693280.768,
+            "currency": "USD"
+          },
+          "model.irr": 4.50005,
+          "model.npv": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.0,
+          "run.periods_per_year": 1.0
+        }
+      },
+      {
+        "name": "early_exit_partial",
+        "metrics": {
+          "entity.asset.fund.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "entity.party.gp.total": {
+            "amount": 403359.616,
+            "currency": "USD"
+          },
+          "entity.party.lp.total": {
+            "amount": 15096640.384,
+            "currency": "USD"
+          },
+          "model.irr": 4.50005,
+          "model.npv": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.0,
+          "run.periods_per_year": 1.0
+        }
+      },
+      {
+        "name": "full_catchup",
+        "metrics": {
+          "entity.asset.fund.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "entity.party.gp.total": {
+            "amount": 4000000.0,
+            "currency": "USD"
+          },
+          "entity.party.lp.total": {
+            "amount": 26000000.0,
+            "currency": "USD"
+          },
+          "model.irr": 4.50005,
+          "model.npv": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.0,
+          "run.periods_per_year": 1.0
+        }
+      }
+    ]
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

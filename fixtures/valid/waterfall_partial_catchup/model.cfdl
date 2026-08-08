@@ -1,0 +1,78 @@
+version 0.1
+model "waterfall-partial-catchup"
+time calendar annual from 2020-01 for 6
+
+// A PARTIAL CATCH-UP — the tier that pays the GP some of each dollar rather
+// than all of it.
+//
+// Under a full catch-up the GP takes every dollar above the preferred return
+// until it holds its 20% of profits. Under a 50/50 catch-up it takes half of
+// each dollar, so the tier is twice as long and the LPs keep receiving cash
+// throughout it. 80/20 splits everything below.
+//
+// THE RATE IS AN INPUT, SO THE TIER IS STILL ARITHMETIC. Let P be the
+// preferred return, k the carry rate, c the catch-up rate, and g what the GP
+// is owed in the tier. The tier total is g/c, and the tier ends when the GP
+// holds k of everything distributed above capital:
+//
+//     g = k * (P + g/c)     ->     g = k*P*c / (c - k)
+//
+// One expression, and c = 1 reduces it to the full catch-up's P/4 — which is
+// how this model checks itself. Its `full_catchup` scenario returns the same
+// $4,000,000 / $26,000,000 split as `waterfall_fund_carry`, to the cent.
+//
+// A catch-up rate at or below the carry rate never catches up: c = k makes the
+// denominator zero and the tier infinite. That is a mis-specified deal, not a
+// case the language has to represent.
+//
+// WHERE THE RATE ACTUALLY CHANGES THE ANSWER is when the money runs out inside
+// the tier, which is the whole reason the structure is negotiated. The
+// `early_exit` scenarios stop there, on $15.5mm of proceeds. A full catch-up
+// hands the GP the whole $806,719 left above the preferred; a 50/50 catch-up
+// splits it, and the GP takes $403,360. Same deal, same money, one negotiated
+// number between them.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume called_capital = 10000000.0
+assume pref_rate      = 0.08
+assume hold_years     = 5.0
+assume gp_carry       = 0.20
+assume proceeds       = 30000000.0
+
+// Capital plus the compounding preferred, measured from inception.
+state lp_preference {
+  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+  next prev
+}
+
+waterfall fund.distribution on entity asset.fund {
+  schedule on 2025-01
+  from cfg.proceeds
+
+  // 1. Return of capital and the cumulative preferred, to the LPs.
+  pay lp_preference to party.lp = state.lp_preference
+
+  // 2. The catch-up, at whatever rate the deal negotiated. The GP takes its
+  //    share OF THE TIER — `remaining * c` — capped at what the tier owes it,
+  //    so a pot that runs out mid-tier is split at the negotiated rate rather
+  //    than handed to the GP whole. That cap is the entire difference between
+  //    a full and a partial catch-up.
+  pay gp_catchup to party.gp =
+        min((state.lp_preference - inputs.called_capital)
+              * inputs.gp_carry * cfg.catchup_rate
+              / (cfg.catchup_rate - inputs.gp_carry),
+            remaining * cfg.catchup_rate)
+
+  // 3. The LPs' side of the same tier, sized off what the GP was ACTUALLY
+  //    paid. Reading `paid.` rather than recomputing keeps the two sides of
+  //    one tier consistent when the pot clamps the step above.
+  pay lp_catchup to party.lp =
+        paid.gp_catchup * (1.0 - cfg.catchup_rate) / cfg.catchup_rate
+
+  // 4. The 80/20 split of what survives.
+  pay gp_promote  to party.gp = remaining * inputs.gp_carry
+  pay lp_residual to party.lp = remaining
+}
