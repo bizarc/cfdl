@@ -148,6 +148,26 @@ Two rules, not one:
 All transitions evaluate against the state at the start of the period, the state
 commits, then outputs read the committed result.
 
+### The grid decides when an event can fire
+
+An event fires in the first period where its condition holds. It cannot fire
+between periods, because there is nothing between them — so **the calendar
+sets how precisely a condition can be met**.
+
+That is a modelling choice with money attached whenever an event decides who
+gets paid. A tax-equity partnership flips when its investor's return reaches a
+target; on an annual grid the test can only be asked at year ends. In
+[a worked case](/docs/examples/energy-tax-equity-flip) the investor is $445,000
+short of its hurdle at the end of year two and two months of cash clear it, but
+the annual grid has no period between month 24 and month 36 in which to notice.
+The same deal on a monthly calendar flips **ten months earlier**, and about
+$3.5mm changes hands on the strength of one line.
+
+The same applies to a covenant test, a cash trap, a rate step, or any trigger
+whose date is not written into a contract. Choose the grid the test is actually
+performed on. A model that states its trigger date hides the question; one that
+derives it cannot.
+
 ### Transitions are in the results
 
 Results carry a transition log: for each state change, the period, the date, the
@@ -182,7 +202,7 @@ paid — a party, or an asset such as a note class.
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from asset.trust.available_funds
+  from entity.asset.trust.available_funds
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0

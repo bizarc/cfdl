@@ -19,7 +19,7 @@ before carry, and how a project pays lenders before equity.
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from asset.trust.available_funds
+  from entity.asset.trust.available_funds
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0
@@ -44,7 +44,7 @@ of payment, because every kind is arithmetic:
 |---|---|
 | a fixed amount | `= 12500.0` |
 | capped at a limit | `= min(fee, cap)` |
-| pay a balance down to a target | `= asset.class_a.balance - asset.trust.pool_balance` |
+| pay a balance down to a target | `= entity.asset.class_a.balance - entity.asset.trust.pool_balance` |
 | top an account up to a level | `= inputs.specified_reserve - asset.reserve.balance` |
 | only on a certain date | `= if(time.t >= 24, balance, 0.0)` |
 | an earlier step's shortfall | `= owed.trustee_fee - paid.trustee_fee` |
@@ -59,6 +59,10 @@ On top of everything an ordinary expression sees:
 | `remaining` | what is still in the pot at this step |
 | `paid.<step>` | what an earlier step actually paid |
 | `owed.<step>` | what an earlier step would have paid, unbounded |
+
+A step also reaches any other entity's declared properties through the
+`entity` root — `entity.asset.class_a.original_balance` — which is how one
+tranche's step reads another's balance.
 
 `owed` and `paid` differ exactly when a step could not be paid in full, so their
 difference is the shortfall. That is how a capped fee gets its overflow paid

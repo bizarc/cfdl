@@ -422,7 +422,7 @@ Syntax:
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from asset.trust.available_funds
+  from entity.asset.trust.available_funds
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0
@@ -718,7 +718,17 @@ Supported actions:
 - `deactivate contract <ContractName>` (optional)
 - `exercise option <OptionName>`
 
-### 13.3 Entity-state-driven activation
+### 13.3 Event timing and the grid (normative)
+
+An event fires in the **first period whose condition holds**, evaluated once per
+period against the state as that period opened. It cannot fire between periods.
+
+The model calendar therefore bounds how precisely a condition can be met: a
+condition that becomes true partway through a period takes effect at that
+period's boundary, not when it became true. Where an event determines an
+allocation, the calendar is a term of the model and not a presentation choice.
+
+### 13.4 Entity-state-driven activation
 Contracts and streams SHOULD use entity state as the primary activation mechanism:
 
 ```cfdl

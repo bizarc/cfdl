@@ -28,6 +28,21 @@ Phases name sub-ranges for organization and scoping:
 phase lease_up from 2026-01 to 2027-06
 ```
 
+### The calendar is an assumption when events are involved
+
+An [event](/docs/object-model) fires in the first period where its condition
+holds, and never between periods. So the calendar sets how precisely a
+condition can be met — which matters as soon as an event decides who gets paid.
+
+An annual grid asks a covenant test, a flip test or a cash-trap test twelve
+times less often than a monthly one, and each miss delays the consequence to
+the next year end. On the [tax-equity flip](/docs/examples/energy-tax-equity-flip)
+the same deal flips ten months later on an annual calendar than a monthly one,
+moving about $3.5mm.
+
+Choose the grid the test is actually performed on, not the grid the reporting
+happens to use.
+
 ## Schedule patterns
 
 One-time:
