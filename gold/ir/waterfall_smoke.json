@@ -1,0 +1,273 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "waterfall-smoke",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2017-02-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8f7ed51a636049b9e523fd88689e602f",
+      "symbol": "asset.class_a",
+      "type": "Credit.Asset.Tranche",
+      "attrs": {
+        "original_balance": "950",
+        "seniority": "1"
+      },
+      "state": {}
+    },
+    {
+      "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
+      "symbol": "asset.trust",
+      "type": "Credit.Asset.LoanPool",
+      "attrs": {
+        "original_balance": "1000"
+      },
+      "state": {}
+    },
+    {
+      "id": "f1e37ea477b1ccd964abf31bc181757a",
+      "symbol": "party.certificate",
+      "type": "Credit.Party.Investor",
+      "attrs": {
+        "name": "Certificateholder"
+      },
+      "state": {}
+    },
+    {
+      "id": "94cdfa4da6d76077f56054f830c54133",
+      "symbol": "party.servicer",
+      "type": "Credit.Party.Servicer",
+      "attrs": {
+        "name": "Servicer"
+      },
+      "state": {}
+    },
+    {
+      "id": "5cc85692ee82f601ccf508671b0d6254",
+      "symbol": "party.trustee",
+      "type": "Credit.Party.Issuer",
+      "attrs": {
+        "name": "Trustee"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "states": [
+    {
+      "name": "available_funds",
+      "init": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev"
+      }
+    },
+    {
+      "name": "pool_balance",
+      "init": {
+        "lang": "cfdl",
+        "src": "900.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev"
+      }
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "abs.distribution",
+      "entity": "asset.trust",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-02-01",
+        "to": "2017-05-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "state.available_funds"
+      },
+      "steps": [
+        {
+          "name": "servicing",
+          "payee": "party.servicer",
+          "amount": {
+            "lang": "cfdl",
+            "src": "12.5"
+          }
+        },
+        {
+          "name": "trustee_fees",
+          "payee": "party.trustee",
+          "amount": {
+            "lang": "cfdl",
+            "src": "min(4.0, 3.0)"
+          }
+        },
+        {
+          "name": "class_a_interest",
+          "payee": "asset.class_a",
+          "amount": {
+            "lang": "cfdl",
+            "src": "6.25"
+          }
+        },
+        {
+          "name": "class_a_target",
+          "payee": "asset.class_a",
+          "amount": {
+            "lang": "cfdl",
+            "src": "entity.asset.class_a.original_balance - state.pool_balance"
+          }
+        },
+        {
+          "name": "trustee_excess",
+          "payee": "party.trustee",
+          "amount": {
+            "lang": "cfdl",
+            "src": "owed.trustee_fees - paid.trustee_fees"
+          }
+        },
+        {
+          "name": "residual",
+          "payee": "party.certificate",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.purchase"
+      ],
+      "formula": "-cumulative(investing.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
+  "contracts": [],
+  "streams": [],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "31da3be174317bd7ff88b2a1dfa8f026",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

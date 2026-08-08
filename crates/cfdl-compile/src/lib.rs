@@ -356,6 +356,10 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     states: Vec<IrState>,
+    /// Ordered allocations of a pot. Omitted when a model declares none, so
+    /// existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    waterfalls: Vec<IrWaterfall>,
     /// Per-period subtotals declared by the active pack. Omitted when the pack
     /// declares none, so existing IR is byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -412,6 +416,25 @@ struct IrCurve {
 /// A named value per period, defined by a recurrence. `init` and `next` are
 /// both required by validation (E1120/E1121) before lowering runs, so they are
 /// plain fields rather than options here.
+#[derive(Debug, Serialize)]
+struct IrWaterfall {
+    name: String,
+    entity: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule: Option<IrSchedule>,
+    /// The pot this allocates.
+    source: IrExpr,
+    steps: Vec<IrWaterfallStep>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrWaterfallStep {
+    name: String,
+    payee: String,
+    /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
+    amount: IrExpr,
+}
+
 #[derive(Debug, Serialize)]
 struct IrState {
     name: String,
@@ -789,6 +812,212 @@ fn check_state_guards(
     } else {
         Err(diagnostics)
     }
+}
+
+/// Structural checks on a waterfall — the ones that stop cash going missing.
+///
+/// A waterfall allocates a pot in order. Three things about it are decidable
+/// before it ever runs, and each is a wrong answer rather than a crash if it
+/// is not caught:
+///
+///   * a step that names a payee nobody declared pays into the void;
+///   * `overflow of <step>` naming a step that is not earlier, or is not
+///     capped, pays a shortfall that cannot exist;
+///   * a missing or misplaced `remainder` silently LOSES whatever is left in
+///     the pot, which is the failure the residual step exists to prevent.
+fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
+    let entities: BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(entity) => Some(entity.symbol()),
+            _ => None,
+        })
+        .collect();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
+            continue;
+        };
+        let file = source_stmt.file.clone();
+        let diag = |code: &str, message: String, span, hint: Option<String>| Diagnostic {
+            code: code.to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(file.clone()),
+            span: Some(map_span(span)),
+            path: None,
+            hint,
+            notes: vec![],
+        };
+
+        if !entities.contains(&waterfall.attached_entity) {
+            diagnostics.push(diag(
+                "E1301_UNRESOLVED_ENTITY_REF",
+                format!(
+                    "Waterfall '{}' is declared on '{}', which is not a declared entity.",
+                    waterfall.name, waterfall.attached_entity
+                ),
+                waterfall.span,
+                None,
+            ));
+        }
+
+        if waterfall.source.is_none() {
+            diagnostics.push(diag(
+                "E1340_WATERFALL_NO_SOURCE",
+                format!(
+                    "Waterfall '{}' declares no pot to allocate.",
+                    waterfall.name
+                ),
+                waterfall.span,
+                Some("Add `from <expr>` — the cash this waterfall distributes.".to_string()),
+            ));
+        }
+
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for (index, step) in waterfall.steps.iter().enumerate() {
+            if !seen.insert(step.name.as_str()) {
+                diagnostics.push(diag(
+                    "E1343_WATERFALL_DUPLICATE_STEP",
+                    format!(
+                        "Waterfall '{}' declares two steps named '{}'.",
+                        waterfall.name, step.name
+                    ),
+                    step.span,
+                    Some(
+                        "`paid()` and `owed()` name a step, so step names must be unique."
+                            .to_string(),
+                    ),
+                ));
+            }
+            if !entities.contains(&step.payee) {
+                diagnostics.push(diag(
+                    "E1301_UNRESOLVED_ENTITY_REF",
+                    format!(
+                        "Waterfall '{}' step '{}' pays '{}', which is not a declared entity.",
+                        waterfall.name, step.name, step.payee
+                    ),
+                    step.span,
+                    None,
+                ));
+            }
+            let Some(amount) = &step.amount else {
+                diagnostics.push(diag(
+                    "E1345_WATERFALL_STEP_NO_AMOUNT",
+                    format!(
+                        "Waterfall '{}' step '{}' says nothing about what it pays.",
+                        waterfall.name, step.name
+                    ),
+                    step.span,
+                    Some("Write `= <expr>`. `= remaining` pays everything left.".to_string()),
+                ));
+                continue;
+            };
+            // `paid(s)` and `owed(s)` read what an EARLIER step did. Naming a
+            // later step would be a forward reference into a value that does
+            // not exist yet, which is the one way an ordered allocation could
+            // become a dependency graph.
+            for referenced in step_references(&amount.src) {
+                if !seen.contains(referenced.as_str()) {
+                    let earlier: Vec<&str> = seen.iter().copied().collect();
+                    diagnostics.push(diag(
+                        "E1341_WATERFALL_FORWARD_REF",
+                        format!(
+                            "Waterfall '{}' step '{}' reads step '{referenced}', which is not an earlier step.",
+                            waterfall.name, step.name
+                        ),
+                        step.span,
+                        Some(if earlier.len() <= 1 {
+                            "A step may only read steps declared before it.".to_string()
+                        } else {
+                            format!("Earlier steps: {}.", earlier.join(", "))
+                        }),
+                    ));
+                }
+            }
+            let _ = index;
+        }
+
+        // WHERE DOES WHAT IS LEFT GO? A waterfall that never reads `remaining`
+        // allocates a fixed set of amounts and abandons the rest in silence.
+        // Publishing the residue would hide it just as well; refusing to
+        // compile is what makes the author say.
+        let takes_remainder = waterfall
+            .steps
+            .iter()
+            .filter_map(|s| s.amount.as_ref())
+            .any(|a| mentions_remaining(&a.src));
+        if !takes_remainder && !waterfall.steps.is_empty() {
+            diagnostics.push(diag(
+                "E1344_WATERFALL_NO_REMAINDER",
+                format!(
+                    "Waterfall '{}' never says where the remainder goes.",
+                    waterfall.name
+                ),
+                waterfall.span,
+                Some(
+                    "End with `pay <name> to <payee> = remaining`. Without it, whatever survives the last step is lost silently."
+                        .to_string(),
+                ),
+            ));
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// Step names an expression reads through `paid.<step>` or `owed.<step>`.
+///
+/// Dotted rather than a call, because every other binding in this language is
+/// a path — `inputs.x`, `cfg.x`, `entity.state.x`, `prev.x`. A function would
+/// have been a second way to say the same thing.
+fn step_references(src: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for root in ["paid.", "owed."] {
+        let mut rest = src;
+        while let Some(at) = rest.find(root) {
+            let before_ok = at == 0 || !is_name_byte(rest.as_bytes()[at - 1]);
+            rest = &rest[at + root.len()..];
+            if !before_ok {
+                continue;
+            }
+            let end = rest
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+                .unwrap_or(rest.len());
+            if end > 0 {
+                found.push(rest[..end].to_string());
+            }
+        }
+    }
+    found
+}
+
+/// Whether an expression reads `remaining` as a binding rather than as part of
+/// a longer name.
+fn mentions_remaining(src: &str) -> bool {
+    let bytes = src.as_bytes();
+    let mut from = 0;
+    while let Some(at) = src[from..].find("remaining") {
+        let start = from + at;
+        let end = start + "remaining".len();
+        let before_ok = start == 0 || !is_name_byte(bytes[start - 1]);
+        let after_ok = end == bytes.len() || !is_name_byte(bytes[end]);
+        if before_ok && after_ok {
+            return true;
+        }
+        from = end;
+    }
+    false
+}
+
+fn is_name_byte(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_' || b == b'.'
 }
 
 fn check_exercise_targets(
@@ -1306,6 +1535,7 @@ fn build_ir(
     check_entity_types(resolve_output, &ontology)?;
     check_party_bindings(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
+    check_waterfalls(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
@@ -1632,6 +1862,50 @@ fn build_ir(
         lowered_states,
     );
 
+    let ir_waterfalls: Vec<IrWaterfall> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| match &source_stmt.statement {
+            Stmt::Waterfall(w) => Some(IrWaterfall {
+                name: w.name.clone(),
+                entity: w.attached_entity.clone(),
+                schedule: lower_schedule(
+                    w.schedule.as_ref(),
+                    &time_calendar,
+                    &time_start,
+                    &timeline_end,
+                    &phase_map,
+                )
+                .ok(),
+                source: IrExpr {
+                    lang: "cfdl".to_string(),
+                    src: w
+                        .source
+                        .as_ref()
+                        .map(|e| coerce_numeric_literals(&e.src))
+                        .unwrap_or_else(|| "0".to_string()),
+                },
+                steps: w
+                    .steps
+                    .iter()
+                    .map(|step| IrWaterfallStep {
+                        name: step.name.clone(),
+                        payee: step.payee.clone(),
+                        amount: IrExpr {
+                            lang: "cfdl".to_string(),
+                            src: step
+                                .amount
+                                .as_ref()
+                                .map(|e| coerce_numeric_literals(&e.src))
+                                .unwrap_or_else(|| "0".to_string()),
+                        },
+                    })
+                    .collect(),
+            }),
+            _ => None,
+        })
+        .collect();
+
     Ok(Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
@@ -1652,6 +1926,7 @@ fn build_ir(
         },
         curves: ir_curves,
         states: ir_states,
+        waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)

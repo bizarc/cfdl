@@ -119,6 +119,14 @@ against it by `make ir-schema`.
         "$ref": "#/$defs/State"
       }
     },
+    "waterfalls": {
+      "type": "array",
+      "minItems": 0,
+      "description": "Ordered allocations of a pot — a priority of payments. Steps run in declaration order after the period's streams and states are known; each takes min(max(0, its amount), what remains). Omitted when a model declares none.",
+      "items": {
+        "$ref": "#/$defs/Waterfall"
+      }
+    },
     "subtotals": {
       "type": "array",
       "items": {
@@ -1461,6 +1469,60 @@ against it by `make ir-schema`.
         "formula": {
           "type": "string",
           "description": "Human-readable lineage, emitted verbatim."
+        }
+      }
+    },
+    "Waterfall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "entity",
+        "source",
+        "steps"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "entity": {
+          "type": "string",
+          "description": "The entity whose cash this allocates."
+        },
+        "schedule": {
+          "$ref": "#/$defs/Schedule"
+        },
+        "source": {
+          "$ref": "#/$defs/Expr"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/WaterfallStep"
+          }
+        }
+      }
+    },
+    "WaterfallStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "payee",
+        "amount"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "payee": {
+          "type": "string",
+          "description": "The entity this step pays."
+        },
+        "amount": {
+          "$ref": "#/$defs/Expr",
+          "description": "What the step is owed. `remaining`, `paid.<step>` and `owed.<step>` are bound on top of the ordinary expression environment."
         }
       }
     }

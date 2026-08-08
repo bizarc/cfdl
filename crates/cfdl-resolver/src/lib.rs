@@ -694,6 +694,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
+        Stmt::Waterfall(s) => s.span,
         Stmt::Run(s) => s.span,
     }
 }

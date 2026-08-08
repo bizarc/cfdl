@@ -1,6 +1,8 @@
 # Ordered waterfall — design
 
-Status: **proposal.** Nothing here is implemented.
+Status: **partly implemented.** §13 is the surface the parser accepts; §3's
+six-form draft is superseded and kept because §2's analysis produced it.
+Evaluation is not built yet.
 
 A waterfall is an author-declared priority over a pot of cash. Each step takes
 what it is owed, up to what is left, and the remainder passes down. It is not a
@@ -372,3 +374,108 @@ iteration count.
 tier catalogued. If one is later found that does not reduce, add a bracketed
 search with a declared tolerance and a named failure, and make it visible in the
 syntax so a reader can see that a model is paying for iteration.
+
+## 13. The surface, as built — one form
+
+§3 proposed six payment forms. Every one is an expression over three bindings,
+and `min`, `max` and `clamp` already exist:
+
+| §3 form | as an expression |
+|---|---|
+| `amount 12.5` | `= 12.5` |
+| `amount X cap C` | `= min(X, C)` |
+| `down to T measuring M` | `= M - T` |
+| `up to L` | `= L - asset.reserve.balance` |
+| `overflow of s` | `= owed(s) - paid(s)` |
+| `remainder` | `= remaining` |
+| `when C` | `= if(C, X, 0)` |
+
+So a step is one form:
+
+```cfdl
+waterfall abs.distribution on entity asset.trust {
+  schedule every month from 2017-02 to 2017-05
+  from asset.trust.available_funds
+
+  pay servicing        to party.servicer    = 12.5
+  pay trustee_fees     to party.trustee     = min(4.0, 3.0)
+  pay class_a_target   to party.class_a     = asset.class_a.balance - asset.trust.pool_balance
+  pay trustee_excess   to party.trustee     = owed(trustee_fees) - paid(trustee_fees)
+  pay residual         to party.certificate = remaining
+}
+```
+
+Three bindings in step scope, on top of everything a stream expression sees:
+
+| binding | |
+|---|---|
+| `remaining` | what is still in the pot at this step |
+| `paid(<step>)` | what an earlier step actually paid |
+| `owed(<step>)` | what an earlier step would have paid unbounded |
+
+**Why one form beats six.** Six rules came from reading one deal. The roadmap
+holds 31 waterfall-shaped requirements across asset classes nobody has opened,
+so a fixed vocabulary is wrong for at least one and each miss is a parser
+change. An expression is wrong for none. It is the shape the language already
+uses — a stream says `amount = <expr>` — and it removes the stop-word machinery
+the six-form draft needed. Readability moves to pack templates, which emit these
+expressions the way a contract emits streams (§8).
+
+**The engine clamps.** A step pays `min(max(0, expr), remaining)`, so the pot
+cannot go negative however the expression is written, and `= remaining` means
+exactly "everything left". §5 question 1 becomes structural rather than a rule
+to remember.
+
+### What the compiler checks
+
+| code | |
+|---|---|
+| `E1301_UNRESOLVED_ENTITY_REF` | a step pays someone who is not declared |
+| `E1341_WATERFALL_FORWARD_REF` | `paid()`/`owed()` names a step that is not earlier — the one way an ordered allocation could become a dependency graph |
+| `E1343_WATERFALL_DUPLICATE_STEP` | two steps share a name, so `paid()` would be ambiguous |
+| `E1344_WATERFALL_NO_REMAINDER` | nothing reads `remaining`, so whatever survives the last step is lost in silence |
+| `E1345_WATERFALL_STEP_NO_AMOUNT` | a step says nothing about what it pays |
+| `E1340_WATERFALL_NO_SOURCE` | no `from` — no pot to allocate |
+
+### The 22-step fixture
+
+`fixtures/valid/waterfall_abs_22_step` encodes the whole priority of payments —
+a servicer and trustee ahead of the notes, five rated classes taking interest
+then principal in strict seniority, a reserve topped to its specified level, an
+overcollateralisation target, and a certificateholder taking what survives.
+
+It runs with no warnings and allocates its pot exactly. The step that proves the
+design is Class B's target:
+
+```cfdl
+= class_a.original_balance + class_b.original_balance
+  - paid.class_a_target - paid.class_a_final
+  - state.pool_balance
+```
+
+That is the prospectus's *"after giving effect to any payments made under
+clauses 4 and 5 above"*, written as a read of what earlier steps paid. No
+mutable state, no departure from the stream model — §12's answer to question 4,
+confirmed against the real clause rather than a reduced example.
+
+### A parser hazard this found
+
+`assume x = 5` immediately before a `waterfall` swallowed the whole statement.
+An assumption's value runs until the next top-level statement keyword, and the
+parser enumerates those keywords in **three separate places** — none of which
+knows about the others, and none of which is checked against the statement
+dispatch table it is supposed to mirror.
+
+Adding a statement to this language therefore means finding three lists by
+grep. The smoke fixture hid it, because a `state { … }` block happened to sit
+before its waterfall and the closing brace stopped the expression by accident.
+
+Worth a single source of truth for "what can begin a statement", derived from
+the dispatch match. Not done here; recorded because the next construct will meet
+it again.
+
+### Still to build
+
+The other three structures §11 names: a fund carry tier, a nested split, and the
+LBO exit waterfall that exists by hand in
+`benchmarks/opco/lbo_option_pool_exit`.
