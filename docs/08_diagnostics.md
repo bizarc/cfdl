@@ -183,6 +183,12 @@ State declarations:
 - `E1124_STATE_SAME_PERIOD_READ` — `state.<name>` appears inside a `next`.
   That path reads the **current** period, which is the same-period edge the
   design exists to prevent; `prev.<name>` reads another state's previous value.
+- `E1126_STATE_INIT_READS_STATE` — `state.<name>` appears inside an `init`.
+  Every state is seeded at period 0 together, so there is no order in which one
+  already holds a value for another to read: the expression evaluated to zero
+  and said nothing. The same edge `next` rejects, one period earlier. Inline the
+  expression, or read the state from a stream or waterfall, both of which see
+  period-close values.
 - `E1125_STATE_UNKNOWN_REFERENCE` — a `state.<name>` or `prev.<name>` names a
   state that is not declared. Without this the reference reaches the engine,
   which warns and substitutes zero — so an entire series evaluates to nothing

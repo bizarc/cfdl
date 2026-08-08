@@ -1,0 +1,27 @@
+version 0.1
+model "state-init-reads-state"
+time calendar annual from 2026-01 for 4
+
+entity asset co : Asset.Financial
+
+state deal_irr {
+  init 0.2457
+  next prev
+}
+
+// READING ANOTHER STATE IN `init` IS ALWAYS ZERO. Every state is seeded at
+// period 0 together, so there is no order in which `deal_irr` already holds a
+// value for this one to read.
+//
+// It used to compile and evaluate to zero in silence — an IRR-hurdle model
+// computed every vested share as nothing at all and reported no problem. The
+// same edge `next` already rejects, one period earlier.
+state vested_share {
+  init if(state.deal_irr >= 0.24, 0.06, 0.0)
+  next prev
+}
+
+stream co.carry on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = state.vested_share * 1000.0
+}

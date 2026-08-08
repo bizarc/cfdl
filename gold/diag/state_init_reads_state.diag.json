@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1126_STATE_INIT_READS_STATE",
+    "severity": "error",
+    "message": "State 'vested_share' reads another state in 'init'. Every state is seeded at period 0 together, so there is no value there to read; it would evaluate to zero. Inline the expression, or read the state from a stream or waterfall, which see period-close values.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 3,
+      "end_line": 20,
+      "end_col": 44
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

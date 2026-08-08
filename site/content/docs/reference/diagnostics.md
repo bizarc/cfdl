@@ -72,6 +72,7 @@ register, so it cannot fall behind the language.
 | `E1122_STATE_DUPLICATE_NAME` | Global structure | two states share a name. |
 | `E1123_STATE_PREV_OUTSIDE_NEXT` | Global structure | `prev` appears in `init`. There is no period before the first, so the initial value cannot depend on a previous one. |
 | `E1124_STATE_SAME_PERIOD_READ` | Global structure | `state.<name>` appears inside a `next`. That path reads the **current** period, which is the same-period edge the design exists to prevent; `prev.<name>` reads another state's previous value. |
+| `E1126_STATE_INIT_READS_STATE` | Global structure | `state.<name>` appears inside an `init`. Every state is seeded at period 0 together, so there is no order in which one already holds a value for another to read: the expression evaluated to zero and said nothing. The same edge `next` rejects, one period earlier. Inline the expression, or read the state from a stream or waterfall, both of which see period-close values. |
 | `E1125_STATE_UNKNOWN_REFERENCE` | Global structure | a `state.<name>` or `prev.<name>` names a state that is not declared. Without this the reference reaches the engine, which warns and substitutes zero — so an entire series evaluates to nothing while the run still reports `status: ok`. |
 | `E1001_DUPLICATE_ENTITY` | Symbols and references | two entities share a name. |
 | `E1002_DUPLICATE_CONTRACT` | Symbols and references | two contracts share a name. Give one a suffix to keep them separable. |
@@ -204,7 +205,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*153 codes.*
+*154 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related

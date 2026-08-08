@@ -156,6 +156,26 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
             state_names.push(state.name.as_str());
         }
         if let Some(init) = &state.init {
+            // `state.<other>` in an `init` names a value that does not exist
+            // yet. States are seeded together at period 0, so there is no order
+            // in which one could already hold a value for another to read — it
+            // evaluated to ZERO and said nothing, which is how an IRR-hurdle
+            // model computed every vested share as nothing at all.
+            //
+            // The same edge `next` already rejects, one period earlier. It was
+            // missed because the rule was written about same-period reads and
+            // period 0 did not look like a period.
+            if references_state_path(&init.src) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1126_STATE_INIT_READS_STATE",
+                    message: format!(
+                        "State '{}' reads another state in 'init'. Every state is seeded at period 0 together, so there is no value there to read; it would evaluate to zero. Inline the expression, or read the state from a stream or waterfall, which see period-close values.",
+                        state.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: init.span,
+                });
+            }
             if references_prev(&init.src) {
                 diagnostics.push(ValidationDiagnostic {
                     code: "E1123_STATE_PREV_OUTSIDE_NEXT",
