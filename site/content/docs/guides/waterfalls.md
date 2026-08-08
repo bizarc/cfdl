@@ -110,14 +110,42 @@ counts toward the payee's total. A waterfall is not a separate kind of output:
 statements, metrics and the results document read it the way they read anything
 else.
 
-## A worked example
+## Worked structures
 
-A real 22-step consumer ABS priority of payments — servicer and trustee ahead of
+Four real waterfalls are encoded in the test suite, and between them they use
+only the rules above.
+
+**A 22-step consumer ABS priority of payments** — servicer and trustee ahead of
 the notes, five rated classes taking interest then principal in strict
 seniority, a reserve topped to its specified level, an overcollateralisation
-target, and a certificateholder taking what survives — is encoded in full in the
-test suite as `waterfall_abs_22_step`. It uses the seven payment rules above and
-nothing else.
+target, and a certificateholder taking what survives.
+
+**A private fund carry waterfall** — capital back, a compounding 8% preferred
+return, a full GP catch-up, then 80/20. It reproduces its published figures
+exactly, and one definition covers three published structures: the only thing
+separating them is what the catch-up is computed on, which is an argument.
+
+**An LBO exit split** — the sponsor's converted preferred against management's
+rollover and exercised options.
+
+**An IRR-hurdle waterfall** — three participants whose vested percentages step
+up as the LP's return crosses eight hurdles.
+
+### On hurdles and catch-ups
+
+Both of the last two are commonly said to need an iterative solver. Neither
+does, and the reason is worth knowing before you reach for one.
+
+A **catch-up** that pays the GP 20% of everything distributed in two tiers
+combined is `X / (pref + X) = 0.20`, so `X = pref / 4`. One division.
+
+An **IRR hurdle** does not solve for a rate — the rate is an input. What is
+unknown is the payment that reaches it, and present value is linear in a payment
+at a fixed rate. Where a hurdle also selects among tiers, the thresholds are
+computable in advance and choosing between them is an ordered comparison.
+
+So a waterfall step stays an expression, and the language needs no solver to
+carry these structures.
 
 ## Related
 
