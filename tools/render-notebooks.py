@@ -27,6 +27,7 @@ import json
 import os
 import pathlib
 import re
+import subprocess
 import sys
 
 # These tools print prose. A Windows console defaults to cp1252, which
@@ -281,6 +282,25 @@ def benchmark_inputs(repo_root: pathlib.Path) -> list[str]:
     return sorted(found)
 
 
+def tracked_files(repo_root: pathlib.Path, rel: str) -> list[pathlib.Path]:
+    """The GIT-TRACKED files under `rel`, sorted by path.
+
+    Walking the working directory instead made the digest machine-dependent:
+    a local `make py-develop` leaves a compiled extension and a build stamp
+    inside `python/cfdl_sdk/` that no CI runner has, so the same commit hashed
+    to two different values and the freshness gate failed on a current render.
+    Tracked files are the same everywhere, which is what a committed stamp has
+    to be comparable against.
+    """
+    out = subprocess.run(
+        ["git", "-C", str(repo_root), "ls-files", "-z", "--", rel],
+        capture_output=True,
+        check=True,
+    )
+    names = [n for n in out.stdout.decode().split("\0") if n]
+    return [repo_root / n for n in sorted(names)]
+
+
 def write_render_stamp(repo_root: pathlib.Path) -> None:
     """Record what the pages were rendered against.
 
@@ -293,10 +313,8 @@ def write_render_stamp(repo_root: pathlib.Path) -> None:
     """
     digest = hashlib.sha256()
     for rel in sorted(STAMP_INPUTS + benchmark_inputs(repo_root)):
-        target = repo_root / rel
-        files = sorted(target.rglob("*")) if target.is_dir() else [target]
-        for f in files:
-            if not f.is_file() or f.name == ".DS_Store":
+        for f in tracked_files(repo_root, rel):
+            if not f.is_file():
                 continue
             digest.update(str(f.relative_to(repo_root)).encode())
             digest.update(f.read_bytes())

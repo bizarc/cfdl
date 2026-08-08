@@ -29,6 +29,7 @@
  * accepted so the makefile and workflow calls do not have to change)
  */
 import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -78,28 +79,25 @@ for (const notebook of fs.readdirSync(notebookDir).sort()) {
   }
 }
 
-/** Every file under a stamp input, in the order render-notebooks.py walks them. */
+/**
+ * The GIT-TRACKED files under a stamp input, sorted by path.
+ *
+ * Walking the working directory made the digest machine-dependent: a local
+ * `make py-develop` leaves a compiled extension and a build stamp inside
+ * `python/cfdl_sdk/` that no CI runner has, so the same commit hashed to two
+ * different values. Tracked files are the same everywhere.
+ */
 function stampFiles(rel) {
-  const target = path.join(repoRoot, rel);
-  if (!fs.existsSync(target)) return [];
-  if (!fs.statSync(target).isDirectory()) return [rel];
-  const found = [];
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir)) {
-      const full = path.join(dir, entry);
-      if (fs.statSync(full).isDirectory()) walk(full);
-      else found.push(path.relative(repoRoot, full));
-    }
-  };
-  walk(target);
-  // Python sorts pathlib objects, which compares their full path strings.
-  return found.sort();
+  const out = execFileSync("git", ["-C", repoRoot, "ls-files", "-z", "--", rel], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return out.split("\0").filter(Boolean).sort();
 }
 
 const digest = crypto.createHash("sha256");
 for (const rel of [...SOURCE_PATHS].sort()) {
   for (const file of stampFiles(rel)) {
-    if (path.basename(file) === ".DS_Store") continue;
     digest.update(file);
     digest.update(fs.readFileSync(path.join(repoRoot, file)));
   }
