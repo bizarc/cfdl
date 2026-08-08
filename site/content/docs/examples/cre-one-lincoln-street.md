@@ -108,7 +108,11 @@ model "one-lincoln-street"
 use pack "cre" version "0.1.0"
 time calendar quarterly from 2000-01 for 16
 
-entity asset tower : CRE.Asset.RealProperty
+entity asset tower : CRE.Asset.RealProperty {
+  // Funding drawn to date. A fact about the development, so it hangs on it.
+  required_to_date init curve_value("required_funding", time.date)
+                   next prev + curve_value("required_funding", time.date)
+}
 
 assume equity_commitment  = 110738000     // Exhibit 7, net construction period equity
 assume construction_rate  = 0.08          // 8.00%, compounded quarterly
@@ -134,10 +138,7 @@ curve required_funding step {
 }
 
 // Cumulative required funding through and including this quarter.
-state cum_required {
-  init curve_value("required_funding", time.date)
-  next prev + curve_value("required_funding", time.date)
-}
+
 
 // Equity funds first, until the commitment is exhausted.
 stream equity.contribution on entity asset.tower inflow currency USD {
@@ -145,7 +146,7 @@ stream equity.contribution on entity asset.tower inflow currency USD {
   category financing.equity
   amount = curve_value("required_funding", time.date)
            - min(curve_value("required_funding", time.date),
-                 max(0, state.cum_required - inputs.equity_commitment))
+                 max(0, asset.tower.required_to_date - inputs.equity_commitment))
 }
 
 // The construction loan takes the balance.
@@ -153,7 +154,7 @@ stream loan.construction_draw on entity asset.tower inflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
   category financing.debt_proceeds
   amount = min(curve_value("required_funding", time.date),
-               max(0, state.cum_required - inputs.equity_commitment))
+               max(0, asset.tower.required_to_date - inputs.equity_commitment))
 }
 
 // Interest on the opening balance plus half of this quarter's draw.
@@ -161,9 +162,9 @@ stream loan.construction_draw on entity asset.tower inflow currency USD {
 stream loan.construction_interest on entity asset.tower outflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
   category financing.debt_service
-  amount = (max(0, state.cum_required - curve_value("required_funding", time.date) - inputs.equity_commitment)
+  amount = (max(0, asset.tower.required_to_date - curve_value("required_funding", time.date) - inputs.equity_commitment)
             + min(curve_value("required_funding", time.date),
-                  max(0, state.cum_required - inputs.equity_commitment)) / 2)
+                  max(0, asset.tower.required_to_date - inputs.equity_commitment)) / 2)
            * inputs.construction_rate / 4
 }
 ```

@@ -96,7 +96,11 @@ model "hud-home-multifamily"
 use pack "cre" version "0.1.0"
 time calendar annual from 2024-01 for 29
 
-entity asset home_project : CRE.Asset.RealProperty
+entity asset home_project : CRE.Asset.RealProperty {
+  // The replacement reserve, escalating on its own trend.
+  reserve init inputs.reserve_y1
+          next round_to(prev * (1 + inputs.opex_trend), 1)
+}
 
 // ---------------------------------------------------------------------------
 // Stated in the Sample workbook's Pro Forma Assumptions tab.
@@ -196,10 +200,7 @@ state opex_taxes_ins {
   next round_to(prev * (1 + inputs.opex_trend), 1)
 }
 
-state reserve_line {
-  init inputs.reserve_y1
-  next round_to(prev * (1 + inputs.opex_trend), 1)
-}
+
 
 // One stream per PUBLISHED sub-line. The workbook reports these four
 // separately — it escalates and rounds each on its own before summing — and
@@ -240,7 +241,7 @@ stream cre.property.opex.taxes_insurance on entity asset.home_project outflow cu
 stream cre.ops.expense on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
-  amount = state.reserve_line
+  amount = asset.home_project.reserve
 }
 
 // ---------------------------------------------------------------------------
