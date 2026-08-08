@@ -1,0 +1,23 @@
+version 0.1
+model "exercise-rent-increase"
+time calendar monthly from 2026-01 for 24
+
+entity asset workshop : Asset.Real
+
+// Year one at the original rent.
+stream workshop.rent_y1 on entity asset.workshop inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 4200
+}
+
+// Year two at 5% more. Writing 4200 * 1.05 rather than 4410 keeps the claim
+// legible: the reader sees the base and the increase, not just the result.
+stream workshop.rent_y2 on entity asset.workshop inflow currency USD {
+  schedule every month from 2027-01 to 2027-12
+  amount = 4200 * 1.05
+}
+
+stream workshop.operating_cost on entity asset.workshop outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 900
+}

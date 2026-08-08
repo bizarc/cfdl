@@ -1,0 +1,47 @@
+{
+  "01-why-a-language/rent-increase": {
+    "title": "A rent increase, as claims",
+    "prompt": "The workshop's landlord raises the rent 5% for the second year.\n\nSplit the single rent stream into two: year one at 4,200 a month, year two at 5% more. Write the year-two amount as an expression (`4200 * 1.05`), not a pre-computed number — the model should show the base and the increase, the way you would state it aloud.\n\nCheck yourself before running: the lifetime rent total should rise by 4,200 × 0.05 × 12 = 2,520 over the starter model's.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-rent-increase\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset workshop : Asset.Real\n\n// The workshop rents for 4,200 a month for two years. Your task: the\n// landlord raises the rent 5% for the second year. Express that as claims —\n// split this stream into a year-one stream and a year-two stream at the\n// higher amount.\nstream workshop.rent on entity asset.workshop inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 4200\n}\n\nstream workshop.operating_cost on entity asset.workshop outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 900\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-rent-increase\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset workshop : Asset.Real\n\n// Year one at the original rent.\nstream workshop.rent_y1 on entity asset.workshop inflow currency USD {\n  schedule every month from 2026-01 to 2026-12\n  amount = 4200\n}\n\n// Year two at 5% more. Writing 4200 * 1.05 rather than 4410 keeps the claim\n// legible: the reader sees the base and the increase, not just the result.\nstream workshop.rent_y2 on entity asset.workshop inflow currency USD {\n  schedule every month from 2027-01 to 2027-12\n  amount = 4200 * 1.05\n}\n\nstream workshop.operating_cost on entity asset.workshop outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 900\n}\n"
+  },
+  "02-the-object-model/studio-setup": {
+    "title": "A studio, from a blank grid",
+    "prompt": "Only the time grid is written. Build the rest: the studio as an entity, a two-month fitout phase, a monthly rent cost of 1,850 for the full two years, and a one-time 12,000 setup cost scheduled with `phase_enter(\"fitout\")` rather than a date.\n\nThis is an all-cost model — both streams are outflows, and its net cash is negative by construction. What you are practicing is the trio every model is made of: grid, cast, claims.\n\nCheck yourself: total cash out should be 12,000 + 1,850 × 24 = 56,400.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-studio-setup\"\ntime calendar monthly from 2026-01 for 24\n\n// Your task, in three steps:\n//   1. Declare the studio as an entity (a real asset).\n//   2. Add a fitout phase covering the first two months.\n//   3. Add two streams: a monthly rent cost of 1,850 for the full two years,\n//      and a one-time 12,000 setup cost that lands when fitout begins —\n//      schedule it with phase_enter, not a date.\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-studio-setup\"\ntime calendar monthly from 2026-01 for 24\nphase fitout from 2026-01 to 2026-02\n\nentity asset studio : Asset.Real\n\n// The setup cost is tied to the phase, not a date: slide the fitout phase\n// and the cash follows without this stream changing.\nstream studio.setup_cost on entity asset.studio outflow currency USD {\n  schedule on phase_enter(\"fitout\")\n  amount = 12000\n}\n\nstream studio.rent on entity asset.studio outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 1850\n}\n"
+  },
+  "03-reading-results/the-assistant": {
+    "title": "Predict, then run",
+    "prompt": "The practice hires an assistant from July 2026 at 5,200 a month through the end of the model.\n\nFirst predict the new lifetime net total — the starter's is 288,000, and the assistant works 18 months. Write your number down. Then add the stream and run.\n\nThe habit being built is prediction-before-run: a wrong model is cheapest to catch while your own expectation is still fresh. If the run surprises you, use the four-step descent from the chapter: streams, periods, run settings, then the model.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-assistant\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset practice : Asset.Intangible\n\nstream practice.retainers on entity asset.practice inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 30000\n}\n\nstream practice.project_fees on entity asset.practice inflow currency USD {\n  schedule every month from 2027-01 to 2027-12\n  amount = 12000\n}\n\nstream practice.overhead on entity asset.practice outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 24000\n}\n\n// Your task: the practice hires an assistant from July 2026 at 5,200 a month\n// through the end of the model. Predict the new lifetime net total BEFORE you\n// run, then add the stream and check yourself.\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-assistant\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset practice : Asset.Intangible\n\nstream practice.retainers on entity asset.practice inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 30000\n}\n\nstream practice.project_fees on entity asset.practice inflow currency USD {\n  schedule every month from 2027-01 to 2027-12\n  amount = 12000\n}\n\nstream practice.overhead on entity asset.practice outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 24000\n}\n\n// 18 months at 5,200: cash out 93,600, so the lifetime net drops from\n// 288,000 to 194,400 — the prediction to have made before running.\nstream practice.assistant on entity asset.practice outflow currency USD {\n  schedule every month from 2026-07 to 2027-12\n  amount = 5200\n}\n"
+  }
+}

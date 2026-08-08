@@ -1,0 +1,27 @@
+version 0.1
+model "exercise-the-assistant"
+time calendar monthly from 2026-01 for 24
+
+entity asset practice : Asset.Intangible
+
+stream practice.retainers on entity asset.practice inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 30000
+}
+
+stream practice.project_fees on entity asset.practice inflow currency USD {
+  schedule every month from 2027-01 to 2027-12
+  amount = 12000
+}
+
+stream practice.overhead on entity asset.practice outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 24000
+}
+
+// 18 months at 5,200: cash out 93,600, so the lifetime net drops from
+// 288,000 to 194,400 — the prediction to have made before running.
+stream practice.assistant on entity asset.practice outflow currency USD {
+  schedule every month from 2026-07 to 2027-12
+  amount = 5200
+}

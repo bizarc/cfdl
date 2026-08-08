@@ -1,0 +1,24 @@
+version 0.1
+model "exercise-the-assistant"
+time calendar monthly from 2026-01 for 24
+
+entity asset practice : Asset.Intangible
+
+stream practice.retainers on entity asset.practice inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 30000
+}
+
+stream practice.project_fees on entity asset.practice inflow currency USD {
+  schedule every month from 2027-01 to 2027-12
+  amount = 12000
+}
+
+stream practice.overhead on entity asset.practice outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 24000
+}
+
+// Your task: the practice hires an assistant from July 2026 at 5,200 a month
+// through the end of the model. Predict the new lifetime net total BEFORE you
+// run, then add the stream and check yourself.

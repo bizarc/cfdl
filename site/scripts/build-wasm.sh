@@ -15,7 +15,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 SITE_DIR="$(pwd)"
 REPO_ROOT="$(cd .. && pwd)"
-OUT_DIR="${SITE_DIR}/public/wasm"
+# Overridable so a sibling app (learn/) can build its own copy of the bundle;
+# the default is unchanged.
+OUT_DIR="${OUT_DIR:-${SITE_DIR}/public/wasm}"
 
 # THE BUNDLE IS SERVED TO EVERY PLAYGROUND VISITOR, so its size is worth
 # watching. What is NOT worth doing is failing the deploy every time the

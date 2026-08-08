@@ -1,0 +1,10 @@
+version 0.1
+model "exercise-studio-setup"
+time calendar monthly from 2026-01 for 24
+
+// Your task, in three steps:
+//   1. Declare the studio as an entity (a real asset).
+//   2. Add a fitout phase covering the first two months.
+//   3. Add two streams: a monthly rent cost of 1,850 for the full two years,
+//      and a one-time 12,000 setup cost that lands when fitout begins —
+//      schedule it with phase_enter, not a date.
