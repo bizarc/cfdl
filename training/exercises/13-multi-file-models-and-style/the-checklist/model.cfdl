@@ -1,0 +1,27 @@
+version 0.1
+model "exercise-the-checklist"
+time calendar monthly from 2026-01 for 30
+
+entity asset clinic : Asset.Real
+
+// This model works — and violates the style checklist. Apply rules 1 and 2
+// without changing any total:
+//   1. Dates live in phases: declare `phase fitout` (2026-01 to 2026-03)
+//      and `phase operations` (2026-04 to 2028-06), then make every
+//      schedule read the phases instead of dates.
+//   2. Opinions live in assumptions: hoist 21500 (visit revenue), 0.62
+//      (staff cost ratio), and 30000 (fitout cost) onto an assumption page.
+stream clinic.visit_revenue on entity asset.clinic inflow currency USD {
+  schedule every month from 2026-04 to 2028-06
+  amount = 21500
+}
+
+stream clinic.staff_cost on entity asset.clinic outflow currency USD {
+  schedule every month from 2026-04 to 2028-06
+  amount = 21500 * 0.62
+}
+
+stream clinic.fitout on entity asset.clinic outflow currency USD {
+  schedule on 2026-02
+  amount = 30000
+}

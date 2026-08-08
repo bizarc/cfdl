@@ -1,0 +1,29 @@
+version 0.1
+model "exercise-the-checklist"
+time calendar monthly from 2026-01 for 30
+phase fitout from 2026-01 to 2026-03
+phase operations from 2026-04 to 2028-06
+
+entity asset clinic : Asset.Real
+
+// The assumption page: what this model believes.
+assume visit_revenue = 21500
+assume staff_cost_ratio = 0.62
+assume fitout_cost = 30000
+
+// Every date now lives in the phase block; slide a phase and the model
+// re-derives itself.
+stream clinic.visit_revenue on entity asset.clinic inflow currency USD {
+  schedule every month from phase_start("operations") to phase_end("operations")
+  amount = inputs.visit_revenue
+}
+
+stream clinic.staff_cost on entity asset.clinic outflow currency USD {
+  schedule every month from phase_start("operations") to phase_end("operations")
+  amount = inputs.visit_revenue * inputs.staff_cost_ratio
+}
+
+stream clinic.fitout on entity asset.clinic outflow currency USD {
+  schedule on phase_enter("fitout")
+  amount = inputs.fitout_cost
+}

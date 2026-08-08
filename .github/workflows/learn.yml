@@ -78,6 +78,9 @@ jobs:
   # hand-written project link and token scoping). OFF until the learn Vercel
   # project exists and its id is stored — enable with repository variable
   # ENABLE_LEARN_CI_DEPLOY = true and secret VERCEL_LEARN_PROJECT_ID.
+  # The token: VERCEL_LEARN_TOKEN, project-scoped to cfdl-learn (falls back to
+  # VERCEL_TOKEN for a future team-scoped one; the cfdl-only token cannot see
+  # this project and fails with "Project not found").
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -138,10 +141,10 @@ jobs:
         run: >
           npx vercel@latest build
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          --token=${{ secrets.VERCEL_TOKEN }}
+          --token=${{ secrets.VERCEL_LEARN_TOKEN || secrets.VERCEL_TOKEN }}
 
       - name: Deploy
         run: >
           npx vercel@latest deploy --prebuilt
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          --token=${{ secrets.VERCEL_TOKEN }}
+          --token=${{ secrets.VERCEL_LEARN_TOKEN || secrets.VERCEL_TOKEN }}
