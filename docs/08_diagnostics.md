@@ -217,7 +217,7 @@ State declarations:
 - `E1315_ENTITY_PART_OF_ITSELF` — an entity is its own parent.
 - `E1330_CONFLICTING_ACTIVE_CLAUSES` — a stream declares both `active when` and `active in state`. Use one: `active in state` for a lifecycle state, `active when` for anything else.
 - `E1331_OWNER_HAS_NO_LIFECYCLE` — a stream is active in a lifecycle state but its owner's type declares no lifecycle.
-- `E1332_UNKNOWN_ACTIVE_STATE` — a stream is active in a state its owner's lifecycle does not declare. A state name is checked against the lifecycle; a string comparison such as `entity.state.status == "leasd"` is not, and stays false for every period.
+- `E1332_UNKNOWN_ACTIVE_STATE` — a stream is active in a state its owner's lifecycle does not declare. A state name is checked against the lifecycle; a string comparison such as `entity.status == "leasd"` is not, and stays false for every period.
 - `E1318_ENTITY_HIERARCHY_CYCLE` — `part of` forms a cycle. Reported once, from the cycle's lexicographically first entity, rather than once per member. An entity aggregates its children, so a cycle has no bottom to sum from.
 - `E1316_UNKNOWN_LIFECYCLE_STATE` — an entity starts in a state its lifecycle does not declare. This is the misspelled status made impossible rather than merely unlikely.
 - `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.

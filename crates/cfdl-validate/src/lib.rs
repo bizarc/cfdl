@@ -2,6 +2,7 @@
 
 use cfdl_parser::{Cadence, ScheduleKind, Span, Stmt};
 use cfdl_resolver::{ResolveOutput, SymbolTables};
+use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValidationDiagnostic {
@@ -130,6 +131,19 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     // through the open-world `entity` root, so an unrejected read returns null
     // and evaluates to ZERO: the failure mode of `init = 100`, of the unbound
     // entity attributes, and of the bare waterfall path.
+    // A rule may not read a field that MOVES — its period-close value does not
+    // exist yet. A LITERAL is a constant, readable at any period, and rejecting
+    // it was over-strict: the same mistake as treating a knowable value as
+    // unknowable, pointing the other way.
+    let mut rule_fields: BTreeSet<String> = BTreeSet::new();
+    for source_stmt in &output.source_statements {
+        if let Stmt::Entity(entity) = &source_stmt.statement {
+            for f in &entity.fields {
+                rule_fields.insert(format!("{}.{}", entity.symbol(), f.name));
+            }
+        }
+    }
+
     for source_stmt in &output.source_statements {
         let Stmt::Entity(entity) = &source_stmt.statement else {
             continue;
@@ -138,7 +152,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         for field in &entity.fields {
             for (clause, slot) in [("init", Some(&field.init)), ("next", field.next.as_ref())] {
                 let Some(slot) = slot else { continue };
-                if references_entity_path(&slot.src) {
+                if reads_moving_field(&slot.src, &rule_fields) {
                     diagnostics.push(ValidationDiagnostic {
                         code: "E1127_FIELD_RULE_READS_FIELD",
                         message: format!(
@@ -790,25 +804,41 @@ fn references_prev_other_than_field(src: &str) -> bool {
     false
 }
 
-/// Whether an expression source reads `state.<name>` — the CURRENT period.
-/// Does this expression name an entity's field by its family path?
+/// Does this expression read a field that MOVES — one carrying a rule?
 ///
-/// `asset.tlb.balance` yes; `inputs.asset_value` no, because the family must
-/// start a path rather than end a word.
-fn references_entity_path(src: &str) -> bool {
-    ["asset.", "party.", "contract.", "reference."]
-        .iter()
-        .any(|family| {
-            src.match_indices(family).any(|(idx, _)| {
-                idx == 0
-                    || !src[..idx]
-                        .chars()
-                        .next_back()
-                        .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.')
-            })
-        })
+/// A literal field is a constant and may be read from anywhere. Only a
+/// rule-bearing field has a period-close value that does not exist yet inside
+/// another rule, which is what §4a of docs/18 settled.
+fn reads_moving_field(src: &str, rule_fields: &BTreeSet<String>) -> bool {
+    for family in ["asset", "party", "contract", "reference"] {
+        let needle = format!("{family}.");
+        let mut base = 0usize;
+        while let Some(idx) = src[base..].find(&needle) {
+            let at = base + idx;
+            let before_ok = at == 0
+                || !src[..at]
+                    .chars()
+                    .next_back()
+                    .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+            base = at + needle.len();
+            if !before_ok {
+                continue;
+            }
+            let tail = &src[base..];
+            let end = tail
+                .find(|c: char| !(c.is_alphanumeric() || c == '_' || c == '.'))
+                .unwrap_or(tail.len());
+            let segs: Vec<&str> = tail[..end].split('.').collect();
+            if segs.len() >= 2 && rule_fields.contains(&format!("{family}.{}.{}", segs[0], segs[1]))
+            {
+                return true;
+            }
+        }
+    }
+    false
 }
 
+/// Whether an expression source reads `state.<name>` — the CURRENT period.
 fn references_state_path(src: &str) -> bool {
     src.match_indices("state.").any(|(idx, _)| {
         let before_ok = idx == 0

@@ -37,5 +37,5 @@ stream cre.rent on entity asset.tower inflow currency USD {
   schedule every year from 2026-01 to 2030-01
   category operating.revenue.base_rent
   amount = 100
-  active when entity.state.status != "repositioning"
+  active when asset.tower.status != "repositioning"
 }

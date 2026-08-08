@@ -34,7 +34,7 @@ entity <family> <name> : <Type> {                --         contract | reference
 }
 ```
 
-Reads, from any expression: `asset.x.field` (this period, at close), `prev.asset.x.field` (prior close), `entity.state.field` (the attached entity's own field). Rules see only the completed prior column — same-period cycles are unwritable.
+Reads, from any expression: `asset.x.field` (this period, at close), `prev.asset.x.field` (prior close), `entity.field` (the attached entity's own field). Rules see only the completed prior column — same-period cycles are unwritable.
 
 ## Streams
 

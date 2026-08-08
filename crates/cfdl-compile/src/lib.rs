@@ -721,7 +721,9 @@ struct IrProvenance {
 fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
     states
         .iter()
-        .map(|guard| format!("entity.state.status == \"{}\"", guard.state))
+        // `entity.status`, not `entity.state.status`: an entity's state IS its
+        // fields, and `status` is one of them. The second store is gone.
+        .map(|guard| format!("entity.status == \"{}\"", guard.state))
         .collect::<Vec<_>>()
         .join(" or ")
 }
@@ -885,6 +887,50 @@ fn field_paths(src: &str) -> Vec<(String, String)> {
         }
     }
     found
+}
+
+/// Is `given` close enough to `declared` to be a typo rather than a new field?
+///
+/// Case alone, or a single edit on a name long enough for that to be unlikely
+/// by chance. Short names are excluded: `fee` and `fees` are plausibly both
+/// wanted, and calling one a misspelling of the other would be a guess.
+fn is_near_miss(declared: &str, given: &str) -> bool {
+    if declared.eq_ignore_ascii_case(given) {
+        return true;
+    }
+    if declared.len() < 5 || given.len() < 5 {
+        return false;
+    }
+    edit_distance_at_most_one(declared, given)
+}
+
+/// One insertion, deletion or substitution apart.
+fn edit_distance_at_most_one(a: &str, b: &str) -> bool {
+    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    if a.len().abs_diff(b.len()) > 1 {
+        return false;
+    }
+    let (mut i, mut j, mut edits) = (0usize, 0usize, 0u8);
+    while i < a.len() && j < b.len() {
+        if a[i] == b[j] {
+            i += 1;
+            j += 1;
+            continue;
+        }
+        edits += 1;
+        if edits > 1 {
+            return false;
+        }
+        match a.len().cmp(&b.len()) {
+            std::cmp::Ordering::Greater => i += 1,
+            std::cmp::Ordering::Less => j += 1,
+            std::cmp::Ordering::Equal => {
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    edits + u8::from(i < a.len() || j < b.len()) <= 1
 }
 
 fn check_prev_first_period(
@@ -1577,8 +1623,20 @@ fn check_entity_types(
                 });
             }
         }
+        // A PACK DECLARES A FLOOR, NOT A CEILING. Required fields must be
+        // present and declared ones must be spelled right, but a modeller may
+        // add fields of their own — that is how a model says something the
+        // pack's vocabulary does not cover, and it is already true of fields
+        // that carry a rule.
+        //
+        // What still fails is a NEAR MISS. `senority` next to a declared
+        // `seniority` is a typo, and allowing it would make the value a field
+        // nobody reads — the quiet kind of wrong this project keeps closing.
         for attr in &entity.literal_fields {
-            if !ty.fields.iter().any(|f| f.name == attr.name) {
+            let declared = ty.fields.iter().any(|f| f.name == attr.name);
+            let near_miss =
+                !declared && ty.fields.iter().any(|f| is_near_miss(&f.name, &attr.name));
+            if near_miss {
                 let mut known: Vec<&str> = ty.fields.iter().map(|f| f.name.as_str()).collect();
                 known.sort_unstable();
                 diagnostics.push(Diagnostic {

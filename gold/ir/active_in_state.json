@@ -115,7 +115,7 @@
       },
       "active_when": {
         "lang": "cfdl",
-        "src": "entity.state.status == \"leased\" or entity.state.status == \"holdover\""
+        "src": "entity.status == \"leased\" or entity.status == \"holdover\""
       },
       "provenance": {
         "source_file": "model.cfdl",

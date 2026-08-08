@@ -1,0 +1,205 @@
+{
+  "results_version": "0.3",
+  "model_hash": "98b7e52ec8226d692f851e8680e6528cf4b4e63833d7977d92a081e79c16c783",
+  "ledger_hash": "cdaf47b660a5a273f924ed20957ab01af10b57a5c681d10b7a198be5c8b22cb0",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.pool.total": {
+        "amount": -6.0,
+        "currency": "USD"
+      },
+      "entity.party.lender.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -6.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -6.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.credit.amortisation.total": {
+        "amount": -6.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.pool.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.8,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.6,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.4,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.2,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.lender.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.8,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.6,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.4,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.2,
+            "currency": "USD"
+          }
+        ]
+      },
+      "state.asset.pool.balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          100.0,
+          90.0,
+          80.0,
+          70.0,
+          60.0
+        ]
+      },
+      "state.asset.pool.fee_rate": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
+      "stream.credit.amortisation": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.8,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.6,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.4,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.2,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "entity": "asset.pool",
+        "field": "fee_rate",
+        "to": "0.05",
+        "event": "covenant_breach"
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

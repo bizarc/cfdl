@@ -17,7 +17,7 @@ event reletting when time.t >= 4 {
 }
 
 // The state name is CHECKED against the unit lifecycle. A misspelling is a
-// compile error, where `entity.state.status == "leasd"` would just be false
+// compile error, where `asset.suite.status == "leasd"` would just be false
 // forever and say nothing.
 stream cre.rent on entity asset.suite inflow currency USD {
   schedule every year from 2026-01 to 2030-01

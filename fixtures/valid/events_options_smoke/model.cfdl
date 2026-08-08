@@ -10,7 +10,7 @@ entity asset senior : Asset.Financial
 stream loan.debt_service on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2026-12
   amount = 500
-  active when entity.state.status != "refinanced"
+  active when entity.status != "refinanced"
 }
 
 event refi_trigger when time.t >= 6 {

@@ -9,13 +9,13 @@ entity asset senior : Asset.Financial
 stream loan.bridge_interest on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 9500
-  active when entity.state.status != "refinanced"
+  active when entity.status != "refinanced"
 }
 
 stream loan.perm_interest on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 6200
-  active when entity.state.status == "refinanced"
+  active when entity.status == "refinanced"
 }
 
 stream ops.noi on entity asset.senior inflow currency USD {

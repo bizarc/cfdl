@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1313_UNKNOWN_ENTITY_FIELD",
+    "severity": "error",
+    "message": "Entity 'asset.tlb' of type 'Credit.Asset.Tranche' sets 'senority', which the type does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 3,
+      "end_line": 17,
+      "end_col": 14
+    },
+    "path": null,
+    "hint": "Declared fields: original_balance, seniority.",
+    "notes": []
+  }
+]

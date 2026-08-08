@@ -1,0 +1,18 @@
+version 0.1
+model "near-miss-field"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// A PACK DECLARES A FLOOR, NOT A CEILING.
+//
+// A modeller may add fields a pack's vocabulary does not cover — that is how a
+// model says something the pack did not anticipate, and it was already true of
+// fields carrying a rule.
+//
+// What still fails is a NEAR MISS. `senority` beside a declared `seniority` is
+// a typo, and allowing it would make the value a field nobody reads: the quiet
+// kind of wrong, where the model looks like it says something and does not.
+
+entity asset tlb : Credit.Asset.Tranche {
+  senority = 1
+}

@@ -17,7 +17,7 @@ event refinance when time.t >= 12 {
 stream loan.debt_service on entity asset.senior outflow currency USD {
   schedule every month from 2026-01 to 2027-12
   amount = 4200
-  active when entity.state.status != "refinanced"
+  active when entity.status != "refinanced"
 }
 
 // An OPTION is a payoff that only lands if it is exercised.

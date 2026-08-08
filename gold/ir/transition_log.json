@@ -115,7 +115,7 @@
       },
       "active_when": {
         "lang": "cfdl",
-        "src": "entity.state.status != \"repositioning\""
+        "src": "asset.tower.status != \"repositioning\""
       },
       "provenance": {
         "source_file": "model.cfdl",
