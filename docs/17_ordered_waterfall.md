@@ -509,10 +509,48 @@ say one deal, but whether one definition parameterises into a family of them.
 tier most often said to need iteration. It is `X = pref / 4` — one division, as
 §12 argued from the algebra and this confirms from the published figures.
 
+### The IRR-hurdle structure — a claim tested and falsified
+
+The source catalogue describes this structure as *"requiring a circular solve:
+the split determines cash flows which determine the IRR which determines the
+split"*, and calls it the case that "trips up most declarative modeling tools".
+
+`fixtures/valid/waterfall_irr_hurdles` reproduces it exactly, with no solver:
+
+| | CFDL | published |
+|---|---:|---:|
+| Management | 1,800,000.0000 | 1,800,000 |
+| Sponsor promote | 4,800,000.0000 | 4,800,000 |
+| Limited partners | 23,400,000.0000 | 23,400,000 |
+
+**There are two reasons the circularity is not there**, and both are visible in
+the arithmetic.
+
+The deal's IRR **does not depend on the split**. Capital goes in once and
+proceeds come back once, so the IRR is `(P/C)^(1/n) - 1` over the deal's own
+totals — 0.245731 against a published 0.2457. Who receives the proceeds cannot
+change what the deal returned.
+
+And each hurdle's vesting threshold is **precomputable**. A tier states an LP
+IRR, so the LP needs `C(1+h)^n`; the LP takes only `1 - mgmt - sponsor` of the
+pot, so the pot must reach that grossed up; the rate that pot implies is again
+closed form. All eight thresholds reproduce the published "implied new hurdle
+rate to vest" column exactly, and all eight are known before any cash moves.
+
+What is left is choosing a tier: an ordered discrete test for the largest tier
+whose implied rate the deal beats. The same shape as the option ladder in
+`benchmarks/opco/lbo_option_pool_exit`, and it enumerates rather than iterates.
+
+So §12's claim survives contact with the case the catalogue nominated to break
+it. A hurdle RATE is an input; only the payment that reaches it is unknown, and
+that is arithmetic.
+
+**A rule this case ran into.** A state's `init` may not read another state, so
+the first draft computed every vested share as zero and said nothing. The tier
+test belongs in the waterfall step, which reads period-close state — and next to
+the payment it decides, which is where it reads better anyway.
+
 ### Still to build
 
-A nested split (composition), and the reference's remaining two structures — a
-partial catch-up, and an IRR-hurdle waterfall the catalogue describes as
-"requiring a circular solve". §12 argues it does not, because the hurdle rate is
-an input rather than an unknown. That is a falsifiable claim against published
-numbers and worth testing next.
+A nested split (composition), and the reference's remaining structure, a partial
+catch-up.

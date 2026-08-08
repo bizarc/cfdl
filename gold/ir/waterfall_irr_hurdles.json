@@ -1,0 +1,152 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "waterfall-irr-hurdles",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2020-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "6597bd55927c6f12d1b59fb0deab7fba",
+      "symbol": "asset.deal",
+      "type": "Asset.Financial",
+      "attrs": {},
+      "state": {}
+    },
+    {
+      "id": "b9fe762e53b028203656d6135ae10893",
+      "symbol": "party.lp",
+      "type": "Party",
+      "attrs": {
+        "name": "Limited Partners"
+      },
+      "state": {}
+    },
+    {
+      "id": "235685dc0212d3972443ddff38b58a3f",
+      "symbol": "party.mgmt",
+      "type": "Party",
+      "attrs": {
+        "name": "Management Team"
+      },
+      "state": {}
+    },
+    {
+      "id": "24a62c472a43f2095bc8f47536162f83",
+      "symbol": "party.sponsor",
+      "type": "Party",
+      "attrs": {
+        "name": "Sponsor Promote"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "called_capital": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "10000000.0"
+        },
+        "name": "called_capital",
+        "type": "Decimal"
+      },
+      "hold_years": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "5.0"
+        },
+        "name": "hold_years",
+        "type": "Decimal"
+      },
+      "proceeds": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "30000000.0"
+        },
+        "name": "proceeds",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "states": [
+    {
+      "name": "deal_irr",
+      "init": {
+        "lang": "cfdl",
+        "src": "pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev"
+      }
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "fund.distribution",
+      "entity": "asset.deal",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2025-01-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "inputs.proceeds"
+      },
+      "steps": [
+        {
+          "name": "mgmt_proceeds",
+          "payee": "party.mgmt",
+          "amount": {
+            "lang": "cfdl",
+            "src": "inputs.proceeds *      if(state.deal_irr >= 0.28148859901472223,         0.08,         if(state.deal_irr >= 0.2604763708480864,            0.07,            if(state.deal_irr >= 0.24011821572791225,               0.06,               if(state.deal_irr >= 0.22339827653178967,                  0.05,                  if(state.deal_irr >= 0.20696650711711273,                     0.04,                     if(state.deal_irr >= 0.15163318845914975,                        0.03,                        if(state.deal_irr >= 0.10299934260814592,                           0.02,                           0.0)))))))"
+          }
+        },
+        {
+          "name": "sponsor_proceeds",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "inputs.proceeds *      if(state.deal_irr >= 0.28148859901472223,         0.2,         if(state.deal_irr >= 0.2604763708480864,            0.18,            if(state.deal_irr >= 0.24011821572791225,               0.16,               if(state.deal_irr >= 0.22339827653178967,                  0.15,                  if(state.deal_irr >= 0.20696650711711273,                     0.14,                     if(state.deal_irr >= 0.15163318845914975,                        0.1,                        if(state.deal_irr >= 0.10299934260814592,                           0.08,                           0.0)))))))"
+          }
+        },
+        {
+          "name": "lp_proceeds",
+          "payee": "party.lp",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
