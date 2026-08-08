@@ -43,21 +43,21 @@ output numbers were carried across.
 
 Every asserted line agrees with the reference.
 
-The case makes a narrower claim than its companion: `energy.merchant` and
-`energy.ptc` are the same expression as `energy.ppa` with different term names,
-and `energy.capacity` is a single division — so agreement shows the terms reach
-the right places and the contracts compose, not that a new formula is correct.
+The claim is narrower than its companion's. `energy.merchant` and `energy.ptc`
+are the same expression as `energy.ppa` with different term names, and
+`energy.capacity` is a single division, so agreement shows the terms reach the
+right places and the contracts compose rather than that a new formula is
+correct.
 
 ## The delta
 
 None on the asserted lines.
 
-One mechanic here is genuinely new, and it is the reason the case exists. The
-production credit is a **staircase**: the inflation-adjusted rate is published
-rounded to the nearest tenth of a cent per kilowatt-hour, so it steps once a year
-and holds. Carrying it continuously was wrong by up to 1.8% in a single year and
-about −0.3% over the ten-year window — and the error alternates sign rather than
-drifting, which is why it survived as long as it did. It looked like noise.
+One mechanic here is new. The production credit is a **staircase**: the
+inflation-adjusted rate is published rounded to the nearest tenth of a cent per
+kilowatt-hour, so it steps once a year and holds. Carried continuously it is
+wrong by up to 1.8% in a single year and about −0.3% over the ten-year window,
+and the error alternates sign rather than drifting.
 
 ## The model
 

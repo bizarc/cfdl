@@ -38,8 +38,8 @@ recreated independently of the model and compared month by month.
 | Language features | a declared `curve` read per period by `curve_value` with step interpolation |
 | Conventions | a coupon that resets rather than fixing at origination, a binding rate floor, a bullet maturity |
 
-This is the case that exercises curves end to end: the curve statement, its
-representation in the compiled model, and the per-period lookup.
+Curves are exercised end to end here: the curve statement, its representation
+in the compiled model, and the per-period lookup.
 
 ## The result
 

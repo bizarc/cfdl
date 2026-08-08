@@ -14,9 +14,8 @@ amortising collateral — the same definitional source the mortgage cases use.
 **Not redistributable.** The source cannot be published, so its conventions are
 recreated independently of the model and compared month by month.
 
-The pack lowers this contract to closed-form pool-factor expressions; the
-comparison is against a month-by-month recursion of the same convention, so an
-error in the closed form has nowhere to hide.
+The pack lowers this contract to closed-form pool-factor expressions, and the
+comparison is against a month-by-month recursion of the same convention.
 
 ## What it exercises
 

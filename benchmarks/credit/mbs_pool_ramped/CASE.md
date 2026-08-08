@@ -1,9 +1,8 @@
 ## The case
 
 The same 30-year agency mortgage pool, but on a **ramping** prepayment curve:
-speeds build month by month over the first thirty months, then level off. A ramp
-is the standard market assumption for a seasoning pool, and it is the case a
-constant-hazard shortcut gets wrong.
+speeds build month by month over the first thirty months, then level off. A
+ramp is the standard market assumption for a seasoning pool.
 
 ## The reference
 
@@ -23,9 +22,8 @@ and cited as facts.
 | Language features | pack contract lowering to four cash flow lines; a per-period pool factor carried as state |
 | Conventions | a prepayment ramp over thirty months, CPR-to-SMM conversion, default, severity, recovery lag |
 
-The ramp is why this case exists alongside the constant-speed one. Under a
-changing hazard the surviving balance is a running product, and a closed-form
-`pow(k, p)` is exact only while the rate holds still.
+Under a changing hazard the surviving balance is a running product, and a
+closed-form `pow(k, p)` is exact only while the rate holds still.
 
 ## The result
 
@@ -37,4 +35,4 @@ Asserted: four stream columns period by period.
 ## The delta
 
 The tolerance is 0.51 — just over half a dollar — set by the published
-schedule's whole-dollar rounding rather than by anything about this pool.
+schedule's whole-dollar rounding.

@@ -14,8 +14,8 @@ equity commitment.
 **Redistributable.** CC BY-NC-SA 4.0, so the source PDF is committed under
 `reference/` and a reader can mark every figure against it directly.
 
-Every number asserted is the exhibit's, and each is *derived* by the model from
-those three published drivers rather than fitted to the answer.
+Every number asserted is the exhibit's, derived by the model from those three
+published drivers.
 
 ## What it exercises
 

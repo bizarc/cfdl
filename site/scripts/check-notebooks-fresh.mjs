@@ -9,18 +9,28 @@
  * without a re-render, leaving the site publishing outputs that no longer match
  * what the code produces.
  *
- * Like check-wasm-fresh.mjs, this compares *what changed* rather than
- * re-rendering: reproducing the output requires the toolchain this runner
- * doesn't have. Execution correctness is separately covered by the notebook
- * step in ci.yml, which does have Python and Rust.
+ * Reproducing the output needs a toolchain this runner does not have, so the
+ * gate checks the STAMP instead: `make notebooks-render` records a digest of
+ * every input the pages were rendered against, and hashing those same files is
+ * something Node can do unaided. A stamp that matches the working tree means
+ * the render ran against exactly this content.
  *
- * Usage: node scripts/check-notebooks-fresh.mjs <base-ref>   (default: origin/main)
+ * It replaces a diff-based heuristic — "inputs changed, so the stamp must have
+ * changed too" — which had a hole. A stamp committed from a tree carrying
+ * uncommitted changes already covers those changes, so once it reaches main a
+ * branch containing them can never produce a differing stamp, and the gate
+ * fails on a render that is in fact current. Comparing digests asks the
+ * question directly and has no such state.
+ *
+ * Kept in step with `write_render_stamp` in tools/render-notebooks.py; the
+ * digests must agree byte for byte, and a mismatch fails this gate loudly.
+ *
+ * Usage: node scripts/check-notebooks-fresh.mjs [base-ref]   (base-ref unused,
+ * accepted so the makefile and workflow calls do not have to change)
  */
-import { execSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-
-const base = process.argv[2] || "origin/main";
 
 /**
  * Inputs whose change can alter what a rendered page shows.
@@ -68,47 +78,50 @@ for (const notebook of fs.readdirSync(notebookDir).sort()) {
   }
 }
 
-let changed;
-try {
-  changed = execSync(`git diff --name-only ${base}...HEAD`, { encoding: "utf8" })
-    .split("\n")
-    .filter(Boolean);
-} catch (error) {
-  // Fatal, not skip — see the same change in check-wasm-fresh.mjs. A shallow
-  // checkout makes this throw on every CI run, so exiting 0 here disabled the
-  // gate entirely without ever saying so.
-  console.error(`check-notebooks-fresh: cannot diff against ${base}.\n`);
-  console.error(`  ${error instanceof Error ? error.message.split("\n")[0] : String(error)}\n`);
-  console.error("The base ref must be present locally. In CI, set:");
-  console.error("  - uses: actions/checkout@v4");
-  console.error("    with:");
-  console.error("      fetch-depth: 0");
-  console.error("\nLocally, fetch it:\n  git fetch origin main");
-  process.exit(1);
+/** Every file under a stamp input, in the order render-notebooks.py walks them. */
+function stampFiles(rel) {
+  const target = path.join(repoRoot, rel);
+  if (!fs.existsSync(target)) return [];
+  if (!fs.statSync(target).isDirectory()) return [rel];
+  const found = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir)) {
+      const full = path.join(dir, entry);
+      if (fs.statSync(full).isDirectory()) walk(full);
+      else found.push(path.relative(repoRoot, full));
+    }
+  };
+  walk(target);
+  // Python sorts pathlib objects, which compares their full path strings.
+  return found.sort();
 }
 
-const sourceChanges = changed.filter((f) => SOURCE_PATHS.some((p) => f.startsWith(p)));
-const rendersChanged = changed.some((f) => RENDER_PATHS.some((p) => f.startsWith(p)));
+const digest = crypto.createHash("sha256");
+for (const rel of [...SOURCE_PATHS].sort()) {
+  for (const file of stampFiles(rel)) {
+    if (path.basename(file) === ".DS_Store") continue;
+    digest.update(file);
+    digest.update(fs.readFileSync(path.join(repoRoot, file)));
+  }
+}
+const expected = digest.digest("hex");
 
-// A render is fresh when it ran against the current inputs, which the stamp
-// records. Requiring a *diff* in the rendered pages was wrong: a change that
-// does not alter notebook output — a new diagnostic, say — left the gate
-// unsatisfiable, because re-rendering produced nothing to commit.
-const stampPath = "site/content/docs/notebooks/.render-stamp";
-const stampChanged = changed.includes(stampPath);
+const stampPath = path.join(repoRoot, "site", "content", "docs", "notebooks", ".render-stamp");
+if (!fs.existsSync(stampPath)) {
+  console.error("check-notebooks-fresh: no render stamp.\n");
+  console.error("Render and commit the pages:\n  make notebooks-render");
+  process.exit(1);
+}
+const committed = fs.readFileSync(stampPath, "utf8").trim();
 
-if (sourceChanges.length > 0 && !rendersChanged && !stampChanged) {
+if (committed !== expected) {
   console.error(
-    "check-notebooks-fresh: notebook inputs changed but the rendered pages were not regenerated.\n",
+    "check-notebooks-fresh: the rendered pages were not produced from these inputs.\n",
   );
-  for (const f of sourceChanges.slice(0, 10)) console.error(`  ${f}`);
-  if (sourceChanges.length > 10) console.error(`  … and ${sourceChanges.length - 10} more`);
-  console.error("\nRe-render and commit the pages:\n  make notebooks-render");
+  console.error(`  stamp    ${committed}`);
+  console.error(`  inputs   ${expected}\n`);
+  console.error("Re-render and commit the pages:\n  make notebooks-render");
   process.exit(1);
 }
 
-console.log(
-  sourceChanges.length === 0
-    ? "check-notebooks-fresh: OK (no notebook inputs changed in this range)"
-    : "check-notebooks-fresh: OK (inputs changed and the render ran against them)",
-);
+console.log("check-notebooks-fresh: OK (the render ran against these inputs)");

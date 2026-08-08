@@ -22,9 +22,8 @@ recreated independently of the model and compared month by month.
 | Language features | a pack contract paired with a purchase price |
 | Conventions | interest-only accrual, a bullet maturity, CPR, CDR, severity, recovery lag |
 
-The bullet shape is the point: with no scheduled amortisation, weighted average
-life is driven entirely by prepayment and default, which is what makes it a
-useful check on both.
+With no scheduled amortisation, weighted average life is driven entirely by
+prepayment and default.
 
 ## The result
 

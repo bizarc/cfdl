@@ -17,13 +17,8 @@ time calendar monthly from 2026-01 for 372
 // aggregated by name prefix rather than by the relation, cannot reproduce a
 // schedule it did not produce.
 //
-// The four balances are deliberately uneven. Four equal loans would agree with
-// the pool under any aggregation that happened to divide by four.
-//
-// The loans state a balance and a coupon but not a term, because `term` is a
-// keyword and an attribute cannot be called one — `Credit.Asset.Loan` declares
-// the field and no model can set it. The term the schedule uses is the
-// contract's `term_months`, so nothing here depends on it.
+// The four balances are uneven so that the aggregation is tested: four equal
+// loans would agree with the pool under any rule that divided by four.
 
 entity asset pool : Credit.Asset.LoanPool {
   collateral_type            = "residential_mortgage"

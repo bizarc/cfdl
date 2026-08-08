@@ -45,8 +45,8 @@ it is neither vendored nor wired into the test suite.
 | Language features | options with an exercise test and a payoff; declared state read by an option guard |
 | Conventions | a preferred accruing 8% and converting one-for-one, a management rollover, laddered option strikes, dilution at exit |
 
-Two tranches are deliberately out of the money, so the case asserts a
-non-exercise as well as an exercise.
+Two tranches are out of the money, so the case asserts a non-exercise as well
+as an exercise.
 
 ## The result
 

@@ -24,8 +24,7 @@ flow, so every line is checkable year by year.
 | Conventions | restricted rents reverting to market mid-hold, per-line escalation, a replacement reserve, mortgage insurance separated from debt service |
 
 The five states carry the four operating expense lines and the reserve, each
-compounding at its own rate — the shape that `pow(1 + r, t)` gets wrong the
-moment a rate moves.
+compounding at its own rate.
 
 ## The result
 
@@ -41,6 +40,6 @@ money to whole dollars while compounding on unrounded balances. Its debt service
 coverage ratio, which the template quotes to sixteen figures, agrees to five
 decimal places and is asserted far more tightly than the money lines.
 
-One convention this case settled: the template's mortgage payment is principal,
-interest **and** mortgage insurance, but insurance is not debt service. Treating
-it as such understated the coverage ratio.
+The template's mortgage payment is principal, interest **and** mortgage
+insurance. Insurance is not debt service, and the coverage ratio is computed
+without it.

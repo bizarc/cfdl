@@ -64,9 +64,9 @@ cheque. That is what the source's own case switch does.
 
 Sizes are not stated as inputs. Each tranche is its leverage multiple times LTM
 EBITDA rounded to a $25mm increment, and the sponsor's cheque is whatever
-balances sources against uses. Base is what checks the rule — its published
-$275mm, $175mm and $100mm are what 3.0x, 2.0x and 1.0x round to — and the other
-two structures are then derived rather than transcribed.
+balances sources against uses. Base checks the rule — its published $275mm,
+$175mm and $100mm are what 3.0x, 2.0x and 1.0x round to — and the other two
+structures are derived rather than transcribed.
 
 ## The result
 
@@ -84,11 +84,10 @@ Base additionally asserts the term loan and subordinated balances period by
 period; the term loan agrees at the engine's own publication precision across
 all five years.
 
-What makes the two scenarios worth having is that **nothing between the inputs
-and the answer is anchored for them**. The operating build, the sizing rule, the
-sweep, the PIK accrual, the exit and the returns arithmetic all have to be
-right to land on a published multiple. Base anchors every intermediate line;
-these two anchor none, and they land anyway.
+For the two scenarios **nothing between the inputs and the answer is
+anchored**: the operating build, the sizing rule, the sweep, the PIK accrual,
+the exit and the returns arithmetic all have to be right to land on a published
+multiple. Base anchors every intermediate line; these two anchor none.
 
 ## The delta
 
@@ -106,13 +105,11 @@ Checked against the reference's own equation, `B = B0 + avg(B0, B) * r`:
 
 The source stopped iterating while its own equation still had a residual of
 3.7e-5, so that is what its convergence supports and the column is asserted to
-1e-4. The closed form is the more accurate of the two, which is the same finding
-a companion case reached at 2.8e-14 on a shorter hold.
+1e-4. The closed form is the more accurate of the two.
 
 One thing the case does **not** cover: the reference publishes a full 5×5 grid
 of entry and exit multiples for each structure — 150 figures. This asserts the
-8.0x / 8.0x corner of each. The rest needs one scenario per grid point, which is
-a matter of generating them rather than of anything being unresolved.
+8.0x / 8.0x corner of each; the rest needs one scenario per grid point.
 
 ## The model
 
