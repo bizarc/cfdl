@@ -35,8 +35,12 @@ property it was unable to expose.
 
 ## 1. What is actually in use
 
-29 `state` declarations across 15 models, plus 21 pack lowering rules that emit
-one. They fall into three groups, and the groups want different answers.
+**42 `state` declarations across 19 models** as of the tax-equity flip case, up
+from 29 across 15 when this was written, plus 21 pack lowering rules that emit
+one. The count has grown because the waterfall fixtures and the flip case all
+reach for `state`, which is the argument for this work rather than against it.
+
+They fall into three groups, and the groups want different answers.
 
 **A. A balance that belongs to a thing** — 11 declarations.
 
@@ -87,8 +91,16 @@ Reading, from anywhere:
 | accessor | meaning |
 |---|---|
 | `asset.tlb.balance` | this period's value, at period close |
+| `entity.asset.tlb.balance` | the same read, spelled the long way |
 | `prev asset.tlb.balance` | the prior period's — retiring every `_open` state |
 | `entity.state.balance` | the owning entity's, inside its own stream |
+
+**The bare form resolves** — shipped ahead of the rest of stage 3. An entity's
+properties are bound under its family, so `asset.tlb.balance` and
+`entity.asset.tlb.balance` name the same read and only a declared family is
+aliased. This repo's own documentation taught the bare form in every waterfall
+example before it worked, which is a reasonable signal about which spelling is
+the natural one.
 
 ## 3. Why this is better than what it replaces
 
@@ -109,25 +121,32 @@ the pot comes from. `from state.available_funds` says a variable exists.
 ## 4. Sequence
 
 1. ~~Attribute binding~~ — **shipped**.
-2. **`prev` on an entity property.** Removes group B outright: four states, no
-   model rewrites beyond deleting them.
+2. ~~The bare accessor~~ — **shipped**. `asset.tlb.balance` resolves as an alias
+   for `entity.asset.tlb.balance`.
 3. **Recurrence on an entity property** — `init`/`next` in an entity block.
    Parser, IR, engine. The engine already evaluates recurrences; this changes
    where it reads them from, not how it solves them.
-4. **Migrate group A** — 11 declarations across 6 models. Each is a rename plus
+4. **`prev` on an entity property.** Removes group B outright: four states, no
+   model rewrites beyond deleting them.
+
+   **This cannot precede the recurrence**, which the first version of this plan
+   had backwards. `prev asset.tlb.balance` requires the property to be a
+   recurrence, so the cheap stage depends on the expensive one and there is no
+   small opener to this work.
+5. **Migrate group A** — 11 declarations across 6 models. Each is a rename plus
    an owner. Benchmarks are the proof: identical numbers or the migration is
    wrong, the same bar the `legal` retirement met.
-5. **Pack lowering emits entity properties** rather than model states. 21 rules,
+6. **Pack lowering emits entity properties** rather than model states. 21 rules,
    and it changes the pack interface, so the pack interface spec and its
    conformance check move with it.
-6. **Migrate group C onto references** (§5) — curves where the values are
+7. **Migrate group C onto references** (§5) — curves where the values are
    known, a reference property with a recurrence where they compound.
-7. **Retire `state`** — reject it, migrate the remaining fixtures, and update
+8. **Retire `state`** — reject it, migrate the remaining fixtures, and update
    the language guide, the object-model page, the specification, the grammar and
    `docs/14`.
 
-Stages 2–4 are independently landable and each keeps the suite green. Stage 5 is
-the one that touches the pack contract, and stage 7 is the breaking change.
+Stages 3–5 are independently landable and each keeps the suite green. Stage 6 is
+the one that touches the pack contract, and stage 8 is the breaking change.
 
 ## 5. Group C is the reference family
 

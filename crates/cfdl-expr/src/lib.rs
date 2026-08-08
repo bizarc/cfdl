@@ -276,23 +276,41 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         if root == "remaining" && parts.next().is_none() {
             return self.env.remaining.as_ref().and_then(domain_to_calc);
         }
-        let map = match root {
-            "paid" => &self.env.paid,
-            "owed" => &self.env.owed,
-            "model" => &self.env.model,
-            "time" => &self.env.time,
-            "entity" => &self.env.entity,
-            "cfg" => &self.env.cfg,
-            "obs" => &self.env.obs,
-            "inputs" => &self.env.inputs,
-            _ => return None,
+        // `asset.tlb.balance` IS `entity.asset.tlb.balance`.
+        //
+        // An entity's properties are bound under its family, so both spellings
+        // name the same read. The bare one is what the object model already
+        // says out loud — an asset has a balance — and it is what everyone
+        // writing a waterfall reached for first, including this project's own
+        // documentation. Supporting it removes the difference rather than
+        // teaching it.
+        //
+        // Only a declared family is aliased, and only when that family is
+        // actually bound, so no other root changes meaning.
+        let family_alias = matches!(root, "asset" | "party" | "contract" | "reference")
+            && matches!(self.env.entity.get(root), Some(Value::Map(_)));
+
+        let (map, first) = if family_alias {
+            (&self.env.entity, root)
+        } else {
+            let m = match root {
+                "paid" => &self.env.paid,
+                "owed" => &self.env.owed,
+                "model" => &self.env.model,
+                "time" => &self.env.time,
+                "entity" => &self.env.entity,
+                "cfg" => &self.env.cfg,
+                "obs" => &self.env.obs,
+                "inputs" => &self.env.inputs,
+                _ => return None,
+            };
+            (m, parts.next()?)
         };
         // The `entity` root is open-world: entity state fields may not exist
         // until an event sets them, and expressions like
         // `entity.status != \"refinanced\"` must evaluate (to null) before
         // that. Other roots stay strict so typos are hard errors.
-        let open_world = root == "entity";
-        let first = parts.next()?;
+        let open_world = root == "entity" || family_alias;
         let Some(mut current) = map.get(first) else {
             return open_world.then_some(cfdl_calc::Value::Null);
         };

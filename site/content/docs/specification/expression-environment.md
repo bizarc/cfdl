@@ -72,7 +72,8 @@ The host (compiler or engine) provides values under these roots:
 |---|---|
 | `model` | `model.id`, `model.base_currency` |
 | `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period` |
-| `entity` | attributes of the stream's owning entity |
+| `entity` | attributes of the stream's owning entity, and every entity's properties under its family — `entity.asset.tlb.balance` |
+| `asset`, `party`, `contract`, `reference` | an entity's properties, spelled bare: `asset.tlb.balance` is the same read as `entity.asset.tlb.balance` |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
 | `inputs` | assumption values (`assume` statements) |
