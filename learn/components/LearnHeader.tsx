@@ -3,10 +3,16 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Badge } from "@/components/ds/Badge";
 import { Button } from "@/components/ds/Button";
+import { firstChapter } from "@/lib/chapters";
 
-const NAV = [{ href: "/#curriculum", label: "Curriculum" }];
+const NAV = [
+  { href: "/#curriculum", label: "Curriculum" },
+  { href: "/#course-kit", label: "Course kit" },
+];
 
 export function LearnHeader() {
+  const start = firstChapter();
+
   return (
     <header className="sticky top-0 z-[100] border-b border-subtle bg-surface-page/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
@@ -28,11 +34,19 @@ export function LearnHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button asChild size="sm" variant="secondary" className="hidden sm:inline-flex">
-            <a href="https://cfdl.dev" target="_blank" rel="noreferrer">
-              cfdl.dev
-            </a>
-          </Button>
+          <a
+            href="https://cfdl.dev"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden rounded-md px-3 py-1.5 text-sm text-secondary transition-colors hover:bg-surface-sunken hover:text-primary sm:inline-flex"
+          >
+            cfdl.dev
+          </a>
+          {start && (
+            <Button asChild size="sm">
+              <Link href={start.slug}>Start</Link>
+            </Button>
+          )}
           <ThemeToggle />
         </div>
       </div>
