@@ -1,0 +1,23 @@
+version 0.1
+model "unknown-field-read"
+time calendar annual from 2026-01 for 3
+
+// A MISSPELLED FIELD IS A TYPO, NOT AN ABSENCE.
+//
+// Field paths resolve through the `entity` root, which is open-world by design:
+// a lifecycle status may not exist until an event writes it, so a guard reading
+// one has to evaluate before that happens.
+//
+// Declared fields are not like that. The model states them, so the compiler
+// knows them, and a name that is not among them is a mistake. Left open-world
+// it reads as null — and null in arithmetic becomes zero, which is a wrong
+// number with nothing to see.
+
+entity asset tlb : Asset.Financial {
+  balance init 275.0 next max(0.0, prev - 25.0)
+}
+
+stream credit.repay on entity asset.tlb outflow currency USD {
+  schedule every year from 2027-01 to 2028-01
+  amount = asset.tlb.blance
+}
