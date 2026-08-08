@@ -171,6 +171,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
+      "category": "operating.collection.interest",
       "schedule": {
         "kind": "Every",
         "every": "annual",
@@ -190,7 +191,7 @@
         "source_span": {
           "start_line": 38,
           "start_col": 1,
-          "end_line": 41,
+          "end_line": 42,
           "end_col": 1
         }
       }

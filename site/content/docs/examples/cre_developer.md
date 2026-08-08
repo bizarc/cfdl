@@ -54,15 +54,21 @@ contract cre.lease {
   }
 }
 
-// Ops as standalone streams (individual revenue/expense items per guidance)
-stream real_estate.ops_revenue on entity asset.property inflow currency USD {
-  schedule every month from 2028-01 to 2031-12
-  amount = 30000
+// Ops income and expense as pack contracts, so the pack classifies them and
+// the operating statement can claim them. Hand-written streams carry no
+// category, and a statement folds categories rather than stream names.
+contract cre.ops_revenue {
+  term 2028-01..2031-12
+  terms {
+    amount = 30000
+  }
 }
 
-stream real_estate.ops_expense on entity asset.property outflow currency USD {
-  schedule every month from 2028-01 to 2031-12
-  amount = 12000
+contract cre.ops_expense {
+  term 2028-01..2031-12
+  terms {
+    amount = 12000
+  }
 }
 
 contract cre.exit_cap {

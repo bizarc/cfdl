@@ -29,11 +29,13 @@ entity party lender : Party { name = "Term lender" }
 
 stream credit.repayment on entity asset.tlb outflow currency USD {
   schedule every year from 2026-01 to 2029-01
+  category operating.collection.principal
   amount = 25.0
 }
 
 // The stream reads the field by name, and gets the period's computed value.
 stream credit.balance_probe on entity asset.tlb inflow currency USD {
   schedule every year from 2026-01 to 2029-01
+  category operating.collection.principal
   amount = asset.tlb.balance
 }

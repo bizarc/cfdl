@@ -32,14 +32,20 @@ time calendar monthly from 2026-01 for 72
 
 entity asset business : OpCo.Asset.Enterprise
 
-// Revenue and opex as standalone streams (individual items per guidance). Growth via expressions.
+// Growth stated as an expression rather than an opco.revenue_line contract,
+// because the pack's growth term is an ANNUAL rate converted to the model's
+// grain, and this line compounds per period. A hand-written stream carries no
+// category, so each states its own — a statement folds categories, and cash in
+// no category is cash no row can claim.
 stream operating.revenue on entity asset.business inflow currency USD {
   schedule every month from 2026-01 to 2031-12
+  category operating.revenue.recurring
   amount = 120000 * pow(1.03, time.t - 1)
 }
 
 stream operating.opex on entity asset.business outflow currency USD {
   schedule every month from 2026-01 to 2031-12
+  category operating.expense.opex
   amount = 70000
 }
 

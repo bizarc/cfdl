@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "39f34fe34433d84a701785288f0c8c665227d98f3b8e451b31ccdf8460ba17f4",
+  "model_hash": "ab5283eeb124b3a6d548b0322d35f471ed7a9cfb3077337e1ed1870a28ec7a0c",
   "ledger_hash": "5311fa85f933ce5ce81c6ae79b70ec8dfe2824254181e17167f759c4c9f1a9f6",
   "engine": {
     "name": "cfdl-engine",
@@ -75,15 +75,15 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.7,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.1,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -4.5,
             "currency": "USD"
           }
         ]
@@ -100,15 +100,15 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.7,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.1,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -4.5,
             "currency": "USD"
           }
         ]
@@ -263,15 +263,15 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.7,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -5.1,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -4.5,
             "currency": "USD"
           }
         ]

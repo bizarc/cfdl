@@ -37,5 +37,6 @@ entity party lender : Party { name = "Lender" }
 // convention that needed two states before, and needs one field now.
 stream credit.interest on entity asset.senior outflow currency USD {
   schedule every year from 2027-01 to 2029-01
+  category operating.collection.interest
   amount = (asset.junior.opening + asset.senior.balance) / 2.0 * 0.06
 }
