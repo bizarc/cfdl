@@ -151,13 +151,22 @@ the pot comes from. `from state.available_funds` says a variable exists.
 3. **Recurrence on an entity property** — `init`/`next` in an entity block.
    Parser, IR, engine. The engine already evaluates recurrences; this changes
    where it reads them from, not how it solves them.
-4. **`prev` on an entity property.** Removes group B outright: four states, no
-   model rewrites beyond deleting them.
+4. ~~`prev` on a field~~ — **shipped**, as `prev.asset.tlb.balance`.
 
-   **This cannot precede the recurrence**, which the first version of this plan
-   had backwards. `prev asset.tlb.balance` requires the property to be a
-   recurrence, so the cheap stage depends on the expensive one and there is no
-   small opener to this work.
+   NOT the `prev <path>` prefix this document first proposed. `prev` is an
+   ordinary identifier, so a prefix form is two operands side by side — which
+   is exactly where an expression ends, once the boundary is derived from the
+   grammar rather than a stop list. The dotted form reuses the `prev.<name>`
+   namespace a state already has, and needs no parser change at all.
+
+   This is what removes group B. The four `_open` states are not quantities;
+   they are a missing accessor wearing a name, and average-balance interest is
+   the convention that forced them. `fixtures/valid/prev_on_a_field` computes
+   it with one field and no duplicate.
+
+   It could not precede the recurrence, which the first version of this plan
+   had backwards: reading a field one period back requires the field to be a
+   recurrence first.
 5. **Migrate group A** — 11 declarations across 6 models. Each is a rename plus
    an owner. Benchmarks are the proof: identical numbers or the migration is
    wrong, the same bar the `legal` retirement met.
