@@ -26,31 +26,44 @@ time calendar monthly from 2017-02 for 6
 //   top an account to a level    = <level> - <balance>
 //   everything that survives     = remaining
 
-entity asset trust   : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 1000000 }
-entity asset class_a : Credit.Asset.Tranche  { seniority = 1  original_balance = 700000 }
-entity asset class_b : Credit.Asset.Tranche  { seniority = 2  original_balance = 120000 }
-entity asset class_c : Credit.Asset.Tranche  { seniority = 3  original_balance =  90000 }
-entity asset class_d : Credit.Asset.Tranche  { seniority = 4  original_balance =  60000 }
-entity asset class_e : Credit.Asset.Tranche  { seniority = 5  original_balance =  30000 }
-entity asset reserve : Credit.Asset.Tranche  { seniority = 9  original_balance =  20000 }
+// THE DEAL'S OWN CAPITAL STRUCTURE, as the prospectus publishes it. The class
+// sizes, coupons and final scheduled distribution dates are the transaction's;
+// the pool and collection figures below are not, and are marked where they
+// appear.
+entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280 }
+entity asset class_a1 : Credit.Asset.Tranche  { seniority = 1  original_balance = 182000000 }
+entity asset class_a2a: Credit.Asset.Tranche  { seniority = 2  original_balance = 230000000 }
+entity asset class_a2b: Credit.Asset.Tranche  { seniority = 2  original_balance =  75000000 }
+entity asset class_a3 : Credit.Asset.Tranche  { seniority = 3  original_balance = 189000000 }
+entity asset class_b  : Credit.Asset.Tranche  { seniority = 4  original_balance =  73370000 }
+entity asset class_c  : Credit.Asset.Tranche  { seniority = 5  original_balance =  91080000 }
+entity asset class_d  : Credit.Asset.Tranche  { seniority = 6  original_balance =  89550000 }
+// The Class E Notes exist in the indenture and are retained by the depositor,
+// so the prospectus states no size for them. Zero here, and steps 15-17 still
+// appear: a step that pays nothing is a step the deal has.
+entity asset class_e  : Credit.Asset.Tranche  { seniority = 7  original_balance =         0 }
+entity asset reserve  : Credit.Asset.Tranche  { seniority = 9  original_balance =  19684866 }
 
 entity party servicer    : Credit.Party.Servicer { name = "Servicer" }
 entity party trustee     : Credit.Party.Issuer   { name = "Trustee" }
 entity party sponsor     : Credit.Party.Issuer   { name = "Sponsor" }
 entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
 
-// Available funds, the pool balance it is measured against, and the reserve's
-// specified level. Declared here because the collateral engine is a separate
-// concern from the waterfall this fixture exists to exercise.
-state available_funds  { init 95000.0  next prev * 0.97 }
-state pool_balance     { init 960000.0 next prev * 0.96 }
-state reserve_balance  { init 18000.0  next prev }
+// ILLUSTRATIVE, NOT THE DEAL'S. Available funds, the pool balance and the
+// reserve balance are inputs a collateral engine would produce, and the
+// prospectus publishes no period-by-period schedule for them. They are stated
+// here so the waterfall has something to allocate; the capital structure above
+// is the transaction's own.
+state available_funds  { init 12500000.0 next prev * 0.97 }
+state pool_balance     { init 960000000.0 next prev * 0.96 }
+state reserve_balance  { init 18000000.0 next prev }
 
-assume servicing_fee   = 1875.0        // 2.25% / 12 on the pool
-assume trustee_fee     = 900.0
-assume trustee_cap     = 750.0         // the stated annual limit, per period
-assume specified_reserve = 20000.0
-assume oc_target       = 940000.0
+assume servicing_fee   = 1845456.0     // 2.25%/12 on the pool
+assume trustee_fee     = 90000.0
+assume trustee_cap     = 75000.0       // the stated annual limit, per period
+assume specified_reserve   = 19684866.0
+assume principal_distributable = 2500000.0
+assume oc_target       = 940000000.0
 
 waterfall abs.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2017-07
@@ -60,79 +73,121 @@ waterfall abs.distribution on entity asset.trust {
   pay servicing_fee     to party.servicer  = inputs.servicing_fee
   pay sponsor_amounts   to party.sponsor   = 0.0
 
-  //  2. trustee and related parties, subject to a stated cap. Step 21 pays
-  //     whatever the cap held back, which is `owed - paid` and nothing else.
+  //  2. trustee, owner trustee, collateral agent and asset representations
+  //     reviewer, subject to a stated annual limit. Step 21 pays whatever the
+  //     cap held back, which is `owed - paid` and nothing else.
   pay trustee_fees      to party.trustee   = min(inputs.trustee_fee, inputs.trustee_cap)
 
-  //  3-5. Class A: interest, then principal down to the pool balance, then
-  //       the remaining balance at its final scheduled distribution date.
-  pay class_a_interest  to asset.class_a   = 1458.0
-  pay class_a_target    to asset.class_a   = entity.asset.class_a.original_balance
-                                             - state.pool_balance
-  pay class_a_final     to asset.class_a   = if(time.t >= 5,
-                                                entity.asset.class_a.original_balance, 0.0)
+  //  3. interest due on the Class A Notes — all four subclasses together, at
+  //     the published coupons: A-1 0.92%, A-2-A 1.51%, A-2-B one-month LIBOR
+  //     + 0.30%, A-3 1.87%.
+  pay class_a_interest  to asset.class_a1  = 790350.0
 
-  //  6-8. Class B, measured on the COMBINED A+B balance after the payments
-  //       clauses 4 and 5 made — `paid.` is what "after giving effect to"
-  //       means, and it needs no mutable state.
-  pay class_b_interest  to asset.class_b   = 300.0
-  pay class_b_target    to asset.class_b   = entity.asset.class_a.original_balance
+  //  4. principal to reduce the Class A balance to the pool balance
+  pay class_a_target    to asset.class_a1  = entity.asset.class_a1.original_balance
+                                             + entity.asset.class_a2a.original_balance
+                                             + entity.asset.class_a2b.original_balance
+                                             + entity.asset.class_a3.original_balance
+                                             - state.pool_balance
+
+  //  5. the remaining Class A balance at its final scheduled distribution date
+  pay class_a_final     to asset.class_a1  = if(time.t >= 5,
+                                                entity.asset.class_a1.original_balance, 0.0)
+
+  //  6. interest due on the Class B Notes, 2.30%
+  pay class_b_interest  to asset.class_b   = 140625.83
+
+  //  7. principal to reduce the COMBINED A+B balance to the pool balance,
+  //     after giving effect to clauses 4 and 5 — which is what `paid.` reads.
+  pay class_b_target    to asset.class_b   = entity.asset.class_a1.original_balance
+                                             + entity.asset.class_a2a.original_balance
+                                             + entity.asset.class_a2b.original_balance
+                                             + entity.asset.class_a3.original_balance
                                              + entity.asset.class_b.original_balance
-                                             - paid.class_a_target - paid.class_a_final
+                                             - paid.class_a_target
+                                             - paid.class_a_final
                                              - state.pool_balance
-  pay class_b_final     to asset.class_b   = if(time.t >= 5,
-                                                entity.asset.class_b.original_balance, 0.0)
 
-  //  9-11. Class C
-  pay class_c_interest  to asset.class_c   = 262.0
-  pay class_c_target    to asset.class_c   = entity.asset.class_a.original_balance
+  //  8. the remaining Class B balance at its final scheduled date
+  pay class_b_final     to asset.class_b   = if(time.t >= 5, entity.asset.class_b.original_balance, 0.0)
+
+  //  9. interest due on the Class C Notes, 2.71%
+  pay class_c_interest  to asset.class_c   = 205689.0
+
+  // 10. principal, after clauses 4, 5, 7 and 8
+  pay class_c_target    to asset.class_c   = entity.asset.class_a1.original_balance
+                                             + entity.asset.class_a2a.original_balance
+                                             + entity.asset.class_a2b.original_balance
+                                             + entity.asset.class_a3.original_balance
                                              + entity.asset.class_b.original_balance
                                              + entity.asset.class_c.original_balance
-                                             - paid.class_a_target - paid.class_a_final
-                                             - paid.class_b_target - paid.class_b_final
+                                             - paid.class_a_target
+                                             - paid.class_a_final
+                                             - paid.class_b_target
+                                             - paid.class_b_final
                                              - state.pool_balance
-  pay class_c_final     to asset.class_c   = if(time.t >= 5,
-                                                entity.asset.class_c.original_balance, 0.0)
 
-  // 12-14. Class D
-  pay class_d_interest  to asset.class_d   = 210.0
-  pay class_d_target    to asset.class_d   = entity.asset.class_a.original_balance
+  // 11. the remaining Class C balance at its final scheduled date
+  pay class_c_final     to asset.class_c   = if(time.t >= 5, entity.asset.class_c.original_balance, 0.0)
+
+  // 12. interest due on the Class D Notes, 3.13%
+  pay class_d_interest  to asset.class_d   = 233576.25
+
+  // 13. principal, after clauses 4, 5, 7, 8, 10 and 11
+  pay class_d_target    to asset.class_d   = entity.asset.class_a1.original_balance
+                                             + entity.asset.class_a2a.original_balance
+                                             + entity.asset.class_a2b.original_balance
+                                             + entity.asset.class_a3.original_balance
                                              + entity.asset.class_b.original_balance
                                              + entity.asset.class_c.original_balance
                                              + entity.asset.class_d.original_balance
-                                             - paid.class_a_target - paid.class_a_final
-                                             - paid.class_b_target - paid.class_b_final
-                                             - paid.class_c_target - paid.class_c_final
+                                             - paid.class_a_target
+                                             - paid.class_a_final
+                                             - paid.class_b_target
+                                             - paid.class_b_final
+                                             - paid.class_c_target
+                                             - paid.class_c_final
                                              - state.pool_balance
-  pay class_d_final     to asset.class_d   = if(time.t >= 5,
-                                                entity.asset.class_d.original_balance, 0.0)
 
-  // 15-17. Class E — interest "if any", so the same form with a zero coupon
-  //        would read identically.
-  pay class_e_interest  to asset.class_e   = 120.0
-  pay class_e_target    to asset.class_e   = entity.asset.class_a.original_balance
+  // 14. the remaining Class D balance at its final scheduled date
+  pay class_d_final     to asset.class_d   = if(time.t >= 5, entity.asset.class_d.original_balance, 0.0)
+
+  // 15. interest due, IF ANY, on the Class E Notes. Retained and sized at
+  //     zero here, so the step pays nothing and still exists.
+  pay class_e_interest  to asset.class_e   = 0.0
+
+  // 16. principal, after clauses 4, 5, 7, 8, 10, 11, 13 and 14
+  pay class_e_target    to asset.class_e   = entity.asset.class_a1.original_balance
+                                             + entity.asset.class_a2a.original_balance
+                                             + entity.asset.class_a2b.original_balance
+                                             + entity.asset.class_a3.original_balance
                                              + entity.asset.class_b.original_balance
                                              + entity.asset.class_c.original_balance
                                              + entity.asset.class_d.original_balance
                                              + entity.asset.class_e.original_balance
-                                             - paid.class_a_target - paid.class_a_final
-                                             - paid.class_b_target - paid.class_b_final
-                                             - paid.class_c_target - paid.class_c_final
-                                             - paid.class_d_target - paid.class_d_final
+                                             - paid.class_a_target
+                                             - paid.class_a_final
+                                             - paid.class_b_target
+                                             - paid.class_b_final
+                                             - paid.class_c_target
+                                             - paid.class_c_final
+                                             - paid.class_d_target
+                                             - paid.class_d_final
                                              - state.pool_balance
-  pay class_e_final     to asset.class_e   = if(time.t >= 5,
-                                                entity.asset.class_e.original_balance, 0.0)
+
+  // 17. the remaining Class E balance at its final scheduled date
+  pay class_e_final     to asset.class_e   = if(time.t >= 5, entity.asset.class_e.original_balance, 0.0)
 
   // 18. the Noteholders' Principal Distributable Amount
-  pay principal_distributable to asset.class_a = 2500.0
+  pay principal_distributable to asset.class_a1 = inputs.principal_distributable
 
   // 19. the reserve account, up to its specified amount
   pay reserve_topup     to asset.reserve   = inputs.specified_reserve - state.reserve_balance
 
   // 20. principal to achieve the specified overcollateralisation
-  pay oc_build          to asset.class_a   = state.pool_balance - inputs.oc_target
+  pay oc_build          to asset.class_a1  = state.pool_balance - inputs.oc_target
 
-  // 21. trustee amounts in excess of the cap that held them back at step 2
+  // 21. trustee amounts in excess of the cap that held them at step 2
   pay trustee_excess    to party.trustee   = owed.trustee_fees - paid.trustee_fees
 
   // 22. everything that survives

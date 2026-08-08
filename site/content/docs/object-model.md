@@ -174,6 +174,26 @@ The exercise condition reads the same environment an event condition does,
 including entity state, so an option can be conditioned on where an asset is in
 its lifecycle.
 
+## Waterfalls pay entities
+
+A priority of payments shares a pot out in order, and every step names who is
+paid — a party, or an asset such as a note class.
+
+```cfdl
+waterfall deal.distribution on entity asset.trust {
+  schedule every month from 2026-01 to 2030-12
+  from asset.trust.available_funds
+
+  pay servicing to party.servicer    = 12500.0
+  pay senior    to asset.class_a     = 6250.0
+  pay residual  to party.certificate = remaining
+}
+```
+
+Each step's cash counts toward its payee's total, so a waterfall is how money
+reaches the parties and tranches an ontology already names. See
+[Waterfalls](/docs/guides/waterfalls).
+
 ## Quantities can carry units
 
 A number in a contract's terms can state what it measures.

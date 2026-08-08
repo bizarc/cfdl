@@ -12,12 +12,42 @@
   "phases": [],
   "entities": [
     {
-      "id": "8f7ed51a636049b9e523fd88689e602f",
-      "symbol": "asset.class_a",
+      "id": "3bb604f0e40853afaf2c51b661025356",
+      "symbol": "asset.class_a1",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "700000",
+        "original_balance": "182000000",
         "seniority": "1"
+      },
+      "state": {}
+    },
+    {
+      "id": "eaff540174b4ef476567b0b93be819f9",
+      "symbol": "asset.class_a2a",
+      "type": "Credit.Asset.Tranche",
+      "attrs": {
+        "original_balance": "230000000",
+        "seniority": "2"
+      },
+      "state": {}
+    },
+    {
+      "id": "db0b66e648519ea64cbf591466ad5556",
+      "symbol": "asset.class_a2b",
+      "type": "Credit.Asset.Tranche",
+      "attrs": {
+        "original_balance": "75000000",
+        "seniority": "2"
+      },
+      "state": {}
+    },
+    {
+      "id": "67b9301520ced7866aa78c5537ec48be",
+      "symbol": "asset.class_a3",
+      "type": "Credit.Asset.Tranche",
+      "attrs": {
+        "original_balance": "189000000",
+        "seniority": "3"
       },
       "state": {}
     },
@@ -26,8 +56,8 @@
       "symbol": "asset.class_b",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "120000",
-        "seniority": "2"
+        "original_balance": "73370000",
+        "seniority": "4"
       },
       "state": {}
     },
@@ -36,8 +66,8 @@
       "symbol": "asset.class_c",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "90000",
-        "seniority": "3"
+        "original_balance": "91080000",
+        "seniority": "5"
       },
       "state": {}
     },
@@ -46,8 +76,8 @@
       "symbol": "asset.class_d",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "60000",
-        "seniority": "4"
+        "original_balance": "89550000",
+        "seniority": "6"
       },
       "state": {}
     },
@@ -56,8 +86,8 @@
       "symbol": "asset.class_e",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "30000",
-        "seniority": "5"
+        "original_balance": "0",
+        "seniority": "7"
       },
       "state": {}
     },
@@ -66,7 +96,7 @@
       "symbol": "asset.reserve",
       "type": "Credit.Asset.Tranche",
       "attrs": {
-        "original_balance": "20000",
+        "original_balance": "19684866",
         "seniority": "9"
       },
       "state": {}
@@ -77,7 +107,7 @@
       "type": "Credit.Asset.LoanPool",
       "attrs": {
         "collateral_type": "auto",
-        "original_balance": "1000000"
+        "original_balance": "984243280"
       },
       "state": {}
     },
@@ -123,15 +153,23 @@
       "oc_target": {
         "expr": {
           "lang": "cfdl",
-          "src": "940000.0"
+          "src": "940000000.0"
         },
         "name": "oc_target",
+        "type": "Decimal"
+      },
+      "principal_distributable": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "2500000.0"
+        },
+        "name": "principal_distributable",
         "type": "Decimal"
       },
       "servicing_fee": {
         "expr": {
           "lang": "cfdl",
-          "src": "1875.0"
+          "src": "1845456.0"
         },
         "name": "servicing_fee",
         "type": "Decimal"
@@ -139,7 +177,7 @@
       "specified_reserve": {
         "expr": {
           "lang": "cfdl",
-          "src": "20000.0"
+          "src": "19684866.0"
         },
         "name": "specified_reserve",
         "type": "Decimal"
@@ -147,7 +185,7 @@
       "trustee_cap": {
         "expr": {
           "lang": "cfdl",
-          "src": "750.0"
+          "src": "75000.0"
         },
         "name": "trustee_cap",
         "type": "Decimal"
@@ -155,7 +193,7 @@
       "trustee_fee": {
         "expr": {
           "lang": "cfdl",
-          "src": "900.0"
+          "src": "90000.0"
         },
         "name": "trustee_fee",
         "type": "Decimal"
@@ -168,7 +206,7 @@
       "name": "available_funds",
       "init": {
         "lang": "cfdl",
-        "src": "95000.0"
+        "src": "12500000.0"
       },
       "next": {
         "lang": "cfdl",
@@ -179,7 +217,7 @@
       "name": "pool_balance",
       "init": {
         "lang": "cfdl",
-        "src": "960000.0"
+        "src": "960000000.0"
       },
       "next": {
         "lang": "cfdl",
@@ -190,7 +228,7 @@
       "name": "reserve_balance",
       "init": {
         "lang": "cfdl",
-        "src": "18000.0"
+        "src": "18000000.0"
       },
       "next": {
         "lang": "cfdl",
@@ -239,26 +277,26 @@
         },
         {
           "name": "class_a_interest",
-          "payee": "asset.class_a",
+          "payee": "asset.class_a1",
           "amount": {
             "lang": "cfdl",
-            "src": "1458.0"
+            "src": "790350.0"
           }
         },
         {
           "name": "class_a_target",
-          "payee": "asset.class_a",
+          "payee": "asset.class_a1",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance                                              - state.pool_balance"
+            "src": "entity.asset.class_a1.original_balance                                              + entity.asset.class_a2a.original_balance                                              + entity.asset.class_a2b.original_balance                                              + entity.asset.class_a3.original_balance                                              - state.pool_balance"
           }
         },
         {
           "name": "class_a_final",
-          "payee": "asset.class_a",
+          "payee": "asset.class_a1",
           "amount": {
             "lang": "cfdl",
-            "src": "if(time.t >= 5.0,                                                 entity.asset.class_a.original_balance, 0.0)"
+            "src": "if(time.t >= 5.0,                                                 entity.asset.class_a1.original_balance, 0.0)"
           }
         },
         {
@@ -266,7 +304,7 @@
           "payee": "asset.class_b",
           "amount": {
             "lang": "cfdl",
-            "src": "300.0"
+            "src": "140625.83"
           }
         },
         {
@@ -274,7 +312,7 @@
           "payee": "asset.class_b",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance                                              + entity.asset.class_b.original_balance                                              - paid.class_a_target - paid.class_a_final                                              - state.pool_balance"
+            "src": "entity.asset.class_a1.original_balance                                              + entity.asset.class_a2a.original_balance                                              + entity.asset.class_a2b.original_balance                                              + entity.asset.class_a3.original_balance                                              + entity.asset.class_b.original_balance                                              - paid.class_a_target                                              - paid.class_a_final                                              - state.pool_balance"
           }
         },
         {
@@ -282,7 +320,7 @@
           "payee": "asset.class_b",
           "amount": {
             "lang": "cfdl",
-            "src": "if(time.t >= 5.0,                                                 entity.asset.class_b.original_balance, 0.0)"
+            "src": "if(time.t >= 5.0, entity.asset.class_b.original_balance, 0.0)"
           }
         },
         {
@@ -290,7 +328,7 @@
           "payee": "asset.class_c",
           "amount": {
             "lang": "cfdl",
-            "src": "262.0"
+            "src": "205689.0"
           }
         },
         {
@@ -298,7 +336,7 @@
           "payee": "asset.class_c",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              - paid.class_a_target - paid.class_a_final                                              - paid.class_b_target - paid.class_b_final                                              - state.pool_balance"
+            "src": "entity.asset.class_a1.original_balance                                              + entity.asset.class_a2a.original_balance                                              + entity.asset.class_a2b.original_balance                                              + entity.asset.class_a3.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              - paid.class_a_target                                              - paid.class_a_final                                              - paid.class_b_target                                              - paid.class_b_final                                              - state.pool_balance"
           }
         },
         {
@@ -306,7 +344,7 @@
           "payee": "asset.class_c",
           "amount": {
             "lang": "cfdl",
-            "src": "if(time.t >= 5.0,                                                 entity.asset.class_c.original_balance, 0.0)"
+            "src": "if(time.t >= 5.0, entity.asset.class_c.original_balance, 0.0)"
           }
         },
         {
@@ -314,7 +352,7 @@
           "payee": "asset.class_d",
           "amount": {
             "lang": "cfdl",
-            "src": "210.0"
+            "src": "233576.25"
           }
         },
         {
@@ -322,7 +360,7 @@
           "payee": "asset.class_d",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              + entity.asset.class_d.original_balance                                              - paid.class_a_target - paid.class_a_final                                              - paid.class_b_target - paid.class_b_final                                              - paid.class_c_target - paid.class_c_final                                              - state.pool_balance"
+            "src": "entity.asset.class_a1.original_balance                                              + entity.asset.class_a2a.original_balance                                              + entity.asset.class_a2b.original_balance                                              + entity.asset.class_a3.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              + entity.asset.class_d.original_balance                                              - paid.class_a_target                                              - paid.class_a_final                                              - paid.class_b_target                                              - paid.class_b_final                                              - paid.class_c_target                                              - paid.class_c_final                                              - state.pool_balance"
           }
         },
         {
@@ -330,7 +368,7 @@
           "payee": "asset.class_d",
           "amount": {
             "lang": "cfdl",
-            "src": "if(time.t >= 5.0,                                                 entity.asset.class_d.original_balance, 0.0)"
+            "src": "if(time.t >= 5.0, entity.asset.class_d.original_balance, 0.0)"
           }
         },
         {
@@ -338,7 +376,7 @@
           "payee": "asset.class_e",
           "amount": {
             "lang": "cfdl",
-            "src": "120.0"
+            "src": "0.0"
           }
         },
         {
@@ -346,7 +384,7 @@
           "payee": "asset.class_e",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              + entity.asset.class_d.original_balance                                              + entity.asset.class_e.original_balance                                              - paid.class_a_target - paid.class_a_final                                              - paid.class_b_target - paid.class_b_final                                              - paid.class_c_target - paid.class_c_final                                              - paid.class_d_target - paid.class_d_final                                              - state.pool_balance"
+            "src": "entity.asset.class_a1.original_balance                                              + entity.asset.class_a2a.original_balance                                              + entity.asset.class_a2b.original_balance                                              + entity.asset.class_a3.original_balance                                              + entity.asset.class_b.original_balance                                              + entity.asset.class_c.original_balance                                              + entity.asset.class_d.original_balance                                              + entity.asset.class_e.original_balance                                              - paid.class_a_target                                              - paid.class_a_final                                              - paid.class_b_target                                              - paid.class_b_final                                              - paid.class_c_target                                              - paid.class_c_final                                              - paid.class_d_target                                              - paid.class_d_final                                              - state.pool_balance"
           }
         },
         {
@@ -354,15 +392,15 @@
           "payee": "asset.class_e",
           "amount": {
             "lang": "cfdl",
-            "src": "if(time.t >= 5.0,                                                 entity.asset.class_e.original_balance, 0.0)"
+            "src": "if(time.t >= 5.0, entity.asset.class_e.original_balance, 0.0)"
           }
         },
         {
           "name": "principal_distributable",
-          "payee": "asset.class_a",
+          "payee": "asset.class_a1",
           "amount": {
             "lang": "cfdl",
-            "src": "2500.0"
+            "src": "inputs.principal_distributable"
           }
         },
         {
@@ -375,7 +413,7 @@
         },
         {
           "name": "oc_build",
-          "payee": "asset.class_a",
+          "payee": "asset.class_a1",
           "amount": {
             "lang": "cfdl",
             "src": "state.pool_balance - inputs.oc_target"

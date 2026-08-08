@@ -1,0 +1,127 @@
+---
+id: guide-waterfalls
+title: Waterfalls
+slug: /docs/guides/waterfalls
+generated: none
+---
+
+# Waterfalls
+
+A waterfall is a priority of payments: an ordered list of steps sharing out a
+pot of cash. Each step takes what it is owed, up to what is left, and the
+remainder passes down.
+
+It is how a securitisation pays its tranches, how a fund pays a preferred return
+before carry, and how a project pays lenders before equity.
+
+## The shape
+
+```cfdl
+waterfall deal.distribution on entity asset.trust {
+  schedule every month from 2026-01 to 2030-12
+  from asset.trust.available_funds
+
+  pay servicing to party.servicer    = 12500.0
+  pay senior    to asset.class_a     = 6250.0
+  pay residual  to party.certificate = remaining
+}
+```
+
+Three parts:
+
+- **`on entity`** — whose cash this is.
+- **`schedule`** — when it runs. The same construct a stream takes.
+- **`from`** — the pot.
+
+Then the steps, in the order they are paid.
+
+## One form for every step
+
+A step is `pay <name> to <payee> = <expr>`. There is no separate syntax per kind
+of payment, because every kind is arithmetic:
+
+| what you want | how to write it |
+|---|---|
+| a fixed amount | `= 12500.0` |
+| capped at a limit | `= min(fee, cap)` |
+| pay a balance down to a target | `= asset.class_a.balance - asset.trust.pool_balance` |
+| top an account up to a level | `= inputs.specified_reserve - asset.reserve.balance` |
+| only on a certain date | `= if(time.t >= 24, balance, 0.0)` |
+| an earlier step's shortfall | `= owed.trustee_fee - paid.trustee_fee` |
+| everything left | `= remaining` |
+
+## Three names a step can read
+
+On top of everything an ordinary expression sees:
+
+| | |
+|---|---|
+| `remaining` | what is still in the pot at this step |
+| `paid.<step>` | what an earlier step actually paid |
+| `owed.<step>` | what an earlier step would have paid, unbounded |
+
+`owed` and `paid` differ exactly when a step could not be paid in full, so their
+difference is the shortfall. That is how a capped fee gets its overflow paid
+later, and how a step measures a balance "after giving effect to" the payments
+above it.
+
+A step may only read steps **declared before it**. Reading a later one is a
+compile error, because a priority of payments is an order, not a system of
+equations.
+
+## The pot never goes negative
+
+Every step pays `min(max(0, your expression), remaining)`.
+
+You do not have to write `min(..., remaining)` yourself, and a step that asks
+for more than is left simply takes what is left. A negative expression pays
+nothing rather than clawing cash back.
+
+That also makes `= remaining` mean exactly what it says.
+
+## Say where the remainder goes
+
+At least one step must read `remaining`, or the model does not compile.
+
+Without it, whatever survives the last step would vanish with nothing to show
+for it. Naming the residual is the difference between a model that says the
+sponsor keeps the excess and one that quietly loses it.
+
+## When it runs
+
+A waterfall is a post-cash-flow distribution: it runs after the period's streams
+and states are known, so it allocates money that already exists. It never feeds
+a stream in the same period.
+
+Two shapes cover most deals, and a model can use both at once:
+
+```cfdl
+// Every period — a distribution date, a debt service cascade.
+schedule every month from 2026-01 to 2030-12
+
+// Once — an exit, a liquidation, a final recoupment.
+schedule on 2030-12
+```
+
+## What comes out
+
+Each step publishes as a series named `stream.<waterfall>.<step>`, and its cash
+counts toward the payee's total. A waterfall is not a separate kind of output:
+statements, metrics and the results document read it the way they read anything
+else.
+
+## A worked example
+
+A real 22-step consumer ABS priority of payments — servicer and trustee ahead of
+the notes, five rated classes taking interest then principal in strict
+seniority, a reserve topped to its specified level, an overcollateralisation
+target, and a certificateholder taking what survives — is encoded in full in the
+test suite as `waterfall_abs_22_step`. It uses the seven payment rules above and
+nothing else.
+
+## Related
+
+- [The object model](/docs/object-model) — assets, parties and the entities a
+  waterfall pays.
+- [Reading results](/docs/guides/reading-results) — where the per-step series
+  land.
