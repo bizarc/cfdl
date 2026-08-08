@@ -2682,6 +2682,7 @@ impl<'a> Parser<'a> {
                         | TokenKind::Keyword(Keyword::Stream)
                         | TokenKind::Keyword(Keyword::Event)
                         | TokenKind::Keyword(Keyword::Option)
+                        | TokenKind::Keyword(Keyword::Waterfall)
                         | TokenKind::Keyword(Keyword::Run) => break,
                         _ => {
                             let tok = self.bump();
@@ -3017,6 +3018,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Event)
                 | TokenKind::Keyword(Keyword::Option)
+                | TokenKind::Keyword(Keyword::Waterfall)
                 | TokenKind::Keyword(Keyword::Run)
                 | TokenKind::Keyword(Keyword::Stream) => break,
                 _ => {

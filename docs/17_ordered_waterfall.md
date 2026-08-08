@@ -437,8 +437,45 @@ to remember.
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | a step says nothing about what it pays |
 | `E1340_WATERFALL_NO_SOURCE` | no `from` — no pot to allocate |
 
+### The 22-step fixture
+
+`fixtures/valid/waterfall_abs_22_step` encodes the whole priority of payments —
+a servicer and trustee ahead of the notes, five rated classes taking interest
+then principal in strict seniority, a reserve topped to its specified level, an
+overcollateralisation target, and a certificateholder taking what survives.
+
+It runs with no warnings and allocates its pot exactly. The step that proves the
+design is Class B's target:
+
+```cfdl
+= class_a.original_balance + class_b.original_balance
+  - paid.class_a_target - paid.class_a_final
+  - state.pool_balance
+```
+
+That is the prospectus's *"after giving effect to any payments made under
+clauses 4 and 5 above"*, written as a read of what earlier steps paid. No
+mutable state, no departure from the stream model — §12's answer to question 4,
+confirmed against the real clause rather than a reduced example.
+
+### A parser hazard this found
+
+`assume x = 5` immediately before a `waterfall` swallowed the whole statement.
+An assumption's value runs until the next top-level statement keyword, and the
+parser enumerates those keywords in **three separate places** — none of which
+knows about the others, and none of which is checked against the statement
+dispatch table it is supposed to mirror.
+
+Adding a statement to this language therefore means finding three lists by
+grep. The smoke fixture hid it, because a `state { … }` block happened to sit
+before its waterfall and the closing brace stopped the expression by accident.
+
+Worth a single source of truth for "what can begin a statement", derived from
+the dispatch match. Not done here; recorded because the next construct will meet
+it again.
+
 ### Still to build
 
-Evaluation: bind the three names, run steps in order after this period's streams
-and states, lower each step to a stream. Then the 22-step fixture, and the other
-three structures §11 names.
+The other three structures §11 names: a fund carry tier, a nested split, and the
+LBO exit waterfall that exists by hand in
+`benchmarks/opco/lbo_option_pool_exit`.
