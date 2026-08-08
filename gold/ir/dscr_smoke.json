@@ -15,14 +15,14 @@
       "id": "0c38bc1e0b71ed828079ff5a9fd3475f",
       "symbol": "asset.permanent",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "1b2062afc52d6bef8969b3c2a04f3bee",
       "symbol": "asset.prop",
       "type": "Asset.Real",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

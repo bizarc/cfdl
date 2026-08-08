@@ -15,7 +15,7 @@
       "id": "3bb604f0e40853afaf2c51b661025356",
       "symbol": "asset.class_a1",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "182000000",
         "seniority": "1"
       },
@@ -25,7 +25,7 @@
       "id": "eaff540174b4ef476567b0b93be819f9",
       "symbol": "asset.class_a2a",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "230000000",
         "seniority": "2"
       },
@@ -35,7 +35,7 @@
       "id": "db0b66e648519ea64cbf591466ad5556",
       "symbol": "asset.class_a2b",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "75000000",
         "seniority": "2"
       },
@@ -45,7 +45,7 @@
       "id": "67b9301520ced7866aa78c5537ec48be",
       "symbol": "asset.class_a3",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "189000000",
         "seniority": "3"
       },
@@ -55,7 +55,7 @@
       "id": "e3f7e0827ab7be20b3c514e8cd02599a",
       "symbol": "asset.class_b",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "73370000",
         "seniority": "4"
       },
@@ -65,7 +65,7 @@
       "id": "6a3acfa2549c9d0676dcaed680a5b672",
       "symbol": "asset.class_c",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "91080000",
         "seniority": "5"
       },
@@ -75,7 +75,7 @@
       "id": "0c0047d938f53a07682b9b901dddf6ce",
       "symbol": "asset.class_d",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "89550000",
         "seniority": "6"
       },
@@ -85,7 +85,7 @@
       "id": "b686c7757e9b644555c4d973157a1dd4",
       "symbol": "asset.class_e",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "0",
         "seniority": "7"
       },
@@ -95,7 +95,7 @@
       "id": "90332f0ef9eaa7042ab143e65eac3589",
       "symbol": "asset.reserve",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "19684866",
         "seniority": "9"
       },
@@ -105,7 +105,7 @@
       "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
       "symbol": "asset.trust",
       "type": "Credit.Asset.LoanPool",
-      "attrs": {
+      "fields": {
         "collateral_type": "auto",
         "original_balance": "984243280"
       },
@@ -115,7 +115,7 @@
       "id": "f1e37ea477b1ccd964abf31bc181757a",
       "symbol": "party.certificate",
       "type": "Credit.Party.Investor",
-      "attrs": {
+      "fields": {
         "name": "Certificateholder"
       },
       "state": {}
@@ -124,7 +124,7 @@
       "id": "94cdfa4da6d76077f56054f830c54133",
       "symbol": "party.servicer",
       "type": "Credit.Party.Servicer",
-      "attrs": {
+      "fields": {
         "name": "Servicer"
       },
       "state": {}
@@ -133,7 +133,7 @@
       "id": "72e452633fe42edda17ac15a4baa3895",
       "symbol": "party.sponsor",
       "type": "Credit.Party.Issuer",
-      "attrs": {
+      "fields": {
         "name": "Sponsor"
       },
       "state": {}
@@ -142,7 +142,7 @@
       "id": "5cc85692ee82f601ccf508671b0d6254",
       "symbol": "party.trustee",
       "type": "Credit.Party.Issuer",
-      "attrs": {
+      "fields": {
         "name": "Trustee"
       },
       "state": {}

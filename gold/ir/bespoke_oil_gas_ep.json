@@ -40,21 +40,21 @@
       "id": "cc60d93bfdcc5054cb8513f608005ac8",
       "symbol": "asset.asset",
       "type": "Asset.Real",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "32bcad207ab9cf3e4a9cb4cee9745f0e",
       "symbol": "asset.drillco",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "4b1145954af2a1fcd4e2523d3ccab8c7",
       "symbol": "asset.opco",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

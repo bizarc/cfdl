@@ -15,21 +15,21 @@
       "id": "9b355928620539c3baff065350caf5d9",
       "symbol": "asset.construction",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "18fe63421326a92186837c40f51aff5f",
       "symbol": "asset.permanent",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "ad1f1c6e084f2c4fe189bf227f7438cc",
       "symbol": "asset.property",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

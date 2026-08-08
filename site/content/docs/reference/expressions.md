@@ -26,7 +26,7 @@ loops, so the same inputs always produce the same number.
 | `time.*` | where you are — `time.t` is the period index, `time.date` its date |
 | `inputs.*` | values declared with `assume`, including sampled ones |
 | `model.*` | model-level facts such as the currency |
-| `entity.*` | attributes of the entity the stream belongs to |
+| `entity.*` | fields of the entity the stream belongs to |
 | `cfg.*` | run configuration, such as the discount rate |
 | `obs.*` | observed series a curve provides |
 | `state.*` | declared states, at the current period |

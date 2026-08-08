@@ -15,7 +15,7 @@
       "id": "7063a536bb3763aab1bc57266f92e75d",
       "symbol": "asset.borrower",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

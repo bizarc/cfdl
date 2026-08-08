@@ -15,7 +15,7 @@
       "id": "8ca71b46277588990b2687beb5fc6196",
       "symbol": "asset.plant",
       "type": "Asset.Real",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

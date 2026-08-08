@@ -328,7 +328,7 @@
         "id",
         "symbol",
         "type",
-        "attrs"
+        "fields"
       ],
       "properties": {
         "id": {
@@ -341,9 +341,9 @@
         "type": {
           "$ref": "#/$defs/Qname"
         },
-        "attrs": {
+        "fields": {
           "type": "object",
-          "description": "Attribute values declared in the entity's block, checked against the declared fields of its ontology type. Literals, not expressions: an attribute describes the thing rather than computing anything.",
+          "description": "Field values declared in the entity's block, checked against the fields its ontology type declares. Literals here: a field stated with '=' is a fact about the thing. A field that moves carries an 'init'/'next' rule instead.",
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
@@ -366,7 +366,7 @@
       }
     },
     "TypedValue": {
-      "description": "Strongly-typed value union used for attrs/terms/state. anyOf, not oneOf: the members overlap structurally — an Expr {lang, src} is also a valid Map of strings — so requiring exactly one match can never hold for an untagged union.",
+      "description": "Strongly-typed value union used for fields/terms/state. anyOf, not oneOf: the members overlap structurally — an Expr {lang, src} is also a valid Map of strings — so requiring exactly one match can never hold for an untagged union.",
       "anyOf": [
         {
           "type": "string"

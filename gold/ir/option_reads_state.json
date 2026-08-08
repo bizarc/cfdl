@@ -15,14 +15,14 @@
       "id": "8ca71b46277588990b2687beb5fc6196",
       "symbol": "asset.plant",
       "type": "Asset.Real",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "05e0f5f63d961c9d49138ee28dd07373",
       "symbol": "party.holder",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "Holder"
       },
       "state": {}

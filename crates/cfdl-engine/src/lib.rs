@@ -698,7 +698,7 @@ fn simulate_events(
         // event may later write over one, which is why they seed the same map
         // rather than sitting beside it: a model asks an entity what it is,
         // and does not care whether the answer was declared or assigned.
-        for (name, raw) in &entity.attrs {
+        for (name, raw) in &entity.fields {
             let value = match raw.parse::<f64>() {
                 Ok(number) => ExprValue::Decimal(number),
                 Err(_) => ExprValue::String(raw.clone()),
@@ -3622,7 +3622,7 @@ struct IrEntityDecl {
     /// Carried as strings because that is the IR's shape; parsed to a number
     /// where they look like one, so arithmetic works and a label stays a label.
     #[serde(default)]
-    attrs: BTreeMap<String, String>,
+    fields: BTreeMap<String, String>,
     /// The lifecycle state this entity opens in. `None` when its type declares
     /// no lifecycle, which is most entities.
     #[serde(default)]

@@ -15,7 +15,7 @@
       "id": "cba4429628f451d17a2086ab3c3e03b6",
       "symbol": "asset.strip_center",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

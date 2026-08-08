@@ -15,14 +15,14 @@
       "id": "3c6c11fda23792a65856906e29379f24",
       "symbol": "asset.first_entity",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "e369834caa5dddbd823414e32a780d4b",
       "symbol": "asset.second_entity",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

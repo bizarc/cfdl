@@ -16,7 +16,7 @@
       "id": "121876c85ba64d3a28b2875e9e107d71",
       "symbol": "asset.tower",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

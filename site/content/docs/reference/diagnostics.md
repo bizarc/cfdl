@@ -124,7 +124,7 @@ register, so it cannot fall behind the language.
 | `W3001_EXPR_TYPE_UNKNOWN` | Expressions / typing | an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped. |
 | `W3002_OBS_REF_EXTRACTION_FAILED` | Expressions / typing | an observation reference could not be read out of an expression, so the run may not know it needs that input. |
 | `E4001_UNKNOWN_TYPE_ID` | Pack errors | a declaration names a type the active pack does not define. |
-| `E4002_INVALID_ENTITY_ATTR` | Pack errors | an entity attribute is not one the pack declares, or holds the wrong kind of value. |
+| `E4002_INVALID_ENTITY_ATTR` | Pack errors | an entity field is not one the pack declares, or holds the wrong kind of value. |
 | `E4003_INVALID_CONTRACT_TERMS` | Pack errors | a contract's terms do not satisfy the pack's schema for that contract. |
 | `E4004_MISSING_PACK` | Pack errors | the named pack could not be loaded — not found, or found and rejected. |
 | `E5001_ID_GENERATION_FAILED` | Lowering/emission | the compiler could not derive a stable identifier for a declaration. |

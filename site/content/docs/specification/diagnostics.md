@@ -280,7 +280,7 @@ Warnings:
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 ### 7.8 Pack errors (E4xxx)
 - `E4001_UNKNOWN_TYPE_ID` — a declaration names a type the active pack does not define.
-- `E4002_INVALID_ENTITY_ATTR` — an entity attribute is not one the pack declares, or holds the wrong kind of value.
+- `E4002_INVALID_ENTITY_ATTR` — an entity field is not one the pack declares, or holds the wrong kind of value.
 - `E4003_INVALID_CONTRACT_TERMS` — a contract's terms do not satisfy the pack's schema for that contract.
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
 ### 7.9 Lowering/emission (E5xxx)

@@ -73,6 +73,31 @@ group A.
 
 ## 2. The surface
 
+**One word: FIELD.** An entity has fields. The word was already settled by every
+contract that is expensive to change — the diagnostics `E1312_MISSING_REQUIRED_FIELD`
+and `E1313_UNKNOWN_ENTITY_FIELD`, whose codes are never reused; the pack ontology
+format's `[[entities.fields]]` and `field_type`, which is the interop shape; and
+the results schema's transition log. Only the IR key said `attrs`, and it now
+says `fields` too. "Attribute" and "property" are retired as terms of art.
+
+A field HOLDS, MOVES BY RULE, or is WRITTEN BY AN EVENT:
+
+| | |
+|---|---|
+| `use = "office"` | a stated fact; holds until something changes it |
+| `factor init 1.0 next prev * (1.0 - smm)` | a rule moves it |
+| `set entity asset.tower.use = "retail"` | an event writes it |
+
+The three compose in the order the engine already runs — states, then events,
+then streams — so a rule computes the period's value, an event may overwrite it,
+and outputs read what was committed. A building changes its use; a pool
+amortises its factor until a trigger resets it.
+
+`=` takes a LITERAL and nothing else. A field stated with `=` is a fact about
+the thing, and a computed one is not a fact but a rule: `occupancy = base * 0.95`
+stays illegal after the parser is capable of it. `init` takes an expression,
+because a base case often needs `inputs.*` and `init` is part of the rule.
+
 A property with a recurrence, declared on the entity that owns it:
 
 ```cfdl

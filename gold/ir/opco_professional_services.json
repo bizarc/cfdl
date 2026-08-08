@@ -15,14 +15,14 @@
       "id": "31134b4ed5186f202725850f1caa03f6",
       "symbol": "asset.equity",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "165e0f5488a119883e1200ab749a411b",
       "symbol": "asset.firm",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

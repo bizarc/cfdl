@@ -15,7 +15,7 @@
       "id": "78addbcb4fef35f6390fdcd3b175e0e8",
       "symbol": "asset.co",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

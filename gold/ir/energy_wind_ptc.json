@@ -15,7 +15,7 @@
       "id": "18e3ec02665ee6189c0d1d0d5e0d5052",
       "symbol": "asset.windfarm",
       "type": "Energy.Asset.GenerationFacility",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

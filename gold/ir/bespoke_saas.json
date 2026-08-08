@@ -40,14 +40,14 @@
       "id": "718652edd9b63387a8fa1b681caa7bad",
       "symbol": "asset.product",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "73559b6f68233e419e647b352894dce4",
       "symbol": "asset.venture",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

@@ -15,7 +15,7 @@
       "id": "a71748fbe21431c0569661d27139ddd6",
       "symbol": "asset.interest",
       "type": "Energy.Asset.ProjectInterest",
-      "attrs": {
+      "fields": {
         "interest_type": "tax_equity"
       },
       "state": {},
@@ -25,7 +25,7 @@
       "id": "e543bf7d14a9fd314df744fc80d7d002",
       "symbol": "party.sponsor",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "Sponsor"
       },
       "state": {}
@@ -34,7 +34,7 @@
       "id": "5e7c9f22af2e5c5343f4f398f0cc62a2",
       "symbol": "party.tax_investor",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "Tax investor"
       },
       "state": {}
