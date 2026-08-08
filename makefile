@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -123,6 +123,17 @@ verify-site-nofresh:
 	cd site && npm run check:links
 	cd site && npm run check:examples
 	cd site && npm run check:dialogs
+	# The learn app mirrors the design system from site/; a site-side edit to a
+	# shared file fails here until learn/ is re-synced. Runs plain node, so it
+	# needs no npm ci in learn/.
+	cd learn && npm run check:shared
+
+# The learn-app gates that need no git history. Same split as the site's for
+# the same reason. Needs `cd learn && npm ci` first (check:shared excepted).
+verify-learn-nofresh:
+	cd learn && npm run check:shared
+	cd learn && npm run check:tokens
+	cd learn && npm run check:dialogs
 
 # Compare committed artefacts against what the sources would produce, relative
 # to BASE_REF.
