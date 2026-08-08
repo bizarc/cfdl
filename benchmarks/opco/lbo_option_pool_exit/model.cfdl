@@ -176,19 +176,28 @@ stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   amount = 44.500
 }
 
-// The sponsor's share: its converted preferred shares at the resolved value.
-stream opco.exit.sponsor_proceeds on entity asset.target inflow currency USD {
-  schedule every year from 2021-01 to 2021-01
-  category investing.exit
-  amount = 23.353133120640006 * state.value_per_share
-}
+// THE SPLIT, AS A WATERFALL. Total cash to shareholders is exit equity plus
+// the strike proceeds the exercised tranches pay in. The sponsor takes its
+// converted preferred shares at the resolved value; management takes what is
+// left, which is its rollover plus the exercised option shares at the same
+// value.
+//
+// WHY A WATERFALL AND NOT TWO STREAMS. Written as two independent amounts,
+// nothing checked that they add up to the cash available — both could be wrong
+// together and every gate would pass. As a waterfall the adding-up is
+// structural: management's step is `remaining`, so the two exhaust the pot by
+// construction, and an error in the sponsor's share moves management's figure
+// away from the published one instead of hiding.
+//
+// It is gross of the strikes paid in: those are already inside the pot, so
+// netting them here would double-count.
+entity party sponsor : OpCo.Party.Sponsor    { name = "Sponsor" }
+entity party mgmt    : OpCo.Party.Management { name = "Management" }
 
-// Management's share: rollover shares plus the 2.75m exercised option shares,
-// at the resolved value. GROSS of the strikes paid in — those are already
-// inside total cash to shareholders, so netting them here would double-count.
-// Sponsor 487.546 + management 132.570 = 620.116, the published total.
-stream opco.exit.management_proceeds on entity asset.target inflow currency USD {
-  schedule every year from 2021-01 to 2021-01
-  category investing.exit
-  amount = (3.6 + 2.75) * state.value_per_share
+waterfall opco.exit on entity asset.target {
+  schedule on 2021-01
+  from state.exit_equity + 44.500
+
+  pay sponsor_proceeds    to party.sponsor = 23.353133120640006 * state.value_per_share
+  pay management_proceeds to party.mgmt    = remaining
 }

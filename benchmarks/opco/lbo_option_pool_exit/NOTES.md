@@ -145,3 +145,31 @@ The same publicly downloadable seven-step LBO teaching model as
 `lbo_circular_interest` — free, no registration, "All Rights Reserved" with no
 open licence. Neither vendored nor in CI: downloaded once outside this repo,
 cached values read, only numbers carried across.
+
+## The split became a waterfall, and what that changed
+
+The sponsor's and management's shares were two independent streams. Both
+reproduced their published figures, and **nothing checked that they added up to
+the cash available** — the total appeared only in a comment. Two amounts that
+were wrong together would have passed every gate.
+
+They are now the two steps of an exit waterfall over a pot of exit equity plus
+the strike proceeds, with management taking `remaining`. The published figures
+are unchanged:
+
+| | CFDL | published |
+|---|---:|---:|
+| sponsor | 487.546139 | 487.54613944 |
+| management | 132.569706 | 132.56970572 |
+
+The constraint now binds. Perturbing the sponsor's share count from 23.3531 to
+23.4 moves its figure to 488.524585 **and management's to 131.591260** — so the
+published management figure fails, where before only the sponsor's would have.
+An error can no longer hide in a line nobody cross-checks.
+
+**What the waterfall did not do**, and the design note claiming it would was
+wrong: it does not retire the discrete fixed point. Resolving which option
+tranches exercise is a search over ordered prefixes, and it stays exactly as it
+was. The waterfall distributes cash once the value per share is known; it has
+nothing to say about how that value is found. Two different mechanisms, and only
+one of them is an ordered allocation.
