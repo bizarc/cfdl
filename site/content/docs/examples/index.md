@@ -39,6 +39,7 @@ Complete models for every pack, each checked period by period against an indepen
 - [Energy: cost-based solar feed-in tariff](/docs/examples/energy-crest-solar-cost-based) — A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty.
 - [Energy: merchant generator with capacity revenue](/docs/examples/energy-merchant-capacity) — A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake.
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid) — A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price.
+- [Energy: a tax-equity flip, with the date derived](/docs/examples/energy-tax-equity-flip) — A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model.
 - [Energy: utility-scale PV, single owner](/docs/examples/energy-utility-pv-singleowner) — A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor.
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs) — A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule.
 

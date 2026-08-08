@@ -1,0 +1,136 @@
+version 0.1
+model "flip-monthly-grain"
+use pack "energy" version "0.1.0"
+time calendar monthly from 2026-01 for 312
+
+// THE SAME PARTNERSHIP FLIP, TESTED MONTHLY.
+//
+// `benchmarks/energy/tax_equity_flip` runs this deal on an annual grid and
+// reproduces its reference exactly: the tax investor's after-tax return clears
+// its 8% hurdle during year 3, and the sharing moves from 98/2 to 5/95.
+//
+// This is the same deal, the same lifecycle and the same test, with one line
+// changed — the calendar. Nothing else about the economics moves.
+//
+// The flip lands TEN MONTHS EARLIER, in the second month of year 3.
+//
+// It is not a rounding difference. By the end of year 2 the investor is
+// $445,000 short of its hurdle, and two months of operating cash clear it. An
+// annual grid has no period between month 24 and month 36 in which to notice,
+// so the event cannot fire until the next year end — and the investor keeps
+// 98% of the cash for ten months it was no longer entitled to. On this deal
+// that is about $3.5mm.
+//
+// SO THE GRID IS AN ECONOMIC ASSUMPTION, not a presentation choice, whenever
+// an event decides who gets paid. A model that states its flip date hides
+// that; one that derives it cannot.
+//
+// WHAT IS DELIBERATELY NOT MONTHLY: the credit and the tax benefits. Those are
+// realised on a return, once a year — spreading them monthly would move the
+// flip earlier for a reason that is not real. Only the operating cash sits on
+// the monthly grid, which is where it actually sits.
+
+entity asset interest : Energy.Asset.ProjectInterest {
+  interest_type = "tax_equity"
+  state pre_flip
+}
+
+entity party sponsor      : Party { name = "Sponsor" }
+entity party tax_investor : Party { name = "Tax investor" }
+
+assume energy_year_one = 250000000.0
+assume ppa_price       = 0.045
+assume ppa_escalation  = 0.02
+assume degradation     = 0.005
+
+assume capacity_kw     = 100000.0
+assume om_per_kw       = 15.0
+assume om_escalation   = 0.02
+
+assume debt_amount     = 60000000.0
+assume debt_rate       = 0.06
+assume debt_term       = 18.0
+
+assume installed_cost  = 103100000.0
+assume itc_rate        = 0.30
+assume tax_rate        = 0.21
+
+assume preflip_share   = 0.98
+assume postflip_share  = 0.05
+
+assume hurdle          = 0.08
+assume investor_equity = 42238000.0
+
+// The calendar has no integer division, so the model counts. `month_of_year`
+// cycles 1..12 and `operating_year` steps when it wraps.
+state month_of_year {
+  init 0.0
+  next if(prev >= 12.0, 1.0, prev + 1.0)
+}
+
+state operating_year {
+  init 1.0
+  next if(prev.month_of_year == 12.0, prev + 1.0, prev)
+}
+
+// THE TEST, monthly. Identical in shape to the annual model's: the investor's
+// discounted after-tax position through the period before this one, stopping
+// the moment it turns non-negative.
+//
+// Operating cash is a twelfth of its year. The credit and the tax benefit land
+// whole, in the month the year closes.
+state investor_npv_closed {
+  init 0.0 - inputs.investor_equity
+  next prev
+       + if(time.t >= 2.0 and prev < 0.0,
+            inputs.preflip_share
+             * ( ( inputs.energy_year_one * inputs.ppa_price
+                    * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)
+                    * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)
+                   - inputs.capacity_kw * inputs.om_per_kw
+                    * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)
+                   - if(prev.operating_year <= inputs.debt_term,
+                        0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+                        0.0) ) / 12.0
+                 + if(prev.month_of_year == 12.0,
+                      0.0 - inputs.tax_rate
+                       * ( inputs.energy_year_one * inputs.ppa_price
+                            * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)
+                            * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)
+                           - inputs.capacity_kw * inputs.om_per_kw
+                            * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)
+                           + if(prev.operating_year <= inputs.debt_term,
+                                ipmt(inputs.debt_rate, prev.operating_year,
+                                     inputs.debt_term, inputs.debt_amount),
+                                0.0)
+                           - macrs_rate(prev.operating_year - 1.0, 5)
+                             * (inputs.installed_cost
+                                - 0.5 * inputs.itc_rate * inputs.installed_cost) )
+                      + if(prev.operating_year == 1.0,
+                           inputs.itc_rate * inputs.installed_cost, 0.0),
+                      0.0) )
+             / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),
+            0.0)
+}
+
+event flip when state.investor_npv_closed >= 0.0 {
+  set entity asset.interest.status = "post_flip"
+}
+
+waterfall interest.distribution on entity asset.interest {
+  schedule every month from 2026-02 to 2051-12
+  from ( inputs.energy_year_one * inputs.ppa_price
+          * pow(1.0 + inputs.ppa_escalation, state.operating_year - 1.0)
+          * pow(1.0 - inputs.degradation, state.operating_year - 1.0)
+         - inputs.capacity_kw * inputs.om_per_kw
+          * pow(1.0 + inputs.om_escalation, state.operating_year - 1.0)
+         - if(state.operating_year <= inputs.debt_term,
+              0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+              0.0) ) / 12.0
+
+  pay investor to party.tax_investor =
+        remaining * if(entity.state.status == "post_flip",
+                       inputs.postflip_share,
+                       inputs.preflip_share)
+  pay sponsor  to party.sponsor = remaining
+}

@@ -71,6 +71,7 @@ description = "A grouping of facilities modelled as one. Use only when the grain
 type_id = "Energy.Asset.ProjectInterest"
 family = "asset"
 class = "financial"
+lifecycle = "energy.flip_structure"
 description = "An equity interest in a project's cash and tax attributes."
 
 [[entities.fields]]
@@ -179,6 +180,21 @@ to = "operating"
 [[lifecycles.transitions]]
 from = "operating"
 to = "decommissioned"
+
+# A PARTNERSHIP FLIP is a lifecycle, not a schedule. Before the flip the tax
+# investor takes almost all of the cash and all of the tax attributes; after
+# it, almost none. What moves the structure between the two is not a date but
+# a test — the investor's after-tax return reaching its target — so the state
+# is the honest place to hold it, and the date is derived rather than stated.
+[[lifecycles]]
+lifecycle_id = "energy.flip_structure"
+initial = "pre_flip"
+states = ["pre_flip", "post_flip"]
+
+[[lifecycles.transitions]]
+from = "pre_flip"
+to = "post_flip"
+description = "The tax investor's after-tax internal rate of return reaches its target."
 
 # ---------------------------------------------------------------------------
 # Contracts

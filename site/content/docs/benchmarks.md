@@ -77,6 +77,7 @@ checked, and a write-up of the reference and the residual.
 | [Energy: cost-based solar feed-in tariff](/docs/examples/energy-crest-solar-cost-based) | A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty. |
 | [Energy: merchant generator with capacity revenue](/docs/examples/energy-merchant-capacity) | A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake. |
 | [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid) | A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price. |
+| [Energy: a tax-equity flip, with the date derived](/docs/examples/energy-tax-equity-flip) | A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model. |
 | [Energy: utility-scale PV, single owner](/docs/examples/energy-utility-pv-singleowner) | A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor. |
 | [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs) | A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule. |
 | [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) | A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends. |
@@ -102,7 +103,7 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: LBO exit waterfall with an option pool](/docs/examples/opco-lbo-option-pool-exit) | A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool. |
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 
-*27 cases.*
+*28 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite
