@@ -791,6 +791,158 @@ fn check_state_guards(
     }
 }
 
+/// Structural checks on a waterfall — the ones that stop cash going missing.
+///
+/// A waterfall allocates a pot in order. Three things about it are decidable
+/// before it ever runs, and each is a wrong answer rather than a crash if it
+/// is not caught:
+///
+///   * a step that names a payee nobody declared pays into the void;
+///   * `overflow of <step>` naming a step that is not earlier, or is not
+///     capped, pays a shortfall that cannot exist;
+///   * a missing or misplaced `remainder` silently LOSES whatever is left in
+///     the pot, which is the failure the residual step exists to prevent.
+fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
+    let entities: BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(entity) => Some(entity.symbol()),
+            _ => None,
+        })
+        .collect();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
+            continue;
+        };
+        let file = source_stmt.file.clone();
+        let diag = |code: &str, message: String, span, hint: Option<String>| Diagnostic {
+            code: code.to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(file.clone()),
+            span: Some(map_span(span)),
+            path: None,
+            hint,
+            notes: vec![],
+        };
+
+        if !entities.contains(&waterfall.attached_entity) {
+            diagnostics.push(diag(
+                "E1301_UNRESOLVED_ENTITY_REF",
+                format!(
+                    "Waterfall '{}' is declared on '{}', which is not a declared entity.",
+                    waterfall.name, waterfall.attached_entity
+                ),
+                waterfall.span,
+                None,
+            ));
+        }
+
+        if waterfall.source.is_none() {
+            diagnostics.push(diag(
+                "E1340_WATERFALL_NO_SOURCE",
+                format!(
+                    "Waterfall '{}' declares no pot to allocate.",
+                    waterfall.name
+                ),
+                waterfall.span,
+                Some("Add `from <expr>` — the cash this waterfall distributes.".to_string()),
+            ));
+        }
+
+        let mut capped_so_far: BTreeSet<&str> = BTreeSet::new();
+        let mut seen: BTreeSet<&str> = BTreeSet::new();
+        for (index, step) in waterfall.steps.iter().enumerate() {
+            if !seen.insert(step.name.as_str()) {
+                diagnostics.push(diag(
+                    "E1343_WATERFALL_DUPLICATE_STEP",
+                    format!(
+                        "Waterfall '{}' declares two steps named '{}'.",
+                        waterfall.name, step.name
+                    ),
+                    step.span,
+                    Some("`overflow of` names a step, so step names must be unique.".to_string()),
+                ));
+            }
+            if !entities.contains(&step.payee) {
+                diagnostics.push(diag(
+                    "E1301_UNRESOLVED_ENTITY_REF",
+                    format!(
+                        "Waterfall '{}' step '{}' pays '{}', which is not a declared entity.",
+                        waterfall.name, step.name, step.payee
+                    ),
+                    step.span,
+                    None,
+                ));
+            }
+            if let cfdl_parser::WaterfallRule::OverflowOf(target) = &step.rule {
+                if !capped_so_far.contains(target.as_str()) {
+                    let known: Vec<&str> = capped_so_far.iter().copied().collect();
+                    diagnostics.push(diag(
+                        "E1341_WATERFALL_BAD_OVERFLOW",
+                        format!(
+                            "Waterfall '{}' step '{}' pays the overflow of '{target}', which is not an earlier capped step.",
+                            waterfall.name, step.name
+                        ),
+                        step.span,
+                        Some(if known.is_empty() {
+                            "No earlier step in this waterfall declares a `cap`.".to_string()
+                        } else {
+                            format!("Earlier capped steps: {}.", known.join(", "))
+                        }),
+                    ));
+                }
+            }
+            // A `remainder` that is not last would strand every step after it,
+            // because there is nothing left for them to take.
+            if matches!(step.rule, cfdl_parser::WaterfallRule::Remainder)
+                && index + 1 != waterfall.steps.len()
+            {
+                diagnostics.push(diag(
+                    "E1342_WATERFALL_REMAINDER_NOT_LAST",
+                    format!(
+                        "Waterfall '{}' pays the remainder at step '{}', which is not the last step.",
+                        waterfall.name, step.name
+                    ),
+                    step.span,
+                    Some("Every later step would receive nothing.".to_string()),
+                ));
+            }
+            if step.cap.is_some() {
+                capped_so_far.insert(step.name.as_str());
+            }
+        }
+
+        let has_remainder = waterfall
+            .steps
+            .iter()
+            .any(|s| matches!(s.rule, cfdl_parser::WaterfallRule::Remainder));
+        if !has_remainder {
+            diagnostics.push(diag(
+                "E1344_WATERFALL_NO_REMAINDER",
+                format!(
+                    "Waterfall '{}' never says where the remainder goes.",
+                    waterfall.name
+                ),
+                waterfall.span,
+                Some(
+                    "End with `pay <name> to <payee> remainder`. Without it, whatever survives the last step is lost silently."
+                        .to_string(),
+                ),
+            ));
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_exercise_targets(
     resolve_output: &cfdl_resolver::ResolveOutput,
 ) -> Result<(), Vec<Diagnostic>> {
@@ -1306,6 +1458,7 @@ fn build_ir(
     check_entity_types(resolve_output, &ontology)?;
     check_party_bindings(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
+    check_waterfalls(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output

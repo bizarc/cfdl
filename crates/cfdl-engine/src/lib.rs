@@ -694,6 +694,20 @@ fn simulate_events(
     // null until an event wrote one and `entity.status == "x"` was false for
     // reasons that had nothing to do with the deal.
     for entity in &ir.entities {
+        // Declared attributes are the entity's properties from period 0. An
+        // event may later write over one, which is why they seed the same map
+        // rather than sitting beside it: a model asks an entity what it is,
+        // and does not care whether the answer was declared or assigned.
+        for (name, raw) in &entity.attrs {
+            let value = match raw.parse::<f64>() {
+                Ok(number) => ExprValue::Decimal(number),
+                Err(_) => ExprValue::String(raw.clone()),
+            };
+            current_state
+                .entry(entity.symbol.clone())
+                .or_default()
+                .insert(name.clone(), value);
+        }
         if let Some(initial) = &entity.initial_state {
             current_state
                 .entry(entity.symbol.clone())
@@ -3395,6 +3409,17 @@ struct IrOption {
 #[derive(Debug, Deserialize)]
 struct IrEntityDecl {
     symbol: String,
+    /// Declared attributes — `rentable_area = 30000`.
+    ///
+    /// These were parsed, validated against the ontology, and carried into the
+    /// IR, and then the engine deserialised right past them: an attribute read
+    /// as ZERO in every expression that touched it. The ontology checked the
+    /// name and nothing checked the value ever arrived.
+    ///
+    /// Carried as strings because that is the IR's shape; parsed to a number
+    /// where they look like one, so arithmetic works and a label stays a label.
+    #[serde(default)]
+    attrs: BTreeMap<String, String>,
     /// The lifecycle state this entity opens in. `None` when its type declares
     /// no lifecycle, which is most entities.
     #[serde(default)]

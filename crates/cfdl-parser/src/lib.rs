@@ -1615,14 +1615,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// `state <name> { init <expr>  next <expr> }`
-    ///
-    /// Both clauses are required. `init` is the value at period 0 and `next`
-    /// the value at every later period, with `prev` bound to this state's
-    /// previous value. Missingness is reported by validation rather than here,
-    /// so the diagnostic carries the whole statement's span and both problems
-    /// surface at once.
-
     /// `waterfall <name> on entity <e> { schedule … from <expr> pay … }`
     ///
     /// EVERY WORD INSIDE THE BLOCK IS CONTEXTUAL, not a reserved keyword.
@@ -1904,6 +1896,13 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// `state <name> { init <expr>  next <expr> }`
+    ///
+    /// Both clauses are required. `init` is the value at period 0 and `next`
+    /// the value at every later period, with `prev` bound to this state's
+    /// previous value. Missingness is reported by validation rather than here,
+    /// so the diagnostic carries the whole statement's span and both problems
+    /// surface at once.
     fn parse_state_stmt(&mut self) -> Option<StateStmt> {
         let start = self.expect_keyword(Keyword::State, "'state'")?;
         let name_tok = self.bump();
