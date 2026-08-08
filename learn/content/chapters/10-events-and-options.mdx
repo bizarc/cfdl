@@ -1,0 +1,86 @@
+---
+title: "Events and options"
+description: "Discrete change and contingent claims: latch semantics, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct."
+part: 2
+order: 10
+track: core
+---
+
+Everything so far varies *continuously* along the grid — amounts grow, ramps climb, balances amortize. But deals also turn: a loan refinances, a covenant trips, a tenant exercises a renewal, an asset sells. These are discrete, once-only changes of regime, and modeling them with arithmetic — flags multiplied into amounts, `if` pyramids keyed to hard-coded dates — is how spreadsheets bury their most consequential logic. The language gives turning points their own constructs: **events** for "when this happens, change these things," and **options** for "someone holds the right to make this happen."
+
+## Events: when, then
+
+```cfdl
+version 0.1
+model "events-refinance"
+time calendar monthly from 2026-01 for 24
+
+entity asset senior : Asset.Financial
+
+// Expensive bridge debt, alive only until the refinance.
+stream loan.bridge_interest on entity asset.senior outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 9500
+  active when entity.state.status != "refinanced"
+}
+
+// Cheaper permanent debt, alive only after.
+stream loan.perm_interest on entity asset.senior outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 6200
+  active when entity.state.status == "refinanced"
+}
+
+stream ops.noi on entity asset.senior inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 21000
+}
+
+// The turning point, stated once: at month twelve, the regime changes.
+event refi.trigger when time.t >= 12 {
+  set entity asset.senior.status = "refinanced"
+}
+```
+
+An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression — here a date test, but it can read anything expressions read, so "when cumulative revenue passes the threshold" or "when the balance falls below target" are conditions of the same shape.
+
+The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is a stream with a guard.
+
+The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one: the event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it — `entity.state.status` being how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
+
+## Options: the right, not the obligation
+
+An option is a contingent claim someone holds — a renewal, an early-purchase right, an expansion. The construct carries the option's terms; an event's `exercise` action fires it:
+
+```cfdl
+option refi.savings type Option.Refinance {
+  exercise when false
+  payoff 10000 - 250
+}
+
+event refi.trigger when time.t >= 12 {
+  set entity asset.senior.status = "refinanced"
+  exercise option refi.savings
+}
+```
+
+`payoff` is what exercising is worth, as an expression, evaluated at exercise time. The `exercise when` clause can hold the trigger rule itself; writing `exercise when false` and firing it from an event, as here, keeps *all* the deal's turning points in one place — a matter of style, and the style this course recommends once a model has more than one event.
+
+The deliberate boundary to understand: exercise is **rule-based, not optimal**. The model exercises when the stated condition says so — period twelve, price above strike, whatever the deal documents say — not when a valuation engine decides exercise maximizes holder value. Optimal exercise (the American-option problem) requires a model *of the decision-maker*, with all the machinery and debatable assumptions that implies, and it is deliberately outside a language whose promise is that every behavior traces to a stated claim. What this means in practice: you state the exercise policy, and policy alternatives are scenarios — which is precisely how an investment committee actually discusses a renewal ("assume they renew at year five" / "assume they walk"), and chapter 12 shows the probabilistic version.
+
+## What can go wrong
+
+**A condition that is never true.** The event simply never fires — not an error, because "the covenant never trips" is a legitimate outcome of a legitimate model. The defense is a scenario where it *does* fire, run on purpose. If a turning point matters, one of your run configurations should visit it.
+
+**Two events racing.** Two events, same period, both writing the same field — the model has claimed two regimes at once. Order-dependence is a smell here as it is everywhere; give the events mutually exclusive conditions and the question disappears.
+
+**A guard reading a field before anything sets it.** A lifecycle guard like `!= "refinanced"` works from period 0 because an unset field simply isn't equal to the string. But an equality guard (`== "operating"`) on a field nothing has set yet is false forever — declare the starting regime as a fact field (`status = "operating"`) so the model states its initial condition instead of relying on absence.
+
+## Exercises
+
+<Exercise id="10-events-and-options/the-refinance" />
+
+Then, on your own:
+
+1. Move the refinance trigger from a date test to an economic one: fire when cumulative NOI passes 250,000 (`series_sum("ops.noi", 0, time.t)`). Predict the firing month by hand first — you know the NOI per month.
+2. Add a second event that *reverses* nothing: try writing a "de-refinance." The latch means the model refuses to express regime flapping — write down, in one sentence, why that refusal is a feature in a reviewed model.

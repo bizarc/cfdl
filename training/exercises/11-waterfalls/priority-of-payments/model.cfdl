@@ -1,0 +1,25 @@
+version 0.1
+model "exercise-priority-of-payments"
+time calendar quarterly from 2026-01 for 8
+
+// Quarterly collections arrive in the trust; the parties are paid from them.
+entity asset trust : Asset.Financial {
+  available_funds init 100000
+                  next 100000
+}
+
+entity party servicer : Party
+entity party lender : Party
+entity party investor : Party
+
+// Your task: write the waterfall the documents describe, in document order —
+//   1. servicing fee: 4,500 per quarter
+//   2. debt service: 62,000 per quarter
+//   3. residual: everything remaining, to the investor
+// waterfall trust.distribution on entity asset.trust, scheduled quarterly,
+// paying from asset.trust.available_funds.
+
+stream trust.collections_report on entity asset.trust inflow currency USD {
+  schedule every quarter from 2026-01 to 2027-10
+  amount = asset.trust.available_funds
+}

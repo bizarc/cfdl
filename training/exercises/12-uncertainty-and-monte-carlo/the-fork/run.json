@@ -1,0 +1,9 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.09
+  },
+  "monte_carlo": {
+    "trial_count": 1000,
+    "seed": 20260808
+  }
+}

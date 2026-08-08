@@ -1,0 +1,29 @@
+version 0.1
+model "exercise-priority-of-payments"
+time calendar quarterly from 2026-01 for 8
+
+entity asset trust : Asset.Financial {
+  available_funds init 100000
+                  next 100000
+}
+
+entity party servicer : Party
+entity party lender : Party
+entity party investor : Party
+
+// In document order: fee, debt, sweep. The engine's per-step rule —
+// min(max(0, owed), remaining) — carries the seniority; the steps just
+// state what each claim is owed.
+waterfall trust.distribution on entity asset.trust {
+  schedule every quarter from 2026-01 to 2027-10
+  from asset.trust.available_funds
+
+  pay servicing_fee to party.servicer = 4500
+  pay debt_service  to party.lender   = 62000
+  pay residual      to party.investor = remaining
+}
+
+stream trust.collections_report on entity asset.trust inflow currency USD {
+  schedule every quarter from 2026-01 to 2027-10
+  amount = asset.trust.available_funds
+}

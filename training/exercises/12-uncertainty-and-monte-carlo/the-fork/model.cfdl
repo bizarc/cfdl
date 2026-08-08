@@ -1,0 +1,21 @@
+version 0.1
+model "exercise-the-fork"
+time calendar monthly from 2026-01 for 24
+
+entity asset building : Asset.Real
+
+// The lease rolls at month 12. This model blends the outcome: 70% renewal
+// at 85,000, 30% vacancy-then-relet, averaged into one number. Un-blend it:
+//   1. assume renewal_draw ~ Uniform(min=0.0, max=1.0)
+//   2. after the roll, branch: draw < 0.70 pays 85000; otherwise 0 for
+//      three months (time.t < 15), then 74000.
+// The run configuration already carries 1,000 seeded trials.
+stream building.rent on entity asset.building inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = if(time.t < 12, 85000, 81700)
+}
+
+stream building.opex on entity asset.building outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 31000
+}
