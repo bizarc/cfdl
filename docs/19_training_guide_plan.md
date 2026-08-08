@@ -4,12 +4,11 @@
 
 The goal is a deep, course-grade authoring guide for CFDL — usable as the basis of an MBA class or professional training program. It is a **separate property from cfdl.dev** but shares the logo and design system. The existing site's "Learn the language" track is a *tour* (15–25 lines per construct); this guide is the *course*: modelling judgment, construct interaction, one deal carried end to end, finance semantics, and failure-mode pedagogy.
 
-Decisions from the user:
+Locked decisions:
 - **Audience:** dual-tracked — a core track for finance professionals new to code, plus optional deep-dive chapters for technical readers.
 - **Scope:** general/packless language modeling in depth, plus a deep multi-chapter **CRE capstone**.
-- **Format & repo strategy:** user asked for a best-practice recommendation (answered below).
 
-Key ground truths (verified against `~/Documents/cfdl`, the live repo — NOT the older `evs-platform/cfdl-core` snapshot):
+Key ground truths (verified against the current implementation):
 - Language surface: 16 statement kinds — `version, model, use pack, import, time, phase, entity, assume, curve, state, event, option, waterfall, run, contract, stream`. Custom decimal-first expression engine (`crates/cfdl-calc`), 37 builtins + `if`/`series_sum`/`series_avg`/`curve_value` special forms; bare expressions (no `cel "…"`). MC distributions: Normal, LogNormal, Uniform, Triangular (language `assume ~` and run-config levels).
 - CRE pack has 13 contract types incl. `percentage_rent`, `vacancy_loss`, `rollover`, `permanent_debt`, three exit forms.
 - Site design system: `site/app/tokens.css` (two-layer `--p-*`/`--cfdl-*`), Inter + JetBrains Mono, `next-themes` dark/light, inline-SVG logo `site/components/Logo.tsx`, ds components `site/components/ds/`, shiki with the real TextMate grammar, WASM playground (in-browser engine).
@@ -67,8 +66,6 @@ A single development deal built across chapters, each ending with a working mode
 Every chapter's models live as real `model.cfdl` + `run.json` + expected-results files, compile-and-run gated in CI.
 
 ## Delivery architecture
-
-All work happens in `~/Documents/cfdl` (the live repo — the site and current engine live there, not in `evs-platform`).
 
 ### Topology: sibling app `learn/` in the cfdl repo, shared design system via gated sync
 

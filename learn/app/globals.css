@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/*
+ * Tailwind v4 theme bridge: every utility resolves to a semantic token so
+ * components never name a raw color. Add a token in tokens.css, expose it
+ * here, use it as `bg-surface-raised`, `text-secondary`, `border-default`, …
+ */
+@theme inline {
+  --color-surface-page: var(--cfdl-surface-page);
+  --color-surface-raised: var(--cfdl-surface-raised);
+  --color-surface-sunken: var(--cfdl-surface-sunken);
+  --color-surface-code: var(--cfdl-surface-code);
+  --color-surface-inverse: var(--cfdl-surface-inverse);
+  --color-figure: var(--cfdl-surface-figure);
+
+  --color-primary: var(--cfdl-text-primary);
+  --color-secondary: var(--cfdl-text-secondary);
+  --color-muted: var(--cfdl-text-muted);
+  --color-inverse: var(--cfdl-text-inverse);
+
+  --color-accent: var(--cfdl-accent-solid);
+  --color-accent-hover: var(--cfdl-accent-solid-hover);
+  --color-accent-soft: var(--cfdl-accent-soft);
+  --color-accent-fg: var(--cfdl-accent-text-on-solid);
+  --color-accent-text: var(--cfdl-text-accent);
+  --color-accent-ring: var(--cfdl-accent-ring);
+
+  --color-subtle: var(--cfdl-border-subtle);
+  --color-default: var(--cfdl-border-default);
+  --color-strong: var(--cfdl-border-strong);
+
+  --color-ok: var(--cfdl-status-ok);
+  --color-warn: var(--cfdl-status-warn);
+  --color-err: var(--cfdl-status-err);
+  --color-ok-soft: var(--cfdl-status-ok-soft);
+  --color-warn-soft: var(--cfdl-status-warn-soft);
+  --color-err-soft: var(--cfdl-status-err-soft);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: var(--p-radius-sm);
+  --radius-md: var(--p-radius-md);
+  --radius-lg: var(--p-radius-lg);
+  --radius-xl: var(--p-radius-xl);
+
+  --shadow-sm: var(--p-shadow-sm);
+  --shadow-md: var(--p-shadow-md);
+  --shadow-lg: var(--p-shadow-lg);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--cfdl-surface-page);
+  color: var(--cfdl-text-primary);
+  font-family: var(--font-sans);
+  line-height: var(--p-leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--cfdl-accent-soft);
+  color: var(--cfdl-text-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cfdl-accent-ring);
+  outline-offset: 2px;
+  border-radius: var(--p-radius-sm);
+}
+
+/* Shiki dual-theme: markup carries both, the theme attribute picks one. */
+.shiki,
+.shiki span {
+  background-color: var(--shiki-light-bg);
+  color: var(--shiki-light);
+}
+
+[data-theme="dark"] .shiki,
+[data-theme="dark"] .shiki span {
+  background-color: var(--shiki-dark-bg);
+  color: var(--shiki-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
