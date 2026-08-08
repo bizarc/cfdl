@@ -2300,6 +2300,41 @@ fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usiz
                 .map(|v| (name.clone(), ExprValue::Decimal(*v)))
         })
         .collect();
+
+    // A FIELD RULE IS READ WHERE THE FIELD IS, not under `state.`.
+    //
+    // `compute_states` keys a rule by its entity path, so `asset.tlb.balance`
+    // arrives here as one name. Binding it into the entity map is what makes
+    // the computed value answer to the same spelling as a stated one — a
+    // reader should not have to know whether a field holds or moves to know
+    // how to read it.
+    for (name, values) in states {
+        let Some(value) = values.get(idx) else {
+            continue;
+        };
+        let mut parts = name.split('.');
+        let (Some(family), Some(entity), Some(field)) = (parts.next(), parts.next(), parts.next())
+        else {
+            continue;
+        };
+        if parts.next().is_some() {
+            continue;
+        }
+        let ExprValue::Map(family_map) = env
+            .entity
+            .entry(family.to_string())
+            .or_insert_with(|| ExprValue::Map(BTreeMap::new()))
+        else {
+            continue;
+        };
+        let ExprValue::Map(entity_map) = family_map
+            .entry(entity.to_string())
+            .or_insert_with(|| ExprValue::Map(BTreeMap::new()))
+        else {
+            continue;
+        };
+        entity_map.insert(field.to_string(), ExprValue::Decimal(*value));
+    }
 }
 
 /// Bind every entity's state under its qualified path — `entity.asset.tower.status`.
@@ -2373,15 +2408,16 @@ fn compute_states(
         .iter()
         .map(|st| (st.name.clone(), vec![0.0; timeline.len()]))
         .collect();
-    if ir.states.is_empty() {
+    if ir.states.is_empty() && ir.entities.iter().all(|e| e.rules.is_empty()) {
         return values;
     }
 
     // Compiled once per state, not once per state per period. This loop is the
     // only place a state's source is evaluated and it runs `states x periods`
     // times — `x trials` under Monte Carlo.
-    struct Prepared<'a> {
-        state: &'a IrState,
+    struct Prepared {
+        /// A declared state's name, or `<entity>.<field>` for a field rule.
+        name: String,
         init: CompiledExpr,
         next: CompiledExpr,
         /// Model periods on which the recurrence STEPS. `None` means every
@@ -2453,12 +2489,43 @@ fn compute_states(
             .and_then(|t: &Vec<bool>| t.iter().position(|on| *on))
             .unwrap_or(0);
         prepared.push(Prepared {
-            state,
+            name: state.name.clone(),
             init,
             next,
             ticks,
             first_tick,
         });
+    }
+
+    // A FIELD'S RULE IS THE SAME RECURRENCE, evaluated in the same pass.
+    //
+    // It joins the declared states rather than getting a pass of its own, so
+    // there is one place a recurrence is solved and one set of rules about what
+    // it can see. The name is the entity path, which is also how it is read.
+    for entity in &ir.entities {
+        for (field, rule) in &entity.rules {
+            let name = format!("{}.{}", entity.symbol, field);
+            let mut compile = |src: &str, clause: &str| match cfdl_expr::compile_expr(src) {
+                Ok(compiled) => compiled,
+                Err(err) => {
+                    warnings.push(format!(
+                        "Field '{name}' {clause} expression compile failed [{}]: {}; using 0.",
+                        err.code, err.message
+                    ));
+                    zero.clone()
+                }
+            };
+            let init = compile(&rule.init.src, "init");
+            let next = compile(&rule.next.src, "next");
+            values.insert(name.clone(), vec![0.0; timeline.len()]);
+            prepared.push(Prepared {
+                name,
+                init,
+                next,
+                ticks: None,
+                first_tick: 0,
+            });
+        }
     }
 
     for (t, date) in timeline.iter().enumerate() {
@@ -2474,7 +2541,7 @@ fn compute_states(
         };
 
         for entry in &prepared {
-            let name = &entry.state.name;
+            let name = &entry.name;
             // Between ticks, and outside the schedule's window, a state HOLDS.
             // It does not fall to zero — that is what separates a schedule from
             // `active when`, and why `active when` is deliberately absent here.
@@ -3610,6 +3677,12 @@ struct IrWaterfallStep {
 }
 
 #[derive(Debug, Deserialize)]
+struct IrFieldRule {
+    init: IrExpr,
+    next: IrExpr,
+}
+
+#[derive(Debug, Deserialize)]
 struct IrEntityDecl {
     symbol: String,
     /// Declared attributes — `rentable_area = 30000`.
@@ -3623,6 +3696,10 @@ struct IrEntityDecl {
     /// where they look like one, so arithmetic works and a label stays a label.
     #[serde(default)]
     fields: BTreeMap<String, String>,
+    /// Fields that MOVE. A recurrence owned by this entity, evaluated in the
+    /// same pass as a declared state because it is the same construct.
+    #[serde(default)]
+    rules: BTreeMap<String, IrFieldRule>,
     /// The lifecycle state this entity opens in. `None` when its type declares
     /// no lifecycle, which is most entities.
     #[serde(default)]

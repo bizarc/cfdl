@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1128_FIELD_DECLARED_TWICE",
+    "severity": "error",
+    "message": "Field 'asset.tranche.original_balance' is declared twice — once with '=' and once with a rule. A field is one value; state it as a fact or give it a rule, not both.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 3,
+      "end_line": 12,
+      "end_col": 46
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1,0 +1,433 @@
+{
+  "results_version": "0.3",
+  "model_hash": "72e0e77a9236aad0e09ab3b1d1ef1a58361a6b0702d41fea530a29a490ee248f",
+  "ledger_hash": "ae02e6adf96682118511d377a2272bda33e11b4778b1b4cbab34c7b8b5ceab35",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.tlb.total": {
+        "amount": 850.0,
+        "currency": "USD"
+      },
+      "entity.party.lender.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 850.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 850.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.352941,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.credit.balance_probe.total": {
+        "amount": 950.0,
+        "currency": "USD"
+      },
+      "stream.credit.repayment.total": {
+        "amount": -100.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.credit.balance_outstanding": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.gross_collections": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.net_collections": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.original_balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.pool_factor": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.credit.principal_collections": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_negated": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_to_date": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.servicing_fee": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.total_investment_income": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tlb.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 225.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 175.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.lender.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 225.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 175.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "state.asset.tlb.balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          275.0,
+          250.0,
+          225.0,
+          200.0
+        ]
+      },
+      "stream.credit.balance_probe": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 275.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 225.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.repayment": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -25.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -25.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -25.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -25.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
