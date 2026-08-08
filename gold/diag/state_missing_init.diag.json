@@ -107,7 +107,7 @@
   {
     "code": "E1123_STATE_PREV_OUTSIDE_NEXT",
     "severity": "error",
-    "message": "Stream 'co.y' uses 'prev', which reads the previous period and exists only inside a state's 'next'. Use 'state.<name>' for a state's value at this period.",
+    "message": "Stream 'co.y' uses 'prev' for a recurrence's own previous value, which means nothing outside a 'next'. A FIELD's previous value is readable here as 'prev.<entity>.<field>'; for a state's value at this period use 'state.<name>'.",
     "file": "model.cfdl",
     "span": {
       "start_line": 40,

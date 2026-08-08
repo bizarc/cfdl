@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1129_PREV_IN_FIRST_PERIOD",
+    "severity": "error",
+    "message": "Stream 'opco.interest' reads a field's previous period but runs from the model's first period, where there is none. Start the stream one period later, or carry the opening value as a field of its own.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 25,
+      "start_col": 3,
+      "end_line": 25,
+      "end_col": 68
+    },
+    "path": null,
+    "hint": "A field's previous period is the close before this one; the first period has no close before it.",
+    "notes": []
+  }
+]
