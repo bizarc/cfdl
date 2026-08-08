@@ -474,8 +474,45 @@ Worth a single source of truth for "what can begin a statement", derived from
 the dispatch match. Not done here; recorded because the next construct will meet
 it again.
 
+### The fund carry tier — and the first numeric check
+
+`fixtures/valid/waterfall_fund_carry` reproduces a published distribution
+waterfall exactly: $10mm called, $30mm returned after five years, split as
+capital back, a compounding 8% preferred, a full GP catch-up, then 80/20.
+
+| tier | CFDL | published |
+|---|---:|---:|
+| LP capital + preferred | 14,693,280.768000 | 14,693,280.768 |
+| GP catch-up | 1,173,320.192000 | 1,173,320.192 |
+| GP promote | 2,826,679.808000 | 2,826,679.808 |
+| LP residual | 11,306,719.232000 | 11,306,719.232 |
+
+Zero difference, not a tolerance. This is the construct's first NUMERIC check —
+the ABS fixture proves expressiveness against a source that publishes no
+schedule, this reproduces figures somebody else computed.
+
+**One definition, three structures.** The reference publishes five waterfalls on
+identical inputs, and three differ only in what the catch-up is computed on.
+That is one run-config argument, so the deterministic run and two scenarios
+cover all three:
+
+| structure | `catchup_base` | GP | LP |
+|---|---|---:|---:|
+| straight 80/20 | 0 | 3,061,343.8464 | 26,938,656.1536 |
+| catch-up on all distributions | first tier | 6,000,000.0000 | 24,000,000.0000 |
+| catch-up on the preferred only | preferred | 4,000,000.0000 | 26,000,000.0000 |
+
+All three exact. That is the sharper test of the primitive: not whether it can
+say one deal, but whether one definition parameterises into a family of them.
+
+**And it settles the solver question against numbers.** The GP catch-up is the
+tier most often said to need iteration. It is `X = pref / 4` — one division, as
+§12 argued from the algebra and this confirms from the published figures.
+
 ### Still to build
 
-The other three structures §11 names: a fund carry tier, a nested split, and the
-LBO exit waterfall that exists by hand in
-`benchmarks/opco/lbo_option_pool_exit`.
+A nested split (composition), and the reference's remaining two structures — a
+partial catch-up, and an IRR-hurdle waterfall the catalogue describes as
+"requiring a circular solve". §12 argues it does not, because the hurdle rate is
+an input rather than an unknown. That is a falsifiable claim against published
+numbers and worth testing next.

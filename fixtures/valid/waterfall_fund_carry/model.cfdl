@@ -1,0 +1,70 @@
+version 0.1
+model "waterfall-fund-carry"
+time calendar annual from 2020-01 for 6
+
+// A PRIVATE FUND CARRY WATERFALL — the ordered kind.
+//
+// $10mm called, $30mm returned five years later, split on a whole-of-fund
+// waterfall: capital back, then a compounding 8% preferred return, then a full
+// GP catch-up, then 80/20. Each tier is paid only out of what the tier above
+// left, which is what makes this an ordered allocation rather than a set of
+// shares.
+//
+// WHAT THIS EXERCISES THAT THE ABS CASE DOES NOT:
+//
+//   * CUMULATIVE targets — a preferred return is measured since inception, not
+//     for the period, so the tier is a balance rather than a periodic accrual;
+//   * a ONCE-AT-EXIT schedule, `schedule on`, rather than a distribution date;
+//   * a catch-up, which is the tier most often said to need a solver.
+//
+// IT NEEDS NO SOLVER. The catch-up pays the GP 20% of everything distributed
+// in the preferred and catch-up tiers combined:
+//
+//     X / (pref + X) = 0.20   ->   X = pref / 4
+//
+// one division, and the same is true of every other tier here. `docs/17` §12
+// works through why an IRR HURDLE is closed-form too: the hurdle rate is an
+// input, so nothing solves for a rate — only for the payment that reaches it.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume called_capital = 10000000.0
+assume pref_rate      = 0.08
+assume hold_years     = 5.0
+assume gp_carry       = 0.20
+assume proceeds       = 30000000.0
+
+// WHAT THE CATCH-UP IS COMPUTED ON is the only thing separating three
+// published structures, so it is a run-config knob rather than three models:
+//
+//   0                        no catch-up tier at all — straight 80/20
+//   the preferred only       GP catches up to 20% of the PREF
+//   the whole first tier     GP catches up to 20% of ALL distributions
+//
+// The deterministic run is the third; two scenarios are the others.
+
+// Capital plus the compounding preferred, measured from inception — the tier
+// one hurdle in money rather than in rate.
+state lp_preference {
+  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+  next prev
+}
+
+waterfall fund.distribution on entity asset.fund {
+  schedule on 2025-01
+  from inputs.proceeds
+
+  // 1. Return of capital and the 8% cumulative preferred, to the LPs.
+  pay lp_preference to party.lp = state.lp_preference
+
+  // 2. Full GP catch-up: 20% of everything paid in tiers 1's preferred
+  //    component and this one together. Closed form, X = pref / 4.
+  pay gp_catchup    to party.gp = cfg.catchup_base
+                                  / (1.0 - inputs.gp_carry) * inputs.gp_carry
+
+  // 3. The 80/20 split of what survives.
+  pay gp_promote    to party.gp = remaining * inputs.gp_carry
+  pay lp_residual   to party.lp = remaining
+}

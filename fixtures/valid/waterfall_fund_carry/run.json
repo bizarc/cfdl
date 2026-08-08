@@ -1,0 +1,20 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0,
+    "parameters": {
+      "cfg.catchup_base": 4693280.768000003
+    }
+  },
+  "scenarios": {
+    "no_catchup": {
+      "parameters": {
+        "cfg.catchup_base": 0.0
+      }
+    },
+    "catchup_on_all": {
+      "parameters": {
+        "cfg.catchup_base": 14693280.768000003
+      }
+    }
+  }
+}
