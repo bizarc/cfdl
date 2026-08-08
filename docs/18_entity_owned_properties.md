@@ -148,6 +148,65 @@ the pot comes from. `from state.available_funds` says a variable exists.
 Stages 3–5 are independently landable and each keeps the suite green. Stage 6 is
 the one that touches the pack contract, and stage 8 is the breaking change.
 
+## 4a. What a property read means inside another property's `next` — settled
+
+The question stage 3 cannot avoid: inside `asset.tlb.balance`'s `next`, what
+does `asset.sub.balance` mean — this period's value or last period's?
+
+**Settled: it means neither, because it is rejected.** Inside a `next`, a bare
+property read is a compile error naming the fix, and the previous period is
+spelled explicitly:
+
+```cfdl
+entity asset tlb : Credit.Asset.Tranche {
+  balance init 275.0
+          next prev - min(prev, cfg.sweep + prev asset.sub.balance * 0.0)
+}
+```
+
+Three reasons, in order of weight.
+
+**One spelling, one meaning.** Everywhere else in the language
+`asset.tlb.balance` means *this period's value, at period close*. If the same
+text meant *last period's* inside a `next`, the meaning of a read would depend
+on where it sits — which is the class of trap this whole document exists to
+remove. A construct that cannot mean the usual thing should say so rather than
+quietly mean a different one.
+
+**It keeps the order an order.** Allowing current-period reads between
+properties makes the answer depend on a topological sort of the recurrences,
+and a cycle then needs a solver. The waterfall settled the house rule already —
+an order, not a graph — and model-level `state` follows it today.
+
+**It is the rule `E1126` already established.** A state's `init` may not read
+another state, because at period 0 there is nothing there to read; the answer
+was a diagnostic rather than an evaluation order. This is the same shape one
+period along, and it should have the same answer and a neighbouring code.
+
+### The hazard this closes
+
+Stage 2 aliased bare family paths onto the `entity` root, which is
+**open-world** — a missing key resolves to null rather than failing, because an
+event-written status field does not exist until an event writes it.
+
+Left alone, that would make a bare read inside a `next` return null *silently*
+and evaluate to zero: precisely the failure mode of `init = 100`, of the
+unbound entity attributes, and of the bare waterfall path — all three of which
+this project has already had to find the hard way. The compile-time rejection
+closes it before stage 3 can open it.
+
+It also argues for a narrower rule later: a property **declared by the
+ontology** is knowable at compile time, so a typo in one should be an error
+rather than a null, and open-world behaviour should be reserved for lifecycle
+status fields. That is a separate change and is noted here so it is not lost.
+
+### Spelling
+
+`prev asset.tlb.balance` — the prefix form, as §2 proposes. `prev.<name>` stays
+for model-level states until stage 8 retires them, so the two coexist for the
+duration and neither is ambiguous: `prev` takes a path, `prev.` takes a state
+name.
+
 ## 5. Group C is the reference family
 
 Group C is not a third category. An index, a rate path, a price deck — these
