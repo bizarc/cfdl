@@ -17,7 +17,7 @@ use cfdl_engine::{
     StatementReconciliation, StatementRow, StatementsSection,
 };
 use cfdl_pack::{StatementSpec, SubtotalSpec};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Render every statement the pack declares. `None` when it declares none.
 pub fn compute(
@@ -25,6 +25,7 @@ pub fn compute(
     specs: &[StatementSpec],
     subtotals: &[SubtotalSpec],
     stream_categories: &BTreeMap<String, String>,
+    waterfall_series: &BTreeSet<String>,
     results: &Results,
 ) -> Option<StatementsSection> {
     if specs.is_empty() {
@@ -41,9 +42,19 @@ pub fn compute(
     // are excluded by prefix rather than by rule: a state is not cash, and a
     // subtotal is a fold OF the cash, so counting either would double what it
     // touches.
+    //
+    // WATERFALL STEPS ARE EXCLUDED BY NAME, because a prefix cannot reach them:
+    // a step publishes as `stream.<waterfall>.<step>` and is indistinguishable
+    // from a stream by its key alone. A waterfall runs AFTER the cash it
+    // divides has been computed — it distributes free cash flow rather than
+    // producing any — which is why `model.total` already leaves the steps out.
+    // Counting them here made the statement disagree with the model by the
+    // whole distributed amount: 4,000 on waterfall_smoke, 202.7M on the
+    // monthly-grain flip, reported as W3502 beside the W3500 that named them.
     let cash_keys: Vec<&String> = series
         .keys()
         .filter(|k| k.starts_with("stream.") || k.starts_with("option."))
+        .filter(|k| !waterfall_series.contains(k.as_str()))
         .collect();
 
     // The index every series shares, used to rebuild the timeline a coarser
@@ -417,6 +428,31 @@ fn round6(v: f64) -> f64 {
 ///
 /// The engine does not republish a stream's category, so a caller passes it in.
 /// Kept as a free function so every host builds it the same way.
+/// Every series key a waterfall publishes, as `stream.<waterfall>.<step>`.
+///
+/// Read from the IR because the results cannot tell one apart: a step's series
+/// is keyed exactly like a stream's, carries no category, and so would land in
+/// a statement's residual row — which is cash the model never counted.
+pub fn waterfall_series(ir: &serde_json::Value) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    if let Some(waterfalls) = ir.get("waterfalls").and_then(|w| w.as_array()) {
+        for w in waterfalls {
+            let Some(name) = w.get("name").and_then(|v| v.as_str()) else {
+                continue;
+            };
+            let Some(steps) = w.get("steps").and_then(|s| s.as_array()) else {
+                continue;
+            };
+            for step in steps {
+                if let Some(step_name) = step.get("name").and_then(|v| v.as_str()) {
+                    out.insert(format!("stream.{name}.{step_name}"));
+                }
+            }
+        }
+    }
+    out
+}
+
 pub fn stream_categories(ir: &serde_json::Value) -> BTreeMap<String, String> {
     let mut out = BTreeMap::new();
     if let Some(streams) = ir.get("streams").and_then(|s| s.as_array()) {
