@@ -171,21 +171,21 @@ period                                          ...
 2026-04                          131015.309222  ...         4.324722e+05   
 2026-05                          129089.417780  ...         4.277859e+05   
 
-         state.credit_level_pay_survival_auto_a  \
-period                                            
-2026-01                                1.000000   
-2026-02                                0.991393   
-2026-03                                0.982861   
-2026-04                                0.974402   
-2026-05                                0.966016   
+         state.asset.buyer.credit_level_pay_survival_auto_a  \
+period                                                        
+2026-01                                           1.000000    
+2026-02                                           0.991393    
+2026-03                                           0.982861    
+2026-04                                           0.974402    
+2026-05                                           0.966016    
 
-         state.credit_level_pay_survival_lag_auto_a  \
-period                                                
-2026-01                                         1.0   
-2026-02                                         1.0   
-2026-03                                         1.0   
-2026-04                                         1.0   
-2026-05                                         1.0   
+         state.asset.buyer.credit_level_pay_survival_lag_auto_a  \
+period                                                            
+2026-01                                                1.0        
+2026-02                                                1.0        
+2026-03                                                1.0        
+2026-04                                                1.0        
+2026-05                                                1.0        
 
          stream.credit.pool.interest.auto_a  \
 period                                        
