@@ -741,6 +741,152 @@ fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
 /// The check is a date comparison rather than a schedule resolution: a stream
 /// whose schedule starts on the model's start date runs at period 0. A stream
 /// that starts later cannot, whatever its cadence.
+/// Every `asset.<name>.<field>` in an expression names a field that exists.
+///
+/// THE HOLE THIS CLOSES. Field paths resolve through the `entity` root, which
+/// is OPEN-WORLD by design: a lifecycle status may not exist until an event
+/// writes it, so `entity.status != "refinanced"` has to evaluate before that.
+/// Aliasing bare family paths onto that root gave them the same forgiveness —
+/// so `asset.tlb.blance` resolved to null, and null in arithmetic becomes zero.
+///
+/// A DECLARED field is knowable at compile time, so a missing one is a typo
+/// rather than an absence. Status keeps the open world; declared fields do not.
+fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
+    let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Entity(entity) = &source_stmt.statement {
+            let names = known.entry(entity.symbol()).or_default();
+            for f in &entity.literal_fields {
+                names.insert(f.name.clone());
+            }
+            for f in &entity.fields {
+                names.insert(f.name.clone());
+            }
+            // Lifecycle status stays open: an event may write it later, and a
+            // pack's lifecycle declares the states rather than the model.
+            names.insert("status".to_string());
+            names.insert("state".to_string());
+        }
+    }
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let mut check = |src: &str, span: cfdl_parser::Span, file: &str, ctx: &str| {
+        for (symbol, field) in field_paths(src) {
+            let Some(names) = known.get(&symbol) else {
+                continue; // an unknown ENTITY is E1301's business, not this one.
+            };
+            if !names.contains(&field) {
+                diagnostics.push(Diagnostic {
+                    code: "E1131_UNKNOWN_FIELD_READ".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{ctx} reads '{symbol}.{field}', which that entity does not declare."
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
+                    path: None,
+                    hint: Some(
+                        "Declare the field on the entity, or correct the name. Unrejected this reads as null and becomes zero in arithmetic."
+                            .to_string(),
+                    ),
+                    notes: Vec::new(),
+                });
+            }
+        }
+    };
+
+    for source_stmt in &resolve_output.source_statements {
+        let file = source_stmt.file.clone();
+        match &source_stmt.statement {
+            Stmt::Stream(stream) => {
+                for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+                    check(
+                        &slot.src,
+                        slot.span,
+                        &file,
+                        &format!("Stream '{}'", stream.name),
+                    );
+                }
+            }
+            Stmt::Entity(entity) => {
+                for f in &entity.fields {
+                    let ctx = format!("Field '{}.{}'", entity.symbol(), f.name);
+                    check(&f.init.src, f.init.span, &file, &ctx);
+                    if let Some(next) = &f.next {
+                        check(&next.src, next.span, &file, &ctx);
+                    }
+                }
+            }
+            Stmt::Event(event) => {
+                check(
+                    &event.when,
+                    event.span,
+                    &file,
+                    &format!("Event '{}'", event.name),
+                );
+            }
+            Stmt::Waterfall(w) => {
+                if let Some(from) = &w.source {
+                    check(
+                        &from.src,
+                        from.span,
+                        &file,
+                        &format!("Waterfall '{}'", w.name),
+                    );
+                }
+                for step in &w.steps {
+                    if let Some(amount) = &step.amount {
+                        check(
+                            &amount.src,
+                            amount.span,
+                            &file,
+                            &format!("Waterfall '{}' step '{}'", w.name, step.name),
+                        );
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// `(entity symbol, field)` for every family path in an expression source.
+fn field_paths(src: &str) -> Vec<(String, String)> {
+    let mut found = Vec::new();
+    for family in ["asset", "party", "contract", "reference"] {
+        let needle = format!("{family}.");
+        // `base` walks forward; the scan is always over `src` itself.
+        let mut base = 0usize;
+        while let Some(idx) = src[base..].find(&needle) {
+            let at = base + idx;
+            let before_ok = at == 0
+                || !src[..at]
+                    .chars()
+                    .next_back()
+                    .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+            base = at + needle.len();
+            if !before_ok {
+                continue;
+            }
+            let tail = &src[base..];
+            let end = tail
+                .find(|c: char| !(c.is_alphanumeric() || c == '_' || c == '.'))
+                .unwrap_or(tail.len());
+            let segs: Vec<&str> = tail[..end].split('.').collect();
+            if segs.len() >= 2 && !segs[0].is_empty() && !segs[1].is_empty() {
+                found.push((format!("{family}.{}", segs[0]), segs[1].to_string()));
+            }
+        }
+    }
+    found
+}
+
 fn check_prev_first_period(
     resolve_output: &cfdl_resolver::ResolveOutput,
     model_start: &str,
@@ -1626,6 +1772,7 @@ fn build_ir(
     check_waterfalls(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
+    check_field_paths(resolve_output)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements

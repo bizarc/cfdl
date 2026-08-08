@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1131_UNKNOWN_FIELD_READ",
+    "severity": "error",
+    "message": "Stream 'credit.repay' reads 'asset.tlb.blance', which that entity does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 3,
+      "end_line": 22,
+      "end_col": 27
+    },
+    "path": null,
+    "hint": "Declare the field on the entity, or correct the name. Unrejected this reads as null and becomes zero in arithmetic.",
+    "notes": []
+  }
+]
