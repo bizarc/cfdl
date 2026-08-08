@@ -1,0 +1,137 @@
+---
+title: "Appendix A: language quick reference"
+description: "The whole language on two pages — every statement form, the schedule sub-language, the expression environment, and the run configuration."
+part: 5
+order: 25
+track: core
+---
+
+Everything the course taught, compressed for the working desk. Shapes use angle brackets for what you supply and square brackets for what is optional; the normative grammar lives in the specification at [cfdl.dev](https://cfdl.dev/docs/specification).
+
+## Model structure
+
+```text
+version 0.1
+model "<name>"
+use pack "<id>" version "<ver>"        -- optional; root file only
+import "<file>.cfdl"                   -- root and imported files; no cycles,
+                                       -- never outside the model directory
+time calendar <daily|monthly|quarterly|annual> from <date> for <N>
+phase <name> from <date> to <date>
+```
+
+One time grid per model; header statements live in the root file only. Everything else — entities, assumptions, curves, streams, contracts, events, options, waterfalls — may live in any file, in any order. Order never carries meaning.
+
+## Entities and fields
+
+```text
+entity <family> <name> : <Type>                  -- family: asset | party |
+entity <family> <name> : <Type> {                --         contract | reference
+  <field> = <literal>                            -- a fact: literal only
+  <field> init <expr>                            -- a rule: the recurrence
+          next <expr>                            --   `prev` = own prior value
+  part of <family>.<name>                        -- hierarchy; rollups follow
+}
+```
+
+Reads, from any expression: `asset.x.field` (this period, at close), `prev.asset.x.field` (prior close), `entity.state.field` (the attached entity's own field). Rules see only the completed prior column — same-period cycles are unwritable.
+
+## Streams
+
+```text
+stream <a>.<b>[.<c>] on entity <family>.<name> <inflow|outflow> currency <CCY> {
+  schedule <see below>
+  [active when <boolean expr>]
+  amount = <expr>
+}
+```
+
+Names are dotted, at least two segments, unique. Direction is declared; amounts are written positive.
+
+## Schedules
+
+```text
+schedule on <date> [mid] [convention <conv>] [calendar "<cal>"]
+schedule every <day|week|month|quarter|year> [due|mid]
+         [on day <n> | on eom]
+         [net <n> [days|months]]
+         from <date|phase_start("p")> to <date|phase_end("p")>
+         [except [<dates>]] [also [<dates>]]
+schedule on phase_enter("<phase>")
+```
+
+Placement: default = period end (arrears); `due` = start (advance; stride schedules only — one payment in advance is `every month due from X to X`); `mid` = midpoint (mid-period convention). Conventions: `none`, `following`, `preceding`, `modified_following`, `modified_preceding`. Calendars: `"weekend"`, `"us"`, `"uk"`, `"target"`. `net` counts days, or steps calendar months. Occurrences pushed off the grid are compile errors.
+
+## Assumptions and curves
+
+```text
+assume <name> = <expr>
+assume <name> ~ Normal(mean=, stdev=, clip=[lo, hi])
+             ~ LogNormal(mu=, sigma=)     ~ Uniform(min=, max=)
+             ~ Triangular(min=, mode=, max=)
+curve <name> <step|linear> { <date>: <value>  ... }
+```
+
+Read as `inputs.<name>` and `curve_value("<name>", <date>)`. Deterministic runs use central values: Normal → mean, LogNormal → exp(mu + sigma²/2), Uniform → midpoint, Triangular → (min + mode + max) / 3 — *not* the mode. Curves clamp outside their stated range.
+
+## Contracts, events, options, waterfalls
+
+```text
+contract <pack>.<type>[.<suffix>] [on entity <ref>] {
+  term <date>..<date>
+  terms { <key> = <literal | inputs.name>  ... }
+}
+
+event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period
+  set entity <family>.<name>.<field> = <value>
+  activate stream <name> | deactivate stream <name>
+  exercise option <name>
+}
+
+option <a>.<b> type <Type> {
+  exercise when <boolean expr>
+  payoff <expr>
+}
+
+waterfall <a>.<b> on entity <ref> {
+  schedule <as streams>
+  from <expr>                                -- the pot; fields and series work
+  pay <step> to <family>.<name> = <expr>     -- receives min(max(0,owed),remaining)
+}
+```
+
+Waterfall step expressions may read `remaining`, `owed.<step>`, `paid.<step>` (earlier steps only). The five step shapes: stated amount, capped (`min`), pay-to-target (balance − target), shortfall (`owed.x − paid.x`), sweep (`remaining`).
+
+## Expressions
+
+Scopes: `time.t` (period index from 0), `time.date`, `time.phase` · `inputs.*` · `cfg.*`, `obs.*` (run-supplied) · field reads as above. Arithmetic is decimal; `%` is remainder, not percent.
+
+| Family | Functions |
+|---|---|
+| Bounds and shape | `min` `max` `abs` `clamp(x, lo, hi)` |
+| Growth | `pow` `exp` `ln` |
+| Rounding | `round(x, digits)` `round_up` `round_down` · `round_to(x, step)` — nearest multiple |
+| Conditional | `if(cond, then, else)` |
+| Dates | `date` `edate` `eomonth` `days_between` `months_between` `year_frac` `is_business_day` `add_business_days` `roll` |
+| TVM | `pv` `fv` `pmt(rate, nper, pv)` `ipmt` `ppmt` `nper` `rate` |
+| Series | `series_sum("name", from_t, to_t)` `series_avg` — second-pass; readers cannot read readers |
+| Domain | `cpr_to_smm` `macrs_rate(year, life)` `curve_value` |
+
+Full signatures: the expressions reference at [cfdl.dev](https://cfdl.dev/docs/reference/expressions).
+
+## Run configuration
+
+```json
+{
+  "deterministic": { "annual_discount_rate": 0.08, "as_of": "2026-01-01",
+                     "parameters": { "cfg.x": 1.0, "obs.y": 0.05, "inputs.z": 42 } },
+  "scenarios": { "<name>": { "annual_discount_rate": 0.08, "parameters": {} } },
+  "monte_carlo": { "trial_count": 1000, "seed": 42 }
+}
+```
+
+Annual rates convert to the grid geometrically: `(1 + r)^(1/n) − 1`. Parameters override `cfg`/`obs`/`inputs` per scenario without touching the model. A `run monte_carlo trials N seed N` statement in the model is overridden by the configuration when both exist.
+
+## The disciplines, one line each
+
+Model at the grain cash moves; roll up, never slice down. Opinions on the assumption page; structure literal. Dates in phases. Expressions that read aloud. One hand-checked anchor per file. Match a source's method, then its answer. Recompute ratios from rolled-up flows. Fix the first error only. Predict before you run.
