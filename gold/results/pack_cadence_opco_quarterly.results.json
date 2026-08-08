@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "f3cdc3259e1959e66be88d10d9a0496d65b4d230be66f484c99b716a86920ac1",
-  "ledger_hash": "1d79f9a8a6ff7fe395447417c3a40bb5e56fa021379e90ffc8089fcfbec983cc",
+  "model_hash": "cf09f30133b772e313114d709c67206c46c7340e2667df1d20a607666a85e824",
+  "ledger_hash": "866c8ceb94058252bf797aba37a2d1794dff7bd756c39df61f1e6983f1e1e620",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -812,7 +812,7 @@
           }
         ]
       },
-      "state.opco_capex_growth": {
+      "state.asset.business.opco_capex_growth": {
         "index": {
           "calendar": "quarterly",
           "start": "2025-01-01",
@@ -833,7 +833,7 @@
           1.0
         ]
       },
-      "state.opco_opex_growth": {
+      "state.asset.business.opco_opex_growth": {
         "index": {
           "calendar": "quarterly",
           "start": "2025-01-01",
@@ -854,7 +854,7 @@
           1.0
         ]
       },
-      "state.opco_revenue_growth": {
+      "state.asset.business.opco_revenue_growth": {
         "index": {
           "calendar": "quarterly",
           "start": "2025-01-01",

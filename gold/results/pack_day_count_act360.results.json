@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "4fed54403b2768f0f8c585df5d950d217c639f3a822b871bc13a2f0a7af0df9c",
-  "ledger_hash": "02c70a80980a931a10522de9baff1a7943626175b27e075d0d216638e0e5b17f",
+  "model_hash": "765196e49bed507e3de529937f1a4a8506219cae2a7931045eef955cc720c972",
+  "ledger_hash": "641dbb8c5a097602eb66077ca986cf632609165965f6d632523486d315241ae0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -880,7 +880,7 @@
           }
         ]
       },
-      "state.credit_io_bullet_survival_lag_p": {
+      "state.asset.buyer.credit_io_bullet_survival_lag_p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -902,7 +902,7 @@
           1.0
         ]
       },
-      "state.credit_io_bullet_survival_p": {
+      "state.asset.buyer.credit_io_bullet_survival_p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",

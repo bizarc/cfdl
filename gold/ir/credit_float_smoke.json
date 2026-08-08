@@ -16,6 +16,40 @@
       "symbol": "asset.buyer",
       "type": "Credit.Asset.LoanPool",
       "fields": {},
+      "rules": {
+        "credit_float_io_survival_lag_smoke": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)), 0.000001), 1))), prev)"
+          },
+          "schedule": {
+            "kind": "Every",
+            "every": "monthly",
+            "from": "2026-01-01",
+            "to": "2027-03-01"
+          }
+        },
+        "credit_float_io_survival_smoke": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
+          },
+          "schedule": {
+            "kind": "Every",
+            "every": "monthly",
+            "from": "2026-01-01",
+            "to": "2027-03-01"
+          }
+        }
+      },
       "state": {}
     }
   ],
@@ -37,42 +71,6 @@
           "value": 0.038
         }
       ]
-    }
-  ],
-  "states": [
-    {
-      "name": "credit_float_io_survival_lag_smoke",
-      "init": {
-        "lang": "cfdl",
-        "src": "1"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)), 0.000001), 1))), prev)"
-      },
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2027-03-01"
-      }
-    },
-    {
-      "name": "credit_float_io_survival_smoke",
-      "init": {
-        "lang": "cfdl",
-        "src": "1"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
-      },
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2026-01-01",
-        "to": "2027-03-01"
-      }
     }
   ],
   "subtotals": [
@@ -241,7 +239,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * asset.buyer.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -281,7 +279,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * asset.buyer.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -321,7 +319,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * asset.buyer.credit_float_io_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -361,7 +359,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * state.credit_float_io_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * asset.buyer.credit_float_io_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -401,7 +399,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, 1200000.0 * state.credit_float_io_survival_lag_smoke * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, 1200000.0 * asset.buyer.credit_float_io_survival_lag_smoke * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -441,7 +439,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * state.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * asset.buyer.credit_float_io_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",

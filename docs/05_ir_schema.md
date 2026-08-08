@@ -391,8 +391,12 @@ against it by `make ir-schema`.
               },
               "next": {
                 "$ref": "#/$defs/Expr"
+              },
+              "schedule": {
+                "$ref": "#/$defs/Schedule"
               }
-            }
+            },
+            "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeller wrote has none and steps every period."
           }
         }
       }

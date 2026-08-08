@@ -2600,13 +2600,37 @@ fn compute_states(
             };
             let init = compile(&rule.init.src, "init");
             let next = compile(&rule.next.src, "next");
+            let (ticks, first_tick) = match &rule.schedule {
+                None => (None, 0),
+                Some(schedule) => {
+                    let mut slots = vec![Vec::new(); timeline.len()];
+                    match apply_schedule_indices(schedule, timeline, &mut slots) {
+                        Ok(()) => {
+                            let mut ticks = vec![false; timeline.len()];
+                            for accruals in &slots {
+                                for &idx in accruals {
+                                    ticks[idx] = true;
+                                }
+                            }
+                            let first = ticks.iter().position(|t| *t).unwrap_or(0);
+                            (Some(ticks), first)
+                        }
+                        Err(err) => {
+                            warnings.push(format!(
+                                "Field '{name}' schedule could not be resolved: {err}; stepping every period."
+                            ));
+                            (None, 0)
+                        }
+                    }
+                }
+            };
             values.insert(name.clone(), vec![0.0; timeline.len()]);
             prepared.push(Prepared {
                 name,
                 init,
                 next,
-                ticks: None,
-                first_tick: 0,
+                ticks,
+                first_tick,
             });
         }
     }
@@ -3772,6 +3796,11 @@ struct IrWaterfallStep {
 struct IrFieldRule {
     init: IrExpr,
     next: IrExpr,
+    /// A field a CONTRACT brought carries that contract's rhythm: a
+    /// monthly-paying pool on a daily book compounds twelve times a year, not
+    /// 365. A field a modeller wrote has none and steps every period.
+    #[serde(default)]
+    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "0f7f713ab56e249e7c234a165f6c492d3d5f1e21780b20a25a02212ddcc045e1",
-  "ledger_hash": "717825d2571b9daf36d93b86f793f718b501afef5057e8c20a0aa9d9d2c8c4c4",
+  "model_hash": "4c76bf95625170c4ae3856dfaf7b6937a569698d0bbde39b165b9a0891d637b9",
+  "ledger_hash": "67fd82d7254b9d43fdca0794af5765c8dee3b1a62b3fc787c4d6d4a638b4d5db",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -2055,7 +2055,7 @@
           }
         ]
       },
-      "state.credit_level_pay_survival_book": {
+      "state.asset.buyer.credit_level_pay_survival_book": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -2103,7 +2103,7 @@
           0.6498930420867837
         ]
       },
-      "state.credit_level_pay_survival_lag_book": {
+      "state.asset.buyer.credit_level_pay_survival_lag_book": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",

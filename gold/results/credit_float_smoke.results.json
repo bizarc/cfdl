@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "26bc09a5bdee6639f333f2e97029267ff91073db802bb256fb8ab2fa4bf11e94",
-  "ledger_hash": "667ca027267ceee5fe83fb61ac512d38e9a86b014d7f1be84a456ede18285032",
+  "model_hash": "a2c2f762169d6dc5b1ec2afe49ea71e0abae1ceeb0a458ddbfab793423206c6a",
+  "ledger_hash": "d47c4862f947a30ac9ba9f7b4a707dded3db9ce1d4bcc2782c179d0f0dcf118e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -988,7 +988,7 @@
           }
         ]
       },
-      "state.credit_float_io_survival_lag_smoke": {
+      "state.asset.buyer.credit_float_io_survival_lag_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1012,7 +1012,7 @@
           0.882719359713597
         ]
       },
-      "state.credit_float_io_survival_smoke": {
+      "state.asset.buyer.credit_float_io_survival_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
