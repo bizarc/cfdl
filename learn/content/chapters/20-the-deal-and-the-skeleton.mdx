@@ -1,0 +1,76 @@
+---
+title: "The capstone: Harbor Point"
+description: "One deal, carried to the end of the course: the case, the two-grain declaration, and the skeleton every later chapter builds on."
+part: 4
+order: 20
+track: core
+---
+
+Everything so far taught one construct or one judgment at a time. Part IV is the payoff: one deal, built the way you would build it at a desk, across five chapters — each ending in a model that compiles, runs, and answers more of the deal's questions than the last. By chapter 24 it will carry a rent roll, a two-loan capital stack, a priced exit, a downside scenario, a thousand-trial risk book, and an equity waterfall — and it will still read aloud, because it is built to Part II's style checklist from its first line.
+
+## The case
+
+**Harbor Point** is a ground-up development: an office building with a retail base, on a site to be acquired January 2026 for 5,500,000. Construction runs eighteen months at roughly 11.9 million of hard and soft cost. The office pre-lease takes occupancy mid-2027 and ramps over a year; the retail suite signs shortly after, with free rent and an allowance. A construction facility funds 65% of the build, taken out at stabilization by an interest-only permanent loan. The plan is to sell at the end of 2030 at a market cap rate and split the proceeds between the LP and the GP over an 8% preferred return and a 20% promote.
+
+Hold the shape in your head — *buy, build, lease, finance, sell, split* — because each verb is a chapter, and each chapter is one file's worth of claims added to this one.
+
+## The two-grain declaration
+
+Chapter 16 said to write this down before the first stream, so we do, in public. **Timeline: monthly.** The finest documented cadences are monthly — draws, rent, debt service — and the exit's forward-NOI window is naturally twelve of them; daily would add thirty periods of noise per real claim, annual would fabricate the inside of the lease-up. **Entities: the property, with the retail lease at unit grain.** The office anchor and the retail suite behave differently — different start, escalation, incentives — so retail is a `cre.lease_unit` of its own; everything else about the building pools at property level. The construction loan is its own entity because a balance lives on it. The parties arrive in chapter 24, when cash finally reaches them.
+
+## The skeleton
+
+```cfdl
+version 0.1
+model "harbor-point"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+phase construction from 2026-01 to 2027-06
+phase lease_up from 2027-07 to 2028-06
+phase operations from 2028-07 to 2030-12
+
+// examples-allow: harbor — the skeleton compiles before any stream exists
+entity asset harbor : CRE.Asset.RealProperty
+```
+
+Nine lines, and note what each is doing. The pack is declared up front — this deal is standard CRE, and chapter 19's decision goes pack-first, with bespoke streams joining where the pack has no word for what we mean (the construction facility, in chapter 22, will be exactly that). The three phases are the deal's entire calendar; per the style checklist, no later claim will carry a date the phases could own. And the property is typed, so every field and contract from here on is checked against the domain's vocabulary.
+
+The first two claims go in today — the land closing and the construction program:
+
+```cfdl
+// Land closes at the start of month one.
+stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 5500000
+}
+
+// Seventeen level draws, Feb 2026 through Jun 2027: 11,900,000 of hard and
+// soft cost. Anchor: 5,500,000 + 11,900,000 = 17,400,000 all-in.
+contract cre.construction_stub {
+  term 2026-02..2027-06
+  terms {
+    amount = 700000
+  }
+}
+```
+
+The land uses chapter 4's payment-in-advance idiom — closings happen at the start of a month, and the `due` stride says so. The construction program is the pack's `construction_stub`: level draws over the term, the standard treatment, stated by one term. (A draw *schedule* from a contractor's S-curve would be the bespoke alternative — a hand stream reading a curve — and upgrading the stub to one is an end-of-part exercise.)
+
+## What the numbers say
+
+Run it. Total: −17,400,000 — the anchor, checked by hand, the model's first entry in the checklist's ledger of verified numbers. NPV at 10%: about −16.5 million, *less* negative than the total, and that difference is worth staring at once: development costs discount barely at all because they are paid first. Every dollar of return this deal will ever show has to climb over full-weight costs with discounted revenue — which is why the next four chapters' numbers matter in the order they arrive: revenue first, then cheaper funding, then the exit that carries most of the value, then the stated width around it.
+
+## What can go wrong
+
+**A phase that lies.** The phases were declared from the construction schedule; if the build takes twenty-one months, the fix is the phase line — and every schedule that obeyed the checklist follows. The chapter-9 slip test is now a standing capstone exercise: slip construction one quarter at each checkpoint and watch what re-derives.
+
+**An anchor nobody checked.** 17,400,000 took one multiplication. Every checkpoint from here adds one hand-checked number to the set; by chapter 24 the model carries five, and any future wrongness lands *between* two verified anchors instead of anywhere at all.
+
+## Exercises
+
+<Exercise id="20-the-deal-and-the-skeleton/the-skeleton" />
+
+Then, on your own:
+
+1. Slip construction one quarter — phases only — and rerun. Nothing else should need touching, and the total should not move (the same seventeen draws, later). What *does* move, and why is that correct?
+2. Sketch, on paper, which of the deal's six verbs will need which constructs. You have the whole toolbox and the whole judgment part now; the next four chapters are your chance to check your own predictions.

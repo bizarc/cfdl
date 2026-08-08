@@ -1,0 +1,61 @@
+---
+title: "Capstone: exit and returns"
+description: "The reversion — a cap-rate sale with its window named, the loan payoff against proceeds, and the levered returns the whole deal has been building toward."
+part: 4
+order: 23
+track: core
+---
+
+Every number so far has been rehearsal. Development deals live or die on the reversion — the sale that converts four years of claims into one wire — and this shortest chapter of the capstone adds the two lines that price it, then spends its weight where the judgment is: what those two lines assert, and how to interrogate the returns they produce.
+
+## The sale, with its window named
+
+```cfdl
+// Sale at the horizon: forward-twelve-month NOI at the exit cap, net of
+// selling costs. The window is NAMED: forward NOI, stated to match the
+// stabilized year the modeled streams produce.
+contract cre.exit {
+  term 2030-12..2030-12
+  terms {
+    noi_forward_year = 1550000
+    exit_cap = 0.0625
+    selling_costs = 0.02
+  }
+}
+
+// The permanent loan is repaid against the sale — the reversion carries the
+// payoff, not the debt service line (which is why the balloon is off).
+stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
+  schedule on 2030-12
+  amount = 9500000
+}
+```
+
+Chapter 18's exit conventions, now as committed terms. The NOI basis is **forward** — the term's own name says so — because a buyer underwrites the year they are buying, and the 1,550,000 is *stated to match the modeled stabilized year*: check it against the results' final-year NOI, and record the check (it is this chapter's hand anchor). Stating the number rather than deriving it is a choice with a tradeoff — a stated window is visible and committee-editable but can drift from the model that surrounds it; the pack's `cre.exit_forward` derives the same window from the modeled streams instead, at the price of a projection tail. The exercise has you reconcile the two. Selling costs belong in every reversion that expects to survive diligence; the payoff is the takeout structure from chapter 22 completing itself — an IO loan returns its full principal, and it returns it *here*, against proceeds, exactly where the pack's balloon note said it belongs.
+
+The sale lands at the *end* of the final period — the pack places it there deliberately, and after chapter 4 you know that placement is worth a full month of discounting on the deal's largest number.
+
+## What the numbers say
+
+Proceeds: 1,550,000 / 0.0625 × 0.98 = **24,304,000** — arithmetic you should do on paper before the engine confirms it. And with the reversion in, the deal finally has a bottom line: total about +8.6 million, **IRR 15.6%, equity multiple 1.8x** on roughly 8 million of equity over five years.
+
+Now interrogate them, because this is where chapter 3's discipline meets real stakes. **Where does the value sit?** Strip the exit from the total in your head: without the sale the deal is −6.2 million; the reversion is not the icing but most of the cake — which is the risk profile of all development, stated as one subtraction. **What is the IRR sensitive to?** Move the cap 50 basis points in your head before running it: at 6.75%, proceeds drop to about 22.5 million — call it 1.8 million of value, on a number nobody controls. **Is the multiple consistent with the IRR?** 1.8x over five years is roughly 15% and the model says 15.6% — the two metrics cross-check each other, and when they ever disagree wildly, timing (an early distribution, a late call) is the explanation to hunt.
+
+That cap-rate subtraction is the whole argument for the final chapter: a deal whose value lives in one market number at one future date is not described by a point estimate, however carefully anchored.
+
+## What can go wrong
+
+**A stated window that drifted.** The model's stabilized NOI creeps up in a revision; the stated 1,550,000 does not. Nothing errors — two parts of one model now disagree about the same year. The defense is the recorded reconciliation (anchor plus comment), or the derived-exit contract, which cannot drift and cannot be committee-edited: choose which failure you would rather have, deliberately.
+
+**A payoff that misses the loan.** Raise the permanent loan in chapter 22's exercise and forget this chapter's payoff line, and the model happily sells the building while still owing 1,000,000. The two claims live three chapters apart; the checklist's hand-checked-anchors habit is what catches cross-file drift.
+
+**Trusting a point IRR.** 15.6% is one draw from a distribution this model does not yet admit having. The last chapter fixes that.
+
+## Exercises
+
+<Exercise id="23-capstone-exit-and-returns/the-reversion" />
+
+Then, on your own:
+
+1. Reconcile the stated window: read the final twelve months' NOI from the results and compare to 1,550,000. Then restate the exit with a cap of 0.0675 and write, in one sentence suitable for a committee memo, what 50 basis points cost.
+2. Test the multiple/IRR cross-check: move the sale a year earlier (phases, term, payoff — the slip test in reverse). The multiple falls and the IRR rises. Explain why in one sentence about time.
