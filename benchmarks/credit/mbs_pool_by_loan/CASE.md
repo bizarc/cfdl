@@ -30,7 +30,7 @@ is the only step taken.
 |---|---|
 | Pack | `credit` |
 | Declared | five typed assets, one of them a parent; four contract instances |
-| Language features | **`part of` hierarchy**, typed entity attributes, per-instance contract suffixes |
+| Language features | **`part of` hierarchy**, typed entity fields, per-instance contract suffixes |
 | Conventions | level-pay amortisation, SMM on the gross balance, MDR, a lagged recovery |
 
 Two aggregates are asserted, computed by unrelated code:

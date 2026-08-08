@@ -792,7 +792,7 @@ The expression environment MUST support:
 - `cfg.<name>` for run-config values
 
 **Entities**
-- `entity.<attr>` / `entity.state.*` — entity attributes and mutable state
+- `entity.<field>` / `entity.state.*` — entity fields and lifecycle state
   (set via events; null before first set)
 
 **Observables and curves**

@@ -102,7 +102,8 @@ pub struct EntityStmt {
     /// Attributes declared in the entity's block, as raw source. Checked
     /// against the type's declared fields.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<EntityAttribute>,
+    pub literal_fields: Vec<EntityLiteralField>,
+    pub fields: Vec<EntityField>,
     /// The parent this entity belongs to, if the model groups it.
     ///
     /// ALWAYS OPTIONAL. A pool models collective behaviour perfectly well with
@@ -118,10 +119,32 @@ pub struct EntityStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
-pub struct EntityAttribute {
+pub struct EntityLiteralField {
     pub name: String,
     /// Raw source of the value expression.
     pub value: String,
+    pub span: Span,
+}
+
+/// A field of an entity, declared with an expression and an optional rule for
+/// what it does next.
+///
+/// THERE IS ONE CONCEPT HERE, NOT TWO. `use = "office"` and
+/// `factor init 1.0 next prev * (1.0 - smm)` are both fields; the first simply
+/// holds. `=` is shorthand for `init <literal>` with no `next`, and an absent
+/// `next` means the value carries forward.
+///
+/// A field changes in one of three ways: it holds, a `next` rule moves it, or
+/// an event writes it. They compose in the order the engine already runs —
+/// states, then events, then streams — so a rule computes the period's value,
+/// an event may overwrite it, and outputs read what was committed. A building
+/// changes its use, a pool amortises its factor and then a trigger resets it.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct EntityField {
+    pub name: String,
+    pub init: ExprSlot,
+    /// Absent means the field holds its value.
+    pub next: Option<ExprSlot>,
     pub span: Span,
 }
 
@@ -900,7 +923,8 @@ impl<'a> Parser<'a> {
                 namespace,
                 name,
                 type_name: None,
-                attributes: Vec::new(),
+                literal_fields: Vec::new(),
+                fields: Vec::new(),
                 parent: None,
                 initial_state: None,
                 span: merge_spans(start.span, name_tok.span),
@@ -929,7 +953,8 @@ impl<'a> Parser<'a> {
                 namespace,
                 name,
                 type_name: Some(type_name),
-                attributes: Vec::new(),
+                literal_fields: Vec::new(),
+                fields: Vec::new(),
                 parent: None,
                 initial_state: None,
                 span: merge_spans(start.span, type_tok.span),
@@ -937,7 +962,8 @@ impl<'a> Parser<'a> {
         }
         let _ = self.bump(); // '{'
 
-        let mut attributes: Vec<EntityAttribute> = Vec::new();
+        let mut literal_fields: Vec<EntityLiteralField> = Vec::new();
+        let mut fields: Vec<EntityField> = Vec::new();
         let mut parent: Option<String> = None;
         let mut initial_state: Option<String> = None;
         let end;
@@ -950,8 +976,7 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
-                            .to_string(),
+                        "Expected a field, 'part of', 'state' or '}' in entity block.".to_string(),
                     );
                     return None;
                 }
@@ -1011,6 +1036,56 @@ impl<'a> Parser<'a> {
                         unreachable!("matched Ident above")
                     };
                     let key = key.clone();
+
+                    // `<name> init <expr> [next <expr>]` — the long form of a
+                    // field. `<name> = <literal>` is the short one, and they
+                    // are the same thing: `=` means `init` with no rule. The
+                    // clause keyword is all that distinguishes the spellings,
+                    // and `init`/`next` carry no '=' for the reason a state's
+                    // do not.
+                    if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "init") {
+                        let init_tok = self.bump();
+                        if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                            let span = self.current_span();
+                            self.push_expected(
+                                span,
+                                "`init` takes an expression directly, with no '='. \
+                                 Write `init <expr>`."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                        let init = self.parse_expr_slot_until(init_tok.span, &["next"])?;
+                        // `next` is OPTIONAL: a field with no rule holds its
+                        // value, which is what an attribute has always done.
+                        let mut next = None;
+                        let mut end_span = init.span;
+                        if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "next") {
+                            let next_tok = self.bump();
+                            if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                                let span = self.current_span();
+                                self.push_expected(
+                                    span,
+                                    "`next` takes an expression directly, with no '='. \
+                                     Write `next <expr>`."
+                                        .to_string(),
+                                );
+                                return None;
+                            }
+                            let slot = self.parse_expr_slot(next_tok.span)?;
+                            end_span = slot.span;
+                            next = Some(slot);
+                        }
+                        let span = merge_spans(key_tok.span, end_span);
+                        fields.push(EntityField {
+                            name: key,
+                            init,
+                            next,
+                            span,
+                        });
+                        continue;
+                    }
+
                     let _ = self.expect_punct(Punct::Equal, "'='")?;
                     // A signed number lexes as a sign punct then the number.
                     let sign = match self.peek().kind {
@@ -1036,12 +1111,12 @@ impl<'a> Parser<'a> {
                         _ => {
                             self.push_expected(
                                 value_tok.span,
-                                format!("Expected a literal value for entity attribute '{key}'."),
+                                format!("Expected a literal value for entity field '{key}'."),
                             );
                             return None;
                         }
                     };
-                    attributes.push(EntityAttribute {
+                    literal_fields.push(EntityLiteralField {
                         name: key,
                         value,
                         span: merge_spans(key_tok.span, value_tok.span),
@@ -1051,8 +1126,7 @@ impl<'a> Parser<'a> {
                     let bad = self.bump();
                     self.push_expected(
                         bad.span,
-                        "Expected an attribute, 'part of', 'state' or '}' in entity block."
-                            .to_string(),
+                        "Expected a field, 'part of', 'state' or '}' in entity block.".to_string(),
                     );
                     return None;
                 }
@@ -1063,7 +1137,8 @@ impl<'a> Parser<'a> {
             namespace,
             name,
             type_name: Some(type_name),
-            attributes,
+            literal_fields,
+            fields,
             parent,
             initial_state,
             span: merge_spans(start.span, end.span),
@@ -1936,16 +2011,51 @@ impl<'a> Parser<'a> {
         // truncated by its own final segment. Tracking whether the previous
         // token was a dot is what separates the two.
         let mut after_dot = false;
+        // WHERE AN EXPRESSION ENDS IS A FACT ABOUT THE GRAMMAR, not a list of
+        // words to watch for.
+        //
+        // This used to scan until it met a known clause name, which meant every
+        // block that could follow an expression had to be enumerated here —
+        // and a block whose next item is an arbitrary IDENT could not be
+        // enumerated at all. That is why an entity field's value had to be a
+        // literal: an expression there swallowed the rest of the block.
+        //
+        // Two operands side by side is not an expression in any grammar this
+        // language has. So the rule is maximal munch: once an operand has
+        // closed, another operand starting is the next item, and the
+        // expression ended at the previous token. `275.0 next`, `max(a, b) rate`
+        // and `prev - 25.0 use` all end where a reader would say they end.
+        //
+        // `complete` tracks whether the last token closed an operand. A dotted
+        // path is not two operands — `inputs.amount` — so `after_dot` still
+        // carries the exception it always did.
+        let mut complete = false;
         loop {
             match self.peek().kind {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
                 | TokenKind::Keyword(Keyword::Schedule)
                 | TokenKind::Keyword(Keyword::Active) => break,
-                TokenKind::Ident(ref ident)
-                    if !after_dot
-                        && (matches!(ident.as_str(), "amount" | "init" | "next")
-                            || extra_stops.contains(&ident.as_str())) =>
+                // An operand cannot follow an operand — but `and`, `or` and
+                // `not` lex as identifiers and are OPERATORS, so they continue
+                // the expression rather than beginning a new item.
+                TokenKind::Ident(ref w)
+                    if complete && !after_dot && matches!(w.as_str(), "and" | "or" | "not") =>
+                {
+                    let tok = self.bump();
+                    after_dot = false;
+                    complete = false;
+                    if first.is_none() {
+                        first = Some(tok.span);
+                    }
+                    last = Some(tok.span);
+                }
+                TokenKind::Ident(_)
+                | TokenKind::Number(_)
+                | TokenKind::String(_)
+                | TokenKind::Date(_)
+                | TokenKind::Qname(_)
+                    if complete && !after_dot =>
                 {
                     break
                 }
@@ -1955,6 +2065,18 @@ impl<'a> Parser<'a> {
                 _ => {
                     let tok = self.bump();
                     after_dot = matches!(tok.kind, TokenKind::Punct(Punct::Dot));
+                    complete = !after_dot
+                        && matches!(
+                            tok.kind,
+                            TokenKind::Ident(_)
+                                | TokenKind::Number(_)
+                                | TokenKind::String(_)
+                                | TokenKind::Date(_)
+                                | TokenKind::Qname(_)
+                                | TokenKind::Punct(Punct::RParen)
+                                | TokenKind::Keyword(Keyword::True)
+                                | TokenKind::Keyword(Keyword::False)
+                        );
                     if first.is_none() {
                         first = Some(tok.span);
                     }

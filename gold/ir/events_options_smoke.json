@@ -15,7 +15,7 @@
       "id": "972cf2aa048ecab4133b6577cca17e6f",
       "symbol": "asset.senior",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

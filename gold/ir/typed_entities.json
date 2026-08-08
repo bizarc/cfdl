@@ -15,14 +15,14 @@
       "id": "7853fc246dad4a4bd91dfae5a5c2c82d",
       "symbol": "asset.legacy",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "4b3815af6f8727aa5e6a0802a277ce2e",
       "symbol": "asset.suite_a",
       "type": "CRE.Asset.Unit",
-      "attrs": {
+      "fields": {
         "rentable_area": "12000"
       },
       "state": {},
@@ -33,7 +33,7 @@
       "id": "121876c85ba64d3a28b2875e9e107d71",
       "symbol": "asset.tower",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {
+      "fields": {
         "asset_class": "office",
         "rentable_area": "30000"
       },
@@ -44,7 +44,7 @@
       "id": "0fbaf93a67f73e142625ed8e48f208b2",
       "symbol": "party.acme",
       "type": "CRE.Party.Tenant",
-      "attrs": {
+      "fields": {
         "name": "Acme Corp"
       },
       "state": {}

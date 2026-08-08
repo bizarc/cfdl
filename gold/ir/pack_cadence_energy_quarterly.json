@@ -15,7 +15,7 @@
       "id": "5ee7af216ff44dd9f6738e5e37dae0ab",
       "symbol": "asset.microgrid",
       "type": "Energy.Asset.GenerationFacility",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

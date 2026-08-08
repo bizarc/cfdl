@@ -15,7 +15,7 @@
       "id": "8f7ed51a636049b9e523fd88689e602f",
       "symbol": "asset.class_a",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "950",
         "seniority": "1"
       },
@@ -25,7 +25,7 @@
       "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
       "symbol": "asset.trust",
       "type": "Credit.Asset.LoanPool",
-      "attrs": {
+      "fields": {
         "original_balance": "1000"
       },
       "state": {}
@@ -34,7 +34,7 @@
       "id": "f1e37ea477b1ccd964abf31bc181757a",
       "symbol": "party.certificate",
       "type": "Credit.Party.Investor",
-      "attrs": {
+      "fields": {
         "name": "Certificateholder"
       },
       "state": {}
@@ -43,7 +43,7 @@
       "id": "94cdfa4da6d76077f56054f830c54133",
       "symbol": "party.servicer",
       "type": "Credit.Party.Servicer",
-      "attrs": {
+      "fields": {
         "name": "Servicer"
       },
       "state": {}
@@ -52,7 +52,7 @@
       "id": "5cc85692ee82f601ccf508671b0d6254",
       "symbol": "party.trustee",
       "type": "Credit.Party.Issuer",
-      "attrs": {
+      "fields": {
         "name": "Trustee"
       },
       "state": {}

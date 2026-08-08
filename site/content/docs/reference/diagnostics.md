@@ -70,7 +70,9 @@ register, so it cannot fall behind the language.
 | `E1120_STATE_MISSING_INIT` | Global structure | a `state` has no `init`. The value at period 0 is required, not defaulted: a recurrence with an unstated base case would evaluate to zero for every period, and an out-of-range read returns zero silently, so the error would never surface. |
 | `E1121_STATE_MISSING_NEXT` | Global structure | a `state` has no `next`. It would hold its initial value forever, which an `assume` expresses more clearly. |
 | `E1122_STATE_DUPLICATE_NAME` | Global structure | two states share a name. |
-| `E1123_STATE_PREV_OUTSIDE_NEXT` | Global structure | `prev` appears in `init`. There is no period before the first, so the initial value cannot depend on a previous one. |
+| `E1123_STATE_PREV_OUTSIDE_NEXT` | Global structure | `prev` appears in `init`. There is no period |
+| `E1127_FIELD_RULE_READS_FIELD` | Global structure | a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev <entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero. |
+| `E1128_FIELD_DECLARED_TWICE` | Global structure | a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win. before the first, so the initial value cannot depend on a previous one. |
 | `E1124_STATE_SAME_PERIOD_READ` | Global structure | `state.<name>` appears inside a `next`. That path reads the **current** period, which is the same-period edge the design exists to prevent; `prev.<name>` reads another state's previous value. |
 | `E1126_STATE_INIT_READS_STATE` | Global structure | `state.<name>` appears inside an `init`. Every state is seeded at period 0 together, so there is no order in which one already holds a value for another to read: the expression evaluated to zero and said nothing. The same edge `next` rejects, one period earlier. Inline the expression, or read the state from a stream or waterfall, both of which see period-close values. |
 | `E1125_STATE_UNKNOWN_REFERENCE` | Global structure | a `state.<name>` or `prev.<name>` names a state that is not declared. Without this the reference reaches the engine, which warns and substitutes zero — so an entire series evaluates to nothing while the run still reports `status: ok`. |
@@ -124,7 +126,7 @@ register, so it cannot fall behind the language.
 | `W3001_EXPR_TYPE_UNKNOWN` | Expressions / typing | an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped. |
 | `W3002_OBS_REF_EXTRACTION_FAILED` | Expressions / typing | an observation reference could not be read out of an expression, so the run may not know it needs that input. |
 | `E4001_UNKNOWN_TYPE_ID` | Pack errors | a declaration names a type the active pack does not define. |
-| `E4002_INVALID_ENTITY_ATTR` | Pack errors | an entity attribute is not one the pack declares, or holds the wrong kind of value. |
+| `E4002_INVALID_ENTITY_ATTR` | Pack errors | an entity field is not one the pack declares, or holds the wrong kind of value. |
 | `E4003_INVALID_CONTRACT_TERMS` | Pack errors | a contract's terms do not satisfy the pack's schema for that contract. |
 | `E4004_MISSING_PACK` | Pack errors | the named pack could not be loaded — not found, or found and rejected. |
 | `E5001_ID_GENERATION_FAILED` | Lowering/emission | the compiler could not derive a stable identifier for a declaration. |
@@ -205,7 +207,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*154 codes.*
+*156 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related

@@ -15,14 +15,14 @@
       "id": "d70ccd8d3fec8169c67d3a81f03a604b",
       "symbol": "asset.annex",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "027b43fa857365289ee336a2102298f9",
       "symbol": "asset.primary",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

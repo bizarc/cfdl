@@ -15,7 +15,7 @@
       "id": "74bc83da92847424713e6c3b3fbc005e",
       "symbol": "asset.suite",
       "type": "CRE.Asset.Unit",
-      "attrs": {
+      "fields": {
         "rentable_area": "12000"
       },
       "state": {},
@@ -25,7 +25,7 @@
       "id": "121876c85ba64d3a28b2875e9e107d71",
       "symbol": "asset.tower",
       "type": "CRE.Asset.RealProperty",
-      "attrs": {
+      "fields": {
         "asset_class": "office",
         "rentable_area": "30000"
       },

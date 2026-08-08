@@ -15,7 +15,7 @@
       "id": "95d2e935baff9181191f1d8e3239c019",
       "symbol": "asset.lender",
       "type": "Credit.Asset.LoanPool",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

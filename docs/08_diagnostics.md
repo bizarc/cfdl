@@ -179,6 +179,8 @@ State declarations:
   initial value forever, which an `assume` expresses more clearly.
 - `E1122_STATE_DUPLICATE_NAME` — two states share a name.
 - `E1123_STATE_PREV_OUTSIDE_NEXT` — `prev` appears in `init`. There is no period
+- `E1127_FIELD_RULE_READS_FIELD` — a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev <entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero.
+- `E1128_FIELD_DECLARED_TWICE` — a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win.
   before the first, so the initial value cannot depend on a previous one.
 - `E1124_STATE_SAME_PERIOD_READ` — `state.<name>` appears inside a `next`.
   That path reads the **current** period, which is the same-period edge the
@@ -273,7 +275,7 @@ Warnings:
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 ### 7.8 Pack errors (E4xxx)
 - `E4001_UNKNOWN_TYPE_ID` — a declaration names a type the active pack does not define.
-- `E4002_INVALID_ENTITY_ATTR` — an entity attribute is not one the pack declares, or holds the wrong kind of value.
+- `E4002_INVALID_ENTITY_ATTR` — an entity field is not one the pack declares, or holds the wrong kind of value.
 - `E4003_INVALID_CONTRACT_TERMS` — a contract's terms do not satisfy the pack's schema for that contract.
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
 ### 7.9 Lowering/emission (E5xxx)

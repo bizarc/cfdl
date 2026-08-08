@@ -15,7 +15,7 @@
       "id": "471076055446ce1641fbc7a06755119e",
       "symbol": "asset.firm",
       "type": "OpCo.Asset.Enterprise",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

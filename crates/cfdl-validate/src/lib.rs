@@ -118,6 +118,54 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     // docs/14_state_and_recurrence.md). `prev` outside `next` has no referent —
     // there is no period -1 — and `state.<name>` inside `next` would name the
     // CURRENT period, which is the same-period edge the whole design prevents.
+    // A FIELD'S RULE, held to the same two rules a state's is.
+    //
+    // `docs/18` §4a settles what a bare field read means inside a `next`: it is
+    // rejected. Everywhere else `asset.tlb.balance` means this period's value
+    // at close, and inside a rule that value does not exist yet — so rather
+    // than quietly meaning the previous period, it is an error naming the
+    // spelling that says so.
+    //
+    // Silence would be the worst answer here. A bare family path resolves
+    // through the open-world `entity` root, so an unrejected read returns null
+    // and evaluates to ZERO: the failure mode of `init = 100`, of the unbound
+    // entity attributes, and of the bare waterfall path.
+    for source_stmt in &output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        let symbol = entity.symbol();
+        for field in &entity.fields {
+            for (clause, slot) in [("init", Some(&field.init)), ("next", field.next.as_ref())] {
+                let Some(slot) = slot else { continue };
+                if references_entity_path(&slot.src) {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: "E1127_FIELD_RULE_READS_FIELD",
+                        message: format!(
+                            "Field '{symbol}.{}' reads another entity's field in '{clause}'. A field names this period's value at close, which does not exist yet inside a rule. Write `prev <entity>.<field>` for the previous period, or read it from a stream or waterfall, which see period-close values.",
+                            field.name
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: slot.span,
+                    });
+                }
+            }
+            // One name, one meaning: a field cannot be both a stated fact and a
+            // rule, because both bind the same path and one would silently win.
+            if entity.literal_fields.iter().any(|l| l.name == field.name) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1128_FIELD_DECLARED_TWICE",
+                    message: format!(
+                        "Field '{symbol}.{}' is declared twice — once with '=' and once with a rule. A field is one value; state it as a fact or give it a rule, not both.",
+                        field.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: field.span,
+                });
+            }
+        }
+    }
+
     let mut state_names: Vec<&str> = Vec::new();
     for source_stmt in &output.source_statements {
         let Stmt::State(state) = &source_stmt.statement else {
@@ -713,6 +761,24 @@ fn references_prev(src: &str) -> bool {
 }
 
 /// Whether an expression source reads `state.<name>` — the CURRENT period.
+/// Does this expression name an entity's field by its family path?
+///
+/// `asset.tlb.balance` yes; `inputs.asset_value` no, because the family must
+/// start a path rather than end a word.
+fn references_entity_path(src: &str) -> bool {
+    ["asset.", "party.", "contract.", "reference."]
+        .iter()
+        .any(|family| {
+            src.match_indices(family).any(|(idx, _)| {
+                idx == 0
+                    || !src[..idx]
+                        .chars()
+                        .next_back()
+                        .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.')
+            })
+        })
+}
+
 fn references_state_path(src: &str) -> bool {
     src.match_indices("state.").any(|(idx, _)| {
         let before_ok = idx == 0

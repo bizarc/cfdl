@@ -15,14 +15,14 @@
       "id": "dd7840c10afd55a0cee86fe6c87325df",
       "symbol": "asset.fund",
       "type": "Asset.Financial",
-      "attrs": {},
+      "fields": {},
       "state": {}
     },
     {
       "id": "9f76a9014f8e67d2951a906b1cbf69c0",
       "symbol": "party.gp",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "General Partner"
       },
       "state": {}
@@ -31,7 +31,7 @@
       "id": "b9fe762e53b028203656d6135ae10893",
       "symbol": "party.lp",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "Limited Partners"
       },
       "state": {}

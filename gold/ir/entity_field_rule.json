@@ -1,0 +1,233 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "entity-field-rule",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "39a483b4fc1574309d2e9c1cdf264e4b",
+      "symbol": "asset.tlb",
+      "type": "Credit.Asset.Tranche",
+      "fields": {
+        "original_balance": "275.0",
+        "seniority": "1"
+      },
+      "rules": {
+        "balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "275.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "max(0.0, prev - 25.0)"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "dd9ce192b49e4c2405b8f8c87f24a893",
+      "symbol": "party.lender",
+      "type": "Party",
+      "fields": {
+        "name": "Term lender"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.purchase"
+      ],
+      "formula": "-cumulative(investing.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "d07d894ea9bdb832ec918a55628ba20d",
+      "name": "credit.balance_probe",
+      "owner": {
+        "symbol": "asset.tlb"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2029-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.tlb.balance"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 39,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "d841ed8edcf62e606180e625941c878c",
+      "name": "credit.repayment",
+      "owner": {
+        "symbol": "asset.tlb"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2029-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "25.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "31da3be174317bd7ff88b2a1dfa8f026",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

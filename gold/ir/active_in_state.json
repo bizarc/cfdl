@@ -15,7 +15,7 @@
       "id": "74bc83da92847424713e6c3b3fbc005e",
       "symbol": "asset.suite",
       "type": "CRE.Asset.Unit",
-      "attrs": {
+      "fields": {
         "rentable_area": "10000"
       },
       "state": {},

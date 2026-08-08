@@ -32,7 +32,7 @@
       "id": "25e2dcf6b842bdfd68d77edc067f5580",
       "symbol": "asset.property",
       "type": "Asset.Real",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1127_FIELD_RULE_READS_FIELD",
+    "severity": "error",
+    "message": "Field 'asset.junior.balance' reads another entity's field in 'next'. A field names this period's value at close, which does not exist yet inside a rule. Write `prev <entity>.<field>` for the previous period, or read it from a stream or waterfall, which see period-close values.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 23,
+      "start_col": 21,
+      "end_line": 23,
+      "end_col": 58
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

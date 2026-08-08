@@ -340,7 +340,7 @@ against it by `make ir-schema`.
         "id",
         "symbol",
         "type",
-        "attrs"
+        "fields"
       ],
       "properties": {
         "id": {
@@ -353,9 +353,9 @@ against it by `make ir-schema`.
         "type": {
           "$ref": "#/$defs/Qname"
         },
-        "attrs": {
+        "fields": {
           "type": "object",
-          "description": "Attribute values declared in the entity's block, checked against the declared fields of its ontology type. Literals, not expressions: an attribute describes the thing rather than computing anything.",
+          "description": "Field values declared in the entity's block, checked against the fields its ontology type declares. Literals here: a field stated with '=' is a fact about the thing. A field that moves carries an 'init'/'next' rule instead.",
           "additionalProperties": {
             "$ref": "#/$defs/TypedValue"
           }
@@ -374,11 +374,31 @@ against it by `make ir-schema`.
         "initial_state": {
           "type": "string",
           "description": "The lifecycle state this entity starts in, overriding its type's declared initial. Absent when the type declares no lifecycle. An entity WITH a lifecycle is always in exactly one of its states — there is no null state and no undeclared state, which is what makes a misspelled status a compile error rather than a wrong answer."
+        },
+        "rules": {
+          "type": "object",
+          "description": "Fields that MOVE, as recurrences owned by this entity. A field stated with '=' is a fact and lives in `fields`; a field with an 'init'/'next' rule lives here. A rule with no 'next' in source is written out as `next prev`, because a field with no rule holds.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "init",
+              "next"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "init": {
+                "$ref": "#/$defs/Expr"
+              },
+              "next": {
+                "$ref": "#/$defs/Expr"
+              }
+            }
+          }
         }
       }
     },
     "TypedValue": {
-      "description": "Strongly-typed value union used for attrs/terms/state. anyOf, not oneOf: the members overlap structurally — an Expr {lang, src} is also a valid Map of strings — so requiring exactly one match can never hold for an untagged union.",
+      "description": "Strongly-typed value union used for fields/terms/state. anyOf, not oneOf: the members overlap structurally — an Expr {lang, src} is also a valid Map of strings — so requiring exactly one match can never hold for an untagged union.",
       "anyOf": [
         {
           "type": "string"

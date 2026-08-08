@@ -15,7 +15,7 @@
       "id": "f5160f6d699abe84dd287f28e2a63842",
       "symbol": "asset.plant",
       "type": "Energy.Asset.GenerationFacility",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],

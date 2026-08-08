@@ -15,7 +15,7 @@
       "id": "8f7ed51a636049b9e523fd88689e602f",
       "symbol": "asset.class_a",
       "type": "Credit.Asset.Tranche",
-      "attrs": {
+      "fields": {
         "original_balance": "5000.0",
         "seniority": "1"
       },
@@ -25,7 +25,7 @@
       "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
       "symbol": "asset.trust",
       "type": "Credit.Asset.LoanPool",
-      "attrs": {
+      "fields": {
         "collateral_type": "auto"
       },
       "state": {}
@@ -34,7 +34,7 @@
       "id": "1eb4ffd7cc8147ffbcfedd1811c6aeb7",
       "symbol": "party.residual",
       "type": "Party",
-      "attrs": {
+      "fields": {
         "name": "Residual holder"
       },
       "state": {}

@@ -1,0 +1,39 @@
+version 0.1
+model "entity-field-rule"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+// A FIELD THAT MOVES, OWNED BY THE THING IT DESCRIBES.
+//
+// `balance` is a fact about this tranche, so it is declared on the tranche and
+// read as `asset.tlb.balance` — the same spelling a stated field answers to. A
+// reader does not have to know whether a field holds or moves to know how to
+// read it.
+//
+// A model-level `state tlb_balance` said only that a variable existed. This
+// says what the number IS, which is what lets the ontology check it, what lets
+// a parent aggregate it by relation, and what a waterfall means when it draws
+// `from asset.trust.available_funds`.
+//
+// The rule is the same recurrence a state carries and is evaluated in the same
+// pass — one place a recurrence is solved, one set of rules about what it can
+// see.
+
+entity asset tlb : Credit.Asset.Tranche {
+  seniority = 1
+  original_balance = 275.0
+  balance init 275.0 next max(0.0, prev - 25.0)
+}
+
+entity party lender : Party { name = "Term lender" }
+
+stream credit.repayment on entity asset.tlb outflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = 25.0
+}
+
+// The stream reads the field by name, and gets the period's computed value.
+stream credit.balance_probe on entity asset.tlb inflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = asset.tlb.balance
+}

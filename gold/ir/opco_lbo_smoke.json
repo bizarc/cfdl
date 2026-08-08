@@ -15,7 +15,7 @@
       "id": "8d4daf0aed594d76e3f13af8e7a2587d",
       "symbol": "asset.target",
       "type": "OpCo.Asset.Enterprise",
-      "attrs": {},
+      "fields": {},
       "state": {}
     }
   ],
