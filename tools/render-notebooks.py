@@ -92,6 +92,13 @@ def execute(path: pathlib.Path) -> dict:
     deliberately does not honour MPLBACKEND=Agg, which CI sets — Agg suppresses
     figure capture, which is harmless when only checking for exceptions but
     would silently drop every chart from these pages.
+
+    The same cell PINS THE FRAME GEOMETRY, because a committed page must not
+    depend on how a pandas version happens to lay a table out. The defaults are
+    environment-sensitive by design — width adapts, columns truncate — so two
+    machines rendering identical numbers produced differing pages, and the
+    freshness gate could only report the churn, not prevent it. Every value
+    below is stated rather than inherited.
     """
     import nbformat
     from nbclient import NotebookClient
@@ -99,7 +106,17 @@ def execute(path: pathlib.Path) -> dict:
     notebook = nbformat.read(path, as_version=4)
     os.environ.pop("MPLBACKEND", None)
 
-    setup = nbformat.v4.new_code_cell("%matplotlib inline")
+    setup = nbformat.v4.new_code_cell(
+        "%matplotlib inline\n"
+        "import pandas as _pd\n"
+        "_pd.set_option('display.width', 100)\n"
+        "_pd.set_option('display.max_columns', 20)\n"
+        "_pd.set_option('display.max_rows', 40)\n"
+        "_pd.set_option('display.max_colwidth', 40)\n"
+        "_pd.set_option('display.precision', 6)\n"
+        "_pd.set_option('display.expand_frame_repr', True)\n"
+        "del _pd"
+    )
     setup.metadata[SETUP_MARKER] = True
     notebook.cells.insert(0, setup)
 

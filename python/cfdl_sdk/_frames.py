@@ -40,6 +40,21 @@ def currency_of(value) -> str | None:
     return None
 
 
+def currency_label(value) -> str:
+    """The currency as a FRAME CELL: a label, blank when the value has none.
+
+    `currency_of` returns None, which is right for the `.attrs` dictionaries —
+    absence there is meaningful and filtered on. In a column it is not: a
+    unitless metric (an IRR, a multiple, a margin) has no currency, and `None`
+    makes the column object-dtype with missing values whose repr is a pandas
+    display internal. It printed `None` under pandas 2 and `NaN` under pandas 3,
+    which put a library's formatting choice into committed documentation pages.
+
+    A blank string says the same thing, in one way, in every version.
+    """
+    return currency_of(value) or ""
+
+
 def period_index(index: dict) -> pd.Index:
     """Build a PeriodIndex from a series ``index`` block.
 
