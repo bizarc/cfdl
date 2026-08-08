@@ -486,12 +486,25 @@ struct IrPhase {
     range: IrDateRange,
 }
 
+/// A field's recurrence: its value at the first period, and the rule that
+/// carries it to every later one.
+#[derive(Debug, Serialize)]
+struct IrFieldRule {
+    init: IrExpr,
+    next: IrExpr,
+}
+
 #[derive(Debug, Serialize)]
 struct IrEntity {
     id: String,
     symbol: String,
     r#type: String,
     fields: BTreeMap<String, serde_json::Value>,
+    /// Fields that MOVE: an `init`/`next` recurrence owned by this entity.
+    /// Separate from `fields` because those are stated facts and these are
+    /// rules — the same split the source has between `=` and `init`.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    rules: BTreeMap<String, IrFieldRule>,
     state: BTreeMap<String, serde_json::Value>,
     /// The parent this entity belongs to, when the model groups it. Absent for
     /// an entity that stands alone, which is most of them: hierarchy is always
@@ -1567,11 +1580,40 @@ fn build_ir(
                     )
                 })
                 .collect();
+            // A field with no `next` HOLDS, which is the recurrence
+            // `next prev` — so the absent rule is written out rather than
+            // special-cased downstream.
+            let rules = entity
+                .fields
+                .iter()
+                .map(|f| {
+                    (
+                        f.name.clone(),
+                        IrFieldRule {
+                            init: IrExpr {
+                                lang: f.init.lang.clone(),
+                                src: f.init.src.clone(),
+                            },
+                            next: f.next.as_ref().map_or_else(
+                                || IrExpr {
+                                    lang: "cfdl".to_string(),
+                                    src: "prev".to_string(),
+                                },
+                                |n| IrExpr {
+                                    lang: n.lang.clone(),
+                                    src: n.src.clone(),
+                                },
+                            ),
+                        },
+                    )
+                })
+                .collect();
             let ir_entity = IrEntity {
                 id: deterministic_id("Entity", &stable_key, &id_seed),
                 symbol: symbol.clone(),
                 r#type: type_name,
                 fields,
+                rules,
                 state: BTreeMap::new(),
                 parent: entity.parent.clone(),
                 initial_state: entity.initial_state.clone(),
