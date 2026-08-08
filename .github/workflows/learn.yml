@@ -88,6 +88,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      # Pinned deliberately; see the note in site/scripts/build-wasm.sh.
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --version 0.13.1 --locked
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -97,6 +108,12 @@ jobs:
       - name: Install
         working-directory: learn
         run: npm ci
+
+      # BEFORE `vercel build`, which copies public/ as it finds it. The same
+      # script the site deploy uses, pointed at learn's public dir — one
+      # bundle recipe, two consumers.
+      - name: Build the wasm bundle
+        run: OUT_DIR="$GITHUB_WORKSPACE/learn/public/wasm" ./site/scripts/build-wasm.sh
 
       - name: Write the Vercel project link
         run: |

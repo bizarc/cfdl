@@ -1,0 +1,18 @@
+version 0.1
+model "exercise-studio-setup"
+time calendar monthly from 2026-01 for 24
+phase fitout from 2026-01 to 2026-02
+
+entity asset studio : Asset.Real
+
+// The setup cost is tied to the phase, not a date: slide the fitout phase
+// and the cash follows without this stream changing.
+stream studio.setup_cost on entity asset.studio outflow currency USD {
+  schedule on phase_enter("fitout")
+  amount = 12000
+}
+
+stream studio.rent on entity asset.studio outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 1850
+}

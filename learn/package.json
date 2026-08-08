@@ -9,10 +9,14 @@
     "lint": "eslint",
     "sync:shared": "node scripts/sync-shared.mjs",
     "check:shared": "node scripts/sync-shared.mjs --check",
+    "sync:exercises": "node scripts/sync-exercises.mjs",
+    "check:exercises": "node scripts/sync-exercises.mjs --check",
+    "prebuild": "node scripts/sync-exercises.mjs --check",
     "check:tokens": "./scripts/check-tokens.sh",
     "check:dialogs": "node scripts/check-no-native-dialogs.mjs"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-checkbox": "^1.3.11",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-slider": "^1.4.7",

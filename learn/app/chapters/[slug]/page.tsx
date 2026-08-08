@@ -11,6 +11,7 @@ import type { ShikiTransformer } from "shiki";
 import { ChaptersSidebar } from "@/components/ChaptersSidebar";
 import { TableOfContents } from "@/components/docs/TableOfContents";
 import { mdxComponents } from "@/components/docs/mdx-components";
+import { Exercise } from "@/components/exercise/Exercise";
 import {
   PARTS,
   chapterNeighbours,
@@ -65,12 +66,13 @@ export default async function ChapterPage({
 
   const { content } = await compileMDX({
     source: chapter.body,
-    components: mdxComponents,
+    components: { ...mdxComponents, Exercise },
     options: {
       mdxOptions: {
-        // Chapters are markdown-with-frontmatter, like the site's corpus;
-        // treating them as such keeps stray braces in prose harmless.
-        format: "md",
+        // Full MDX, unlike the site's markdown corpus: chapters embed the
+        // <Exercise/> component. The cost is that prose must stay clear of
+        // bare braces and angle brackets outside code spans.
+        format: "mdx",
         remarkPlugins: [remarkGfm],
         rehypePlugins: [
           rehypeSlug,

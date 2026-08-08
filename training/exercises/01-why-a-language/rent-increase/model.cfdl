@@ -1,0 +1,19 @@
+version 0.1
+model "exercise-rent-increase"
+time calendar monthly from 2026-01 for 24
+
+entity asset workshop : Asset.Real
+
+// The workshop rents for 4,200 a month for two years. Your task: the
+// landlord raises the rent 5% for the second year. Express that as claims —
+// split this stream into a year-one stream and a year-two stream at the
+// higher amount.
+stream workshop.rent on entity asset.workshop inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 4200
+}
+
+stream workshop.operating_cost on entity asset.workshop outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 900
+}
