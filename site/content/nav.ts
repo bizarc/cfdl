@@ -79,6 +79,7 @@ export const NAV: NavSection[] = [
       { title: "Stochastic modeling", slug: "/docs/stochastic-modeling" },
       { title: "Curves", slug: "/docs/guides/curves" },
       { title: "Metrics", slug: "/docs/guides/metrics" },
+      { title: "Waterfalls", slug: "/docs/guides/waterfalls" },
       { title: "Statements and reporting", slug: "/docs/guides/statements" },
       { title: "Reading results and IR", slug: "/docs/guides/reading-results" },
       { title: "Troubleshooting", slug: "/docs/troubleshooting" },
