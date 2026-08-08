@@ -81,6 +81,10 @@ def _authored_site_pages() -> list[pathlib.Path]:
 SOURCES = (
     sorted(REPO_ROOT.glob("packs/*/README.md"))
     + _authored_site_pages()
+    # The training site's chapters: authored prose whose fenced models a
+    # learner is invited to run, so they are held to the same standard as the
+    # pack guides — complete models compile and run, fragments parse.
+    + sorted(REPO_ROOT.glob("learn/content/chapters/*.mdx"))
     # The landing page's model, which is not markdown and so was reached by
     # nothing. It sat on the front page with `every monthly` and an untyped
     # entity — neither valid — for as long as it took someone to try it.

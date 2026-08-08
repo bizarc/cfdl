@@ -1,0 +1,122 @@
+---
+title: "The object model"
+description: "Time as the spine, entities as the cast, streams as the atoms of cash — the three ideas every CFDL model is made of."
+part: 1
+order: 2
+track: core
+---
+
+Every model you will write in this course — from a one-stream rental to the capstone's financed development deal — is built from the same three ideas. **Time** is the spine: one dated grid that everything else hangs on. **Entities** are the cast: the things that earn, owe, own, and pay. **Streams** are the atoms: dated, directed movements of cash, attached to an entity, laid out on the grid.
+
+Hold onto this trio. When a model confuses you — yours or someone else's — the way back is always the same three questions: *what is the grid, who is the cast, which streams touch cash?*
+
+## Time: one grid, declared once
+
+A model declares exactly one time grid:
+
+```cfdl
+time calendar monthly from 2026-01 for 36
+```
+
+This line fixes three decisions for the whole model. The **grain** — `monthly` here; `daily`, `quarterly`, and `annual` exist too — is the resolution of every period in the model. The **origin**, `2026-01`, is where period 0 starts. The **horizon**, `for 36`, is how many periods exist. Nothing can occur off the grid: a payment before the origin or after the horizon is not "clipped" or "ignored" — it is a compile error, because a claim about cash the model cannot represent is a claim the model should not silently accept.
+
+Choosing the grain is a modeling decision, not a formality, and it is consequential enough that Part III gives it a whole chapter. For now, one rule of thumb: model at the grain at which cash actually moves. Rent moves monthly; model months. A power contract that settles daily wants days, and an annual grid would average away exactly the variation being modeled.
+
+### Phases
+
+Real deals have chapters: construction, then lease-up, then operations, then exit. The grid can carry these as **phases** — named, dated spans:
+
+```cfdl
+time calendar monthly from 2026-01 for 36
+phase construction from 2026-01 to 2026-09
+phase operations from 2026-10 to 2028-12
+```
+
+Phases earn their keep in two ways you will use constantly. Schedules can reference them — *every month while in operations* — so when the construction estimate slips a quarter, you move one date and every downstream schedule follows. And the model can ask what phase it is in, so behavior can differ by chapter without any stream hard-coding the dates. The alternative — dates copied into a dozen schedules — is the spreadsheet drift problem wearing new clothes.
+
+## Entities: the cast
+
+An entity is a named thing that cash flows through. Declaring one takes a family, a name, and — the form you should treat as standard — a type:
+
+```cfdl
+entity asset tower : Asset.Real
+entity party lender : Party
+```
+
+The **family** (`asset`, `party`) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it; contracts, in turn, check that they attach to entities of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
+
+Entities can also nest — a building that is `part of` a portfolio, a unit that is `part of` a building — which gives roll-ups something real to roll up along. The capstone uses this; for now just know the structure is there.
+
+What should be an entity? The cast, not the props. The building, the operating company, the loan, the counterparty — things that could plausibly have their own statement of cash flows. The rent number is not an entity; it is a claim *about* an entity, which is the next idea.
+
+## Streams: the atoms of cash
+
+A stream is one kind of dated cash movement, attached to an entity:
+
+```cfdl
+version 0.1
+model "object-model-streams"
+time calendar monthly from 2026-01 for 36
+phase fitout from 2026-01 to 2026-03
+phase operations from 2026-04 to 2028-12
+
+entity asset tower : Asset.Real
+
+// One-time cash out while fitting out the space.
+stream tower.fitout_cost on entity asset.tower outflow currency USD {
+  schedule on 2026-02
+  amount = 250000
+}
+
+// Steady rent once operating.
+stream tower.rent on entity asset.tower inflow currency USD {
+  schedule every month from 2026-04 to 2028-12
+  amount = 38000
+}
+
+// Operating costs run over the same span.
+stream tower.opex on entity asset.tower outflow currency USD {
+  schedule every month from 2026-04 to 2028-12
+  amount = 11500
+}
+```
+
+Take the anatomy of one stream slowly, because every stream you ever write has exactly these parts.
+
+**The name** — `tower.rent` — is dotted, at least two segments, and unique in the model. The segments are yours to design; use them as a taxonomy (`tower.rent`, `tower.opex`, `loan.interest`) and results become self-organizing, because every series in the output carries the name you chose here.
+
+**The attachment** — `on entity asset.tower` — says whose cash this is. Attachment is what makes per-entity statements and roll-ups possible; a stream is never free-floating.
+
+**The direction** — `inflow` or `outflow` — is declared, not inferred from sign. Amounts are written positive; the direction says what they mean. This is a deliberate redundancy: when an expression later goes wrong and produces cash the wrong way, the declared direction is what lets the tooling notice the contradiction instead of quietly folding it into a total.
+
+**The currency** names the unit. Explicit per stream, so a model that mixes currencies has to say so where it happens.
+
+**The schedule** says *when* — here, the single date `on 2026-02` and the recurring `every month from … to …`. Schedules are a small language of their own (day-of-month rules, month-end, business-day conventions, phase-driven spans) and get a full chapter in Part II.
+
+**The amount** says *how much per occurrence*. Here they are constants. In real models they are expressions — reading assumptions, the clock, a price curve, the model's own accumulated state — and that is where most of a model's intelligence lives. Also Part II.
+
+One thing a stream is *not*: a total. `tower.rent` above is not "rent revenue of 1,254,000" — it is thirty-three dated payments of 38,000. The engine will happily total it for you, but the model stores the dated claims, and everything downstream (discounting, phase analysis, simulation) depends on having them dated.
+
+## The trio, assembled
+
+Notice what the complete model above reads like: a time grid with two phases, a cast of one, three claims about cash. Twenty lines, and a committee could read it aloud. Notice also what is *absent* — no cell references, no copied formulas, no answer anywhere in the file. The NPV of this building exists only when an engine runs the model, which means there is exactly one place the arithmetic can be wrong, and it is not your file.
+
+A useful exercise in reading any model, starting now: find the grid, count the cast, and classify every stream as one of the three kinds of claim it can be — *scheduled* (dates known, amount known: the fitout), *recurring* (dates patterned, amount ruled: the rent), or — the kind you have not met yet — *contingent* (existence itself depends on something: an option exercised, a covenant tripped). Part II closes the gap between the second and third kind.
+
+## What can go wrong
+
+Three refusals you should trigger on purpose before moving on. Each teaches a rule by enforcing it.
+
+**A schedule off the grid.** Change the rent schedule to end `2029-12` — past the 36-period horizon — and the compiler refuses: the schedule is out of bounds for the time grid. The fix is always a real decision, never a shrug: either the horizon is wrong or the claim is.
+
+**A reference to nobody.** Attach a stream `on entity asset.warehouse` without declaring a warehouse and the compiler refuses the unresolved reference by name. Nothing in a model dangles; every name written is a name declared.
+
+**A flat stream name.** Name a stream `rent` — one segment — and the parser refuses it with the rule and an example of the shape it wants (`tower.rent`). Names being dotted is not bureaucratic tidiness; the taxonomy is how a hundred-stream model's output stays navigable.
+
+The pattern to internalize from all three: the language does not accept-and-adjust. It refuses, names the rule, and makes you decide. Models built under that discipline accumulate no sediment of silently-tolerated wrongness — which is precisely the property a spreadsheet cannot offer.
+
+## Exercises
+
+1. Model your own workspace — home office, rented desk, whatever is real to you — on a 24-month grid: one entity, one recurring cost stream, one one-time setup cost. Run it and check the total is what your own arithmetic says.
+2. Add a `fitout` phase covering the first two months and move the setup cost's schedule to `on phase_enter("fitout")` — the schedule form that means "once, when this phase begins." Confirm the cash lands in the same period as before. You have just made a date-free claim: slide the phase and the cost follows.
+3. Trigger all three refusals above, in any order, and read each message before fixing it. Ten minutes of deliberate breakage now buys you fluent error-reading for the rest of the course.

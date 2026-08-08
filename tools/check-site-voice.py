@@ -149,6 +149,11 @@ def sources() -> list[pathlib.Path]:
         for p in sorted((REPO_ROOT / "site" / "content").rglob("*.md"))
         if "generated: full" not in p.read_text(encoding="utf-8")[:400]
     ]
+    # The training site's chapters are published pages like the site's docs —
+    # authored, never generated — and the exercise models that will sit beside
+    # them are reader-facing the same way the examples are.
+    found += sorted((REPO_ROOT / "learn" / "content").rglob("*.mdx"))
+    found += sorted(REPO_ROOT.glob("training/exercises/*/*/README.md"))
     return [p for p in found if p.exists()]
 
 

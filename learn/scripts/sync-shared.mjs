@@ -31,6 +31,12 @@ const MANIFEST = [
   "components/ds/Tabs.tsx",
   "lib/cn.ts",
   "lib/shiki.ts",
+  "lib/toc.ts",
+  "lib/playground/protocol.ts",
+  "lib/playground/share.ts",
+  "components/docs/mdx-components.tsx",
+  "components/docs/CodeActions.tsx",
+  "components/docs/TableOfContents.tsx",
   "public/favicon.svg",
 ];
 

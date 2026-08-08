@@ -1,11 +1,13 @@
 import { Badge } from "@/components/ds/Badge";
 import { Card } from "@/components/ds/Card";
 
+import Link from "next/link";
+
 type Part = {
   number: string;
   title: string;
   blurb: string;
-  chapters: string[];
+  chapters: { label: string; href?: string }[];
   status: "in-progress" | "planned";
 };
 
@@ -15,7 +17,11 @@ const PARTS: Part[] = [
     title: "Thinking in cash flows",
     blurb:
       "Why a modeling language beats a spreadsheet for auditable deals, the object model — time, entities, streams — and how to read what a run gives you back.",
-    chapters: ["Why a language?", "The object model", "Reading results"],
+    chapters: [
+      { label: "Why a language?", href: "/chapters/why-a-language" },
+      { label: "The object model", href: "/chapters/the-object-model" },
+      { label: "Reading results", href: "/chapters/reading-results" },
+    ],
     status: "in-progress",
   },
   {
@@ -24,16 +30,16 @@ const PARTS: Part[] = [
     blurb:
       "Streams, schedules, expressions, assumptions, curves, state, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
     chapters: [
-      "Streams and schedules",
-      "Expressions",
-      "Assumptions and inputs",
-      "Curves",
-      "State and recurrence",
-      "Growth, ramps, and guards",
-      "Events and options",
-      "Waterfalls",
-      "Uncertainty and Monte Carlo",
-      "Multi-file models and style",
+      { label: "Streams and schedules" },
+      { label: "Expressions" },
+      { label: "Assumptions and inputs" },
+      { label: "Curves" },
+      { label: "State and recurrence" },
+      { label: "Growth, ramps, and guards" },
+      { label: "Events and options" },
+      { label: "Waterfalls" },
+      { label: "Uncertainty and Monte Carlo" },
+      { label: "Multi-file models and style" },
     ],
     status: "planned",
   },
@@ -43,10 +49,10 @@ const PARTS: Part[] = [
     blurb:
       "The decisions the syntax can't make for you: choosing grain, choosing constructs, the finance semantics the language encodes, and when a domain pack earns its keep.",
     chapters: [
-      "Choosing grain",
-      "Stream, contract, state, event, option, or waterfall?",
-      "Finance semantics",
-      "Packs: when and why",
+      { label: "Choosing grain" },
+      { label: "Stream, contract, state, event, option, or waterfall?" },
+      { label: "Finance semantics" },
+      { label: "Packs: when and why" },
     ],
     status: "planned",
   },
@@ -56,11 +62,11 @@ const PARTS: Part[] = [
     blurb:
       "One development deal carried end to end — skeleton, revenue, costs and financing, exit and returns, then scenarios, Monte Carlo, and an equity waterfall over the whole structure.",
     chapters: [
-      "The deal and the skeleton",
-      "Revenue",
-      "Costs and financing",
-      "Exit and returns",
-      "Risk",
+      { label: "The deal and the skeleton" },
+      { label: "Revenue" },
+      { label: "Costs and financing" },
+      { label: "Exit and returns" },
+      { label: "Risk" },
     ],
     status: "planned",
   },
@@ -69,7 +75,7 @@ const PARTS: Part[] = [
     title: "Reference",
     blurb:
       "The language on two pages, and every CRE contract type with its required and defaulted terms.",
-    chapters: ["Language quick reference", "CRE pack term tables"],
+    chapters: [{ label: "Language quick reference" }, { label: "CRE pack term tables" }],
     status: "planned",
   },
 ];
@@ -130,14 +136,23 @@ export default function Home() {
               <ul className="mt-4 space-y-1.5">
                 {part.chapters.map((chapter) => (
                   <li
-                    key={chapter}
+                    key={chapter.label}
                     className="flex items-baseline gap-2 text-sm text-secondary"
                   >
                     <span
                       className="h-1.5 w-1.5 shrink-0 translate-y-[-1px] rounded-full bg-strong"
                       aria-hidden
                     />
-                    {chapter}
+                    {chapter.href ? (
+                      <Link
+                        href={chapter.href}
+                        className="transition-colors hover:text-accent-text"
+                      >
+                        {chapter.label}
+                      </Link>
+                    ) : (
+                      chapter.label
+                    )}
                   </li>
                 ))}
               </ul>
