@@ -4,9 +4,11 @@ title: "OpCo: growth via expressions"
 slug: "/docs/examples/opco_with_growth"
 ---
 
-This example uses **standalone streams** for revenue and opex (per guidance); pack **contract** for exit.
+This example uses pack **contracts** throughout: `opco.revenue_line` and `opco.opex_line` for operations, `opco.exit_multiple` for the exit.
 
-Revenue line with **growth_rate** > 0 (e.g. 3%). Demonstrates the industry lever for recurring revenue growth in DCF.
+Revenue line with **growth_rate** > 0 (3% here). Demonstrates the industry lever for recurring revenue growth in DCF.
+
+`growth_rate` is an **annual** rate. The pack converts it to the model's grain geometrically, so revenue compounds to 3% a year on a monthly calendar rather than 3% a month — the same conversion a discount rate gets.
 
 ## Compile
 
@@ -32,29 +34,36 @@ time calendar monthly from 2026-01 for 72
 
 entity asset business : OpCo.Asset.Enterprise
 
-// Growth stated as an expression rather than an opco.revenue_line contract,
-// because the pack's growth term is an ANNUAL rate converted to the model's
-// grain, and this line compounds per period. A hand-written stream carries no
-// category, so each states its own — a statement folds categories, and cash in
-// no category is cash no row can claim.
-stream operating.revenue on entity asset.business inflow currency USD {
-  schedule every month from 2026-01 to 2031-12
-  category operating.revenue.recurring
-  amount = 120000 * pow(1.03, time.t - 1)
+// The deal's numbers, stated once. Growth is an ANNUAL rate: the pack
+// converts it to the model's grain geometrically, so 3% a year is 3% a year
+// on any calendar.
+assume base_revenue = 120000
+assume revenue_growth = 0.03
+assume base_opex = 70000
+assume exit_base_value = 800000
+assume exit_multiple = 6.5
+
+contract opco.revenue_line {
+  term 2026-01..2031-12
+  terms {
+    amount = inputs.base_revenue
+    growth_rate = inputs.revenue_growth
+  }
 }
 
-stream operating.opex on entity asset.business outflow currency USD {
-  schedule every month from 2026-01 to 2031-12
-  category operating.expense.opex
-  amount = 70000
+contract opco.opex_line {
+  term 2026-01..2031-12
+  terms {
+    amount = inputs.base_opex
+  }
 }
 
 contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
     exit_period = 72
-    exit_multiple = 6.5
-    base_value = 800000
+    exit_multiple = inputs.exit_multiple
+    base_value = inputs.exit_base_value
   }
 }
 ```

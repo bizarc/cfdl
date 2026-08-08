@@ -1,8 +1,10 @@
 # OpCo With Growth Example
 
-This example uses **standalone streams** for revenue and opex (per guidance); pack **contract** for exit.
+This example uses pack **contracts** throughout: `opco.revenue_line` and `opco.opex_line` for operations, `opco.exit_multiple` for the exit.
 
-Revenue line with **growth_rate** > 0 (e.g. 3%). Demonstrates the industry lever for recurring revenue growth in DCF.
+Revenue line with **growth_rate** > 0 (3% here). Demonstrates the industry lever for recurring revenue growth in DCF.
+
+`growth_rate` is an **annual** rate. The pack converts it to the model's grain geometrically, so revenue compounds to 3% a year on a monthly calendar rather than 3% a month — the same conversion a discount rate gets.
 
 ## Compile
 
