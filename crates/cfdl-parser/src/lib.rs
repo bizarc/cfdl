@@ -443,42 +443,37 @@ pub struct WaterfallStmt {
     pub span: Span,
 }
 
-/// One line of a priority of payments.
+/// One line of a priority of payments: `pay <name> to <payee> = <expr>`.
+///
+/// ONE FORM, NOT SIX. A first draft gave each rule its own syntax — `amount`,
+/// `cap`, `down to … measuring`, `up to`, `overflow of`, `remainder`. Every one
+/// of them is an expression over three bindings, and `min`, `max` and `clamp`
+/// already exist:
+///
+///     amount 12.5              ->  = 12.5
+///     amount X cap C           ->  = min(X, C)
+///     down to T measuring M    ->  = M - T
+///     up to L                  ->  = L - asset.reserve.balance
+///     overflow of s            ->  = owed(s) - paid(s)
+///     remainder                ->  = remaining
+///
+/// A closed set of six rules came from reading one deal. The roadmap holds 31
+/// waterfall-shaped requirements across asset classes nobody has opened yet, so
+/// a fixed vocabulary would be wrong for one of them and each miss would be a
+/// parser change. An expression is wrong for none, and it is the shape the
+/// language already uses — a stream says `amount = <expr>`.
+///
+/// Readability is not lost: it moves to pack templates, which lower to this the
+/// way a contract lowers to streams.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WaterfallStep {
     pub name: String,
-    /// Who is paid. `party.x`, or an account.
+    /// Who is paid.
     pub payee: String,
-    pub rule: WaterfallRule,
-    /// `cap <expr>` — pay no more than this, and record the shortfall so a
-    /// later `overflow of` step can pay it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cap: Option<ExprSlot>,
-    /// `when <expr>` — gate the step. Read from period-open state, the rule
-    /// events and options already follow.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub when: Option<ExprSlot>,
+    /// What this step is owed. The engine pays `min(max(0, this), remaining)`,
+    /// so the pot cannot go negative however the expression is written.
+    pub amount: Option<ExprSlot>,
     pub span: Span,
-}
-
-/// How much a step pays. Six forms, one per rule the reference deals need.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
-pub enum WaterfallRule {
-    /// `amount <expr>` — pay this, or what is left, whichever is smaller.
-    Amount(ExprSlot),
-    /// `down to <target> measuring <measure>` — pay `max(0, measure - target)`,
-    /// bounded by what is left. Not a solver: the target is linear in the
-    /// payment, so it is one subtraction. `measure` sees prior steps' payments.
-    DownTo { target: ExprSlot, measure: ExprSlot },
-    /// `up to <expr>` — top the payee up to this level.
-    UpTo(ExprSlot),
-    /// `overflow of <step>` — pay the shortfall an earlier capped step recorded.
-    OverflowOf(String),
-    /// `remainder` — everything still in the pot.
-    ///
-    /// REQUIRED, exactly once, as the last step. A waterfall that does not say
-    /// where the remainder goes would lose cash silently.
-    Remainder,
 }
 
 /// A party filling a role in a contract — `holder = party.management`.
@@ -1708,7 +1703,7 @@ impl<'a> Parser<'a> {
         })
     }
 
-    /// One `pay <name> to <payee> <rule> [cap <expr>] [when <expr>]` line.
+    /// One `pay <name> to <payee> = <expr>` line.
     fn parse_waterfall_step(&mut self) -> Option<WaterfallStep> {
         let start = self.bump(); // `pay`
         let name_tok = self.bump();
@@ -1727,173 +1722,15 @@ impl<'a> Parser<'a> {
         let payee_tok = self.bump();
         let payee = self.parse_entity_ref_token(&payee_tok)?;
 
-        let rule = self.parse_waterfall_rule()?;
-
-        let mut cap = None;
-        let mut when = None;
-        let mut end = start.span;
-        loop {
-            match self.peek().kind {
-                TokenKind::Ident(ref w) if w == "cap" && cap.is_none() => {
-                    let tok = self.bump();
-                    end = tok.span;
-                    cap = self.parse_expr_slot_until(
-                        tok.span,
-                        &[
-                            "pay",
-                            "cap",
-                            "measuring",
-                            "remainder",
-                            "overflow",
-                            "down",
-                            "up",
-                            "amount",
-                        ],
-                    );
-                }
-                TokenKind::Keyword(Keyword::When) if when.is_none() => {
-                    let tok = self.bump();
-                    end = tok.span;
-                    when = self.parse_expr_slot_until(
-                        tok.span,
-                        &[
-                            "pay",
-                            "cap",
-                            "measuring",
-                            "remainder",
-                            "overflow",
-                            "down",
-                            "up",
-                            "amount",
-                        ],
-                    );
-                }
-                _ => break,
-            }
-        }
+        let eq = self.expect_punct(Punct::Equal, "'=' before the amount this step pays")?;
+        let amount = self.parse_expr_slot_until(eq.span, &["pay"]);
 
         Some(WaterfallStep {
             name,
             payee,
-            rule,
-            cap,
-            when,
-            span: merge_spans(start.span, end),
+            amount,
+            span: merge_spans(start.span, eq.span),
         })
-    }
-
-    fn parse_waterfall_rule(&mut self) -> Option<WaterfallRule> {
-        let tok = self.bump();
-        match tok.kind {
-            TokenKind::Ident(ref w) if w == "amount" => {
-                let slot = self.parse_expr_slot_until(
-                    tok.span,
-                    &[
-                        "pay",
-                        "cap",
-                        "measuring",
-                        "remainder",
-                        "overflow",
-                        "down",
-                        "up",
-                        "amount",
-                    ],
-                )?;
-                Some(WaterfallRule::Amount(slot))
-            }
-            TokenKind::Ident(ref w) if w == "remainder" => Some(WaterfallRule::Remainder),
-            TokenKind::Ident(ref w) if w == "down" => {
-                let _ = self.expect_keyword(Keyword::To, "'to' after 'down'")?;
-                let target = self.parse_expr_slot_until(
-                    tok.span,
-                    &[
-                        "pay",
-                        "cap",
-                        "measuring",
-                        "remainder",
-                        "overflow",
-                        "down",
-                        "up",
-                        "amount",
-                    ],
-                )?;
-                // `measuring` closes the target expression; the slot parser
-                // stops at it because it is not an operator.
-                let m = self.bump();
-                match m.kind {
-                    TokenKind::Ident(ref w) if w == "measuring" => {}
-                    _ => {
-                        self.push_expected(
-                            m.span,
-                            "Expected 'measuring' after 'down to <target>'. A target says what balance to reach; 'measuring' says which balance."
-                                .to_string(),
-                        );
-                        return None;
-                    }
-                }
-                let measure = self.parse_expr_slot_until(
-                    m.span,
-                    &[
-                        "pay",
-                        "cap",
-                        "measuring",
-                        "remainder",
-                        "overflow",
-                        "down",
-                        "up",
-                        "amount",
-                    ],
-                )?;
-                Some(WaterfallRule::DownTo { target, measure })
-            }
-            TokenKind::Ident(ref w) if w == "up" => {
-                let _ = self.expect_keyword(Keyword::To, "'to' after 'up'")?;
-                let slot = self.parse_expr_slot_until(
-                    tok.span,
-                    &[
-                        "pay",
-                        "cap",
-                        "measuring",
-                        "remainder",
-                        "overflow",
-                        "down",
-                        "up",
-                        "amount",
-                    ],
-                )?;
-                Some(WaterfallRule::UpTo(slot))
-            }
-            TokenKind::Ident(ref w) if w == "overflow" => {
-                let of = self.bump();
-                match of.kind {
-                    TokenKind::Ident(ref w) if w == "of" => {}
-                    _ => {
-                        self.push_expected(of.span, "Expected 'of' after 'overflow'.".to_string());
-                        return None;
-                    }
-                }
-                let step_tok = self.bump();
-                match step_tok.kind {
-                    TokenKind::Ident(ref s) => Some(WaterfallRule::OverflowOf(s.clone())),
-                    _ => {
-                        self.push_expected(
-                            step_tok.span,
-                            "Expected the name of an earlier capped step after 'overflow of'."
-                                .to_string(),
-                        );
-                        None
-                    }
-                }
-            }
-            _ => {
-                self.push_expected(
-                    tok.span,
-                    "Expected a payment rule: 'amount', 'down to', 'up to', 'overflow of' or 'remainder'."
-                        .to_string(),
-                );
-                None
-            }
-        }
     }
 
     /// `state <name> { init <expr>  next <expr> }`

@@ -853,7 +853,6 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
             ));
         }
 
-        let mut capped_so_far: BTreeSet<&str> = BTreeSet::new();
         let mut seen: BTreeSet<&str> = BTreeSet::new();
         for (index, step) in waterfall.steps.iter().enumerate() {
             if !seen.insert(step.name.as_str()) {
@@ -864,7 +863,10 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                         waterfall.name, step.name
                     ),
                     step.span,
-                    Some("`overflow of` names a step, so step names must be unique.".to_string()),
+                    Some(
+                        "`paid()` and `owed()` name a step, so step names must be unique."
+                            .to_string(),
+                    ),
                 ));
             }
             if !entities.contains(&step.payee) {
@@ -878,49 +880,53 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                     None,
                 ));
             }
-            if let cfdl_parser::WaterfallRule::OverflowOf(target) = &step.rule {
-                if !capped_so_far.contains(target.as_str()) {
-                    let known: Vec<&str> = capped_so_far.iter().copied().collect();
+            let Some(amount) = &step.amount else {
+                diagnostics.push(diag(
+                    "E1345_WATERFALL_STEP_NO_AMOUNT",
+                    format!(
+                        "Waterfall '{}' step '{}' says nothing about what it pays.",
+                        waterfall.name, step.name
+                    ),
+                    step.span,
+                    Some("Write `= <expr>`. `= remaining` pays everything left.".to_string()),
+                ));
+                continue;
+            };
+            // `paid(s)` and `owed(s)` read what an EARLIER step did. Naming a
+            // later step would be a forward reference into a value that does
+            // not exist yet, which is the one way an ordered allocation could
+            // become a dependency graph.
+            for referenced in step_references(&amount.src) {
+                if !seen.contains(referenced.as_str()) {
+                    let earlier: Vec<&str> = seen.iter().copied().collect();
                     diagnostics.push(diag(
-                        "E1341_WATERFALL_BAD_OVERFLOW",
+                        "E1341_WATERFALL_FORWARD_REF",
                         format!(
-                            "Waterfall '{}' step '{}' pays the overflow of '{target}', which is not an earlier capped step.",
+                            "Waterfall '{}' step '{}' reads step '{referenced}', which is not an earlier step.",
                             waterfall.name, step.name
                         ),
                         step.span,
-                        Some(if known.is_empty() {
-                            "No earlier step in this waterfall declares a `cap`.".to_string()
+                        Some(if earlier.len() <= 1 {
+                            "A step may only read steps declared before it.".to_string()
                         } else {
-                            format!("Earlier capped steps: {}.", known.join(", "))
+                            format!("Earlier steps: {}.", earlier.join(", "))
                         }),
                     ));
                 }
             }
-            // A `remainder` that is not last would strand every step after it,
-            // because there is nothing left for them to take.
-            if matches!(step.rule, cfdl_parser::WaterfallRule::Remainder)
-                && index + 1 != waterfall.steps.len()
-            {
-                diagnostics.push(diag(
-                    "E1342_WATERFALL_REMAINDER_NOT_LAST",
-                    format!(
-                        "Waterfall '{}' pays the remainder at step '{}', which is not the last step.",
-                        waterfall.name, step.name
-                    ),
-                    step.span,
-                    Some("Every later step would receive nothing.".to_string()),
-                ));
-            }
-            if step.cap.is_some() {
-                capped_so_far.insert(step.name.as_str());
-            }
+            let _ = index;
         }
 
-        let has_remainder = waterfall
+        // WHERE DOES WHAT IS LEFT GO? A waterfall that never reads `remaining`
+        // allocates a fixed set of amounts and abandons the rest in silence.
+        // Publishing the residue would hide it just as well; refusing to
+        // compile is what makes the author say.
+        let takes_remainder = waterfall
             .steps
             .iter()
-            .any(|s| matches!(s.rule, cfdl_parser::WaterfallRule::Remainder));
-        if !has_remainder {
+            .filter_map(|s| s.amount.as_ref())
+            .any(|a| mentions_remaining(&a.src));
+        if !takes_remainder && !waterfall.steps.is_empty() {
             diagnostics.push(diag(
                 "E1344_WATERFALL_NO_REMAINDER",
                 format!(
@@ -929,7 +935,7 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                 ),
                 waterfall.span,
                 Some(
-                    "End with `pay <name> to <payee> remainder`. Without it, whatever survives the last step is lost silently."
+                    "End with `pay <name> to <payee> = remaining`. Without it, whatever survives the last step is lost silently."
                         .to_string(),
                 ),
             ));
@@ -941,6 +947,46 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
     } else {
         Err(diagnostics)
     }
+}
+
+/// Step names an expression reads through `paid(<step>)` or `owed(<step>)`.
+fn step_references(src: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for call in ["paid(", "owed("] {
+        let mut rest = src;
+        while let Some(at) = rest.find(call) {
+            rest = &rest[at + call.len()..];
+            if let Some(close) = rest.find(')') {
+                let name = rest[..close].trim().trim_matches('"').to_string();
+                if !name.is_empty() {
+                    found.push(name);
+                }
+            }
+        }
+    }
+    found
+}
+
+/// Whether an expression reads `remaining` as a binding rather than as part of
+/// a longer name.
+fn mentions_remaining(src: &str) -> bool {
+    let bytes = src.as_bytes();
+    let mut from = 0;
+    while let Some(at) = src[from..].find("remaining") {
+        let start = from + at;
+        let end = start + "remaining".len();
+        let before_ok = start == 0 || !is_name_byte(bytes[start - 1]);
+        let after_ok = end == bytes.len() || !is_name_byte(bytes[end]);
+        if before_ok && after_ok {
+            return true;
+        }
+        from = end;
+    }
+    false
+}
+
+fn is_name_byte(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_' || b == b'.'
 }
 
 fn check_exercise_targets(
