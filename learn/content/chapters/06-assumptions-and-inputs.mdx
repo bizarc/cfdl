@@ -1,0 +1,106 @@
+---
+title: "Assumptions and inputs"
+description: "Where numbers belong: declared assumptions, run-time parameters and observations, and the discipline that keeps the claim separate from the question."
+part: 2
+order: 6
+track: core
+---
+
+By now your amounts read well but your numbers are scattered: a growth rate inside one expression, a fee inside another, a rate that appears twice. This chapter is about where numbers *live*. The language gives you three homes for a number — declared assumptions, run-time parameters, and observations — and choosing correctly among them is what makes one model serve a base case, a downside, a committee question, and a simulation without ever being edited.
+
+## Assumptions: the model's named claims
+
+An `assume` statement declares a named input, readable anywhere as `inputs.<name>`:
+
+```cfdl
+version 0.1
+model "assumptions-cafe"
+time calendar monthly from 2026-01 for 36
+
+entity asset cafe : Asset.Real
+
+assume monthly_covers = 5200
+assume avg_ticket = 14.50
+assume food_cost_pct = 0.31
+assume rent = 6800
+
+stream cafe.revenue on entity asset.cafe inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_covers * inputs.avg_ticket
+}
+
+stream cafe.food_cost on entity asset.cafe outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_covers * inputs.avg_ticket * inputs.food_cost_pct
+}
+
+stream cafe.rent on entity asset.cafe outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.rent
+}
+```
+
+Look at what the block of `assume` lines has become: the model's *assumption page* — the first thing a reviewer reads, the only place a committee edit lands, and the complete list of what this model believes. Every number a person might question belongs here; the expressions below it hold structure, not opinions. An assumption can be an expression itself (`assume annual_revenue = inputs.monthly_covers * inputs.avg_ticket * 12`), so derived assumptions stay derived rather than pre-computed.
+
+This is the discipline every good spreadsheet strives for with its "Inputs" tab in blue type — except here it is not a convention someone can drift from. A number buried in an expression is *visible* in review precisely because it is not in the assumption block, and the block is where your eye goes first.
+
+## Distributions: the same claim, with a width
+
+An assumption can carry a distribution instead of a point:
+
+```cfdl
+assume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])
+```
+
+Read it as a widened claim: "growth is about 3%, give or take 1%, and never outside 0–8%." Four families exist — `Normal`, `LogNormal`, `Uniform`, `Triangular`, each with an optional `clip` — and chapter 12 is where they earn their keep in Monte Carlo. What matters *now* is the deterministic behavior: in an ordinary run, a distributed assumption resolves to its central value (a Normal to its mean, a Uniform to its midpoint, a Triangular to `(min + mode + max) / 3`). So you can state the uncertainty on day one, and your base case simply runs through the middle of it — one model, both readings, no edits between them.
+
+## Parameters and observations: the run's side of the line
+
+Chapter 3 drew the line: the model owns the claims, the run configuration owns the question. Two scopes cross that line at run time.
+
+**`cfg.*` — parameters.** Knobs the question turns. An expression reads `cfg.stress_factor`; the run configuration supplies it:
+
+```json
+{
+  "deterministic": {
+    "annual_discount_rate": 0.08,
+    "parameters": { "cfg.stress_factor": 1.0 }
+  },
+  "scenarios": {
+    "base":     { "parameters": { "cfg.stress_factor": 1.0 } },
+    "downside": { "parameters": { "cfg.stress_factor": 0.85 } }
+  }
+}
+```
+
+One model, and the scenario table — base and downside, side by side in one run's output — comes entirely from configuration. The committee's "what if revenue is 15% softer?" is answered without touching the file the committee already reviewed. Parameters can also override things the model *does* declare — a named scenario can pin `inputs.growth` or a specific stream's amount — which is how a downside case reshapes a reviewed model without editing it.
+
+**`obs.*` — observations.** Facts from outside: the index fixing, the appraised value, last month's actuals. Same mechanics as parameters (`"obs.sofr_fixing": 0.043`), different meaning — a parameter is a dial *you* turn, an observation is data the *world* supplies. The distinction is documentation, but it is documentation in the model's own vocabulary: a reviewer who sees `obs.` knows this number arrives from a data pipeline, not from an analyst's judgment.
+
+## Where does a number belong?
+
+The complete decision, four questions long:
+
+1. **Would a reviewer question it?** → an `assume`, on the assumption page. (Growth, margins, pricing, costs.)
+2. **Does the question vary per run, per scenario, per user?** → `cfg.*`, in the run configuration. (Stress factors, toggles, the discount rate itself.)
+3. **Does the world supply it after the model is written?** → `obs.*`. (Fixings, actuals, appraisals.)
+4. **Is it structure, not opinion?** → leave it literal. (Twelve months in a year, a contractual `net 45`, a stated loan principal in a signed document.)
+
+The failure mode this prevents has a familiar smell: the spreadsheet whose "inputs" tab is half the story, with the other half hard-coded in formulas nobody has opened since the analyst who wrote them left. Here, the four homes are syntactically distinct, so *where a number lives states what kind of number it is* — and the model documents its own epistemology.
+
+## What can go wrong
+
+**An input nobody supplied.** Read `cfg.stress_factor` and run without it in the configuration, and the run refuses with the missing name — not a default of 1, not a silent zero. The claim/question split is enforced from both sides.
+
+**A name collision with a meaning.** `assume rent` and a `cfg.rent` parameter are different scopes and can coexist — but should not, because the reviewer now has to ask which one wins where. Name the scopes' contents differently: assumptions describe the deal, parameters describe the run.
+
+**An assumption page that lies by omission.** The gate you cannot automate: a beautiful `assume` block plus one hard-coded `* 1.15` "temporary stress" someone left in an expression. The discipline is cultural — numbers with opinions live on the assumption page, and review enforces it — but the language makes the violation *visible*, which is the most a language can do.
+
+## Exercises
+
+<Exercise id="06-assumptions-and-inputs/assumption-page" />
+
+Then, on your own:
+
+1. Take the café model and add a downside scenario in the run configuration that cuts `monthly_covers` 20% via a parameter override — without editing the model. Compare the two NPVs in the scenario table.
+2. From a spreadsheet you know well, list five numbers and assign each a home — assume, cfg, obs, or literal — using the four questions. The two you hesitate on are the interesting ones: they are usually claims masquerading as structure.

@@ -43,5 +43,50 @@
     },
     "pack": "",
     "solution": "version 0.1\nmodel \"exercise-the-assistant\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset practice : Asset.Intangible\n\nstream practice.retainers on entity asset.practice inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 30000\n}\n\nstream practice.project_fees on entity asset.practice inflow currency USD {\n  schedule every month from 2027-01 to 2027-12\n  amount = 12000\n}\n\nstream practice.overhead on entity asset.practice outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 24000\n}\n\n// 18 months at 5,200: cash out 93,600, so the lifetime net drops from\n// 288,000 to 194,400 — the prediction to have made before running.\nstream practice.assistant on entity asset.practice outflow currency USD {\n  schedule every month from 2026-07 to 2027-12\n  amount = 5200\n}\n"
+  },
+  "04-streams-and-schedules/billing-terms": {
+    "title": "Two timing terms",
+    "prompt": "The totals are already right; the *timing* is wrong. Apply the two stated terms: collections settle `net 45`, and a 15,000 retainer deposit arrives at the start of January, written as a one-shot placed with `due`.\n\nBefore running, predict the shape: with net-45, which is the first month with any collections cash, and which months receive two invoices' worth at once? Then run and check the series against your prediction.\n\nThe lifetime total should rise by exactly the deposit — 15,000 — because `net` moves cash without creating or destroying it.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-billing-terms\"\ntime calendar monthly from 2026-01 for 12\n\nentity asset agency : Asset.Intangible\n\n// The agency bills 40,000 a month for six months of work. Two timing terms\n// are missing from this model:\n//   1. Clients pay net 45 — apply it to collections.\n//   2. A 15,000 retainer deposit arrives at the START of January 2026 —\n//      add it as a single-occurrence stream placed with `due` (hint: a\n//      stride from 2026-01 to 2026-01 has exactly one occurrence).\nstream agency.collections on entity asset.agency inflow currency USD {\n  schedule every month from 2026-01 to 2026-06\n  amount = 40000\n}\n\nstream agency.payroll on entity asset.agency outflow currency USD {\n  schedule every month from 2026-01 to 2026-06\n  amount = 26000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-billing-terms\"\ntime calendar monthly from 2026-01 for 12\n\nentity asset agency : Asset.Intangible\n\n// net 45: January's invoice is March cash. The activity window is unchanged;\n// only the cash placement moves.\nstream agency.collections on entity asset.agency inflow currency USD {\n  schedule every month net 45 from 2026-01 to 2026-06\n  amount = 40000\n}\n\nstream agency.payroll on entity asset.agency outflow currency USD {\n  schedule every month from 2026-01 to 2026-06\n  amount = 26000\n}\n\n// The deposit is cash in advance. `due` belongs to stride schedules, so a\n// single-occurrence stride carries it: one January payment, placed at the\n// period's start. (A bare `on` date sits at its period's end.)\nstream agency.deposit on entity asset.agency inflow currency USD {\n  schedule every month due from 2026-01 to 2026-01\n  amount = 15000\n}\n"
+  },
+  "05-expressions/level-payment": {
+    "title": "The level payment",
+    "prompt": "Replace the placeholder debt service with the real claim: a 250,000 loan at 7.2% annual, fully amortizing over 60 monthly payments, written with `pmt()`.\n\nSanity anchors before you trust yourself: the first month's interest is 250,000 × 0.6% = 1,500, so the payment must exceed that; and sixty payments must total more than 250,000 (the excess is lifetime interest).\n\nOne more thing to notice after running: the run configuration's discount rate equals the loan's own 7.2% — so you might expect the NPV of proceeds-minus-payments to be zero, the definition of a fairly priced loan. It is instead about −1,356. That gap is the rate-conversion lesson from the reading-results chapter, live: the loan's payment uses 7.2% *divided by twelve* (0.600% a month, the loan-document convention), while discounting converts 7.2% annual by *compounding* (0.582% a month). Two defensible conventions, a real difference. Explain which rate is \"higher\" and why the NPV comes out negative rather than positive.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-level-payment\"\ntime calendar monthly from 2026-01 for 60\n\nentity asset borrower : Asset.Financial\n\n// A 250,000 loan at 7.2% annual, fully amortizing over 60 monthly payments.\n// Write the debt service as a pmt() expression — rate per period, number of\n// periods, principal — wrapped in abs() so the declared direction carries\n// the sign. Show the structure (0.072 / 12), not a pre-divided number.\nstream loan.debt_service on entity asset.borrower outflow currency USD {\n  schedule every month from 2026-01 to 2030-12\n  amount = 1\n}\n\n// A single-occurrence due stride: the advance arrives at January's start.\nstream loan.proceeds on entity asset.borrower inflow currency USD {\n  schedule every month due from 2026-01 to 2026-01\n  amount = 250000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.072
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-level-payment\"\ntime calendar monthly from 2026-01 for 60\n\nentity asset borrower : Asset.Financial\n\n// pmt(rate per period, periods, principal): the same PMT as a spreadsheet.\n// It returns a payer's negative number; abs() hands the sign duty back to\n// the stream's declared direction, where a reviewer can see it.\nstream loan.debt_service on entity asset.borrower outflow currency USD {\n  schedule every month from 2026-01 to 2030-12\n  amount = abs(pmt(0.072 / 12, 60, 250000))\n}\n\n// A single-occurrence due stride: the advance arrives at January's start.\nstream loan.proceeds on entity asset.borrower inflow currency USD {\n  schedule every month due from 2026-01 to 2026-01\n  amount = 250000\n}\n"
+  },
+  "06-assumptions-and-inputs/assumption-page": {
+    "title": "Build the assumption page",
+    "prompt": "A refactor with an invariant: hoist the four buried numbers into `assume` statements and read them back through `inputs.*` — and prove the totals did not move.\n\nRun the starter first and note the NPV. Then refactor and run again: same NPV, to the penny. A refactor that changes no numbers is the only kind you can do to a reviewed model without triggering a re-review — and now the next change *will* be one visible line on the assumption page.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-assumption-page\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset cafe : Asset.Real\n\n// Every number a reviewer might question is buried in an expression.\n// Hoist them onto an assumption page: monthly_covers = 5200,\n// avg_ticket = 14.50, food_cost_pct = 0.31, rent = 6800 — then rewrite\n// the amounts to read from inputs.*. The totals must not change.\nstream cafe.revenue on entity asset.cafe inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 5200 * 14.50\n}\n\nstream cafe.food_cost on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 5200 * 14.50 * 0.31\n}\n\nstream cafe.rent on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 6800\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-assumption-page\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset cafe : Asset.Real\n\n// The assumption page: what this model believes, in one reviewable block.\nassume monthly_covers = 5200\nassume avg_ticket = 14.50\nassume food_cost_pct = 0.31\nassume rent = 6800\n\n// The expressions below now hold structure, not opinions.\nstream cafe.revenue on entity asset.cafe inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_covers * inputs.avg_ticket\n}\n\nstream cafe.food_cost on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_covers * inputs.avg_ticket * inputs.food_cost_pct\n}\n\nstream cafe.rent on entity asset.cafe outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.rent\n}\n"
   }
 }

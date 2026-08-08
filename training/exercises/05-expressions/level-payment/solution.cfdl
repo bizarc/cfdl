@@ -1,0 +1,19 @@
+version 0.1
+model "exercise-level-payment"
+time calendar monthly from 2026-01 for 60
+
+entity asset borrower : Asset.Financial
+
+// pmt(rate per period, periods, principal): the same PMT as a spreadsheet.
+// It returns a payer's negative number; abs() hands the sign duty back to
+// the stream's declared direction, where a reviewer can see it.
+stream loan.debt_service on entity asset.borrower outflow currency USD {
+  schedule every month from 2026-01 to 2030-12
+  amount = abs(pmt(0.072 / 12, 60, 250000))
+}
+
+// A single-occurrence due stride: the advance arrives at January's start.
+stream loan.proceeds on entity asset.borrower inflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 250000
+}
