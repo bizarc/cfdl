@@ -182,5 +182,20 @@
     },
     "pack": "",
     "solution": "version 0.1\nmodel \"exercise-the-fork\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset building : Asset.Real\n\n// One draw per trial: below 0.70 the tenant renews; above, three dark\n// months and a discounted re-let. Each path lives in one world — the\n// blended 81,700 average lived in neither.\nassume renewal_draw ~ Uniform(min=0.0, max=1.0)\n\nstream building.rent on entity asset.building inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = if(time.t < 12, 85000,\n              if(inputs.renewal_draw < 0.70, 85000,\n                 if(time.t < 15, 0, 74000)))\n}\n\nstream building.opex on entity asset.building outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 31000\n}\n"
+  },
+  "13-multi-file-models-and-style/the-checklist": {
+    "title": "Pay the style debt",
+    "prompt": "The model computes the right numbers and fails the checklist: dates copied into three schedules, three opinions buried in expressions. Apply rules 1 and 2 — phases and an assumption page.\n\nOne wrinkle to notice: the fitout cost sits in February, mid-phase. `phase_enter(\"fitout\")` places it at the phase's *start* — January. That moves cash one month earlier, which changes NPV by a whisker while the total holds. It is the right trade: the original February date encoded nothing (why February? nobody remembers), while \"when fitout begins\" is a claim that survives the timeline slipping. The expected metrics are the refactored model's — totals identical to the starter, NPV very slightly different, for exactly this reason.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-checklist\"\ntime calendar monthly from 2026-01 for 30\n\nentity asset clinic : Asset.Real\n\n// This model works — and violates the style checklist. Apply rules 1 and 2\n// without changing any total:\n//   1. Dates live in phases: declare `phase fitout` (2026-01 to 2026-03)\n//      and `phase operations` (2026-04 to 2028-06), then make every\n//      schedule read the phases instead of dates.\n//   2. Opinions live in assumptions: hoist 21500 (visit revenue), 0.62\n//      (staff cost ratio), and 30000 (fitout cost) onto an assumption page.\nstream clinic.visit_revenue on entity asset.clinic inflow currency USD {\n  schedule every month from 2026-04 to 2028-06\n  amount = 21500\n}\n\nstream clinic.staff_cost on entity asset.clinic outflow currency USD {\n  schedule every month from 2026-04 to 2028-06\n  amount = 21500 * 0.62\n}\n\nstream clinic.fitout on entity asset.clinic outflow currency USD {\n  schedule on 2026-02\n  amount = 30000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-checklist\"\ntime calendar monthly from 2026-01 for 30\nphase fitout from 2026-01 to 2026-03\nphase operations from 2026-04 to 2028-06\n\nentity asset clinic : Asset.Real\n\n// The assumption page: what this model believes.\nassume visit_revenue = 21500\nassume staff_cost_ratio = 0.62\nassume fitout_cost = 30000\n\n// Every date now lives in the phase block; slide a phase and the model\n// re-derives itself.\nstream clinic.visit_revenue on entity asset.clinic inflow currency USD {\n  schedule every month from phase_start(\"operations\") to phase_end(\"operations\")\n  amount = inputs.visit_revenue\n}\n\nstream clinic.staff_cost on entity asset.clinic outflow currency USD {\n  schedule every month from phase_start(\"operations\") to phase_end(\"operations\")\n  amount = inputs.visit_revenue * inputs.staff_cost_ratio\n}\n\nstream clinic.fitout on entity asset.clinic outflow currency USD {\n  schedule on phase_enter(\"fitout\")\n  amount = inputs.fitout_cost\n}\n"
   }
 }

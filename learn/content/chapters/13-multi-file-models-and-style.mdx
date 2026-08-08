@@ -1,0 +1,77 @@
+---
+title: "Multi-file models and style"
+description: "Organizing a real model: the import graph, a file layout that mirrors review, naming as taxonomy, and a style guide for models that other people read."
+part: 2
+order: 13
+track: core
+---
+
+Every model so far fit in one file, and one file is right until it is not — somewhere past a dozen streams, the single file stops being a document a reviewer can hold. This chapter is the craft of *organizing* a model: how the language splits files, and — the larger subject — the style discipline that makes a model something colleagues can review, inherit, and trust. Nothing here adds expressive power. All of it adds the property that actually determines a model's lifespan: whether the next person can read it.
+
+## The import graph
+
+A model is a directory with one root file — `model.cfdl` — that declares the header (version, model, time, any pack) and imports the rest:
+
+```cfdl
+version 0.1
+model "office-deal"
+time calendar monthly from 2026-01 for 60
+
+import "structure.cfdl"
+import "revenue.cfdl"
+import "financing.cfdl"
+```
+
+An imported file contains declarations — entities, fields, streams, curves, assumptions, events, waterfalls — and no header: `version`, `model`, `time`, and `use pack` belong to the root alone, stated once for the whole model. Imports resolve relative to the file that declares them, must stay inside the model's directory, and may not form cycles — the compiler refuses an import loop or an escape from the model root by name, so a model is always a self-contained tree you can zip, send, and trust to compile identically elsewhere.
+
+Beyond that, placement is free: the model behaves *exactly* as if every file were concatenated. Declaration order never carries meaning — chapter 8 established that for rules; it is true globally — so splitting is purely an act of communication. Which is why the interesting question is not how to split, but *where*.
+
+## A layout that mirrors review
+
+Split by *what a reviewer wants to read together*, not by construct type. The layout that recurs across well-organized deal models:
+
+- **`model.cfdl`** — header and imports. A table of contents: one glance says what the model contains.
+- **`assumptions.cfdl`** — every `assume`, together. Chapter 6's assumption page, now literally a page. Most reviews start and end here.
+- **`structure.cfdl`** — the cast: entities, their fact fields, their rule fields. The deal's balance sheet of *things*.
+- **One file per economic subject** — `revenue.cfdl`, `opex.cfdl`, `financing.cfdl`, `exit.cfdl`: the streams, events, and waterfalls of one storyline, together. The lender reads `financing.cfdl` top to bottom and sees their whole world; the file boundary *is* the review boundary.
+
+The anti-pattern is splitting by construct — all streams in one file, all events in another — which scatters each storyline across every file and makes no single file readable alone. If a file cannot be summarized in one sentence ("the debt and its lifecycle"), the split is wrong.
+
+## Naming as taxonomy
+
+Chapter 2 said stream names are yours to design; a large model is where that design pays or costs. The working rules:
+
+**The first segment is the subject** — `tower.rent`, `loan.interest`, `fund.mgmt_fee` — so sorted output groups by storyline and a glob like `tower.*` means something. Keep subjects aligned with your file layout and the model's organization is self-describing: the reader who sees `loan.interest` knows to open `financing.cfdl`.
+
+**The last segment is the economics** — `rent`, `interest`, `capex`, `promote` — the word a statement line would use. Middle segments only when a real hierarchy exists (`tower.retail.rent` for the retail suite of a mixed-use building).
+
+**Fields are nouns on their owner** (`asset.tlb.balance`), **events are their trigger** (`refi.trigger`), **waterfall steps are the document's own words** (`servicing_fee`, `class_a_interest`) — transcription, chapter 11 argued, is review.
+
+## Style: the rules that survive contact
+
+House rules this course has been quietly following, stated once as a checklist — the review standard for every model from here to the capstone:
+
+1. **Dates live in phases.** Streams reference `phase_start`/`phase_enter`; the phase block at the top of `model.cfdl` is the deal's entire calendar. (Chapter 9's slip test: one date edit re-derives the model.)
+2. **Opinions live in assumptions.** A number in an expression is structure; anything a committee might debate reads from `inputs.*`. (Chapter 6's four questions.)
+3. **Expressions read aloud.** Structure over results, names over repeats, decomposition over cleverness. (Chapter 5's three habits.)
+4. **Comments state claims, not mechanics.** `// Net-45 per the MSA, signed 2026-03` earns its line; `// multiply rent by occupancy` restates the code. The best comments cite the document the claim came from — the model as annotated deal file.
+5. **One hand-checked number per file.** The chapter-3 habit, scaled: each economic file's total, verified once by hand, noted in a comment. A model whose every file carries a checked anchor is a model whose next error is *localized*.
+
+None of these is enforced by the compiler — they are what the compiler cannot check, which is exactly why they belong to style. A team that adopts them gets models that review like documents; the capstone is written to this standard so you can read a full deal built this way before writing one.
+
+## What can go wrong
+
+**An import cycle.** `revenue.cfdl` imports `opex.cfdl` which imports `revenue.cfdl` — refused, with the cycle's path named. Cycles between *files* are always a layout smell (the declarations themselves cannot be circular anyway): merge the files or move the shared piece to `structure.cfdl`.
+
+**A path outside the root.** `import "../shared/rates.cfdl"` is refused. Sharing across models is a real need with a real answer — packs, Part III — not a relative path that makes a model's meaning depend on what happens to sit beside it.
+
+**A split that hides a duplicate.** Two files each declare a `tower.insurance` stream — refused as a duplicate, exactly as in one file. The compiler sees the concatenation; only readers see the files.
+
+## Exercises
+
+<Exercise id="13-multi-file-models-and-style/the-checklist" />
+
+Then, on your own:
+
+1. Take your chapter-9 venue model and split it: assumptions, structure, operations. Confirm the results are byte-identical to the single-file version — the split is pure communication.
+2. Apply the five-rule checklist to the most recent model you wrote before this chapter. Score it strictly, fix the two cheapest violations, and note how long each took — style debt is cheapest paid immediately.

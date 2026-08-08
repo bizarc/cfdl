@@ -1,0 +1,59 @@
+---
+title: "Diagnostics as a discipline"
+description: "Deep dive: the anatomy of a refusal, the code taxonomy mapped to the pipeline, and debugging as a five-minute method instead of an afternoon."
+part: 2
+order: 15
+track: deep
+---
+
+The core track can skip this chapter, though it is the deep dive most worth not skipping. You have been *reading* refusals since chapter 2; this chapter is about reading them the way an experienced practitioner does — as a structured message from a specific stage, carrying a specific promise, pointing at a specific class of fix. The compiler's error output is not an obstacle course before the results appear. It is half the product: a model that moves money is validated by what it *refuses* as much as by what it computes.
+
+## Anatomy of a refusal
+
+Every diagnostic carries the same parts: a **code** (`E2103`), a **severity**, a **message** stating the rule, the **file and span** — line and column, start to end — of the offending text, and where it helps, a **hint** naming the likely fix and **related locations** (the other end of an import cycle, the time grid a schedule overruns). Rendered on the command line:
+
+```text
+error[E2103_SCHEDULE_OUT_OF_BOUNDS] revenue.cfdl:14:12
+  schedule extends beyond the model's time grid
+  hint: the grid ends 2028-12; this schedule runs to 2029-12
+```
+
+Two properties are worth trusting because they are designed, not accidental. **Codes are stable and never reused** — an `E2103` today is an `E2103` forever, so a team's internal notes ("we hit E1201 whenever someone splits the debt file") stay true, and tooling can key on codes without fear. **Messages name the rule, not just the symptom** — "must be a dotted qualified name (e.g. cre.lease.rent)" teaches the grammar in the error itself. When a message quotes your own model's vocabulary back at you — the schedule's dates, the phase's name — that is the compiler using the resolution work it has already done to make the refusal *about your model* rather than about syntax.
+
+## The taxonomy is a map of the pipeline
+
+Codes are banded by the stage that owns them, which is the previous chapter read back as an index:
+
+- **E0xxx — lexical and parse.** The text itself is malformed. Fix the writing: these never require understanding your model, only the grammar.
+- **E1xxx — resolution.** A name problem: duplicates, unresolved references, import cycles, paths outside the root. Fix the *relationships*: something is declared twice, or referenced but not declared, or declared where it cannot be seen.
+- **E2xxx — validation.** The model is well-formed and self-consistent but breaks a semantic rule: a schedule off the grid, a missing required clause, a malformed day rule. These are the errors that teach the most, because each one is a modeling rule stated precisely.
+- **Pack bands.** A model using an industry pack gets that pack's validations — a lease missing its base rent, an occupancy outside [0,1] — in the pack's own vocabulary. Same anatomy, domain rules.
+- **Evaluation-time refusals.** What cannot be known until numbers exist: a `prev` read in the first period, a `round_to` step of zero. These surface from the engine with the same structure, and the previous chapter explained why they *cannot* surface earlier.
+
+The band tells you the *kind* of thinking the fix needs before you read the message: E0 says look at the text, E1 says look at the names, E2 says look at the claims. That pre-classification is worth more than it sounds — it is the difference between opening the right file first and grepping.
+
+## Cascades, and trusting the first error
+
+When one mistake produces several messages, the first is the cause and the rest are weather. The compiler works to suppress cascades — parse recovery resynchronizes at statement boundaries precisely so one typo does not shower you with twenty phantom errors — but suppression is best-effort where refusal is guaranteed. The discipline: **fix the first error, recompile, reread.** Never fix three reported errors in one edit; the second and third were often shadows of the first, and your "fixes" to shadows are tomorrow's real errors.
+
+## The five-minute method
+
+The debugging discipline this course has been building piecewise, assembled:
+
+1. **Compile errors: read the code's band, then the span, then the hint.** Fix one, recompile. (This step, done crisply, is most of debugging in this language — the structural errors that consume spreadsheet afternoons cannot survive to run time here.)
+2. **It compiles but a number is wrong: descend.** Chapter 3's four steps — which streams, which periods, which settings, then the claim. The wrongness is always *located*; the series tell you where.
+3. **It compiles but a number is missing: check existence gates.** A guard that is never true, an event that never fired, a schedule whose window is empty, a waterfall step starved by seniority. Missing cash is almost always a *condition*, not an amount.
+4. **Two runs disagree: diff configurations, then IRs.** Deterministic evaluation means disagreement has a cause in the inputs; the previous chapter gave you both diffs.
+5. **You and a colleague disagree: exchange model hash and seed.** If the hashes match and the numbers differ, the difference is configuration — and now the conversation is about a small JSON file, not about trust.
+
+What has no place in the method: rerunning unchanged code hoping for different output (deterministic), sprinkling magnitude tweaks to "see what moves" (every claim is legible — read it), or deleting-and-retyping (the span already names the offending text). The habits imported from debugging nondeterministic systems are not merely wasted here; they destroy the audit trail of deliberate claims that is the model's whole value.
+
+## Errors as curriculum
+
+A closing reframe for readers who teach or lead teams. Because every refusal states a rule, the set of diagnostics *is* a syllabus of the language's semantics — and deliberately triggering them is the fastest fluency drill available. The exercises in this course that said "break it on purpose" were building exactly this: a practitioner who has *seen* E1201's cycle report, E2103's overrun span, and the first-period `prev` refusal reads real errors the way a chess player reads a familiar position. Ten minutes of deliberate breakage per construct, once, is the cheapest expertise you will ever buy.
+
+## On your own
+
+1. Collect five distinct diagnostic codes from models you break on purpose — one lexical, one resolution, one validation, one pack, one evaluation-time. For each, write the one-sentence rule it enforces *without looking at the message again*. That summary sheet is your team's onboarding document.
+2. Take a model you wrote in Part II, introduce a subtle wrongness that still compiles — a guard condition off by one period — and hand it to a colleague with only the five-minute method. Time them. Then swap roles. The method is learned by being the person who finds it.
+3. The next time a model refuses to compile at the end of a long day, notice the impulse to fight the compiler — and then read the hint, which was written for exactly that moment. The discipline is emotional as much as technical, which is why it is a discipline.
