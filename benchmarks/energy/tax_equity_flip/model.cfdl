@@ -1,0 +1,160 @@
+version 0.1
+model "tax-equity-flip"
+use pack "energy" version "0.1.0"
+time calendar annual from 2026-01 for 26
+
+// A TAX-EQUITY PARTNERSHIP FLIP, where the flip date is DERIVED.
+//
+// A tax investor funds most of the equity and takes 98% of the cash and the
+// tax attributes. When its after-tax return reaches a target, the structure
+// flips: it drops to 5% and the sponsor takes the rest. The flip is not a date
+// in a contract — it is a test, and when it lands depends on how the project
+// performs.
+//
+// So the flip is a LIFECYCLE, and the date is an output. The partnership
+// interest is declared with the `energy.flip_structure` lifecycle, opens in
+// `pre_flip`, and an event moves it when the test passes.
+//
+// THE TEST NEEDS NO SOLVER. The criterion is an internal rate of return
+// reaching 8%, and this language cannot compute an IRR mid-model. It does not
+// need to: at a fixed hurdle the two statements are the same one.
+//
+//     IRR through period n >= 8%   <=>   NPV at 8% through period n >= 0
+//
+// A discounted running sum is a recurrence, which is a declared state, so the
+// test is arithmetic evaluated once a period — a discrete test rather than a
+// search, the same shape as an ordered waterfall's tiers.
+//
+// AND IT CANNOT BE CIRCULAR. The test at period t reads flows through t-1, and
+// every one of those periods is by construction still pre-flip: the flip has
+// not fired yet, or the test would not still be running. So the sharing
+// percentages the test depends on are settled before it is evaluated.
+
+entity asset project : Energy.Asset.GenerationFacility {
+  technology         = "solar_pv"
+  nameplate_capacity = 100000.0
+  state operating
+}
+
+// The lifecycle lives on the INTEREST, not the plant. The panels do not change
+// when the partnership flips; the claim on their cash does.
+entity asset interest : Energy.Asset.ProjectInterest {
+  interest_type = "tax_equity"
+  state pre_flip
+}
+
+entity party sponsor      : Party { name = "Sponsor" }
+entity party tax_investor : Party { name = "Tax investor" }
+
+// ---------------------------------------------------------------------------
+// The deal
+// ---------------------------------------------------------------------------
+
+assume energy_year_one = 250000000.0     // kWh in the first operating year
+assume ppa_price       = 0.045           // $/kWh
+assume ppa_escalation  = 0.02
+assume degradation     = 0.005
+
+assume capacity_kw     = 100000.0
+assume om_per_kw       = 15.0
+assume om_escalation   = 0.02
+
+assume debt_amount     = 60000000.0
+assume debt_rate       = 0.06
+assume debt_term       = 18.0
+
+// The equipment is $100mm; the reference capitalises $3.1mm of financing into
+// the installed cost, so the credit and depreciation are taken on the larger
+// figure. Both bases follow from it: the credit on all of it, depreciation on
+// it less half the credit, which is the rule that catches people out.
+assume installed_cost  = 103100000.0
+assume itc_rate        = 0.30
+assume tax_rate        = 0.21
+
+assume preflip_share   = 0.98
+assume postflip_share  = 0.05
+
+assume hurdle          = 0.08
+assume investor_equity = 42238000.0      // 98% of $43.1mm of equity
+
+// ---------------------------------------------------------------------------
+// The project, before anybody is paid
+// ---------------------------------------------------------------------------
+
+state project_cash {
+  init 0.0
+  next inputs.energy_year_one * inputs.ppa_price
+        * pow(1.0 + inputs.ppa_escalation, time.t - 1.0)
+        * pow(1.0 - inputs.degradation, time.t - 1.0)
+       - inputs.capacity_kw * inputs.om_per_kw
+        * pow(1.0 + inputs.om_escalation, time.t - 1.0)
+       - if(time.t <= inputs.debt_term,
+            0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+            0.0)
+}
+
+// THE TEST, as one recurrence.
+//
+// At period t this holds the investor's discounted after-tax position through
+// period t-1: its share of cash, of the tax saved on the loss depreciation
+// creates, and of the credit in the first operating year.
+//
+// It is one state rather than two because a state's `next` may read another
+// state's PREVIOUS value and not its current one — so the flow of period t-1
+// is exactly what is reachable here, and that is the flow the closed test
+// wants. The lag is the deal's own convention: the year's books close, the
+// return is tested, and the new sharing applies to the year that follows.
+//
+// Computed at the PRE-FLIP shares, and it stops accumulating the moment it
+// turns non-negative — which is the period the flip fires. A test that has
+// passed has no further question to answer, and stopping it keeps the series
+// readable: its final value is the position that triggered the flip, not a
+// running total at shares that stopped applying.
+//
+// Interest comes from `ipmt` rather than from a balance carried alongside.
+// A balance state would hold the CLOSING figure, and interest is charged on
+// the opening one — an off-by-one this states outright rather than works
+// around.
+state investor_npv_closed {
+  init 0.0 - inputs.investor_equity
+  next prev
+       + if(time.t >= 2.0 and prev < 0.0,
+            inputs.preflip_share
+             * ( prev.project_cash
+                 - inputs.tax_rate
+                   * ( prev.project_cash
+                       + if(time.t - 1.0 <= inputs.debt_term,
+                            (0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount))
+                            + ipmt(inputs.debt_rate, time.t - 1.0, inputs.debt_term,
+                                   inputs.debt_amount),
+                            0.0)
+                       - macrs_rate(time.t - 2.0, 5)
+                         * (inputs.installed_cost
+                            - 0.5 * inputs.itc_rate * inputs.installed_cost) )
+                 + if(time.t - 1.0 == 1.0, inputs.itc_rate * inputs.installed_cost, 0.0) )
+             / pow(1.0 + inputs.hurdle, time.t - 1.0),
+            0.0)
+}
+
+event flip when state.investor_npv_closed >= 0.0 {
+  set entity asset.interest.status = "post_flip"
+}
+
+// ---------------------------------------------------------------------------
+// What each partner receives
+//
+// The waterfall is owned by the INTEREST, so its steps read the lifecycle that
+// governs the split. The investor takes its share and the sponsor takes the
+// residual, which is what "the sponsor gets the rest" means.
+// ---------------------------------------------------------------------------
+
+waterfall interest.distribution on entity asset.interest {
+  schedule every year from 2027-01 to 2051-01
+  from state.project_cash
+
+  pay investor to party.tax_investor =
+        remaining * if(entity.state.status == "post_flip",
+                       inputs.postflip_share,
+                       inputs.preflip_share)
+  pay sponsor  to party.sponsor = remaining
+}

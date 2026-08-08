@@ -1,0 +1,364 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "flip-monthly-grain",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 312
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a71748fbe21431c0569661d27139ddd6",
+      "symbol": "asset.interest",
+      "type": "Energy.Asset.ProjectInterest",
+      "attrs": {
+        "interest_type": "tax_equity"
+      },
+      "state": {},
+      "initial_state": "pre_flip"
+    },
+    {
+      "id": "e543bf7d14a9fd314df744fc80d7d002",
+      "symbol": "party.sponsor",
+      "type": "Party",
+      "attrs": {
+        "name": "Sponsor"
+      },
+      "state": {}
+    },
+    {
+      "id": "5e7c9f22af2e5c5343f4f398f0cc62a2",
+      "symbol": "party.tax_investor",
+      "type": "Party",
+      "attrs": {
+        "name": "Tax investor"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "capacity_kw": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "100000.0"
+        },
+        "name": "capacity_kw",
+        "type": "Decimal"
+      },
+      "debt_amount": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "60000000.0"
+        },
+        "name": "debt_amount",
+        "type": "Decimal"
+      },
+      "debt_rate": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.06"
+        },
+        "name": "debt_rate",
+        "type": "Decimal"
+      },
+      "debt_term": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "18.0"
+        },
+        "name": "debt_term",
+        "type": "Decimal"
+      },
+      "degradation": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.005"
+        },
+        "name": "degradation",
+        "type": "Decimal"
+      },
+      "energy_year_one": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "250000000.0"
+        },
+        "name": "energy_year_one",
+        "type": "Decimal"
+      },
+      "hurdle": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.08"
+        },
+        "name": "hurdle",
+        "type": "Decimal"
+      },
+      "installed_cost": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "103100000.0"
+        },
+        "name": "installed_cost",
+        "type": "Decimal"
+      },
+      "investor_equity": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "42238000.0"
+        },
+        "name": "investor_equity",
+        "type": "Decimal"
+      },
+      "itc_rate": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.30"
+        },
+        "name": "itc_rate",
+        "type": "Decimal"
+      },
+      "om_escalation": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.02"
+        },
+        "name": "om_escalation",
+        "type": "Decimal"
+      },
+      "om_per_kw": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "15.0"
+        },
+        "name": "om_per_kw",
+        "type": "Decimal"
+      },
+      "postflip_share": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.05"
+        },
+        "name": "postflip_share",
+        "type": "Decimal"
+      },
+      "ppa_escalation": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.02"
+        },
+        "name": "ppa_escalation",
+        "type": "Decimal"
+      },
+      "ppa_price": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.045"
+        },
+        "name": "ppa_price",
+        "type": "Decimal"
+      },
+      "preflip_share": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.98"
+        },
+        "name": "preflip_share",
+        "type": "Decimal"
+      },
+      "tax_rate": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.21"
+        },
+        "name": "tax_rate",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "states": [
+    {
+      "name": "month_of_year",
+      "init": {
+        "lang": "cfdl",
+        "src": "0.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "if(prev >= 12.0, 1.0, prev + 1.0)"
+      }
+    },
+    {
+      "name": "operating_year",
+      "init": {
+        "lang": "cfdl",
+        "src": "1.0"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "if(prev.month_of_year == 12.0, prev + 1.0, prev)"
+      }
+    },
+    {
+      "name": "investor_npv_closed",
+      "init": {
+        "lang": "cfdl",
+        "src": "0.0 - inputs.investor_equity"
+      },
+      "next": {
+        "lang": "cfdl",
+        "src": "prev        + if(time.t >= 2.0 and prev < 0.0,             inputs.preflip_share              * ( ( inputs.energy_year_one * inputs.ppa_price                     * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)                     * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)                    - inputs.capacity_kw * inputs.om_per_kw                     * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)                    - if(prev.operating_year <= inputs.debt_term,                         0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),                         0.0) ) / 12.0                  + if(prev.month_of_year == 12.0,                       0.0 - inputs.tax_rate                        * ( inputs.energy_year_one * inputs.ppa_price                             * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)                             * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)                            - inputs.capacity_kw * inputs.om_per_kw                             * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)                            + if(prev.operating_year <= inputs.debt_term,                                 ipmt(inputs.debt_rate, prev.operating_year,                                      inputs.debt_term, inputs.debt_amount),                                 0.0)                            - macrs_rate(prev.operating_year - 1.0, 5)                              * (inputs.installed_cost                                 - 0.5 * inputs.itc_rate * inputs.installed_cost) )                       + if(prev.operating_year == 1.0,                            inputs.itc_rate * inputs.installed_cost, 0.0),                       0.0) )              / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),             0.0)"
+      }
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "interest.distribution",
+      "entity": "asset.interest",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-02-01",
+        "to": "2051-12-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "( inputs.energy_year_one * inputs.ppa_price           * pow(1.0 + inputs.ppa_escalation, state.operating_year - 1.0)           * pow(1.0 - inputs.degradation, state.operating_year - 1.0)          - inputs.capacity_kw * inputs.om_per_kw           * pow(1.0 + inputs.om_escalation, state.operating_year - 1.0)          - if(state.operating_year <= inputs.debt_term,               0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),               0.0) ) / 12.0"
+      },
+      "steps": [
+        {
+          "name": "investor",
+          "payee": "party.tax_investor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining * if(entity.state.status == \"post_flip\",                        inputs.postflip_share,                        inputs.preflip_share)"
+          }
+        },
+        {
+          "name": "sponsor",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.energy.revenue",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.energy.opex",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.ebitda",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.energy.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service"
+      ],
+      "formula": "-sum(financing.debt_service)"
+    },
+    {
+      "id": "domain.energy.dscr_periodic",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.energy.cfads",
+      "denominator": "domain.energy.debt_service_periodic",
+      "formula": "domain.energy.cfads / domain.energy.debt_service_periodic"
+    }
+  ],
+  "contracts": [],
+  "streams": [],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.interest"
+          },
+          "field": "status",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "\"post_flip\""
+          }
+        }
+      ],
+      "id": "00e8f7674907f66ef97af0af1f9c6d23",
+      "name": "flip",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 118,
+          "start_col": 1,
+          "start_line": 116
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "state.investor_npv_closed >= 0.0"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e37f7451351cef8ab4e58f32498a7a9f",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}
