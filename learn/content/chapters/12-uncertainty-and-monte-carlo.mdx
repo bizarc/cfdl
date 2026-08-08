@@ -1,0 +1,104 @@
+---
+title: "Uncertainty and Monte Carlo"
+description: "From point estimates to distributions: the four families, seeded reproducible trials, reading percentiles, and the per-trial branching that captures real deal risk."
+part: 2
+order: 12
+track: core
+---
+
+Chapter 6 let an assumption carry a distribution and promised the payoff later. This is later. A model whose inputs are distributions can answer the question every point estimate dodges: *how wrong could this be, and with what probability?* The same file that produced your base case produces the distribution around it — no second model, no bolted-on add-in, no copy that drifts.
+
+## Distributions, and choosing among them
+
+```cfdl
+version 0.1
+model "mc-lease-up"
+time calendar monthly from 2026-01 for 36
+
+entity asset building : Asset.Real
+
+assume stabilized_rent ~ Normal(mean=85000, stdev=6000, clip=[60000, 110000])
+assume months_to_stabilize ~ Triangular(min=9, mode=14, max=24)
+assume exit_multiple ~ LogNormal(mu=0.05, sigma=0.18)
+
+stream building.rent on entity asset.building inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.stabilized_rent * clamp(time.t / inputs.months_to_stabilize, 0.0, 1.0)
+}
+
+stream building.opex on entity asset.building outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 31000
+}
+
+stream building.exit on entity asset.building inflow currency USD {
+  schedule on 2028-12
+  amount = 620000 * inputs.exit_multiple
+}
+```
+
+Four families, and the finance judgment of when each is the right shape:
+
+- **`Normal(mean, stdev, clip=[lo, hi])`** — symmetric, additive uncertainty: a rent level, a cost estimate, anything where errors up and down are equally plausible. The `clip` states the bounds beyond which you refuse to believe your own distribution — and note the discipline: clipping is *declared in the model*, not applied silently.
+- **`LogNormal(mu, sigma)`** — multiplicative, right-skewed, never negative: prices, multiples, anything that compounds. The natural home for "it can double more easily than it can halve."
+- **`Uniform(min, max)`** — pure bounds, no view inside them. The right shape for "somewhere between 40 and 60, and I refuse to pretend I know where."
+- **`Triangular(min, mode, max)`** — the expert-elicitation shape: worst, best-guess, best. The right form for timeline and cost questions where someone experienced will give you exactly those three numbers and no more.
+
+Notice the ramp now divides by a *distributed* `months_to_stabilize` — the uncertainty flows through the same expressions the base case uses. That is the design's point: uncertainty is not a separate model, it is a wider reading of the same claims.
+
+## Running trials
+
+The model can carry its own run policy as a statement — `run monte_carlo trials 2000 seed 42`, with both numbers required — or the run configuration can supply it, which wins when both exist and is where this course keeps it:
+
+```json
+{
+  "deterministic": { "annual_discount_rate": 0.09 },
+  "monte_carlo": { "trial_count": 2000, "seed": 42 }
+}
+```
+
+Each trial draws every distributed assumption once, runs the full model, and records the results; the output then reports, alongside your deterministic case, the distribution of every metric — mean, standard deviation, min and max, and percentiles from p01 to p99.
+
+Two properties of the machinery matter to a practitioner. **The seed makes trials reproducible**: same model, same configuration, same two thousand paths, byte for byte, on any machine — "the p05 was −1.2 million" is a checkable statement in a committee memo, not a weather report. And **each assumption owns its own draw stream**, derived from the seed and the assumption independently — so adding a new distributed assumption does not reshuffle the draws of existing ones. Add a cost distribution and your rent paths stay *identical*, which means the change in the output is attributable to the assumption you added. Between-run comparability of this kind is exactly what add-in Monte Carlo tools quietly fail to provide.
+
+## Reading a distribution like a practitioner
+
+The deterministic case runs through the distributions' central values, so the number the committee saw is still in the report, unchanged. Around it, the questions worth asking of the percentiles, in the order they usually matter:
+
+1. **Does the base case sit near the median?** If the deterministic NPV is far from p50, your central values and your distributions disagree about the deal — usually a skewed input (that LogNormal) pulling the mean away from the mode. Understand why before quoting either number.
+2. **What is the p05 — and can you survive it?** The downside tail is the lender's and the risk committee's question. A deal with a fine mean and a fatal p05 is a different deal from one with the same mean and a boring p05; no point estimate distinguishes them.
+3. **What fraction of trials go negative?** "Eleven percent of paths lose money" is the sentence that changes meetings — concrete, checkable, and impossible to produce from a base case and a downside case alone.
+4. **Which input drives the spread?** Widen one distribution at a time and watch the output percentiles move. Ten minutes of this identifies the assumption worth diligence money — the one whose uncertainty actually propagates.
+
+## Branching: when uncertainty is a fork, not a wobble
+
+Real risk is often binary: the tenant renews or vacates, the permit lands or does not. A distribution on rent cannot say that — but a uniform draw through a branch can:
+
+```cfdl
+assume renewal_draw ~ Uniform(min=0.0, max=1.0)
+
+// 70% of trials: renewal at market. 30%: vacancy, then re-let at a discount.
+stream building.rollover_rent on entity asset.building inflow currency USD {
+  schedule every month from 2029-01 to 2029-12
+  amount = if(inputs.renewal_draw < 0.70, 85000, if(time.t < 39, 0, 74000))
+}
+```
+
+Each trial commits to one branch for its whole path — this is a *fork in the world*, not noise around a level — and the output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a year starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
+
+## What can go wrong
+
+**Distributions on everything.** Twenty distributed assumptions produce a wide, smooth, unexplainable fan. Distribute the three to five inputs that are both genuinely uncertain and genuinely consequential (question 4 above tells you which); state the rest as the scalars they effectively are. Precision about *what you are uncertain about* is the whole craft.
+
+**Independence you did not mean.** Draws are independent — rent and exit multiple wobble separately, though in the world they move together. Sometimes that is acceptable; when it is not, derive both from a shared draw (a `market_draw` assumption feeding both expressions) so the correlation is *stated*. Never present independent-draw tails as if they priced a correlated crash.
+
+**Quoting the mean of a skewed output.** After a LogNormal exit and a branch or two, the output is not symmetric, and the mean is not the middle. Quote the median and the tails — p50, p05, p95 — and say "mean" only when you have looked at the histogram and it earned the word.
+
+## Exercises
+
+<Exercise id="12-uncertainty-and-monte-carlo/the-fork" />
+
+Then, on your own:
+
+1. In the lease-up model, tighten `stabilized_rent`'s stdev to 1,000 and rerun: which percentiles move, and which barely? Then restore it and tighten `months_to_stabilize` instead. You have just performed the drives-the-spread analysis on a real model.
+2. Make the renewal branch's two arms share their world with the market: replace the fixed 85,000 renewal rent with a level driven by the same draw (`74000 + inputs.renewal_draw * 20000`). One draw, two consequences — the correlation is now stated in the model, which is the pattern for every "when it rains it pours" risk you will ever need to price.

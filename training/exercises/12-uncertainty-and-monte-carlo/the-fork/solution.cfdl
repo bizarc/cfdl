@@ -1,0 +1,22 @@
+version 0.1
+model "exercise-the-fork"
+time calendar monthly from 2026-01 for 24
+
+entity asset building : Asset.Real
+
+// One draw per trial: below 0.70 the tenant renews; above, three dark
+// months and a discounted re-let. Each path lives in one world — the
+// blended 81,700 average lived in neither.
+assume renewal_draw ~ Uniform(min=0.0, max=1.0)
+
+stream building.rent on entity asset.building inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = if(time.t < 12, 85000,
+              if(inputs.renewal_draw < 0.70, 85000,
+                 if(time.t < 15, 0, 74000)))
+}
+
+stream building.opex on entity asset.building outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 31000
+}

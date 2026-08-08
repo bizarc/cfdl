@@ -1,0 +1,121 @@
+---
+title: "Waterfalls"
+description: "Priority of payments as a first-class construct: pots, steps, owed and paid, the non-negative pot guarantee, and distribution structures written the way the documents state them."
+part: 2
+order: 11
+track: core
+---
+
+Every structured deal ends in the same question: *who gets paid, in what order, out of what?* A securitization's priority of payments, a fund's distribution clause, a JV's promote — all are the same shape: a pot of cash, a sequence of claims, each claim taking what it is owed until the pot runs out. Spreadsheets model this shape with their most fragile machinery — chains of `MIN(MAX(...))` cells where one wrong reference pays a junior claim ahead of a senior one. The language makes the shape a construct: the **waterfall**.
+
+## Pot, steps, payees
+
+```cfdl
+version 0.1
+model "waterfall-first"
+time calendar quarterly from 2026-01 for 8
+
+// The trust collects; the parties are paid from what it collects.
+entity asset trust : Asset.Financial {
+  available_funds init 100000
+                  next 100000
+}
+
+entity party servicer : Party
+entity party lender : Party
+entity party investor : Party
+
+// The cash that funds the pot, visible in results beside its allocation.
+stream trust.collections on entity asset.trust inflow currency USD {
+  schedule every quarter from 2026-01 to 2027-10
+  amount = asset.trust.available_funds
+}
+
+waterfall trust.distribution on entity asset.trust {
+  schedule every quarter from 2026-01 to 2027-10
+  from asset.trust.available_funds
+
+  // Each step: pay <name> to <payee> = <amount it is owed>.
+  pay servicing_fee to party.servicer = 4500
+  pay debt_service  to party.lender   = 62000
+  pay residual      to party.investor = remaining
+}
+```
+
+A waterfall has a schedule (it distributes on dates, like any claim), a **pot** — the `from` expression, here a field of the trust stating what arrived this period — and ordered **steps**. Each step names itself, names its payee (an entity reference — this is where chapter 2's parties earn their place in the cast), and states what the step is *owed* as an ordinary expression.
+
+The engine applies one rule at every step: the step receives `min(max(0, owed), remaining)`. That single rule is the construct's guarantee — **the pot cannot go negative, and no step can be paid more than what survives the steps above it** — however any individual step is written. The seniority logic that a spreadsheet re-implements per cell, correctly or not, is here the meaning of the construct itself, proved once in the engine rather than per model. What is left after a step is `remaining`, and a final `= remaining` step sweeps the residual — the equity's position in one word.
+
+Each step publishes as a series under the waterfall's name, so results show the full allocation grid: who was owed what, who received what, period by period.
+
+## owed and paid: shortfalls made visible
+
+Steps can read each other through two special names: `owed.<step>` — what a step was *entitled to* this period — and `paid.<step>` — what it actually received. Their difference is the step's **shortfall**, and real documents are full of clauses about exactly that:
+
+```cfdl
+// A junior fee is deferred when funds run short; the deferral claim ranks
+// lower than current fees, exactly as the indenture says.
+pay junior_fee_current  to party.manager = 8000
+pay senior_note         to asset.class_a = 55000
+pay junior_fee_deferred to party.manager = owed.junior_fee_current - paid.junior_fee_current
+```
+
+Five expression shapes cover essentially every step a real priority of payments contains — a stated amount (`4500`), a capped amount (`min(fee, cap)`), pay-down-to-a-target (`balance - target`), an earlier step's shortfall (`owed.x - paid.x`), and the sweep (`remaining`). Learn to see any indenture's payment section as combinations of these five, and transcription becomes mechanical: read a clause, write a step, in document order. The model reads *in the same order the lawyer wrote* — which is what makes review by the person who negotiated the document possible at all.
+
+## The promote: equity's waterfall
+
+The same construct expresses the private-equity shapes. A simplified preferred-return-then-promote split over annual distributable cash:
+
+```cfdl
+version 0.1
+model "waterfall-promote"
+time calendar annual from 2026-01 for 4
+
+entity asset venture : Asset.Financial {
+  distributable init 500000
+                next 500000
+}
+
+entity party lp : Party
+entity party gp : Party
+
+stream venture.cash_generated on entity asset.venture inflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = asset.venture.distributable
+}
+
+waterfall venture.split on entity asset.venture {
+  schedule every year from 2026-01 to 2029-01
+  from asset.venture.distributable
+
+  // The LP's 8% preferred on committed capital, then capital back, then
+  // the GP's 20% promote on what remains, then the LP's share of the rest.
+  pay lp_preferred to party.lp = 4000000 * 0.08
+  pay lp_capital   to party.lp = 100000
+  pay gp_promote   to party.gp = remaining * 0.20
+  pay lp_residual  to party.lp = remaining
+}
+```
+
+Note what `remaining * 0.20` does: a step's owed amount can *read the pot mid-flow*, so proportional splits fall out of the same five shapes. (A full promote with IRR hurdles and catch-up provisions is these pieces plus accrual fields — the capstone's final chapter builds one over the whole deal.) Waterfalls also **chain**: because steps publish as series, one waterfall's step can feed another's pot — a property-level distribution feeding a fund-level one — which is how multi-tier structures stay legible instead of collapsing into one giant priority list.
+
+## What the construct refuses
+
+No step can overdraw the pot, pay negatively (a step is a payment, not a clawback — a true clawback is cash the *other* way: a stream), or be referenced before it runs (`owed.x` looks *up* the priority list, never down — a forward reference is refused at compile). Each refusal corresponds to a way spreadsheet waterfalls actually fail; each is impossible to express rather than checked after the fact.
+
+## What can go wrong
+
+**The pot is wrong.** The waterfall allocates whatever `from` says, and if that expression misses a revenue line, every step downstream is quietly short. The pot deserves the chapter-3 treatment: one period, by hand, reconciled to the sources that feed it, before any step is trusted.
+
+**A step that reads like the document but ranks differently.** The construct guarantees seniority *within the order you wrote* — it cannot know the indenture ordered things differently. Transcribe in document order, then have the person who knows the document read your steps top to bottom. That review is the point of the shape matching.
+
+**A sweep that isn't last.** `remaining` mid-list is legal — sometimes correct (the promote above) — but a *final* sweep left off the end silently strands cash in the pot. If the pot should always empty, end with `= remaining` and check the residual series is what equity expects.
+
+## Exercises
+
+<Exercise id="11-waterfalls/priority-of-payments" />
+
+Then, on your own:
+
+1. In the exercise's solution, swap the order of the debt-service and management-fee steps and rerun. Watch which party's series changes and by how much — you have just measured what "seniority" is worth in dollars.
+2. Shrink the pot until the junior steps starve (set collections to 60,000) and read the `owed` vs `paid` gap in the output. Then add a deferred-fee step that catches the shortfall next period, using `owed.x - paid.x`.

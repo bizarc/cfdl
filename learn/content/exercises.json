@@ -133,5 +133,54 @@
     },
     "pack": "",
     "solution": "version 0.1\nmodel \"exercise-the-kicker\"\ntime calendar monthly from 2026-01 for 36\n\nentity asset venue : Asset.Real\n\nassume monthly_revenue = 52000\nassume breakeven = 40000\n\nstream venue.revenue on entity asset.venue inflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = inputs.monthly_revenue * clamp(time.t / 12.0, 0.0, 1.0)\n}\n\nstream venue.opex on entity asset.venue outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  amount = 38000\n}\n\n// The guard carries the condition — this claim exists only above breakeven —\n// and the amount carries the economics. During the ramp the guard is false\n// and the stream simply does not occur.\nstream venue.percentage_rent on entity asset.venue outflow currency USD {\n  schedule every month from 2026-01 to 2028-12\n  active when series_sum(\"venue.revenue\", time.t, time.t) > inputs.breakeven\n  amount = (series_sum(\"venue.revenue\", time.t, time.t) - inputs.breakeven) * 0.07\n}\n"
+  },
+  "10-events-and-options/the-refinance": {
+    "title": "One turning point, stated once",
+    "prompt": "The starter pays both loans for the full two years — 15,700 a month of interest on a deal that refinances at month twelve. Add the lifecycle: guard each loan on `entity.state.status`, and add the event that sets it to `\"refinanced\"` at `time.t >= 12`.\n\nPredict the saving before you run: twelve months of bridge (9,500) plus twelve of perm (6,200), versus twenty-four of both. Then check the series — the bridge should stop exactly when the perm starts, with no overlap month and no gap month. Off-by-one here is the difference between the latch firing *at* twelve and *after* twelve; the series will tell you which claim you actually wrote.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-refinance\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset senior : Asset.Financial\n\n// Both loans currently run for the full two years — which is wrong: the\n// deal refinances at month 12. Your task:\n//   1. Guard each loan with an `active when` on the lifecycle field\n//      entity.state.status (\"refinanced\" / not).\n//   2. Add an event that fires at time.t >= 12 and sets\n//      entity asset.senior.status = \"refinanced\".\nstream loan.bridge_interest on entity asset.senior outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 9500\n}\n\nstream loan.perm_interest on entity asset.senior outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 6200\n}\n\nstream ops.noi on entity asset.senior inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 21000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-refinance\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset senior : Asset.Financial\n\n// The event owns WHEN the regime changes; each stream states WHICH regime\n// it belongs to. Move the refinance date and one line changes.\nstream loan.bridge_interest on entity asset.senior outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 9500\n  active when entity.state.status != \"refinanced\"\n}\n\nstream loan.perm_interest on entity asset.senior outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 6200\n  active when entity.state.status == \"refinanced\"\n}\n\nstream ops.noi on entity asset.senior inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 21000\n}\n\nevent refi.trigger when time.t >= 12 {\n  set entity asset.senior.status = \"refinanced\"\n}\n"
+  },
+  "11-waterfalls/priority-of-payments": {
+    "title": "Transcribe the priority of payments",
+    "prompt": "The trust receives 100,000 a quarter; the documents pay a 4,500 servicing fee, then 62,000 of debt service, then everything remaining to the investor. Write the waterfall in document order, paying from `asset.trust.available_funds`.\n\nCheck by allocation: every quarter must account for exactly 100,000 across the three steps — 4,500 + 62,000 + 33,500. Then stress it in your head: if collections fell to 60,000, who is short, and by how much? (The engine's answer, when you try it, is in the owed-versus-paid columns.)",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-priority-of-payments\"\ntime calendar quarterly from 2026-01 for 8\n\n// Quarterly collections arrive in the trust; the parties are paid from them.\nentity asset trust : Asset.Financial {\n  available_funds init 100000\n                  next 100000\n}\n\nentity party servicer : Party\nentity party lender : Party\nentity party investor : Party\n\n// Your task: write the waterfall the documents describe, in document order —\n//   1. servicing fee: 4,500 per quarter\n//   2. debt service: 62,000 per quarter\n//   3. residual: everything remaining, to the investor\n// waterfall trust.distribution on entity asset.trust, scheduled quarterly,\n// paying from asset.trust.available_funds.\n\nstream trust.collections_report on entity asset.trust inflow currency USD {\n  schedule every quarter from 2026-01 to 2027-10\n  amount = asset.trust.available_funds\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.08
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-priority-of-payments\"\ntime calendar quarterly from 2026-01 for 8\n\nentity asset trust : Asset.Financial {\n  available_funds init 100000\n                  next 100000\n}\n\nentity party servicer : Party\nentity party lender : Party\nentity party investor : Party\n\n// In document order: fee, debt, sweep. The engine's per-step rule —\n// min(max(0, owed), remaining) — carries the seniority; the steps just\n// state what each claim is owed.\nwaterfall trust.distribution on entity asset.trust {\n  schedule every quarter from 2026-01 to 2027-10\n  from asset.trust.available_funds\n\n  pay servicing_fee to party.servicer = 4500\n  pay debt_service  to party.lender   = 62000\n  pay residual      to party.investor = remaining\n}\n\nstream trust.collections_report on entity asset.trust inflow currency USD {\n  schedule every quarter from 2026-01 to 2027-10\n  amount = asset.trust.available_funds\n}\n"
+  },
+  "12-uncertainty-and-monte-carlo/the-fork": {
+    "title": "Un-blend the rollover",
+    "prompt": "The starter averages a 70% renewal and a 30% vacancy into 81,700 a month — a rent that no future actually pays. Replace the blend with the fork: a uniform draw, and a branch that commits each trial to one world.\n\nAfter running, put the deterministic result and the Monte Carlo percentiles side by side. The deterministic case (draw at its central 0.5) renews. The trials split: about seven hundred renewal paths, about three hundred with a dark quarter and a discounted re-let. Find where the blended starter's answer sits relative to the two clusters — it should sit *between* worlds, which is precisely the problem with blends: the reserve sized on the average is wrong in every path that occurs.",
+    "files": {
+      "model.cfdl": "version 0.1\nmodel \"exercise-the-fork\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset building : Asset.Real\n\n// The lease rolls at month 12. This model blends the outcome: 70% renewal\n// at 85,000, 30% vacancy-then-relet, averaged into one number. Un-blend it:\n//   1. assume renewal_draw ~ Uniform(min=0.0, max=1.0)\n//   2. after the roll, branch: draw < 0.70 pays 85000; otherwise 0 for\n//      three months (time.t < 15), then 74000.\n// The run configuration already carries 1,000 seeded trials.\nstream building.rent on entity asset.building inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = if(time.t < 12, 85000, 81700)\n}\n\nstream building.opex on entity asset.building outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 31000\n}\n"
+    },
+    "root": "model.cfdl",
+    "config": {
+      "deterministic": {
+        "annual_discount_rate": 0.09
+      },
+      "monte_carlo": {
+        "trial_count": 1000,
+        "seed": 20260808
+      }
+    },
+    "pack": "",
+    "solution": "version 0.1\nmodel \"exercise-the-fork\"\ntime calendar monthly from 2026-01 for 24\n\nentity asset building : Asset.Real\n\n// One draw per trial: below 0.70 the tenant renews; above, three dark\n// months and a discounted re-let. Each path lives in one world — the\n// blended 81,700 average lived in neither.\nassume renewal_draw ~ Uniform(min=0.0, max=1.0)\n\nstream building.rent on entity asset.building inflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = if(time.t < 12, 85000,\n              if(inputs.renewal_draw < 0.70, 85000,\n                 if(time.t < 15, 0, 74000)))\n}\n\nstream building.opex on entity asset.building outflow currency USD {\n  schedule every month from 2026-01 to 2027-12\n  amount = 31000\n}\n"
   }
 }

@@ -1,0 +1,28 @@
+version 0.1
+model "exercise-the-refinance"
+time calendar monthly from 2026-01 for 24
+
+entity asset senior : Asset.Financial
+
+// The event owns WHEN the regime changes; each stream states WHICH regime
+// it belongs to. Move the refinance date and one line changes.
+stream loan.bridge_interest on entity asset.senior outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 9500
+  active when entity.state.status != "refinanced"
+}
+
+stream loan.perm_interest on entity asset.senior outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 6200
+  active when entity.state.status == "refinanced"
+}
+
+stream ops.noi on entity asset.senior inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 21000
+}
+
+event refi.trigger when time.t >= 12 {
+  set entity asset.senior.status = "refinanced"
+}
