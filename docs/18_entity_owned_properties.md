@@ -241,6 +241,44 @@ for model-level states until stage 8 retires them, so the two coexist for the
 duration and neither is ambiguous: `prev` takes a path, `prev.` takes a state
 name.
 
+## 4b. Stage 6 is a hierarchy, not a rename — settled
+
+The pack rules emit 82 model-level states (73 credit, 9 opco), almost all pool
+survival factors. Two wrong answers were proposed before the right one:
+
+**Not a rename onto the pool.** `state.credit_level_pay_survival_a2` becoming
+`asset.pool.factor_a2` keeps the flat namespace and has the pack inventing
+fields on an entity the modeller declared. A pack declares KINDS; a modeller
+declares ENTITIES. A lowering rule writing fields into someone else's entity
+reproduces the invisibility this work removes.
+
+**The tell is `{{contract.suffix_ident}}`.** It appears in every one of those
+rules, and it exists to keep 43 sub-pools apart in a namespace with no notion of
+containment. That is a HIERARCHY FLATTENED INTO STRINGS.
+
+**Sub-pools are children.** `part of` already expresses this, and
+`benchmarks/credit/mbs_pool_by_loan` already proves it: four loans belonging to
+a pool, the pool holding no contract, every figure asserted against the pool an
+aggregate the engine computes by walking the relation — reconciled against a
+published schedule.
+
+So the auto ABS case with 43 sub-pools is the same shape wearing the wrong
+clothes. Modelled properly it is 43 entities, each `part of` the pool, each
+carrying its own contract and its own factor. The suffix disappears because
+identity comes from the entity. Aggregation is free because it is the relation
+the parent already aggregates by. And the grain becomes the modeller's choice,
+which was the stated intent from the beginning.
+
+### What still has no answer
+
+`state_every = "{{contract.payment_frequency}}"` on all 18 scheduled rules.
+Fields are not temporal, so the step condition belongs in the rule — but "is
+this a payment period" is not expressible without a `mod`. When the contract's
+frequency equals the model's cadence, which is every current benchmark, the rule
+steps every period and needs no guard. The mismatch — a monthly-paying pool on a
+daily book — needs either a small builtin or a curve the pack emits from what it
+already knows at lowering time.
+
 ## 5. Group C is the reference family
 
 Group C is not a third category. An index, a rate path, a price deck — these
