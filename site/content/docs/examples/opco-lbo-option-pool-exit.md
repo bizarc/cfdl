@@ -117,7 +117,28 @@ use pack "opco" version "0.1.0"
 // waterfall, not a cash flow schedule, and the schedule is the other case.
 time calendar annual from 2021-01 for 1
 
-entity asset target : OpCo.Asset.Enterprise
+entity asset target : OpCo.Asset.Enterprise {
+  // Both quantities describe the enterprise AT EXIT, so they hang on it rather
+  // than floating as model variables. `value_per_share` is what every option's
+  // exercise test reads.
+  exit_equity init 575.6158451632398
+
+  value_per_share init if(25.00 < (575.6158451632398 + 103.875) / 32.203133120640006,
+          (575.6158451632398 + 103.875) / 32.203133120640006,
+          if(22.50 < (575.6158451632398 + 72.625) / 30.953133120640006,
+          (575.6158451632398 + 72.625) / 30.953133120640006,
+          if(20.00 < (575.6158451632398 + 44.500) / 29.703133120640006,
+          (575.6158451632398 + 44.500) / 29.703133120640006,
+          if(17.50 < (575.6158451632398 + 29.500) / 28.953133120640006,
+          (575.6158451632398 + 29.500) / 28.953133120640006,
+          if(15.00 < (575.6158451632398 + 20.750) / 28.453133120640006,
+          (575.6158451632398 + 20.750) / 28.453133120640006,
+          if(14.00 < (575.6158451632398 + 13.250) / 27.953133120640006,
+          (575.6158451632398 + 13.250) / 27.953133120640006,
+          if(12.50 < (575.6158451632398 + 6.250) / 27.453133120640006,
+          (575.6158451632398 + 6.250) / 27.453133120640006,
+          575.6158451632398 / 26.953133120640006)))))))
+}
 
 // ---------------------------------------------------------------------------
 // Exit. LTM adjusted EBITDA at the end of the five-year hold, at 8.0x, less
@@ -150,10 +171,7 @@ assume rollover_shares  = 3.6
 // ---------------------------------------------------------------------------
 
 // Exit equity value, before any option proceeds.
-state exit_equity {
-  init 575.6158451632398
-  next prev
-}
+
 
 // The resolved value per share.
 //
@@ -164,70 +182,52 @@ state exit_equity {
 //
 // The denominators are (26.953133120640006 + cumulative option shares), where
 // 26.953133 is the preferred plus rollover shares that exist regardless.
-state value_per_share {
-  init if(25.00 < (575.6158451632398 + 103.875) / 32.203133120640006,
-          (575.6158451632398 + 103.875) / 32.203133120640006,
-       if(22.50 < (575.6158451632398 + 72.625) / 30.953133120640006,
-          (575.6158451632398 + 72.625) / 30.953133120640006,
-       if(20.00 < (575.6158451632398 + 44.500) / 29.703133120640006,
-          (575.6158451632398 + 44.500) / 29.703133120640006,
-       if(17.50 < (575.6158451632398 + 29.500) / 28.953133120640006,
-          (575.6158451632398 + 29.500) / 28.953133120640006,
-       if(15.00 < (575.6158451632398 + 20.750) / 28.453133120640006,
-          (575.6158451632398 + 20.750) / 28.453133120640006,
-       if(14.00 < (575.6158451632398 + 13.250) / 27.953133120640006,
-          (575.6158451632398 + 13.250) / 27.953133120640006,
-       if(12.50 < (575.6158451632398 + 6.250) / 27.453133120640006,
-          (575.6158451632398 + 6.250) / 27.453133120640006,
-          575.6158451632398 / 26.953133120640006)))))))
-  next prev
-}
 
 // ---------------------------------------------------------------------------
 // The options themselves. Each tests its own strike against the resolved value
 // per share — the economically real test, and now expressible directly:
-// `exercise when` reads `state.value_per_share`, the value the model derives
+// `exercise when` reads `asset.target.value_per_share`, the value the model derives
 // above, rather than a constant restated for the engine's benefit.
 //
 // The payoff is the tranche's intrinsic value at exit: shares * (value - strike).
 // ---------------------------------------------------------------------------
 
 option mgmt_options_12_50 type Option.Equity {
-  exercise when state.value_per_share > 12.50
-  payoff 0.50 * (state.value_per_share - 12.50)
+  exercise when asset.target.value_per_share > 12.50
+  payoff 0.50 * (asset.target.value_per_share - 12.50)
 }
 
 option mgmt_options_14_00 type Option.Equity {
-  exercise when state.value_per_share > 14.00
-  payoff 0.50 * (state.value_per_share - 14.00)
+  exercise when asset.target.value_per_share > 14.00
+  payoff 0.50 * (asset.target.value_per_share - 14.00)
 }
 
 option mgmt_options_15_00 type Option.Equity {
-  exercise when state.value_per_share > 15.00
-  payoff 0.50 * (state.value_per_share - 15.00)
+  exercise when asset.target.value_per_share > 15.00
+  payoff 0.50 * (asset.target.value_per_share - 15.00)
 }
 
 option mgmt_options_17_50 type Option.Equity {
-  exercise when state.value_per_share > 17.50
-  payoff 0.50 * (state.value_per_share - 17.50)
+  exercise when asset.target.value_per_share > 17.50
+  payoff 0.50 * (asset.target.value_per_share - 17.50)
 }
 
 option mgmt_options_20_00 type Option.Equity {
-  exercise when state.value_per_share > 20.00
-  payoff 0.75 * (state.value_per_share - 20.00)
+  exercise when asset.target.value_per_share > 20.00
+  payoff 0.75 * (asset.target.value_per_share - 20.00)
 }
 
 // Out of the money at 8.0x: the value per share resolves to $20.88, below both
 // remaining strikes. Included precisely so the case asserts a NON-exercise as
 // well as an exercise — an option model that only ever fires is not tested.
 option mgmt_options_22_50 type Option.Equity {
-  exercise when state.value_per_share > 22.50
-  payoff 1.25 * (state.value_per_share - 22.50)
+  exercise when asset.target.value_per_share > 22.50
+  payoff 1.25 * (asset.target.value_per_share - 22.50)
 }
 
 option mgmt_options_25_00 type Option.Equity {
-  exercise when state.value_per_share > 25.00
-  payoff 1.25 * (state.value_per_share - 25.00)
+  exercise when asset.target.value_per_share > 25.00
+  payoff 1.25 * (asset.target.value_per_share - 25.00)
 }
 
 // ---------------------------------------------------------------------------
@@ -239,7 +239,7 @@ option mgmt_options_25_00 type Option.Equity {
 stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
   category investing.exit
-  amount = state.exit_equity
+  amount = asset.target.exit_equity
 }
 
 stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
@@ -268,9 +268,9 @@ entity party mgmt    : OpCo.Party.Management { name = "Management" }
 
 waterfall opco.exit on entity asset.target {
   schedule on 2021-01
-  from state.exit_equity + 44.500
+  from asset.target.exit_equity + 44.500
 
-  pay sponsor_proceeds    to party.sponsor = 23.353133120640006 * state.value_per_share
+  pay sponsor_proceeds    to party.sponsor = 23.353133120640006 * asset.target.value_per_share
   pay management_proceeds to party.mgmt    = remaining
 }
 ```
@@ -289,7 +289,7 @@ waterfall opco.exit on entity asset.target {
 
 Checked period by period: **12 series** across **1 periods**, each within ±1e-6 of the reference.
 
-- `state.value_per_share`
+- `state.asset.target.value_per_share`
 - `opco.exit.equity_value`
 - `opco.exit.option_proceeds`
 - `opco.exit.sponsor_proceeds`

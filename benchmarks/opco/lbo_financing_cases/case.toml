@@ -40,4 +40,4 @@ pack = "opco"
 period_tolerance = 1e-6
 
 [tolerance]
-"state.sub_balance" = 1e-4
+"state.asset.sub_notes.balance" = 1e-4
