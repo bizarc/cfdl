@@ -15,8 +15,7 @@ An expression evaluates inside a sealed environment. Every name it can read belo
 - **`time.*`** — the clock at this occurrence: `time.t` (the period index, starting at 0), `time.date` (the period's date), `time.phase` (the current phase's name). The workhorse: `time.t` is what growth compounds on.
 - **`inputs.*`** — the model's own declared assumptions (next chapter).
 - **`cfg.*`** and **`obs.*`** — values supplied by the run configuration at run time: parameters and observations. Also next chapter.
-- **`state.*`** and **`prev`** — the model's accumulated state (chapter 8).
-- **`entity.*`** — fields of the entity the stream is attached to.
+- **Entity fields** — facts and running quantities owned by the model's entities, read by path (`asset.tlb.balance`), with `prev.` reaching the prior period's value (chapter 8).
 
 And that is all. No file access, no wall-clock date, no environment variables, no randomness outside declared assumptions. The sealed environment is what makes a run reproducible, and it has a practical authoring consequence: if a number matters to the model, it must be *declared somewhere* — which is exactly where a reviewer will find it.
 
@@ -106,7 +105,7 @@ The examples above share a property worth making explicit, because it is the cha
 
 **Name what recurs.** The moment `0.072` appears in two expressions it belongs in an assumption (`assume loan_rate = 0.072`, next chapter) — one place to change, one place to review.
 
-**Split what compounds.** An expression juggling occupancy, escalation, and a fee cap is three claims in a trench coat. Three streams — or state, or a contract — each carrying one claim, total the same and *review* utterly differently. When an expression stops reading aloud cleanly, reach for a bigger construct, not a longer line. Part III's construct-choice chapter is that decision, systematized.
+**Split what compounds.** An expression juggling occupancy, escalation, and a fee cap is three claims in a trench coat. Three streams — or an entity field, or a contract — each carrying one claim, total the same and *review* utterly differently. When an expression stops reading aloud cleanly, reach for a bigger construct, not a longer line. Part III's construct-choice chapter is that decision, systematized.
 
 ## What can go wrong
 

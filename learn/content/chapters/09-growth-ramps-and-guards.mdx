@@ -6,7 +6,7 @@ order: 9
 track: core
 ---
 
-You now hold every core tool: schedules place cash, expressions compute it, assumptions and curves feed it, state remembers. This chapter adds no new construct. It is the *idiom kit* — the five patterns that recur in nearly every commercial model, each a one-liner once you have seen it, each a claim with finance content worth naming. Fluency here is what makes the difference between assembling a model and deriving one from scratch every time.
+You now hold every core tool: schedules place cash, expressions compute it, assumptions and curves feed it, entity fields remember. This chapter adds no new construct. It is the *idiom kit* — the five patterns that recur in nearly every commercial model, each a one-liner once you have seen it, each a claim with finance content worth naming. Fluency here is what makes the difference between assembling a model and deriving one from scratch every time.
 
 ## Compounding vs. stepping
 
@@ -20,7 +20,7 @@ amount = 4000 * pow(1.03, time.t / 12)
 amount = 4000 * pow(1.03, round_down(time.t / 12, 0))
 ```
 
-Most contracts *step* — rent bumps on anniversaries, wage scales revise annually — while most macro assumptions *drift*. The two produce the same year-end value and different cash within every year: the smooth version front-loads part of each year's increase, worth real money across a long lease. Read the contract, then write the claim it makes. When the escalation also *rounds* before compounding, neither one-liner survives and you reach back to chapter 8's state recurrence.
+Most contracts *step* — rent bumps on anniversaries, wage scales revise annually — while most macro assumptions *drift*. The two produce the same year-end value and different cash within every year: the smooth version front-loads part of each year's increase, worth real money across a long lease. Read the contract, then write the claim it makes. When the escalation also *rounds* before compounding, neither one-liner survives and you reach back to chapter 8's field rules.
 
 ## The ramp
 
@@ -92,7 +92,7 @@ stream venue.stabilized_kicker on entity asset.venue inflow currency USD {
 }
 ```
 
-Phase gating in the schedule, a maturity guard, and an amount that is *stepped escalation times a delayed ramp* — four idioms, one stream, still readable aloud clause by clause. That compositional style, rather than any single pattern, is the chapter's real skill. And its limit from chapter 5 still binds: when the amount stops reading aloud cleanly, the answer is decomposition — split streams, a state, a contract — never a longer line.
+Phase gating in the schedule, a maturity guard, and an amount that is *stepped escalation times a delayed ramp* — four idioms, one stream, still readable aloud clause by clause. That compositional style, rather than any single pattern, is the chapter's real skill. And its limit from chapter 5 still binds: when the amount stops reading aloud cleanly, the answer is decomposition — split streams, a field, a contract — never a longer line.
 
 ## What can go wrong
 

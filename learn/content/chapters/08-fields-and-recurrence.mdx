@@ -1,0 +1,122 @@
+---
+title: "Fields and recurrence"
+description: "Values that remember, owned by the things they describe: entity fields, init/next rules, the prev discipline that makes cycles impossible, and the balances every real model carries."
+part: 2
+order: 8
+track: core
+---
+
+Everything you have computed so far is *memoryless*: an amount at period 12 reads the clock, the assumptions, a curve — but never period 11's answer. A loan balance cannot be written that way, and neither can a compounding index off a varying rate, a cumulative-spend tracker, or an escalation that rounds before it compounds. These are **recurrences** — this period's value defined in terms of last period's — and the language's home for them starts from a simple observation: *a balance belongs to something*. A term loan's balance is a fact about the term loan; cumulative capex is a fact about the asset. So recurrences live where facts live — as **fields on entities**.
+
+## Fields: facts and rules
+
+Chapter 2 introduced typed entities; the braces you have not used yet hold their fields, and a field comes in two kinds:
+
+```cfdl
+entity asset tlb : Asset.Financial {
+  // A fact: stated with `=`, a literal, held until something changes it.
+  seniority = 1
+
+  // A rule: the field moves itself, period by period.
+  balance init 250000
+          next max(0.0, prev - 4200)
+}
+```
+
+A **fact field** (`seniority = 1`) takes a literal and nothing else — it is a statement about the thing, checked against the pack's ontology when one is in play, so a misspelled field name fails at compile time. A **rule field** carries the recurrence: **`init`** is the value at the first period (an expression — a base case often needs `inputs.*`), and **`next`** is evaluated each subsequent period with **`prev`** bound to this field's own value one period ago. A computed "fact" (`occupancy = base * 0.95`) is deliberately illegal — a value that moves is a rule, and the syntax makes you say so.
+
+There is a third way a field changes — an *event* writes it (`set entity asset.tower.use = "retail"`) — which chapter 10 takes up. Rule, then event, then reads: that ordering is fixed by the engine, so a rule computes the period's value, an event may overwrite it, and everything downstream sees what was committed.
+
+## Reading a field, at either end of the period
+
+From any expression, anywhere in the model:
+
+- `asset.tlb.balance` — this period's value, at period **close**.
+- `prev.asset.tlb.balance` — the same field at the close *before* this one: the value the period **opened** with.
+
+Both ends of the period, one declared quantity. Here is the convention that makes this matter — interest on the *average* of a period's opening and closing balance, the standard debt-schedule convention:
+
+```cfdl
+version 0.1
+model "fields-average-balance"
+time calendar annual from 2026-01 for 4
+
+entity asset senior : Asset.Financial {
+  balance init 100000
+          next max(0.0, prev - 10000)
+}
+
+// Interest on the average of the period's two ends: the opening balance is
+// simply the previous close, read with prev — no second declaration.
+stream senior.interest on entity asset.senior outflow currency USD {
+  schedule every year from 2027-01 to 2029-01
+  amount = (prev.asset.senior.balance + asset.senior.balance) / 2.0 * 0.06
+}
+
+stream senior.amortization on entity asset.senior outflow currency USD {
+  schedule every year from 2027-01 to 2029-01
+  amount = 10000
+}
+```
+
+Read the interest amount aloud: "six percent on the average of what the period opened and closed with." In a spreadsheet, average-balance interest is the classic circular-reference trap; here it is one line, because *opening balance* is not a second quantity to declare — it is the same field, read one period back.
+
+## Why cycles are impossible
+
+The reads above are safe by construction, and the argument is worth owning because it is the design's core guarantee. A **rule's** `next` reads `prev` — its own or another field's previous value — plus the clock, assumptions, and curves: everything from the *completed* previous column, nothing from its own. A **stream** may read fields at the current period's close, because every rule has already run by the time streams evaluate — that is the fixed ordering above, not a hope.
+
+The consequence: circular references — the spreadsheet's most notorious failure mode — are not detected and warned about; they are **unwritable**. Two rules may reference each other freely (each sees the other's *previous* value; last period is always finished), and declaration order carries no meaning. The iterative-solver dance ("enable circular references, set max iterations…") that infects interest-on-average-balance workbooks has no equivalent here; the grammar itself is the proof that evaluation is well-founded.
+
+The cost is one modeling discipline: genuine same-period simultaneity must be *staged*. A definition that truly needs this period's answer on both sides — price that depends on volume that depends on price — has to be restated as a rule off last period, or split across two fields, and either way the model *declares its convention*. That is the trade throughout this language: a construct that cannot express confusion, in exchange for saying what you mean.
+
+## The rounded-escalation case
+
+The canonical case for a rule over a formula, promised in chapter 3. A published schedule escalates a fee 3% annually, *rounding to the dollar each year* — and compounds next year on the rounded value, because that is what the workbook it came from did:
+
+```cfdl
+version 0.1
+model "fields-rounded-escalation"
+time calendar annual from 2026-01 for 6
+
+entity asset co : Asset.Financial {
+  // Escalate, round to the dollar, and NEXT year compounds on the ROUNDED
+  // value — the recurrence a clean pow() formula cannot state.
+  fee_schedule init 100000
+               next round_to(prev * 1.03, 1)
+}
+
+stream co.management_fee on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = asset.co.fee_schedule
+}
+
+stream co.admin_cost on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 20000
+}
+```
+
+Over six years, `100000 * pow(1.03, time.t)` and this rule drift apart by about a dollar — and over the thirty-year schedules where this pattern actually lives, by real money. Invisible in a total, fatal in a reconciliation that must match a source to the penny. The rule matches the *method*, so it matches the pennies, and every future deviation from the published schedule is a visible choice rather than an unexplained residual. Carrying a rounded value forward is the single most common reason mature models need recurrences at all.
+
+## What fields are not
+
+A field is **not cash**. A balance, an index, a counter — none of them appear in results as flows; they are the model's working memory, and only streams that *read* them produce cash. If you find yourself wanting a field's value to "land" somewhere, what you want is a stream whose amount reads the field.
+
+And a field is not the answer to everything sequenced. When the accumulating thing is *someone's entitlement* — arrears owed, a preferred return accruing until paid — the language has purpose-built constructs (`waterfall`'s `owed` and `paid`, chapter 11) that carry the entitlement *and* the payment against it together. Hand-building that from raw fields means re-proving what the waterfall already proves. The smell to notice: a field paired with a stream that tries to "pay it down."
+
+## What can go wrong
+
+**Reading a current value inside a rule.** A `next` written in terms of another field's *current* value is refused — the environment simply has no such name at rule time. The error is the design working.
+
+**`prev` at the very first period.** There is no close before the first close, and a stream that reads `prev.asset.x.y` in period 0 is refused rather than handed a silent zero — schedule such streams from the second period on, as the average-balance example does.
+
+**An `init` that contradicts the first payment.** The classic off-by-one: does the balance start at the principal, or principal less the first payment? `init` is the value at the first period, *before any `next` has run* — anchor it to a dated fact and hand-check periods 0 and 1, once, every time you write a balance.
+
+## Exercises
+
+<Exercise id="08-fields-and-recurrence/the-balance" />
+
+Then, on your own:
+
+1. Take the rounded-escalation model and remove the `round_to`, then compare year-six fees against the rounded version. You have just measured the cost — and the meaning — of "matches the method."
+2. Extend the average-balance model: add a `senior.opening_report` stream whose amount is just `prev.asset.senior.balance`, run it, and check that it equals last period's close by eye. Then try scheduling it from 2026 and read the refusal — the first period has no "before."

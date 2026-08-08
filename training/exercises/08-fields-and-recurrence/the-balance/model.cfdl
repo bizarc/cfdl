@@ -6,9 +6,10 @@ entity asset co : Asset.Financial
 
 // The published fee schedule escalates 3% a year, ROUNDING TO THE DOLLAR
 // each year — and next year compounds on the rounded value. This pow()
-// version drifts from the published schedule by year six. Replace it with
-// a state recurrence (init 100000, next = round_to(prev * 1.03, 1)) and
-// make the fee stream read state.fee_schedule.
+// version drifts from the published schedule. Move the fee onto the entity
+// as a rule field: fee_schedule with init 100000 and
+// next round_to(prev * 1.03, 1), then make the fee stream read
+// asset.co.fee_schedule.
 stream co.management_fee on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = 100000 * pow(1.03, time.t)

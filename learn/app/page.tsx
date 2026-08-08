@@ -34,7 +34,7 @@ const PARTS: Part[] = [
       { label: "Expressions", href: "/chapters/expressions" },
       { label: "Assumptions and inputs", href: "/chapters/assumptions-and-inputs" },
       { label: "Curves", href: "/chapters/curves" },
-      { label: "State and recurrence", href: "/chapters/state-and-recurrence" },
+      { label: "Fields and recurrence", href: "/chapters/fields-and-recurrence" },
       { label: "Growth, ramps, and guards", href: "/chapters/growth-ramps-and-guards" },
       { label: "Events and options" },
       { label: "Waterfalls" },
