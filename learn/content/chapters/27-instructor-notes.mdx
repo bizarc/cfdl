@@ -1,0 +1,49 @@
+---
+title: "Appendix C: instructor notes"
+description: "Teaching the course: session structure, per-chapter objectives and discussion prompts, problem-set variants, and how to grade with the engine."
+part: 5
+order: 27
+track: deep
+---
+
+Notes for anyone teaching this material — an MBA elective, a desk-training program, a self-organized study group. They assume the course as published: chapters in order, exercises run in the page or from the downloadable kit, the playground for everything else.
+
+## How the course teaches
+
+Three design commitments shape any session plan. **Every claim is runnable** — never lecture from a slide when the class can run the model; the exercise starters are built for live projection, and prediction-before-run (chapter 3's habit) is the single best classroom device this material offers: make the room commit to a number out loud, then run. **Errors are curriculum** — the deliberate-breakage exercises are not warm-ups; a session that triggers three refusals teaches more grammar than one that avoids them. **The deal is the exam** — Part IV's checkpoints are cumulative, so a cohort that keeps its own deal (see the term-project variant below) rehearses every chapter twice.
+
+A thirteen-week shape that fits the material: one session each for chapters 1–3 grouped, then 4–5, 6–7, 8–9, 10–11, 12, 13 with the two deep dives as reading, 16–17, 18–19, then one session per capstone chapter with the last doubling as presentations. Professional cohorts compress the first four sessions into two; the judgment and capstone sessions do not compress well, because discussion is the content.
+
+## Part I — the mental model
+
+**Why a language?** *Objective:* claims versus consequences — a model is the set of claims. *Prompt:* "Bring the worst spreadsheet you have inherited. Which of its failures were skill, and which were the medium?" The distinction lands the whole course. *Variant:* have each student state one formula from their own work as a spoken claim, then as a stream.
+
+**The object model.** *Objective:* grid, cast, claims — and the three refusals. *Prompt:* "What should a modeling tool refuse to compute?" — run the three breakages live. *Variant:* model the classroom itself (a rent, a projector purchase, a semester phase).
+
+**Reading results.** *Objective:* the four-step descent; matching method versus answer. *Prompt:* the rate-conversion gap — give two teams the same deal, one dividing, one compounding, and reconcile in class. *Variant:* hand out a results document with one doctored number and time the room finding it.
+
+## Part II — the core language
+
+Per-chapter objectives compress well here; the prompts are where sessions live.
+
+**Streams and schedules** — timing is money. *Prompt:* "Find the working-capital hole" in the net-45 model; ask who has lived it. **Expressions** — expressions you can read aloud. *Prompt:* the `pmt` exercise's −1,356: two right answers, one convention gap. **Assumptions and inputs** — the assumption page as governance. *Prompt:* "Which numbers in your firm's template would fail the four questions?" **Curves** — interpolation as claim. *Prompt:* step versus linear on a policy rate, priced. **Fields and recurrence** — cycles unwritable; match the method. *Prompt:* the dollar of drift in the rounded-escalation exercise: when does a dollar matter? **Growth, ramps, guards** — the idiom kit composes. *Variant:* idiom golf — express a claim in the fewest legible clauses; penalize illegibility. **Events and options** — the latch; policy as scenario. *Prompt:* "Why does the model refuse to predict exercise?" — the best philosophy-of-modeling discussion in the course. **Waterfalls** — transcription is review. *Variant:* hand out a real (redacted) priority-of-payments clause; transcribe in document order. **Uncertainty** — forks versus wobbles. *Prompt:* the blended 81,700 that no future pays; ask for examples from the room's own underwriting. **Multi-file and style** — the checklist as review standard. *Variant:* swap models between teams for a checklist review; grade the *review*, not the model.
+
+The two deep dives read well as homework before the judgment part; assign exercise 1 from each (the IR read, the diagnostics collection) and discuss findings for ten minutes.
+
+## Part III — judgment
+
+These chapters are seminars, not lectures. **Choosing grain:** the two-grain declaration exercise, done for a deal each student knows, read aloud and defended. **Construct choice:** run the pairs as debates — assign one student the if-ladder, one the event, and have them amend the deal live (the 1% exit fee) in front of the room; the construct argument makes itself. **Finance semantics:** the CPR exercise's 0.92 anchor, then a scavenger hunt — find the divide-versus-compound decision in a real document. **Packs:** the migration exercise, then the sorting exercise from the chapter as a take-home on each student's own deal; the bucket fractions make a good discussion of what "standard" means in their market.
+
+## Part IV — the capstone as a term project
+
+Two ways to run it. **Follow Harbor Point:** each session builds the checkpoint live, with the exercise as pre-work; grade the anchors (did they verify by hand?) and the slip test (chapter 24, exercise 3 — the line count is a defensible grade). **Parallel deal:** each team keeps its own deal — different asset, same verbs — hitting the same five checkpoints. This doubles instructor load and roughly doubles what students retain; the term tables (Appendix B) become their working document, which is the intended relationship.
+
+Presentation day: each team presents its risk book — scenario table, trial statistics, the one assumption that drives the spread — in committee format, with the instructor as the skeptical LP asking chapter 23's three questions.
+
+## Grading with the engine
+
+The engine is a fair, tireless grader. A submitted exercise is *correct* when its solution compiles, runs, and matches the expected metrics — the kit carries `expected.json` for every exercise, and the checker pattern is one script. What the engine cannot grade is the course's real subject: whether the model *says what the deal means*. For that, grade with the style checklist (chapter 13) and the six smells (chapter 17) as rubrics — both were written to be usable as grading standards, five and six lines respectively. A workable weighting for a graded cohort: a third correctness (engine), a third construction (rubrics), a third the capstone presentation.
+
+## The kit
+
+The download cards on the course home page carry two bundles, rebuilt from the course sources on every deploy: `cfdl-exercises.zip` (starters, prompts, run configurations — hand this out) and `cfdl-course-kit.zip` (everything, including solutions and expected metrics — the instructor's copy and the self-study answer key). Distribute the solutions bundle after the session, not before; the prediction-before-run habit does not survive an open answer key.
