@@ -1,0 +1,115 @@
+---
+title: "Reading results"
+description: "What a run produces, how to interrogate it, and the discipline of matching a source's method rather than its answer."
+part: 1
+order: 3
+track: core
+---
+
+You now know what a model declares. This chapter is about the other side of the pipeline: what a run hands back, and how to read it like a practitioner — which means knowing not just where the NPV is, but how to challenge any number until it confesses where it came from.
+
+A model to read results against — a small consulting practice, chosen because its numbers are easy to hold in your head:
+
+```cfdl run={"deterministic":{"annual_discount_rate":0.08}}
+version 0.1
+model "reading-results"
+time calendar monthly from 2026-01 for 24
+
+entity asset practice : Asset.Intangible
+
+// Two retainers, invoiced monthly.
+stream practice.retainers on entity asset.practice inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 30000
+}
+
+// A project engagement in the second year only.
+stream practice.project_fees on entity asset.practice inflow currency USD {
+  schedule every month from 2027-01 to 2027-12
+  amount = 12000
+}
+
+// Salaries and rent.
+stream practice.overhead on entity asset.practice outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 24000
+}
+```
+
+Run it (the play button carries an 8% discount rate with it) and keep the output open as you read.
+
+## The shape of results
+
+A run produces one document with a consistent anatomy, whether the model is this three-stream practice or a forty-stream financing. In reading order:
+
+**Per-stream series.** Every stream appears under the name you gave it, as dated cash per period — `practice.retainers` is 24 entries of 30,000; `practice.project_fees` is twelve zeros, then twelve entries of 12,000. This level is the ground truth: everything else in the document is arithmetic over these series, and when any higher number surprises you, you descend to here.
+
+**Signed convention.** In results, direction becomes sign: inflows positive, outflows negative. Period 1 of this model nets 30,000 − 24,000 = 6,000; period 13 nets 30,000 + 12,000 − 24,000 = 18,000. The signs were declared in the model, which is why the engine can also *check* them — an outflow stream that nets positive over its life is flagged rather than folded quietly into the total.
+
+**Net cash flow and totals.** The period-by-period net across all streams, plus per-stream and model totals. Do the practice's arithmetic once by hand: year one nets 6,000 × 12 = 72,000; year two nets 18,000 × 12 = 216,000; lifetime 288,000. Checking one such number by hand, every model, is a habit that outlives any tooling.
+
+**Annual rollup.** The same cash regrouped by calendar year — the view a committee actually reads, and the bridge to how results are compared against a source document that reports annually.
+
+**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
+
+## Discounting: the two knobs that change everything
+
+NPV in this output is not "the" NPV of the model; it is the NPV *at the run's discount rate, from the run's as-of date*. Both live in the run configuration, not the model — the same file priced at 8% and at 12% is the same set of claims under two costs of capital.
+
+Two conventions to fix in your head now, because every discrepancy-hunt you ever run will check them first:
+
+**Rate conversion.** The configured rate is annual; the grid here is monthly. The engine converts by compounding, `(1 + r)^(1/12) − 1`, not by dividing by twelve. At 8%, that is 0.643% per month, not 0.667%. A source that divides by twelve will disagree with your NPV in the third digit — and *neither of you is wrong*; you are using different claims about compounding, and the fix is to match the source's method deliberately (an exercise below does exactly this).
+
+**Timing.** Cash is dated by its period on the grid; discounting measures from the as-of date. A model whose rent lands on the 1st versus the 15th versus month-end can carry the same totals and different NPVs. The schedule chapter in Part II gives you precise control over placement; what matters now is knowing that placement is a claim, and the results reflect it.
+
+IRR is reported alongside NPV: the rate at which this cash's NPV crosses zero. For well-behaved shapes — money out, then money in, like this practice — it is the familiar number. Part III discusses the shapes where IRR misleads (sign changes mid-life, multiple roots) and what to report instead.
+
+## Interrogating a number
+
+The discipline for challenging any figure in the output, in the order that finds the problem fastest:
+
+1. **Which streams feed it?** Names answer this — a total over `practice.*` is legible because the taxonomy was designed in the model.
+2. **Which periods?** Open the series; find where the cash actually lands. Half of all surprises are timing, not magnitude.
+3. **What run settings shaped it?** Rate, as-of date, scenario overrides — all recorded in the output itself. A results document answers "how was this run?" without needing the person who ran it.
+4. **What does the model say?** Only now open the source — and you arrive already knowing which stream, which periods, and which claim to read.
+
+This four-step descent works because every layer of the output is derived from the layer below it, down to dated per-stream cash, which is derived from lines someone wrote. There is nowhere for a number to hide.
+
+## Matching a method, not an answer
+
+Sooner or later — often on day one — you rebuild a model that already exists: an offering memo, a bank case, someone's workbook. Your total is 288,000 and theirs is 287,946, and someone asks you to "reconcile."
+
+The professional rule: **match the source's method, then match its answer.** The 54-dollar gap is never noise; it is a *method difference* — they divide the rate by twelve, they round each period to the dollar before summing, they place cash at month-end and you place it at month-start. Find the method difference, decide *on purpose* whether to adopt it, and record the decision in the model where the next reader will meet it.
+
+The language gives you the tools to adopt a source's method exactly. When a source rounds each period before aggregating, `round_to` in the amount expression reproduces *their* pennies instead of averaging the difference away. When an escalation compounds on an already-rounded prior value — spreadsheet-native behavior that a clean formula cannot reproduce — the language's state constructs (Part II) carry the rounded value forward the way the workbook did. A model that matches a source to the penny is a model whose every deviation from that source is now *visible and chosen* — which is the entire point of reconciliation.
+
+**Deep-dive aside** for the technically inclined: the engine's arithmetic is decimal, not binary floating point — money math without the femto-cent residue that haunts float-based tools. There is also a compatibility mode that reproduces common spreadsheet function semantics for benchmark comparison. The core track never needs more than knowing this; the machinery chapter in Part II covers it.
+
+## One model, many runs
+
+The run configuration is a small JSON document that travels beside the model. The one the play button used above:
+
+```json
+{
+  "deterministic": {
+    "annual_discount_rate": 0.08
+  }
+}
+```
+
+Configurations can also name **scenarios** — base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side — and simulation settings, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
+
+## What can go wrong
+
+**The metric moved and you do not know why.** Wrong instinct: stare at the metric. Right instinct: run the four-step descent. The metric is the last derivation in a chain; the cause is always in a series, a setting, or a claim.
+
+**Two runs of "the same model" disagree.** They differ in model bytes or configuration — there is no third possibility, because runs are deterministic. Compare the two configurations first; they are smaller.
+
+**Your total matches, your NPV does not.** Same cash, different placement or different rate handling. Check as-of date, then rate conversion, then schedule placement — in that order.
+
+## Exercises
+
+1. By hand, compute this model's undiscounted total (shown above) and verify it against the run. Then lower the discount rate until NPV approaches the undiscounted total and explain, in one sentence, why they converge.
+2. Reproduce a "reconciliation gap" on purpose: compute year-one NPV at 8% annual with the compounding conversion, then with rate-divided-by-twelve, in any tool you like. The difference you find is the same third-digit gap you will someday be asked to explain in a meeting.
+3. Add a fourth stream — an assistant hired from 2026-07 at 5,200 a month — predict the new lifetime total *before* running, then run and confirm. Prediction-before-run is the habit that catches wrong models while they are still cheap.
+4. Change the retainer amount to `round_to(30000 / 7, 2) * 7` (a contrived per-diem-style calculation). Look at what one period actually pays, and explain where the pennies went — you have just performed, in miniature, every rounding reconciliation you will ever do.

@@ -1,0 +1,92 @@
+---
+title: "Why a language?"
+description: "What a cash-flow model really is, where spreadsheets stop being able to say it, and what writing the model down as a language buys you."
+part: 1
+order: 1
+track: core
+---
+
+Every financial model is a claim: *if these assumptions hold, this is the cash*. An acquisition model claims what a business throws off under a set of growth and margin assumptions. A development model claims what a building earns after construction, lease-up, and exit. The model is not the spreadsheet, the code, or the deck — it is the set of claims. Everything else is a way of writing them down.
+
+This course teaches you to write those claims in CFDL, the Cash Flow Domain Language. Before the syntax, it is worth being precise about why a *language* — rather than a grid of cells — is the right way to write them.
+
+## What a spreadsheet actually stores
+
+A spreadsheet stores answers. Each cell holds a formula that produces one number for one period, and the model's logic exists only as the pattern those formulas make — a pattern you infer by clicking through cells one at a time.
+
+That design has consequences that every practitioner has met:
+
+- **The logic is invisible.** "Rent escalates 3% annually on the anniversary" is nowhere in the workbook. What exists is `=D14*1.03` in one cell, copied across a row, and the reader must reverse-engineer the intent from the arithmetic. Reviewing a model means auditing cells, and auditing catches what it happens to look at.
+- **Copies drift.** The row is the unit of reuse, and rows are copied. When the copy in column AB was fixed and the one in AJ was not, both look right until the one number they disagree on matters.
+- **There is no meaningful diff.** Two versions of a workbook differ in thousands of cells. Which of them are the *decision* — the changed assumption — and which are recalculation? A reviewer cannot tell, so review collapses into trust.
+- **Uncertainty is bolted on.** The workbook produces one path. Scenario tabs and add-ins graft distributions onto a machine built for a single answer, and the grafts are the first thing to break.
+
+None of this is a failure of skill. It is what happens when the *claims* are stored as their *consequences*.
+
+## Declaring instead of computing
+
+A CFDL model states the claims themselves and lets an engine derive the consequences. Here is a complete model — small, but genuinely complete, in the sense that an engine can run it and produce a cash-flow series, NPV, and IRR:
+
+```cfdl
+version 0.1
+model "first-claim"
+time calendar monthly from 2026-01 for 24
+
+entity asset workshop : Asset.Real
+
+// The claim: the workshop rents for 4,200 a month, every month, for two years.
+stream workshop.rent on entity asset.workshop inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 4200
+}
+
+// And it costs 900 a month to keep the lights on.
+stream workshop.operating_cost on entity asset.workshop outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 900
+}
+```
+
+Read it top to bottom. Time is declared once, for the whole model: a monthly grid, starting January 2026, 24 periods long. The thing that earns the cash is declared as an *entity*. Each claim about cash is a *stream*: a direction (money in or money out), a currency, a *schedule* saying when it occurs, and an *amount* saying how much. Nothing in this file is an answer — every line is an assumption you could read aloud to a committee, and the file reads in the order you would say it.
+
+That inversion — store the claims, derive the numbers — is what the rest of the course builds on, and it pays out in four specific ways.
+
+**The model is reviewable.** A colleague reviews the statement `amount = 4200`, not seven hundred copies of a formula. When the rent assumption changes, the diff between versions is one line, and it is the line a reviewer should look at. Version control works on models the way it works on contracts: what changed is what is shown.
+
+**The model is checkable before it runs.** Because the claims are explicit, a compiler can hold them to account. A stream scheduled beyond the end of the time grid, a reference to an entity that was never declared, a contract missing a required term — each is refused, with a message naming the file, the line, and the fix. A spreadsheet cannot refuse anything; it computes whatever the cells happen to say. You will meet the compiler's refusals throughout this course, deliberately: they are half of how the language teaches you.
+
+**The same model gives you the number and the distribution.** Uncertainty is part of the language, not an add-in. Later in the course you will replace a fixed assumption with a distribution and re-run the same file to get percentiles instead of a point estimate — same claims, same engine, wider question.
+
+**The run is reproducible.** The same model and the same inputs produce the same results, to the byte, on any machine — including simulated ones, because random draws come from a declared seed. When a committee asks "where did this number come from," reproducibility is the difference between an answer and an anecdote.
+
+## What happens when you run a model
+
+You will run models constantly, so it is worth knowing what the machine does with one. The pipeline has two halves.
+
+The **compiler** reads your source files, checks everything it can check without running — syntax, references, schedules against the time grid, contract terms against their pack's requirements — and emits an *intermediate representation* (IR): a complete, self-contained description of the model with every name resolved and every schedule made explicit. The IR is a boring, inspectable JSON document, and that is its virtue: it is the model with nothing left implicit.
+
+The **engine** takes the IR and a *run configuration* — the discount rate, the as-of date, scenario overrides, simulation settings — and produces *results*: the cash of every stream in every period, aggregates, metrics like NPV and IRR, and enough tracing to answer where any number came from. Chapter 3 is about reading these.
+
+Two things about this split matter to you as an author. First, everything the compiler can catch is caught before any number is produced — a model that compiles has already survived every structural check the language knows how to make. Second, the run configuration lives *outside* the model, which is why one model can serve base case, downside, and simulation without being edited. Keeping "what is claimed" separate from "how it is run" is a discipline the language enforces for you.
+
+## A language with opinions
+
+CFDL is deliberately narrow. It describes dated cash flows and the structures that generate them — it is not a general programming language, and the things it refuses to do are as load-bearing as the things it does.
+
+It refuses to accept what it does not understand: there is no syntax that parses but silently does nothing. It refuses hidden state: an amount expression can read the model's declared assumptions, the clock, and the model's own published series, and nothing else — no file, no network, no wall-clock time, nothing that would make two runs differ. And it refuses to guess: an ambiguous schedule or a missing term is an error, never a default applied in silence.
+
+For a modeler, these refusals are the point. Every behavior of the model traces to a line someone wrote, which means every number in the output traces to a claim someone made. Making that trace *legible* is most of what financial modeling discipline is, and here the discipline is the medium itself.
+
+## How this course works
+
+The course is five parts. Part I (you are here) builds the mental model: objects, time, and how to read results. Part II teaches the core language, construct by construct, on models that stand alone without any industry pack. Part III is judgment — choosing the grain of a model, choosing between constructs, and the finance semantics the language encodes. Part IV is the capstone: one commercial real-estate development deal carried end to end, from skeleton to equity waterfall, growing chapter by chapter the way a real deal model does. Part V is reference.
+
+Chapters marked **deep dive** go into the machinery — the compiler's stages, the evaluation order, the diagnostic system. They are written for readers who want them; the core track never depends on them.
+
+One habit to start now: run everything. Every complete model in this course can be pasted into the playground at [cfdl.dev/playground](https://cfdl.dev/playground) and run against the real engine — and most code blocks have an "open in playground" button that does it in one click. The models are checked against the engine before a chapter ships, so if the text and the engine ever disagree, the engine is telling the truth and the text has a bug worth reporting.
+
+## Exercises
+
+1. Take the model above into the playground and change one claim: give the workshop a 5% rent increase starting January 2027 (write it as a second stream for now — the idiomatic way comes in Part II). Watch what changes in the output, and notice what did *not* have to change.
+2. Break it on purpose: schedule the rent through `2028-12`, past the end of the 24-period grid, and read the error you get. Note that it names the schedule, not just a line number — the compiler talks in the model's own vocabulary.
+3. From your own work, pick one spreadsheet formula you have had to explain to someone. Write down, in a sentence, the *claim* it implements. That sentence is what you will be writing directly, starting in the next chapter.
