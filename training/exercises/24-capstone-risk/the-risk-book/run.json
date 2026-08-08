@@ -1,0 +1,14 @@
+{
+  "deterministic": { "annual_discount_rate": 0.10 },
+  "scenarios": {
+    "base": { "annual_discount_rate": 0.10 },
+    "downside": {
+      "annual_discount_rate": 0.10,
+      "parameters": {
+        "inputs.exit_cap": 0.0725,
+        "inputs.office_rent": 140000
+      }
+    }
+  },
+  "monte_carlo": { "trial_count": 1000, "seed": 20260808 }
+}

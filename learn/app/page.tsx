@@ -64,13 +64,13 @@ const PARTS: Part[] = [
     blurb:
       "One development deal carried end to end — skeleton, revenue, costs and financing, exit and returns, then scenarios, Monte Carlo, and an equity waterfall over the whole structure.",
     chapters: [
-      { label: "The deal and the skeleton" },
-      { label: "Revenue" },
-      { label: "Costs and financing" },
-      { label: "Exit and returns" },
-      { label: "Risk" },
+      { label: "The capstone: Harbor Point", href: "/chapters/the-deal-and-the-skeleton" },
+      { label: "Revenue", href: "/chapters/capstone-revenue" },
+      { label: "Costs and financing", href: "/chapters/capstone-costs-and-financing" },
+      { label: "Exit and returns", href: "/chapters/capstone-exit-and-returns" },
+      { label: "Risk and the split", href: "/chapters/capstone-risk" },
     ],
-    status: "planned",
+    status: "in-progress",
   },
   {
     number: "Part V",

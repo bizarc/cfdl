@@ -1,0 +1,16 @@
+version 0.1
+model "harbor-point"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+phase construction from 2026-01 to 2027-06
+phase lease_up from 2027-07 to 2028-06
+phase operations from 2028-07 to 2030-12
+
+entity asset harbor : CRE.Asset.RealProperty
+
+// The timeline and the cast are declared; the first claims are yours:
+//   1. Land: 5,500,000 out at the START of January 2026 (a single-occurrence
+//      due stride).
+//   2. Construction: a cre.construction_stub contract, seventeen level
+//      draws of 700,000 from 2026-02 through 2027-06.
+// Check: total cost 17,400,000.
