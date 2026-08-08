@@ -1,0 +1,37 @@
+version 0.1
+model "waterfall-smoke"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2017-02 for 4
+
+entity asset trust : Credit.Asset.LoanPool { original_balance = 1000 }
+entity asset class_a : Credit.Asset.Tranche { seniority = 1  original_balance = 950 }
+entity party servicer : Credit.Party.Servicer { name = "Servicer" }
+entity party trustee : Credit.Party.Issuer { name = "Trustee" }
+entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
+
+state available_funds { init 1000.0  next prev }
+state pool_balance    { init  900.0  next prev }
+
+// A priority of payments, and the seven rules a real 22-step consumer ABS
+// waterfall needs, each written as an ORDINARY EXPRESSION rather than its own
+// syntax:
+//
+//   a stated amount            = 12.5
+//   a capped amount            = min(4.0, 3.0)
+//   pay down to a target       = <balance> - <target>
+//   an earlier step's overflow = owed.x - paid.x
+//   everything that survives   = remaining
+//
+// Steps take min(max(0, owed), remaining), so the pot cannot go negative
+// however a step is written, and the six lines below allocate exactly 1000.
+waterfall abs.distribution on entity asset.trust {
+  schedule every month from 2017-02 to 2017-05
+  from state.available_funds
+
+  pay servicing        to party.servicer    = 12.5
+  pay trustee_fees     to party.trustee     = min(4.0, 3.0)
+  pay class_a_interest to asset.class_a      = 6.25
+  pay class_a_target   to asset.class_a      = entity.asset.class_a.original_balance - state.pool_balance
+  pay trustee_excess   to party.trustee     = owed.trustee_fees - paid.trustee_fees
+  pay residual         to party.certificate = remaining
+}

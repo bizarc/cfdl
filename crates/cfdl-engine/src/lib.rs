@@ -1297,6 +1297,19 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         }
     }
 
+    // Waterfalls run last: a priority of payments allocates cash that this
+    // period's streams and states have already produced.
+    let waterfall_series = run_waterfalls(
+        ir,
+        &timeline,
+        &base_inputs,
+        &state_values,
+        &event_sim.entity_state,
+        &ir_curve_defs(ir),
+        config,
+        &mut warnings,
+    );
+
     let mut series_map = BTreeMap::new();
     for (name, values) in &stream_series {
         series_map.insert(
@@ -1307,6 +1320,22 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 periods as u32,
                 &ir.model.currency,
                 stream_offsets.get(name).copied(),
+                values,
+            ),
+        );
+    }
+    // Each waterfall step is a stream, so a priority of payments publishes
+    // under the same prefix everything else pays under and needs no special
+    // handling downstream.
+    for (name, values) in &waterfall_series {
+        series_map.insert(
+            format!("stream.{name}"),
+            Series::from_values(
+                &ir.time.calendar,
+                &ir.time.start,
+                periods as u32,
+                &ir.model.currency,
+                None,
                 values,
             ),
         );
@@ -1396,6 +1425,17 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     for stream in &ir.streams {
         if let Some(values) = stream_series.get(&stream.name) {
             add_owned(&stream.owner.symbol, values);
+        }
+    }
+    // A waterfall step's cash belongs to whoever it pays. Without this a
+    // priority of payments would move money and no entity's total would show
+    // it — the payee is named in the step and would have gone unread.
+    for waterfall in &ir.waterfalls {
+        for step in &waterfall.steps {
+            if let Some(values) = waterfall_series.get(&format!("{}.{}", waterfall.name, step.name))
+            {
+                add_owned(&step.payee, values);
+            }
         }
     }
     // An option is a contract, so its payoff belongs to the asset it is
@@ -2944,6 +2984,130 @@ fn beyond_timeline(timeline: &[Date], date: &Date) -> bool {
     *date >= last.add_days(span_days)
 }
 
+/// Run a model's waterfalls, after this period's streams and states are known.
+///
+/// A waterfall is an author-declared priority over a pot. Steps evaluate in
+/// declaration order; each takes `min(max(0, owed), remaining)` and reduces
+/// what is left. The clamp is here rather than in the author's expression, so
+/// the pot cannot go negative however a step is written and `= remaining`
+/// means exactly what survives.
+///
+/// Each step becomes a stream — `stream.<waterfall>.<step>` — so a waterfall
+/// adds no new kind of output and statements, metrics and the results schema
+/// are untouched.
+#[allow(clippy::too_many_arguments)]
+fn run_waterfalls(
+    ir: &Ir,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    state_values: &BTreeMap<String, Vec<f64>>,
+    entity_state: &[BTreeMap<String, BTreeMap<String, ExprValue>>],
+    curves: &BTreeMap<String, cfdl_expr::CurveDef>,
+    config: &RunConfig,
+    warnings: &mut Vec<String>,
+) -> BTreeMap<String, Vec<f64>> {
+    let periods = timeline.len();
+    let mut out: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for waterfall in &ir.waterfalls {
+        // Which periods this waterfall runs in. No schedule means every
+        // period, the cadence a distribution date usually has.
+        let mut hits = vec![Vec::new(); periods];
+        let runs_in: Vec<bool> = match &waterfall.schedule {
+            Some(schedule) => {
+                if apply_schedule_indices(schedule, timeline, &mut hits).is_err() {
+                    warnings.push(format!(
+                        "Waterfall '{}' has an unusable schedule; skipped.",
+                        waterfall.name
+                    ));
+                    continue;
+                }
+                hits.iter().map(|h| !h.is_empty()).collect()
+            }
+            None => vec![true; periods],
+        };
+
+        for step in &waterfall.steps {
+            out.insert(
+                format!("{}.{}", waterfall.name, step.name),
+                vec![0.0; periods],
+            );
+        }
+
+        for (t, runs) in runs_in.iter().enumerate().take(periods) {
+            if !runs {
+                continue;
+            }
+            let date = &timeline[t];
+            let mut env = build_base_env(ir, config, t, date, base_inputs);
+            env.curves = curves.clone();
+            bind_states(&mut env, state_values, t);
+            if let Some(state) = entity_state.get(t) {
+                // Every entity by path — `entity.asset.class_a.balance` —
+                // because a waterfall reads the balances of the things it pays,
+                // not only of the one it hangs on.
+                bind_all_entity_state(&mut env, state);
+                // And the waterfall's own entity as `entity.state.*`, the
+                // shorthand a stream on that entity already has.
+                apply_entity_state(&mut env, state, &waterfall.entity);
+            }
+
+            let mut remaining = match cfdl_expr::compile_expr(&waterfall.source.src) {
+                Ok(compiled) => eval_amount_expr(
+                    &compiled,
+                    &env,
+                    &waterfall.name,
+                    &ir.model.currency,
+                    warnings,
+                )
+                .max(0.0),
+                Err(err) => {
+                    warnings.push(format!(
+                        "Waterfall '{}' pot failed to compile [{}]: {}; treated as zero.",
+                        waterfall.name, err.code, err.message
+                    ));
+                    0.0
+                }
+            };
+
+            let mut paid: BTreeMap<String, ExprValue> = BTreeMap::new();
+            let mut owed: BTreeMap<String, ExprValue> = BTreeMap::new();
+            for step in &waterfall.steps {
+                let mut step_env = env.clone();
+                step_env.remaining = Some(ExprValue::Decimal(remaining));
+                step_env.paid = paid.clone();
+                step_env.owed = owed.clone();
+
+                let wants = match cfdl_expr::compile_expr(&step.amount.src) {
+                    Ok(compiled) => eval_amount_expr(
+                        &compiled,
+                        &step_env,
+                        &format!("{}.{}", waterfall.name, step.name),
+                        &ir.model.currency,
+                        warnings,
+                    ),
+                    Err(err) => {
+                        warnings.push(format!(
+                            "Waterfall '{}' step '{}' failed to compile [{}]: {}; pays nothing.",
+                            waterfall.name, step.name, err.code, err.message
+                        ));
+                        0.0
+                    }
+                }
+                .max(0.0);
+                let takes = wants.min(remaining);
+                remaining = round_amount(remaining - takes);
+
+                owed.insert(step.name.clone(), ExprValue::Decimal(round_amount(wants)));
+                paid.insert(step.name.clone(), ExprValue::Decimal(round_amount(takes)));
+                if let Some(series) = out.get_mut(&format!("{}.{}", waterfall.name, step.name)) {
+                    series[t] = round_amount(takes);
+                }
+            }
+        }
+    }
+    out
+}
+
 fn apply_schedule_indices(
     schedule: &IrSchedule,
     timeline: &[Date],
@@ -3326,6 +3490,8 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(default)]
     states: Vec<IrState>,
+    #[serde(default)]
+    waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
     #[serde(default)]
@@ -3404,6 +3570,24 @@ struct IrOption {
     /// in a stream.
     #[serde(default)]
     owner: Option<IrEntityRef>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrWaterfall {
+    name: String,
+    entity: String,
+    #[serde(default)]
+    schedule: Option<IrSchedule>,
+    source: IrExpr,
+    #[serde(default)]
+    steps: Vec<IrWaterfallStep>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IrWaterfallStep {
+    name: String,
+    payee: String,
+    amount: IrExpr,
 }
 
 #[derive(Debug, Deserialize)]

@@ -450,12 +450,14 @@ pub struct WaterfallStmt {
 /// of them is an expression over three bindings, and `min`, `max` and `clamp`
 /// already exist:
 ///
-///     amount 12.5              ->  = 12.5
-///     amount X cap C           ->  = min(X, C)
-///     down to T measuring M    ->  = M - T
-///     up to L                  ->  = L - asset.reserve.balance
-///     overflow of s            ->  = owed(s) - paid(s)
-///     remainder                ->  = remaining
+/// ```text
+/// amount 12.5              ->  = 12.5
+/// amount X cap C           ->  = min(X, C)
+/// down to T measuring M    ->  = M - T
+/// up to L                  ->  = L - asset.reserve.balance
+/// overflow of s            ->  = owed.s - paid.s
+/// remainder                ->  = remaining
+/// ```
 ///
 /// A closed set of six rules came from reading one deal. The roadmap holds 31
 /// waterfall-shaped requirements across asset classes nobody has opened yet, so

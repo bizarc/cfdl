@@ -356,6 +356,10 @@ struct Ir {
     curves: Vec<IrCurve>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     states: Vec<IrState>,
+    /// Ordered allocations of a pot. Omitted when a model declares none, so
+    /// existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    waterfalls: Vec<IrWaterfall>,
     /// Per-period subtotals declared by the active pack. Omitted when the pack
     /// declares none, so existing IR is byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -412,6 +416,25 @@ struct IrCurve {
 /// A named value per period, defined by a recurrence. `init` and `next` are
 /// both required by validation (E1120/E1121) before lowering runs, so they are
 /// plain fields rather than options here.
+#[derive(Debug, Serialize)]
+struct IrWaterfall {
+    name: String,
+    entity: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule: Option<IrSchedule>,
+    /// The pot this allocates.
+    source: IrExpr,
+    steps: Vec<IrWaterfallStep>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrWaterfallStep {
+    name: String,
+    payee: String,
+    /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
+    amount: IrExpr,
+}
+
 #[derive(Debug, Serialize)]
 struct IrState {
     name: String,
@@ -949,18 +972,26 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
     }
 }
 
-/// Step names an expression reads through `paid(<step>)` or `owed(<step>)`.
+/// Step names an expression reads through `paid.<step>` or `owed.<step>`.
+///
+/// Dotted rather than a call, because every other binding in this language is
+/// a path — `inputs.x`, `cfg.x`, `entity.state.x`, `prev.x`. A function would
+/// have been a second way to say the same thing.
 fn step_references(src: &str) -> Vec<String> {
     let mut found = Vec::new();
-    for call in ["paid(", "owed("] {
+    for root in ["paid.", "owed."] {
         let mut rest = src;
-        while let Some(at) = rest.find(call) {
-            rest = &rest[at + call.len()..];
-            if let Some(close) = rest.find(')') {
-                let name = rest[..close].trim().trim_matches('"').to_string();
-                if !name.is_empty() {
-                    found.push(name);
-                }
+        while let Some(at) = rest.find(root) {
+            let before_ok = at == 0 || !is_name_byte(rest.as_bytes()[at - 1]);
+            rest = &rest[at + root.len()..];
+            if !before_ok {
+                continue;
+            }
+            let end = rest
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+                .unwrap_or(rest.len());
+            if end > 0 {
+                found.push(rest[..end].to_string());
             }
         }
     }
@@ -1831,6 +1862,50 @@ fn build_ir(
         lowered_states,
     );
 
+    let ir_waterfalls: Vec<IrWaterfall> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| match &source_stmt.statement {
+            Stmt::Waterfall(w) => Some(IrWaterfall {
+                name: w.name.clone(),
+                entity: w.attached_entity.clone(),
+                schedule: lower_schedule(
+                    w.schedule.as_ref(),
+                    &time_calendar,
+                    &time_start,
+                    &timeline_end,
+                    &phase_map,
+                )
+                .ok(),
+                source: IrExpr {
+                    lang: "cfdl".to_string(),
+                    src: w
+                        .source
+                        .as_ref()
+                        .map(|e| coerce_numeric_literals(&e.src))
+                        .unwrap_or_else(|| "0".to_string()),
+                },
+                steps: w
+                    .steps
+                    .iter()
+                    .map(|step| IrWaterfallStep {
+                        name: step.name.clone(),
+                        payee: step.payee.clone(),
+                        amount: IrExpr {
+                            lang: "cfdl".to_string(),
+                            src: step
+                                .amount
+                                .as_ref()
+                                .map(|e| coerce_numeric_literals(&e.src))
+                                .unwrap_or_else(|| "0".to_string()),
+                        },
+                    })
+                    .collect(),
+            }),
+            _ => None,
+        })
+        .collect();
+
     Ok(Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
@@ -1851,6 +1926,7 @@ fn build_ir(
         },
         curves: ir_curves,
         states: ir_states,
+        waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)

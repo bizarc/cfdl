@@ -78,6 +78,19 @@ pub struct ExprEnv {
     pub prev_states: BTreeMap<String, Value>,
     /// The state being evaluated, at the previous period — bare `prev`.
     pub prev_self: Option<Value>,
+    /// What is still in the pot at this waterfall step — bare `remaining`.
+    ///
+    /// Bare, the way `prev` is, because a waterfall step is written about the
+    /// pot and reads better for saying so: `= remaining` is the residual.
+    /// `None` everywhere outside a waterfall, which makes reading it there an
+    /// unresolved name rather than a silent zero.
+    pub remaining: Option<Value>,
+    /// What each earlier step in this waterfall actually paid — `paid.<step>`.
+    pub paid: BTreeMap<String, Value>,
+    /// What each earlier step would have paid unbounded — `owed.<step>`. The
+    /// difference between the two IS the shortfall, so a step that pays an
+    /// earlier step's overflow writes `owed.x - paid.x`.
+    pub owed: BTreeMap<String, Value>,
 }
 
 /// A named curve: date/value points plus interpolation policy.
@@ -103,6 +116,9 @@ impl ExprEnv {
             states: BTreeMap::new(),
             prev_states: BTreeMap::new(),
             prev_self: None,
+            remaining: None,
+            paid: BTreeMap::new(),
+            owed: BTreeMap::new(),
             series: Arc::default(),
             curves: BTreeMap::new(),
         }
@@ -257,7 +273,12 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
                 Some(name) => self.env.prev_states.get(name).and_then(domain_to_calc),
             };
         }
+        if root == "remaining" && parts.next().is_none() {
+            return self.env.remaining.as_ref().and_then(domain_to_calc);
+        }
         let map = match root {
+            "paid" => &self.env.paid,
+            "owed" => &self.env.owed,
             "model" => &self.env.model,
             "time" => &self.env.time,
             "entity" => &self.env.entity,
