@@ -1,0 +1,20 @@
+version 0.1
+model "exercise-level-payment"
+time calendar monthly from 2026-01 for 60
+
+entity asset borrower : Asset.Financial
+
+// A 250,000 loan at 7.2% annual, fully amortizing over 60 monthly payments.
+// Write the debt service as a pmt() expression — rate per period, number of
+// periods, principal — wrapped in abs() so the declared direction carries
+// the sign. Show the structure (0.072 / 12), not a pre-divided number.
+stream loan.debt_service on entity asset.borrower outflow currency USD {
+  schedule every month from 2026-01 to 2030-12
+  amount = 1
+}
+
+// A single-occurrence due stride: the advance arrives at January's start.
+stream loan.proceeds on entity asset.borrower inflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 250000
+}

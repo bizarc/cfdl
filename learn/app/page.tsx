@@ -30,9 +30,9 @@ const PARTS: Part[] = [
     blurb:
       "Streams, schedules, expressions, assumptions, curves, state, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
     chapters: [
-      { label: "Streams and schedules" },
-      { label: "Expressions" },
-      { label: "Assumptions and inputs" },
+      { label: "Streams and schedules", href: "/chapters/streams-and-schedules" },
+      { label: "Expressions", href: "/chapters/expressions" },
+      { label: "Assumptions and inputs", href: "/chapters/assumptions-and-inputs" },
       { label: "Curves" },
       { label: "State and recurrence" },
       { label: "Growth, ramps, and guards" },
@@ -41,7 +41,7 @@ const PARTS: Part[] = [
       { label: "Uncertainty and Monte Carlo" },
       { label: "Multi-file models and style" },
     ],
-    status: "planned",
+    status: "in-progress",
   },
   {
     number: "Part III",

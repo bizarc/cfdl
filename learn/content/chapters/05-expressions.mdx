@@ -1,0 +1,126 @@
+---
+title: "Expressions"
+description: "The amount language: evaluation environment, decimal arithmetic, the function library from rounding to time-value-of-money, and the discipline of expressions you can read aloud."
+part: 2
+order: 5
+track: core
+---
+
+Every `amount =` you have written so far held a constant. Real claims are rarely constants — rent escalates, interest accrues on a balance, a fee is a percentage of something. The right side of `amount =` is an expression, evaluated once per scheduled occurrence, and this chapter is the working tour of that language: what an expression can see, what it can compute, and the habits that keep a model's intelligence legible.
+
+## What an expression can see
+
+An expression evaluates inside a sealed environment. Every name it can read belongs to one of a handful of scopes, and knowing the scopes *is* knowing the language:
+
+- **`time.*`** — the clock at this occurrence: `time.t` (the period index, starting at 0), `time.date` (the period's date), `time.phase` (the current phase's name). The workhorse: `time.t` is what growth compounds on.
+- **`inputs.*`** — the model's own declared assumptions (next chapter).
+- **`cfg.*`** and **`obs.*`** — values supplied by the run configuration at run time: parameters and observations. Also next chapter.
+- **`state.*`** and **`prev`** — the model's accumulated state (chapter 8).
+- **`entity.*`** — fields of the entity the stream is attached to.
+
+And that is all. No file access, no wall-clock date, no environment variables, no randomness outside declared assumptions. The sealed environment is what makes a run reproducible, and it has a practical authoring consequence: if a number matters to the model, it must be *declared somewhere* — which is exactly where a reviewer will find it.
+
+## Arithmetic you can trust
+
+The operators are the familiar set — `+ - * / %`, comparisons, `&&` and `||` — with one property worth a paragraph: arithmetic is **decimal**, not binary floating point. `0.1 + 0.2` is `0.3`, a cent is a cent, and a million-row sum does not accumulate float dust. This is the arithmetic a general-purpose language reserves for its money library, made the default because every number here is money or a rate on money.
+
+Conditionals are the `if` function — an expression, not a statement:
+
+```cfdl
+// A management fee that steps down after the first year.
+amount = if(time.t < 12, 12000, 9000)
+```
+
+Here is the environment and the arithmetic together in the most common pattern in modeling — compound growth off the clock:
+
+```cfdl
+version 0.1
+model "expressions-growth"
+time calendar monthly from 2026-01 for 36
+
+entity asset venue : Asset.Real
+
+// 4,000 a month, escalating 3% every 12 periods, compounded.
+stream venue.rent on entity asset.venue inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 4000 * pow(1.03, time.t / 12)
+}
+
+stream venue.opex on entity asset.venue outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = 1500
+}
+```
+
+Read the rent amount aloud: "four thousand, growing three percent per year, compounded monthly along the way." One line, and the whole escalation policy is in it. (If the deal *steps* annually rather than compounding smoothly — most leases do — you want `pow(1.03, round_down(time.t / 12, 0))`, and the difference between those two claims is real money; chapter 9 dwells on it.)
+
+## The function library, by family
+
+The library is small and chosen — every function earns its place in cash-flow work. What follows is the working set; the complete reference with signatures lives at [cfdl.dev](https://cfdl.dev/docs/reference/expressions).
+
+**Bounds and shape.** `min`, `max`, `abs`, `clamp(x, lo, hi)`. `clamp` is the ramp-builder: `clamp(time.t / 18, 0.0, 1.0)` is a linear lease-up from zero to full over eighteen periods, and you will write that idiom for the rest of your career.
+
+**Growth and decay.** `pow`, `exp`, `ln`. Compounding up (`pow(1.03, …)`) and decline curves down (`pow(0.94, time.t)` — a 6%-per-period decline).
+
+**Rounding.** `round`, `round_up`, `round_down`, `round_to(x, places)`. Two distinct uses: `round_down(time.t / 12, 0)` for step functions, and `round_to(…, 2)` for matching a source that rounds each period before summing — the reconciliation tool from chapter 3.
+
+**Dates.** `date`, `edate` (shift by months, the Excel EDATE), `eomonth`, `days_between`, `months_between`, `year_frac` (day-count-aware year fractions — the bridge between "a rate per annum" and "this period's accrual"), `is_business_day`, `add_business_days`, `roll`.
+
+**Aggregation.** `sum`, `avg` over a list; `series_sum` and `series_avg` over another stream's published series — the construct that lets a fee be "2% of collections" without restating collections. It has an evaluation-order story worth understanding before you lean on it, told in the machinery chapter.
+
+**Domain.** `cpr_to_smm` (annual prepayment rate to monthly, the standard mortgage conversion), `macrs_rate` (US tax depreciation schedules), `curve_value` (chapter 7).
+
+**Time value of money.** The Excel TVM family with the same argument logic: `pv`, `fv`, `pmt`, `ipmt`, `ppmt`, `nper`, `rate`. If you can write `=PMT(rate, nper, pv)` you can write this — and here it earns its keep:
+
+```cfdl
+version 0.1
+model "expressions-loan"
+time calendar monthly from 2026-01 for 60
+
+entity asset borrower : Asset.Financial
+
+// A 250,000 loan at 7.2% annual, fully amortizing over 60 months:
+// the level payment, straight from the same PMT you know from a spreadsheet.
+// pmt() returns the payment with the sign convention of a payer, so wrap it
+// in abs() and let the stream's declared direction carry the meaning.
+stream loan.debt_service on entity asset.borrower outflow currency USD {
+  schedule every month from 2026-01 to 2030-12
+  amount = abs(pmt(0.072 / 12, 60, 250000))
+}
+
+// The lender's advance at January's start: `due` belongs to stride
+// schedules, so a single-occurrence stride carries it.
+stream loan.proceeds on entity asset.borrower inflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 250000
+}
+```
+
+Run it: the payment is 4,973.92, sixty times, against 250,000 up front. `ipmt` and `ppmt` split any period's payment into interest and principal when a statement needs the split — same arguments plus the period number.
+
+## Expressions you can read aloud
+
+The examples above share a property worth making explicit, because it is the chapter's actual lesson: each amount is one readable sentence about the deal. Three habits keep it that way.
+
+**Show the structure, not the result.** `4000 * pow(1.03, time.t / 12)` over `4000 * 1.0024663`; `0.072 / 12` over `0.006`. The reviewer checks the *claim* — base, rate, convention — not your calculator work.
+
+**Name what recurs.** The moment `0.072` appears in two expressions it belongs in an assumption (`assume loan_rate = 0.072`, next chapter) — one place to change, one place to review.
+
+**Split what compounds.** An expression juggling occupancy, escalation, and a fee cap is three claims in a trench coat. Three streams — or state, or a contract — each carrying one claim, total the same and *review* utterly differently. When an expression stops reading aloud cleanly, reach for a bigger construct, not a longer line. Part III's construct-choice chapter is that decision, systematized.
+
+## What can go wrong
+
+**A name from nowhere.** Misspell a scope or an assumption — `time.T`, `inputs.growht` — and the compiler refuses with the name and its location. Nothing resolves silently.
+
+**A type that does not fit.** Compare a date to a number, add a string to money, and the expression is refused at compile time, not evaluated to something creative at run time.
+
+**The right answer to the wrong question.** The engine cannot catch a `pmt` given a monthly rate and annual `nper` — both are just numbers. Defense is the chapter-3 habit: one hand-checked payment, every model. The engine guarantees your arithmetic, never your finance.
+
+## Exercises
+
+<Exercise id="05-expressions/level-payment" />
+
+Then, on your own:
+
+1. Rewrite the growth model's rent to *step* 3% annually instead of compounding monthly (`round_down` is the tool). Predict which of the two claims produces more lifetime rent before you run — then explain the answer in one sentence about when each escalation happens.
+2. Verify one month of the loan by hand: 250,000 × 0.6% is the first month's interest; the payment minus that is the first month's principal. Then confirm with `ipmt(0.072/12, 1, 60, 250000)` in a scratch stream.

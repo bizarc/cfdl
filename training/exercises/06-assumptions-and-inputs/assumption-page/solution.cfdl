@@ -1,0 +1,27 @@
+version 0.1
+model "exercise-assumption-page"
+time calendar monthly from 2026-01 for 36
+
+entity asset cafe : Asset.Real
+
+// The assumption page: what this model believes, in one reviewable block.
+assume monthly_covers = 5200
+assume avg_ticket = 14.50
+assume food_cost_pct = 0.31
+assume rent = 6800
+
+// The expressions below now hold structure, not opinions.
+stream cafe.revenue on entity asset.cafe inflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_covers * inputs.avg_ticket
+}
+
+stream cafe.food_cost on entity asset.cafe outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.monthly_covers * inputs.avg_ticket * inputs.food_cost_pct
+}
+
+stream cafe.rent on entity asset.cafe outflow currency USD {
+  schedule every month from 2026-01 to 2028-12
+  amount = inputs.rent
+}

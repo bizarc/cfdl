@@ -1,0 +1,143 @@
+---
+title: "Streams and schedules"
+description: "The full schedule sub-language: cadences, day rules, within-period placement, business-day conventions, exceptions, and payment terms — where cash timing becomes precise."
+part: 2
+order: 4
+track: core
+---
+
+Part I treated a schedule as "when the cash occurs" and left it at that. This chapter makes timing precise, because timing *is* money: the same totals placed differently produce different NPVs, different coverage ratios in a given year, and different reconciliations against a bank's statement. The schedule sub-language exists so that every timing decision a real contract makes — bill on the last business day, settle net-45, pay in advance — is written down rather than approximated.
+
+## The grid and the schedule are different things
+
+The time grid (one per model) defines the periods that exist. A schedule places a stream's occurrences *onto* that grid. The two are deliberately independent: a monthly rent can live on a daily grid, and the rent stays monthly.
+
+```cfdl
+version 0.1
+model "grid-vs-schedule"
+time calendar daily from 2026-01-01 for 90
+
+entity asset shop : Asset.Real
+
+// A monthly claim on a daily grid: twelve occurrences a year, not ninety.
+stream shop.rent on entity asset.shop inflow currency USD {
+  schedule every month on day 1 from 2026-01-01 to 2026-03-31
+  amount = 2600
+}
+
+// A daily claim on the same grid.
+stream shop.card_settlement on entity asset.shop inflow currency USD {
+  schedule every day from 2026-01-01 to 2026-03-31
+  amount = 310
+}
+```
+
+Choose the grid for the finest-grained cash that matters; every coarser schedule states its own cadence. The strides are `every day`, `every week`, `every month`, `every quarter`, `every year` — and a stride coarser than the grid is normal, while a stride *finer* than the grid has nowhere to land and is refused.
+
+## Day rules: where in the month
+
+A monthly stride needs to know which day. Two rules cover practice:
+
+```cfdl
+// Rent due on the 15th.
+schedule every month on day 15 from 2026-01 to 2026-12
+
+// A cash sweep on the last day of each month — February included, because
+// eom clamps to each month's real length rather than assuming 30 or 31.
+schedule every month on eom from 2026-01 to 2026-12
+```
+
+`on day 31` in a run of months that includes February is not clamped for you — that is what `on eom` is for, and the distinction is deliberate: "the 31st" and "month-end" are different contractual claims, and only one of them exists in February.
+
+## Within-period placement: end, due, mid
+
+Every occurrence also has a position *within* its period, and this single keyword carries more valuation weight than any other in the chapter:
+
+```cfdl
+// Default: cash at the period's end — payment in arrears, the ordinary annuity.
+schedule every year from 2026-01 to 2029-01
+
+// due: cash at the period's start — payment in advance, the annuity due.
+// Rent and leases are due; debt service is in arrears.
+schedule every year due from 2026-01 to 2029-01
+
+// mid: the mid-period convention — cash treated as arriving at the period's
+// midpoint, the standard treatment for operating flows earned continuously.
+schedule every year mid from 2026-01 to 2029-01
+```
+
+The finance content here is exactly the ordinary-annuity / annuity-due distinction from any valuation course, plus the mid-year convention: three identical totals, three different NPVs, ordered `due` > `mid` > end because earlier cash discounts less. When a valuation you are matching uses the mid-year convention and your model does not, the gap is systematic and this keyword is the fix. A one-shot date takes `mid` the same way (`schedule on 2028-01 mid`) — used when a lump represents a year of activity rather than a strike at an instant. `due` is the one placement a bare date does not take: it belongs to stride schedules, and a single-occurrence stride (`every month due from 2026-01 to 2026-01`) is the idiom for one payment in advance.
+
+## Business days: conventions and calendars
+
+Real payments do not land on weekends or holidays; they roll. A schedule can say so:
+
+```cfdl
+// July 4th 2026 is a Saturday. On the US calendar, `following` rolls the
+// payment to Monday the 6th.
+schedule on 2026-07-04 convention following calendar "us"
+```
+
+The conventions are the standard fixed-income set: `following` (next business day), `preceding` (previous), `modified_following` (next, unless that crosses into a new month — then previous), `modified_preceding` (the mirror), and `none`. The calendars: `"weekend"` (Saturday/Sunday only), `"us"`, `"uk"`, `"target"` (the euro settlement calendar).
+
+When to reach for this: models that reconcile to actual settlement — debt service, receivables, anything checked against a bank ledger — on daily grids. A monthly deal model usually does not need rolling; a securitization's payment-date logic absolutely does. `modified_following` is the default convention of most loan documentation, and now you know why it exists: plain `following` can pay January's interest in February, which changes which month's coverage test it lands in.
+
+## Exceptions: except and also
+
+A pattern with a handful of contractual exceptions stays one schedule instead of dissolving into listed dates:
+
+```cfdl
+// Daily accrual, skipping a contractual holiday, adding a make-up date.
+schedule every day from 2026-07-01 to 2026-07-05 except [2026-07-03] also [2026-07-08]
+```
+
+Use these for genuine exceptions — a rent holiday, a skipped draw, one extra settlement. If you find yourself writing five `also` dates, the claim is probably not "a pattern with exceptions" but two different streams, and the model reads better saying so.
+
+## Payment terms: net N
+
+The most commercially important timing tool in the chapter. Activity and cash are different events — January's services, invoiced at month-end, paid net-45, are *March cash* — and `net` states the offset:
+
+```cfdl
+version 0.1
+model "payment-terms-demo"
+time calendar monthly from 2026-01 for 12
+
+entity asset agency : Asset.Intangible
+
+// Billed monthly, collected 45 days later: January's invoice is March cash.
+stream agency.collections on entity asset.agency inflow currency USD {
+  schedule every month net 45 from 2026-01 to 2026-06
+  amount = 40000
+}
+
+// Salaries leave in the month they are earned.
+stream agency.payroll on entity asset.agency outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 26000
+}
+```
+
+`net 45` counts days; `net 2 months` steps by the calendar (which is not sixty days). Two consequences to internalize, both visible the first time you run such a model. Cash can land *after* the activity window ends — collections continue past June here. And two invoices can settle in the same period — under net-30 on a monthly grid, January's and February's invoices both arrive in March, and they *sum*; nothing is displaced. This is precisely the working-capital timing gap that spreadsheet models fake with a "collections lag" row, except here it is a stated term of the claim, applied by the engine, and visible in the series.
+
+Run this model and look at the shape: payroll is level from January, collections are zero until mid-March, and the model is cash-negative for its first quarter — a business profitable on paper and starving for cash, in nine lines. That shape is why payment terms are a language feature and not a footnote.
+
+## What is deliberately absent
+
+Two things practitioners sometimes look for are not in the schedule language, on purpose. There are no **weekday schedules** ("every Tuesday") — a claim that specific belongs on a daily grid with explicit dates, and `except`/`also` handle the exceptions. And there are no **stub periods** as an automatic feature: a short first period is a real economic claim (what does the partial period pay?), so the language makes you state it — a one-shot stream for the stub amount beside the regular pattern — rather than inferring a pro-rata amount you never wrote. When you meet a stub in the capstone's construction loan, that is how it will be written, and the reviewer will see the stub's amount as a line, not an inference.
+
+## What can go wrong
+
+**Out of bounds** — any occurrence off the grid, including one *pushed* off it by `net` terms or a `following` roll at the horizon's edge, is a compile error naming the schedule. The fix is a decision: extend the horizon or change the claim.
+
+**`on day 31` meets February** — refused, not clamped. Say `eom` if you mean month-end.
+
+**A phase that does not exist** — `phase_start("operatons")` with a typo is caught at compile, because phase references resolve like every other name.
+
+## Exercises
+
+<Exercise id="04-streams-and-schedules/billing-terms" />
+
+Then, on your own:
+
+1. Take the payment-terms model above and change collections to `net 2 months`. Predict which periods change before running — remember the calendar steps by months, not by 60 days.
+2. Build a four-payment annual stream three ways — default, `due`, `mid` — at a 10% discount rate, and rank the three NPVs before running. You are re-deriving the annuity-due relationship, and the engine will grade you.
