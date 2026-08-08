@@ -1306,6 +1306,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         &state_values,
         &event_sim.entity_state,
         &ir_curve_defs(ir),
+        &stream_series,
         config,
         &mut warnings,
     );
@@ -3003,12 +3004,22 @@ fn run_waterfalls(
     state_values: &BTreeMap<String, Vec<f64>>,
     entity_state: &[BTreeMap<String, BTreeMap<String, ExprValue>>],
     curves: &BTreeMap<String, cfdl_expr::CurveDef>,
+    stream_series: &BTreeMap<String, Vec<f64>>,
     config: &RunConfig,
     warnings: &mut Vec<String>,
 ) -> BTreeMap<String, Vec<f64>> {
     let periods = timeline.len();
     let mut out: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    // COMPOSITION: a waterfall may draw on what an EARLIER one paid.
+    //
+    // A fund's carry is a fund waterfall's output and a firm's carry pool is
+    // its input, so the second reads the first through `series_sum`. Waterfalls
+    // run in declaration order and each one's steps join this map as it
+    // finishes, which makes the dependency an order rather than a graph — the
+    // same rule steps inside a waterfall already follow.
+    let mut visible: BTreeMap<String, Vec<f64>> = stream_series.clone();
     for waterfall in &ir.waterfalls {
+        let shared = Arc::new(visible.clone());
         // Which periods this waterfall runs in. No schedule means every
         // period, the cadence a distribution date usually has.
         let mut hits = vec![Vec::new(); periods];
@@ -3040,6 +3051,7 @@ fn run_waterfalls(
             let date = &timeline[t];
             let mut env = build_base_env(ir, config, t, date, base_inputs);
             env.curves = curves.clone();
+            env.series = Arc::clone(&shared);
             bind_states(&mut env, state_values, t);
             if let Some(state) = entity_state.get(t) {
                 // Every entity by path — `entity.asset.class_a.balance` —
@@ -3102,6 +3114,13 @@ fn run_waterfalls(
                 if let Some(series) = out.get_mut(&format!("{}.{}", waterfall.name, step.name)) {
                     series[t] = round_amount(takes);
                 }
+            }
+        }
+        // This waterfall's steps become visible to the next one.
+        for step in &waterfall.steps {
+            let key = format!("{}.{}", waterfall.name, step.name);
+            if let Some(values) = out.get(&key) {
+                visible.insert(key, values.clone());
             }
         }
     }

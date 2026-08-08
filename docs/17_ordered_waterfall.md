@@ -550,7 +550,34 @@ the first draft computed every vested share as zero and said nothing. The tier
 test belongs in the waterfall step, which reads period-close state — and next to
 the payment it decides, which is where it reads better anyway.
 
+### A nested split — `fixtures/valid/waterfall_nested_split`
+
+The last structure §9 asked for, and the one that needed a language change
+rather than a model.
+
+A GP stakes deal runs three waterfalls in a row. The fund pays its carry to the
+general partner; the management company splits that carry with the deal team;
+and what the firm keeps is split again between the founders and the passive
+minority investor holding a strip of it. Each pot only exists once the one above
+has run.
+
+**Composition was missing.** A waterfall's environment carried curves, inputs
+and states, but not the series map, so a second waterfall naming the first one's
+step matched nothing and took a zero — with the warning `series ... is not
+available in this context`. The rule now is DECLARATION ORDER: each waterfall's
+steps join the visible series as it finishes, so a later one may read an earlier
+one, exactly as a step may read the steps above it. An order, not a graph.
+
+The fund tier is `waterfall_fund_carry` unchanged, so the pot is already
+verified: its GP carry comes to exactly $4,000,000, which is 20% of the $20mm
+profit — the definition of a full catch-up. The rest is checkable by hand: a 40%
+team pool leaves the firm $2,400,000, and a 20% strip of that is $480,000 to the
+stakes investor and $1,920,000 to the founders.
+
+What this rules out is restating the second pot as an assumption. That number is
+the first waterfall's output, and an assumption holding a copy of it is a number
+that goes stale the first time a fee changes.
+
 ### Still to build
 
-A nested split (composition), and the reference's remaining structure, a partial
-catch-up.
+The reference's remaining structure, a partial catch-up.

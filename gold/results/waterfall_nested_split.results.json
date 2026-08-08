@@ -1,0 +1,621 @@
+{
+  "results_version": "0.3",
+  "model_hash": "43113fec7a46419c12b36745ac983b88bfc7cc077511d4727e852749d6b53fb8",
+  "ledger_hash": "ea1f98e9f9d6d02d7dbae6f6235b6b8786201cf234ca83aa66ab2faa46aacd8b",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "called_capital": 10000000.0,
+      "gp_carry": 0.2,
+      "hold_years": 5.0,
+      "pref_rate": 0.08,
+      "proceeds": 30000000.0,
+      "stakes_pct": 0.2,
+      "team_pool_pct": 0.4
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.fund.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "entity.asset.mgmt_co.total": {
+        "amount": 2400000.0,
+        "currency": "USD"
+      },
+      "entity.party.founders.total": {
+        "amount": 1920000.0,
+        "currency": "USD"
+      },
+      "entity.party.gp.total": {
+        "amount": 4000000.0,
+        "currency": "USD"
+      },
+      "entity.party.lp.total": {
+        "amount": 26000000.0,
+        "currency": "USD"
+      },
+      "entity.party.stakes.total": {
+        "amount": 480000.0,
+        "currency": "USD"
+      },
+      "entity.party.team.total": {
+        "amount": 1600000.0,
+        "currency": "USD"
+      },
+      "model.irr": 4.50005,
+      "model.npv": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0
+    },
+    "series": {
+      "entity.asset.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.mgmt_co.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2400000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.founders.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1920000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.gp.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.lp.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 26000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.stakes.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.team.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1600000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "state.lp_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768
+        ]
+      },
+      "stream.firm.carry_allocation.firm_share": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2400000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.firm.carry_allocation.team_pool": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1600000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.firm.owner_split.founder_share": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1920000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.firm.owner_split.stakes_strip": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.gp_catchup": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1173320.192,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.gp_promote": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 2826679.808,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.lp_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 14693280.768,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.distribution.lp_residual": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11306719.232,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
