@@ -139,6 +139,18 @@ entity asset project : Energy.Asset.GenerationFacility {
   technology         = "solar_pv"
   nameplate_capacity = 100000.0
   state operating
+
+  // What the plant throws off after operating costs and debt service. A fact
+  // about the project, so it belongs to the project.
+  cash init 0.0
+       next inputs.energy_year_one * inputs.ppa_price
+       * pow(1.0 + inputs.ppa_escalation, time.t - 1.0)
+       * pow(1.0 - inputs.degradation, time.t - 1.0)
+       - inputs.capacity_kw * inputs.om_per_kw
+       * pow(1.0 + inputs.om_escalation, time.t - 1.0)
+       - if(time.t <= inputs.debt_term,
+       0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+       0.0)
 }
 
 // THE PARTNERSHIP, which is the thing that allocates the project's cash. Not
@@ -161,9 +173,9 @@ entity asset partnership : Energy.Asset.ProjectInterest {
                   next prev
                      + if(time.t >= 2.0 and prev < 0.0,
                      inputs.preflip_share
-                     * ( prev.project_cash
+                     * ( prev.asset.project.cash
                      - inputs.tax_rate
-                     * ( prev.project_cash
+                     * ( prev.asset.project.cash
                      + if(time.t - 1.0 <= inputs.debt_term,
                      (0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount))
                      + ipmt(inputs.debt_rate, time.t - 1.0, inputs.debt_term,
@@ -215,17 +227,7 @@ assume investor_equity = 42238000.0      // 98% of $43.1mm of equity
 // The project, before anybody is paid
 // ---------------------------------------------------------------------------
 
-state project_cash {
-  init 0.0
-  next inputs.energy_year_one * inputs.ppa_price
-        * pow(1.0 + inputs.ppa_escalation, time.t - 1.0)
-        * pow(1.0 - inputs.degradation, time.t - 1.0)
-       - inputs.capacity_kw * inputs.om_per_kw
-        * pow(1.0 + inputs.om_escalation, time.t - 1.0)
-       - if(time.t <= inputs.debt_term,
-            0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
-            0.0)
-}
+
 
 // THE TEST, as one recurrence.
 //
@@ -269,7 +271,7 @@ event flip when asset.partnership.return_position >= 0.0 {
 
 waterfall partnership.distribution on entity asset.partnership {
   schedule every year from 2027-01 to 2051-01
-  from state.project_cash
+  from asset.project.cash
 
   pay investor to party.tax_investor = remaining * asset.partnership.investor_share
   pay sponsor  to party.sponsor = remaining
