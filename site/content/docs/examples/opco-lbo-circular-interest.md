@@ -195,46 +195,35 @@ curve delta_nwc linear {
 // the bilinear transform. After three years the coupon turns cash and the
 // balance holds flat, which is the `if` below.
 // ---------------------------------------------------------------------------
-state sub_balance {
-  init 100.0
-  next if(time.t <= 3, prev * (1 + 0.085 / 2) / (1 - 0.085 / 2), prev)
-}
-
-// The prior period's balance, so a stream at t can see both ends of the year.
-state sub_balance_open {
-  init 0.0
-  next prev.sub_balance
+entity asset sub_notes : Asset.Financial {
+  balance init 100.0
+          next if(time.t <= 3, prev * (1 + 0.085 / 2) / (1 - 0.085 / 2), prev)
 }
 
 // ---------------------------------------------------------------------------
 // Term Loan B: the circular tranche, in closed form.
 //
 // The subordinated coupon appears inside this expression because it is part of
-// K(t). It is restated from `prev.sub_balance` rather than read from the
+// K(t). It is restated from `prev.asset.sub_notes.balance` rather than read from the
 // stream, because a stream is an output and this is an input to the recursion.
 // ---------------------------------------------------------------------------
-state tlb_balance {
-  init 275.0
-  next (prev * (1 + (1 - 0.35) * (curve_value("libor", time.date) + 0.03) / 2)
+entity asset tlb : Asset.Financial {
+  balance init 275.0
+          next (prev * (1 + (1 - 0.35) * (curve_value("libor", time.date) + 0.03) / 2)
         - (1 - 0.35) * (curve_value("ebit", time.date)
              - (0.35 + 12.25
                 + if(time.t <= 3,
-                     prev.sub_balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
-                     0.085 * prev.sub_balance)
+                     prev.asset.sub_notes.balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
+                     0.085 * prev.asset.sub_notes.balance)
                 + 1.3604166666666666 - 0.0125))
         - (curve_value("dna", time.date)
            + if(time.t <= 3,
-                prev.sub_balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
+                prev.asset.sub_notes.balance * ((1 + 0.085 / 2) / (1 - 0.085 / 2) - 1),
                 0.0)
            + 1.3604166666666666
            + curve_value("delta_nwc", time.date)
            - curve_value("capex", time.date)))
        / (1 - (1 - 0.35) * (curve_value("libor", time.date) + 0.03) / 2)
-}
-
-state tlb_balance_open {
-  init 0.0
-  next prev.tlb_balance
 }
 
 // ---------------------------------------------------------------------------
@@ -247,7 +236,7 @@ stream opco.interest.term_loan on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = (curve_value("libor", time.date) + 0.03)
-           * (state.tlb_balance_open + state.tlb_balance) / 2
+           * (prev.asset.tlb.balance + asset.tlb.balance) / 2
 }
 
 // Subordinated coupon. While it is PIK it IS the balance increase, which is
@@ -257,8 +246,8 @@ stream opco.interest.sub_notes on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.interest
   amount = if(time.t <= 3,
-              state.sub_balance - state.sub_balance_open,
-              0.085 * state.sub_balance)
+              asset.sub_notes.balance - prev.asset.sub_notes.balance,
+              0.085 * asset.sub_notes.balance)
 }
 
 // $175 of senior notes at a fixed 7.0%.
@@ -281,7 +270,7 @@ stream opco.interest.undrawn_revolver on entity asset.target outflow currency US
 stream opco.debt.repayment on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.debt_principal
-  amount = state.tlb_balance_open - state.tlb_balance
+  amount = prev.asset.tlb.balance - asset.tlb.balance
 }
 ```
 
@@ -299,8 +288,8 @@ stream opco.debt.repayment on entity asset.target outflow currency USD {
 
 Checked period by period: **7 series** across **5 periods**, each within ±1e-6 of the reference.
 
-- `state.tlb_balance`
-- `state.sub_balance`
+- `state.asset.tlb.balance`
+- `state.asset.sub_notes.balance`
 - `opco.interest.term_loan`
 - `opco.interest.sub_notes`
 - `opco.interest.senior_notes`

@@ -273,11 +273,11 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 // reference reaches the engine, warns, and evaluates the whole
                 // stream to zero — cash silently missing, `status: ok`.
                 for slot in stream.amount.iter().chain(stream.active_when.iter()) {
-                    if references_prev(&slot.src) {
+                    if references_prev_other_than_field(&slot.src) {
                         diagnostics.push(ValidationDiagnostic {
                             code: "E1123_STATE_PREV_OUTSIDE_NEXT",
                             message: format!(
-                                "Stream '{}' uses 'prev', which reads the previous period and exists only inside a state's 'next'. Use 'state.<name>' for a state's value at this period.",
+                                "Stream '{}' uses 'prev' for a recurrence's own previous value, which means nothing outside a 'next'. A FIELD's previous value is readable here as 'prev.<entity>.<field>'; for a state's value at this period use 'state.<name>'.",
                                 stream.name
                             ),
                             file: source_stmt.file.clone(),
@@ -758,6 +758,36 @@ fn fmt_date(date: Date) -> String {
 /// match.
 fn references_prev(src: &str) -> bool {
     mentions_word(src, "prev")
+}
+
+/// `prev` used for anything OTHER than a field's previous value.
+///
+/// A stream may read `prev.<family>.<entity>.<field>` — the close before this
+/// one, which the engine has as a column and which a debt schedule needs for
+/// average-balance interest. It may not read bare `prev` or `prev.<state>`,
+/// which name a recurrence's own previous value and mean nothing outside one.
+fn references_prev_other_than_field(src: &str) -> bool {
+    let mut rest = src;
+    while let Some(idx) = rest.find("prev") {
+        let (before, from) = rest.split_at(idx);
+        let boundary_ok = before
+            .chars()
+            .next_back()
+            .is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+        let tail = &from[4..];
+        if boundary_ok && !tail.starts_with('.') {
+            return true;
+        }
+        if boundary_ok
+            && !["asset.", "party.", "contract.", "reference."]
+                .iter()
+                .any(|family| tail[1..].starts_with(family))
+        {
+            return true;
+        }
+        rest = &from[4..];
+    }
+    false
 }
 
 /// Whether an expression source reads `state.<name>` — the CURRENT period.

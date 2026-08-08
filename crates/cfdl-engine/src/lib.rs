@@ -2301,6 +2301,25 @@ fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usiz
         })
         .collect();
 
+    // A STREAM READS A FIELD'S PREVIOUS PERIOD TOO.
+    //
+    // `_open` states existed because a stream could not: a debt schedule
+    // charging interest on the average of a period's opening and closing
+    // balance had to declare the quantity twice, and the second was never a
+    // quantity — it was this accessor, missing. Only field paths are bound, so
+    // bare `prev` still means nothing outside a rule.
+    if idx > 0 {
+        env.prev_states = states
+            .iter()
+            .filter(|(name, _)| name.matches('.').count() == 2)
+            .filter_map(|(name, values)| {
+                values
+                    .get(idx - 1)
+                    .map(|v| (name.clone(), ExprValue::Decimal(*v)))
+            })
+            .collect();
+    }
+
     // A FIELD RULE IS READ WHERE THE FIELD IS, not under `state.`.
     //
     // `compute_states` keys a rule by its entity path, so `asset.tlb.balance`

@@ -1,0 +1,26 @@
+version 0.1
+model "prev-in-first-period"
+time calendar annual from 2026-01 for 4
+
+// THERE IS NO CLOSE BEFORE THE FIRST CLOSE.
+//
+// A stream may read a field's previous period — that is what retires the
+// `_open` pattern — but not in the model's first period, where no previous
+// period exists.
+//
+// Left to the engine the read resolves to nothing and the stream evaluates to
+// zero: a wrong number arrived at by accident, in a model that looks like it
+// says something. The same refusal `E1123` and `E1126` make one step along.
+//
+// The fix is either to start the stream a period later, as a debt schedule
+// does, or to carry the opening value as a field that states what it is at
+// period 0.
+
+entity asset tlb : Asset.Financial {
+  balance init 275.0 next max(0.0, prev - 25.0)
+}
+
+stream opco.interest on entity asset.tlb outflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = (prev.asset.tlb.balance + asset.tlb.balance) / 2.0 * 0.06
+}

@@ -188,6 +188,7 @@ State declarations:
 - `E1123_STATE_PREV_OUTSIDE_NEXT` — `prev` appears in `init`. There is no period
 - `E1127_FIELD_RULE_READS_FIELD` — a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev <entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero.
 - `E1128_FIELD_DECLARED_TWICE` — a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win.
+- `E1129_PREV_IN_FIRST_PERIOD` — a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero.
   before the first, so the initial value cannot depend on a previous one.
 - `E1124_STATE_SAME_PERIOD_READ` — `state.<name>` appears inside a `next`.
   That path reads the **current** period, which is the same-period edge the

@@ -732,6 +732,77 @@ fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
 /// status field cannot be checked — a misspelling is simply a comparison that
 /// is never true — so the state space has to be declared and the name resolved
 /// against it.
+/// A stream may not read a field's previous period in the model's FIRST period.
+///
+/// There is no period before the first, so the read has no answer. Left to the
+/// engine it resolves to nothing and the stream evaluates to zero — the same
+/// silent wrong number `E1123` and `E1126` exist to refuse, one step along.
+///
+/// The check is a date comparison rather than a schedule resolution: a stream
+/// whose schedule starts on the model's start date runs at period 0. A stream
+/// that starts later cannot, whatever its cadence.
+fn check_prev_first_period(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    model_start: &str,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        let Some(schedule) = &stream.schedule else {
+            continue;
+        };
+        // Dates are written YYYY-MM or YYYY-MM-DD; compare the month, which is
+        // the grain a period boundary sits on.
+        let month = |d: &str| d.get(..7).unwrap_or(d).to_string();
+        let starts_at_zero = schedule
+            .from
+            .as_deref()
+            .is_some_and(|from| month(from) == month(model_start));
+        if !starts_at_zero {
+            continue;
+        }
+        for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+            if reads_prev_field(&slot.src) {
+                diagnostics.push(Diagnostic {
+                    code: "E1129_PREV_IN_FIRST_PERIOD".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' reads a field's previous period but runs from the model's first period, where there is none. Start the stream one period later, or carry the opening value as a field of its own.",
+                        stream.name
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(slot.span)),
+                    path: None,
+                    hint: Some(
+                        "A field's previous period is the close before this one; the first period has no close before it."
+                            .to_string(),
+                    ),
+                    notes: Vec::new(),
+                });
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// Does this expression read `prev.<family>.<entity>.<field>`?
+fn reads_prev_field(src: &str) -> bool {
+    [
+        "prev.asset.",
+        "prev.party.",
+        "prev.contract.",
+        "prev.reference.",
+    ]
+    .iter()
+    .any(|p| src.contains(p))
+}
+
 fn check_state_guards(
     resolve_output: &cfdl_resolver::ResolveOutput,
     ontology: &cfdl_pack::PackOntology,
@@ -1554,6 +1625,7 @@ fn build_ir(
     check_exercise_targets(resolve_output)?;
     check_waterfalls(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
+    check_prev_first_period(resolve_output, &time_start)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
