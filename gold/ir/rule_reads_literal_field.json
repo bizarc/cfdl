@@ -1,0 +1,103 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "rule-reads-literal-field",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a3e43afc90e34948d56b6d13a155c8fa",
+      "symbol": "asset.pool",
+      "type": "Asset.Financial",
+      "fields": {
+        "amortisation": "10.0"
+      },
+      "rules": {
+        "balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "max(0.0, prev - asset.pool.amortisation)"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "1cf9f2f5ecdc0a62bc79ff3c05e92cb4",
+      "symbol": "party.lender",
+      "type": "Party",
+      "fields": {
+        "name": "Lender"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "012e486131d569b02cbade987149814d",
+      "name": "credit.principal",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2029-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.pool.amortisation"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

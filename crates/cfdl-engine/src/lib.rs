@@ -2298,6 +2298,48 @@ fn describe_value(value: &ExprValue) -> String {
     }
 }
 
+/// Bind every entity's LITERAL fields under its family path.
+///
+/// Constants only. A field carrying a rule is deliberately absent: inside
+/// another rule its period-close value has not been computed, and `E1127`
+/// rejects the read rather than letting it resolve to nothing.
+fn bind_literal_fields(env: &mut ExprEnv, ir: &Ir) {
+    for entity in &ir.entities {
+        let Some((namespace, name)) = entity.symbol.split_once('.') else {
+            continue;
+        };
+        let mut values: BTreeMap<String, ExprValue> = BTreeMap::new();
+        for (field, raw) in &entity.fields {
+            let value = match raw.parse::<f64>() {
+                Ok(number) => ExprValue::Decimal(number),
+                Err(_) => ExprValue::String(raw.clone()),
+            };
+            values.insert(field.clone(), value);
+        }
+        if values.is_empty() {
+            continue;
+        }
+        match env.entity.get_mut(namespace) {
+            Some(ExprValue::Map(ns_map)) => match ns_map.get_mut(name) {
+                Some(ExprValue::Map(existing)) => {
+                    for (field, value) in values {
+                        existing.entry(field).or_insert(value);
+                    }
+                }
+                _ => {
+                    ns_map.insert(name.to_string(), ExprValue::Map(values));
+                }
+            },
+            _ => {
+                let mut ns_map = BTreeMap::new();
+                ns_map.insert(name.to_string(), ExprValue::Map(values));
+                env.entity
+                    .insert(namespace.to_string(), ExprValue::Map(ns_map));
+            }
+        }
+    }
+}
+
 fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
     env.states = states
         .iter()
@@ -2596,6 +2638,16 @@ fn compute_states(
             }
 
             let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
+            // A RULE MAY READ A LITERAL FIELD. It is a constant, so there is no
+            // ordering question and nothing to sequence — `amortisation = 10.0`
+            // means the same thing in every period.
+            //
+            // Rule-bearing fields stay out: their period-close value does not
+            // exist yet inside another rule, which is what `E1127` rejects at
+            // compile time. Binding only literals here is what makes that
+            // diagnostic honest — the validator permits exactly what the engine
+            // can resolve.
+            bind_literal_fields(&mut env, ir);
             let (compiled, clause) = if t == 0 {
                 (&entry.init, "init")
             } else {
