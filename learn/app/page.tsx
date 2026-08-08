@@ -80,6 +80,7 @@ const PARTS: Part[] = [
     chapters: [
       { label: "Appendix A: language quick reference", href: "/chapters/language-quick-reference" },
       { label: "Appendix B: CRE pack term tables", href: "/chapters/cre-pack-term-tables" },
+      { label: "Appendix C: instructor notes", href: "/chapters/instructor-notes" },
     ],
     status: "in-progress",
   },
@@ -163,6 +164,46 @@ export default function Home() {
               </ul>
             </Card>
           ))}
+        </div>
+      </section>
+
+      <section className="pb-24">
+        <h2 className="text-2xl font-semibold tracking-tight">The course kit</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-secondary">
+          Every exercise in the course as plain files — models, run
+          configurations, and prompts — for classroom use or offline work with
+          the command-line tools. Rebuilt from the course sources on every
+          deploy.
+        </p>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <Card className="p-6">
+            <h3 className="text-base font-semibold">Exercises only</h3>
+            <p className="mt-2 text-sm leading-relaxed text-secondary">
+              Starters, prompts, and run configurations — no solutions. The set
+              to hand a class.
+            </p>
+            <a
+              href="/cfdl-exercises.zip"
+              download
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-default px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-strong hover:text-primary"
+            >
+              Download cfdl-exercises.zip
+            </a>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-base font-semibold">Full kit</h3>
+            <p className="mt-2 text-sm leading-relaxed text-secondary">
+              Everything, including solutions and their expected metrics — the
+              instructor&apos;s copy, and the self-study answer key.
+            </p>
+            <a
+              href="/cfdl-course-kit.zip"
+              download
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-default px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-strong hover:text-primary"
+            >
+              Download cfdl-course-kit.zip
+            </a>
+          </Card>
         </div>
       </section>
     </div>
