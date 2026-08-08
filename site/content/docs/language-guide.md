@@ -217,7 +217,7 @@ declares that order over a pot:
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from entity.asset.trust.available_funds
+  from asset.trust.available_funds
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0

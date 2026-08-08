@@ -1,0 +1,205 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "entity-property-bare-path",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 2
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8f7ed51a636049b9e523fd88689e602f",
+      "symbol": "asset.class_a",
+      "type": "Credit.Asset.Tranche",
+      "attrs": {
+        "original_balance": "5000.0",
+        "seniority": "1"
+      },
+      "state": {}
+    },
+    {
+      "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
+      "symbol": "asset.trust",
+      "type": "Credit.Asset.LoanPool",
+      "attrs": {
+        "collateral_type": "auto"
+      },
+      "state": {}
+    },
+    {
+      "id": "1eb4ffd7cc8147ffbcfedd1811c6aeb7",
+      "symbol": "party.residual",
+      "type": "Party",
+      "attrs": {
+        "name": "Residual holder"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "waterfalls": [
+    {
+      "name": "abs.distribution",
+      "entity": "asset.trust",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "10000.0"
+      },
+      "steps": [
+        {
+          "name": "senior_bare",
+          "payee": "asset.class_a",
+          "amount": {
+            "lang": "cfdl",
+            "src": "asset.class_a.original_balance / 2.0"
+          }
+        },
+        {
+          "name": "senior_long",
+          "payee": "asset.class_a",
+          "amount": {
+            "lang": "cfdl",
+            "src": "entity.asset.class_a.original_balance / 2.0"
+          }
+        },
+        {
+          "name": "rest",
+          "payee": "party.residual",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.purchase"
+      ],
+      "formula": "-cumulative(investing.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
+  "contracts": [],
+  "streams": [],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "31da3be174317bd7ff88b2a1dfa8f026",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

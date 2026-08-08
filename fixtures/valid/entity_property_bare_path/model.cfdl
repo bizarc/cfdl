@@ -1,0 +1,32 @@
+version 0.1
+model "entity-property-bare-path"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// AN ENTITY'S PROPERTY, NAMED DIRECTLY.
+//
+// `asset.class_a.original_balance` and `entity.asset.class_a.original_balance`
+// are the same read. Properties are bound under their family, so the bare form
+// is an alias rather than a second mechanism, and only a declared family —
+// asset, party, contract, reference — is aliased.
+//
+// It matters most in a waterfall, where a step names the thing it is paying
+// and then names what that thing is owed. Before the alias the bare spelling
+// resolved to nothing, and because the entity root is open-world it returned
+// null and paid ZERO rather than failing — in the one construct whose job is
+// deciding who gets paid. Every waterfall example in the documentation was
+// written that way.
+
+entity asset trust   : Credit.Asset.LoanPool { collateral_type = "auto" }
+entity asset class_a : Credit.Asset.Tranche  { original_balance = 5000.0 seniority = 1 }
+entity party residual : Party { name = "Residual holder" }
+
+waterfall abs.distribution on entity asset.trust {
+  schedule on 2026-01
+  from 10000.0
+
+  // The bare form and the long form, side by side, on the same fact.
+  pay senior_bare to asset.class_a  = asset.class_a.original_balance / 2.0
+  pay senior_long to asset.class_a  = entity.asset.class_a.original_balance / 2.0
+  pay rest        to party.residual = remaining
+}

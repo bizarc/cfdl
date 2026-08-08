@@ -395,11 +395,11 @@ So a step is one form:
 ```cfdl
 waterfall abs.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2017-05
-  from entity.asset.trust.available_funds
+  from asset.trust.available_funds
 
   pay servicing        to party.servicer    = 12.5
   pay trustee_fees     to party.trustee     = min(4.0, 3.0)
-  pay class_a_target   to party.class_a     = entity.asset.class_a.balance - entity.asset.trust.pool_balance
+  pay class_a_target   to party.class_a     = asset.class_a.balance - asset.trust.pool_balance
   pay trustee_excess   to party.trustee     = owed(trustee_fees) - paid(trustee_fees)
   pay residual         to party.certificate = remaining
 }
