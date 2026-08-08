@@ -77,8 +77,11 @@ const PARTS: Part[] = [
     title: "Reference",
     blurb:
       "The language on two pages, and every CRE contract type with its required and defaulted terms.",
-    chapters: [{ label: "Language quick reference" }, { label: "CRE pack term tables" }],
-    status: "planned",
+    chapters: [
+      { label: "Appendix A: language quick reference", href: "/chapters/language-quick-reference" },
+      { label: "Appendix B: CRE pack term tables", href: "/chapters/cre-pack-term-tables" },
+    ],
+    status: "in-progress",
   },
 ];
 
