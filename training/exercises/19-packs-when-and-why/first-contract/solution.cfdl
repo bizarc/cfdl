@@ -1,0 +1,23 @@
+version 0.1
+model "exercise-first-contract"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 36
+
+entity asset office : CRE.Asset.RealProperty
+
+// The same economics as claims in the domain's vocabulary. The lowering
+// expands each contract into the stream you deleted — audit it in the IR —
+// and the pack now validates terms and categorizes the cash.
+contract cre.lease {
+  term 2026-01..2028-12
+  terms {
+    base_rent = 42000
+  }
+}
+
+contract cre.ops_expense {
+  term 2026-01..2028-12
+  terms {
+    amount = 15500
+  }
+}

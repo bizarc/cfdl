@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 storybook-static/
 public/wasm
+public/cfdl-course-kit.zip
+public/cfdl-exercises.zip
+.course-kit-stage/

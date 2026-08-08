@@ -1,0 +1,22 @@
+version 0.1
+model "harbor-point"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+phase construction from 2026-01 to 2027-06
+phase lease_up from 2027-07 to 2028-06
+phase operations from 2028-07 to 2030-12
+
+entity asset harbor : CRE.Asset.RealProperty
+
+// Land closes at the start of month one.
+stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 5500000
+}
+
+contract cre.construction_stub {
+  term 2026-02..2027-06
+  terms {
+    amount = 700000
+  }
+}

@@ -1,0 +1,80 @@
+---
+title: "Capstone: risk and the split"
+description: "The finished deal — distributed assumptions deferred into terms, a downside scenario, a thousand seeded trials, and the equity waterfall that divides what the exit brings."
+part: 4
+order: 24
+track: core
+---
+
+The deal works on paper. This closing chapter asks the two questions every committee asks next — *how wrong could it be?* and *who gets what?* — and answers both without restructuring anything: the claims widen in place, and a waterfall divides the proceeds the model already produces. That nothing has to be rebuilt is the course's whole thesis landing at once.
+
+## Widening the claims
+
+Three numbers in this deal are opinions wide enough to deserve stating with their width — the office rent the market will bear, the construction cost, and the exit cap. They become the assumption page, and the contracts *defer* to them:
+
+```cfdl
+// The deal's contested numbers, stated once with their width. Everything
+// else in the terms below is a signed fact and stays literal.
+assume office_rent ~ Normal(mean=155000, stdev=8000, clip=[130000, 175000])
+assume monthly_draw ~ Triangular(min=680000, mode=700000, max=780000)
+assume exit_cap ~ Normal(mean=0.0625, stdev=0.005, clip=[0.05, 0.08])
+```
+
+with `base_rent = inputs.office_rent`, `amount = inputs.monthly_draw`, `exit_cap = inputs.exit_cap` in the respective contracts. The chapter-6 line holds under pressure: the *signed* terms — the retail lease, the loan's rate, the breakpoint — stay literal, because they are facts; only opinions got width. The shapes are chapter 12's judgment applied: symmetric market views get Normals, and the construction estimate gets the contractor's own three numbers — floor, bid, blowout — as a Triangular.
+
+And here the base case moves, on purpose: **a Triangular's deterministic value is the mean of its three points** — (680 + 700 + 780)/3 = 720,000 — not the 700,000 mode. Stating the cost risk's asymmetry made the base construction budget 340,000 heavier and pulled base IRR from 15.6% to about 14.8%. That is not an artifact to suppress; it is the model saying that an estimate with more room above than below *is* a higher expected cost. If the committee wants to underwrite the bid, that is a scenario — which is exactly what the run configuration now carries:
+
+```json
+{
+  "deterministic": { "annual_discount_rate": 0.10 },
+  "scenarios": {
+    "base": { "annual_discount_rate": 0.10 },
+    "downside": {
+      "annual_discount_rate": 0.10,
+      "parameters": { "inputs.exit_cap": 0.0725, "inputs.office_rent": 140000 }
+    }
+  },
+  "monte_carlo": { "trial_count": 1000, "seed": 20260808 }
+}
+```
+
+## Reading the risk book
+
+One run now produces the full committee packet. The **scenario table**: base NPV about +2.0 million; the named downside — cap out a hundred basis points, rents soft — about **−0.5 million**. The deal can lose money in a stated, defensible world, and it says so in its own output. The **trials**: a thousand seeded paths put the NPV distribution's spread (standard deviation about 1.3 million) around a median close to base — chapter 12's first question answered well: the base case is not flattering itself. A single-digit percent of paths go negative, and the shape of the downside tail traces to exactly the input you would guess: run the drives-the-spread drill and the exit cap dominates, confirming with a thousand runs what chapter 23 argued with one subtraction.
+
+## The split
+
+The proceeds have owners. Two parties join the cast, and the deal ends the way its papers do — with a priority of payments:
+
+```cfdl
+entity party lp : Party
+entity party gp : Party
+
+waterfall harbor.equity_split on entity asset.harbor {
+  schedule on 2030-12
+  from series_sum("cre.exit.proceeds", time.t, time.t) - 9500000
+
+  pay lp_preferred to party.lp = 8200000 * 0.08 * 5
+  pay lp_capital   to party.lp = 8200000
+  pay gp_promote   to party.gp = remaining * 0.20
+  pay lp_residual  to party.lp = remaining
+}
+```
+
+The pot is worth reading twice: it is the sale proceeds *as the model computes them*, net of the payoff — a series read, so every widened assumption flows through automatically. In a downside trial the pot shrinks and the waterfall's guarantee does the rest: the promote is the shock absorber, the preferred is the cushion, and no step can be paid from money that is not there. In the base case: a 14.8 million pot pays the LP's 3.28 million preferred and 8.2 million capital, leaving 3.32 million — 664,800 to the GP, the rest to the LP. Hand-check the promote: 20% of the remainder, to the dollar.
+
+One simplification to name, in the open: the preferred here is *simple* — five years at 8% on committed capital, stated as arithmetic. A compounding preferred, or a full IRR-hurdle promote with catch-up, accrues period by period: an entitlement field growing beside the deal, paid through `owed`/`paid` steps — every piece of which you have built in chapters 8 and 11. It is the natural next model past the course's edge, and the exercise points at it.
+
+## The course, closed
+
+Look at what fits in one readable file: six verbs, five phases of construction finance, a unit-grain rent roll, a priced reversion, three distributions, two scenarios, a thousand trials, and a waterfall — every line traceable to a chapter, every anchor hand-checked, and the whole thing re-derivable from a phase edit. That is what "the model is the set of claims" meant in chapter 1, demonstrated rather than asserted. What remains beyond the course is more of the same, not different in kind — richer packs, deeper waterfalls, longer rent rolls — and the reference part that follows is built for exactly that working life.
+
+## Exercises
+
+<Exercise id="24-capstone-risk/the-risk-book" />
+
+Then, on your own:
+
+1. The committee underwrites the contractor's bid: add a `bid` scenario pinning `inputs.monthly_draw` to 700,000 and compare its NPV to base. You have just priced the difference between a mode and a mean — the 340,000 the Triangular moved, given back by a stated choice.
+2. Upgrade the preferred: replace the `8200000 * 0.08 * 5` arithmetic with an accruing entitlement field (init 0, growing 8%/12 of committed capital monthly until exit) read by the step. Confirm the base split barely moves — then explain in one sentence why the *downside* split moves more.
+3. The graduation exercise: slip construction one quarter, at full risk configuration, and follow the consequence chain through every chapter's claims — draws, interest, takeout, lease-up, exit window, pot, split. Count the lines you had to edit. That number is the course.

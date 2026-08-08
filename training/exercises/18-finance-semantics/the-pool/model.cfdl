@@ -1,0 +1,21 @@
+version 0.1
+model "exercise-the-pool"
+time calendar monthly from 2026-01 for 24
+
+entity asset pool : Asset.Financial
+
+// A 5,000,000 pool at 6.5%, quoted at 8 CPR. This version divides the
+// annual prepayment rate by twelve — the wrong conversion, in exactly the
+// way dividing a discount rate is wrong. Fix it:
+//   1. Give the pool a factor field: init 1.0,
+//      next prev * (1 - cpr_to_smm(0.08)).
+//   2. Make interest read the factor: 5000000 * factor * 0.065 / 12.
+stream pool.interest on entity asset.pool inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 5000000 * pow(1 - 0.08 / 12, time.t) * 0.065 / 12
+}
+
+stream pool.servicing on entity asset.pool outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 5000000 * pow(1 - 0.08 / 12, time.t) * 0.0025 / 12
+}

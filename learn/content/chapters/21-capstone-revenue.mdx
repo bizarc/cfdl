@@ -1,0 +1,113 @@
+---
+title: "Capstone: revenue"
+description: "The rent roll — an anchor lease with lease-up, a unit-grain retail lease with incentives and recoveries, overage rent, and the deductions that make NOI mean something."
+part: 4
+order: 21
+track: core
+---
+
+A building earns like a portfolio of promises, each on its own paper. This chapter writes Harbor Point's rent roll — five revenue claims and two deductions — almost entirely in the pack's vocabulary, because these are the standard leases chapter 19 said contracts exist for. Watch two things as it assembles: how each contract's *terms* carry exactly the numbers a leasing brief would state, and how the storylines stay separate — the reviewer who cares about the retail deal reads the retail contracts and nothing else.
+
+## The anchor lease
+
+```cfdl
+// The anchor office lease: 1.86M/yr, ramping to full over twelve months.
+contract cre.lease {
+  term 2027-07..2030-12
+  terms {
+    base_rent = 155000
+    lease_up_months = 12
+  }
+}
+```
+
+The pack's lease lowers to a rent stream over the term with chapter 9's ramp built in — `lease_up_months` *is* the `clamp` idiom, as a term. Twelve months from a July 2027 start puts stabilization at mid-2028, which is why the skeleton's phases drew the lease-up phase where they did: phases and terms telling the same story is not a coincidence to admire but a consistency to maintain.
+
+## The retail suite, at unit grain
+
+Chapter 16's entity-grain decision said retail behaves differently, so it gets the lease-by-lease contract with the full institutional term sheet:
+
+```cfdl
+// The retail suite: escalating, three months free, TI/LC on day one,
+// expense recoveries above a stop at the tenant's pro-rata share.
+contract cre.lease_unit.retail {
+  term 2027-10..2030-12
+  terms {
+    rent_year = 480000
+    escalation = 0.03
+    free_rent_months = 3
+    ti_total = 250000
+    lc_total = 90000
+    opex_year = 950000
+    opex_escalation = 0.03
+    expense_stop_year = 950000
+    pro_rata_share = 0.2
+  }
+}
+```
+
+One contract, four streams in the lowering — and each is a lesson from earlier in the course arriving as a term. **Base rent** escalates 3% on lease anniversaries (the *stepped* claim from chapter 9, not the smooth one). **Abatement** books the three free months as their own deduction line rather than netting them invisibly into rent — gross potential revenue and the incentive both stay visible, which is how an institutional pro forma reports and how a reviewer audits a concession. **Recoveries** reimburse opex above the stop at the tenant's 20% share — zero in the base year by construction (the stop *equals* year-one opex), growing as opex escalates past it; a term sheet's most fiddly clause, five terms. **TI/LC** lands as capital on day one. The `.retail` suffix names this lease's streams (`cre.unit.base_rent.retail`), so a second suite later is another contract, not a renaming exercise.
+
+## Overage, other income, and the deductions
+
+```cfdl
+// Overage rent on the retailer's sales above the natural breakpoint.
+contract cre.percentage_rent.retail {
+  term 2028-01..2030-12
+  terms {
+    sales_year = 6000000
+    breakpoint_year = 4800000
+    overage_pct = 0.06
+    sales_growth = 0.03
+  }
+}
+
+// Parking and signage.
+contract cre.ops_revenue {
+  term 2027-07..2030-12
+  terms {
+    amount = 18000
+  }
+}
+
+// Property operating costs, escalating.
+contract cre.property_opex {
+  term 2027-07..2030-12
+  terms {
+    opex_year = 950000
+    escalation = 0.03
+  }
+}
+
+// A stabilized-vacancy allowance once operating.
+contract cre.vacancy_loss {
+  term 2028-07..2030-12
+  terms {
+    rate = 0.05
+    potential_gross_year = 2560000
+  }
+}
+```
+
+Percentage rent is chapter 9's guarded kicker as a contract — 6% of sales above the breakpoint, the guard inside the pack's `max(0, …)`. The vacancy allowance runs only from stabilization: during lease-up, vacancy is *in the ramp* — an allowance on top would double-count the same emptiness, which is precisely the kind of claim-overlap a reviewer reading storyline-by-storyline catches and a formula auditor does not.
+
+## What the numbers say
+
+Run the checkpoint. The office lease totals 5,657,500 — check the shape, not just the sum: half-rent months climbing the ramp, then level. Retail base rent runs 1.6 million with the abatement's −120,000 beside it (three months × 40,000, the anchor to verify by hand this chapter). Recoveries are small and *start at zero* — if that zero surprised you, reread the stop; the term sheet's economics are working exactly as written. And the model's total is still −13.3 million, because a rent roll is not a deal: nothing has funded the 17.4 million yet. NOI now exists, though — the pack derives it from these categorized streams — and NOI is what both of the next two chapters price.
+
+## What can go wrong
+
+**Terms that drift from the phases.** The lease starts at `2027-07` and the lease-up phase ends at `2028-06` — today those agree with `lease_up_months = 12`. Change one without the others and the model still compiles; only a reader notices the deal disagreeing with itself. Keep the story in one place (the phases) and derive where you can.
+
+**A vacancy allowance during lease-up.** The double-count described above — the single most common CRE pro forma error, and in this model it is impossible to make *silently* because the vacancy contract's term states where it applies.
+
+**A blended retail claim.** The alternative to `lease_unit.retail` was folding retail into the anchor's rent. Chapter 16's test said no — different behavior, different grain — and the free-rent negotiation that produced the abatement line is the evidence: you could not have stated it inside a blend.
+
+## Exercises
+
+<Exercise id="21-capstone-revenue/the-rent-roll" />
+
+Then, on your own:
+
+1. Add a second retail suite — `cre.lease_unit.kiosk`, 120,000 a year, starting 2028-01, one free month, no recoveries — and confirm the suffix keeps its streams separate in the results. One more lease is one more contract: that is unit grain paying rent.
+2. The retailer's broker calls: sales are tracking 5.4 million, not 6. Change one term, rerun, and find every number that moved. The blast radius of a term is the pack's category discipline made visible.

@@ -28,7 +28,7 @@ const PARTS: Part[] = [
     number: "Part II",
     title: "The core language",
     blurb:
-      "Streams, schedules, expressions, assumptions, curves, state, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
+      "Streams, schedules, expressions, assumptions, curves, fields, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
     chapters: [
       { label: "Streams and schedules", href: "/chapters/streams-and-schedules" },
       { label: "Expressions", href: "/chapters/expressions" },
@@ -51,12 +51,12 @@ const PARTS: Part[] = [
     blurb:
       "The decisions the syntax can't make for you: choosing grain, choosing constructs, the finance semantics the language encodes, and when a domain pack earns its keep.",
     chapters: [
-      { label: "Choosing grain" },
-      { label: "Stream, contract, state, event, option, or waterfall?" },
-      { label: "Finance semantics" },
-      { label: "Packs: when and why" },
+      { label: "Choosing grain", href: "/chapters/choosing-grain" },
+      { label: "Stream, contract, field, event, option, or waterfall?", href: "/chapters/choosing-constructs" },
+      { label: "Finance semantics", href: "/chapters/finance-semantics" },
+      { label: "Packs: when and why", href: "/chapters/packs-when-and-why" },
     ],
-    status: "planned",
+    status: "in-progress",
   },
   {
     number: "Part IV",
@@ -64,21 +64,25 @@ const PARTS: Part[] = [
     blurb:
       "One development deal carried end to end — skeleton, revenue, costs and financing, exit and returns, then scenarios, Monte Carlo, and an equity waterfall over the whole structure.",
     chapters: [
-      { label: "The deal and the skeleton" },
-      { label: "Revenue" },
-      { label: "Costs and financing" },
-      { label: "Exit and returns" },
-      { label: "Risk" },
+      { label: "The capstone: Harbor Point", href: "/chapters/the-deal-and-the-skeleton" },
+      { label: "Revenue", href: "/chapters/capstone-revenue" },
+      { label: "Costs and financing", href: "/chapters/capstone-costs-and-financing" },
+      { label: "Exit and returns", href: "/chapters/capstone-exit-and-returns" },
+      { label: "Risk and the split", href: "/chapters/capstone-risk" },
     ],
-    status: "planned",
+    status: "in-progress",
   },
   {
     number: "Part V",
     title: "Reference",
     blurb:
       "The language on two pages, and every CRE contract type with its required and defaulted terms.",
-    chapters: [{ label: "Language quick reference" }, { label: "CRE pack term tables" }],
-    status: "planned",
+    chapters: [
+      { label: "Appendix A: language quick reference", href: "/chapters/language-quick-reference" },
+      { label: "Appendix B: CRE pack term tables", href: "/chapters/cre-pack-term-tables" },
+      { label: "Appendix C: instructor notes", href: "/chapters/instructor-notes" },
+    ],
+    status: "in-progress",
   },
 ];
 
@@ -160,6 +164,46 @@ export default function Home() {
               </ul>
             </Card>
           ))}
+        </div>
+      </section>
+
+      <section className="pb-24">
+        <h2 className="text-2xl font-semibold tracking-tight">The course kit</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-secondary">
+          Every exercise in the course as plain files — models, run
+          configurations, and prompts — for classroom use or offline work with
+          the command-line tools. Rebuilt from the course sources on every
+          deploy.
+        </p>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <Card className="p-6">
+            <h3 className="text-base font-semibold">Exercises only</h3>
+            <p className="mt-2 text-sm leading-relaxed text-secondary">
+              Starters, prompts, and run configurations — no solutions. The set
+              to hand a class.
+            </p>
+            <a
+              href="/cfdl-exercises.zip"
+              download
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-default px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-strong hover:text-primary"
+            >
+              Download cfdl-exercises.zip
+            </a>
+          </Card>
+          <Card className="p-6">
+            <h3 className="text-base font-semibold">Full kit</h3>
+            <p className="mt-2 text-sm leading-relaxed text-secondary">
+              Everything, including solutions and their expected metrics — the
+              instructor&apos;s copy, and the self-study answer key.
+            </p>
+            <a
+              href="/cfdl-course-kit.zip"
+              download
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-default px-3 py-1.5 text-sm font-medium text-secondary transition-colors hover:border-strong hover:text-primary"
+            >
+              Download cfdl-course-kit.zip
+            </a>
+          </Card>
         </div>
       </section>
     </div>

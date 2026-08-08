@@ -1,0 +1,113 @@
+---
+title: "Appendix B: CRE pack term tables"
+description: "Every CRE contract type with its terms, requirements, defaults, and the streams its lowering produces — the working reference for the capstone's domain."
+part: 5
+order: 26
+track: core
+---
+
+The CRE pack's contract types, one table each: the terms, which are required, what the defaults are, and what streams the lowering emits (with their categories, which is what statements and NOI are built from). Amount conventions: `*_year` terms are annual and divide by the model's periods per year; escalations step on term anniversaries. The pack's own reference page at [cfdl.dev](https://cfdl.dev/docs/reference/packs) is normative if the two ever disagree.
+
+## Development and operations
+
+**`cre.construction_stub`** → `cre.construction.draws` (investing.capital.construction, outflow). Level draws over the term.
+
+| Term | Required | Meaning |
+|---|---|---|
+| `amount` | yes | Draw per period — a material number the model must state |
+
+**`cre.ops_revenue`** → `cre.ops.revenue` (operating.revenue.other, inflow); **`cre.ops_expense`** → `cre.ops.expense` (operating.expense.opex, outflow). Flat amount per period over the term.
+
+| Term | Required | Meaning |
+|---|---|---|
+| `amount` | yes | Per-period amount |
+
+**`cre.property_opex`** → `cre.property.opex[.suffix]` (operating.expense.opex, outflow).
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `opex_year` | yes | — | Annual operating cost |
+| `escalation` | no | 0 | Annual escalation, stepped on anniversaries |
+
+**`cre.vacancy_loss`** → `cre.vacancy.loss` (operating.deduction.vacancy, outflow).
+
+| Term | Required | Meaning |
+|---|---|---|
+| `rate` | yes | Allowance rate |
+| `potential_gross_year` | yes | The base it applies to, annual |
+
+Apply over stabilized operations only — during lease-up, vacancy is already in the ramp.
+
+## Leases
+
+**`cre.lease`** → `cre.lease.base_rent` (operating.revenue.base_rent, inflow). The simple property-level lease with a built-in occupancy ramp.
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `base_rent` | yes | 0 | Rent per period at full occupancy |
+| `base_rent_year` | no | 0 | Alternative annual spelling, additive |
+| `lease_up_months` | no | 1 | Ramp length; 1 = fully occupied from month one |
+
+**`cre.lease_unit[.suffix]`** → four streams per lease: `cre.unit.base_rent.<suffix>` (revenue), `cre.unit.abatement.<suffix>` (operating.deduction.abatement — free rent as its own visible line), `cre.unit.recoveries.<suffix>` (revenue.recovery), `cre.unit.ti_lc.<suffix>` (investing.capital.leasing, day one). The institutional lease-by-lease form.
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `rent_year` | yes | — | Annual rent (gross; abatement offsets it) |
+| `escalation` | no | 0 | Steps on lease anniversaries |
+| `free_rent_months` | no | 0 | Booked as the abatement line |
+| `ti_total`, `lc_total` | no | 0 | Tenant improvements / leasing commissions at start |
+| `opex_year` | no | 0 | Recoverable opex base |
+| `opex_escalation` | no | 0 | Its growth |
+| `expense_stop_year` | no | 0 | Reimbursement above this stop |
+| `pro_rata_share` | no | 0 | Tenant's share of the excess |
+| `gross_up_factor` | no | 1 | Occupancy gross-up on the recoverable base |
+
+**`cre.percentage_rent[.suffix]`** → `cre.pct_rent[.suffix]` (operating.revenue.percentage_rent, inflow). Overage: `max(0, sales − breakpoint) × pct`.
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `sales_year` | yes | — | Tenant sales, annual |
+| `breakpoint_year` | yes | — | The natural breakpoint |
+| `overage_pct` | yes | — | Share of the excess |
+| `sales_growth` | no | 0 | Sales growth on anniversaries |
+
+**`cre.rollover[.suffix]`** → `cre.rollover.rent.<suffix>` and `cre.rollover.ti_lc.<suffix>`. The market-leasing assumption at an expiry: the window starts *at* expiry; during downtime only the renewal scenario pays; afterwards rent is the probability-weighted blend. Turnover costs split by scenario timing.
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `renewal_probability` | yes | — | p |
+| `renewal_rent_year` | yes | — | Rent if the tenant stays |
+| `market_rent_year` | yes | — | Rent if re-let |
+| `market_escalation` | no | 0 | On window anniversaries |
+| `downtime_months` | no | 0 | Vacancy in the re-let scenario |
+| `renewal_ti_lc` | no | 0 | Turnover cost, renewal scenario (at expiry) |
+| `new_ti_lc` | no | 0 | Turnover cost, re-let scenario (after downtime) |
+
+## Debt
+
+**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt_service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
+
+| Term | Required | Default | Meaning |
+|---|---|---|---|
+| `principal` | yes | — | Loan amount |
+| `rate` | yes | — | Annual rate |
+| `amort_months` | yes | — | Strikes the payment; normally longer than the term |
+| `io_months` | no | 0 | Interest-only period |
+| `balloon_at_maturity` | no | 0 | Off by default: the payoff belongs to the reversion, so periodic DSCR stays meaningful. `1` opts in |
+| `payment_frequency` | no | grid | Payment cadence override |
+
+## Exits
+
+Three forms, one decision: where does the NOI come from?
+
+**`cre.exit_cap`** → `cre.exit.sale` (investing.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
+
+**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap × (1 − selling_costs)`. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+
+**`cre.exit_forward`** → `cre.exit.proceeds`, with forward NOI *derived* from the modeled streams over the twelve months after the sale date — cannot drift, cannot be committee-edited, requires a projection tail so the window has data. | Required: `exit_cap`. Default: `selling_costs = 0`.
+
+All three settle at the *end* of the sale period — the full holding period discounts.
+
+## Reading a term table like a reviewer
+
+Three habits, in closing. **Requireds are the pack's floor, not the deal's** — a lease can satisfy the table and still misstate your deal; the table tells you what the pack checks, chapter 19 told you what to do when your deal says more. **Defaults are claims** — `escalation = 0` unstated is still an escalation assumption, visible only here; state terms you relied on even when they equal the default. **Categories are where the money reports** — the parenthesized category on each stream is what NOI, DSCR, and the statements aggregate; when a metric looks wrong, the category trail is the four-step descent's first stop.

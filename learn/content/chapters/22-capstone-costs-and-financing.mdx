@@ -1,0 +1,84 @@
+---
+title: "Capstone: costs and financing"
+description: "The capital stack — a construction facility built from a balance field and prev reads, its takeout, and the interest-only permanent loan with the DSCR it must clear."
+part: 4
+order: 22
+track: core
+---
+
+Harbor Point is earning and nothing has paid for it. This chapter funds the deal, and it is deliberately a chapter of *mixed* construction — chapter 19's promised pattern of pack contracts beside bespoke claims. The permanent loan is standard commercial paper, so the pack states it. The construction facility — advanced in pieces, accruing on a moving balance, repaid in one takeout — is a storyline the pack has no single word for, and it becomes the course's best worked example of fields, `prev`, and streams cooperating.
+
+## The construction facility, bespoke
+
+```cfdl
+// The construction lender funds 65% of each draw; interest accrues on the
+// drawn balance and the whole facility is repaid at stabilization.
+entity asset cloan : Asset.Financial {
+  balance init 0
+          next if(time.t <= 17, prev + 455000, if(time.t == 30, 0, prev))
+}
+
+stream cloan.advances on entity asset.cloan inflow currency USD {
+  schedule every month from 2026-02 to 2027-06
+  amount = 455000
+}
+
+stream cloan.interest on entity asset.cloan outflow currency USD {
+  schedule every month from 2026-03 to 2028-06
+  amount = prev.asset.cloan.balance * 0.075 / 12
+}
+
+stream cloan.payoff on entity asset.cloan outflow currency USD {
+  schedule every month from 2028-07 to 2028-07
+  amount = prev.asset.cloan.balance
+}
+```
+
+Read it as three chapters of this course meeting. The **balance** is a rule field (chapter 8) on the loan's own entity — a fact about the facility, growing 455,000 per draw month, zeroed at takeout. **Interest** reads the balance *one period back* — `prev.asset.cloan.balance` — because construction interest bills on the balance you carried into the month; the field is declared once and read at both ends, the average-balance machinery from chapter 8 in its simplest form. The **payoff** reads the same `prev` at takeout: whatever the facility closed June 2028 with — 7,735,000, and the model *derives* that rather than stating it, so a changed draw schedule repays itself correctly without anyone updating a payoff number.
+
+One deliberate simplification to name (style rule 4 — comments state claims): interest here is *paid monthly*, not capitalized into the balance. A capitalizing facility compounds — `next prev * (1 + 0.075/12) + draw` — and the end-of-part exercises upgrade to it. Write the version the term sheet states; ours states monthly pay.
+
+## The takeout and the permanent loan
+
+```cfdl
+// The permanent loan closes as operations begin: interest-only to maturity.
+stream harbor.perm_proceeds on entity asset.harbor inflow currency USD {
+  schedule every month due from 2028-07 to 2028-07
+  amount = 9500000
+}
+
+contract cre.permanent_debt on entity asset.harbor {
+  term 2028-07..2030-12
+  terms {
+    principal = 9500000
+    rate = 0.058
+    amort_months = 360
+    io_months = 36
+  }
+}
+```
+
+The proceeds arrive `due` — closing cash comes at the month's start, funding the payoff that leaves at its end — and the loan itself is one pack contract. Its terms encode the commercial-mortgage grammar from the pack's design: `amort_months` strikes the payment on a 30-year schedule while the *term* sets maturity, and `io_months = 36` keeps the whole 30-month hold interest-only — a bridge-to-sale structure, which is why chapter 23's exit must repay principal in full. The balloon stays off by default for the reason the pack states: coverage is measured on *periodic* debt service, and folding a payoff into the final period's service line would make that month's DSCR meaningless. The payoff belongs to the reversion, where the next chapter puts it.
+
+## What the numbers say
+
+Advances total 7,735,000 and the payoff repays exactly 7,735,000 — the model's self-consistency, visible as two matching series. Facility interest totals 966,875; the hand anchor is any single month — March 2026 bills 455,000 × 0.625% = 2,843.75 — and the ramp shape of the interest series *is* the drawn balance, plotted. Permanent debt service is 9,500,000 × 5.8% / 12 = 45,916.67, thirty times: 1,377,500.
+
+And now the pack's derived metrics earn their keep: stabilized NOI against IO service puts **DSCR comfortably above two** — this deal's risk was never coverage. Notice what the whole-deal total says: −6.2 million. Financing did not create value — it *moved* the equity check from 17.4 million to about 8, plus carry. Leverage rearranges who funds and who earns; the deal's worth still rests entirely on the next chapter's exit.
+
+## What can go wrong
+
+**A balance and a payoff maintained separately.** The payoff reads the field; the naive version states `7735000` literally, and the first draw-schedule change breaks their agreement silently. Chapter 17's smell — history restated instead of read — with six figures attached.
+
+**Interest on the wrong end of the period.** `asset.cloan.balance` (this month's close) instead of `prev.…` charges interest on money drawn *this* month — a subtle overstatement that compounds. The convention is a claim; the term sheet says which end, and the expression says it back.
+
+**Proceeds without their `due`.** Takeout proceeds at month-end would leave the payoff unfunded for a month inside the model — a fictional cash hole that a reviewer chasing the minimum-balance question would waste an afternoon on. Placement, again, is money.
+
+## Exercises
+
+<Exercise id="22-capstone-costs-and-financing/the-capital-stack" />
+
+Then, on your own:
+
+1. Upgrade the facility to capitalized interest: the balance compounds and the interest stream disappears into it (delete the stream; the cost now arrives as a larger payoff). Confirm the payoff grows to about 8.16 million and the deal total barely moves — the cost was real either way; only its path changed.
+2. Price the takeout differently: raise the permanent loan to 10,500,000 and watch DSCR and the equity check trade against each other. One term, two consequences, both visible in one run — sizing debt is exactly this loop, done until the committee stops arguing.

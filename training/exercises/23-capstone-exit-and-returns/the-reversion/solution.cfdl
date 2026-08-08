@@ -1,0 +1,145 @@
+version 0.1
+model "harbor-point"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+phase construction from 2026-01 to 2027-06
+phase lease_up from 2027-07 to 2028-06
+phase operations from 2028-07 to 2030-12
+
+entity asset harbor : CRE.Asset.RealProperty
+
+// Land closes at the start of month one.
+stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  schedule every month due from 2026-01 to 2026-01
+  amount = 5500000
+}
+
+contract cre.construction_stub {
+  term 2026-02..2027-06
+  terms {
+    amount = 700000
+  }
+}
+
+// The anchor office lease: 1.86M/yr, ramping to full over twelve months.
+contract cre.lease {
+  term 2027-07..2030-12
+  terms {
+    base_rent = 155000
+    lease_up_months = 12
+  }
+}
+
+// The retail suite, lease-by-lease: escalating, three months free, TI/LC on day one.
+contract cre.lease_unit.retail {
+  term 2027-10..2030-12
+  terms {
+    rent_year = 480000
+    escalation = 0.03
+    free_rent_months = 3
+    ti_total = 250000
+    lc_total = 90000
+    opex_year = 950000
+    opex_escalation = 0.03
+    expense_stop_year = 950000
+    pro_rata_share = 0.2
+  }
+}
+
+// Overage rent on the retailer's sales above the natural breakpoint.
+contract cre.percentage_rent.retail {
+  term 2028-01..2030-12
+  terms {
+    sales_year = 6000000
+    breakpoint_year = 4800000
+    overage_pct = 0.06
+    sales_growth = 0.03
+  }
+}
+
+// Parking and signage.
+contract cre.ops_revenue {
+  term 2027-07..2030-12
+  terms {
+    amount = 18000
+  }
+}
+
+// Property operating costs, escalating.
+contract cre.property_opex {
+  term 2027-07..2030-12
+  terms {
+    opex_year = 950000
+    escalation = 0.03
+  }
+}
+
+// A stabilized-vacancy allowance once operating.
+contract cre.vacancy_loss {
+  term 2028-07..2030-12
+  terms {
+    rate = 0.05
+    potential_gross_year = 2560000
+  }
+}
+// ---------------- Financing (chapter 22) ----------------
+
+// The construction lender funds 65% of each draw; interest accrues on the
+// drawn balance and the whole facility is repaid at stabilization.
+entity asset cloan : Asset.Financial {
+  balance init 0
+          next if(time.t <= 17, prev + 455000, if(time.t == 30, 0, prev))
+}
+
+stream cloan.advances on entity asset.cloan inflow currency USD {
+  schedule every month from 2026-02 to 2027-06
+  amount = 455000
+}
+
+stream cloan.interest on entity asset.cloan outflow currency USD {
+  schedule every month from 2026-03 to 2028-06
+  amount = prev.asset.cloan.balance * 0.075 / 12
+}
+
+stream cloan.payoff on entity asset.cloan outflow currency USD {
+  schedule every month from 2028-07 to 2028-07
+  amount = prev.asset.cloan.balance
+}
+
+// The permanent loan closes as operations begin: interest-only to maturity.
+stream harbor.perm_proceeds on entity asset.harbor inflow currency USD {
+  schedule every month due from 2028-07 to 2028-07
+  amount = 9500000
+}
+
+contract cre.permanent_debt on entity asset.harbor {
+  term 2028-07..2030-12
+  terms {
+    principal = 9500000
+    rate = 0.058
+    amort_months = 360
+    io_months = 36
+  }
+}
+
+// ---------------- Exit (chapter 23) ----------------
+
+// Sale at the horizon: forward-twelve-month NOI at the exit cap, net of
+// selling costs. The window is NAMED: forward NOI, stated to match the
+// stabilized year the modeled streams produce.
+contract cre.exit {
+  term 2030-12..2030-12
+  terms {
+    noi_forward_year = 1550000
+    exit_cap = 0.0625
+    selling_costs = 0.02
+  }
+}
+
+// The permanent loan is repaid against the sale — the reversion carries the
+// payoff, not the debt service line (which is why the balloon is off).
+stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
+  schedule on 2030-12
+  amount = 9500000
+}
+
