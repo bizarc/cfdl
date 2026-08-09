@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "84389afb1d0f7b5d0985427b1dcdf15f1b399c591c899853df345df6c89c62ce",
-  "ledger_hash": "aea4c62e92a3ff2101a63365d322af2f29c19d3f7a4b97a3c0f3fdb679a48ea4",
+  "model_hash": "1a88606bc9aa7ca50c35d861fba74752333140be9ea7e76455970ed66934c80c",
+  "ledger_hash": "b4630ed5e489256d5c97fa3e9e0cf320cb4c3257cc8d2c234706ac5e0dfc02ac",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -107,6 +107,42 @@
       }
     },
     "series": {
+      "asset.business.opco_capex_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_opex_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.business.opco_revenue_growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "domain.opco.cfads": {
         "index": {
           "calendar": "annual",
@@ -369,42 +405,6 @@
             "amount": 391200.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.opco_capex_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.opco_opex_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.opco_revenue_growth": {
-        "index": {
-          "calendar": "annual",
-          "start": "2025-01-01",
-          "periods": 3
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0
         ]
       },
       "stream.opco.capex": {

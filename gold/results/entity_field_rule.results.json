@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "10dc740e4809502f4ca8544b7c59532833253e8545e654a59a0d8eb58671598c",
-  "ledger_hash": "ae02e6adf96682118511d377a2272bda33e11b4778b1b4cbab34c7b8b5ceab35",
+  "ledger_hash": "c1f389d82da83fd75fae8e50b262130664811077c841b1a33dca63150cf3a052",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -39,6 +39,19 @@
       }
     },
     "series": {
+      "asset.tlb.balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          275.0,
+          250.0,
+          225.0,
+          200.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "annual",
@@ -350,19 +363,6 @@
             "amount": 175.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.asset.tlb.balance": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "values": [
-          275.0,
-          250.0,
-          225.0,
-          200.0
         ]
       },
       "stream.credit.balance_probe": {

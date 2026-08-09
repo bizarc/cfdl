@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "a97bab93224e917913129a7d9fb98eb9dfc6c96ef30108cf4bf8f5c3160d7a4e",
-  "ledger_hash": "ced97957f68f823d1a139e0b20eef87a8672d290bc3b0fc5a89497ee0832581c",
+  "model_hash": "4464f8677623bebfaaf1b5d96569b4fff1bb8230eef4a131df25d79136a27c81",
+  "ledger_hash": "4d625369d6346082f42160ed1476b06280a18f0e6f0d5f38cf7a4b1b35706c4f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -192,6 +192,50 @@
       }
     },
     "series": {
+      "asset.buyer.credit_level_pay_survival_lag_p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.buyer.credit_level_pay_survival_p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "monthly",
@@ -883,50 +927,6 @@
             "amount": 0.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.credit_level_pay_survival_lag_p": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2025-01-01",
-          "periods": 13
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.credit_level_pay_survival_p": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2025-01-01",
-          "periods": 13
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
         ]
       },
       "stream.credit.pool.interest.p": {

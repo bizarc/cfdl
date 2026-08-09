@@ -325,8 +325,9 @@ struct ActivePackContext {
 
 struct PackLoweringOutput {
     streams: Vec<((String, String), IrStream)>,
-    /// States declared by lowering rules, deduplicated by name.
-    states: Vec<IrState>,
+    /// Fields a lowering rule hangs on the entity it describes, keyed by
+    /// (owner symbol, field name). A pack no longer emits model-level state.
+    fields: BTreeMap<(String, String), IrFieldRule>,
     /// What each lowered stream consumed. Parallel to `streams`.
     stream_inputs: Vec<IrStreamInputs>,
     diagnostics: Vec<Diagnostic>,
@@ -488,10 +489,19 @@ struct IrPhase {
 
 /// A field's recurrence: its value at the first period, and the rule that
 /// carries it to every later one.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct IrFieldRule {
     init: IrExpr,
     next: IrExpr,
+    /// A FIELD OF A CONTRACT INHERITS THE CONTRACT'S SCHEDULE.
+    ///
+    /// Entities are not temporal, so a field a modeller writes has no clock.
+    /// But a pack's field comes from a CONTRACT, and a contract has a payment
+    /// rhythm — a monthly-paying pool on a daily book must compound twelve
+    /// times a year, not 365. Absent means every period, which is what a
+    /// modeller's own field means.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Serialize)]
@@ -523,7 +533,7 @@ struct IrAssumptions {
     random: BTreeMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct IrExpr {
     lang: String,
     src: String,
@@ -547,14 +557,14 @@ struct IrContract {
     provenance: IrNodeProvenance,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct IrOnRule {
     kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     day: Option<i32>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct IrSchedule {
     kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1871,6 +1881,7 @@ fn build_ir(
                                 lang: f.init.lang.clone(),
                                 src: f.init.src.clone(),
                             },
+                            schedule: None,
                             next: f.next.as_ref().map_or_else(
                                 || IrExpr {
                                     lang: "cfdl".to_string(),
@@ -2138,7 +2149,19 @@ fn build_ir(
             }
         }
     }
-    let lowered_states = lowered.states;
+    // A LOWERING RULE'S FIELD HANGS ON THE ENTITY IT DESCRIBES.
+    //
+    // The rule already names its owner — `owner_entity = "${subject}"` — so no
+    // new pack vocabulary is needed. Two contracts on different entities may
+    // carry the same field name without colliding, which is what made the
+    // `{{contract.suffix_ident}}` discriminator necessary while these were
+    // global model states.
+    let lowered_fields = lowered.fields;
+    for ((owner, field), rule) in &lowered_fields {
+        if let Some((_, entity)) = entities.iter_mut().find(|(_, e)| &e.symbol == owner) {
+            entity.rules.insert(field.clone(), rule.clone());
+        }
+    }
     let stream_inputs = lowered.stream_inputs;
     streams.extend(lowered.streams);
     streams.sort_by(|a, b| a.0.cmp(&b.0));
@@ -2174,15 +2197,14 @@ fn build_ir(
     let mut sources = resolve_output.module_order.clone();
     sources.sort();
 
-    let ir_states = merge_states(
-        lower_states(
-            resolve_output,
-            &time_calendar,
-            &time_start,
-            &timeline_end,
-            &phase_map,
-        ),
-        lowered_states,
+    // A pack no longer contributes model-level state: its rules hang fields on
+    // the entities they describe, folded into the entity map below.
+    let ir_states = lower_states(
+        resolve_output,
+        &time_calendar,
+        &time_start,
+        &timeline_end,
+        &phase_map,
     );
 
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
@@ -2488,7 +2510,7 @@ fn lower_contract_streams(
     let Some(pack) = active_pack else {
         return PackLoweringOutput {
             streams: vec![],
-            states: vec![],
+            fields: BTreeMap::new(),
             stream_inputs: vec![],
             diagnostics: vec![],
         };
@@ -2541,7 +2563,11 @@ fn lower_contract_streams(
     }
 
     let mut lowered = Vec::new();
-    let mut lowered_states: BTreeMap<String, IrState> = BTreeMap::new();
+    // A PACK EMITS A FIELD OF THE THING, not a model-level state. Keyed by
+    // owner and name: two contracts on DIFFERENT entities may carry the same
+    // field name without colliding, which is what made the suffix necessary
+    // while these were global.
+    let mut lowered_fields: BTreeMap<(String, String), IrFieldRule> = BTreeMap::new();
     let mut stream_inputs: Vec<IrStreamInputs> = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
@@ -3074,7 +3100,7 @@ fn lower_contract_streams(
                 ctx.timeline_end,
                 contract.payment_net,
             );
-            let amount_src = rule.amount_expr.clone();
+            let mut amount_src = rule.amount_expr.clone();
             // Pack terms are applied declaratively via rule templates; the
             // legacy hardcoded paths (CRE, then OpCo) were removed with the
             // v1 rule migrations.
@@ -3125,7 +3151,17 @@ fn lower_contract_streams(
                 // silently keep whichever lowered first. Identical definitions
                 // collapse, which is what several contracts sharing one curve
                 // should do.
-                match lowered_states.get(&rule.state_name) {
+                // THE SUBJECT, not this rule's owner. One contract's rules may
+                // have different owners — collections on the pool, the purchase
+                // on the buyer — and they share one factor. Keying it to each
+                // rule's own owner put the field where some rules could not see
+                // it, and the read resolved to nothing.
+                let field_owner = contract
+                    .subject_entity
+                    .clone()
+                    .unwrap_or_else(|| owner_symbol.clone());
+                let field_key = (field_owner.clone(), rule.state_name.clone());
+                match lowered_fields.get(&field_key) {
                     Some(existing)
                         if existing.init.src != rule.state_init
                             || existing.next.src != rule.state_next =>
@@ -3133,7 +3169,7 @@ fn lower_contract_streams(
                         diagnostics.push(lowering_rule_diag(
                             "E5021_DUPLICATE_LOWERED_STATE",
                             &format!(
-                                "Contract '{}' lowers to state '{}', which another contract already defines differently. Give the rule's state_name a per-contract discriminator ({{{{contract.suffix_ident}}}}).",
+                                "Contract '{}' lowers to field '{}' on an entity where another contract already defines it differently. Two contracts on ONE entity need distinct field names; two contracts on different entities do not collide.",
                                 contract.name, rule.state_name
                             ),
                             source_stmt,
@@ -3143,16 +3179,9 @@ fn lower_contract_streams(
                     }
                     Some(_) => {}
                     None => {
-                        lowered_states.insert(
-                            rule.state_name.clone(),
-                            IrState {
-                                name: rule.state_name.clone(),
-                                schedule: lower_rule_state_schedule(
-                                    rule,
-                                    ctx.time_calendar,
-                                    ctx.time_start,
-                                    ctx.timeline_end,
-                                ),
+                        lowered_fields.insert(
+                            field_key,
+                            IrFieldRule {
                                 init: IrExpr {
                                     lang: "cfdl".to_string(),
                                     src: rule.state_init.clone(),
@@ -3161,10 +3190,36 @@ fn lower_contract_streams(
                                     lang: "cfdl".to_string(),
                                     src: rule.state_next.clone(),
                                 },
+                                schedule: lower_rule_state_schedule(
+                                    rule,
+                                    ctx.time_calendar,
+                                    ctx.time_start,
+                                    ctx.timeline_end,
+                                ),
                             },
                         );
                     }
                 }
+            }
+
+            // AND THE EXPRESSIONS READ THE FIELD, not a model state. The rule's
+            // own text still says `state.<name>` because that is the pack's
+            // spelling; here it becomes the entity path the value now lives at.
+            if !rule.state_name.is_empty() {
+                let from = format!("state.{}", rule.state_name);
+                // `entity.<owner>.<field>`, the long form. The bare alias covers
+                // the four declared families only, and a lowering rule may sit
+                // on any entity — so the spelling that always resolves is the
+                // one that goes through the entity root.
+                let to = format!(
+                    "entity.{}.{}",
+                    contract
+                        .subject_entity
+                        .clone()
+                        .unwrap_or_else(|| owner_symbol.clone()),
+                    rule.state_name
+                );
+                amount_src = amount_src.replace(&from, &to);
             }
 
             // What this rule actually read to strike this stream. Derived from
@@ -3265,7 +3320,7 @@ fn lower_contract_streams(
     }
     PackLoweringOutput {
         streams: lowered,
-        states: lowered_states.into_values().collect(),
+        fields: lowered_fields,
         stream_inputs,
         diagnostics,
     }
@@ -3910,28 +3965,6 @@ type AssumeMaps = (
     BTreeMap<String, serde_json::Value>,
     Vec<Diagnostic>,
 );
-
-/// Lower `assume` statements into IR assumptions (constants + random), per
-/// docs/schemas/ir.schema.json $defs AssumeConstant / AssumeRandom.
-/// Lower `state` statements into IR states, in declaration order.
-///
-/// Missing clauses and duplicate names are already E1120/E1121/E1122 from
-/// validation, so a statement that reaches here without both clauses is
-/// skipped rather than re-reported — compilation has already failed and a
-/// second diagnostic for one mistake is noise.
-/// Model-declared states first, then any a pack rule added.
-///
-/// A model-declared name wins: a modeller who writes `state x` has said what
-/// they mean, and silently substituting the pack's version would be the kind
-/// of invisible override a pack should never perform.
-fn merge_states(mut declared: Vec<IrState>, lowered: Vec<IrState>) -> Vec<IrState> {
-    for state in lowered {
-        if !declared.iter().any(|s| s.name == state.name) {
-            declared.push(state);
-        }
-    }
-    declared
-}
 
 fn lower_states(
     resolve_output: &cfdl_resolver::ResolveOutput,

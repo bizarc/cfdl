@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "ab5283eeb124b3a6d548b0322d35f471ed7a9cfb3077337e1ed1870a28ec7a0c",
-  "ledger_hash": "5311fa85f933ce5ce81c6ae79b70ec8dfe2824254181e17167f759c4c9f1a9f6",
+  "ledger_hash": "70dfae45ed0fd61d95b34e82262fb745aa1fd115d0aa2c7a9cb10fdd49678fa9",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -38,6 +38,32 @@
       }
     },
     "series": {
+      "asset.junior.opening": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          0.0,
+          100.0,
+          90.0,
+          80.0
+        ]
+      },
+      "asset.senior.balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          100.0,
+          90.0,
+          80.0,
+          70.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "annual",
@@ -374,32 +400,6 @@
             "amount": -4.5,
             "currency": "USD"
           }
-        ]
-      },
-      "state.asset.junior.opening": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "values": [
-          0.0,
-          100.0,
-          90.0,
-          80.0
-        ]
-      },
-      "state.asset.senior.balance": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "values": [
-          100.0,
-          90.0,
-          80.0,
-          70.0
         ]
       },
       "stream.credit.interest": {

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "aea8a76425e869158ed8a6eabacff911a86858e29b77354d4abdbd0f39f1262b",
-  "ledger_hash": "8c48a5763e47b50b2e3a80e4080eac44e3b25200dd20783c3a29d045a37bfce4",
+  "model_hash": "e0d5122776dcf86e51e4a092f8993125406f9715465500be0eeaecd0ed7e51a8",
+  "ledger_hash": "bcfde1a36cd7fba725136956521a176932a41568363dfa58ae5c1abd5e892052",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -193,6 +193,48 @@
       }
     },
     "series": {
+      "asset.lender.credit_level_pay_survival": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.lender.credit_level_pay_survival_lag": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "monthly",
@@ -839,48 +881,6 @@
             "amount": 100000.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.credit_level_pay_survival": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 12
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
-        ]
-      },
-      "state.credit_level_pay_survival_lag": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 12
-        },
-        "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
         ]
       },
       "stream.credit.pool.interest": {

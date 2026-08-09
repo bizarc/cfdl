@@ -289,7 +289,7 @@ waterfall opco.exit on entity asset.target {
 
 Checked period by period: **12 series** across **1 periods**, each within ±1e-6 of the reference.
 
-- `state.asset.target.value_per_share`
+- `asset.target.value_per_share`
 - `opco.exit.equity_value`
 - `opco.exit.option_proceeds`
 - `opco.exit.sponsor_proceeds`

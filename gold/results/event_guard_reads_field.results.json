@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "98b7e52ec8226d692f851e8680e6528cf4b4e63833d7977d92a081e79c16c783",
-  "ledger_hash": "cdaf47b660a5a273f924ed20957ab01af10b57a5c681d10b7a198be5c8b22cb0",
+  "ledger_hash": "ea379a9fbf768fc8808568c28cbc2f23635a39cc054ba09f82f47f5b5258d1b1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -34,6 +34,34 @@
       }
     },
     "series": {
+      "asset.pool.balance": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          100.0,
+          90.0,
+          80.0,
+          70.0,
+          60.0
+        ]
+      },
+      "asset.pool.fee_rate": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
       "entity.asset.pool.net_cash_flow": {
         "index": {
           "calendar": "annual",
@@ -119,34 +147,6 @@
             "amount": -1.2,
             "currency": "USD"
           }
-        ]
-      },
-      "state.asset.pool.balance": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 5
-        },
-        "values": [
-          100.0,
-          90.0,
-          80.0,
-          70.0,
-          60.0
-        ]
-      },
-      "state.asset.pool.fee_rate": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 5
-        },
-        "values": [
-          0.02,
-          0.02,
-          0.02,
-          0.02,
-          0.02
         ]
       },
       "stream.credit.amortisation": {

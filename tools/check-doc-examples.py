@@ -252,10 +252,14 @@ def stream_totals(results: dict) -> dict[str, float]:
     """Total per CASH series.
 
     A series entry is either a Money object or a bare number. Only the first is
-    cash: a `state.` series publishes a dimensionless index, factor or counter,
-    which has no currency and must not be summed as though it did. This check
-    exists to prove every documented stream carries flow, so a state has nothing
-    to say to it.
+    cash: a FIELD publishes a dimensionless balance, index or factor, which has
+    no currency and must not be summed as though it did. This check exists to
+    prove every documented stream carries flow, so a field has nothing to say
+    to it.
+
+    A field is recognised by its shape rather than a prefix: it publishes under
+    the entity that owns it — `asset.trust.available_funds` — because `state.`
+    named a model-level state and a field is not one.
     """
     series = results["deterministic"]["series"]
     return {
@@ -274,6 +278,10 @@ def stream_totals(results: dict) -> dict[str, float]:
         if name != "model.net_cash_flow"
         and not name.startswith("state.")
         and not name.startswith("domain.")
+        # A field: `<family>.<entity>.<field>`, three segments and no prefix
+        # this gate knows. A stream is `stream.<name>`, so the two never
+        # collide.
+        and not (name.count(".") == 2 and not name.startswith("stream."))
     }
 
 
@@ -347,6 +355,10 @@ def nonzero_period_counts(results: dict) -> dict[str, int]:
         if name != "model.net_cash_flow"
         and not name.startswith("state.")
         and not name.startswith("domain.")
+        # A field: `<family>.<entity>.<field>`, three segments and no prefix
+        # this gate knows. A stream is `stream.<name>`, so the two never
+        # collide.
+        and not (name.count(".") == 2 and not name.startswith("stream."))
     }
 
 

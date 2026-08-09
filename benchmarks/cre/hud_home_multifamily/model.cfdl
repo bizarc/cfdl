@@ -33,7 +33,23 @@ use pack "cre" version "0.1.0"
 time calendar annual from 2024-01 for 29
 
 entity asset home_project : CRE.Asset.RealProperty {
-  // The replacement reserve, escalating on its own trend.
+  // THE OPERATING LINES ARE THE PROPERTY'S, each escalating on the trend.
+  // The trend is the shared assumption; the amounts are facts about this
+  // building, so they belong to it.
+  // management, escalating on the trend.
+  opex_management init inputs.opex_management
+       next round_to(prev * (1 + inputs.opex_trend), 1)
+  // maintenance, escalating on the trend.
+  opex_maintenance init inputs.opex_maintenance
+       next round_to(prev * (1 + inputs.opex_trend), 1)
+  // utilities, escalating on the trend.
+  opex_utilities init inputs.opex_utilities
+       next round_to(prev * (1 + inputs.opex_trend), 1)
+  // taxes and ins, escalating on the trend.
+  opex_taxes_ins init inputs.opex_taxes_ins
+       next round_to(prev * (1 + inputs.opex_trend), 1)
+
+  // The replacement reserve, on the same trend.
   reserve init inputs.reserve_y1
           next round_to(prev * (1 + inputs.opex_trend), 1)
 }
@@ -116,26 +132,6 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 //
 // A declared state expresses that recurrence directly.
 // One state per sub-line, because each is rounded on its own before the sum.
-state opex_management {
-  init inputs.opex_management
-  next round_to(prev * (1 + inputs.opex_trend), 1)
-}
-
-state opex_maintenance {
-  init inputs.opex_maintenance
-  next round_to(prev * (1 + inputs.opex_trend), 1)
-}
-
-state opex_utilities {
-  init inputs.opex_utilities
-  next round_to(prev * (1 + inputs.opex_trend), 1)
-}
-
-state opex_taxes_ins {
-  init inputs.opex_taxes_ins
-  next round_to(prev * (1 + inputs.opex_trend), 1)
-}
-
 
 
 // One stream per PUBLISHED sub-line. The workbook reports these four
@@ -150,25 +146,25 @@ state opex_taxes_ins {
 stream cre.property.opex.management on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
-  amount = state.opex_management
+  amount = asset.home_project.opex_management
 }
 
 stream cre.property.opex.maintenance on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
-  amount = state.opex_maintenance
+  amount = asset.home_project.opex_maintenance
 }
 
 stream cre.property.opex.utilities on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
-  amount = state.opex_utilities
+  amount = asset.home_project.opex_utilities
 }
 
 stream cre.property.opex.taxes_insurance on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
-  amount = state.opex_taxes_ins
+  amount = asset.home_project.opex_taxes_ins
 }
 
 // The replacement reserve is its own published line and is semantically not an

@@ -16,6 +16,28 @@
       "symbol": "asset.business",
       "type": "OpCo.Asset.Enterprise",
       "fields": {},
+      "rules": {
+        "opco_opex_growth": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * pow(1 + if(\"\" == \"\", 0, curve_value(\"\", time.date)), 1 / 12)"
+          }
+        },
+        "opco_revenue_growth": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * pow(1 + if(\"\" == \"\", 0.12, curve_value(\"\", time.date)), 1 / 12)"
+          }
+        }
+      },
       "state": {}
     }
   ],
@@ -23,30 +45,6 @@
     "constants": {},
     "random": {}
   },
-  "states": [
-    {
-      "name": "opco_opex_growth",
-      "init": {
-        "lang": "cfdl",
-        "src": "1"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev * pow(1 + if(\"\" == \"\", 0, curve_value(\"\", time.date)), 1 / 12)"
-      }
-    },
-    {
-      "name": "opco_revenue_growth",
-      "init": {
-        "lang": "cfdl",
-        "src": "1"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev * pow(1 + if(\"\" == \"\", 0.12, curve_value(\"\", time.date)), 1 / 12)"
-      }
-    }
-  ],
   "subtotals": [
     {
       "id": "domain.opco.revenue_periodic",
@@ -226,7 +224,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(60000.0 + 0.0 / 12.0) * state.opco_opex_growth"
+        "src": "(60000.0 + 0.0 / 12.0) * entity.asset.business.opco_opex_growth"
       },
       "active_when": {
         "lang": "cfdl",
@@ -266,7 +264,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(100000.0 + 0.0 / 12.0) * state.opco_revenue_growth"
+        "src": "(100000.0 + 0.0 / 12.0) * entity.asset.business.opco_revenue_growth"
       },
       "active_when": {
         "lang": "cfdl",
