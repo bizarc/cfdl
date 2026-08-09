@@ -1,0 +1,22 @@
+# Benchmark case: the NOTE CLASSES of an auto-receivables trust, against the
+# issuer's published percent-outstanding grid.
+#
+# `auto_abs_wal` reconciles this deal's collateral and stops there, saying the
+# per-class columns need a sequential-pay waterfall. This is that axis: the same
+# 43 sub-pools, run through one ordered waterfall over six note classes.
+#
+# Reference: EXTERNAL. Exhibit 99.4 to the Form 8-K of Ally Auto Receivables
+# Trust 2017-3, filed 17 September 2018 — see SOURCE.md.
+summary = "The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date."
+pack = "credit"
+period_tolerance = 0.01
+
+# A published percentage rounded to 0.01 becomes a dollar band once it is
+# differenced into a per-period payment, and the band scales with the class.
+[tolerance]
+"notes.principal.a2_principal" = 11202.66
+"notes.principal.a3_principal" = 27137.0
+"notes.principal.a4_principal" = 8601.0
+"notes.principal.b_principal" = 2222.0
+"notes.principal.c_principal" = 1851.0
+"notes.principal.d_principal" = 1375.0

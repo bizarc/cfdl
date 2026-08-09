@@ -87,6 +87,7 @@ checked, and a write-up of the reference and the residual.
 | [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
 | [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance. |
 | [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) | The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens. |
+| [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) | The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date. |
 | [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) | An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back. |
 | [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) | A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination. |
 | [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) | An interest-only loan repaying its entire principal in a single balloon at maturity. |
@@ -103,7 +104,7 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: LBO exit waterfall with an option pool](/docs/examples/opco-lbo-option-pool-exit) | A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool. |
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 
-*28 cases.*
+*29 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite
