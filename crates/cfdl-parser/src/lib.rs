@@ -3374,6 +3374,17 @@ fn keyword_text(keyword: Keyword) -> &'static str {
     }
 }
 
+/// EVERY keyword that can open a top-level declaration.
+///
+/// A block that scans forward for the end of its own body stops here, so an
+/// omission does not read as a missing case — it reads as the next declaration
+/// being absorbed into the previous one. A `waterfall` left off this list was
+/// swallowed whole by a contract that preceded it, with no diagnostic, because
+/// a declaration that never reaches the AST cannot be complained about.
+///
+/// The list is exhaustive over `parse_statement`'s dispatch. `state` is absent
+/// deliberately: it opens no declaration, and the parser rejects it with a
+/// message pointing at entity fields.
 fn is_statement_start(token: &Token) -> bool {
     matches!(
         token.kind,
@@ -3384,8 +3395,14 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Time)
             | TokenKind::Keyword(Keyword::Phase)
             | TokenKind::Keyword(Keyword::Entity)
+            | TokenKind::Keyword(Keyword::Assume)
+            | TokenKind::Keyword(Keyword::Curve)
             | TokenKind::Keyword(Keyword::Contract)
             | TokenKind::Keyword(Keyword::Stream)
+            | TokenKind::Keyword(Keyword::Event)
+            | TokenKind::Keyword(Keyword::Option)
+            | TokenKind::Keyword(Keyword::Waterfall)
+            | TokenKind::Keyword(Keyword::Run)
     )
 }
 
