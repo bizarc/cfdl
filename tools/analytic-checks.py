@@ -688,9 +688,9 @@ entity legal co
 
 
 def _state_series(src: str, name: str) -> list[float]:
-    """A `state.<name>` series, which carries bare numbers rather than Money."""
+    """A FIELD series, which carries bare numbers rather than Money."""
     block = run_model(src, 0.0)
-    entry = block["series"][f"state.{name}"]
+    entry = block["series"][f"asset.co.{name}"]
     return [v if isinstance(v, (int, float)) else v["amount"] for v in entry["values"]]
 
 
@@ -701,13 +701,15 @@ def state_constant_rate_matches_pow() -> tuple[float, float]:
     src = """version 0.1
 model "state-constant"
 time calendar annual from 2026-01 for 10
-entity legal co
-state idx { init 1.0  next prev * 1.05 }
-stream co.state_path on entity legal.co inflow currency USD {
-  schedule every year from 2026-01 to 2035-01
-  amount = 1000 * state.idx
+entity asset co : Asset.Financial {
+  idx init 1.0
+      next prev * 1.05
 }
-stream co.closed_form on entity legal.co inflow currency USD {
+stream co.state_path on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2035-01
+  amount = 1000 * asset.co.idx
+}
+stream co.closed_form on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2035-01
   amount = 1000 * pow(1.05, time.t)
 }
@@ -724,7 +726,10 @@ def state_varying_rate_matches_product() -> tuple[float, float]:
     src = """version 0.1
 model "state-varying"
 time calendar annual from 2026-01 for 5
-entity legal co
+entity asset co : Asset.Financial {
+  idx init 1.0
+      next prev * (1 + curve_value("g", time.date))
+}
 curve g step {
   2026-01: 0.10
   2027-01: 0.08
@@ -732,7 +737,7 @@ curve g step {
   2029-01: 0.04
   2030-01: 0.02
 }
-state idx { init 1.0  next prev * (1 + curve_value("g", time.date)) }
+
 """
     rates = [0.10, 0.08, 0.06, 0.04, 0.02]
     expected, acc = [], 1.0
@@ -753,9 +758,11 @@ def state_is_not_cash() -> tuple[float, float]:
     src = """version 0.1
 model "state-not-cash"
 time calendar annual from 2026-01 for 5
-entity legal co
-state big { init 0  next prev + 1000 }
-stream co.only_cash on entity legal.co inflow currency USD {
+entity asset co : Asset.Financial {
+  big init 0
+      next prev + 1000
+}
+stream co.only_cash on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2030-01
   amount = 7
 }

@@ -2917,12 +2917,12 @@ fn lower_contract_streams(
                 // instrument. Already expanded above to derive ppy; expanding
                 // it again here is what puts the result on the rule.
                 (&rule.schedule_every, &mut expanded_rule.schedule_every),
-                (&rule.state_name, &mut expanded_rule.state_name),
-                (&rule.state_init, &mut expanded_rule.state_init),
-                (&rule.state_next, &mut expanded_rule.state_next),
-                (&rule.state_every, &mut expanded_rule.state_every),
-                (&rule.state_from, &mut expanded_rule.state_from),
-                (&rule.state_to, &mut expanded_rule.state_to),
+                (&rule.field_name, &mut expanded_rule.field_name),
+                (&rule.field_init, &mut expanded_rule.field_init),
+                (&rule.field_next, &mut expanded_rule.field_next),
+                (&rule.field_every, &mut expanded_rule.field_every),
+                (&rule.field_from, &mut expanded_rule.field_from),
+                (&rule.field_to, &mut expanded_rule.field_to),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -3123,13 +3123,13 @@ fn lower_contract_streams(
                 continue;
             }
 
-            if !rule.state_name.is_empty() {
+            if !rule.field_name.is_empty() {
                 // Same treatment as the amount: a textual splice can produce an
                 // expression the parser rejects, and the engine's fallback for
                 // a failed state is zero — which would silently flatten every
                 // stream that reads it.
                 let mut bad = None;
-                for (clause, src) in [("init", &rule.state_init), ("next", &rule.state_next)] {
+                for (clause, src) in [("init", &rule.field_init), ("next", &rule.field_next)] {
                     if let Err(err) = cfdl_expr::compile_expr(src) {
                         bad = Some((clause, err, src.clone()));
                         break;
@@ -3160,17 +3160,17 @@ fn lower_contract_streams(
                     .subject_entity
                     .clone()
                     .unwrap_or_else(|| owner_symbol.clone());
-                let field_key = (field_owner.clone(), rule.state_name.clone());
+                let field_key = (field_owner.clone(), rule.field_name.clone());
                 match lowered_fields.get(&field_key) {
                     Some(existing)
-                        if existing.init.src != rule.state_init
-                            || existing.next.src != rule.state_next =>
+                        if existing.init.src != rule.field_init
+                            || existing.next.src != rule.field_next =>
                     {
                         diagnostics.push(lowering_rule_diag(
                             "E5021_DUPLICATE_LOWERED_STATE",
                             &format!(
                                 "Contract '{}' lowers to field '{}' on an entity where another contract already defines it differently. Two contracts on ONE entity need distinct field names; two contracts on different entities do not collide.",
-                                contract.name, rule.state_name
+                                contract.name, rule.field_name
                             ),
                             source_stmt,
                             contract.span,
@@ -3184,11 +3184,11 @@ fn lower_contract_streams(
                             IrFieldRule {
                                 init: IrExpr {
                                     lang: "cfdl".to_string(),
-                                    src: rule.state_init.clone(),
+                                    src: rule.field_init.clone(),
                                 },
                                 next: IrExpr {
                                     lang: "cfdl".to_string(),
-                                    src: rule.state_next.clone(),
+                                    src: rule.field_next.clone(),
                                 },
                                 schedule: lower_rule_state_schedule(
                                     rule,
@@ -3205,8 +3205,8 @@ fn lower_contract_streams(
             // AND THE EXPRESSIONS READ THE FIELD, not a model state. The rule's
             // own text still says `state.<name>` because that is the pack's
             // spelling; here it becomes the entity path the value now lives at.
-            if !rule.state_name.is_empty() {
-                let from = format!("state.{}", rule.state_name);
+            if !rule.field_name.is_empty() {
+                let from = format!("state.{}", rule.field_name);
                 // `entity.<owner>.<field>`, the long form. The bare alias covers
                 // the four declared families only, and a lowering rule may sit
                 // on any entity — so the spelling that always resolves is the
@@ -3217,7 +3217,7 @@ fn lower_contract_streams(
                         .subject_entity
                         .clone()
                         .unwrap_or_else(|| owner_symbol.clone()),
-                    rule.state_name
+                    rule.field_name
                 );
                 amount_src = amount_src.replace(&from, &to);
             }
@@ -3238,8 +3238,8 @@ fn lower_contract_streams(
                     &source_rule.schedule_net_days,
                     &source_rule.schedule_net_months,
                     &source_rule.schedule_every,
-                    &source_rule.state_init,
-                    &source_rule.state_next,
+                    &source_rule.field_init,
+                    &source_rule.field_next,
                 ] {
                     for key in cfdl_pack::template_placeholders(template) {
                         // Cadence primitives and name derivations are computed,
@@ -3684,12 +3684,12 @@ fn lower_rule_state_schedule(
     time_start: &str,
     timeline_end: &str,
 ) -> Option<IrSchedule> {
-    if rule.state_name.is_empty() {
+    if rule.field_name.is_empty() {
         return None;
     }
     // Absent means every model period — the behaviour of every state written
     // before states had a clock, so an unset field changes nothing.
-    if rule.state_every.is_empty() && rule.state_from.is_empty() && rule.state_to.is_empty() {
+    if rule.field_every.is_empty() && rule.field_from.is_empty() && rule.field_to.is_empty() {
         return None;
     }
     Some(IrSchedule {
@@ -3700,20 +3700,20 @@ fn lower_rule_state_schedule(
         net_days: None,
         net_months: None,
         on: None,
-        every: Some(if rule.state_every.is_empty() {
+        every: Some(if rule.field_every.is_empty() {
             time_calendar.to_string()
         } else {
-            interval_to_frequency(&rule.state_every).to_string()
+            interval_to_frequency(&rule.field_every).to_string()
         }),
-        from: Some(normalize_date(if rule.state_from.is_empty() {
+        from: Some(normalize_date(if rule.field_from.is_empty() {
             time_start
         } else {
-            &rule.state_from
+            &rule.field_from
         })),
-        to: Some(normalize_date(if rule.state_to.is_empty() {
+        to: Some(normalize_date(if rule.field_to.is_empty() {
             timeline_end
         } else {
-            &rule.state_to
+            &rule.field_to
         })),
         on_rule: None,
         phase: None,

@@ -182,31 +182,44 @@ declared in the model.
 
 See [Curves](/docs/guides/curves).
 
-## State
+## Fields that move
 
-Some quantities depend on the period before: a loan balance, a survival factor.
-A `state` says so directly.
+Some quantities depend on the period before: a loan balance, a survival factor,
+a reserve. Those belong to the thing they describe, so they are declared on it.
 
 ```cfdl
-state balance {
-  init 1000000
-  next prev * (1 - 0.01)
+entity asset loan : Credit.Asset.Tranche {
+  seniority = 1
+
+  balance init 1000000
+          next prev * (1 - 0.01)
 }
 ```
 
-`init` is period zero; `next` computes each later period from `prev`. Both take
-an expression directly, with no `=`, the way `schedule` and `active when` do. A
-state is
-**not cash** — it never reaches the model's total. It exists so a stream can
-read it:
+`init` is the value at period zero; `next` computes each later period, with
+`prev` bound to the field's own previous value. Both take an expression
+directly, with no `=`, the way `schedule` and `active when` do. A field with no
+`next` simply holds.
+
+Read it by naming the thing:
 
 ```cfdl
-amount = state.balance * 0.005
+amount = asset.loan.balance * 0.005
 ```
+
+`prev.asset.loan.balance` reads the close before this one — which is how a debt
+schedule charges interest on the average of a period's opening and closing
+balance without declaring the quantity twice.
+
+A field is **not cash**: it never reaches the model's total. It exists so a
+stream, waterfall or event can read it.
 
 Writing the recurrence directly is often the only way to match a published
 figure exactly, because a source that escalates an already-rounded number each
 year is not computing a power of its base.
+
+**A field needs a typed entity.** An untyped `entity asset thing` takes no
+block, so a value that moves needs something with a declared type to belong to.
 
 ## Waterfalls
 

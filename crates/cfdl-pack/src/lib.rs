@@ -762,17 +762,17 @@ pub struct LoweringRule {
     /// segment: use `{{contract.suffix_ident}}`, not `{{contract.dot_suffix}}`,
     /// to keep each contract instance's state distinct.
     #[serde(default)]
-    pub state_name: String,
+    pub field_name: String,
     /// The state's value at period 0. Templated.
     #[serde(default)]
-    pub state_init: String,
+    pub field_init: String,
     /// The state's value at every later period, with `prev` bound to its own
     /// previous value. Templated.
     #[serde(default)]
-    pub state_next: String,
+    pub field_next: String,
     /// How often the state STEPS: `day`, `week`, `month`, `quarter`, `year`.
     /// Templated, so a rule can defer to a contract term
-    /// (`state_every = "{{contract.payment_frequency}}"`).
+    /// (`field_every = "{{contract.payment_frequency}}"`).
     ///
     /// Empty means every model period. Set it whenever the recurrence belongs
     /// to the INSTRUMENT's rhythm rather than the book's: a pool carried on a
@@ -783,13 +783,13 @@ pub struct LoweringRule {
     /// `E2108_SCHEDULE_FINER_THAN_CALENDAR`, the same rule a stream's schedule
     /// obeys — a pack cannot express what a model may not.
     #[serde(default)]
-    pub state_every: String,
+    pub field_every: String,
     /// Window over which the state steps. Templated; both default to the
     /// model timeline. Outside the window the state holds rather than zeroing.
     #[serde(default)]
-    pub state_from: String,
+    pub field_from: String,
     #[serde(default)]
-    pub state_to: String,
+    pub field_to: String,
     /// Default values for template placeholders when the contract does not
     /// declare the term. Keys are the bare placeholder names (no `contract.`
     /// prefix), e.g. `"lease_up.months" = "18"`.

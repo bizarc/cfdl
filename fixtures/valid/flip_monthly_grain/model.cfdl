@@ -33,6 +33,42 @@ time calendar monthly from 2026-01 for 312
 entity asset interest : Energy.Asset.ProjectInterest {
   interest_type = "tax_equity"
   state pre_flip
+
+  month_of_year init 0.0
+                next if(prev >= 12.0, 1.0, prev + 1.0)
+  operating_year init 1.0
+                 next if(prev.asset.interest.month_of_year == 12.0, prev + 1.0, prev)
+  investor_npv_closed init 0.0 - inputs.investor_equity
+                      next prev
+       + if(time.t >= 2.0 and prev < 0.0,
+            inputs.preflip_share
+             * ( ( inputs.energy_year_one * inputs.ppa_price
+                    * pow(1.0 + inputs.ppa_escalation, prev.asset.interest.operating_year - 1.0)
+                    * pow(1.0 - inputs.degradation, prev.asset.interest.operating_year - 1.0)
+                   - inputs.capacity_kw * inputs.om_per_kw
+                    * pow(1.0 + inputs.om_escalation, prev.asset.interest.operating_year - 1.0)
+                   - if(prev.asset.interest.operating_year <= inputs.debt_term,
+                        0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+                        0.0) ) / 12.0
+                 + if(prev.asset.interest.month_of_year == 12.0,
+                      0.0 - inputs.tax_rate
+                       * ( inputs.energy_year_one * inputs.ppa_price
+                            * pow(1.0 + inputs.ppa_escalation, prev.asset.interest.operating_year - 1.0)
+                            * pow(1.0 - inputs.degradation, prev.asset.interest.operating_year - 1.0)
+                           - inputs.capacity_kw * inputs.om_per_kw
+                            * pow(1.0 + inputs.om_escalation, prev.asset.interest.operating_year - 1.0)
+                           + if(prev.asset.interest.operating_year <= inputs.debt_term,
+                                ipmt(inputs.debt_rate, prev.asset.interest.operating_year,
+                                     inputs.debt_term, inputs.debt_amount),
+                                0.0)
+                           - macrs_rate(prev.asset.interest.operating_year - 1.0, 5)
+                             * (inputs.installed_cost
+                                - 0.5 * inputs.itc_rate * inputs.installed_cost) )
+                      + if(prev.asset.interest.operating_year == 1.0,
+                           inputs.itc_rate * inputs.installed_cost, 0.0),
+                      0.0) )
+             / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),
+            0.0)
 }
 
 entity party sponsor      : Party { name = "Sponsor" }
@@ -63,15 +99,7 @@ assume investor_equity = 42238000.0
 
 // The calendar has no integer division, so the model counts. `month_of_year`
 // cycles 1..12 and `operating_year` steps when it wraps.
-state month_of_year {
-  init 0.0
-  next if(prev >= 12.0, 1.0, prev + 1.0)
-}
 
-state operating_year {
-  init 1.0
-  next if(prev.month_of_year == 12.0, prev + 1.0, prev)
-}
 
 // THE TEST, monthly. Identical in shape to the annual model's: the investor's
 // discounted after-tax position through the period before this one, stopping
@@ -79,52 +107,19 @@ state operating_year {
 //
 // Operating cash is a twelfth of its year. The credit and the tax benefit land
 // whole, in the month the year closes.
-state investor_npv_closed {
-  init 0.0 - inputs.investor_equity
-  next prev
-       + if(time.t >= 2.0 and prev < 0.0,
-            inputs.preflip_share
-             * ( ( inputs.energy_year_one * inputs.ppa_price
-                    * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)
-                    * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)
-                   - inputs.capacity_kw * inputs.om_per_kw
-                    * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)
-                   - if(prev.operating_year <= inputs.debt_term,
-                        0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
-                        0.0) ) / 12.0
-                 + if(prev.month_of_year == 12.0,
-                      0.0 - inputs.tax_rate
-                       * ( inputs.energy_year_one * inputs.ppa_price
-                            * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)
-                            * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)
-                           - inputs.capacity_kw * inputs.om_per_kw
-                            * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)
-                           + if(prev.operating_year <= inputs.debt_term,
-                                ipmt(inputs.debt_rate, prev.operating_year,
-                                     inputs.debt_term, inputs.debt_amount),
-                                0.0)
-                           - macrs_rate(prev.operating_year - 1.0, 5)
-                             * (inputs.installed_cost
-                                - 0.5 * inputs.itc_rate * inputs.installed_cost) )
-                      + if(prev.operating_year == 1.0,
-                           inputs.itc_rate * inputs.installed_cost, 0.0),
-                      0.0) )
-             / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),
-            0.0)
-}
 
-event flip when state.investor_npv_closed >= 0.0 {
+event flip when asset.interest.investor_npv_closed >= 0.0 {
   set entity asset.interest.status = "post_flip"
 }
 
 waterfall interest.distribution on entity asset.interest {
   schedule every month from 2026-02 to 2051-12
   from ( inputs.energy_year_one * inputs.ppa_price
-          * pow(1.0 + inputs.ppa_escalation, state.operating_year - 1.0)
-          * pow(1.0 - inputs.degradation, state.operating_year - 1.0)
+          * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)
+          * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)
          - inputs.capacity_kw * inputs.om_per_kw
-          * pow(1.0 + inputs.om_escalation, state.operating_year - 1.0)
-         - if(state.operating_year <= inputs.debt_term,
+          * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)
+         - if(asset.interest.operating_year <= inputs.debt_term,
               0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
               0.0) ) / 12.0
 

@@ -644,7 +644,27 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
-            TokenKind::Keyword(Keyword::State) => self.parse_state_stmt().map(Stmt::State),
+            // A value that changes over time belongs to the thing it
+            // describes, so there is no model-level declaration for one: a
+            // field names a fact about an entity where a loose variable would
+            // name nothing.
+            //
+            // `state` inside an ENTITY block is a different word for a
+            // different thing — the lifecycle state it opens in — and is
+            // unaffected.
+            TokenKind::Keyword(Keyword::State) => {
+                let tok = self.bump();
+                self.push_expected(
+                    tok.span,
+                    "A value that changes over time is a FIELD of the entity it \
+                     describes. Write `balance init <expr> next <expr>` inside that \
+                     entity's block, and read it as `asset.<name>.balance`. \
+                     (`state` inside an entity block names its lifecycle state, which \
+                     is a different thing.)"
+                        .to_string(),
+                );
+                None
+            }
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
             TokenKind::Keyword(Keyword::Waterfall) => {
@@ -1807,101 +1827,6 @@ impl<'a> Parser<'a> {
             payee,
             amount,
             span: merge_spans(start.span, eq.span),
-        })
-    }
-
-    /// `state <name> { init <expr>  next <expr> }`
-    ///
-    /// Both clauses are required. `init` is the value at period 0 and `next`
-    /// the value at every later period, with `prev` bound to this state's
-    /// previous value. Missingness is reported by validation rather than here,
-    /// so the diagnostic carries the whole statement's span and both problems
-    /// surface at once.
-    fn parse_state_stmt(&mut self) -> Option<StateStmt> {
-        let start = self.expect_keyword(Keyword::State, "'state'")?;
-        let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'state'.".to_string(),
-                );
-                return None;
-            }
-        };
-        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
-        let (mut init, mut next) = (None, None);
-        let mut schedule = None;
-        let end;
-        loop {
-            match self.peek().kind {
-                TokenKind::Punct(Punct::RBrace) => {
-                    end = self.bump();
-                    break;
-                }
-                TokenKind::Eof => {
-                    self.push_expected(
-                        self.current_span(),
-                        "Expected 'schedule', 'init', 'next' or '}' in state block.".to_string(),
-                    );
-                    return None;
-                }
-                // The same clause, the same parser as a stream's. A state's
-                // cadence is not a new concept and should not read like one.
-                TokenKind::Keyword(Keyword::Schedule) => {
-                    let _ = self.bump();
-                    if let Some(spec) = self.parse_schedule_expr() {
-                        schedule = Some(spec);
-                    }
-                }
-                TokenKind::Ident(ref ident) if ident == "init" || ident == "next" => {
-                    let is_init = ident == "init";
-                    let clause_tok = self.bump();
-                    // `init <expr>` — no '=', matching the clause style of
-                    // `schedule` and `active when` rather than `amount =`.
-                    //
-                    // `init = <expr>` used to parse and evaluate to ZERO. Every
-                    // other block in the language assigns with '=', so it is the
-                    // form a reader reaches for — the language guide taught it —
-                    // and a state that silently holds zero takes every stream
-                    // reading it down with it, with nothing to see. Rejected
-                    // here, naming the form that works.
-                    if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
-                        let span = self.current_span();
-                        let clause = if is_init { "init" } else { "next" };
-                        self.push_expected(
-                            span,
-                            format!(
-                                "`{clause}` takes an expression directly, with no '='. \
-                                 Write `{clause} <expr>`, as `schedule` and `active when` do."
-                            ),
-                        );
-                        return None;
-                    }
-                    let slot = self.parse_expr_slot(clause_tok.span)?;
-                    if is_init {
-                        init = Some(slot);
-                    } else {
-                        next = Some(slot);
-                    }
-                }
-                _ => {
-                    self.push_expected(
-                        self.current_span(),
-                        "Unexpected token in a state block. Expected 'schedule', 'init', 'next' or '}'."
-                            .to_string(),
-                    );
-                    return None;
-                }
-            }
-        }
-        Some(StateStmt {
-            name,
-            init,
-            next,
-            schedule,
-            span: merge_spans(start.span, end.span),
         })
     }
 
@@ -3548,98 +3473,6 @@ phase p from 2026-01 to 2026-02
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
         assert!(matches!(ast.statements[2], Stmt::Phase(_)));
-    }
-
-    #[test]
-    fn parses_state_schedule_clause() {
-        // A state's clock is its own. The clause is the stream's, parsed by the
-        // stream's parser, so the two cannot drift apart.
-        let src = r#"version 0.1
-model "demo"
-state survival {
-  schedule every quarter from 2026-01 to 2031-01
-  init 1.0
-  next prev * 0.99
-}
-state plain { init 1  next prev }
-"#;
-        let (tokens, lex_diags) = lex(src);
-        assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", src, &tokens);
-        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
-        let ast = result.ast.expect("AST expected");
-
-        let Stmt::State(scheduled) = &ast.statements[2] else {
-            panic!("expected state statement");
-        };
-        let schedule = scheduled.schedule.as_ref().expect("schedule");
-        assert_eq!(schedule.every.as_deref(), Some("quarter"));
-        assert_eq!(schedule.from.as_deref(), Some("2026-01"));
-        assert_eq!(schedule.to.as_deref(), Some("2031-01"));
-        // The clause must not swallow the clauses after it.
-        assert_eq!(scheduled.init.as_ref().expect("init").src, "1.0");
-        assert_eq!(scheduled.next.as_ref().expect("next").src, "prev * 0.99");
-
-        // Absent means every model period, which is what every state written
-        // before states had a clock assumes.
-        let Stmt::State(plain) = &ast.statements[3] else {
-            panic!("expected state statement");
-        };
-        assert!(plain.schedule.is_none());
-    }
-
-    #[test]
-    fn parses_state_statement() {
-        let src = r#"version 0.1
-model "demo"
-state revenue_index {
-  init 1.0
-  next prev * (1 + curve_value("growth", time.date))
-}
-state cum_capex { next prev + prev.revenue_index  init 0 }
-"#;
-        let (tokens, lex_diags) = lex(src);
-        assert!(lex_diags.is_empty());
-        let result = parse("model.cfdl", src, &tokens);
-        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
-        let ast = result.ast.expect("AST expected");
-
-        let Stmt::State(idx) = &ast.statements[2] else {
-            panic!("expected state statement");
-        };
-        assert_eq!(idx.name, "revenue_index");
-        assert_eq!(idx.init.as_ref().expect("init").src, "1.0");
-        assert_eq!(
-            idx.next.as_ref().expect("next").src,
-            "prev * (1 + curve_value(\"growth\", time.date))"
-        );
-
-        // Clause order is not significant, like schedule options.
-        let Stmt::State(cum) = &ast.statements[3] else {
-            panic!("expected state statement");
-        };
-        assert_eq!(cum.name, "cum_capex");
-        assert_eq!(cum.init.as_ref().expect("init").src, "0");
-        assert_eq!(
-            cum.next.as_ref().expect("next").src,
-            "prev + prev.revenue_index"
-        );
-    }
-
-    #[test]
-    fn state_missing_a_clause_still_parses_for_validation_to_report() {
-        // Missingness is a validation diagnostic, not a parse error, so both
-        // problems surface at once with the statement's span.
-        let src = "version 0.1\nmodel \"demo\"\nstate bare { init 1 }\n";
-        let (tokens, _) = lex(src);
-        let result = parse("model.cfdl", src, &tokens);
-        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
-        let ast = result.ast.expect("AST expected");
-        let Stmt::State(bare) = &ast.statements[2] else {
-            panic!("expected state statement");
-        };
-        assert!(bare.init.is_some());
-        assert!(bare.next.is_none());
     }
 
     #[test]

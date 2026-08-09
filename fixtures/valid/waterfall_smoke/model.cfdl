@@ -7,13 +7,14 @@ entity asset trust : Credit.Asset.LoanPool {
   original_balance = 1000
   // The pot, a fact about the trust.
   available_funds init 1000.0
+  pool_balance    init 900.0
+                  next prev
 }
 entity asset class_a : Credit.Asset.Tranche { seniority = 1  original_balance = 950 }
 entity party servicer : Credit.Party.Servicer { name = "Servicer" }
 entity party trustee : Credit.Party.Issuer { name = "Trustee" }
 entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
 
-state pool_balance    { init  900.0  next prev }
 
 // A priority of payments, and the seven rules a real 22-step consumer ABS
 // waterfall needs, each written as an ORDINARY EXPRESSION rather than its own
@@ -34,7 +35,7 @@ waterfall abs.distribution on entity asset.trust {
   pay servicing        to party.servicer    = 12.5
   pay trustee_fees     to party.trustee     = min(4.0, 3.0)
   pay class_a_interest to asset.class_a      = 6.25
-  pay class_a_target   to asset.class_a      = entity.asset.class_a.original_balance - state.pool_balance
+  pay class_a_target   to asset.class_a      = entity.asset.class_a.original_balance - asset.trust.pool_balance
   pay trustee_excess   to party.trustee     = owed.trustee_fees - paid.trustee_fees
   pay residual         to party.certificate = remaining
 }

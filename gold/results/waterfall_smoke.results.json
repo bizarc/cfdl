@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "fd83c59775c50e8dbe586399ebc478680c4ffa4c775067434b472663c3a46a48",
-  "ledger_hash": "c9c7f3929a632b37e089cd64025f659d90d9cfdf2c56ccef2fea9d4f9e149bec",
+  "model_hash": "a665cba05fe2400a3e4d76254c3423b0f9eac6eb2ca8c3759bbf18dcb8b83795",
+  "ledger_hash": "5cd003bb31f38207d878a85d56801d4a75a7fc1e9cd3d018bce65462830d1439",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -54,6 +54,19 @@
           1000.0,
           1000.0,
           1000.0
+        ]
+      },
+      "asset.trust.pool_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 4
+        },
+        "values": [
+          900.0,
+          900.0,
+          900.0,
+          900.0
         ]
       },
       "domain.credit.balance_outstanding": {
@@ -442,19 +455,6 @@
             "amount": 0.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.pool_balance": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 4
-        },
-        "values": [
-          900.0,
-          900.0,
-          900.0,
-          900.0
         ]
       },
       "stream.abs.distribution.class_a_interest": {

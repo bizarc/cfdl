@@ -18,6 +18,38 @@
       "fields": {
         "interest_type": "tax_equity"
       },
+      "rules": {
+        "investor_npv_closed": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0 - inputs.investor_equity"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev        + if(time.t >= 2.0 and prev < 0.0,             inputs.preflip_share              * ( ( inputs.energy_year_one * inputs.ppa_price                     * pow(1.0 + inputs.ppa_escalation, prev.asset.interest.operating_year - 1.0)                     * pow(1.0 - inputs.degradation, prev.asset.interest.operating_year - 1.0)                    - inputs.capacity_kw * inputs.om_per_kw                     * pow(1.0 + inputs.om_escalation, prev.asset.interest.operating_year - 1.0)                    - if(prev.asset.interest.operating_year <= inputs.debt_term,                         0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),                         0.0) ) / 12.0                  + if(prev.asset.interest.month_of_year == 12.0,                       0.0 - inputs.tax_rate                        * ( inputs.energy_year_one * inputs.ppa_price                             * pow(1.0 + inputs.ppa_escalation, prev.asset.interest.operating_year - 1.0)                             * pow(1.0 - inputs.degradation, prev.asset.interest.operating_year - 1.0)                            - inputs.capacity_kw * inputs.om_per_kw                             * pow(1.0 + inputs.om_escalation, prev.asset.interest.operating_year - 1.0)                            + if(prev.asset.interest.operating_year <= inputs.debt_term,                                 ipmt(inputs.debt_rate, prev.asset.interest.operating_year,                                      inputs.debt_term, inputs.debt_amount),                                 0.0)                            - macrs_rate(prev.asset.interest.operating_year - 1.0, 5)                              * (inputs.installed_cost                                 - 0.5 * inputs.itc_rate * inputs.installed_cost) )                       + if(prev.asset.interest.operating_year == 1.0,                            inputs.itc_rate * inputs.installed_cost, 0.0),                       0.0) )              / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),             0.0)"
+          }
+        },
+        "month_of_year": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(prev >= 12.0, 1.0, prev + 1.0)"
+          }
+        },
+        "operating_year": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(prev.asset.interest.month_of_year == 12.0, prev + 1.0, prev)"
+          }
+        }
+      },
       "state": {},
       "initial_state": "pre_flip"
     },
@@ -181,41 +213,6 @@
     },
     "random": {}
   },
-  "states": [
-    {
-      "name": "month_of_year",
-      "init": {
-        "lang": "cfdl",
-        "src": "0.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "if(prev >= 12.0, 1.0, prev + 1.0)"
-      }
-    },
-    {
-      "name": "operating_year",
-      "init": {
-        "lang": "cfdl",
-        "src": "1.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "if(prev.month_of_year == 12.0, prev + 1.0, prev)"
-      }
-    },
-    {
-      "name": "investor_npv_closed",
-      "init": {
-        "lang": "cfdl",
-        "src": "0.0 - inputs.investor_equity"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev        + if(time.t >= 2.0 and prev < 0.0,             inputs.preflip_share              * ( ( inputs.energy_year_one * inputs.ppa_price                     * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)                     * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)                    - inputs.capacity_kw * inputs.om_per_kw                     * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)                    - if(prev.operating_year <= inputs.debt_term,                         0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),                         0.0) ) / 12.0                  + if(prev.month_of_year == 12.0,                       0.0 - inputs.tax_rate                        * ( inputs.energy_year_one * inputs.ppa_price                             * pow(1.0 + inputs.ppa_escalation, prev.operating_year - 1.0)                             * pow(1.0 - inputs.degradation, prev.operating_year - 1.0)                            - inputs.capacity_kw * inputs.om_per_kw                             * pow(1.0 + inputs.om_escalation, prev.operating_year - 1.0)                            + if(prev.operating_year <= inputs.debt_term,                                 ipmt(inputs.debt_rate, prev.operating_year,                                      inputs.debt_term, inputs.debt_amount),                                 0.0)                            - macrs_rate(prev.operating_year - 1.0, 5)                              * (inputs.installed_cost                                 - 0.5 * inputs.itc_rate * inputs.installed_cost) )                       + if(prev.operating_year == 1.0,                            inputs.itc_rate * inputs.installed_cost, 0.0),                       0.0) )              / pow(1.0 + inputs.hurdle, (time.t - 1.0) / 12.0),             0.0)"
-      }
-    }
-  ],
   "waterfalls": [
     {
       "name": "interest.distribution",
@@ -228,7 +225,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "( inputs.energy_year_one * inputs.ppa_price           * pow(1.0 + inputs.ppa_escalation, state.operating_year - 1.0)           * pow(1.0 - inputs.degradation, state.operating_year - 1.0)          - inputs.capacity_kw * inputs.om_per_kw           * pow(1.0 + inputs.om_escalation, state.operating_year - 1.0)          - if(state.operating_year <= inputs.debt_term,               0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),               0.0) ) / 12.0"
+        "src": "( inputs.energy_year_one * inputs.ppa_price           * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)           * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)          - inputs.capacity_kw * inputs.om_per_kw           * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)          - if(asset.interest.operating_year <= inputs.debt_term,               0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),               0.0) ) / 12.0"
       },
       "steps": [
         {
@@ -329,14 +326,14 @@
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 118,
+          "end_line": 113,
           "start_col": 1,
-          "start_line": 116
+          "start_line": 111
         }
       },
       "when": {
         "lang": "cfdl",
-        "src": "state.investor_npv_closed >= 0.0"
+        "src": "asset.interest.investor_npv_closed >= 0.0"
       }
     }
   ],
