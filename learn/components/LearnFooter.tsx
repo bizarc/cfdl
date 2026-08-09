@@ -50,7 +50,7 @@ export function LearnFooter() {
             ))}
             <li>
               <Link
-                href="/#course-kit"
+                href="/course-kit"
                 className="text-sm text-secondary transition-colors hover:text-primary"
               >
                 Course kit
