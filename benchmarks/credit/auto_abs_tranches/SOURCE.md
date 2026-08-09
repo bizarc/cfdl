@@ -42,12 +42,34 @@ at its own coupon and day count, then principal by seniority — and the clean-u
 call. It does not exercise the OC or trigger machinery; that is what the
 AmeriCredit 2017-1 case is for.
 
-## Still needed
+## The class principal amounts
 
-The exhibit publishes percent **of initial class balance**, not the class
-balances themselves, and the 8-K's four exhibits do not state them. They are in
-this deal's own 424B5 prospectus, and in any of its 10-D distribution reports,
-both public on EDGAR under the same registrant.
+The exhibit publishes percent **of initial class balance** without stating those
+balances. They come from the trust's own Form 10-D distribution report for the
+October 2018 period (EDGAR CIK 1705002, accession 0001705002-18-000057), which
+states each class's beginning balance and its note pool factor per $1,000 of
+original principal.
 
-Deriving them from the published percentages instead would be calibrating the
-inputs from the answers, which is not a reconciliation.
+| class | original principal |
+|---|---:|
+| A-1 | 270,000,000.00 |
+| A-2 | 371,370,000.00 |
+| A-3 | 271,370,000.00 |
+| A-4 | 86,010,000.00 |
+| B | 22,220,000.00 |
+| C | 18,510,000.00 |
+| D | 13,750,000.00 |
+| **total** | **1,053,230,000.00** |
+
+A-3, A-4, B, C and D still stood at a factor of 1,000.00000000, so their stated
+beginning balances ARE their originals. A-2 had begun amortising, at a factor of
+239.65123125 against a balance of 88,999,277.75, which puts its original at
+371,370,000.003. A-1 had already retired and reports zero, so it is backed out
+of the aggregate: the beginning aggregate note pool factor of 475.54596598
+against a beginning aggregate balance of 500,859,277.75 makes the total original
+issuance 1,053,230,000.00, leaving A-1 at 270,000,000.00.
+
+The derivation checks itself. Six of the seven come out as exact round numbers
+and the seventh, A-2, reconciles to three decimal places — which is what a
+correct reading of an issuer's factors should look like, and is not what
+backing the figures out of the percentage grid would have given.
