@@ -26,7 +26,10 @@ time calendar annual from 2020-01 for 6
 // producing that number, so the pot the firm-level waterfalls draw on is
 // checkable by hand before any of them run.
 
-entity asset fund     : Asset.Financial
+entity asset fund     : Asset.Financial {
+  lp_preference init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+                next prev
+}
 entity asset mgmt_co  : Asset.Financial
 entity party lp       : Party { name = "Limited Partners" }
 entity party gp       : Party { name = "General Partner" }
@@ -43,10 +46,6 @@ assume proceeds       = 30000000.0
 assume team_pool_pct  = 0.40
 assume stakes_pct     = 0.20
 
-state lp_preference {
-  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
-  next prev
-}
 
 // 1. THE FUND. Capital and preferred to the LPs, catch-up and promote to the
 //    general partner, residual to the LPs.
@@ -54,7 +53,7 @@ waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
   from inputs.proceeds
 
-  pay lp_preference to party.lp = state.lp_preference
+  pay lp_preference to party.lp = asset.fund.lp_preference
   pay gp_catchup    to party.gp = 4693280.768
                                    / (1.0 - inputs.gp_carry) * inputs.gp_carry
   pay gp_promote    to party.gp = remaining * inputs.gp_carry

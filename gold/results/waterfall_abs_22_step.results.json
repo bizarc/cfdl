@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "66e1fb2a9422080db725743bf2fb40062ef57d23b82b9b86e8914e323419ff46",
-  "ledger_hash": "67fd73340c739a3595950d88a6a7650a1f109cc391b95505490c66a5ad2a287a",
+  "model_hash": "6cf983bb5c4eb665ceb010e1799078c2d8687803870fcca96b1da9891bf59abb",
+  "ledger_hash": "04e9ba91fb80afd70708aa4a2820983f5641af508c4d1585bf8701dadcfeb835",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -89,6 +89,51 @@
       "run.periods_per_year": 12.0
     },
     "series": {
+      "asset.trust.available_funds": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 6
+        },
+        "values": [
+          12500000.0,
+          12125000.0,
+          11761250.0,
+          11408412.5,
+          11066160.125,
+          10734175.32125
+        ]
+      },
+      "asset.trust.pool_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 6
+        },
+        "values": [
+          960000000.0,
+          921600000.0,
+          884736000.0,
+          849346560.0,
+          815372697.6,
+          782757789.696
+        ]
+      },
+      "asset.trust.reserve_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 6
+        },
+        "values": [
+          18000000.0,
+          18000000.0,
+          18000000.0,
+          18000000.0,
+          18000000.0,
+          18000000.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "monthly",
@@ -894,51 +939,6 @@
             "amount": 0.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.available_funds": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 6
-        },
-        "values": [
-          12500000.0,
-          12125000.0,
-          11761250.0,
-          11408412.5,
-          11066160.125,
-          10734175.32125
-        ]
-      },
-      "state.pool_balance": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 6
-        },
-        "values": [
-          960000000.0,
-          921600000.0,
-          884736000.0,
-          849346560.0,
-          815372697.6,
-          782757789.696
-        ]
-      },
-      "state.reserve_balance": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 6
-        },
-        "values": [
-          18000000.0,
-          18000000.0,
-          18000000.0,
-          18000000.0,
-          18000000.0,
-          18000000.0
         ]
       },
       "stream.abs.distribution.class_a_final": {

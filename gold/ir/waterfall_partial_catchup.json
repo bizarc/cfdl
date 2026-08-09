@@ -16,6 +16,18 @@
       "symbol": "asset.fund",
       "type": "Asset.Financial",
       "fields": {},
+      "rules": {
+        "lp_preference": {
+          "init": {
+            "lang": "cfdl",
+            "src": "inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
       "state": {}
     },
     {
@@ -82,19 +94,6 @@
     },
     "random": {}
   },
-  "states": [
-    {
-      "name": "lp_preference",
-      "init": {
-        "lang": "cfdl",
-        "src": "inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev"
-      }
-    }
-  ],
   "waterfalls": [
     {
       "name": "fund.distribution",
@@ -113,7 +112,7 @@
           "payee": "party.lp",
           "amount": {
             "lang": "cfdl",
-            "src": "state.lp_preference"
+            "src": "asset.fund.lp_preference"
           }
         },
         {
@@ -121,7 +120,7 @@
           "payee": "party.gp",
           "amount": {
             "lang": "cfdl",
-            "src": "min((state.lp_preference - inputs.called_capital)               * inputs.gp_carry * cfg.catchup_rate               / (cfg.catchup_rate - inputs.gp_carry),             remaining * cfg.catchup_rate)"
+            "src": "min((asset.fund.lp_preference - inputs.called_capital)               * inputs.gp_carry * cfg.catchup_rate               / (cfg.catchup_rate - inputs.gp_carry),             remaining * cfg.catchup_rate)"
           }
         },
         {

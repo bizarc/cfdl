@@ -16,6 +16,18 @@
       "symbol": "asset.deal",
       "type": "Asset.Financial",
       "fields": {},
+      "rules": {
+        "deal_irr": {
+          "init": {
+            "lang": "cfdl",
+            "src": "pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
       "state": {}
     },
     {
@@ -75,19 +87,6 @@
     },
     "random": {}
   },
-  "states": [
-    {
-      "name": "deal_irr",
-      "init": {
-        "lang": "cfdl",
-        "src": "pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev"
-      }
-    }
-  ],
   "waterfalls": [
     {
       "name": "fund.distribution",
@@ -106,7 +105,7 @@
           "payee": "party.mgmt",
           "amount": {
             "lang": "cfdl",
-            "src": "inputs.proceeds *      if(state.deal_irr >= 0.28148859901472223,         0.08,         if(state.deal_irr >= 0.2604763708480864,            0.07,            if(state.deal_irr >= 0.24011821572791225,               0.06,               if(state.deal_irr >= 0.22339827653178967,                  0.05,                  if(state.deal_irr >= 0.20696650711711273,                     0.04,                     if(state.deal_irr >= 0.15163318845914975,                        0.03,                        if(state.deal_irr >= 0.10299934260814592,                           0.02,                           0.0)))))))"
+            "src": "inputs.proceeds *      if(asset.deal.deal_irr >= 0.28148859901472223,         0.08,         if(asset.deal.deal_irr >= 0.2604763708480864,            0.07,            if(asset.deal.deal_irr >= 0.24011821572791225,               0.06,               if(asset.deal.deal_irr >= 0.22339827653178967,                  0.05,                  if(asset.deal.deal_irr >= 0.20696650711711273,                     0.04,                     if(asset.deal.deal_irr >= 0.15163318845914975,                        0.03,                        if(asset.deal.deal_irr >= 0.10299934260814592,                           0.02,                           0.0)))))))"
           }
         },
         {
@@ -114,7 +113,7 @@
           "payee": "party.sponsor",
           "amount": {
             "lang": "cfdl",
-            "src": "inputs.proceeds *      if(state.deal_irr >= 0.28148859901472223,         0.2,         if(state.deal_irr >= 0.2604763708480864,            0.18,            if(state.deal_irr >= 0.24011821572791225,               0.16,               if(state.deal_irr >= 0.22339827653178967,                  0.15,                  if(state.deal_irr >= 0.20696650711711273,                     0.14,                     if(state.deal_irr >= 0.15163318845914975,                        0.1,                        if(state.deal_irr >= 0.10299934260814592,                           0.08,                           0.0)))))))"
+            "src": "inputs.proceeds *      if(asset.deal.deal_irr >= 0.28148859901472223,         0.2,         if(asset.deal.deal_irr >= 0.2604763708480864,            0.18,            if(asset.deal.deal_irr >= 0.24011821572791225,               0.16,               if(asset.deal.deal_irr >= 0.22339827653178967,                  0.15,                  if(asset.deal.deal_irr >= 0.20696650711711273,                     0.14,                     if(asset.deal.deal_irr >= 0.15163318845914975,                        0.1,                        if(asset.deal.deal_irr >= 0.10299934260814592,                           0.08,                           0.0)))))))"
           }
         },
         {

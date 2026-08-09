@@ -29,7 +29,11 @@ time calendar annual from 2020-01 for 6
 //
 // So the waterfall itself is three plain steps.
 
-entity asset deal : Asset.Financial
+entity asset deal : Asset.Financial {
+  // The deal's own realised return — a fact about the deal.
+  deal_irr init pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0
+           next prev
+}
 entity party mgmt    : Party { name = "Management Team" }
 entity party sponsor : Party { name = "Sponsor Promote" }
 entity party lp      : Party { name = "Limited Partners" }
@@ -39,10 +43,6 @@ assume proceeds       = 30000000.0
 assume hold_years     = 5.0
 
 // The deal's own return. Two points, so this is arithmetic, not a search.
-state deal_irr {
-  init pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0
-  next prev
-}
 
 // THE VESTED PERCENTAGES, chosen in the waterfall rather than in a state.
 //
@@ -59,36 +59,36 @@ waterfall fund.distribution on entity asset.deal {
   from inputs.proceeds
 
   pay mgmt_proceeds    to party.mgmt    = inputs.proceeds *
-     if(state.deal_irr >= 0.28148859901472223,
+     if(asset.deal.deal_irr >= 0.28148859901472223,
         0.08,
-        if(state.deal_irr >= 0.2604763708480864,
+        if(asset.deal.deal_irr >= 0.2604763708480864,
            0.07,
-           if(state.deal_irr >= 0.24011821572791225,
+           if(asset.deal.deal_irr >= 0.24011821572791225,
               0.06,
-              if(state.deal_irr >= 0.22339827653178967,
+              if(asset.deal.deal_irr >= 0.22339827653178967,
                  0.05,
-                 if(state.deal_irr >= 0.20696650711711273,
+                 if(asset.deal.deal_irr >= 0.20696650711711273,
                     0.04,
-                    if(state.deal_irr >= 0.15163318845914975,
+                    if(asset.deal.deal_irr >= 0.15163318845914975,
                        0.03,
-                       if(state.deal_irr >= 0.10299934260814592,
+                       if(asset.deal.deal_irr >= 0.10299934260814592,
                           0.02,
                           0.0)))))))
 
   pay sponsor_proceeds to party.sponsor = inputs.proceeds *
-     if(state.deal_irr >= 0.28148859901472223,
+     if(asset.deal.deal_irr >= 0.28148859901472223,
         0.2,
-        if(state.deal_irr >= 0.2604763708480864,
+        if(asset.deal.deal_irr >= 0.2604763708480864,
            0.18,
-           if(state.deal_irr >= 0.24011821572791225,
+           if(asset.deal.deal_irr >= 0.24011821572791225,
               0.16,
-              if(state.deal_irr >= 0.22339827653178967,
+              if(asset.deal.deal_irr >= 0.22339827653178967,
                  0.15,
-                 if(state.deal_irr >= 0.20696650711711273,
+                 if(asset.deal.deal_irr >= 0.20696650711711273,
                     0.14,
-                    if(state.deal_irr >= 0.15163318845914975,
+                    if(asset.deal.deal_irr >= 0.15163318845914975,
                        0.1,
-                       if(state.deal_irr >= 0.10299934260814592,
+                       if(asset.deal.deal_irr >= 0.10299934260814592,
                           0.08,
                           0.0)))))))
 
