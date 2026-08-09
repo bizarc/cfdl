@@ -561,6 +561,7 @@ const benchmarkTitles = {
   "cre/retail_strip": "CRE: retail strip with expense stops",
   "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
   "credit/auto_abs_speed_150": "Credit: auto ABS at 1.5x prepayment speed",
+  "credit/auto_abs_tranches": "Credit: auto ABS note classes",
   "credit/auto_abs_wal": "Credit: auto ABS weighted average life",
   "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
   "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",

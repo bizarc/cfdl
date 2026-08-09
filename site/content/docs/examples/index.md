@@ -55,6 +55,7 @@ Complete models for every pack, each checked period by period against an indepen
 
 - [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) — An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance.
 - [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) — The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens.
+- [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) — The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date.
 - [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) — An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back.
 - [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) — A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination.
 - [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) — An interest-only loan repaying its entire principal in a single balloon at maturity.
