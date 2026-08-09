@@ -131,29 +131,21 @@ period
 2026-04                       2.348667e+07                    442423.647210   
 2026-05                       2.317816e+07                    437591.065867   
 
-         domain.credit.net_collections  domain.credit.original_balance  \
-period                                                                   
-2026-01                  446795.723595                      24750000.0   
-2026-02                  441976.718401                      24750000.0   
-2026-03                  437202.339282                      24750000.0   
-2026-04                  432472.191964                      24750000.0   
-2026-05                  427785.885597                      24750000.0   
+         domain.credit.net_collections  domain.credit.original_balance  domain.credit.pool_factor  \
+period                                                                                              
+2026-01                  446795.723595                      24750000.0                   0.987059   
+2026-02                  441976.718401                      24750000.0                   0.974239   
+2026-03                  437202.339282                      24750000.0                   0.961538   
+2026-04                  432472.191964                      24750000.0                   0.948956   
+2026-05                  427785.885597                      24750000.0                   0.936491   
 
-         domain.credit.pool_factor  domain.credit.principal_collections  \
-period                                                                    
-2026-01                   0.987059                        320285.175229   
-2026-02                   0.974239                        317299.872656   
-2026-03                   0.961538                        314341.003541   
-2026-04                   0.948956                        311408.337988   
-2026-05                   0.936491                        308501.648088   
-
-         domain.credit.principal_paid_negated  \
-period                                          
-2026-01                         -3.202852e+05   
-2026-02                         -6.375850e+05   
-2026-03                         -9.519261e+05   
-2026-04                         -1.263334e+06   
-2026-05                         -1.571836e+06   
+         domain.credit.principal_collections  domain.credit.principal_paid_negated  \
+period                                                                               
+2026-01                        320285.175229                         -3.202852e+05   
+2026-02                        317299.872656                         -6.375850e+05   
+2026-03                        314341.003541                         -9.519261e+05   
+2026-04                        311408.337988                         -1.263334e+06   
+2026-05                        308501.648088                         -1.571836e+06   
 
          domain.credit.principal_paid_to_date  domain.credit.servicing_fee  \
 period                                                                       
@@ -171,61 +163,37 @@ period                                          ...
 2026-04                          131015.309222  ...         4.324722e+05   
 2026-05                          129089.417780  ...         4.277859e+05   
 
-         state.asset.buyer.credit_level_pay_survival_auto_a  \
-period                                                        
-2026-01                                           1.000000    
-2026-02                                           0.991393    
-2026-03                                           0.982861    
-2026-04                                           0.974402    
-2026-05                                           0.966016    
+         state.credit_level_pay_survival_auto_a  state.credit_level_pay_survival_lag_auto_a  \
+period                                                                                        
+2026-01                                1.000000                                      1.0      
+2026-02                                0.991393                                      1.0      
+2026-03                                0.982861                                      1.0      
+2026-04                                0.974402                                      1.0      
+2026-05                                0.966016                                      1.0      
 
-         state.asset.buyer.credit_level_pay_survival_lag_auto_a  \
-period                                                            
-2026-01                                                1.0        
-2026-02                                                1.0        
-2026-03                                                1.0        
-2026-04                                                1.0        
-2026-05                                                1.0        
+         stream.credit.pool.interest.auto_a  stream.credit.pool.penalty.auto_a  \
+period                                                                           
+2026-01                       135188.876529                        1720.816184   
+2026-02                       133229.509847                        1695.759733   
+2026-03                       131289.582287                        1670.952092   
+2026-04                       129368.918209                        1646.391013   
+2026-05                       127467.343513                        1622.074267   
 
-         stream.credit.pool.interest.auto_a  \
-period                                        
-2026-01                       135188.876529   
-2026-02                       133229.509847   
-2026-03                       131289.582287   
-2026-04                       129368.918209   
-2026-05                       127467.343513   
+         stream.credit.pool.prepay.auto_a  stream.credit.pool.recoveries.auto_a  \
+period                                                                            
+2026-01                     172081.618419                                   0.0   
+2026-02                     169575.973277                                   0.0   
+2026-03                     167095.209193                                   0.0   
+2026-04                     164639.101296                                   0.0   
+2026-05                     162207.426682                                   0.0   
 
-         stream.credit.pool.penalty.auto_a  stream.credit.pool.prepay.auto_a  \
-period                                                                         
-2026-01                        1720.816184                     172081.618419   
-2026-02                        1695.759733                     169575.973277   
-2026-03                        1670.952092                     167095.209193   
-2026-04                        1646.391013                     164639.101296   
-2026-05                        1622.074267                     162207.426682   
-
-         stream.credit.pool.recoveries.auto_a  \
-period                                          
-2026-01                                   0.0   
-2026-02                                   0.0   
-2026-03                                   0.0   
-2026-04                                   0.0   
-2026-05                                   0.0   
-
-         stream.credit.pool.sched_principal.auto_a  \
-period                                               
-2026-01                              148203.556810   
-2026-02                              147723.899379   
-2026-03                              147245.794348   
-2026-04                              146769.236692   
-2026-05                              146294.221405   
-
-         stream.credit.pool.servicing.auto_a  \
-period                                         
-2026-01                        -10399.144348   
-2026-02                        -10248.423834   
-2026-03                        -10099.198637   
-2026-04                         -9951.455247   
-2026-05                         -9805.180270   
+         stream.credit.pool.sched_principal.auto_a  stream.credit.pool.servicing.auto_a  \
+period                                                                                    
+2026-01                            148203.556810                          -10399.144348   
+2026-02                            147723.899379                          -10248.423834   
+2026-03                            147245.794348                          -10099.198637   
+2026-04                            146769.236692                           -9951.455247   
+2026-05                            146294.221405                           -9805.180270   
 
          stream.credit.purchase.price.auto_a  
 period                                        
@@ -258,59 +226,32 @@ results.metrics_frame()
 ```
 
 ```
-                                             metric         value currency  \
-0                         domain.credit.collections  3.072748e+07      USD   
-1                domain.credit.collections_multiple  1.241514e+00     None   
-2                            domain.credit.interest  6.499895e+06      USD   
-3                           domain.credit.penalties  8.220768e+04      USD   
-4                           domain.credit.principal  2.297806e+07      USD   
-5                            domain.credit.purchase  2.475000e+07      USD   
-6                          domain.credit.recoveries  1.167320e+06      USD   
-7                           domain.credit.servicing  4.999919e+05      USD   
-8                           domain.credit.wal_years  4.056967e+00     None   
-9                          entity.asset.buyer.total  5.477491e+06      USD   
-10                                       model.moic  1.225381e+00     None   
-11                                        model.npv -2.959752e+05      USD   
-12                            model.payback_periods  8.000000e+01     None   
-13                              model.payback_years  6.750000e+00     None   
-14                                      model.total  5.477491e+06      USD   
-15                                  model.wal_years  3.843940e+00     None   
-16                         run.annual_discount_rate  6.000000e-02     None   
-17                             run.periods_per_year  1.200000e+01     None   
-18         stream.credit.pool.interest.auto_a.total  6.499895e+06      USD   
-19          stream.credit.pool.penalty.auto_a.total  8.220768e+04      USD   
-20           stream.credit.pool.prepay.auto_a.total  8.220768e+06      USD   
-21       stream.credit.pool.recoveries.auto_a.total  1.167320e+06      USD   
-22  stream.credit.pool.sched_principal.auto_a.total  1.475729e+07      USD   
-23        stream.credit.pool.servicing.auto_a.total -4.999919e+05      USD   
-24        stream.credit.purchase.price.auto_a.total -2.475000e+07      USD   
-
-           source  
-0   domain:credit  
-1   domain:credit  
-2   domain:credit  
-3   domain:credit  
-4   domain:credit  
-5   domain:credit  
-6   domain:credit  
-7   domain:credit  
-8   domain:credit  
-9            core  
-10           core  
-11           core  
-12           core  
-13           core  
-14           core  
-15           core  
-16           core  
-17           core  
-18           core  
-19           core  
-20           core  
-21           core  
-22           core  
-23           core  
-24           core  
+                                     metric         value currency         source
+0                 domain.credit.collections  3.072748e+07      USD  domain:credit
+1        domain.credit.collections_multiple  1.241514e+00           domain:credit
+2                    domain.credit.interest  6.499895e+06      USD  domain:credit
+3                   domain.credit.penalties  8.220768e+04      USD  domain:credit
+4                   domain.credit.principal  2.297806e+07      USD  domain:credit
+5                    domain.credit.purchase  2.475000e+07      USD  domain:credit
+6                  domain.credit.recoveries  1.167320e+06      USD  domain:credit
+7                   domain.credit.servicing  4.999919e+05      USD  domain:credit
+8                   domain.credit.wal_years  4.056967e+00           domain:credit
+9                  entity.asset.buyer.total  5.477491e+06      USD           core
+10                               model.moic  1.225381e+00                    core
+11                                model.npv -2.959752e+05      USD           core
+12                    model.payback_periods  8.000000e+01                    core
+13                      model.payback_years  6.750000e+00                    core
+14                              model.total  5.477491e+06      USD           core
+15                          model.wal_years  3.843940e+00                    core
+16                 run.annual_discount_rate  6.000000e-02                    core
+17                     run.periods_per_year  1.200000e+01                    core
+18  stream.credit.pool.interest.auto_a.t...  6.499895e+06      USD           core
+19  stream.credit.pool.penalty.auto_a.total  8.220768e+04      USD           core
+20   stream.credit.pool.prepay.auto_a.total  8.220768e+06      USD           core
+21  stream.credit.pool.recoveries.auto_a...  1.167320e+06      USD           core
+22  stream.credit.pool.sched_principal.a...  1.475729e+07      USD           core
+23  stream.credit.pool.servicing.auto_a.... -4.999919e+05      USD           core
+24  stream.credit.purchase.price.auto_a.... -2.475000e+07      USD           core
 ```
 
 ## What-if

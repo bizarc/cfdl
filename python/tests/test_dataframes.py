@@ -43,6 +43,14 @@ def test_metrics_series_and_frame():
     assert "core" in sources
     assert any(s.startswith("domain:") for s in sources)
 
+    # A unitless metric carries a BLANK currency, never a missing value. The
+    # repr of a missing value in an object column is a pandas display internal
+    # — `None` in pandas 2, `NaN` in pandas 3 — and these frames are rendered
+    # into committed documentation pages.
+    assert not frame["currency"].isna().any()
+    assert all(isinstance(c, str) for c in frame["currency"])
+    assert "" in set(frame["currency"])  # ratios: irr, moic, margins
+
 
 def test_scenarios_frame():
     res = _run("cre_developer_scenarios")

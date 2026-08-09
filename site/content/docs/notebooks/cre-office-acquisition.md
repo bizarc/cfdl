@@ -123,77 +123,45 @@ shape: (120, 23)
 ```
 
 ```
-         domain.cre.debt_service  domain.cre.dscr  domain.cre.egi  \
-period                                                              
-2026-01             36845.249537        -0.719224         -1500.0   
-2026-02             36845.249537        -0.719224         -1500.0   
-2026-03             36845.249537        -0.719224         -1500.0   
-2026-04             36845.249537         0.366397         38500.0   
-2026-05             36845.249537         0.366397         38500.0   
+         domain.cre.debt_service  domain.cre.dscr  domain.cre.egi  domain.cre.leasing_costs  \
+period                                                                                        
+2026-01             36845.249537        -0.719224         -1500.0                  200000.0   
+2026-02             36845.249537        -0.719224         -1500.0                       0.0   
+2026-03             36845.249537        -0.719224         -1500.0                       0.0   
+2026-04             36845.249537         0.366397         38500.0                       0.0   
+2026-05             36845.249537         0.366397         38500.0                       0.0   
 
-         domain.cre.leasing_costs  domain.cre.noi  domain.cre.opex_total  \
-period                                                                     
-2026-01                  200000.0        -26500.0               -25000.0   
-2026-02                       0.0        -26500.0               -25000.0   
-2026-03                       0.0        -26500.0               -25000.0   
-2026-04                       0.0         13500.0               -25000.0   
-2026-05                       0.0         13500.0               -25000.0   
+         domain.cre.noi  domain.cre.opex_total  domain.cre.pgr  entity.asset.tower.net_cash_flow  \
+period                                                                                             
+2026-01        -26500.0               -25000.0         40000.0                    -263345.249537   
+2026-02        -26500.0               -25000.0         40000.0                     -63345.249537   
+2026-03        -26500.0               -25000.0         40000.0                     -63345.249537   
+2026-04         13500.0               -25000.0         40000.0                     -23345.249537   
+2026-05         13500.0               -25000.0         40000.0                     -23345.249537   
 
-         domain.cre.pgr  entity.asset.tower.net_cash_flow  \
-period                                                      
-2026-01         40000.0                    -263345.249537   
-2026-02         40000.0                     -63345.249537   
-2026-03         40000.0                     -63345.249537   
-2026-04         40000.0                     -23345.249537   
-2026-05         40000.0                     -23345.249537   
+         model.net_cash_flow  stream.cre.exit.proceeds  ...  stream.cre.unit.abatement.tenant_a  \
+period                                                  ...                                       
+2026-01       -263345.249537                       0.0  ...                            -40000.0   
+2026-02        -63345.249537                       0.0  ...                            -40000.0   
+2026-03        -63345.249537                       0.0  ...                            -40000.0   
+2026-04        -23345.249537                       0.0  ...                                 0.0   
+2026-05        -23345.249537                       0.0  ...                                 0.0   
 
-         model.net_cash_flow  stream.cre.exit.proceeds  ...  \
-period                                                  ...   
-2026-01       -263345.249537                       0.0  ...   
-2026-02        -63345.249537                       0.0  ...   
-2026-03        -63345.249537                       0.0  ...   
-2026-04        -23345.249537                       0.0  ...   
-2026-05        -23345.249537                       0.0  ...   
+         stream.cre.unit.abatement.tenant_b  stream.cre.unit.base_rent.tenant_a  \
+period                                                                            
+2026-01                                 0.0                             40000.0   
+2026-02                                 0.0                             40000.0   
+2026-03                                 0.0                             40000.0   
+2026-04                                 0.0                             40000.0   
+2026-05                                 0.0                             40000.0   
 
-         stream.cre.unit.abatement.tenant_a  \
-period                                        
-2026-01                            -40000.0   
-2026-02                            -40000.0   
-2026-03                            -40000.0   
-2026-04                                 0.0   
-2026-05                                 0.0   
-
-         stream.cre.unit.abatement.tenant_b  \
-period                                        
-2026-01                                 0.0   
-2026-02                                 0.0   
-2026-03                                 0.0   
-2026-04                                 0.0   
-2026-05                                 0.0   
-
-         stream.cre.unit.base_rent.tenant_a  \
-period                                        
-2026-01                             40000.0   
-2026-02                             40000.0   
-2026-03                             40000.0   
-2026-04                             40000.0   
-2026-05                             40000.0   
-
-         stream.cre.unit.base_rent.tenant_b  \
-period                                        
-2026-01                                 0.0   
-2026-02                                 0.0   
-2026-03                                 0.0   
-2026-04                                 0.0   
-2026-05                                 0.0   
-
-         stream.cre.unit.recoveries.tenant_a  \
-period                                         
-2026-01                                  0.0   
-2026-02                                  0.0   
-2026-03                                  0.0   
-2026-04                                  0.0   
-2026-05                                  0.0   
+         stream.cre.unit.base_rent.tenant_b  stream.cre.unit.recoveries.tenant_a  \
+period                                                                             
+2026-01                                 0.0                                  0.0   
+2026-02                                 0.0                                  0.0   
+2026-03                                 0.0                                  0.0   
+2026-04                                 0.0                                  0.0   
+2026-05                                 0.0                                  0.0   
 
          stream.cre.unit.recoveries.tenant_b  stream.cre.unit.ti_lc.tenant_a  \
 period                                                                         
@@ -242,63 +210,34 @@ results.metrics_frame()
 ```
 
 ```
-                                       metric         value currency  \
-0                     domain.cre.debt_service  4.421430e+06      USD   
-1                             domain.cre.dscr  1.067287e+00     None   
-2                    domain.cre.leasing_costs  5.250000e+05      USD   
-3                              domain.cre.noi  4.718934e+06      USD   
-4                    entity.asset.tower.total  3.009647e+06      USD   
-5                                  model.moic  3.234175e+00     None   
-6                                   model.npv  1.424274e+06      USD   
-7                       model.payback_periods  5.300000e+01     None   
-8                         model.payback_years  4.500000e+00     None   
-9                                 model.total  3.009647e+06      USD   
-10                            model.wal_years  8.508512e+00     None   
-11                   run.annual_discount_rate  7.250000e-02     None   
-12                       run.periods_per_year  1.200000e+01     None   
-13             stream.cre.exit.proceeds.total  3.237143e+06      USD   
-14             stream.cre.property.opex.total -3.361015e+06      USD   
-15    stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD   
-16   stream.cre.rollover.ti_lc.tenant_a.total -1.750000e+05      USD   
-17   stream.cre.unit.abatement.tenant_a.total -1.200000e+05      USD   
-18   stream.cre.unit.abatement.tenant_b.total  0.000000e+00      USD   
-19   stream.cre.unit.base_rent.tenant_a.total  2.548385e+06      USD   
-20   stream.cre.unit.base_rent.tenant_b.total  2.717075e+06      USD   
-21  stream.cre.unit.recoveries.tenant_a.total  3.075942e+04      USD   
-22  stream.cre.unit.recoveries.tenant_b.total  3.012687e+05      USD   
-23       stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD   
-24       stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD   
-25              stream.cre.vacancy.loss.total -1.800000e+05      USD   
-26   stream.loan.permanent_debt_service.total -4.421430e+06      USD   
-
-        source  
-0   domain:cre  
-1   domain:cre  
-2   domain:cre  
-3   domain:cre  
-4         core  
-5         core  
-6         core  
-7         core  
-8         core  
-9         core  
-10        core  
-11        core  
-12        core  
-13        core  
-14        core  
-15        core  
-16        core  
-17        core  
-18        core  
-19        core  
-20        core  
-21        core  
-22        core  
-23        core  
-24        core  
-25        core  
-26        core  
+                                     metric         value currency      source
+0                   domain.cre.debt_service  4.421430e+06      USD  domain:cre
+1                           domain.cre.dscr  1.067287e+00           domain:cre
+2                  domain.cre.leasing_costs  5.250000e+05      USD  domain:cre
+3                            domain.cre.noi  4.718934e+06      USD  domain:cre
+4                  entity.asset.tower.total  3.009647e+06      USD        core
+5                                model.moic  3.234175e+00                 core
+6                                 model.npv  1.424274e+06      USD        core
+7                     model.payback_periods  5.300000e+01                 core
+8                       model.payback_years  4.500000e+00                 core
+9                               model.total  3.009647e+06      USD        core
+10                          model.wal_years  8.508512e+00                 core
+11                 run.annual_discount_rate  7.250000e-02                 core
+12                     run.periods_per_year  1.200000e+01                 core
+13           stream.cre.exit.proceeds.total  3.237143e+06      USD        core
+14           stream.cre.property.opex.total -3.361015e+06      USD        core
+15  stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD        core
+16  stream.cre.rollover.ti_lc.tenant_a.t... -1.750000e+05      USD        core
+17  stream.cre.unit.abatement.tenant_a.t... -1.200000e+05      USD        core
+18  stream.cre.unit.abatement.tenant_b.t...  0.000000e+00      USD        core
+19  stream.cre.unit.base_rent.tenant_a.t...  2.548385e+06      USD        core
+20  stream.cre.unit.base_rent.tenant_b.t...  2.717075e+06      USD        core
+21  stream.cre.unit.recoveries.tenant_a....  3.075942e+04      USD        core
+22  stream.cre.unit.recoveries.tenant_b....  3.012687e+05      USD        core
+23     stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD        core
+24     stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD        core
+25            stream.cre.vacancy.loss.total -1.800000e+05      USD        core
+26  stream.loan.permanent_debt_service.t... -4.421430e+06      USD        core
 ```
 
 ## What-if
@@ -312,7 +251,7 @@ mf[mf["metric"].str.contains("dscr|noi|exit", case=False)]
 
 ```
                             metric         value currency      source
-1                  domain.cre.dscr  1.067287e+00     None  domain:cre
+1                  domain.cre.dscr  1.067287e+00           domain:cre
 3                   domain.cre.noi  4.718934e+06      USD  domain:cre
 13  stream.cre.exit.proceeds.total  3.237143e+06      USD        core
 ```

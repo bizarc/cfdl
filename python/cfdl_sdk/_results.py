@@ -5,7 +5,7 @@ import json
 
 import pandas as pd
 
-from ._frames import currency_of, period_index, scalar
+from ._frames import currency_label, currency_of, period_index, scalar
 
 
 class Results:
@@ -82,7 +82,7 @@ class Results:
                         "series": name,
                         "period": period,
                         "amount": scalar(value),
-                        "currency": currency_of(value),
+                        "currency": currency_label(value),
                     }
                 )
         return pd.DataFrame(rows, columns=["series", "period", "amount", "currency"])
@@ -124,7 +124,7 @@ class Results:
                 {
                     "metric": name,
                     "value": scalar(value),
-                    "currency": currency_of(value),
+                    "currency": currency_label(value),
                     "source": "core",
                 }
             )
@@ -133,7 +133,7 @@ class Results:
                 {
                     "metric": name,
                     "value": scalar(value),
-                    "currency": currency_of(value),
+                    "currency": currency_label(value),
                     "source": f"domain:{pack}" if pack else "domain",
                 }
             )
