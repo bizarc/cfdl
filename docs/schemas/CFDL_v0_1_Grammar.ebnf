@@ -141,7 +141,7 @@ amount_stmt     = "amount" expr ;
    later may draw on an earlier one's output as its own pot. Composition
    follows declaration order, the same rule steps follow inside a waterfall.
 
-   A waterfall runs after the period's streams and states, so it allocates cash
+   A waterfall runs after the period's fields and streams, so it allocates cash
    that already exists and never feeds a stream in the same period.
    See docs/17_ordered_waterfall.md. --- *)
 waterfall_stmt  = "waterfall" qname

@@ -689,7 +689,6 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
-        Stmt::State(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,

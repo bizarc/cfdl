@@ -242,7 +242,7 @@ Every step is `pay <name> to <payee> = <expr>`, and a step takes what it asks
 for or what is left, whichever is smaller. `remaining` is what survives the
 steps above; `paid.<step>` and `owed.<step>` read what an earlier step did.
 
-A waterfall runs after the period's streams and states, so it shares out money
+A waterfall runs after the period's fields and streams, so it shares out money
 that already exists. Its steps publish as series, so a waterfall declared later
 can draw on an earlier one's payment as its own pot — a fund's carry becoming a
 management company's. See [Waterfalls](/docs/guides/waterfalls).

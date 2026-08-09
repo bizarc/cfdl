@@ -169,34 +169,22 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E1107_MULTIPLE_USE_PACK` — more than one `use pack`. A model draws contracts from a single pack.
 - `E1108_USE_PACK_NOT_IN_MODEL_FILE` — `use pack` appears in an imported file rather than the model's own. The pack applies to the whole model, so it is declared where the model is.
 - `E1109_MISSING_ENTITY` — no entity is declared. Every stream belongs to one.
-State declarations:
+Fields that move:
 
-- `E1120_STATE_MISSING_INIT` — a `state` has no `init`. The value at period 0 is
-  required, not defaulted: a recurrence with an unstated base case would
-  evaluate to zero for every period, and an out-of-range read returns zero
-  silently, so the error would never surface.
-- `E1121_STATE_MISSING_NEXT` — a `state` has no `next`. It would hold its
-  initial value forever, which an `assume` expresses more clearly.
-- `E1122_STATE_DUPLICATE_NAME` — two states share a name.
-- `E1123_STATE_PREV_OUTSIDE_NEXT` — `prev` appears in `init`. There is no period
-- `E1127_FIELD_RULE_READS_FIELD` — a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev <entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero.
+- `E1123_PREV_OUTSIDE_NEXT` — `prev` names a recurrence's own previous value and
+  means nothing outside a `next`. A field's previous value is readable elsewhere
+  as `prev.<entity>.<field>`.
+- `E1125_NO_STATE_NAMESPACE` — an expression reads `state.<name>`. There is no
+  such namespace: a value that changes over time is a field of the entity it
+  describes, declared as `<name> init <expr> next <expr>` inside that entity's
+  block and read as `<family>.<entity>.<name>`. Without this the reference
+  reaches the engine, which warns and substitutes zero — an entire series
+  evaluating to nothing while the run still reports `status: ok`.
+- `E1127_FIELD_RULE_READS_FIELD` — a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev.<entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero.
 - `E1128_FIELD_DECLARED_TWICE` — a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win.
 - `E1129_PREV_IN_FIRST_PERIOD` — a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero.
 - `E1131_UNKNOWN_FIELD_READ` — an expression reads a field the entity does not declare. Field paths resolve through the open-world `entity` root, so unrejected a misspelling reads as null and becomes zero in arithmetic. Lifecycle `status` keeps the open world; declared fields do not.
-  before the first, so the initial value cannot depend on a previous one.
-- `E1124_STATE_SAME_PERIOD_READ` — `state.<name>` appears inside a `next`.
-  That path reads the **current** period, which is the same-period edge the
-  design exists to prevent; `prev.<name>` reads another state's previous value.
-- `E1126_STATE_INIT_READS_STATE` — `state.<name>` appears inside an `init`.
-  Every state is seeded at period 0 together, so there is no order in which one
-  already holds a value for another to read: the expression evaluated to zero
-  and said nothing. The same edge `next` rejects, one period earlier. Inline the
-  expression, or read the state from a stream or waterfall, both of which see
-  period-close values.
-- `E1125_STATE_UNKNOWN_REFERENCE` — a `state.<name>` or `prev.<name>` names a
-  state that is not declared. Without this the reference reaches the engine,
-  which warns and substitutes zero — so an entire series evaluates to nothing
-  while the run still reports `status: ok`.
+
 ### 7.4 Symbols and references (E13xx)
 - `E1001_DUPLICATE_ENTITY` — two entities share a name.
 - `E1002_DUPLICATE_CONTRACT` — two contracts share a name. Give one a suffix to keep them separable.
@@ -293,13 +281,13 @@ Warnings:
 - `E5009_LOWERED_EXPR_INVALID` — a pack lowering rule expanded to an amount
   expression the parser rejects. Without this the engine evaluates the failed
   expression as zero and continues with only a warning.
-- `E5020_LOWERED_STATE_INVALID` — a pack lowering rule expanded to a `state`
+- `E5020_LOWERED_FIELD_INVALID` — a pack lowering rule expanded to a field
   `init` or `next` the parser rejects. Same reasoning as `E5009`: the engine's
-  fallback for a failed state is zero, which would flatten every stream reading
-  it rather than fail loudly.
-- `E5021_DUPLICATE_LOWERED_STATE` — two contracts lower to one state name with
+  fallback for a failed rule is zero, which would flatten every stream reading
+  the field rather than fail loudly.
+- `E5021_DUPLICATE_LOWERED_FIELD` — two contracts lower to one field name with
   *different* recurrences, so one would silently win. Give the rule's
-  `state_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
+  `field_name` a per-contract discriminator (`{{contract.suffix_ident}}`).
   Identical definitions collapse instead, which is what several contracts
   sharing one curve should do.
 Statement completeness. These are warnings rather

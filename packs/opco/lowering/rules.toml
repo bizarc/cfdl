@@ -21,7 +21,7 @@
 #     require a planned engine allocation pass; term debt here is
 #     scheduled (IO period + level-pay amortization + balloon at maturity).
 #   - No NOL carryforwards in cash taxes (losses floor at zero tax per
-#     period); carryforwards need H3-style state.
+#     period); carryforwards need a field with a recurrence.
 
 # ---------------------------------------------------------------------------
 # Operating lines.
@@ -65,7 +65,7 @@ stream_name = "opco.revenue.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.recurring"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * state.opco_revenue_growth{{contract.suffix_ident}}"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_revenue_growth{{contract.suffix_ident}}"
 field_name = "opco_revenue_growth{{contract.suffix_ident}}"
 field_init = "1"
 field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"
@@ -91,7 +91,7 @@ stream_name = "opco.opex.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.opex"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * state.opco_opex_growth{{contract.suffix_ident}}"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_opex_growth{{contract.suffix_ident}}"
 field_name = "opco_opex_growth{{contract.suffix_ident}}"
 field_init = "1"
 field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"
@@ -179,7 +179,7 @@ stream_name = "opco.capex{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.capital.capex"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * state.opco_capex_growth{{contract.suffix_ident}} + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_capex_growth{{contract.suffix_ident}} + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
 field_name = "opco_capex_growth{{contract.suffix_ident}}"
 field_init = "1"
 field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"

@@ -70,8 +70,7 @@ The host (compiler or engine) provides values under these roots:
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
 | `inputs` | assumption values (`assume` statements) |
-| `state` | declared `state` values **at the current period** — present in stream expressions only |
-| `prev` | declared `state` values **at the previous period** — present inside a state's `next` only |
+| `prev` | a field's own previous value, bare — present inside that field's `next` only |
 | `prev.<entity>.<field>` | a field one period back — `prev.asset.tlb.balance`, inside a rule |
 | `remaining` | what is left in the pot — present in waterfall step expressions only (§3.2) |
 | `paid` | `paid.<step>`, what an earlier waterfall step actually paid — steps only |
@@ -98,21 +97,21 @@ the compiler can see that. `time.ppy` reads the calendar and would say 365.
 an Actual/360 or Actual/365 accrual expressible: `rate * time.days_in_period /
 360`. Packs reach it through `{{model.accrual_divisor}}` rather than directly.
 
-### 3.1 States: `state.<name>` and `prev`
+### 3.1 Fields that move: `<family>.<entity>.<field>` and `prev`
 
-A `state` is a named number per period defined by a recurrence — the one shape
-`pow(1 + r, t)` cannot express, since that applies a single period's rate as
-though it had held from the start.
+A field with a rule is a named number per period defined by a recurrence — the
+one shape `pow(1 + r, t)` cannot express, since that applies a single period's
+rate as though it had held from the start. It belongs to the entity it describes:
 
 ```cfdl
-state revenue_index {
-  init  1.0
-  next  prev * (1 + curve_value("growth", time.date))
+entity asset firm : Asset.Financial {
+  revenue_index init 1.0
+                next prev * (1 + curve_value("growth", time.date))
 }
 
 stream firm.revenue on entity asset.firm inflow currency USD {
   schedule every year from 2026-01 to 2035-01
-  amount = 21765.4 * state.revenue_index
+  amount = 21765.4 * asset.firm.revenue_index
 }
 ```
 
@@ -120,75 +119,66 @@ stream firm.revenue on entity asset.firm inflow currency USD {
 would otherwise evaluate as a silent zero for every period, since an unmatched
 lookup returns 0. `next` is the value at every later period.
 
-Inside `next`, bare `prev` is this state's own previous value and `prev.<name>`
-is another state's. The two prefixes never overlap, and each exists in exactly
-one place:
+Inside `next`, bare `prev` is this field's own previous value and
+`prev.<family>.<entity>.<field>` is another field's. A rule may not read any
+field at the current period, which is what keeps a cycle unexpressible:
 
-| prefix | resolves to | present in |
+| form | resolves to | present in |
 |---|---|---|
-| `state.<name>` | that state at the **current** period | stream expressions |
-| `prev.<name>` | that state at the **previous** period | `next` expressions |
+| `<family>.<entity>.<field>` | that field at the **current** period | streams, waterfall steps, event guards |
+| `prev` | this field at the **previous** period | `next` expressions |
+| `prev.<family>.<entity>.<field>` | another field at the **previous** period | `next` expressions, streams |
 
-This is separation **by absence**, not by check — a `next` environment carries
-no `state` map and a stream environment carries no `prev` map, so the entry is
-not there to be found. The same mechanism as `series` being empty when a
-phase-1 stream evaluates.
+A stream environment carries no bare `prev`, so a stream cannot ask for "the
+previous value" of something it does not own — the entry is not there to be
+found. The same mechanism as `series` being empty when a phase-1 stream
+evaluates.
 
-Because everything a state can read is already finished, no reference can close
-a cycle. States may therefore reference each other freely, including mutually,
-and **declaration order carries no meaning**:
-
-```cfdl
-state a { init 1  next prev + prev.b }
-state b { init 1  next prev + prev.a }
-```
-
-### A state has its own clock
-
-A state may carry the same `schedule` clause a stream does:
+Because everything a rule can read is already finished, no reference can close a
+cycle. Fields may therefore reference each other freely, including mutually, and
+**declaration order carries no meaning**:
 
 ```cfdl
-state pool_survival {
-  schedule every quarter from 2026-01 to 2031-01
-  init 1.0
-  next prev * (1 - hazard)
+entity asset pair : Asset.Financial {
+  a init 1.0 next prev + prev.asset.pair.b
+  b init 1.0 next prev + prev.asset.pair.a
 }
 ```
 
-The recurrence **steps** on that cadence and **holds** between ticks. Absent, it
-steps every model period, which is what a state without the clause has always
-meant.
+### A field steps on the clock of whatever brought it
 
-This matters because the model's clock is not the instrument's. A pool carried
-on a daily calendar but paying monthly must compound its hazard twelve times a
-year, not three hundred and sixty-five — the same separation a stream's
-`schedule every quarter` already expresses on a monthly book.
+A field has no `schedule` clause of its own. An entity is not a temporal thing:
+it does not start, stop or recur, so there is no cadence for it to carry. A
+field declared directly on an entity therefore steps every model period.
 
-Two details that are off-by-one traps, both found by building the fixture:
+A field a CONTRACT brings inherits that contract's schedule, because the
+contract is the thing with a term and a payment frequency. The recurrence
+**steps** on that cadence and **holds** between ticks, which is what lets a pool
+carried on a daily calendar but paying monthly compound its hazard twelve times
+a year rather than three hundred and sixty-five.
+
+Two details that are off-by-one traps:
 
 - The recurrence steps on **accrual** periods, not settlement periods. A
   quarterly schedule accrues at periods 0, 3, 6 and settles at 2, 5, 8; a
-  stream's amount is evaluated at the accrual, so that is where the state must
+  stream's amount is evaluated at the accrual, so that is where the field must
   align.
 - `init` is the value **at the first tick**, not at model period 0. Otherwise
   the first payment would read the second value of the recurrence.
 
-An interval finer than the model calendar is
-`E2108_SCHEDULE_FINER_THAN_CALENDAR`, exactly as for a stream.
-
 Three further properties, each the opposite of a defensible alternative:
 
-- **Holding is not being inactive.** Outside its window, and between ticks, a
-  state keeps its value. An inactive *stream* yields 0; a state does not, which
-  is why `active when` is deliberately absent — a schedule says *when the
-  recurrence advances*, not *whether the quantity exists*.
-- **A state is not cash.** It has no entity, direction or currency. It is
-  published in results as `state.<name>` with bare numbers, and never enters
-  `model.total`, `model.npv`, the annual rollup or any domain metric.
-- **`next` has no series access** in v0.1. It sees `prev`, `prev.<name>`,
-  `time.*`, `inputs.*`, `cfg`, `obs` and curves. Reading another *stream's*
-  history from a recurrence is not expressible yet; `series_sum` remains the
-  route to a stream's window, from a stream.
+- **Holding is not being inactive.** Between ticks a field keeps its value. An
+  inactive *stream* yields 0; a field does not, which is why `active when` has
+  no meaning here — a cadence says *when the recurrence advances*, not *whether
+  the quantity exists*.
+- **A field is not cash.** It has no direction or currency. It is published in
+  results under its own path as bare numbers, and never enters `model.total`,
+  `model.npv`, the annual rollup or any domain metric.
+- **`next` has no series access** in v0.1. It sees `prev`,
+  `prev.<family>.<entity>.<field>`, `time.*`, `inputs.*`, `cfg`, `obs` and
+  curves. Reading a *stream's* history from a recurrence is not expressible;
+  `series_sum` remains the route to a stream's window, from a stream.
 
 See `docs/14_state_and_recurrence.md` for the design and the prior art it
 follows.
@@ -215,8 +205,8 @@ That is how a capped fee gets its overflow paid at a later priority, and how a
 step measures a balance "after giving effect to" the payments above it. Reading
 a step declared later is a compile error.
 
-A step also sees everything a stream sees, including `state.<name>` at the
-current period — a waterfall runs after states are evaluated, so the balances
+A step also sees everything a stream sees, including entity fields at the
+current period — a waterfall runs after fields are evaluated, so the balances
 it tests are period-close values.
 
 Steps publish as series `stream.<waterfall>.<step>`, so `series_sum` reaches an

@@ -13,7 +13,7 @@ is invisible to them.
 Measured rather than assumed, by injecting a 10x typo (`0.002` -> `0.02`) into
 one PSA branch and re-blessing:
 
-    typo in a shared `field_next`      -> E5021_DUPLICATE_LOWERED_STATE
+    typo in a shared `field_next`      -> E5021_DUPLICATE_LOWERED_FIELD
     typo in one rule's `amount_expr`   -> gold PASSES, benchmarks PASS,
                                           analytic checks PASS, only this gate
                                           fails

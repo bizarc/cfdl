@@ -30,7 +30,6 @@ pub enum Stmt {
     Entity(EntityStmt),
     Assume(AssumeStmt),
     Curve(CurveStmt),
-    State(StateStmt),
     Contract(ContractStmt),
     Stream(StreamStmt),
     Event(EventStmt),
@@ -234,31 +233,6 @@ pub struct AssumeStmt {
 /// `curve <name> [step|linear] { <date>: <number>, ... }` — a named
 /// date-indexed value curve (e.g. a forward rate curve), looked up in
 /// expressions with `curve_value("<name>", <date>)`.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
-pub struct StateStmt {
-    pub name: String,
-    /// Value at period 0. Mandatory — a recurrence with an unstated base case
-    /// would otherwise read as a silent zero for every period.
-    pub init: Option<ExprSlot>,
-    /// Value at every later period. `prev` is bound to this state's value at
-    /// t-1; `prev.<other>` reads another state's.
-    pub next: Option<ExprSlot>,
-    /// When the recurrence STEPS, and over what window.
-    ///
-    /// A state's clock is its own, exactly as a stream's is: a pool carried on
-    /// a daily book but paying monthly must advance twelve times a year, not
-    /// three hundred and sixty-five. Absent means every model period over the
-    /// whole timeline, which is what every state written before this existed
-    /// assumes.
-    ///
-    /// Outside the window, and between ticks, the state HOLDS. It does not go
-    /// to zero — that is the difference between a schedule and `active when`,
-    /// and the reason `active when` is deliberately absent here. See
-    /// docs/14_state_and_recurrence.md.
-    pub schedule: Option<ScheduleSpec>,
-    pub span: Span,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CurveStmt {
     pub name: String,
@@ -3268,7 +3242,6 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
-        Stmt::State(s) => s.span,
         Stmt::Run(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,

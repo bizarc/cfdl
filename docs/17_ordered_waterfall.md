@@ -103,7 +103,7 @@ same rule events and options already follow.
 
 ## 4. Evaluation
 
-A waterfall runs **after** streams and states for the period are known, and
+A waterfall runs **after** the period's fields and streams are known, and
 before results are published. It reads period-close state, because the pot it
 allocates is this period's cash and the balances it measures are this period's
 balances.
@@ -250,7 +250,7 @@ cadence of its own. Two shapes cover the roadmap:
 So a waterfall takes a **`schedule`**, the same construct a stream takes, and
 the two shapes are `schedule every month …` and `schedule on <date>`. That is
 reuse rather than a new mechanism, and it settles a question §4 left vague by
-saying only "after streams and states are known":
+saying only "after the period's fields and streams are known":
 
     waterfall opco.exit on entity asset.target {
       schedule on 2021-01

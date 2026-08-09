@@ -707,21 +707,26 @@ Use it for operating flows. Do not use it for a **price**: a disposal, a
 terminal value or an acquisition is struck at a point in time and discounts
 whole, which is what `schedule_at_period_end` is for.
 
-### A rule may declare a state
+### A rule may declare a field
 
 A rule that compounds a rate which MOVES cannot use `pow(1 + g, t)` — that
 applies one period's rate as though it had held from the start, which is exact
-while the rate is flat and wrong the moment it varies. Three optional fields let
+while the rate is flat and wrong the moment it varies. Three optional keys let
 the rule declare a recurrence instead:
 
 ```toml
-amount_expr = "{{contract.amount}} * state.opco_revenue_growth{{contract.suffix_ident}}"
+amount_expr = "{{contract.amount}} * field.opco_revenue_growth{{contract.suffix_ident}}"
 field_name  = "opco_revenue_growth{{contract.suffix_ident}}"
 field_init  = "1"
 field_next  = "prev * pow(1 + curve_value(\"{{contract.growth_curve}}\", time.date), 1 / {{model.periods_per_year}})"
 ```
 
-A state may also carry its own clock:
+The field is attached to the contract's subject entity, because that is what the
+value is a fact about. `field.<name>` is the rule's own placeholder for it: a
+rule cannot know which entity it will be attached to, so it names the field it
+declares and lowering rewrites that to the entity path a model would write.
+
+A field a contract brings inherits the contract's own clock:
 
 ```toml
 field_every = "{{contract.payment_frequency}}"
@@ -737,21 +742,19 @@ and sixty-five, and `{{time.elapsed_periods}}` counts the rule's *payment*
 periods — so a rule whose `schedule_every` is templated almost certainly wants
 `field_every` templated the same way.
 
-The state steps on its **accrual** periods and **holds** between ticks and
+The field steps on its **accrual** periods and **holds** between ticks and
 outside `field_from`/`field_to`. It does not fall to zero: that is what
-separates a schedule from `active when`, which a state deliberately does not
-have. An interval finer than the model calendar is
-`E2108_SCHEDULE_FINER_THAN_CALENDAR`, the same rule a stream obeys.
+separates a cadence from `active when`, which a field does not have. An interval
+finer than the model calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR`, the same
+rule a stream obeys.
 
 All templated. `field_name` must expand to a **single identifier** —
-`state.<name>` resolves one segment, so `{{contract.dot_suffix}}` would produce
+`field.<name>` resolves one segment, so `{{contract.dot_suffix}}` would produce
 an unreachable path; use `{{contract.suffix_ident}}`.
 
-States are deduplicated by name across contracts. Identical definitions collapse,
+Fields are deduplicated by name across contracts. Identical definitions collapse,
 which is what several contracts sharing one curve should do; differing ones are
-`E5021_DUPLICATE_LOWERED_STATE` rather than one silently winning. A state the
-*model* declares under the same name wins over the rule's — a pack should never
-invisibly override what a modeller wrote.
+`E5021_DUPLICATE_LOWERED_FIELD` rather than one silently winning.
 
 The construct itself is language-level and needs no pack: see
 `docs/14_state_and_recurrence.md` and §3.1 of `docs/03_expression_environment.md`.
