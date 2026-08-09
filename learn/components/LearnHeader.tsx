@@ -7,7 +7,7 @@ import { firstChapter } from "@/lib/chapters";
 
 const NAV = [
   { href: "/#curriculum", label: "Curriculum" },
-  { href: "/#course-kit", label: "Course kit" },
+  { href: "/course-kit", label: "Course kit" },
 ];
 
 export function LearnHeader() {
