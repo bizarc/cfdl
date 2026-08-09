@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "65a8224bb01d3d204c989b49aa8a5457ab290dff026b28fcae4ae2db1c466f6c",
-  "ledger_hash": "fb68ae513fc28b13e018314f7b8a5f1a10708255ff21e0acdbeab863871d2d4f",
+  "model_hash": "fd83c59775c50e8dbe586399ebc478680c4ffa4c775067434b472663c3a46a48",
+  "ledger_hash": "c9c7f3929a632b37e089cd64025f659d90d9cfdf2c56ccef2fea9d4f9e149bec",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -43,6 +43,19 @@
       "run.periods_per_year": 12.0
     },
     "series": {
+      "asset.trust.available_funds": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 4
+        },
+        "values": [
+          1000.0,
+          1000.0,
+          1000.0,
+          1000.0
+        ]
+      },
       "domain.credit.balance_outstanding": {
         "index": {
           "calendar": "monthly",
@@ -429,19 +442,6 @@
             "amount": 0.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.available_funds": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 4
-        },
-        "values": [
-          1000.0,
-          1000.0,
-          1000.0,
-          1000.0
         ]
       },
       "state.pool_balance": {

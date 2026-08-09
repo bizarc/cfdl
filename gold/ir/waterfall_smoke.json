@@ -28,6 +28,18 @@
       "fields": {
         "original_balance": "1000"
       },
+      "rules": {
+        "available_funds": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1000.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
       "state": {}
     },
     {
@@ -64,17 +76,6 @@
   },
   "states": [
     {
-      "name": "available_funds",
-      "init": {
-        "lang": "cfdl",
-        "src": "1000.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev"
-      }
-    },
-    {
       "name": "pool_balance",
       "init": {
         "lang": "cfdl",
@@ -98,7 +99,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "state.available_funds"
+        "src": "asset.trust.available_funds"
       },
       "steps": [
         {

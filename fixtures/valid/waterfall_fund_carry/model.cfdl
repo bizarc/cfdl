@@ -26,7 +26,11 @@ time calendar annual from 2020-01 for 6
 // works through why an IRR HURDLE is closed-form too: the hurdle rate is an
 // input, so nothing solves for a rate — only for the payment that reaches it.
 
-entity asset fund : Asset.Financial
+entity asset fund : Asset.Financial {
+  // Capital plus the compounding preferred — the fund's own hurdle.
+  lp_preference init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+                next prev
+}
 entity party lp   : Party { name = "Limited Partners" }
 entity party gp   : Party { name = "General Partner" }
 
@@ -47,17 +51,13 @@ assume proceeds       = 30000000.0
 
 // Capital plus the compounding preferred, measured from inception — the tier
 // one hurdle in money rather than in rate.
-state lp_preference {
-  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
-  next prev
-}
 
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
   from inputs.proceeds
 
   // 1. Return of capital and the 8% cumulative preferred, to the LPs.
-  pay lp_preference to party.lp = state.lp_preference
+  pay lp_preference to party.lp = asset.fund.lp_preference
 
   // 2. Full GP catch-up: 20% of everything paid in tiers 1's preferred
   //    component and this one together. Closed form, X = pref / 4.
