@@ -180,107 +180,13 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         }
     }
 
-    let mut state_names: Vec<&str> = Vec::new();
-    for source_stmt in &output.source_statements {
-        let Stmt::State(state) = &source_stmt.statement else {
-            continue;
-        };
-        if state.init.is_none() {
-            diagnostics.push(ValidationDiagnostic {
-                code: "E1120_STATE_MISSING_INIT",
-                message: format!(
-                    "State '{}' is missing required 'init'. A recurrence needs its value at period 0 stated; without it every period would evaluate to zero.",
-                    state.name
-                ),
-                file: source_stmt.file.clone(),
-                span: state.span,
-            });
-        }
-        if state.next.is_none() {
-            diagnostics.push(ValidationDiagnostic {
-                code: "E1121_STATE_MISSING_NEXT",
-                message: format!(
-                    "State '{}' is missing required 'next'. Without it the state would hold its initial value forever, which a plain input expresses more clearly.",
-                    state.name
-                ),
-                file: source_stmt.file.clone(),
-                span: state.span,
-            });
-        }
-        if state_names.contains(&state.name.as_str()) {
-            diagnostics.push(ValidationDiagnostic {
-                code: "E1122_STATE_DUPLICATE_NAME",
-                message: format!("State '{}' is declared more than once.", state.name),
-                file: source_stmt.file.clone(),
-                span: state.span,
-            });
-        } else {
-            state_names.push(state.name.as_str());
-        }
-        if let Some(init) = &state.init {
-            // `state.<other>` in an `init` names a value that does not exist
-            // yet. States are seeded together at period 0, so there is no order
-            // in which one could already hold a value for another to read — it
-            // evaluated to ZERO and said nothing, which is how an IRR-hurdle
-            // model computed every vested share as nothing at all.
-            //
-            // The same edge `next` already rejects, one period earlier. It was
-            // missed because the rule was written about same-period reads and
-            // period 0 did not look like a period.
-            if references_state_path(&init.src) {
-                diagnostics.push(ValidationDiagnostic {
-                    code: "E1126_STATE_INIT_READS_STATE",
-                    message: format!(
-                        "State '{}' reads another state in 'init'. Every state is seeded at period 0 together, so there is no value there to read; it would evaluate to zero. Inline the expression, or read the state from a stream or waterfall, which see period-close values.",
-                        state.name
-                    ),
-                    file: source_stmt.file.clone(),
-                    span: init.span,
-                });
-            }
-            if references_prev(&init.src) {
-                diagnostics.push(ValidationDiagnostic {
-                    code: "E1123_STATE_PREV_OUTSIDE_NEXT",
-                    message: format!(
-                        "State '{}' uses 'prev' in 'init'. There is no period before the first, so 'init' must not depend on a previous value.",
-                        state.name
-                    ),
-                    file: source_stmt.file.clone(),
-                    span: init.span,
-                });
-            }
-        }
-        if let Some(next) = &state.next {
-            if references_state_path(&next.src) {
-                diagnostics.push(ValidationDiagnostic {
-                    code: "E1124_STATE_SAME_PERIOD_READ",
-                    message: format!(
-                        "State '{}' reads 'state.<name>' inside 'next', which is the CURRENT period. Use 'prev.<name>' for another state's previous value.",
-                        state.name
-                    ),
-                    file: source_stmt.file.clone(),
-                    span: next.span,
-                });
-            }
-        }
-    }
-
-    // Every `state.<name>` and `prev.<name>` must name a declared state.
-    // Without this an undeclared reference reaches the engine, which warns and
-    // substitutes zero — so a whole series silently evaluates to nothing while
-    // the run still reports `status: ok`. Demonstrated before this check
-    // existed; see docs/14_state_and_recurrence.md.
+    // THERE IS NO `state.` NAMESPACE. A value that changes over time is a field
+    // of the entity it describes, so a `state.<name>` read names nothing.
+    // Without this check it reaches the engine, which warns and substitutes
+    // zero — a whole series silently evaluating to nothing while the run still
+    // reports `status: ok`.
     for source_stmt in &output.source_statements {
         let referenced: Vec<(&str, Span)> = match &source_stmt.statement {
-            Stmt::State(state) => state
-                .next
-                .iter()
-                .flat_map(|slot| {
-                    referenced_names(&slot.src, "prev.")
-                        .into_iter()
-                        .map(move |n| (n, slot.span))
-                })
-                .collect(),
             Stmt::Stream(stream) => {
                 // A stream reads the CURRENT period, so `prev` has no meaning
                 // there. Its env carries no `prev` map, so without this the
@@ -289,9 +195,9 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 for slot in stream.amount.iter().chain(stream.active_when.iter()) {
                     if references_prev_other_than_field(&slot.src) {
                         diagnostics.push(ValidationDiagnostic {
-                            code: "E1123_STATE_PREV_OUTSIDE_NEXT",
+                            code: "E1123_PREV_OUTSIDE_NEXT",
                             message: format!(
-                                "Stream '{}' uses 'prev' for a recurrence's own previous value, which means nothing outside a 'next'. A FIELD's previous value is readable here as 'prev.<entity>.<field>'; for a state's value at this period use 'state.<name>'.",
+                                "Stream '{}' uses 'prev' for a recurrence's own previous value, which means nothing outside a 'next'. A field's previous value is readable here as 'prev.<entity>.<field>', and its value at this period as '<entity>.<field>'.",
                                 stream.name
                             ),
                             file: source_stmt.file.clone(),
@@ -313,21 +219,14 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
             _ => Vec::new(),
         };
         for (name, span) in referenced {
-            if !state_names.contains(&name) {
-                diagnostics.push(ValidationDiagnostic {
-                    code: "E1125_STATE_UNKNOWN_REFERENCE",
-                    message: format!(
-                        "Reference to state '{name}', which is not declared. Declared states: {}.",
-                        if state_names.is_empty() {
-                            "none".to_string()
-                        } else {
-                            state_names.join(", ")
-                        }
-                    ),
-                    file: source_stmt.file.clone(),
-                    span,
-                });
-            }
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1125_NO_STATE_NAMESPACE",
+                message: format!(
+                    "Reference to 'state.{name}', which names nothing. A value that changes over time is a field of the entity it describes: declare it as '{name} init <expr> next <expr>' inside that entity's block and read it as '<family>.<entity>.{name}'."
+                ),
+                file: source_stmt.file.clone(),
+                span,
+            });
         }
     }
 
@@ -764,17 +663,12 @@ fn fmt_date(date: Date) -> String {
     format!("{:04}-{:02}-{:02}", date.year, date.month, date.day)
 }
 
-/// Whether an expression source mentions `prev`, bare or namespaced.
+/// `prev` used for anything OTHER than a field's previous value.
 ///
 /// Source-text matching rather than an AST walk, deliberately: validation runs
 /// before expressions are compiled, and every other check at this layer works
 /// the same way. Word-bounded so `prev_year` and `inputs.prevailing` do not
 /// match.
-fn references_prev(src: &str) -> bool {
-    mentions_word(src, "prev")
-}
-
-/// `prev` used for anything OTHER than a field's previous value.
 ///
 /// A stream may read `prev.<family>.<entity>.<field>` — the close before this
 /// one, which the engine has as a column and which a debt schedule needs for
@@ -838,18 +732,6 @@ fn reads_moving_field(src: &str, rule_fields: &BTreeSet<String>) -> bool {
     false
 }
 
-/// Whether an expression source reads `state.<name>` — the CURRENT period.
-fn references_state_path(src: &str) -> bool {
-    src.match_indices("state.").any(|(idx, _)| {
-        let before_ok = idx == 0
-            || !src[..idx]
-                .chars()
-                .next_back()
-                .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
-        before_ok
-    })
-}
-
 /// The `<name>` of every `<prefix><name>` in an expression source.
 fn referenced_names<'a>(src: &'a str, prefix: &str) -> Vec<&'a str> {
     let mut out = Vec::new();
@@ -872,19 +754,6 @@ fn referenced_names<'a>(src: &'a str, prefix: &str) -> Vec<&'a str> {
     out
 }
 
-fn mentions_word(src: &str, word: &str) -> bool {
-    src.match_indices(word).any(|(idx, _)| {
-        let before = src[..idx].chars().next_back();
-        let after = src[idx + word.len()..].chars().next();
-        // A root, so `inputs.prev` is a different name entirely — the dot
-        // has to disqualify the match as much as an alphanumeric would.
-        let starts = before.is_none_or(|c| !(c.is_alphanumeric() || c == '_' || c == '.'));
-        // `prev.foo` is still a `prev` mention; `prev_year` is not.
-        let ends = after.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
-        starts && ends
-    })
-}
-
 fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Version(s) => s.span,
@@ -896,7 +765,6 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
-        Stmt::State(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,

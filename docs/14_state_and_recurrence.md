@@ -1,15 +1,35 @@
-# State and recurrence — design
+# Recurrence — design
 
-Status: **shipped.** The construct is `state <name> { init … next … }`; see
-`fixtures/valid/state_smoke` for the smallest example and `compute_states` in
-`crates/cfdl-engine/src/lib.rs` for the evaluation. This document is the design
-that produced it, kept because the reasoning is still the reasoning — with
-corrections appended in §8 and §9 rather than edited in, so a reader can see
-what was believed and what measurement changed.
+Status: **shipped.** A quantity whose value in one period depends on its value in
+the previous one is a FIELD of the entity it describes, written inside that
+entity's block:
 
-Filled the gap noted in `docs/13_feature_backlog.md` 5.1/5.2 and referenced four
-times in `packs/opco/lowering/rules.toml` as "H3-style state" with no design
-written down.
+```
+entity asset pool : Asset.Financial {
+  factor init 1.0 next prev * (1.0 - inputs.smm)
+}
+```
+
+It is read as `asset.pool.factor`, and `prev.asset.pool.factor` is its value at
+the previous close. See `fixtures/valid/entity_field_rule` for the smallest
+example and `compute_states` in `crates/cfdl-engine/src/lib.rs` for the
+evaluation.
+
+A field is where it is because a value that changes over time is a fact about
+something. `factor` is a fact about the pool, so the pool holds it; there is no
+free-floating place to put one, because a value belonging to nothing in
+particular is a value nobody can check.
+
+An entity's LIFECYCLE state — `state operating` inside an entity block, and the
+transitions between such states — is a different construct for a different
+purpose, and this document does not cover it.
+
+This document is the design that produced the recurrence, kept because the
+reasoning is still the reasoning — with corrections appended in §8 and §9 rather
+than edited in, so a reader can see what was believed and what measurement
+changed. Everything it settles — why `init` is mandatory, why a rule reads only
+completed prior values, why holding differs from `active when` — holds as
+written; `docs/18` covers where the value lives.
 
 ---
 

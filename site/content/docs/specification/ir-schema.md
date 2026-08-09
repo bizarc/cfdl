@@ -112,17 +112,10 @@ against it by `make ir-schema`.
         "$ref": "#/$defs/Curve"
       }
     },
-    "states": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "$ref": "#/$defs/State"
-      }
-    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
-      "description": "Ordered allocations of a pot — a priority of payments. Steps run in declaration order after the period's streams and states are known; each takes min(max(0, its amount), what remains). Omitted when a model declares none.",
+      "description": "Ordered allocations of a pot — a priority of payments. Steps run in declaration order after the period's fields and streams are known; each takes min(max(0, its amount), what remains). Omitted when a model declares none.",
       "items": {
         "$ref": "#/$defs/Waterfall"
       }
@@ -1350,56 +1343,6 @@ against it by `make ir-schema`.
         }
       }
     },
-    "State": {
-      "type": "object",
-      "required": [
-        "name",
-        "init",
-        "next"
-      ],
-      "additionalProperties": false,
-      "description": "A named value per period defined by a recurrence. `init` is the value at period 0 and is mandatory — a recurrence with an unstated base case would evaluate to zero for every period. `next` gives every later period, with `prev` bound to this state's previous value and `prev.<name>` to another state's; neither may see the current period, which is what keeps cycles impossible by construction. Streams read the current period as `state.<name>`. See 14_state_and_recurrence.md. A state may carry its own `schedule` — the recurrence steps on that cadence and holds between ticks, so a pool carried on a daily calendar but paying monthly compounds twelve times a year rather than three hundred and sixty-five. Absent means every model period. Unlike a stream, an inactive state HOLDS rather than yielding zero, which is why there is no `active_when` here.",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "init": {
-          "type": "object",
-          "required": [
-            "lang",
-            "src"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "lang": {
-              "type": "string"
-            },
-            "src": {
-              "type": "string"
-            }
-          }
-        },
-        "next": {
-          "type": "object",
-          "required": [
-            "lang",
-            "src"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "lang": {
-              "type": "string"
-            },
-            "src": {
-              "type": "string"
-            }
-          }
-        },
-        "schedule": {
-          "$ref": "#/$defs/Schedule"
-        }
-      }
-    },
     "StreamInputs": {
       "type": "object",
       "additionalProperties": false,
@@ -1441,7 +1384,7 @@ against it by `make ir-schema`.
         "kind",
         "op"
       ],
-      "description": "A per-period subtotal: a named fold over the ledger, lowered from the active pack. Where a metric reduces to one lifetime scalar, this produces a value per period — the middle rows of a statement. Folds CATEGORIES by preference rather than stream names, so net operating income is everything under `operating.*` and nothing enumerates which streams those are. Array order is DEPENDENCY order: an entry may reference only ones before it, which makes a cycle unexpressible rather than merely rejected. A subtotal is a fold OF the cash and never counts as cash: it is excluded from model.total, model.npv, model.net_cash_flow and the per-stream annual rollup, by the same construction the `state.` prefix relies on.",
+      "description": "A per-period subtotal: a named fold over the ledger, lowered from the active pack. Where a metric reduces to one lifetime scalar, this produces a value per period — the middle rows of a statement. Folds CATEGORIES by preference rather than stream names, so net operating income is everything under `operating.*` and nothing enumerates which streams those are. Array order is DEPENDENCY order: an entry may reference only ones before it, which makes a cycle unexpressible rather than merely rejected. A subtotal is a fold OF the cash and never counts as cash: it is excluded from model.total, model.npv, model.net_cash_flow and the per-stream annual rollup, by the same construction that keeps a field out of the cash.",
       "properties": {
         "id": {
           "type": "string",

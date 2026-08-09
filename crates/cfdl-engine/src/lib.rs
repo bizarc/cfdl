@@ -2494,25 +2494,21 @@ fn compute_states(
     base_inputs: &BTreeMap<String, f64>,
     warnings: &mut Vec<String>,
 ) -> BTreeMap<String, Vec<f64>> {
-    let mut values: BTreeMap<String, Vec<f64>> = ir
-        .states
-        .iter()
-        .map(|st| (st.name.clone(), vec![0.0; timeline.len()]))
-        .collect();
-    if ir.states.is_empty() && ir.entities.iter().all(|e| e.rules.is_empty()) {
+    let mut values: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    if ir.entities.iter().all(|e| e.rules.is_empty()) {
         return values;
     }
 
-    // Compiled once per state, not once per state per period. This loop is the
-    // only place a state's source is evaluated and it runs `states x periods`
+    // Compiled once per field, not once per field per period. This loop is the
+    // only place a rule's source is evaluated and it runs `fields x periods`
     // times — `x trials` under Monte Carlo.
     struct Prepared {
-        /// A declared state's name, or `<entity>.<field>` for a field rule.
+        /// `<entity>.<field>` — the path the field is read by.
         name: String,
         init: CompiledExpr,
         next: CompiledExpr,
         /// Model periods on which the recurrence STEPS. `None` means every
-        /// period, which is what a state with no `schedule` clause means.
+        /// period, which is what a field with no schedule of its own means.
         ticks: Option<Vec<bool>>,
         /// The first tick. `init` is the value AT the first tick, not at model
         /// period 0 — the base case belongs to the recurrence's own clock.
@@ -2521,77 +2517,16 @@ fn compute_states(
         /// where the payment index is 0, 1, 2. Stepping on the first accrual
         /// would put F(1) where the first payment reads F(0) — an off-by-one
         /// against every published schedule. With no `schedule` this is 0, so
-        /// an unscheduled state behaves exactly as it always has.
+        /// an unscheduled field steps every period.
         first_tick: usize,
     }
 
     let zero = cfdl_expr::compile_expr("0").expect("constant expression compiles");
-    let mut prepared: Vec<Prepared> = Vec::with_capacity(ir.states.len());
-    for state in &ir.states {
-        let mut compile = |src: &str, clause: &str| match cfdl_expr::compile_expr(src) {
-            Ok(compiled) => compiled,
-            Err(err) => {
-                warnings.push(format!(
-                    "State '{}' {clause} expression compile failed [{}]: {}; using 0.",
-                    state.name, err.code, err.message
-                ));
-                zero.clone()
-            }
-        };
-        let init = compile(&state.init.src, "init");
-        let next = compile(&state.next.src, "next");
-
-        // A state's clock is its own, exactly as a stream's is. Without this a
-        // pool carried on a daily book but paying monthly would compound its
-        // hazard 365 times a year instead of 12.
-        let ticks = match &state.schedule {
-            None => None,
-            Some(schedule) => {
-                let mut slots = vec![Vec::new(); timeline.len()];
-                match apply_schedule_indices(schedule, timeline, &mut slots) {
-                    // The ACCRUAL periods, not the settlement periods.
-                    // `apply_schedule_indices` files each accrual under the
-                    // period its cash settles in, and a stream's amount is
-                    // evaluated at the accrual — which is also where
-                    // `{{time.elapsed_periods}}` is counted. Ticking on
-                    // settlement instead puts the recurrence a whole payment
-                    // interval away from the index that reads it.
-                    Ok(()) => {
-                        let mut ticks = vec![false; timeline.len()];
-                        for accruals in &slots {
-                            for &idx in accruals {
-                                ticks[idx] = true;
-                            }
-                        }
-                        Some(ticks)
-                    }
-                    Err(err) => {
-                        warnings.push(format!(
-                            "State '{}' schedule could not be resolved: {err}; stepping every period.",
-                            state.name
-                        ));
-                        None
-                    }
-                }
-            }
-        };
-        let first_tick = ticks
-            .as_ref()
-            .and_then(|t: &Vec<bool>| t.iter().position(|on| *on))
-            .unwrap_or(0);
-        prepared.push(Prepared {
-            name: state.name.clone(),
-            init,
-            next,
-            ticks,
-            first_tick,
-        });
-    }
+    let mut prepared: Vec<Prepared> = Vec::new();
 
     // A FIELD'S RULE IS THE SAME RECURRENCE, evaluated in the same pass.
     //
-    // It joins the declared states rather than getting a pass of its own, so
-    // there is one place a recurrence is solved and one set of rules about what
+    // There is one place a recurrence is solved and one set of rules about what
     // it can see. The name is the entity path, which is also how it is read.
     for entity in &ir.entities {
         for (field, rule) in &entity.rules {
@@ -3699,8 +3634,6 @@ struct Ir {
     #[serde(default)]
     curves: Vec<IrCurve>,
     #[serde(default)]
-    states: Vec<IrState>,
-    #[serde(default)]
     waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
@@ -3711,16 +3644,6 @@ struct Ir {
     /// the model asked for trials and got a single deterministic pass.
     #[serde(default)]
     runs: Vec<IrRun>,
-}
-
-#[derive(Debug, Deserialize)]
-struct IrState {
-    name: String,
-    init: IrExpr,
-    next: IrExpr,
-    /// When the recurrence steps. Absent means every model period.
-    #[serde(default)]
-    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Deserialize)]

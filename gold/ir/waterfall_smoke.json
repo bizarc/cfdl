@@ -38,6 +38,16 @@
             "lang": "cfdl",
             "src": "prev"
           }
+        },
+        "pool_balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "900.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
         }
       },
       "state": {}
@@ -74,19 +84,6 @@
     "constants": {},
     "random": {}
   },
-  "states": [
-    {
-      "name": "pool_balance",
-      "init": {
-        "lang": "cfdl",
-        "src": "900.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev"
-      }
-    }
-  ],
   "waterfalls": [
     {
       "name": "abs.distribution",
@@ -131,7 +128,7 @@
           "payee": "asset.class_a",
           "amount": {
             "lang": "cfdl",
-            "src": "entity.asset.class_a.original_balance - state.pool_balance"
+            "src": "entity.asset.class_a.original_balance - asset.trust.pool_balance"
           }
         },
         {

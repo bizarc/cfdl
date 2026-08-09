@@ -460,7 +460,7 @@ A step MUST NOT read a step declared after it. A priority of payments is an
 order, not a system of equations, so a forward reference is a compile error.
 
 ### 10.4 Evaluation order (normative)
-A waterfall runs **after** the period's streams and states are evaluated, so it
+A waterfall runs **after** the period's fields and streams are evaluated, so it
 allocates cash that already exists. A waterfall MUST NOT feed a stream in the
 same period.
 
@@ -696,8 +696,8 @@ Rules:
   discipline: transitions all evaluate against the current state, the state
   commits, then outputs read the committed result. It is what keeps declaration
   order from changing the value of a guard.
-- A guard may read `state.<name>` and entity state (by qualified path, e.g.
-  `entity.asset.tower.status`, since an event has no owner). It may NOT read a
+- A guard may read any entity field by qualified path — `asset.tower.status`,
+  `asset.pool.factor` — since an event has no owner of its own. It may NOT read a
   stream.
 - Every write is published in `deterministic.transitions` — period, entity,
   field, from, to, and the firing event — so a transition is assertable.

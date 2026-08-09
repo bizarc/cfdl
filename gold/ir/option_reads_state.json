@@ -16,6 +16,18 @@
       "symbol": "asset.plant",
       "type": "Asset.Real",
       "fields": {},
+      "rules": {
+        "book_value": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * 1.10"
+          }
+        }
+      },
       "state": {}
     },
     {
@@ -32,19 +44,6 @@
     "constants": {},
     "random": {}
   },
-  "states": [
-    {
-      "name": "book_value",
-      "init": {
-        "lang": "cfdl",
-        "src": "100.0"
-      },
-      "next": {
-        "lang": "cfdl",
-        "src": "prev * 1.10"
-      }
-    }
-  ],
   "contracts": [],
   "streams": [
     {
@@ -85,7 +84,7 @@
     {
       "exercise_when": {
         "lang": "cfdl",
-        "src": "state.book_value > 120.0"
+        "src": "asset.plant.book_value > 120.0"
       },
       "id": "ca528e2d2cd16ce46a6bd90109e6557a",
       "name": "call_at_120",
@@ -102,7 +101,7 @@
       ],
       "payoff": {
         "lang": "cfdl",
-        "src": "state.book_value - 120.0"
+        "src": "asset.plant.book_value - 120.0"
       },
       "provenance": {
         "source_file": "model.cfdl",
@@ -118,7 +117,7 @@
     {
       "exercise_when": {
         "lang": "cfdl",
-        "src": "state.book_value > 500.0"
+        "src": "asset.plant.book_value > 500.0"
       },
       "id": "7c889a998ea77f49e9d5b73b1e136e97",
       "name": "call_at_500",
@@ -127,7 +126,7 @@
       },
       "payoff": {
         "lang": "cfdl",
-        "src": "state.book_value - 500.0"
+        "src": "asset.plant.book_value - 500.0"
       },
       "provenance": {
         "source_file": "model.cfdl",

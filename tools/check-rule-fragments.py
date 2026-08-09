@@ -13,12 +13,12 @@ is invisible to them.
 Measured rather than assumed, by injecting a 10x typo (`0.002` -> `0.02`) into
 one PSA branch and re-blessing:
 
-    typo in a shared `state_next`      -> E5021_DUPLICATE_LOWERED_STATE
+    typo in a shared `field_next`      -> E5021_DUPLICATE_LOWERED_FIELD
     typo in one rule's `amount_expr`   -> gold PASSES, benchmarks PASS,
                                           analytic checks PASS, only this gate
                                           fails
 
-So half the surface is already protected and half is not. `state_next` is safe
+So half the surface is already protected and half is not. `field_next` is safe
 because five rules per family declare the SAME state, and the compiler requires
 their text to agree — a real guarantee, worth knowing about before adding
 another. `amount_expr` has no such peer: each rule's is independent, so a typo
@@ -30,7 +30,7 @@ wrong everywhere at once, which the external ramped cases DO catch.
 
 Checked per file:
 
-  * every `state_next` sharing a `state_name` prefix is identical
+  * every `field_next` sharing a `field_name` prefix is identical
   * the hazard sub-expressions (`psa_speed`, `sda_speed`, `abs_speed` branches)
     appear with the same text everywhere they appear at all
 
@@ -52,8 +52,8 @@ sys.stderr.reconfigure(encoding="utf-8")
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 RULES = sorted((REPO_ROOT / "packs").glob("*/lowering/rules.toml"))
 
-FIELD_RE = re.compile(r'^(state_next|state_init|state_every)\s*=\s*"(.*)"$', re.M)
-STATE_NAME_RE = re.compile(r'^state_name\s*=\s*"([^"{]*)', re.M)
+FIELD_RE = re.compile(r'^(field_next|field_init|field_every)\s*=\s*"(.*)"$', re.M)
+FIELD_NAME_RE = re.compile(r'^field_name\s*=\s*"([^"{]*)', re.M)
 
 # The hazard branches, keyed by the term that selects them. Each is captured
 # from its `if(` through to the matching close, by paren balance.
@@ -106,13 +106,13 @@ def main() -> int:
         text = path.read_text(encoding="utf-8")
         rel = path.relative_to(REPO_ROOT)
 
-        # 1. one state_name prefix, one recurrence
+        # 1. one field_name prefix, one recurrence
         by_name: dict[str, set[str]] = collections.defaultdict(set)
         for match in FIELD_RE.finditer(text):
-            if match.group(1) != "state_next":
+            if match.group(1) != "field_next":
                 continue
             before = text[: match.start()]
-            name = STATE_NAME_RE.findall(before)
+            name = FIELD_NAME_RE.findall(before)
             if name:
                 by_name[name[-1]].add(match.group(2))
         by_name = {k: {normalise_age(v) for v in vs} for k, vs in by_name.items()}
@@ -122,7 +122,7 @@ def main() -> int:
                 failures += 1
                 print(
                     f"  {rel}: state '{name}' has {len(variants)} different"
-                    " `state_next` expressions:",
+                    " `field_next` expressions:",
                     file=sys.stderr,
                 )
                 for v in sorted(variants):

@@ -78,7 +78,7 @@ contract that is expensive to change — the diagnostics `E1312_MISSING_REQUIRED
 and `E1313_UNKNOWN_ENTITY_FIELD`, whose codes are never reused; the pack ontology
 format's `[[entities.fields]]` and `field_type`, which is the interop shape; and
 the results schema's transition log. Only the IR key said `attrs`, and it now
-says `fields` too. "Attribute" and "property" are retired as terms of art.
+says `fields` too. "Attribute" and "property" are not terms of art here.
 
 A field HOLDS, MOVES BY RULE, or is WRITTEN BY AN EVENT:
 

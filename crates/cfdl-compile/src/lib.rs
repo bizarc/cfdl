@@ -355,8 +355,6 @@ struct Ir {
     assumptions: IrAssumptions,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     curves: Vec<IrCurve>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    states: Vec<IrState>,
     /// Ordered allocations of a pot. Omitted when a model declares none, so
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -434,19 +432,6 @@ struct IrWaterfallStep {
     payee: String,
     /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
     amount: IrExpr,
-}
-
-#[derive(Debug, Serialize)]
-struct IrState {
-    name: String,
-    init: IrExpr,
-    next: IrExpr,
-    /// When the recurrence steps, and over what window. Absent means every
-    /// model period over the whole timeline — the behaviour of every state
-    /// written before states had a clock of their own, so omitting it keeps
-    /// existing IR byte-identical.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    schedule: Option<IrSchedule>,
 }
 
 #[derive(Debug, Serialize)]
@@ -657,7 +642,7 @@ struct IrStreamInputs {
 /// Lowered into the IR rather than evaluated as a post-pass so that the engine
 /// — which is the only thing that has the per-period series — computes it, and
 /// so that every host (`cli`, `wasm`, `py`, `server`) gets it with no plumbing:
-/// it rides in the IR they already load. Same reasoning as `IrState`.
+/// it rides in the IR they already load.
 ///
 /// Array order is dependency order. `parse_subtotal_specs` has already rejected
 /// any forward reference, so by here a reference names something earlier.
@@ -2199,13 +2184,6 @@ fn build_ir(
 
     // A pack no longer contributes model-level state: its rules hang fields on
     // the entities they describe, folded into the entity map below.
-    let ir_states = lower_states(
-        resolve_output,
-        &time_calendar,
-        &time_start,
-        &timeline_end,
-        &phase_map,
-    );
 
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
         .source_statements
@@ -2270,7 +2248,6 @@ fn build_ir(
             random: assume_random,
         },
         curves: ir_curves,
-        states: ir_states,
         waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
@@ -2917,12 +2894,12 @@ fn lower_contract_streams(
                 // instrument. Already expanded above to derive ppy; expanding
                 // it again here is what puts the result on the rule.
                 (&rule.schedule_every, &mut expanded_rule.schedule_every),
-                (&rule.state_name, &mut expanded_rule.state_name),
-                (&rule.state_init, &mut expanded_rule.state_init),
-                (&rule.state_next, &mut expanded_rule.state_next),
-                (&rule.state_every, &mut expanded_rule.state_every),
-                (&rule.state_from, &mut expanded_rule.state_from),
-                (&rule.state_to, &mut expanded_rule.state_to),
+                (&rule.field_name, &mut expanded_rule.field_name),
+                (&rule.field_init, &mut expanded_rule.field_init),
+                (&rule.field_next, &mut expanded_rule.field_next),
+                (&rule.field_every, &mut expanded_rule.field_every),
+                (&rule.field_from, &mut expanded_rule.field_from),
+                (&rule.field_to, &mut expanded_rule.field_to),
             ] {
                 match cfdl_pack::expand_rule_template(slot, &resolve) {
                     Ok(expanded) => *target = expanded,
@@ -3123,13 +3100,13 @@ fn lower_contract_streams(
                 continue;
             }
 
-            if !rule.state_name.is_empty() {
+            if !rule.field_name.is_empty() {
                 // Same treatment as the amount: a textual splice can produce an
                 // expression the parser rejects, and the engine's fallback for
                 // a failed state is zero — which would silently flatten every
                 // stream that reads it.
                 let mut bad = None;
-                for (clause, src) in [("init", &rule.state_init), ("next", &rule.state_next)] {
+                for (clause, src) in [("init", &rule.field_init), ("next", &rule.field_next)] {
                     if let Err(err) = cfdl_expr::compile_expr(src) {
                         bad = Some((clause, err, src.clone()));
                         break;
@@ -3137,7 +3114,7 @@ fn lower_contract_streams(
                 }
                 if let Some((clause, err, src)) = bad {
                     diagnostics.push(lowering_rule_diag(
-                        "E5020_LOWERED_STATE_INVALID",
+                        "E5020_LOWERED_FIELD_INVALID",
                         &format!(
                             "Pack lowering rule '{}' produced an invalid state '{}' clause for contract '{}' [{}]: {}. Expanded to: {}",
                             rule.id, clause, contract.name, err.code, err.message, src
@@ -3160,17 +3137,17 @@ fn lower_contract_streams(
                     .subject_entity
                     .clone()
                     .unwrap_or_else(|| owner_symbol.clone());
-                let field_key = (field_owner.clone(), rule.state_name.clone());
+                let field_key = (field_owner.clone(), rule.field_name.clone());
                 match lowered_fields.get(&field_key) {
                     Some(existing)
-                        if existing.init.src != rule.state_init
-                            || existing.next.src != rule.state_next =>
+                        if existing.init.src != rule.field_init
+                            || existing.next.src != rule.field_next =>
                     {
                         diagnostics.push(lowering_rule_diag(
-                            "E5021_DUPLICATE_LOWERED_STATE",
+                            "E5021_DUPLICATE_LOWERED_FIELD",
                             &format!(
                                 "Contract '{}' lowers to field '{}' on an entity where another contract already defines it differently. Two contracts on ONE entity need distinct field names; two contracts on different entities do not collide.",
-                                contract.name, rule.state_name
+                                contract.name, rule.field_name
                             ),
                             source_stmt,
                             contract.span,
@@ -3184,11 +3161,11 @@ fn lower_contract_streams(
                             IrFieldRule {
                                 init: IrExpr {
                                     lang: "cfdl".to_string(),
-                                    src: rule.state_init.clone(),
+                                    src: rule.field_init.clone(),
                                 },
                                 next: IrExpr {
                                     lang: "cfdl".to_string(),
-                                    src: rule.state_next.clone(),
+                                    src: rule.field_next.clone(),
                                 },
                                 schedule: lower_rule_state_schedule(
                                     rule,
@@ -3202,11 +3179,11 @@ fn lower_contract_streams(
                 }
             }
 
-            // AND THE EXPRESSIONS READ THE FIELD, not a model state. The rule's
-            // own text still says `state.<name>` because that is the pack's
-            // spelling; here it becomes the entity path the value now lives at.
-            if !rule.state_name.is_empty() {
-                let from = format!("state.{}", rule.state_name);
+            // AND THE EXPRESSIONS READ THE FIELD. A rule writes `field.<name>`
+            // because it cannot know which entity it will be attached to; here
+            // that placeholder becomes the path the value actually lives at.
+            if !rule.field_name.is_empty() {
+                let from = format!("field.{}", rule.field_name);
                 // `entity.<owner>.<field>`, the long form. The bare alias covers
                 // the four declared families only, and a lowering rule may sit
                 // on any entity — so the spelling that always resolves is the
@@ -3217,7 +3194,7 @@ fn lower_contract_streams(
                         .subject_entity
                         .clone()
                         .unwrap_or_else(|| owner_symbol.clone()),
-                    rule.state_name
+                    rule.field_name
                 );
                 amount_src = amount_src.replace(&from, &to);
             }
@@ -3238,8 +3215,8 @@ fn lower_contract_streams(
                     &source_rule.schedule_net_days,
                     &source_rule.schedule_net_months,
                     &source_rule.schedule_every,
-                    &source_rule.state_init,
-                    &source_rule.state_next,
+                    &source_rule.field_init,
+                    &source_rule.field_next,
                 ] {
                     for key in cfdl_pack::template_placeholders(template) {
                         // Cadence primitives and name derivations are computed,
@@ -3684,12 +3661,12 @@ fn lower_rule_state_schedule(
     time_start: &str,
     timeline_end: &str,
 ) -> Option<IrSchedule> {
-    if rule.state_name.is_empty() {
+    if rule.field_name.is_empty() {
         return None;
     }
     // Absent means every model period — the behaviour of every state written
     // before states had a clock, so an unset field changes nothing.
-    if rule.state_every.is_empty() && rule.state_from.is_empty() && rule.state_to.is_empty() {
+    if rule.field_every.is_empty() && rule.field_from.is_empty() && rule.field_to.is_empty() {
         return None;
     }
     Some(IrSchedule {
@@ -3700,20 +3677,20 @@ fn lower_rule_state_schedule(
         net_days: None,
         net_months: None,
         on: None,
-        every: Some(if rule.state_every.is_empty() {
+        every: Some(if rule.field_every.is_empty() {
             time_calendar.to_string()
         } else {
-            interval_to_frequency(&rule.state_every).to_string()
+            interval_to_frequency(&rule.field_every).to_string()
         }),
-        from: Some(normalize_date(if rule.state_from.is_empty() {
+        from: Some(normalize_date(if rule.field_from.is_empty() {
             time_start
         } else {
-            &rule.state_from
+            &rule.field_from
         })),
-        to: Some(normalize_date(if rule.state_to.is_empty() {
+        to: Some(normalize_date(if rule.field_to.is_empty() {
             timeline_end
         } else {
-            &rule.state_to
+            &rule.field_to
         })),
         on_rule: None,
         phase: None,
@@ -3965,56 +3942,6 @@ type AssumeMaps = (
     BTreeMap<String, serde_json::Value>,
     Vec<Diagnostic>,
 );
-
-fn lower_states(
-    resolve_output: &cfdl_resolver::ResolveOutput,
-    time_calendar: &str,
-    time_start: &str,
-    timeline_end: &str,
-    phase_map: &BTreeMap<String, (String, String)>,
-) -> Vec<IrState> {
-    let mut states: Vec<IrState> = Vec::new();
-    for source_stmt in &resolve_output.source_statements {
-        let Stmt::State(state) = &source_stmt.statement else {
-            continue;
-        };
-        let (Some(init), Some(next)) = (&state.init, &state.next) else {
-            continue;
-        };
-        if states.iter().any(|s| s.name == state.name) {
-            continue;
-        }
-        // The same lowering a stream's schedule goes through, so a state's
-        // cadence cannot drift from a stream's. `None` stays `None`: an absent
-        // clause means every period, which `lower_schedule` would instead turn
-        // into a one-shot at the model start.
-        let schedule = state.schedule.as_ref().and_then(|spec| {
-            // Phase resolution is the only failure mode, and it is already
-            // reported against the phase statement itself.
-            lower_schedule(
-                Some(spec),
-                time_calendar,
-                time_start,
-                timeline_end,
-                phase_map,
-            )
-            .ok()
-        });
-        states.push(IrState {
-            name: state.name.clone(),
-            schedule,
-            init: IrExpr {
-                lang: init.lang.clone(),
-                src: init.src.clone(),
-            },
-            next: IrExpr {
-                lang: next.lang.clone(),
-                src: next.src.clone(),
-            },
-        });
-    }
-    states
-}
 
 /// Lower `curve` statements into IR curves: dedupe names, sort points by
 /// date, reject duplicate point dates.

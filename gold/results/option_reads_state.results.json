@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "ea6b4b30d10c17362ef4a432f8b49b57f348ec2dcd5a45aa79a03c94ccb7045d",
-  "ledger_hash": "7a2ca5b847139e377ec770ac09f54b1952230a9c9a95c2f597d6b5216d106144",
+  "model_hash": "701840532871f81108182927f0e0e1edb14ae519fd3fa630898c01168860305b",
+  "ledger_hash": "90f1d481cbc2b4ab9fe0267f4af31bd7ddb40dc596bb3aaa7d16766c4ba7022d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -43,6 +43,19 @@
       }
     },
     "series": {
+      "asset.plant.book_value": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          100.0,
+          110.0,
+          121.0,
+          133.1
+        ]
+      },
       "entity.asset.plant.net_cash_flow": {
         "index": {
           "calendar": "annual",
@@ -116,19 +129,6 @@
             "amount": 10.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.book_value": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "values": [
-          100.0,
-          110.0,
-          121.0,
-          133.1
         ]
       },
       "stream.option.call_at_120": {

@@ -7,28 +7,28 @@ time calendar annual from 2026-01 for 4
 // evaluated in a pass that ran before any state existed, and the failure was a
 // warning and `false`, so the option silently never fired.
 
-entity asset plant : Asset.Real
+entity asset plant : Asset.Real {
+  // The plant's carrying value — what an option's exercise test reads.
+  book_value init 100.0
+             next prev * 1.10
+}
 entity party holder : Party { name = "Holder" }
 
 // A value that MOVES, so the period the option fires is a fact about the
 // recurrence rather than a coincidence of the timeline.
-state book_value {
-  init 100.0
-  next prev * 1.10
-}
 
 // Fires the first period book value crosses 120: 100, 110, 121 -> period 2.
 option call_at_120 on entity asset.plant type Option.Call {
   parties { holder = party.holder }
-  exercise when state.book_value > 120.0
-  payoff state.book_value - 120.0
+  exercise when asset.plant.book_value > 120.0
+  payoff asset.plant.book_value - 120.0
 }
 
 // Never in the money over this horizon (peaks at 133.1), so it publishes a
 // zero series rather than no series — a non-exercise is assertable.
 option call_at_500 on entity asset.plant type Option.Call {
-  exercise when state.book_value > 500.0
-  payoff state.book_value - 500.0
+  exercise when asset.plant.book_value > 500.0
+  payoff asset.plant.book_value - 500.0
 }
 
 stream plant.revenue on entity asset.plant inflow currency USD {

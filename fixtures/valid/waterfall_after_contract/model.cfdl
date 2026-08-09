@@ -1,0 +1,48 @@
+version 0.1
+model "waterfall-after-contract"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2018-10 for 6
+
+// DECLARATION ORDER MUST NOT CHANGE WHAT A MODEL MEANS.
+//
+// A block that scans forward for the end of its own body stops at the next
+// declaration. When `waterfall` was missing from that set, a contract ran past
+// its own closing brace and absorbed everything after it — the `assume` and the
+// waterfall both — and the model compiled clean, ran clean, and paid nobody.
+//
+// The give-away was that moving the party ABOVE the contract fixed it: the
+// contract then stopped at `entity`, which was on the list. Same declarations,
+// same numbers, different order, different answer.
+//
+// This fixture is that order: a contract, then an assume, then a waterfall,
+// with nothing after them to stop an over-eager scan.
+
+entity asset trust : Credit.Asset.LoanPool { collateral_type = "auto" }
+entity asset pool  : Credit.Asset.LoanPool {
+  collateral_type = "auto"
+  part of asset.trust
+}
+entity party holders : Credit.Party.Investor { name = "Noteholders" }
+
+contract credit.pool_level_pay.pool on entity asset.pool {
+  term 2018-10..2019-03
+  terms {
+    balance = 1200000.0
+    rate = 0.06
+    term_months = 6
+    cpr = 0
+    cdr = 0
+  }
+}
+
+assume note_balance = 500000.0
+
+waterfall notes.principal on entity asset.trust {
+  schedule every month from 2018-10 to 2019-03
+  from series_sum("credit.pool.sched_principal.pool", time.t, time.t)
+
+  pay note_principal to party.holders =
+        min(remaining,
+            inputs.note_balance
+              - series_sum("notes.principal.note_principal", 0, time.t - 1))
+}
