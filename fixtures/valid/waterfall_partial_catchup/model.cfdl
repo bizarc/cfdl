@@ -32,7 +32,10 @@ time calendar annual from 2020-01 for 6
 // splits it, and the GP takes $403,360. Same deal, same money, one negotiated
 // number between them.
 
-entity asset fund : Asset.Financial
+entity asset fund : Asset.Financial {
+  lp_preference init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
+                next prev
+}
 entity party lp   : Party { name = "Limited Partners" }
 entity party gp   : Party { name = "General Partner" }
 
@@ -43,17 +46,13 @@ assume gp_carry       = 0.20
 assume proceeds       = 30000000.0
 
 // Capital plus the compounding preferred, measured from inception.
-state lp_preference {
-  init inputs.called_capital * pow(1.0 + inputs.pref_rate, inputs.hold_years)
-  next prev
-}
 
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
   from cfg.proceeds
 
   // 1. Return of capital and the cumulative preferred, to the LPs.
-  pay lp_preference to party.lp = state.lp_preference
+  pay lp_preference to party.lp = asset.fund.lp_preference
 
   // 2. The catch-up, at whatever rate the deal negotiated. The GP takes its
   //    share OF THE TIER — `remaining * c` — capped at what the tier owes it,
@@ -61,7 +60,7 @@ waterfall fund.distribution on entity asset.fund {
   //    than handed to the GP whole. That cap is the entire difference between
   //    a full and a partial catch-up.
   pay gp_catchup to party.gp =
-        min((state.lp_preference - inputs.called_capital)
+        min((asset.fund.lp_preference - inputs.called_capital)
               * inputs.gp_carry * cfg.catchup_rate
               / (cfg.catchup_rate - inputs.gp_carry),
             remaining * cfg.catchup_rate)

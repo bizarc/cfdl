@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "3c0b7bd45b4138836205e8802145fe4a504025dac0b919067b7bdca18020de35",
-  "ledger_hash": "ea1f98e9f9d6d02d7dbae6f6235b6b8786201cf234ca83aa66ab2faa46aacd8b",
+  "model_hash": "62597394fc0b35f8063e6f90664b5340cc7ecbb115b17e02e46ed2201716bb64",
+  "ledger_hash": "48ad3cf05ac52d4e01a350daeb9a3c2f707b13a1be0065a50534bcbad6ca4ae1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -62,6 +62,21 @@
       "run.periods_per_year": 1.0
     },
     "series": {
+      "asset.fund.lp_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "values": [
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768,
+          14693280.768
+        ]
+      },
       "entity.asset.fund.net_cash_flow": {
         "index": {
           "calendar": "annual",
@@ -324,21 +339,6 @@
             "amount": 0.0,
             "currency": "USD"
           }
-        ]
-      },
-      "state.lp_preference": {
-        "index": {
-          "calendar": "annual",
-          "start": "2020-01-01",
-          "periods": 6
-        },
-        "values": [
-          14693280.768,
-          14693280.768,
-          14693280.768,
-          14693280.768,
-          14693280.768,
-          14693280.768
         ]
       },
       "stream.firm.carry_allocation.firm_share": {

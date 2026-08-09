@@ -30,7 +30,14 @@ time calendar monthly from 2017-02 for 6
 // sizes, coupons and final scheduled distribution dates are the transaction's;
 // the pool and collection figures below are not, and are marked where they
 // appear.
-entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280 }
+entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280
+  available_funds init 12500000.0
+                  next prev * 0.97
+  pool_balance init 960000000.0
+               next prev * 0.96
+  reserve_balance init 18000000.0
+                  next prev
+}
 entity asset class_a1 : Credit.Asset.Tranche  { seniority = 1  original_balance = 182000000 }
 entity asset class_a2a: Credit.Asset.Tranche  { seniority = 2  original_balance = 230000000 }
 entity asset class_a2b: Credit.Asset.Tranche  { seniority = 2  original_balance =  75000000 }
@@ -54,9 +61,6 @@ entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
 // prospectus publishes no period-by-period schedule for them. They are stated
 // here so the waterfall has something to allocate; the capital structure above
 // is the transaction's own.
-state available_funds  { init 12500000.0 next prev * 0.97 }
-state pool_balance     { init 960000000.0 next prev * 0.96 }
-state reserve_balance  { init 18000000.0 next prev }
 
 assume servicing_fee   = 1845456.0     // 2.25%/12 on the pool
 assume trustee_fee     = 90000.0
@@ -67,7 +71,7 @@ assume oc_target       = 940000000.0
 
 waterfall abs.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2017-07
-  from state.available_funds
+  from asset.trust.available_funds
 
   //  1. the servicer, and amounts the sponsor is entitled to retain
   pay servicing_fee     to party.servicer  = inputs.servicing_fee
@@ -88,7 +92,7 @@ waterfall abs.distribution on entity asset.trust {
                                              + entity.asset.class_a2a.original_balance
                                              + entity.asset.class_a2b.original_balance
                                              + entity.asset.class_a3.original_balance
-                                             - state.pool_balance
+                                             - asset.trust.pool_balance
 
   //  5. the remaining Class A balance at its final scheduled distribution date
   pay class_a_final     to asset.class_a1  = if(time.t >= 5,
@@ -106,7 +110,7 @@ waterfall abs.distribution on entity asset.trust {
                                              + entity.asset.class_b.original_balance
                                              - paid.class_a_target
                                              - paid.class_a_final
-                                             - state.pool_balance
+                                             - asset.trust.pool_balance
 
   //  8. the remaining Class B balance at its final scheduled date
   pay class_b_final     to asset.class_b   = if(time.t >= 5, entity.asset.class_b.original_balance, 0.0)
@@ -125,7 +129,7 @@ waterfall abs.distribution on entity asset.trust {
                                              - paid.class_a_final
                                              - paid.class_b_target
                                              - paid.class_b_final
-                                             - state.pool_balance
+                                             - asset.trust.pool_balance
 
   // 11. the remaining Class C balance at its final scheduled date
   pay class_c_final     to asset.class_c   = if(time.t >= 5, entity.asset.class_c.original_balance, 0.0)
@@ -147,7 +151,7 @@ waterfall abs.distribution on entity asset.trust {
                                              - paid.class_b_final
                                              - paid.class_c_target
                                              - paid.class_c_final
-                                             - state.pool_balance
+                                             - asset.trust.pool_balance
 
   // 14. the remaining Class D balance at its final scheduled date
   pay class_d_final     to asset.class_d   = if(time.t >= 5, entity.asset.class_d.original_balance, 0.0)
@@ -173,7 +177,7 @@ waterfall abs.distribution on entity asset.trust {
                                              - paid.class_c_final
                                              - paid.class_d_target
                                              - paid.class_d_final
-                                             - state.pool_balance
+                                             - asset.trust.pool_balance
 
   // 17. the remaining Class E balance at its final scheduled date
   pay class_e_final     to asset.class_e   = if(time.t >= 5, entity.asset.class_e.original_balance, 0.0)
@@ -182,10 +186,10 @@ waterfall abs.distribution on entity asset.trust {
   pay principal_distributable to asset.class_a1 = inputs.principal_distributable
 
   // 19. the reserve account, up to its specified amount
-  pay reserve_topup     to asset.reserve   = inputs.specified_reserve - state.reserve_balance
+  pay reserve_topup     to asset.reserve   = inputs.specified_reserve - asset.trust.reserve_balance
 
   // 20. principal to achieve the specified overcollateralisation
-  pay oc_build          to asset.class_a1  = state.pool_balance - inputs.oc_target
+  pay oc_build          to asset.class_a1  = asset.trust.pool_balance - inputs.oc_target
 
   // 21. trustee amounts in excess of the cap that held them at step 2
   pay trustee_excess    to party.trustee   = owed.trustee_fees - paid.trustee_fees
