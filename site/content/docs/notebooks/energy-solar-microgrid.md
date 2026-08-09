@@ -123,29 +123,21 @@ shape: (300, 15)
 ```
 
 ```
-         domain.energy.cfads  domain.energy.debt_service_periodic  \
-period                                                              
-2026-01         30166.666667                         11462.896936   
-2026-02         30166.666667                         11462.896936   
-2026-03         30166.666667                         11462.896936   
-2026-04         30166.666667                         11462.896936   
-2026-05         30166.666667                         11462.896936   
+         domain.energy.cfads  domain.energy.debt_service_periodic  domain.energy.dscr_periodic  \
+period                                                                                           
+2026-01         30166.666667                         11462.896936                     2.631679   
+2026-02         30166.666667                         11462.896936                     2.631679   
+2026-03         30166.666667                         11462.896936                     2.631679   
+2026-04         30166.666667                         11462.896936                     2.631679   
+2026-05         30166.666667                         11462.896936                     2.631679   
 
-         domain.energy.dscr_periodic  domain.energy.ebitda  \
-period                                                       
-2026-01                     2.631679          30166.666667   
-2026-02                     2.631679          30166.666667   
-2026-03                     2.631679          30166.666667   
-2026-04                     2.631679          30166.666667   
-2026-05                     2.631679          30166.666667   
-
-         domain.energy.opex  domain.energy.revenue  \
-period                                               
-2026-01         5833.333333                36000.0   
-2026-02         5833.333333                36000.0   
-2026-03         5833.333333                36000.0   
-2026-04         5833.333333                36000.0   
-2026-05         5833.333333                36000.0   
+         domain.energy.ebitda  domain.energy.opex  domain.energy.revenue  \
+period                                                                     
+2026-01          30166.666667         5833.333333                36000.0   
+2026-02          30166.666667         5833.333333                36000.0   
+2026-03          30166.666667         5833.333333                36000.0   
+2026-04          30166.666667         5833.333333                36000.0   
+2026-05          30166.666667         5833.333333                36000.0   
 
          entity.asset.microgrid.net_cash_flow  model.net_cash_flow  \
 period                                                               
@@ -155,29 +147,21 @@ period
 2026-04                          1.870377e+04         1.870377e+04   
 2026-05                          1.870377e+04         1.870377e+04   
 
-         stream.energy.capacity.revenue  stream.energy.capex.outlay  \
-period                                                                
-2026-01                          5000.0                  -2400000.0   
-2026-02                          5000.0                         0.0   
-2026-03                          5000.0                         0.0   
-2026-04                          5000.0                         0.0   
-2026-05                          5000.0                         0.0   
+         stream.energy.capacity.revenue  stream.energy.capex.outlay  stream.energy.debt.service  \
+period                                                                                            
+2026-01                          5000.0                  -2400000.0               -11462.896936   
+2026-02                          5000.0                         0.0               -11462.896936   
+2026-03                          5000.0                         0.0               -11462.896936   
+2026-04                          5000.0                         0.0               -11462.896936   
+2026-05                          5000.0                         0.0               -11462.896936   
 
-         stream.energy.debt.service  stream.energy.itc.credit  \
-period                                                          
-2026-01               -11462.896936                       0.0   
-2026-02               -11462.896936                       0.0   
-2026-03               -11462.896936                       0.0   
-2026-04               -11462.896936                       0.0   
-2026-05               -11462.896936                       0.0   
-
-         stream.energy.om.expense  stream.energy.ppa.revenue  \
-period                                                         
-2026-01              -5833.333333                    29750.0   
-2026-02              -5833.333333                    29750.0   
-2026-03              -5833.333333                    29750.0   
-2026-04              -5833.333333                    29750.0   
-2026-05              -5833.333333                    29750.0   
+         stream.energy.itc.credit  stream.energy.om.expense  stream.energy.ppa.revenue  \
+period                                                                                   
+2026-01                       0.0              -5833.333333                    29750.0   
+2026-02                       0.0              -5833.333333                    29750.0   
+2026-03                       0.0              -5833.333333                    29750.0   
+2026-04                       0.0              -5833.333333                    29750.0   
+2026-05                       0.0              -5833.333333                    29750.0   
 
          stream.energy.storage.margin  
 period                                 
@@ -210,20 +194,20 @@ results.metrics_frame()
 ```
                                   metric         value currency         source
 0             domain.energy.debt_service  2.751095e+06      USD  domain:energy
-1                     domain.energy.dscr  3.708691e+00     None  domain:energy
+1                     domain.energy.dscr  3.708691e+00           domain:energy
 2                   domain.energy.ebitda  1.020296e+07      USD  domain:energy
 3                     domain.energy.opex  2.391043e+06      USD  domain:energy
 4                  domain.energy.revenue  1.259400e+07      USD  domain:energy
 5             domain.energy.tax_benefits  7.200000e+05      USD  domain:energy
 6           entity.asset.microgrid.total  5.771866e+06      USD           core
-7                             model.moic  3.423834e+00     None           core
+7                             model.moic  3.423834e+00                    core
 8                              model.npv  1.220669e+06      USD           core
-9                  model.payback_periods  8.500000e+01     None           core
-10                   model.payback_years  7.166667e+00     None           core
+9                  model.payback_periods  8.500000e+01                    core
+10                   model.payback_years  7.166667e+00                    core
 11                           model.total  5.771866e+06      USD           core
-12                       model.wal_years  1.299224e+01     None           core
-13              run.annual_discount_rate  8.000000e-02     None           core
-14                  run.periods_per_year  1.200000e+01     None           core
+12                       model.wal_years  1.299224e+01                    core
+13              run.annual_discount_rate  8.000000e-02                    core
+14                  run.periods_per_year  1.200000e+01                    core
 15  stream.energy.capacity.revenue.total  1.500000e+06      USD           core
 16      stream.energy.capex.outlay.total -2.400000e+06      USD           core
 17      stream.energy.debt.service.total -2.751095e+06      USD           core
