@@ -1,0 +1,10 @@
+{
+  "domain.credit.principal": {
+    "value": 148372434.00,
+    "tolerance": 0.01
+  },
+  "model.total": {
+    "value": 183313276.29,
+    "tolerance": 1.0
+  }
+}
