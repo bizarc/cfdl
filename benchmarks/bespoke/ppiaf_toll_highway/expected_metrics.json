@@ -1,0 +1,37 @@
+{
+  "stream.infra.construction.works.total": {
+    "value": -723.914961,
+    "tolerance": 0.00001,
+    "source": "financing plan, uses: construction costs (nominal terms) 723.914961"
+  },
+  "stream.infra.funding.equity.total": {
+    "value": 72.391496,
+    "tolerance": 0.00001,
+    "source": "financing plan, sources: equity 72.3914961"
+  },
+  "stream.infra.funding.fees.total": {
+    "value": -9.898973,
+    "tolerance": 0.00001,
+    "source": "financing plan, uses: fees (% debt) 9.898973178"
+  },
+  "stream.infra.debt.principal_t1.total": {
+    "value": -577.45955,
+    "tolerance": 0.00001,
+    "source": "financing plan, sources: debt 1st tranche 577.459549929528"
+  },
+  "stream.infra.debt.principal_t2.total": {
+    "value": -72.852262,
+    "tolerance": 0.00001,
+    "source": "financing plan, sources: debt 2nd tranche 72.852262183474"
+  },
+  "stream.infra.debt.principal_t3.total": {
+    "value": -73.526569,
+    "tolerance": 0.00001,
+    "source": "financing plan, sources: debt 3rd tranche 73.52656882936901"
+  },
+  "stream.infra.subsidy.availability.total": {
+    "value": 351.951289,
+    "tolerance": 0.00001,
+    "source": "sum of the reference's annual subsidies in nominal terms, 2014-2028"
+  }
+}

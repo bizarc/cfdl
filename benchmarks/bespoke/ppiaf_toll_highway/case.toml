@@ -1,0 +1,19 @@
+# Benchmark case: a 125 km tolled highway PPP concession, 2009-2058.
+#
+# 50-year concession, 4-year build, three debt tranches with different
+# maturities, rates and grace periods, traffic-driven toll revenue on two
+# vehicle categories, a regressive variable-cost scale, corporate tax paid one
+# year in arrears with loss carryforward, and an availability subsidy solved
+# each year to hold ADSCR at 1.30x.
+#
+# NO PACK. The first case in the suite written from the bare language: none of
+# energy/cre/credit/opco describes a toll road. See CASE.md.
+#
+# Reference: EXTERNAL. The World Bank / PPIAF "Numerical Model for Financial
+# Simulation of Highway PPP Projects" (Operis v3), run at the case-study
+# defaults it ships with. Every figure asserted here is a cached value from
+# that workbook, which publishes the full 50-year schedule.
+# Status: verified — all 25 asserted series and 7 financing-plan totals
+# reproduce; the residuals are the results file's 6-decimal rounding.
+summary = "A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x."
+period_tolerance = 0.00001

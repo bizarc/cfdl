@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """CFDL benchmark harness.
 
-Each case directory (benchmarks/<pack>/<case>/) contains:
+Each case directory (benchmarks/<group>/<case>/) contains:
   model.cfdl            the CFDL model
   run.json              run configuration
-  case.toml             pack name + per-period tolerance
+  case.toml             pack name (optional) + per-period tolerance
   expected.csv          per-period expectations from an independent reference
   expected_metrics.json  metric -> {value, tolerance}
   expected_scenarios.json  scenario -> metric -> {value, tolerance}   (optional)
@@ -126,16 +126,19 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
             [CFDL, "compile", str(case_dir), "--out", str(ir), "--packs", str(ROOT / "packs")],
             check=True,
         )
-        subprocess.run(
-            [
-                CFDL, "run", str(ir),
-                "--out", str(results_path),
-                "--config", str(case_dir / "run.json"),
-                "--packs", str(ROOT / "packs"),
-                "--pack", case["pack"],
-            ],
-            check=True,
-        )
+        # `pack` is optional. A case built from the bare language rather than
+        # from a domain pack has no pack metrics to compute, and passing a
+        # --pack it does not use would ask the registry for a lowering that
+        # never applies.
+        run_cmd = [
+            CFDL, "run", str(ir),
+            "--out", str(results_path),
+            "--config", str(case_dir / "run.json"),
+            "--packs", str(ROOT / "packs"),
+        ]
+        if case.get("pack"):
+            run_cmd += ["--pack", case["pack"]]
+        subprocess.run(run_cmd, check=True)
         results = json.loads(results_path.read_text(encoding="utf-8"))
 
     if results.get("warnings"):
