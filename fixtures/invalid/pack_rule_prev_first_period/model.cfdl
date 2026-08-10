@@ -1,0 +1,27 @@
+version 0.1
+model "pack-rule-prev-first-period"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 4
+
+entity asset borrower : Asset.Financial
+
+// The same contract as `pack_rule_reads_prev_field`, with its term starting AT
+// the model's first period instead of one after it.
+//
+// The rule strikes interest on the average of the field's opening and closing
+// value, so at t = 0 it reads a close that does not exist. The engine's
+// previous-value map is empty there: without this check the read warns and
+// substitutes zero for that ONE period while every later period is correct —
+// and the run still reports ok. One wrong period inside a right series is the
+// hardest shape to spot.
+//
+// The message names the CONTRACT rather than the stream's schedule, because
+// the pack owns the schedule and moving the term is the remedy available to
+// whoever wrote this model.
+contract test.avg_balance_contract on entity asset.borrower {
+  term 2026-01..2026-04
+  terms {
+    draw = 100
+    rate = 0.01
+  }
+}

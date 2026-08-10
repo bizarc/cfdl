@@ -979,6 +979,73 @@ fn check_prev_first_period(
 }
 
 /// Does this expression read `prev.<family>.<entity>.<field>`?
+/// The same rule as `check_prev_first_period`, on the streams a PACK emitted.
+///
+/// That check walks source statements, and a lowered stream is not one — it
+/// exists only after lowering — so it ran on hand-written streams and on
+/// nothing else. A lowered stream reading `prev.<entity>.<field>` at `t = 0`
+/// reads a close that does not exist: the previous-value map is empty there, so
+/// the engine warns and substitutes zero for that ONE period while every later
+/// period is right. One wrong period inside an otherwise correct series is the
+/// hardest shape to notice, and the run still reports ok.
+///
+/// The wording differs from the source-stream case because the remedy does. A
+/// model author cannot "start the stream one period later" when the pack owns
+/// the schedule, so this names the CONTRACT whose term set it.
+fn check_lowered_prev_first_period(
+    lowered: &[((String, String), IrStream)],
+    stream_inputs: &[IrStreamInputs],
+    model_start: &str,
+) -> Result<(), Vec<Diagnostic>> {
+    let contract_of: BTreeMap<&str, &str> = stream_inputs
+        .iter()
+        .map(|inputs| (inputs.stream.as_str(), inputs.contract.as_str()))
+        .collect();
+    // Dates are written YYYY-MM or YYYY-MM-DD; compare the month, which is the
+    // grain a period boundary sits on.
+    let month = |d: &str| d.get(..7).unwrap_or(d).to_string();
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for ((name, _key), stream) in lowered {
+        let starts_at_zero = stream
+            .schedule
+            .from
+            .as_deref()
+            .is_some_and(|from| month(from) == month(model_start));
+        if !starts_at_zero {
+            continue;
+        }
+        if !reads_prev_field(&stream.amount.src) && !reads_prev_field(&stream.active_when.src) {
+            continue;
+        }
+        // Name the contract when provenance carries it. A rule that consumed no
+        // placeholder records no inputs row, so this is not guaranteed.
+        let lowered_from = contract_of
+            .get(name.as_str())
+            .map(|contract| format!(", lowered from contract '{contract}',"))
+            .unwrap_or_else(|| " (pack-lowered)".to_string());
+        diagnostics.push(Diagnostic {
+            code: "E1129_PREV_IN_FIRST_PERIOD".to_string(),
+            severity: "error".to_string(),
+            message: format!(
+                "Stream '{name}'{lowered_from} reads a field's previous period but runs from the model's first period, where there is none. Start the contract's term one period after the model, or have the rule carry the opening value as a field of its own."
+            ),
+            file: Some(stream.provenance.source_file.clone()),
+            span: Some(stream.provenance.source_span.clone()),
+            path: None,
+            hint: Some(
+                "A field's previous period is the close before this one; the first period has no close before it."
+                    .to_string(),
+            ),
+            notes: Vec::new(),
+        });
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 /// `prev.entity.` is here because a field answers to both spellings — and it is
 /// the one a PACK LOWERING RULE produces, since `field.<name>` is rewritten to
 /// the `entity.` long form. Matching only the bare families let a lowered
@@ -2139,6 +2206,7 @@ fn build_ir(
             }
         }
     }
+    check_lowered_prev_first_period(&lowered.streams, &lowered.stream_inputs, &time_start)?;
     // A LOWERING RULE'S FIELD HANGS ON THE ENTITY IT DESCRIBES.
     //
     // The rule already names its owner — `owner_entity = "${subject}"` — so no

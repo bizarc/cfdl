@@ -1443,7 +1443,7 @@ typed attributes on loan-level assets. The case is unaffected — the term its
 schedule uses is the contract's `term_months` — so it states the balance and
 coupon and leaves `term` out.
 
-### 7.20 `E1129` never sees a pack-lowered stream
+### 7.20 `E1129` never sees a pack-lowered stream — RESOLVED
 
 *Belongs with the language and engine (section 5).*
 
@@ -1475,3 +1475,20 @@ wants a wording that names the CONTRACT and its term instead.
 Found fixing `prev.field.<name>` (`fixtures/valid/pack_rule_reads_prev_field`),
 which is the accessor whose absence hid this: no shipped rule read `prev`, so
 no lowered stream could have tripped the check even if it had run.
+
+**Resolved.** `check_lowered_prev_first_period` runs on `lowered.streams`
+immediately after lowering, with the same predicate and the same code. The
+message names the contract, read from the stream-inputs provenance:
+
+```
+ERROR[E1129_PREV_IN_FIRST_PERIOD] Stream 'testpack.avg_balance_interest',
+lowered from contract 'test.avg_balance_contract', reads a field's previous
+period but runs from the model's first period, where there is none. Start the
+contract's term one period after the model, or have the rule carry the opening
+value as a field of its own.
+```
+
+`fixtures/invalid/pack_rule_prev_first_period` is the same contract as the
+valid fixture with its term moved onto period 0, so the pair reads as one
+statement: this term start compiles, that one does not. No existing golden
+moved.
