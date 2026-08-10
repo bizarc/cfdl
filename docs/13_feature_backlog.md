@@ -1442,3 +1442,36 @@ Found building `benchmarks/credit/mbs_pool_by_loan`, the first case to declare
 typed attributes on loan-level assets. The case is unaffected — the term its
 schedule uses is the contract's `term_months` — so it states the balance and
 coupon and leaves `term` out.
+
+### 7.20 `E1129` never sees a pack-lowered stream
+
+*Belongs with the language and engine (section 5).*
+
+`check_prev_first_period` walks `resolve_output.source_statements` for
+`Stmt::Stream`. A stream a PACK emitted is not a source statement — it exists
+only after lowering — so the check runs on hand-written streams and on nothing
+else.
+
+The diagnostic it skips is real. A stream reading `prev.<entity>.<field>` in
+the model's FIRST period is reading a close that does not exist: `prev_states`
+is empty at `t = 0`, so the read warns and substitutes zero for that period
+while every later period is correct. One wrong period in an otherwise right
+series is the hardest shape to notice, and `status: ok`.
+
+It is bounded — one period, and a warning is emitted — where the defect that
+found it was every period. But it is the same class, and it is live for exactly
+the contract that found it: a construction facility whose draw begins at model
+period 0 and whose interest accrues on the average of opening and closing
+balance.
+
+The fix is placement rather than logic. The check needs the lowered streams, so
+it belongs after lowering rather than beside the other resolve-stage checks; the
+predicate (`reads_prev_field`, plus the schedule-starts-at-model-start test) is
+unchanged, and already recognises the `prev.entity.` spelling a lowering rule
+produces. What needs deciding is the message: a model author cannot "start the
+stream one period later" when the pack owns the schedule, so a lowered stream
+wants a wording that names the CONTRACT and its term instead.
+
+Found fixing `prev.field.<name>` (`fixtures/valid/pack_rule_reads_prev_field`),
+which is the accessor whose absence hid this: no shipped rule read `prev`, so
+no lowered stream could have tripped the check even if it had run.
