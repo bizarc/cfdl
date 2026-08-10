@@ -2365,14 +2365,28 @@ fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usiz
     // balance had to declare the quantity twice, and the second was never a
     // quantity — it was this accessor, missing. Only field paths are bound, so
     // bare `prev` still means nothing outside a rule.
+    //
+    // BOTH SPELLINGS, because a CURRENT-period read already has both:
+    // `asset.tlb.balance` IS `entity.asset.tlb.balance`, and binding one end of
+    // that alias and not the other is not a rule anybody could learn. A PACK
+    // LOWERING RULE IS WHERE IT BIT. A rule writes `field.<name>` and lowering
+    // rewrites that to the `entity.` long form deliberately — the bare alias
+    // covers the four declared families only, and a rule may sit on any entity.
+    // So `prev.field.<name>` — the average-balance accessor this block exists
+    // to provide — arrived here as `prev.entity.asset.x.bal`, matched nothing,
+    // and evaluated as a SILENT ZERO with a warning rather than an error. No
+    // shipped pack exercised it; the credit pack reaches the same value by
+    // declaring a second, lagged field.
     if idx > 0 {
         env.prev_states = states
             .iter()
             .filter(|(name, _)| name.matches('.').count() == 2)
-            .filter_map(|(name, values)| {
-                values
-                    .get(idx - 1)
-                    .map(|v| (name.clone(), ExprValue::Decimal(*v)))
+            .filter_map(|(name, values)| values.get(idx - 1).map(|v| (name, *v)))
+            .flat_map(|(name, value)| {
+                [
+                    (format!("entity.{name}"), ExprValue::Decimal(value)),
+                    (name.clone(), ExprValue::Decimal(value)),
+                ]
             })
             .collect();
     }
@@ -2581,12 +2595,19 @@ fn compute_states(
     for (t, date) in timeline.iter().enumerate() {
         // Snapshot the previous column before writing this one, so every state
         // in this period sees the same completed history regardless of order.
+        // Both spellings, for the reason `build_expr_env` gives: a field answers
+        // to `asset.x.bal` and `entity.asset.x.bal` alike, and `prev` must too.
         let previous: BTreeMap<String, ExprValue> = if t == 0 {
             BTreeMap::new()
         } else {
             values
                 .iter()
-                .map(|(name, v)| (name.clone(), ExprValue::Decimal(v[t - 1])))
+                .flat_map(|(name, v)| {
+                    [
+                        (format!("entity.{name}"), ExprValue::Decimal(v[t - 1])),
+                        (name.clone(), ExprValue::Decimal(v[t - 1])),
+                    ]
+                })
                 .collect()
         };
 

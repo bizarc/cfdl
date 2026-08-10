@@ -686,8 +686,15 @@ fn references_prev_other_than_field(src: &str) -> bool {
         if boundary_ok && !tail.starts_with('.') {
             return true;
         }
+        // `entity.` is the universal root: a field answers to both
+        // `asset.x.bal` and `entity.asset.x.bal`, and `prev` follows the same
+        // rule as a current-period read rather than teaching a difference. It
+        // is also the spelling a pack lowering rule produces, since
+        // `field.<name>` is rewritten through the entity root — the bare
+        // family alias covers the four declared families only, and a rule may
+        // sit on any entity.
         if boundary_ok
-            && !["asset.", "party.", "contract.", "reference."]
+            && !["asset.", "party.", "contract.", "reference.", "entity."]
                 .iter()
                 .any(|family| tail[1..].starts_with(family))
         {

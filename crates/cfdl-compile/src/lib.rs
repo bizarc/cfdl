@@ -979,12 +979,17 @@ fn check_prev_first_period(
 }
 
 /// Does this expression read `prev.<family>.<entity>.<field>`?
+/// `prev.entity.` is here because a field answers to both spellings — and it is
+/// the one a PACK LOWERING RULE produces, since `field.<name>` is rewritten to
+/// the `entity.` long form. Matching only the bare families let a lowered
+/// average-balance stream past this check entirely.
 fn reads_prev_field(src: &str) -> bool {
     [
         "prev.asset.",
         "prev.party.",
         "prev.contract.",
         "prev.reference.",
+        "prev.entity.",
     ]
     .iter()
     .any(|p| src.contains(p))

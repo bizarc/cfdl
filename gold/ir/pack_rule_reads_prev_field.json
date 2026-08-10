@@ -1,0 +1,139 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "pack-rule-reads-prev-field",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "7063a536bb3763aab1bc57266f92e75d",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "testpack_balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev + 100"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [
+    {
+      "id": "9e99e4434c9821b5b646c67bf7fc1e8d",
+      "name": "test.avg_balance_contract",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.borrower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2026-04-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "777cba4df1293744d19c1feae99bc722",
+      "name": "testpack.avg_balance_interest",
+      "owner": {
+        "symbol": "asset.borrower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-02-01",
+        "to": "2026-04-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(prev.entity.asset.borrower.testpack_balance + entity.asset.borrower.testpack_balance) / 2.0 * 0.01"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "testpack",
+            "version": "0.1.0"
+          },
+          "rule_id": "emit_average_balance_interest"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "testpack.avg_balance_interest",
+      "contract": "test.avg_balance_contract",
+      "terms": {
+        "draw": "100",
+        "rate": "0.01"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "7c97529016c0c7396a13afe28130af0c",
+      "notes": [
+        "active_pack=testpack@0.1.0"
+      ]
+    }
+  }
+}

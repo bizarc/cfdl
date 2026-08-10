@@ -129,6 +129,11 @@ field at the current period, which is what keeps a cycle unexpressible:
 | `prev` | this field at the **previous** period | `next` expressions |
 | `prev.<family>.<entity>.<field>` | another field at the **previous** period | `next` expressions, streams |
 
+`prev` accepts the entity-root spelling too — `prev.entity.asset.tlb.balance`
+is the same read as `prev.asset.tlb.balance`, exactly as the two current-period
+spellings are one read. It is the form a pack lowering rule produces, since
+`field.<name>` resolves through the entity root (`docs/07`).
+
 A stream environment carries no bare `prev`, so a stream cannot ask for "the
 previous value" of something it does not own — the entry is not there to be
 found. The same mechanism as `series` being empty when a phase-1 stream

@@ -74,3 +74,30 @@ schedule_to = "{{contract.term_end}}"
 [rules.defaults]
 escalation = "0"
 free_months = "0"
+
+[[rules]]
+# A RULE READS BOTH ENDS OF ITS OWN FIELD — the average-balance accessor.
+#
+# `field.<name>` is the rule's placeholder for a field it declares, and
+# lowering rewrites it through the ENTITY ROOT (`entity.<subject>.<field>`)
+# because the bare family alias covers the four declared families only and a
+# rule may sit on any entity. `prev` had no matching binding for that spelling,
+# so this expression resolved to nothing and the stream evaluated to a SILENT
+# ZERO with a warning rather than an error — the one failure mode the language
+# is supposed not to have. No shipped pack exercised it: the credit pack
+# reaches the same value by declaring a second, lagged field.
+#
+# Interest on the average of opening and closing balance is the shape that
+# forced it — a construction facility, and every commercial draw schedule.
+id = "emit_average_balance_interest"
+contract_name = "test.avg_balance_contract"
+stream_name = "testpack.avg_balance_interest"
+owner_entity = "${subject}"
+direction = "outflow"
+amount_expr = "(prev.field.testpack_balance + field.testpack_balance) / 2 * {{contract.rate}}"
+field_name = "testpack_balance"
+field_init = "{{contract.draw}}"
+field_next = "prev + {{contract.draw}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"

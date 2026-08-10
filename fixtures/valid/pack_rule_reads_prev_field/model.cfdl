@@ -1,0 +1,30 @@
+version 0.1
+model "pack-rule-reads-prev-field"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 4
+
+entity asset borrower : Asset.Financial
+
+// A LOWERING RULE READING BOTH ENDS OF THE FIELD IT DECLARES.
+//
+// The rule declares `testpack_balance` (100 at the first tick, +100 each
+// period after) and strikes interest on the average of its opening and closing
+// value — the accessor a construction facility needs and every commercial draw
+// schedule reproduces.
+//
+// The balance runs 100, 200, 300, 400. The contract starts a period after the
+// model so there is a previous close to read, so interest is:
+//   (100 + 200) / 2 * 0.01 = 1.5
+//   (200 + 300) / 2 * 0.01 = 2.5
+//   (300 + 400) / 2 * 0.01 = 3.5
+//
+// This is a regression fixture. `prev.field.<name>` lowered to a path nothing
+// bound, so the stream evaluated to zero at every period with a warning rather
+// than an error, and the model still reported ok.
+contract test.avg_balance_contract on entity asset.borrower {
+  term 2026-02..2026-04
+  terms {
+    draw = 100
+    rate = 0.01
+  }
+}

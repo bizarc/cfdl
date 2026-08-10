@@ -1,0 +1,177 @@
+{
+  "results_version": "0.3",
+  "model_hash": "b03305fdff22d9e57ef6666e92439509898ba877552b0541fa4a6d1ce63a5b6d",
+  "ledger_hash": "691a6f8632effbe99ccf1fedc0ecd78bfdbdb5449bec9b362f7fec17af3efb5b",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "test.avg_balance_contract",
+        "stream": "testpack.avg_balance_interest",
+        "terms": {
+          "draw": "100",
+          "rate": "0.01"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.borrower.total": {
+        "amount": -7.5,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -7.308049,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -7.5,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.testpack.avg_balance_interest.total": {
+        "amount": -7.5,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.borrower.testpack_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          100.0,
+          200.0,
+          300.0,
+          400.0
+        ]
+      },
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -2.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -3.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -2.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -3.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.testpack.avg_balance_interest": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -2.5,
+            "currency": "USD"
+          },
+          {
+            "amount": -3.5,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -7.5,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.testpack.avg_balance_interest": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -7.5,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
