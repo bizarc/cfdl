@@ -96,7 +96,12 @@ const actual = digest();
 
 if (mode === "--write") {
   writeFileSync(STAMP, actual + "\n");
-  console.log(`wasm-stamp: wrote site/public/wasm/.build-stamp (${actual.slice(0, 12)}…)`);
+  // The path, not a hardcoded one: WASM_STAMP_DIR points this at learn/ too,
+  // and a message naming site/ while writing to learn/ sent one debugging
+  // session looking in the wrong directory.
+  console.log(
+    `wasm-stamp: wrote ${relative(repoRoot, STAMP).split(sep).join("/")} (${actual.slice(0, 12)}…)`,
+  );
   process.exit(0);
 }
 

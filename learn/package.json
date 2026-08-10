@@ -11,7 +11,9 @@
     "check:shared": "node scripts/sync-shared.mjs --check",
     "sync:exercises": "node scripts/sync-exercises.mjs",
     "check:exercises": "node scripts/sync-exercises.mjs --check",
-    "prebuild": "node scripts/sync-exercises.mjs --check && node scripts/build-course-kit.mjs",
+    "prebuild": "node scripts/sync-exercises.mjs --check && node scripts/check-wasm-bundle.mjs && node scripts/build-course-kit.mjs",
+    "check:wasm": "node scripts/check-wasm-bundle.mjs",
+    "build:wasm": "OUT_DIR=\"$PWD/public/wasm\" ../site/scripts/build-wasm.sh",
     "check:tokens": "./scripts/check-tokens.sh",
     "check:dialogs": "node scripts/check-no-native-dialogs.mjs",
     "build:kit": "node scripts/build-course-kit.mjs"
