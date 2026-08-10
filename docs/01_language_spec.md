@@ -80,7 +80,9 @@ Rules:
   - define alias mappings
   - define validators for contract terms/types
   - define contract lowering rules
-  - define additional expression functions
+  - (reserved) define helper expression *sugar* that expands to core primitives
+    — not in v0.1: the expression function vocabulary is engine-owned and fixed
+    (see Pack Interface §6.7); packs compose the existing primitives
 
 Core language semantics MUST NOT change based on pack selection.
 
@@ -792,8 +794,10 @@ The expression environment MUST support:
 - `cfg.<name>` for run-config values
 
 **Entities**
-- `entity.<field>` / `entity.<field>` — entity fields and lifecycle state
-  (set via events; null before first set)
+- `entity.<field>` on the owning entity, and `<family>.<entity>.<field>` from
+  anywhere — entity fields and lifecycle state (an entity with a lifecycle
+  opens in its declared initial state; other event-set fields are null before
+  first set)
 
 **Observables and curves**
 - `obs.<name>` — externally supplied observable values (provided via

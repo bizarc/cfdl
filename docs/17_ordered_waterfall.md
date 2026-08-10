@@ -1,8 +1,10 @@
 # Ordered waterfall — design
 
-Status: **partly implemented.** §13 is the surface the parser accepts; §3's
-six-form draft is superseded and kept because §2's analysis produced it.
-Evaluation is not built yet.
+Status: **implemented.** §13 is the surface as built and evaluated — the
+fixtures there reproduce published figures exactly. §3's six-form draft is
+superseded and kept because §2's analysis produced it; its examples also
+predate entity-owned fields, so read its `state.<name>` spellings as
+`<family>.<entity>.<field>`.
 
 A waterfall is an author-declared priority over a pot of cash. Each step takes
 what it is owed, up to what is left, and the remainder passes down. It is not a
@@ -254,7 +256,7 @@ saying only "after the period's fields and streams are known":
 
     waterfall opco.exit on entity asset.target {
       schedule on 2021-01
-      from state.exit_equity
+      from asset.target.exit_equity
       ...
     }
 
@@ -386,7 +388,7 @@ and `min`, `max` and `clamp` already exist:
 | `amount X cap C` | `= min(X, C)` |
 | `down to T measuring M` | `= M - T` |
 | `up to L` | `= L - asset.reserve.balance` |
-| `overflow of s` | `= owed(s) - paid(s)` |
+| `overflow of s` | `= owed.s - paid.s` |
 | `remainder` | `= remaining` |
 | `when C` | `= if(C, X, 0)` |
 
@@ -400,7 +402,7 @@ waterfall abs.distribution on entity asset.trust {
   pay servicing        to party.servicer    = 12.5
   pay trustee_fees     to party.trustee     = min(4.0, 3.0)
   pay class_a_target   to party.class_a     = asset.class_a.balance - asset.trust.pool_balance
-  pay trustee_excess   to party.trustee     = owed(trustee_fees) - paid(trustee_fees)
+  pay trustee_excess   to party.trustee     = owed.trustee_fees - paid.trustee_fees
   pay residual         to party.certificate = remaining
 }
 ```
@@ -410,8 +412,8 @@ Three bindings in step scope, on top of everything a stream expression sees:
 | binding | |
 |---|---|
 | `remaining` | what is still in the pot at this step |
-| `paid(<step>)` | what an earlier step actually paid |
-| `owed(<step>)` | what an earlier step would have paid unbounded |
+| `paid.<step>` | what an earlier step actually paid |
+| `owed.<step>` | what an earlier step would have paid unbounded |
 
 **Why one form beats six.** Six rules came from reading one deal. The roadmap
 holds 31 waterfall-shaped requirements across asset classes nobody has opened,
@@ -431,8 +433,8 @@ to remember.
 | code | |
 |---|---|
 | `E1301_UNRESOLVED_ENTITY_REF` | a step pays someone who is not declared |
-| `E1341_WATERFALL_FORWARD_REF` | `paid()`/`owed()` names a step that is not earlier — the one way an ordered allocation could become a dependency graph |
-| `E1343_WATERFALL_DUPLICATE_STEP` | two steps share a name, so `paid()` would be ambiguous |
+| `E1341_WATERFALL_FORWARD_REF` | `paid.`/`owed.` names a step that is not earlier — the one way an ordered allocation could become a dependency graph |
+| `E1343_WATERFALL_DUPLICATE_STEP` | two steps share a name, so `paid.<step>` would be ambiguous |
 | `E1344_WATERFALL_NO_REMAINDER` | nothing reads `remaining`, so whatever survives the last step is lost in silence |
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | a step says nothing about what it pays |
 | `E1340_WATERFALL_NO_SOURCE` | no `from` — no pot to allocate |
@@ -448,9 +450,10 @@ It runs with no warnings and allocates its pot exactly. The step that proves the
 design is Class B's target:
 
 ```cfdl
-= class_a.original_balance + class_b.original_balance
+= entity.asset.class_a1.original_balance
+  + entity.asset.class_b.original_balance
   - paid.class_a_target - paid.class_a_final
-  - state.pool_balance
+  - asset.trust.pool_balance
 ```
 
 That is the prospectus's *"after giving effect to any payments made under

@@ -257,7 +257,7 @@ Fields that move:
 - `E2203_ACTION_SET_FIELD_INVALID` — an event sets an entity field that does not exist or cannot hold that value.
 ### 7.7 Expressions / typing (E30xx/W30xx)
 - `E3001_EXPR_PARSE_ERROR` — an expression is not valid CFDL.
-- `E3002_EXPR_UNKNOWN_IDENT` — an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and declared states.
+- `E3002_EXPR_UNKNOWN_IDENT` — an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and entity fields by qualified path (`<family>.<entity>.<field>`).
 - `E3003_EXPR_TYPE_ERROR` — an expression combines types that cannot combine, such as a date and a number.
 - `E3004_EXPR_ILLEGAL_OP` — an operator is not defined for these operands.
 Warnings:
