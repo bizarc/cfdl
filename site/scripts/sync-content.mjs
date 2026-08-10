@@ -554,6 +554,7 @@ if (fs.existsSync(benchRoot)) {
 // none — without inventing models that nothing validates.
 
 const benchmarkTitles = {
+  "bespoke/ppiaf_toll_highway": "Bespoke: tolled highway PPP concession",
   "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
   "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
   "cre/office_two_tenant": "CRE: two-tenant office",
@@ -772,7 +773,13 @@ for (const { pack, name } of benchCases) {
   });
 }
 
+// The order the benchmark groups are presented in, on both the examples index
+// and the benchmarks table. `bespoke` is not a pack — it holds cases written
+// from the bare language — so it sits last, after the four packs.
+const benchmarkGroups = ["energy", "cre", "credit", "opco", "bespoke"];
+
 const packLabels = {
+  bespoke: "Without a pack",
   energy: "Energy",
   cre: "Commercial real estate",
   credit: "Credit",
@@ -790,7 +797,7 @@ exampleIndexLines.push(
 // Grouped by pack, each with the line the case declares about itself. A flat
 // list of twenty-five titles asked the reader to guess from a title alone
 // which model was the one they wanted.
-for (const pack of ["energy", "cre", "credit", "opco"]) {
+for (const pack of benchmarkGroups) {
   const cases = benchmarkExampleLinks[pack] ?? [];
   if (cases.length === 0) continue;
   exampleIndexLines.push("");
@@ -1251,7 +1258,7 @@ const dataRegions = [
     body: [
       "| Case | What it is |",
       "|---|---|",
-      ...["energy", "cre", "credit", "opco"].flatMap((pack) =>
+      ...benchmarkGroups.flatMap((pack) =>
         (benchmarkExampleLinks[pack] ?? []).map(
           ({ title, href, summary }) => `| [${title}](${href}) | ${summary} |`,
         ),
