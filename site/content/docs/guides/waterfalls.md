@@ -142,8 +142,20 @@ pot as a computed number rather than an assumption holding a stale copy of it.
 
 ## Worked structures
 
-Six real waterfalls are encoded in the test suite, and between them they use
+Seven real waterfalls are encoded in the test suite, and between them they use
 only the rules above.
+
+**An auto ABS note stack, checked against the issuer's own figures.** Six
+classes of notes repaid in strict seniority out of the principal a pool of car
+loans throws off. An exhibit filed by the trust states, for each class and every
+monthly distribution date, the percent of that class still outstanding — and the
+model reproduces all 208 published cells to within 0.0054 percentage points.
+The exhibit rounds to 0.01, so that is the floor a reader can check against.
+
+This is the one to read if you want to know whether the construct is right
+rather than merely expressive: the collateral underneath it was already
+reconciled to the cent by a separate case, so any disagreement could only have
+been the waterfall. See [the case](/docs/examples/credit-auto-abs-tranches).
 
 **A 22-step consumer ABS priority of payments** — servicer and trustee ahead of
 the notes, five rated classes taking interest then principal in strict
@@ -192,3 +204,5 @@ carry these structures.
   waterfall pays.
 - [Reading results](/docs/guides/reading-results) — where the per-step series
   land.
+- [Auto ABS note classes](/docs/examples/credit-auto-abs-tranches) — a
+  sequential-pay stack reconciled against an issuer's published grid.
