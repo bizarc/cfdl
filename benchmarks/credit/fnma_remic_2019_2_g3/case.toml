@@ -1,0 +1,35 @@
+# Benchmark case: SECURITY GROUP 3 of Fannie Mae REMIC Trust 2019-2, against
+# the decrement table in the issuer's own prospectus supplement.
+#
+# The first case in this repo where a COUPON IS STRIPPED. The pool passes
+# through at 5.00%; AB takes 3.25% and the remaining 1.75% is sold as IO, a
+# notional class carrying no principal whose balance is 35.0000000674% of AB's.
+# The two coupons reconstruct the pass-through rate, so the interest waterfall
+# leaves the residual classes nothing — which this case asserts to the cent, in
+# every period, alongside the published decrement column.
+#
+# Reference: EXTERNAL. Prospectus Supplement dated 24 January 2019, page S-14 —
+# see SOURCE.md.
+#
+# The published percentages are whole numbers, so half a percent of each class's
+# original balance is the tightest bound a reader can hold this to. Worst
+# observed disagreement is 0.364 percentage points, inside that floor on all 60
+# published cells.
+summary = "Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal."
+pack = "credit"
+
+# The pool's cumulative principal, asserted on the distribution date itself
+# against the same published column — a pass-through class's percentage
+# outstanding IS the pool factor.
+period_tolerance = 741862.17
+
+[tolerance]
+"asset.ab.balance" = 741862.17
+"asset.io.balance" = 259651.76
+# Not a rounding band. The strip either reconstructs the pass-through rate or it
+# does not, and a cent either way would mean it does not.
+"g3.interest.residual" = 0.01
+# Interest on a balance the table pins to a whole percent, at a coupon the cover
+# states exactly. The band is the balance band carried through the coupon.
+"g3.interest.ab_interest" = 2009.21
+"g3.interest.io_interest" = 1081.88

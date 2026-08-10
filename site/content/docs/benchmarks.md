@@ -90,6 +90,7 @@ checked, and a write-up of the reference and the residual.
 | [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) | The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date. |
 | [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) | An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back. |
 | [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) | A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination. |
+| [Credit: Fannie Mae REMIC with a stripped coupon](/docs/examples/credit-fnma-remic-2019-2-g3) | Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal. |
 | [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) | An interest-only loan repaying its entire principal in a single balloon at maturity. |
 | [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) | A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal. |
 | [Credit: a mortgage pool modelled loan by loan](/docs/examples/credit-mbs-pool-by-loan) | The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children. |
@@ -105,7 +106,7 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*30 cases.*
+*31 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

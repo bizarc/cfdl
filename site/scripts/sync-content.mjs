@@ -565,6 +565,7 @@ const benchmarkTitles = {
   "credit/auto_abs_tranches": "Credit: auto ABS note classes",
   "credit/auto_abs_wal": "Credit: auto ABS weighted average life",
   "credit/float_bridge_pool": "Credit: floating-rate bridge pool",
+  "credit/fnma_remic_2019_2_g3": "Credit: Fannie Mae REMIC with a stripped coupon",
   "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
   "credit/level_pay_pool": "Credit: level-pay auto pool",
   "credit/mbs_pool_by_loan": "Credit: a mortgage pool modelled loan by loan",
