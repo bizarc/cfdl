@@ -71,7 +71,7 @@ register, so it cannot fall behind the language.
 | `E1125_NO_STATE_NAMESPACE` | Global structure | an expression reads `state.<name>`. There is no such namespace: a value that changes over time is a field of the entity it describes, declared as `<name> init <expr> next <expr>` inside that entity's block and read as `<family>.<entity>.<name>`. Without this the reference reaches the engine, which warns and substitutes zero — an entire series evaluating to nothing while the run still reports `status: ok`. |
 | `E1127_FIELD_RULE_READS_FIELD` | Global structure | a field's rule names another field by its family path. A field means this period's value at close, which does not exist yet inside a rule; `prev.<entity>.<field>` says the previous period. Unrejected it would resolve through the open-world entity root, return null and evaluate to zero. |
 | `E1128_FIELD_DECLARED_TWICE` | Global structure | a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win. |
-| `E1129_PREV_IN_FIRST_PERIOD` | Global structure | a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. |
+| `E1129_PREV_IN_FIRST_PERIOD` | Global structure | a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. Checked on hand-written and pack-lowered streams alike; the lowered form names the contract whose term set the schedule, since that is the term a model author can move. |
 | `E1131_UNKNOWN_FIELD_READ` | Global structure | an expression reads a field the entity does not declare. Field paths resolve through the open-world `entity` root, so unrejected a misspelling reads as null and becomes zero in arithmetic. Lifecycle `status` keeps the open world; declared fields do not. |
 | `E1001_DUPLICATE_ENTITY` | Symbols and references | two entities share a name. |
 | `E1002_DUPLICATE_CONTRACT` | Symbols and references | two contracts share a name. Give one a suffix to keep them separable. |
@@ -117,7 +117,7 @@ register, so it cannot fall behind the language.
 | `E2202_STREAM_ACTIVE_NOT_BOOL` | Events and actions | a stream's `active when` is not a true/false expression. |
 | `E2203_ACTION_SET_FIELD_INVALID` | Events and actions | an event sets an entity field that does not exist or cannot hold that value. |
 | `E3001_EXPR_PARSE_ERROR` | Expressions / typing | an expression is not valid CFDL. |
-| `E3002_EXPR_UNKNOWN_IDENT` | Expressions / typing | an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and declared states. |
+| `E3002_EXPR_UNKNOWN_IDENT` | Expressions / typing | an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and entity fields by qualified path (`<family>.<entity>.<field>`). |
 | `E3003_EXPR_TYPE_ERROR` | Expressions / typing | an expression combines types that cannot combine, such as a date and a number. |
 | `E3004_EXPR_ILLEGAL_OP` | Expressions / typing | an operator is not defined for these operands. |
 | `W3001_EXPR_TYPE_UNKNOWN` | Expressions / typing | an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped. |

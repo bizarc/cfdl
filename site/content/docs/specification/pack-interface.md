@@ -752,6 +752,28 @@ All templated. `field_name` must expand to a **single identifier** —
 `field.<name>` resolves one segment, so `{{contract.dot_suffix}}` would produce
 an unreachable path; use `{{contract.suffix_ident}}`.
 
+**A rule may read BOTH ENDS of the field it declares.** `field.<name>` is the
+value at this period and `prev.field.<name>` is the value at the previous
+close, which is what an average-balance accrual needs:
+
+```toml
+amount_expr = "(prev.field.loan_balance + field.loan_balance) / 2 * {{contract.rate}}"
+```
+
+Both spellings lower through the entity root, since the bare family alias
+covers the four declared families only and a rule may sit on any entity. A
+stream reading `prev` must not start in the model's FIRST period — there is no
+close before it (`E1129`). `fixtures/valid/pack_rule_reads_prev_field` pins it.
+
+What a rule may NOT do is read a stream from `field_next`: a recurrence sees
+`prev`, other fields' previous values, `time.*`, `inputs.*`, `cfg`, `obs` and
+curves, and no series at all. That absence is what makes cycles impossible by
+construction, so a balance cannot be defined as "last period plus this period's
+draw stream". Derive it instead — a cumulative field over the schedule, with
+the period's split computed from it. `benchmarks/cre/one_lincoln_street` is the
+worked case: one field, and equity draw, debt draw and opening balance all fall
+out of `min`/`max` over it.
+
 Fields are deduplicated by name across contracts. Identical definitions collapse,
 which is what several contracts sharing one curve should do; differing ones are
 `E5021_DUPLICATE_LOWERED_FIELD` rather than one silently winning.
