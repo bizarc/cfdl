@@ -1,5 +1,3 @@
-# A tolled highway concession — no pack, and a subsidy the model solves for itself
-
 ## The case
 
 A 125 km, 2x2-lane tolled highway, built over four years and operated for
