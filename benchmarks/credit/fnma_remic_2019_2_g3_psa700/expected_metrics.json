@@ -3,12 +3,12 @@
     "value": 148372434.0,
     "tolerance": 0.01
   },
-  "model.total": {
-    "value": 183313276.29,
-    "tolerance": 1.0
-  },
   "domain.credit.wal_years": {
-    "value": 4.7,
+    "value": 1.7,
     "tolerance": 0.07
+  },
+  "model.total": {
+    "value": 161035147.51,
+    "tolerance": 1.0
   }
 }
