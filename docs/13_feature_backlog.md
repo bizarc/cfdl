@@ -1626,7 +1626,7 @@ Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
 across five to seven speeds per class, of which a single case can assert the
 0%-, 100%- or 259%-PSA column but not all three.
 
-### 7.24 A validated contract term cannot be parameterised
+### 7.24 A validated contract term cannot be parameterised — WRONG, see the correction
 
 Belongs with section 5 (language and engine).
 
@@ -1654,6 +1654,61 @@ nothing changes for existing models.
 
 Found modelling FNMA 2019-2 at seven speeds, where the attempt to carry the
 speed as `cfg.psa` was the first thing tried and the first thing refused.
+
+#### Correction — `inputs.<name>` was never refused
+
+Appended rather than edited in, because what was believed and what was
+measured are both worth seeing.
+
+The restriction is `cfg.*`, not parameterisation. A term deferred to
+`inputs.<name>` compiles, lowers carrying the reference, and responds to a
+run-config override — on the very term this entry names. Probed against the
+credit pack, `psa_speed = inputs.psa`:
+
+| run | prepayments |
+|---|---:|
+| deterministic, 198% PSA | 25,572.80 |
+| scenario `psa000` | 0.00 |
+| scenario `psa700` | 91,348.34 |
+
+`E9016_CREDIT_INVALID_PSA_SPEED` does not fire, and it is not an oversight
+that it does not: `docs/01_language_spec.md` §8.2.1 states it as policy — *"a
+term whose value is an input reference is not range-checked at compile time,
+since its value is not yet known; pack bounds still apply to literal terms."*
+The channel was documented and open the whole time.
+
+So both consequences this entry draws are false as written:
+
+- **A scenario CAN vary a pack deal's prepayment assumption.** The three runs
+  above are one model and one `run.json`.
+- **A Monte Carlo distribution CAN attach to a validated contract term.**
+  `assume psa ~ Normal(mean=1.98, stdev=0.4, clip=[0.5, 4.0])` over 200 seeded
+  trials moves `model.npv` across 72,663.72 - 97,375.47, mean 86,696.38. The
+  distribution reaches the term because a draw writes `inputs.<name>`, which is
+  the same channel a scenario writes.
+
+**What remains, and it is smaller.** Two real questions survive:
+
+1. Should `cfg.*` work in a term as well? It is the run-config's other half,
+   and a reader who reaches for it gets a diagnostic that says the value is
+   invalid rather than that the channel is wrong. If the answer is no, the
+   diagnostic should say so — `E9016` naming a bound is actively misleading
+   when the term is `cfg.psa`.
+2. A term deferred to `inputs.` is **never** bounds-checked, at compile time or
+   at run start. §8.2.1 accepts that deliberately, but it means a scenario may
+   push `psa_speed` to 40 and the run will price it. The original "Shape" above
+   — validate the RESOLVED value per run, per scenario, per trial — is still
+   the right fix, and it now applies to `inputs.` rather than to `cfg.`.
+
+**The FNMA seven directories are still justified — by §7.23, not by this.**
+The harness asserts metrics per scenario and not the per-period column, and
+the decrement table IS a per-period column. That is the whole reason the case
+ships seven ways, and this entry claimed the compiler half of a story that
+turned out to have only a harness half.
+
+Found while answering an external question about whether pack-validated terms
+could carry scenario and Monte Carlo values, which is the same question this
+entry answers "no" to.
 
 ### 7.25 A model cannot declare a metric
 
@@ -1729,3 +1784,60 @@ being a tolerance line item anywhere.
 
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
+
+### 7.27 A curve is a LEVEL, and a per-period flow read from one multiplies silently
+
+*Belongs with the language and engine (section 5).*
+
+`curve` is a date-indexed value series with step (flat-forward) or linear
+interpolation: a step curve returns *the last point at or before the query
+date*. That is exactly right for what a curve is for — a rate, a price deck, an
+index. A level has a value on every date whether or not a point was declared
+there.
+
+A **flow** does not. `cre.construction_loan` takes `draw_curve` and reads
+`curve_value(draw_curve, time.date)` as *this period's draw*, and flat-forward
+on a flow means REPEAT THE FLOW. One deal, one curve, two calendars:
+
+| model grid | curve points | funded |
+|---|---|---:|
+| quarterly | quarterly | 4,000.00 |
+| monthly | monthly | 4,000.00 |
+| monthly | **quarterly** | **12,000.00** |
+
+Three times the money, no diagnostic, `status: ok`. The contract is otherwise
+cadence-neutral — the first two rows agree on funding AND on interest to four
+decimal places — so the failure is not the rule dividing by a literal, which is
+what `cadence-parity` was built to catch. It is a curve being read at a grain it
+was not stated at.
+
+**This is not a bug in the curve.** Flat-forward is the correct and useful
+semantics for the thing `curve` is. The gap is that the language has ONE series
+construct, and it means "level"; there is no way to say "a value that belongs to
+this period and to no other". Every per-period schedule — a draw programme, a
+capex plan, a lumpy fee — is currently a level pressed into service as a flow,
+and the pressing is silent.
+
+**It cannot be closed with a pack validation.** The check set is closed
+(`term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`,
+`term_range_within_timeline`, `term_enum`, `term_compare`) and none of them can
+see a curve, only a term's own value.
+
+Three shapes, in increasing order of what they cost:
+
+1. **A compile check.** The rule names the curve in a term, the model declares
+   the curve's points, and the compiler knows the timeline — so "a curve read
+   per-period by a lowering rule has a point for every period in that rule's
+   schedule" is decidable at compile time. Cheapest, and catches the case above
+   at the moment it is written.
+2. **Declare the intent on the curve.** `curve draws flow { ... }` beside `step`
+   and `linear`, where a flow returns 0 on a date it has no point for rather
+   than the last one. The semantics a schedule wants, and it makes the two
+   readings distinguishable rather than a convention.
+3. **A distinct construct** for period-indexed series. Largest surface, and
+   probably not warranted while (2) is available.
+
+Found reviewing `cre.construction_loan` against an external question about
+running the same deal at monthly and daily granularity — which the contract does
+correctly, provided the curve is restated at the new grain. Nothing says so, and
+an emitter generating models at a user-chosen calendar will hit this first.
