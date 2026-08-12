@@ -104,10 +104,16 @@ The interest legs are asserted too, and they are external rather than model
 output: a published balance multiplied by a coupon stated on the cover. Their
 tolerance is the balance band carried through the coupon.
 
-The other six published speeds — 0%, 100%, 300%, 400%, 700% and 1000% — all
-reconcile to the same floor with their weighted average lives exact, including
+The weighted average life is asserted at ±0.07: 0.05 is the print floor of a
+figure published to one decimal, and ~0.015 is the axis — the engine measures
+on its month-end axis while the deal distributes on the 25th measured from
+late-January settlement, a uniform bias across all seven published speeds.
+
+The other six published speeds — 0%, 100%, 300%, 400%, 700% and 1000% — each
+ship as their own case (`fnma_remic_2019_2_g3_psa000` through `_psa1000`),
+asserting their own decrement columns and weighted average lives, including
 0% PSA, which the supplement prepares on its own alternative assumption of a
-360-month original and remaining term at 7.50%. Only 198% ships as a case.
+360-month original and remaining term at 7.50%.
 
 ## The delta
 
@@ -119,7 +125,9 @@ reproducing the published tables would need those seventeen deals' own
 collateral. That is a compositional boundary, not a gap in this document, and it
 is why only Group 3 is here.
 
-**One speed.** As above; the case ships the pricing speed.
+**One speed here, seven in all.** This case ships the pricing speed; the other
+six columns are sibling cases, so a convention error that hides under the
+rounding floor at one speed has to hide at all seven simultaneously.
 
 **No losses.** Fannie Mae guarantees timely payment of principal and interest,
 so the collateral cannot default in a way the classes would see.
@@ -323,3 +331,4 @@ Summary metrics for the base run:
 |---|---:|---:|
 | `domain.credit.principal` | 148,372,434 | ±0.01 |
 | `model.total` | 183,313,276.29 | ±1 |
+| `domain.credit.wal_years` | 4.7 | ±0.07 |

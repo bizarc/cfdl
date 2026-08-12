@@ -1,0 +1,87 @@
+version 0.1
+model "fnma-remic-2019-2-g3-psa100"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2019-02 for 361
+
+// GROUP 3 OF FANNIE MAE REMIC TRUST 2019-2 AT 100% PSA, against the same
+// decrement table as `fnma_remic_2019_2_g3`, which ships the 198% pricing
+// speed and carries the deal's full description. This case is one of the six
+// other published columns: same collateral, same strip, same one-line
+// waterfall — only the prepayment assumption moves.
+//
+// See `fnma_remic_2019_2_g3/model.cfdl` for why the class balances are fields
+// and why the balances land one period behind the distributions (the deal's
+// own convention: interest is struck on the balance immediately prior to the
+// distribution date).
+
+entity asset trust : Credit.Asset.LoanPool {
+  collateral_type = "residential"
+}
+
+entity asset pool : Credit.Asset.LoanPool {
+  collateral_type = "residential"
+  part of asset.trust
+
+  balance init 148372434.0
+               * (1.0 - ((-pmt(0.0045425, 173.0, 1.0)) - 0.0045425))
+               * (1.0 - cpr_to_periodic(min(1.0 * 0.002 * max(1.0, min(176.0, 30.0)), 1.0), 12.0))
+          next if(time.t < 173.0,
+                  prev * (1.0 - ((-pmt(0.0045425, 173.0 - time.t, 1.0)) - 0.0045425))
+                       * (1.0 - cpr_to_periodic(min(1.0 * 0.002 * max(1.0, min(time.t + 176.0, 30.0)), 1.0), 12.0)),
+                  0.0)
+}
+
+entity asset ab : Credit.Asset.Tranche {
+  seniority = 1
+  original_balance = 148372434.0
+  balance init 148372434.0
+          next prev.asset.pool.balance
+}
+
+entity asset io : Credit.Asset.Tranche {
+  seniority = 1
+  original_balance = 51930352.0
+  balance init 51930352.0
+          next prev.asset.pool.balance * 0.350000000674
+}
+
+entity party ab_holders : Credit.Party.Investor { name = "Class AB holders" }
+entity party io_holders : Credit.Party.Investor { name = "Class IO holders" }
+entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
+
+// The Pricing Assumptions' collateral, identical to the 198% case: 5.451% WAC, 173 months remaining, 175 months seasoned. Only psa_speed differs.
+contract credit.pool_level_pay.g3 on entity asset.pool {
+  term 2019-02..2033-06
+  terms {
+    balance = 148372434
+    rate = 0.05451
+    term_months = 173
+    age_months = 175
+    psa_speed = 1.0
+    servicing_fee = 0.00451
+  }
+}
+
+waterfall g3.principal on entity asset.trust {
+  schedule every month from 2019-02 to 2033-06
+
+  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
+       + series_sum("credit.pool.prepay.*", time.t, time.t)
+
+  pay ab_principal to party.ab_holders = remaining
+}
+
+// One month's interest on the balance each certificate carried into the
+// distribution date: AB at 3.25%, IO at 5.00% of its notional. The pool
+// passes through at 5.00% under every column's assumptions, so the residual
+// step should take nothing, and expected.csv asserts that it takes nothing.
+waterfall g3.interest on entity asset.trust {
+  schedule every month from 2019-02 to 2033-06
+
+  from series_sum("credit.pool.interest.*", time.t, time.t)
+       + series_sum("credit.pool.servicing.*", time.t, time.t)
+
+  pay ab_interest to party.ab_holders = asset.ab.balance * (0.0325 / 12.0)
+  pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)
+  pay residual    to party.residual   = remaining
+}
