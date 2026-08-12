@@ -1560,3 +1560,68 @@ one.
 
 Found shipping `cre.construction_loan`, which is a pack-only change and tripped
 both guards twice.
+
+### 7.22 A published weighted average life cannot be asserted
+
+Belongs with section 4 (credit pack).
+
+`domain.credit.wal_years` folds the pool's own streams —
+`credit.pool.sched_principal.*`, `prepay.*`, `bullet.*`, `recoveries.*` — so it
+answers "when does the collateral come back". A structured deal publishes the
+question one level up: when does *each class* come back. There is no metric for
+that, and a waterfall step's stream cannot be reached by one, because
+`metrics.toml` names streams by pattern and a WAL needs the class's original
+balance as well as its payments.
+
+So a published weighted average life cannot be checked. Ginnie Mae REMIC Trust
+2026-100 publishes 709 of them, one per class per prepayment speed; Fannie Mae
+REMIC Trust 2019-2 publishes seven. In both cases the model reproduces them —
+709 of 709 exactly for the first, all seven for the second — and in both cases
+the only place to say so was `CASE.md`, in prose.
+
+This is §7.12 one level up. That item was about a pool's amortisation state not
+being exposed, which left `auto_abs_speed_050` reconciling its percent-outstanding
+column in words; the fix was a cumulative subtotal, and the case now asserts it.
+The same argument applies here: a figure the issuer publishes, that the model
+gets right, that no gate would notice going wrong.
+
+Shape: a per-class WAL wants two inputs the pack does not currently pair — a
+payment stream and the original balance of the thing being paid. The class
+already carries the second as `original_balance` on a `Credit.Asset.Tranche`, so
+the metric is plausibly a fold over a stream *keyed to an entity*, rather than
+over a stream pattern alone. That is a wider change than a new metric row, which
+is why this is a backlog item and not a patch.
+
+Found modelling Ginnie Mae 2026-100 and Fannie Mae 2019-2, where between them
+716 published figures could be reproduced and none could be asserted.
+
+### 7.23 A scenario asserts metrics, but not the per-period column that is the published artefact
+
+Belongs with section 5 (harness and tooling).
+
+`expected_scenarios.json` checks a scenario's **metrics**. `expected.csv` checks
+per-period series, but only for the deterministic run. So a case can vary an
+input across scenarios and assert what that does to a summary number, and cannot
+assert what it does to a schedule.
+
+For structured credit that is backwards. The published artefact *is* the
+per-period column, tabulated at several prepayment speeds — five to seven of
+them per class — and the summary number is the derived thing. Ginnie Mae
+2026-100 publishes 58 such tables; the model reconciles every one, and a case can
+assert one speed.
+
+The existing route is one case directory per speed, as `auto_abs_speed_050` and
+`auto_abs_speed_150` do. That works for two. It does not work for roughly 75
+directories differing in a single term, and the duplication is not free: each
+carries its own `CASE.md`, `SOURCE.md` and tolerances to keep in step, and the
+site publishes each as a separate page.
+
+Shape: let `expected.csv` carry a scenario column, or let a scenario name a CSV
+of its own. Either makes the speed grid one case with N columns instead of N
+cases with one, and neither changes what the engine computes — the scenario runs
+already happen and their series are already produced, they are simply not
+reachable from the harness.
+
+Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
+across five to seven speeds per class, of which a single case can assert the
+0%-, 100%- or 259%-PSA column but not all three.
