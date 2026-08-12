@@ -52,6 +52,41 @@ in `lowering/rules.toml`:
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.property_opex`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
 - `cre.permanent_debt`
+- `cre.construction_loan`
+
+### `cre.construction_loan`
+
+A construction facility funded behind an equity commitment. Equity draws first;
+the loan takes the balance once the commitment is exhausted; interest accrues on
+the drawn balance through the build. Emits three streams — the equity draw
+(`financing.equity`), the loan draw (`financing.debt_proceeds`) and interest
+(`financing.debt_service`, so coverage during a build counts it).
+
+| term | | |
+|---|---|---|
+| `draw_curve` | required | the NAME of a declared `curve` giving required funding per period |
+| `equity_commitment` | required | equity funds up to this, then the facility takes over |
+| `rate` | required | nominal annual |
+| `draw_accrual_fraction` | 0.5 | where in the period a draw lands: 0.5 drawn ratably, 0 at the end, 1 at the start |
+| `day_count` | — | drives the accrual divisor, as elsewhere |
+
+**The draw schedule is a curve, not a term.** A development's funding profile is
+per-deal data — a published sixteen-quarter schedule, an S-curve, a contractor's
+actual requisitions — and all three are the same object. A term carrying a
+curve's SHAPE (a steepness parameter, a flat-or-S-curve enum) states an
+implementation choice as though the parties had agreed it. The contract names
+the curve; the model declares it.
+
+**The commitment depleting mid-period is not a special case.** Cumulative
+funding is the contract's one field, and the equity/debt split is
+`min`/`max` over it — so a period where the commitment runs out part-way splits
+by arithmetic rather than by a rule. The published One Lincoln Street case is
+shipped twice, once built from primitives and once through this contract, and
+the two agree in all 48 cells with zero difference.
+
+**Interest is paid, not capitalised.** A capitalising facility compounds and is
+a different recurrence — affine in the closing balance, so it collects rather
+than needing a solver — and is not modelled here.
 
 ### `cre.permanent_debt`
 
@@ -195,6 +230,7 @@ time.date)`), not model years.
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
+| `cre.construction_loan` | `draw_curve` (a curve NAME), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the

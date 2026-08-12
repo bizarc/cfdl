@@ -408,6 +408,14 @@ CRE pack codes:
   normally longer than the loan's term
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
+- `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` — zero or greater; zero is
+  an all-debt build and legal, so the bound is not exclusive
+- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate in [0, 1], which
+  catches 8 entered where 0.08 was meant
+- `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` — where in the period a
+  draw lands, in [0, 1]; 0.5 is funding drawn ratably through it
+- `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` — the build must sit inside the
+  model timeline, or the schedule silently loses draws
 
 `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
 occupancy terms that no longer exist. Per §8 the code is never reused.

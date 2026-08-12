@@ -89,7 +89,15 @@ The operating pro forma, for the reason above. Also the development budget
 (Exhibit 4, $330,495,000) — it is a static cost breakdown rather than a cash
 flow, and the funding schedule already carries its timing.
 
-No CRE pack contract is exercised: the funding waterfall is a depleting
-commitment, and `cre.construction_stub` takes a flat draw. A
-`cre.construction_loan` contract carrying an equity-first commitment is the
-obvious follow-on, and this case is what it should be validated against.
+No CRE pack contract is exercised, and that is now the point rather than a
+gap. This case builds the funding waterfall from primitives — a curve, a field
+and three streams — so it proves the LANGUAGE expresses a depleting equity
+commitment with no domain vocabulary at all. That is the stronger claim, and it
+is why this case was not converted when the contract arrived.
+
+`cre.construction_loan` has since shipped, and
+`benchmarks/cre/one_lincoln_street_contract` is its twin of this case: the same
+exhibit, the same figures, declared as one contract. It reproduces this model in
+all 48 cells with zero difference. The pair is the assertion — the primitives
+prove the deal is expressible, the contract proves the pack changed no answer.
+If they ever disagree, the contract is wrong.

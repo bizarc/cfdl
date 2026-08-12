@@ -84,6 +84,7 @@ checked, and a write-up of the reference and the residual.
 | [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) | A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate. |
 | [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) | An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years. |
 | [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing. |
+| [CRE: office development, through the pack contract](/docs/examples/cre-one-lincoln-street-contract) | The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance. |
 | [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
 | [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance. |
 | [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) | The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens. |
@@ -106,7 +107,7 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*31 cases.*
+*32 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

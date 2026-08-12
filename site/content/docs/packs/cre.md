@@ -35,6 +35,7 @@ each classified so it lands on the right line of a
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent[.suffix]` |
 | `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds` |
 | `cre.permanent_debt` | `balloon_at_maturity`, `payment_frequency`, `principal`, `rate` | `loan.permanent_debt_service` |
+| `cre.construction_loan` | `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]` |
 <!-- /cfdl:generated contracts-cre -->
 
 A contract can be declared more than once by giving it a suffix, so the pieces

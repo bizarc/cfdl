@@ -559,6 +559,8 @@ const benchmarkTitles = {
   "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
   "cre/office_two_tenant": "CRE: two-tenant office",
   "cre/one_lincoln_street": "CRE: office development joint venture",
+  "cre/one_lincoln_street_contract":
+    "CRE: office development, through the pack contract",
   "cre/retail_strip": "CRE: retail strip with expense stops",
   "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
   "credit/auto_abs_speed_150": "Credit: auto ABS at 1.5x prepayment speed",

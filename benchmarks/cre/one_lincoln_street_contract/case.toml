@@ -1,0 +1,26 @@
+# Benchmark case: One Lincoln Street through the `cre.construction_loan`
+# contract — the pack twin of `benchmarks/cre/one_lincoln_street`.
+#
+# THE TWO CASES ARE A MATCHED PAIR AND THE ASSERTION IS THAT THEY AGREE. The
+# native case builds the funding waterfall from a curve, a field and three
+# streams, and proves the LANGUAGE expresses a depleting equity commitment with
+# no domain vocabulary. This one declares one contract and proves the PACK
+# lowers to exactly that.
+#
+# expected.csv here is the native case's file with the stream names changed and
+# not one figure touched — which is the whole point. Every value is still
+# Exhibit 7's, and the contract derives them from the same three published
+# drivers.
+#
+# Measured at build time, native against contract, all 48 cells:
+#   equity draw   0.00
+#   loan draw     0.00
+#   interest      0.00
+# and model.total, model.npv and model.wal_years agree to the last decimal.
+#
+# The tolerances are inherited rather than re-derived, for the same reasons the
+# native case states: the exhibit rounds interest to whole thousands, and its
+# own debt-service total is the sum of those rounded figures.
+summary = "The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance."
+pack = "cre"
+period_tolerance = 500.0

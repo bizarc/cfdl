@@ -247,3 +247,57 @@ when = "present"
 on_invalid = "report"
 min = 0.0
 max = 1.0
+
+# --- cre.construction_loan --------------------------------------------------
+
+# The commitment is the number the whole contract turns on: it is where equity
+# stops and the facility starts. Zero is a legal answer (an all-debt build), so
+# the bound is non-negative rather than positive.
+[[validations]]
+contract = "cre.construction_loan"
+match = "instance"
+code = "E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT"
+message = "CRE construction loan 'equity_commitment' must be zero or greater."
+check = "term_number"
+term = "equity_commitment"
+when = "present"
+on_invalid = "skip"
+min = 0.0
+
+# A construction rate is quoted nominal and annual. 1.0 as an upper bound
+# catches the commonest input error by an order of magnitude — 8 entered where
+# 0.08 was meant — without ruling out a distressed mezzanine coupon.
+[[validations]]
+contract = "cre.construction_loan"
+match = "instance"
+code = "E6058_CRE_CONSTRUCTION_INVALID_RATE"
+message = "CRE construction loan 'rate' must be a nominal annual rate between 0 and 1 (0.08 for 8%)."
+check = "term_number"
+term = "rate"
+when = "present"
+on_invalid = "skip"
+min = 0.0
+max = 1.0
+
+# Where in the period the money lands. Outside [0, 1] it is not a position in
+# the period at all, and a value silently outside it would move every interest
+# figure in the build.
+[[validations]]
+contract = "cre.construction_loan"
+match = "instance"
+code = "E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION"
+message = "CRE construction loan 'draw_accrual_fraction' is where in the period a draw lands and must be between 0 and 1 (0.5 = drawn ratably)."
+check = "term_number"
+term = "draw_accrual_fraction"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
+
+# The build has to sit inside the model, or the schedule silently loses draws.
+[[validations]]
+contract = "cre.construction_loan"
+match = "instance"
+code = "E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE"
+message = "CRE construction loan term must fall within the model timeline."
+check = "term_range_within_timeline"

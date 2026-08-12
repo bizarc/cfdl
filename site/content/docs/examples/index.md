@@ -49,6 +49,7 @@ Complete models for every pack, each checked period by period against an indepen
 - [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) — A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) — An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years.
 - [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) — A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing.
+- [CRE: office development, through the pack contract](/docs/examples/cre-one-lincoln-street-contract) — The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance.
 - [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) — A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold.
 
 ### Credit

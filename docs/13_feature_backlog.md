@@ -777,7 +777,7 @@ gets financed or valued.
 | candidate | forced by |
 |---|---|
 | ~~`cre.permanent_debt`~~ | **SHIPPED.** Interest-only period, level payment, balloon opt-in, one combined `loan.permanent_debt_service` stream so `domain.cre.debt_service` needs no change. DSCR-based sizing is a solve and stays out. |
-| `cre.construction_loan` | The same gap on the construction side, and now with a source: `benchmarks/cre/one_lincoln_street` publishes a sixteen-quarter draw schedule against an equity commitment that depletes mid-quarter. `cre.construction_stub` takes a flat draw and cannot express an equity-first waterfall, which is why that case runs on native streams. |
+| ~~`cre.construction_loan`~~ | **SHIPPED.** Equity-first funding behind a commitment, the facility taking the balance once it depletes, interest on the drawn balance. The draw schedule stays a model `curve` and the contract names it, because a funding profile is per-deal data rather than a term. `benchmarks/cre/one_lincoln_street_contract` reproduces the primitive-built case in all 48 cells with zero difference — the pair is the assertion, and if they disagree the contract is wrong. Capitalised interest is a follow-on: affine in the closing balance, so it collects rather than needing a solver. |
 | `cre.restricted_rent` | HUD — rent capped for an affordability period and reverting to a market track. The defining mechanic of affordable housing, currently a hand-written conditional. |
 | `cre.abatement` | MIT — free rent as its own deduction from potential gross revenue. Today it can be reported as a line or counted in NOI, not both (1.3). |
 | `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. Also One Lincoln Street, whose operating pro forma carries a Capital Reserve line. |
@@ -785,6 +785,19 @@ gets financed or valued.
 With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
 pack contracts instead of native streams — which is the actual fix for 7.3 on
 the CRE side, and needs no new source.
+
+**A correction to how 7.3 framed this.** That entry treats a benchmark running
+on native streams as a coverage failure. It is not, or not only. A case built
+from primitives proves the LANGUAGE expresses the deal with no domain vocabulary
+— which is the stronger claim, and the one a reader evaluating CFDL as a
+language can check. A pack contract is an ergonomics layer for a practitioner
+who should not have to derive an equity-first waterfall from scratch.
+
+So the fix is not to CONVERT those cases. It is to add a contract twin beside
+each, asserted against the primitive-built original rather than only against the
+source: `one_lincoln_street` and `one_lincoln_street_contract` are the first
+pair. A contract validated solely against its own source is the pack marking its
+own homework.
 
 **OpCo — no terminal value a valuation practitioner would recognise.**
 

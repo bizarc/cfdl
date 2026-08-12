@@ -162,6 +162,10 @@ register, so it cannot fall behind the language.
 | `E6054_CRE_DEBT_INVALID_AMORT` | Pack domain validations | `amort_months` strikes the payment and is normally longer than the loan's term |
 | `E6055_CRE_DEBT_INVALID_IO_MONTHS` | Pack domain validations | whole months, 0 or more |
 | `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` | Pack domain validations | `balloon_at_maturity` is 0 or 1 |
+| `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` | Pack domain validations | zero or greater; zero is an all-debt build and legal, so the bound is not exclusive |
+| `E6058_CRE_CONSTRUCTION_INVALID_RATE` | Pack domain validations | a nominal annual rate in [0, 1], which catches 8 entered where 0.08 was meant |
+| `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` | Pack domain validations | where in the period a draw lands, in [0, 1]; 0.5 is funding drawn ratably through it |
+| `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` | Pack domain validations | the build must sit inside the model timeline, or the schedule silently loses draws |
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | Pack domain validations |  |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | Pack domain validations |  |
 | `E7003_OPCO_LINE_INVALID_GROWTH` | Pack domain validations |  |
@@ -204,7 +208,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*153 codes.*
+*157 codes.*
 <!-- /cfdl:generated diagnostics-catalogue -->
 
 ## Related
