@@ -760,7 +760,7 @@ contract credit.pool_level_pay.p50 on entity asset.p50 {
 
 ## Verified results
 
-Checked period by period: **1 series** across **14 periods**, each within ±0.01 of the reference.
+Checked period by period: **1 series** across **14 periods** — **14 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 

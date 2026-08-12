@@ -129,7 +129,7 @@ contract energy.debt_service on entity asset.windfarm {
 
 ## Verified results
 
-Checked period by period: **1 series** across **240 periods**, each within ±0.01 of the reference.
+Checked period by period: **1 series** across **240 periods** — **240 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 

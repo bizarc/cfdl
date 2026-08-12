@@ -324,10 +324,10 @@ stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
 
 ## Verified results
 
-Checked period by period: **2 series** across **6 periods**, each within ±1e-6 of the reference.
+Checked period by period: **2 series** across **6 periods** — **12 values** in all, each within the tolerance shown.
 
-- `asset.tlb.balance`
-- `asset.sub_notes.balance`
+- `asset.tlb.balance` — within ±1e-6
+- `asset.sub_notes.balance` — within ±1e-4
 
 Checked per scenario, each a full run under its own parameters:
 

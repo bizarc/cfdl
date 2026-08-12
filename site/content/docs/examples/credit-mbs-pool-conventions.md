@@ -107,7 +107,7 @@ contract credit.pool_level_pay.a on entity asset.buyer {
 
 ## Verified results
 
-Checked period by period: **4 series** across **25 periods**, each within ±0.51 of the reference.
+Checked period by period: **4 series** across **25 periods** — **95 values** in all, each within ±0.51 of the reference.
 
 - `credit.pool.interest.a`
 - `credit.pool.sched_principal.a`

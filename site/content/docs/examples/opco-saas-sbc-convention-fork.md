@@ -230,7 +230,7 @@ stream opco.exit.value on entity asset.target inflow currency USD {
 
 ## Verified results
 
-Checked period by period: **11 series** across **8 periods**, each within ±0.001 of the reference.
+Checked period by period: **11 series** across **8 periods** — **88 values** in all, each within ±0.001 of the reference.
 
 - `opco.ufcf.stub_2024`
 - `opco.ufcf.fy2025`

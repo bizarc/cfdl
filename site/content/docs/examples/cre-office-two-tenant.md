@@ -176,13 +176,13 @@ contract cre.permanent_debt on entity asset.tower {
 
 ## Verified results
 
-Checked period by period: **5 series** across **120 periods**, each within ±0.01 of the reference.
+Checked period by period: **5 series** across **120 periods** — **600 values** in all, each within the tolerance shown.
 
-- `net_cash_flow`
-- `domain.cre.egi`
-- `domain.cre.noi`
-- `domain.cre.debt_service`
-- `domain.cre.dscr`
+- `net_cash_flow` — within ±0.01
+- `domain.cre.egi` — within ±0.01
+- `domain.cre.noi` — within ±0.01
+- `domain.cre.debt_service` — within ±0.01
+- `domain.cre.dscr` — within ±1.0e-6
 
 Summary metrics for the base run:
 

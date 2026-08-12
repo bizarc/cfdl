@@ -156,7 +156,7 @@ contract energy.macrs_shield on entity asset.pv {
 
 ## Verified results
 
-Checked period by period: **6 series** across **13 periods**, each within ±0.01 of the reference.
+Checked period by period: **6 series** across **13 periods** — **59 values** in all, each within ±0.01 of the reference.
 
 - `energy.ppa.revenue`
 - `energy.om.expense`

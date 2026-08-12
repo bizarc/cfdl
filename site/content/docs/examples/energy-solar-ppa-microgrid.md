@@ -121,7 +121,7 @@ contract energy.debt_service on entity asset.microgrid {
 
 ## Verified results
 
-Checked period by period: **1 series** across **300 periods**, each within ±0.01 of the reference.
+Checked period by period: **1 series** across **300 periods** — **300 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 

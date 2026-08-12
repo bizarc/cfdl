@@ -114,7 +114,7 @@ contract credit.purchase.bridge_f on entity asset.buyer {
 
 ## Verified results
 
-Checked period by period: **1 series** across **41 periods**, each within ±0.01 of the reference.
+Checked period by period: **1 series** across **41 periods** — **41 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 

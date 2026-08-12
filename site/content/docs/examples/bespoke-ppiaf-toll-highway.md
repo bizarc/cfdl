@@ -669,7 +669,7 @@ stream infra.debt.principal_t3 on entity asset.concession outflow currency USD {
 
 ## Verified results
 
-Checked period by period: **26 series** across **51 periods**, each within ±0.00001 of the reference.
+Checked period by period: **26 series** across **51 periods** — **1322 values** in all, each within ±0.00001 of the reference.
 
 - `infra.construction.works`
 - `infra.funding.equity`
