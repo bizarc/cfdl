@@ -13,8 +13,6 @@ Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
-# A Fannie Mae REMIC — one class, and the coupon that was sold away from it
-
 ## The case
 
 Fannie Mae REMIC Trust 2019-2 divides $307,727,958 across three groups. Group 3

@@ -13,8 +13,6 @@ Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
 inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
-# A tolled highway concession — no pack, and a subsidy the model solves for itself
-
 ## The case
 
 A 125 km, 2x2-lane tolled highway, built over four years and operated for

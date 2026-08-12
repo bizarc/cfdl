@@ -48,6 +48,15 @@ def main() -> int:
             continue
 
         text = described.read_text(encoding="utf-8")
+        # The site page already carries a title; `sync-content.mjs` embeds this
+        # file verbatim under it, so an H1 here renders as a second title
+        # stacked on the first. Three cases shipped that way before this check.
+        if re.search(r"^# ", text, flags=re.M):
+            problems.append(
+                f"{rel}/CASE.md: carries an H1 ('# ...'). The published page "
+                f"supplies the title; start at '## The case'."
+            )
+            continue
         headings = re.findall(r"^## .+$", text, flags=re.M)
         if headings[: len(REQUIRED)] != REQUIRED:
             problems.append(
