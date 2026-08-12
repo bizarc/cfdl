@@ -1625,3 +1625,107 @@ reachable from the harness.
 Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
 across five to seven speeds per class, of which a single case can assert the
 0%-, 100%- or 259%-PSA column but not all three.
+
+### 7.24 A validated contract term cannot be parameterised
+
+Belongs with section 5 (language and engine).
+
+A contract term bound to a run-config parameter fails at compile time:
+`psa_speed = cfg.psa` is `E9016_CREDIT_INVALID_PSA_SPEED`, because pack
+validations evaluate terms when the model compiles and a parameter has no
+value yet. So every input a pack validates — speed, rate, term, severity —
+is a literal, and everything downstream of that inherits the restriction:
+
+- a scenario cannot vary a pack deal's prepayment assumption, which is why
+  the FNMA 2019-2 decrement table ships as seven case directories differing
+  in one number (§7.23 is the harness half of that story; this is the
+  compiler half);
+- a Monte Carlo distribution cannot attach to one. Distributions reach
+  `cfg.*` and `stream.<name>:amount`, and each trial is a full rerun — the
+  machinery works — but the inputs a structured-credit practitioner most
+  wants to simulate (CPR, CDR, severity, speed) are contract terms, and no
+  distribution can touch them.
+
+Shape: when a term is an expression over `cfg.*`, defer that term's pack
+validation to run start and validate the RESOLVED value — per run, per
+scenario, per trial — failing the run with the same diagnostic the compiler
+would have raised. Terms that are literals keep compile-time validation;
+nothing changes for existing models.
+
+Found modelling FNMA 2019-2 at seven speeds, where the attempt to carry the
+speed as `cfg.psa` was the first thing tried and the first thing refused.
+
+### 7.25 A model cannot declare a metric
+
+Belongs with section 5 (language and engine).
+
+Metric keys are minted in exactly two places: the engine (`model.*`) and a
+pack's `metrics.toml` (`domain.*`). A model that computes a deal-specific
+figure — a class weighted average life on the deal's own axis, a crossover
+date, an overcollateralisation ratio — has no way to name it. The workaround
+is an entity field asserted per-period in `expected.csv`, which works (§7.22's
+single-class cases use exactly that route for balances) but leaves the number
+a case exists to check sitting unnamed in a CSV column rather than stated in
+`expected_metrics.json` next to the published figure it reproduces.
+
+This is the case-side complement of §7.22. That item asks the credit pack for
+an entity-keyed WAL; this one asks the language to let a case declare the
+number it solved for, whatever the pack thinks. "We solve for the case, not
+for the pack" needs somewhere to put the answer.
+
+Shape: a `metric` declaration — an expression over series and fields,
+evaluated at the horizon, published into `deterministic.metrics` and into
+every scenario summary. Landing in scenario summaries matters: combined with
+§7.23 it lets a speed grid assert a derived figure per column, not only the
+engine's built-ins.
+
+Found modelling FNMA 2019-2, whose published WALs are asserted through the
+pack's pool-level metric only because a single-class pass-through makes the
+pool's WAL and the class's the same number. The next deal's classes will not
+be so obliging.
+
+### 7.26 Time-weighted metrics measure from the model start, on period fractions; a published WAL measures from settlement to stated payment days
+
+Belongs with section 5 (language and engine).
+
+`docs/12_payment_timing.md` names both limits itself: the axis origin is the
+model start, not a settlement date, and precision is period fractions, not
+calendar days. A prospectus weighted average life is defined on neither. The
+FNMA REMIC prospectus (1 November 2018) computes it as principal reductions
+weighted by "the number of years from the settlement date ... to the second
+such distribution date", and the 2019-2 supplement's Pricing Assumptions fix
+both anchors for its tables: settlement 30 January 2019, "each Distribution
+Date occurs on the 25th day of a month".
+
+The distinction is falsifiable, and was falsified. Recomputing the deal's
+seven published WALs under four axes, only settlement-to-the-25th (actual/365)
+reproduces all seven to the printed tenth. The discriminating column is 400%
+PSA: printed 2.9; settlement-to-25th 2.9474; the engine's month-end axis
+2.9608, and both month-end-from-settlement variants 2.956-2.962 — every
+month-end reading rounds to 3.0. Amounts are unaffected throughout: P&I per
+period is scheduled activity and carries no day. Only the time-weighting
+moves.
+
+Today the seven REMIC cases carry the gap as tolerance: ±0.07, decomposed in
+each `case.toml` as 0.05 print floor plus ~0.015 axis. That is stated rather
+than hidden, but it is the wrong long-term shape, because the axis differs by
+program — Ginnie I pays the 15th, Ginnie II the 20th, FNMA REMICs the 25th —
+while a single widened band is deaf to which one a deal used. A band derived
+from one deal's axis can hide a same-sized convention error in the next
+deal's, and nothing in the suite would notice: 2019-2 happened to publish a
+column (400%) that discriminates, and the next deal may not.
+
+Shape, in two independent pieces:
+
+- a run-config `settlement_date` that becomes the origin for `wal_years` and
+  `payback_years`, measured in actual days;
+- a declarable payment-day placement — a day rule the pack lowering carries
+  into its emitted streams' offsets, the way model-level schedules already
+  carry `on day <n>` — so a deal states "distributions on the 25th" once and
+  every time-weighted metric lands on the deal's own axis.
+
+With both, the WAL tolerances return to the print floor and the axis stops
+being a tolerance line item anywhere.
+
+Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
+column refused the naive floor and the refusal was the convention speaking.
