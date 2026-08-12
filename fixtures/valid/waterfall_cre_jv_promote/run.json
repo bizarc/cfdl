@@ -1,0 +1,6 @@
+{
+  "deterministic": { "annual_discount_rate": 0.1 },
+  "scenarios": {
+    "shortfall": { "parameters": { "inputs.net_sale_proceeds": 200000000.0 } }
+  }
+}

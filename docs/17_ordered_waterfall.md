@@ -148,9 +148,16 @@ consumer ABS deal.
 
 Numbers second, and against a different source. Two catalogued engines publish
 full tranche cash flows under permissive licences — **AbsBox** (Apache-2.0) and
-**Hastructure** (BSD 3-Clause). Unlike every reference the benchmark suite uses
-today, those may be vendored and wired into CI, so a securitisation case can be
-checked continuously rather than against numbers copied once. An SEC Exhibit
+**Hastructure** (BSD 3-Clause) — and their licences would permit vendoring.
+
+**They are not to be wired into CI.** A permanent dependency on another engine
+makes this suite's answers contingent on someone else's release schedule, and a
+gate that breaks because an upstream project changed is a gate that gets
+disabled. Use them the way a reference model is used everywhere else here: run
+the deal through one, reconcile once, record the comparison in the case, and
+commit the numbers — the same standing every published exhibit has. The
+distinction is between consulting a second opinion and taking a dependency on
+one. An SEC Exhibit
 99.4 with published weighted-average-life tables per class anchors the endpoint.
 
 ## 7. What this unlocks
@@ -613,7 +620,68 @@ whole $806,719 above the preferred; the 50/50 catch-up splits it, and the GP
 takes $403,360. On $30mm both end at $4,000,000, because a catch-up that
 completes changes the path and not the destination.
 
+### A CRE development JV — `fixtures/valid/waterfall_cre_jv_promote`
+
+The first CRE waterfall, and the first structure whose novelty is not a tier
+shape but a RANKING: two claimants sharing one preference **pari passu**, with a
+third subordinated to both their preferred return and the return of their
+capital.
+
+It is the One Lincoln Street venture's distribution priority, from the same
+published case `benchmarks/cre/one_lincoln_street` reads its funding schedule
+from. MSGW and STRS each earn an annually compounded 11% cumulative preferred on
+invested equity and each is repaid that capital before CPA — the development
+consortium holding the site designation, contributing no capital — sees a
+dollar. What survives splits 34 / 51 / 15.
+
+**Pari passu is the interesting problem, because steps are ordered.** Two
+ordinary steps pay MSGW in full before STRS sees anything, which is sequential
+rather than pari passu — and identical to the right answer whenever the pot is
+deep enough to hide the difference. The first step caps itself at its pro-rata
+share instead:
+
+```cfdl
+pay msgw_preference to party.msgw = min(asset.jv.msgw_preference,
+                                        remaining * asset.jv.msgw_preference
+                                        / (asset.jv.msgw_preference + asset.jv.strs_preference))
+pay strs_preference to party.strs = min(asset.jv.strs_preference, remaining)
+```
+
+Deep pot: the minimum is the entitlement and both are paid in full. Shallow pot:
+it is exactly the pro-rata share, and the second step's `min(..., remaining)`
+collects the rest of the same proportion. One expression, both regimes, no
+branch — and the ordering that made the problem is what makes the second step's
+`remaining` already correct.
+
+**A three-way residual needs a fixed base.** `remaining` falls as each step
+pays, so `remaining * 0.34` followed by `remaining * 0.51` would strike the
+second share on a pot the first had already shrunk. The second step reconstructs
+the base from what the first actually paid:
+
+```cfdl
+pay msgw_residual to party.msgw = remaining * 0.34
+pay strs_residual to party.strs = paid.msgw_residual / 0.34 * 0.51
+pay cpa_residual  to party.cpa  = remaining
+```
+
+That is `paid.<step>` used for the purpose it exists for, and the last step
+takes the remainder, so `E1344` is satisfied by the structure rather than by an
+added line.
+
+**Both regimes are checkable by hand.** Capital is the venture's stated minimum
+— $175mm, 10% MSGW and 90% STRS — so after three construction years the
+entitlements are 17.5mm and 157.5mm each times 1.11³. On $300mm of proceeds both
+preferences pay in full and the residual splits 20,625,955.50 / 30,938,933.25 /
+9,099,686.25. On $200mm the pot cannot cover them, and because the capital split
+is 10/90 the pari passu answer is exactly **20,000,000 and 180,000,000, with CPA
+at zero** — which is what the scenario produces.
+
+**It is an expressiveness fixture, not a benchmark.** The case specifies the
+structure completely and then asks the reader to compute the returns, so there
+is no published answer to reconcile against. Same status as the ABS deal above,
+and for the same reason.
+
 ### Still to build
 
-Nothing from the reference. The five structures between them use one step form,
+Nothing from the reference. The six structures between them use one step form,
 three bindings and the composition rule.

@@ -1,0 +1,438 @@
+{
+  "results_version": "0.3",
+  "model_hash": "fb091485faf0297984c3bb42a6254c508f43a1a8c4da6da4be44e56ac75dc45c",
+  "ledger_hash": "d97021b81000347eeade08b3833851442ec9a572d2de2dde7547e49315b2f88c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "msgw_capital": 17500000.0,
+      "net_sale_proceeds": 300000000.0,
+      "pref_rate": 0.11,
+      "strs_capital": 157500000.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.jv.total": {
+        "amount": -175000000.0,
+        "currency": "USD"
+      },
+      "entity.party.cpa.total": {
+        "amount": 9099686.25,
+        "currency": "USD"
+      },
+      "entity.party.msgw.total": {
+        "amount": 44559498.0,
+        "currency": "USD"
+      },
+      "entity.party.strs.total": {
+        "amount": 246340815.75,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -159090909.090909,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -175000000.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.jv.equity_msgw.total": {
+        "amount": -17500000.0,
+        "currency": "USD"
+      },
+      "stream.jv.equity_strs.total": {
+        "amount": -157500000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.jv.msgw_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          17500000.0,
+          19425000.0,
+          21561750.0,
+          23933542.5
+        ]
+      },
+      "asset.jv.strs_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          157500000.0,
+          174825000.0,
+          194055750.0,
+          215401882.5
+        ]
+      },
+      "entity.asset.jv.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -175000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.cpa.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9099686.25,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.msgw.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 44559498.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.strs.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 246340815.75,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -175000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.distribution.cpa_residual": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 9099686.25,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.distribution.msgw_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 23933542.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.distribution.msgw_residual": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20625955.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.distribution.strs_preference": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 215401882.5,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.distribution.strs_residual": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30938933.25,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.equity_msgw": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -17500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.jv.equity_strs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -157500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "ok",
+    "summaries": [
+      {
+        "name": "shortfall",
+        "metrics": {
+          "entity.asset.jv.total": {
+            "amount": -175000000.0,
+            "currency": "USD"
+          },
+          "entity.party.cpa.total": {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          "entity.party.msgw.total": {
+            "amount": 20000000.0,
+            "currency": "USD"
+          },
+          "entity.party.strs.total": {
+            "amount": 180000000.0,
+            "currency": "USD"
+          },
+          "model.npv": {
+            "amount": -159090909.090909,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": -175000000.0,
+            "currency": "USD"
+          },
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 1.0,
+          "stream.jv.equity_msgw.total": {
+            "amount": -17500000.0,
+            "currency": "USD"
+          },
+          "stream.jv.equity_strs.total": {
+            "amount": -157500000.0,
+            "currency": "USD"
+          }
+        }
+      }
+    ]
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

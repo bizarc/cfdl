@@ -1,0 +1,94 @@
+version 0.1
+model "waterfall-cre-jv-promote"
+time calendar annual from 2000-01 for 4
+
+// A CRE DEVELOPMENT JOINT VENTURE — the distribution priority of the One
+// Lincoln Street venture, as its case states it.
+//
+// Three partners, and the shape is not the fund waterfall this repository
+// already carries. TWO claimants share the preference PARI PASSU, and a third
+// is subordinated to both their preferred return AND the return of their
+// capital before it sees a dollar.
+//
+//   * MSGW and STRS each earn an annually compounded 11% cumulative preferred
+//     on invested equity, and each is entitled to full repayment of that
+//     capital — including earned but unpaid preference — from sale proceeds
+//     before any payment is made to CPA;
+//   * those two preferences rank PARI PASSU with each other;
+//   * what survives splits 34% / 51% / 15% to MSGW / STRS / CPA.
+//
+// CPA is the development consortium holding the site designation. It
+// contributes no capital and takes a promote — which is why it ranks last and
+// why its share is not proportional to anything.
+//
+// WHAT PARI PASSU COSTS IN AN ORDERED WATERFALL. Steps pay in sequence, so
+// writing the two preferences as two ordinary steps would pay MSGW in full
+// before STRS saw anything — sequential, not pari passu, and identical to the
+// correct answer whenever the pot is deep enough to hide the difference. The
+// first step therefore caps itself at its PRO-RATA share of what is there:
+//
+//     min(E_m, remaining * E_m / (E_m + E_s))
+//
+// When the pot covers both, that minimum is E_m and both are paid in full.
+// When it does not, it is exactly the pro-rata share, and the second step's
+// `min(E_s, remaining)` collects the rest of the same proportion. One
+// expression covers both regimes with no branch.
+//
+// EQUITY IS THE VENTURE'S STATED MINIMUM, split as the case states: the greater
+// of $175mm or 50% of total development cost, contributed 10% by MSGW and 90%
+// by STRS. Preference accrues through the four construction years, when the
+// development distributes nothing because it earns nothing.
+//
+// THE SALE PRICE IS AN ASSUMPTION, NOT A PUBLISHED FIGURE. The case is a
+// student assignment: it specifies the structure completely and asks the reader
+// to compute the returns, so there is no published answer to check against.
+// This is an EXPRESSIVENESS fixture — it shows the structure can be said — and
+// the two scenarios below are chosen to exercise both regimes rather than to
+// forecast the building.
+
+entity asset jv : Asset.Financial {
+  // Capital plus the compounding preference, which is the whole entitlement
+  // ranking ahead of CPA. Annually compounded, per the case's own wording.
+  msgw_preference init inputs.msgw_capital next prev * (1.0 + inputs.pref_rate)
+  strs_preference init inputs.strs_capital next prev * (1.0 + inputs.pref_rate)
+}
+
+entity party msgw : Party { name = "MSGW III" }
+entity party strs : Party { name = "Midwest State Teachers Retirement System" }
+entity party cpa  : Party { name = "Columbia Plaza Associates" }
+
+assume msgw_capital = 17500000.0          // 10% of the $175mm venture equity
+assume strs_capital = 157500000.0         // 90%
+assume pref_rate    = 0.11
+assume net_sale_proceeds = 300000000.0    // overridden by the shortfall scenario
+
+// The equity actually going in, so the model carries cash rather than only a
+// distribution.
+stream jv.equity_msgw on entity asset.jv outflow currency USD {
+  schedule every year from 2000-01 to 2000-01
+  amount = inputs.msgw_capital
+}
+
+stream jv.equity_strs on entity asset.jv outflow currency USD {
+  schedule every year from 2000-01 to 2000-01
+  amount = inputs.strs_capital
+}
+
+waterfall jv.distribution on entity asset.jv {
+  schedule on 2003-01
+  from inputs.net_sale_proceeds
+
+  // 1-2. Capital and accrued preference, PARI PASSU between the two funders.
+  pay msgw_preference to party.msgw = min(asset.jv.msgw_preference,
+                                          remaining * asset.jv.msgw_preference
+                                          / (asset.jv.msgw_preference + asset.jv.strs_preference))
+  pay strs_preference to party.strs = min(asset.jv.strs_preference, remaining)
+
+  // 3-5. The residual, 34 / 51 / 15. Each share is struck on the SAME base:
+  // `remaining` falls as the steps pay, so the second share reconstructs the
+  // base from what the first one actually paid rather than re-reading a pot
+  // that has already shrunk.
+  pay msgw_residual to party.msgw = remaining * 0.34
+  pay strs_residual to party.strs = paid.msgw_residual / 0.34 * 0.51
+  pay cpa_residual  to party.cpa  = remaining
+}

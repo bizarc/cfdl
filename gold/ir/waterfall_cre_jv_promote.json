@@ -1,0 +1,250 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "waterfall-cre-jv-promote",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2000-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "e6f7b786f4c9d6db3c669e94a3e5118f",
+      "symbol": "asset.jv",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "msgw_preference": {
+          "init": {
+            "lang": "cfdl",
+            "src": "inputs.msgw_capital"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * (1.0 + inputs.pref_rate)"
+          }
+        },
+        "strs_preference": {
+          "init": {
+            "lang": "cfdl",
+            "src": "inputs.strs_capital"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * (1.0 + inputs.pref_rate)"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "80782ffc1262becfac0dd4a766ef3be5",
+      "symbol": "party.cpa",
+      "type": "Party",
+      "fields": {
+        "name": "Columbia Plaza Associates"
+      },
+      "state": {}
+    },
+    {
+      "id": "cc8be00e0d616ebebaf8198b1ba473eb",
+      "symbol": "party.msgw",
+      "type": "Party",
+      "fields": {
+        "name": "MSGW III"
+      },
+      "state": {}
+    },
+    {
+      "id": "c7e1dfcf995020f7038f9e661ddac25e",
+      "symbol": "party.strs",
+      "type": "Party",
+      "fields": {
+        "name": "Midwest State Teachers Retirement System"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "msgw_capital": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "17500000.0"
+        },
+        "name": "msgw_capital",
+        "type": "Decimal"
+      },
+      "net_sale_proceeds": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "300000000.0"
+        },
+        "name": "net_sale_proceeds",
+        "type": "Decimal"
+      },
+      "pref_rate": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.11"
+        },
+        "name": "pref_rate",
+        "type": "Decimal"
+      },
+      "strs_capital": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "157500000.0"
+        },
+        "name": "strs_capital",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "waterfalls": [
+    {
+      "name": "jv.distribution",
+      "entity": "asset.jv",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2003-01-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "inputs.net_sale_proceeds"
+      },
+      "steps": [
+        {
+          "name": "msgw_preference",
+          "payee": "party.msgw",
+          "amount": {
+            "lang": "cfdl",
+            "src": "min(asset.jv.msgw_preference,                                           remaining * asset.jv.msgw_preference                                           / (asset.jv.msgw_preference + asset.jv.strs_preference))"
+          }
+        },
+        {
+          "name": "strs_preference",
+          "payee": "party.strs",
+          "amount": {
+            "lang": "cfdl",
+            "src": "min(asset.jv.strs_preference, remaining)"
+          }
+        },
+        {
+          "name": "msgw_residual",
+          "payee": "party.msgw",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining * 0.34"
+          }
+        },
+        {
+          "name": "strs_residual",
+          "payee": "party.strs",
+          "amount": {
+            "lang": "cfdl",
+            "src": "paid.msgw_residual / 0.34 * 0.51"
+          }
+        },
+        {
+          "name": "cpa_residual",
+          "payee": "party.cpa",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "89284f86a09aa5afdd8b2ff6f884b37e",
+      "name": "jv.equity_msgw",
+      "owner": {
+        "symbol": "asset.jv"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2000-01-01",
+        "to": "2000-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.msgw_capital"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 67,
+          "start_col": 1,
+          "end_line": 70,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "62ad347717254bf0785425af3d0f4be9",
+      "name": "jv.equity_strs",
+      "owner": {
+        "symbol": "asset.jv"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2000-01-01",
+        "to": "2000-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.strs_capital"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 72,
+          "start_col": 1,
+          "end_line": 75,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
