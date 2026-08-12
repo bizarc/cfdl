@@ -373,10 +373,21 @@ payment_frequency = ""
 # THE DRAW SCHEDULE IS DATA, NOT A TERM. A development's funding curve is
 # per-deal: sixteen published quarters here, an S-curve elsewhere, a
 # contractor's actual schedule on the deal after that. All three are the same
-# object — a value per period — which is what a `curve` is for. The contract
-# names the curve; the model declares it. Putting a curve SHAPE in a term
-# (`s_curve_steepness = 4.0`) states an implementation parameter as though it
-# were something the parties agreed, and the next deal disagrees with it.
+# object, so the contract names a `curve` and the model declares it. Putting a
+# curve SHAPE in a term (`s_curve_steepness = 4.0`) states an implementation
+# parameter as though it were something the parties agreed, and the next deal
+# disagrees with it.
+#
+# THE CURVE CARRIES AN ANNUALISED FUNDING RATE, and every read divides by
+# `{{model.periods_per_year}}`. That is the same convention `rent_year`,
+# `opex_year` and opco's `growth_curve` already follow, and it is what makes
+# the contract cadence-neutral: a `curve` is a LEVEL, so a step curve returns
+# the last point at or before the date whether or not a point was declared
+# there. Read as a per-period TOTAL instead, a schedule stated quarterly and
+# run monthly repeats each quarter's figure three times and funds three times
+# the money, silently. Annualised, the same sparse curve is correct on every
+# calendar, and re-graining spreads a quarter's funding evenly across its
+# months — which is the only defensible reading when nothing finer was stated.
 #
 # ONE FIELD, AND EVERYTHING ELSE IS CLOSED FORM. Cumulative funding required is
 # the only quantity that cannot be recomputed from the period alone, so it is
@@ -414,10 +425,10 @@ owner_entity = "${subject}"
 direction = "inflow"
 category = "financing.equity"
 # The residual: what the commitment still covers after the loan takes its share.
-amount_expr = "curve_value(\"{{contract.draw_curve}}\", time.date) - min(curve_value(\"{{contract.draw_curve}}\", time.date), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
+amount_expr = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
-field_init = "curve_value(\"{{contract.draw_curve}}\", time.date)"
-field_next = "prev + curve_value(\"{{contract.draw_curve}}\", time.date)"
+field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -432,10 +443,10 @@ owner_entity = "${subject}"
 direction = "inflow"
 category = "financing.debt_proceeds"
 # Nothing until cumulative funding passes the commitment; the balance after.
-amount_expr = "min(curve_value(\"{{contract.draw_curve}}\", time.date), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
+amount_expr = "min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
-field_init = "curve_value(\"{{contract.draw_curve}}\", time.date)"
-field_next = "prev + curve_value(\"{{contract.draw_curve}}\", time.date)"
+field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -456,10 +467,10 @@ category = "financing.debt_service"
 # the period (the default, and what a monthly-requisition build does), 0 for
 # funding at the period's end, 1 at its start. It is a convention, so it is a
 # term; the curve's SHAPE is data, so it is not.
-amount_expr = "(max(0, field.cre_construction_funded{{contract.suffix_ident}} - curve_value(\"{{contract.draw_curve}}\", time.date) - {{contract.equity_commitment}}) + min(curve_value(\"{{contract.draw_curve}}\", time.date), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}})"
+amount_expr = "(max(0, field.cre_construction_funded{{contract.suffix_ident}} - (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}})"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
-field_init = "curve_value(\"{{contract.draw_curve}}\", time.date)"
-field_next = "prev + curve_value(\"{{contract.draw_curve}}\", time.date)"
+field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"

@@ -48,6 +48,15 @@ contract carrying a curve's shape — a steepness parameter, a flat-or-S-curve
 enum — states an implementation choice as though the parties had agreed it, and
 the next deal disagrees. The contract names the curve; the model declares it.
 
+**And the curve is annualised, which the first version of this contract got
+wrong.** It read the curve as a per-period total, which is correct on the grain
+the schedule was written at and silently multiplies on any finer one — a
+quarterly schedule run monthly funded three times the money, because a step
+curve returns its last point on every date. Dividing by periods-per-year fixes
+it and costs nothing: the same sparse curve is then right on every calendar.
+Backlog 7.27 carries the measurement, including the first, wrong diagnosis that
+blamed the language.
+
 ## What this case does not cover
 
 Capitalised interest. The exhibit pays it from the equity budget as a stated

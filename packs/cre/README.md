@@ -64,7 +64,7 @@ the drawn balance through the build. Emits three streams — the equity draw
 
 | term | | |
 |---|---|---|
-| `draw_curve` | required | the NAME of a declared `curve` giving required funding per period |
+| `draw_curve` | required | the NAME of a declared `curve` giving required funding as an ANNUALISED rate |
 | `equity_commitment` | required | equity funds up to this, then the facility takes over |
 | `rate` | required | nominal annual |
 | `draw_accrual_fraction` | 0.5 | where in the period a draw lands: 0.5 drawn ratably, 0 at the end, 1 at the start |
@@ -76,6 +76,17 @@ actual requisitions — and all three are the same object. A term carrying a
 curve's SHAPE (a steepness parameter, a flat-or-S-curve enum) states an
 implementation choice as though the parties had agreed it. The contract names
 the curve; the model declares it.
+
+**State the curve ANNUALISED.** Every read divides by the rule's
+periods-per-year, the same convention `rent_year` and `opex_year` follow. This
+is what keeps the contract cadence-neutral, and it is not cosmetic: a `curve` is
+a LEVEL, so a step curve returns its last point on every date whether or not a
+point was declared there. A schedule stated as per-period TOTALS and then run on
+a finer calendar would repeat each figure and fund several times the money, with
+no diagnostic. Annualised, one sparse point — `2026-01: 4000` — funds 4,000 a
+year on a quarterly model and on a monthly one alike, and re-graining spreads a
+quarter's funding across its months, which is the only defensible reading when
+nothing finer was stated.
 
 **The commitment depleting mid-period is not a special case.** Cumulative
 funding is the contract's one field, and the equity/debt split is
@@ -230,7 +241,7 @@ time.date)`), not model years.
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
-| `cre.construction_loan` | `draw_curve` (a curve NAME), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
+| `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALISED), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the

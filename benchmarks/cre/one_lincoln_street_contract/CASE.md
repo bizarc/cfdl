@@ -32,6 +32,14 @@ development's funding profile is per-deal data — sixteen published quarters
 here, an S-curve or a contractor's schedule on the next deal — and all three are
 the same object. What the contract adds is the funding convention.
 
+The curve is stated ANNUALISED — each point is the exhibit's quarterly figure
+times four — and the contract divides by periods-per-year, the same convention
+every annual quantity in the pack follows. On this quarterly model that divides
+straight back to the published number. It matters because a curve is a level: a
+step curve returns its last point on every date, so a schedule stated as
+per-period totals would be correct here and would fund three times the money if
+the same deal were run monthly.
+
 ## The result
 
 **Zero difference from the native case, in all 48 cells**, and `model.total`,

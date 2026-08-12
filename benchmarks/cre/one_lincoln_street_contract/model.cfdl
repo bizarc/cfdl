@@ -26,24 +26,30 @@ time calendar quarterly from 2000-01 for 16
 
 entity asset tower : CRE.Asset.RealProperty
 
-// Exhibit 6's quarterly funding requirement, totalling $285,145,000.
+// Exhibit 6's quarterly funding requirement, totalling $285,145,000 — stated
+// as an ANNUALISED rate, which is how a CRE contract reads a curve. Each point
+// is the exhibit's quarterly figure x 4, so on this quarterly model the
+// contract divides straight back to the published number. Stating per-period
+// totals instead would be correct here and wrong the moment the same schedule
+// were run monthly, because a curve is a level: it returns its last point on
+// every date, so a quarterly figure would repeat three times a quarter.
 curve required_funding step {
-  2000-01: 4983000
-  2000-04: 9279000
-  2000-07: 8403000
-  2000-10: 14115000
-  2001-01: 19022000
-  2001-04: 21209000
-  2001-07: 23205000
-  2001-10: 29430000
-  2002-01: 22171000
-  2002-04: 22146000
-  2002-07: 16843000
-  2002-10: 12119000
-  2003-01: 38719000
-  2003-04: 15085000
-  2003-07: 9970000
-  2003-10: 18446000
+  2000-01: 19932000
+  2000-04: 37116000
+  2000-07: 33612000
+  2000-10: 56460000
+  2001-01: 76088000
+  2001-04: 84836000
+  2001-07: 92820000
+  2001-10: 117720000
+  2002-01: 88684000
+  2002-04: 88584000
+  2002-07: 67372000
+  2002-10: 48476000
+  2003-01: 154876000
+  2003-04: 60340000
+  2003-07: 39880000
+  2003-10: 73784000
 }
 
 // Exhibit 7's three stated drivers, and nothing else. The equity/debt split,

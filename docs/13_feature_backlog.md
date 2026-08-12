@@ -1785,19 +1785,38 @@ being a tolerance line item anywhere.
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.27 A curve is a LEVEL, and a per-period flow read from one multiplies silently
+### 7.27 A pack rule read a curve as a per-period total — RESOLVED, and the first filing was wrong
 
-*Belongs with the language and engine (section 5).*
+*Belongs with the CRE pack (section 1).*
 
-`curve` is a date-indexed value series with step (flat-forward) or linear
-interpolation: a step curve returns *the last point at or before the query
-date*. That is exactly right for what a curve is for — a rate, a price deck, an
-index. A level has a value on every date whether or not a point was declared
-there.
+**What this entry originally said, and why it was wrong.** It claimed the
+language had a gap: that `curve` means "level", that there is no way to state a
+per-period flow, and that every schedule is therefore a level pressed into
+service. It proposed a `flow` interpolation mode and, failing that, a compile
+check.
 
-A **flow** does not. `cre.construction_loan` takes `draw_curve` and reads
-`curve_value(draw_curve, time.date)` as *this period's draw*, and flat-forward
-on a flow means REPEAT THE FLOW. One deal, one curve, two calendars:
+None of that was needed. A sparse curve carrying an ANNUALISED figure, divided
+by the rule's periods-per-year, is correct on every calendar — which is the
+convention `rent_year`, `opex_year` and opco's `growth_curve` have followed all
+along. Two points, two calendars, one answer:
+
+```cfdl
+curve draw_rate_year step { 2026-01: 4000  2026-07: 8000 }
+amount = curve_value("draw_rate_year", time.date) / time.ppy
+```
+
+| grid | total drawn |
+|---|---:|
+| quarterly | 6,000.00 |
+| monthly | 6,000.00 |
+
+Sparse is not a workaround, it is the intended usage: declare a point where the
+value CHANGES and flat-forward holds it in between. That is what a level is for,
+and it is why `step` is the default.
+
+**The defect was `cre.construction_loan` reading its curve as a per-period
+total.** Under that reading a schedule stated quarterly and run monthly repeats
+each quarter's figure three times and funds three times the money, silently:
 
 | model grid | curve points | funded |
 |---|---|---:|
@@ -1805,39 +1824,27 @@ on a flow means REPEAT THE FLOW. One deal, one curve, two calendars:
 | monthly | monthly | 4,000.00 |
 | monthly | **quarterly** | **12,000.00** |
 
-Three times the money, no diagnostic, `status: ok`. The contract is otherwise
-cadence-neutral — the first two rows agree on funding AND on interest to four
-decimal places — so the failure is not the rule dividing by a literal, which is
-what `cadence-parity` was built to catch. It is a curve being read at a grain it
-was not stated at.
+**Resolved** by dividing every curve read in the contract by
+`{{model.periods_per_year}}` and stating the term as an annualised rate. One
+sparse point now funds the same amount on a quarterly and a monthly model, and
+`benchmarks/cre/one_lincoln_street_contract` still reproduces the
+primitive-built case in all 48 cells with zero difference — the curve is stated
+x4 and divides straight back.
 
-**This is not a bug in the curve.** Flat-forward is the correct and useful
-semantics for the thing `curve` is. The gap is that the language has ONE series
-construct, and it means "level"; there is no way to say "a value that belongs to
-this period and to no other". Every per-period schedule — a draw programme, a
-capex plan, a lumpy fee — is currently a level pressed into service as a flow,
-and the pressing is silent.
+**The general rule, which the pack interface should carry:** a lowering rule
+reading a curve divides by periods-per-year for the same reason it does for
+`rent_year`. A curve is a level; a rule that wants a flow annualises it.
 
-**It cannot be closed with a pack validation.** The check set is closed
-(`term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`,
-`term_range_within_timeline`, `term_enum`, `term_compare`) and none of them can
-see a curve, only a term's own value.
+Two smaller things this leaves behind, neither worth an entry of its own:
 
-Three shapes, in increasing order of what they cost:
+- Nothing rejects a curve read at a grain it was not stated at. With the
+  annualised convention there is nothing to reject — any grain is meaningful —
+  so the check the first filing proposed has no subject.
+- Re-graining now SPREADS: a quarter's funding becomes three equal months. That
+  is an assumption, not a fact, and it is the only defensible one when nothing
+  finer was stated. Worth knowing before reading a monthly draw report off a
+  quarterly schedule.
 
-1. **A compile check.** The rule names the curve in a term, the model declares
-   the curve's points, and the compiler knows the timeline — so "a curve read
-   per-period by a lowering rule has a point for every period in that rule's
-   schedule" is decidable at compile time. Cheapest, and catches the case above
-   at the moment it is written.
-2. **Declare the intent on the curve.** `curve draws flow { ... }` beside `step`
-   and `linear`, where a flow returns 0 on a date it has no point for rather
-   than the last one. The semantics a schedule wants, and it makes the two
-   readings distinguishable rather than a convention.
-3. **A distinct construct** for period-indexed series. Largest surface, and
-   probably not warranted while (2) is available.
-
-Found reviewing `cre.construction_loan` against an external question about
-running the same deal at monthly and daily granularity — which the contract does
-correctly, provided the curve is restated at the new grain. Nothing says so, and
-an emitter generating models at a user-chosen calendar will hit this first.
+Found reviewing the contract against an external question about running one deal
+at monthly and daily granularity, and corrected after the first diagnosis was
+challenged — the language behaved exactly as specified throughout.
