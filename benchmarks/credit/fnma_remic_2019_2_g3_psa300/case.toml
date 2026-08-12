@@ -1,0 +1,29 @@
+# Benchmark case: SECURITY GROUP 3 of Fannie Mae REMIC Trust 2019-2 at
+# 300% PSA — one of the six non-pricing columns of the decrement table on
+# page S-14. `fnma_remic_2019_2_g3` ships the 198% pricing speed and carries
+# the deal's full description; this case moves only the prepayment assumption.
+#
+# Reference: EXTERNAL. Prospectus Supplement dated 24 January 2019 — see the
+# base case's SOURCE.md.
+#
+# The published percentages are whole numbers, so half a percent of each
+# class's original balance is the tightest bound a reader can hold a balance
+# to. Cells the table marks '*' (above zero, below half a percent) are not
+# asserted.
+#
+# domain.credit.wal_years carries 0.07: 0.05 is the print floor of a WAL
+# published to one decimal, and ~0.015 is the axis — the engine measures on
+# its month-end ordinary-annuity axis, while the deal distributes on the 25th
+# measured from late-January settlement. The bias is uniform across all seven
+# published speeds and the seven reconcile to the printed tenth once it is
+# accounted for.
+summary = "Group 3 of a Fannie Mae REMIC at 300% PSA — one and a half times its pricing speed, retiring the pass-through class in fifteen years."
+pack = "credit"
+period_tolerance = 0.01
+
+[tolerance]
+"domain.credit.principal_paid_to_date" = 741862.17
+"asset.ab.balance" = 741862.17
+"asset.io.balance" = 259651.76
+"g3.interest.ab_interest" = 2009.21
+"g3.interest.io_interest" = 1081.88

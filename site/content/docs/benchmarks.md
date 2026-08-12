@@ -92,6 +92,12 @@ checked, and a write-up of the reference and the residual.
 | [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) | An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back. |
 | [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) | A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination. |
 | [Credit: Fannie Mae REMIC with a stripped coupon](/docs/examples/credit-fnma-remic-2019-2-g3) | Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal. |
+| [Credit: Fannie Mae REMIC at 0% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa000) | Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortising on schedule for thirty years. |
+| [Credit: Fannie Mae REMIC at 100% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa100) | Group 3 of a Fannie Mae REMIC at 100% of the standard prepayment curve — the slow column of the issuer's decrement table. |
+| [Credit: Fannie Mae REMIC at 1000% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa1000) | Group 3 of a Fannie Mae REMIC at 1000% PSA — the table's fastest column, past half the pool prepaying every year. |
+| [Credit: Fannie Mae REMIC at 300% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa300) | Group 3 of a Fannie Mae REMIC at 300% PSA — one and a half times its pricing speed, retiring the pass-through class in fifteen years. |
+| [Credit: Fannie Mae REMIC at 400% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa400) | Group 3 of a Fannie Mae REMIC at 400% PSA — a fast pool, and the column whose weighted average life pins the timing convention hardest. |
+| [Credit: Fannie Mae REMIC at 700% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa700) | Group 3 of a Fannie Mae REMIC at 700% PSA — a refinancing wave, with the class under two years of average life. |
 | [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) | An interest-only loan repaying its entire principal in a single balloon at maturity. |
 | [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) | A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal. |
 | [Credit: a mortgage pool modelled loan by loan](/docs/examples/credit-mbs-pool-by-loan) | The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children. |
@@ -107,7 +113,7 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*32 cases.*
+*38 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite
