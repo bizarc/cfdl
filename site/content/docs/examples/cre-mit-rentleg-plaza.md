@@ -318,7 +318,7 @@ contract cre.exit_forward on entity asset.rentleg {
 
 ## Verified results
 
-Checked period by period: **12 series** across **5 periods**, each within ±0.01 of the reference.
+Checked period by period: **12 series** across **5 periods** — **60 values** in all, each within ±0.01 of the reference.
 
 - `cre.abatement.suite_200`
 - `cre.capex`

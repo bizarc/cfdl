@@ -153,7 +153,7 @@ contract opco.exit_ebitda on entity asset.target {
 
 ## Verified results
 
-Checked period by period: **1 series** across **60 periods**, each within ±0.01 of the reference.
+Checked period by period: **1 series** across **60 periods** — **60 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 

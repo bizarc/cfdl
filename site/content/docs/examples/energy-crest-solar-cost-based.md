@@ -224,7 +224,7 @@ contract energy.debt_service on entity asset.plant {
 
 ## Verified results
 
-Checked period by period: **8 series** across **25 periods**, each within ±1e-6 of the reference.
+Checked period by period: **8 series** across **25 periods** — **193 values** in all, each within ±1e-6 of the reference.
 
 - `energy.ppa.revenue`
 - `energy.om.expense.fixed`

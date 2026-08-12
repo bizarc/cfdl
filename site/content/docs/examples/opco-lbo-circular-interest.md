@@ -286,7 +286,7 @@ stream opco.debt.repayment on entity asset.target outflow currency USD {
 
 ## Verified results
 
-Checked period by period: **7 series** across **5 periods**, each within ±1e-6 of the reference.
+Checked period by period: **7 series** across **5 periods** — **30 values** in all, each within ±1e-6 of the reference.
 
 - `asset.tlb.balance`
 - `asset.sub_notes.balance`

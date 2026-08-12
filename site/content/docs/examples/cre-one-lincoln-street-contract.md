@@ -153,7 +153,7 @@ contract cre.construction_loan on entity asset.tower {
 
 ## Verified results
 
-Checked period by period: **3 series** across **16 periods**, each within ±500.0 of the reference.
+Checked period by period: **3 series** across **16 periods** — **48 values** in all, each within ±500.0 of the reference.
 
 - `cre.construction.equity_draw`
 - `cre.construction.loan_draw`

@@ -191,7 +191,7 @@ contract opco.exit_perpetuity.gm039 on entity asset.utility {
 
 ## Verified results
 
-Checked period by period: **9 series** across **1 periods**, each within ±1e-6 of the reference.
+Checked period by period: **9 series** across **1 periods** — **9 values** in all, each within ±1e-6 of the reference.
 
 - `opco.exit.value.g041`
 - `opco.exit.value.g031`

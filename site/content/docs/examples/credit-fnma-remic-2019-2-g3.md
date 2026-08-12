@@ -310,14 +310,14 @@ waterfall g3.interest on entity asset.trust {
 
 ## Verified results
 
-Checked period by period: **6 series** across **60 periods**, each within ±741862.17 of the reference.
+Checked period by period: **6 series** across **60 periods** — **180 values** in all, each within the tolerance shown.
 
-- `domain.credit.principal_paid_to_date`
-- `asset.ab.balance`
-- `asset.io.balance`
-- `g3.interest.ab_interest`
-- `g3.interest.io_interest`
-- `g3.interest.residual`
+- `domain.credit.principal_paid_to_date` — within ±741862.17
+- `asset.ab.balance` — within ±741862.17
+- `asset.io.balance` — within ±259651.76
+- `g3.interest.ab_interest` — within ±2009.21
+- `g3.interest.io_interest` — within ±1081.88
+- `g3.interest.residual` — within ±0.01
 
 Summary metrics for the base run:
 

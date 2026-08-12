@@ -642,6 +642,47 @@ function benchmarkCase(caseDir) {
  * assertion is stated first for every case, and the metric table follows when
  * the case has one.
  */
+/**
+ * The tolerance actually applied to each asserted series, and how many values
+ * are asserted at all.
+ *
+ * `case.toml` carries a `period_tolerance` default and an optional
+ * `[tolerance]` table overriding it per column; `tools/benchmark-runner.py`
+ * falls back to 0.01 when neither is given, and this mirrors that so the page
+ * states what the harness enforces rather than what the file happens to say
+ * first.
+ *
+ * A blank cell in `expected.csv` is "not asserted", so series x periods
+ * overcounts every sparse case — 6 x 60 reads as 360 checks where 180 are made.
+ */
+function caseTolerances(caseDir, columns, rows) {
+  const toml = fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8");
+  const fallback = (toml.match(/^period_tolerance\s*=\s*(\S+)/m) ?? [])[1] ?? "0.01";
+  const overrides = {};
+  // The `[tolerance]` table, read to the next table header or end of file.
+  // JavaScript has no `\Z`, so end-of-input is `$` asserted with nothing left
+  // after it — the obvious spelling silently matched nothing at all.
+  const table = toml.match(
+    /^\[tolerance\][^\n]*\n([\s\S]*?)(?=^\[[^\n]*\]\s*$|$(?![\s\S]))/m
+  );
+  if (table) {
+    for (const line of table[1].split("\n")) {
+      const kv = line.match(/^\s*(?:"([^"]+)"|([\w.]+))\s*=\s*(\S+)/);
+      if (kv) overrides[kv[1] ?? kv[2]] = kv[3];
+    }
+  }
+  const tolerances = Object.fromEntries(
+    columns.map((c) => [c, overrides[c] ?? fallback])
+  );
+  let asserted = 0;
+  for (const row of rows.slice(1)) {
+    for (const cell of row.split(",").slice(1)) {
+      if (cell.trim() !== "") asserted += 1;
+    }
+  }
+  return { tolerances, asserted };
+}
+
 function verifiedResults(caseDir, metrics) {
   const lines = [];
   const csv = path.resolve(caseDir, "expected.csv");
@@ -650,17 +691,27 @@ function verifiedResults(caseDir, metrics) {
       .readFileSync(csv, "utf8")
       .split("\n")
       .filter((line) => line.trim() !== "");
-    const columns = rows[0].split(",").slice(1);
-    const tolerance = (
-      fs.readFileSync(path.resolve(caseDir, "case.toml"), "utf8")
-        .match(/^period_tolerance\s*=\s*(\S+)/m) ?? []
-    )[1];
+    const columns = rows[0].split(",").slice(1).map((c) => c.trim());
+    const { tolerances, asserted } = caseTolerances(caseDir, columns, rows);
+    // ONE NUMBER ONLY WHEN ONE NUMBER IS TRUE. `period_tolerance` is the
+    // default, not the rule: six of the cases override it per column, and
+    // printing the default as though it governed every series misstated them
+    // in both directions — `auto_abs_tranches` claimed ±0.01 while checking
+    // its classes at 1,375 to 27,137, and `fnma_remic_2019_2_g3` claimed
+    // ±741,862 while pinning its residual to a cent.
+    const distinct = [...new Set(columns.map((c) => tolerances[c]))];
+    const uniform = distinct.length === 1 ? distinct[0] : null;
     lines.push(
       `Checked period by period: **${columns.length} series** across ` +
-        `**${rows.length - 1} periods**` +
-        (tolerance ? `, each within ±${tolerance} of the reference.` : "."),
+        `**${rows.length - 1} periods** — **${asserted} values** in all` +
+        (uniform
+          ? `, each within ±${uniform} of the reference.`
+          : `, each within the tolerance shown.`),
       "",
-      ...columns.map((column) => `- \`${column.trim()}\``),
+      ...columns.map(
+        (column) =>
+          `- \`${column}\`` + (uniform ? "" : ` — within ±${tolerances[column]}`)
+      ),
       ""
     );
   }

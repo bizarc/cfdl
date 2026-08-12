@@ -162,7 +162,7 @@ contract energy.macrs_shield on entity asset.wind {
 
 ## Verified results
 
-Checked period by period: **6 series** across **14 periods**, each within ±0.001 of the reference.
+Checked period by period: **6 series** across **14 periods** — **84 values** in all, each within ±0.001 of the reference.
 
 - `energy.merchant.revenue`
 - `energy.capacity.revenue`

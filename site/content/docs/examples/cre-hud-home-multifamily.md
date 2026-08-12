@@ -286,21 +286,21 @@ stream loan.mortgage_insurance on entity asset.home_project outflow currency USD
 
 ## Verified results
 
-Checked period by period: **13 series** across **11 periods**, each within ±0.5 of the reference.
+Checked period by period: **13 series** across **11 periods** — **138 values** in all, each within the tolerance shown.
 
-- `cre.unit.base_rent.home`
-- `cre.vacancy.loss`
-- `cre.ops.revenue`
-- `cre.property.opex.management`
-- `cre.property.opex.maintenance`
-- `cre.property.opex.utilities`
-- `cre.property.opex.taxes_insurance`
-- `cre.ops.expense`
-- `loan.permanent_debt_service`
-- `loan.mortgage_insurance`
-- `domain.cre.egi`
-- `domain.cre.noi`
-- `domain.cre.dscr`
+- `cre.unit.base_rent.home` — within ±0.5
+- `cre.vacancy.loss` — within ±0.5
+- `cre.ops.revenue` — within ±0.5
+- `cre.property.opex.management` — within ±0.5
+- `cre.property.opex.maintenance` — within ±0.5
+- `cre.property.opex.utilities` — within ±0.5
+- `cre.property.opex.taxes_insurance` — within ±0.5
+- `cre.ops.expense` — within ±0.5
+- `loan.permanent_debt_service` — within ±0.5
+- `loan.mortgage_insurance` — within ±0.5
+- `domain.cre.egi` — within ±1.0
+- `domain.cre.noi` — within ±1.0
+- `domain.cre.dscr` — within ±1.0e-4
 
 Summary metrics for the base run:
 

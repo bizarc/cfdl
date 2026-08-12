@@ -203,7 +203,7 @@ contract credit.pool_level_pay.d on entity asset.loan_d {
 
 ## Verified results
 
-Checked period by period: **2 series** across **25 periods**, each within ±2.01 of the reference.
+Checked period by period: **2 series** across **25 periods** — **50 values** in all, each within ±2.01 of the reference.
 
 - `entity.asset.pool.net_cash_flow`
 - `domain.credit.gross_collections`

@@ -150,7 +150,7 @@ contract cre.exit on entity asset.strip_center {
 
 ## Verified results
 
-Checked period by period: **3 series** across **84 periods**, each within ±0.01 of the reference.
+Checked period by period: **3 series** across **84 periods** — **252 values** in all, each within ±0.01 of the reference.
 
 - `net_cash_flow`
 - `domain.cre.egi`

@@ -177,7 +177,7 @@ contract opco.capex_line.reinvestment on entity asset.firm {
 
 ## Verified results
 
-Checked period by period: **4 series** across **10 periods**, each within ±0.001 of the reference.
+Checked period by period: **4 series** across **10 periods** — **34 values** in all, each within ±0.001 of the reference.
 
 - `opco.revenue.recurring.core`
 - `opco.opex.recurring.operating`

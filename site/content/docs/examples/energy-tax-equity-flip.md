@@ -286,7 +286,7 @@ waterfall partnership.distribution on entity asset.partnership {
 
 ## Verified results
 
-Checked period by period: **2 series** across **25 periods**, each within ±0.01 of the reference.
+Checked period by period: **2 series** across **25 periods** — **50 values** in all, each within ±0.01 of the reference.
 
 - `partnership.distribution.investor`
 - `partnership.distribution.sponsor`

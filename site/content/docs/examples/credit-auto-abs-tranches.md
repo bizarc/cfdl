@@ -918,14 +918,14 @@ waterfall notes.principal on entity asset.trust {
 
 ## Verified results
 
-Checked period by period: **6 series** across **48 periods**, each within ±0.01 of the reference.
+Checked period by period: **6 series** across **48 periods** — **208 values** in all, each within the tolerance shown.
 
-- `notes.principal.a2_principal`
-- `notes.principal.a3_principal`
-- `notes.principal.a4_principal`
-- `notes.principal.b_principal`
-- `notes.principal.c_principal`
-- `notes.principal.d_principal`
+- `notes.principal.a2_principal` — within ±11202.66
+- `notes.principal.a3_principal` — within ±27137.0
+- `notes.principal.a4_principal` — within ±8601.0
+- `notes.principal.b_principal` — within ±2222.0
+- `notes.principal.c_principal` — within ±1851.0
+- `notes.principal.d_principal` — within ±1375.0
 
 Summary metrics for the base run:
 
