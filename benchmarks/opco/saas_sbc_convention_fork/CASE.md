@@ -25,7 +25,7 @@ analysis rather than the company.
 |---|---|
 | Pack | `opco` |
 | Declared | ten native streams |
-| Language features | stock compensation modelled as its own stream, so both conventions come from one model |
+| Language features | stock compensation modeled as its own stream, so both conventions come from one model |
 | Conventions | mid-period discounting, a nine-month stub, a terminal multiple struck on a pre-compensation base |
 
 Compensation is a separate stream on the same date as the flow it burdens, so

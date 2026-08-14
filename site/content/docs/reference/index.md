@@ -27,4 +27,4 @@ for it, and how to get a particular result.
   provides.
 - [Specification](/docs/specification) — the normative definition of the
   language, its schemas and its diagnostics, written for someone implementing
-  against CFDL rather than modelling with it.
+  against CFDL rather than modeling with it.

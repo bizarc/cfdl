@@ -30,7 +30,7 @@ changes:
 | Low leverage | 3.0x @ L+2.75% | 1.5x @ 6.0% | — | 4.4x |
 
 The subordinated notes pay in kind for three years. Every dollar of free cash
-flow after a 1% mandatory amortisation sweeps against the term loan, and
+flow after a 1% mandatory amortization sweeps against the term loan, and
 interest accrues on the average balance — so the balance depends on the interest
 that depends on the balance.
 
@@ -42,7 +42,7 @@ switch, and publishes a five-year multiple and return for each of the three
 structures across a grid of entry and exit multiples.
 
 **Not redistributable.** The workbook carries an "All Rights Reserved" notice
-and no open licence, so it is neither vendored nor wired into the test suite. It
+and no open license, so it is neither vendored nor wired into the test suite. It
 was downloaded once outside the repository and only its output numbers were
 carried across.
 
@@ -58,7 +58,7 @@ two structures it publishes the returns and nothing in between.
 | Language features | **run-config scenarios**, `cfg.*` parameters, declared state with `init`/`next`, curves |
 | Conventions | average-balance interest, payment-in-kind accrual, a 100% cash sweep, tranche sizing to a debt increment, a sponsor cheque struck as the plug |
 
-The financing case is the **run config**, not the model: the deterministic run is
+The financing case is the **run configuration**, not the model: the deterministic run is
 Base and two scenarios override the tranche sizes, coupons and the sponsor's
 cheque. That is what the source's own case switch does.
 
@@ -124,7 +124,7 @@ time calendar annual from 2016-01 for 6
 // The operating case is identical in all three — same revenue path, same
 // margin, same capex, same working capital. Only the financing changes, which
 // is what the reference's own "financing case" switch does. Here that switch is
-// the run config: the deterministic run is Base, and two scenarios override the
+// the run configuration: the deterministic run is Base, and two scenarios override the
 // tranche sizes and coupons.
 //
 // WHAT IS ASSERTED IS THE ENDPOINT. The reference publishes a period-by-period
@@ -208,8 +208,8 @@ assume rollover          = 36.0         // 5% management rollover
 assume exit_multiple     = 8.0
 assume cash_at_exit      = 5.0          // the minimum cash balance
 
-// Tranche sizes, coupons, the annual fee amortisation and the sponsor's cheque
-// all arrive from the run config, because they are what a financing case IS.
+// Tranche sizes, coupons, the annual fee amortization and the sponsor's cheque
+// all arrive from the run configuration, because they are what a financing case IS.
 // The deterministic run is Base; the two scenarios are the other structures.
 
 
@@ -230,7 +230,7 @@ entity asset sub_notes : Asset.Financial {
 }
 
 // Term Loan B, in closed form. Every dollar of free cash flow after the 1%
-// mandatory amortisation sweeps against it, and interest accrues on the average
+// mandatory amortization sweeps against it, and interest accrues on the average
 // balance — so the balance depends on the interest that depends on the balance.
 // Collecting terms solves it in one substitution.
 entity asset tlb : Asset.Financial {

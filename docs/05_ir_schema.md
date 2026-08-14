@@ -362,7 +362,7 @@ against it by `make ir-schema`.
         },
         "parent": {
           "type": "string",
-          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behaviour with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
+          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behavior with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
         },
         "initial_state": {
           "type": "string",

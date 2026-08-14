@@ -11,7 +11,7 @@ A waterfall is a priority of payments: an ordered list of steps sharing out a
 pot of cash. Each step takes what it is owed, up to what is left, and the
 remainder passes down.
 
-It is how a securitisation pays its tranches, how a fund pays a preferred return
+It is how a securitization pays its tranches, how a fund pays a preferred return
 before carry, and how a project pays lenders before equity.
 
 ## The shape
@@ -159,7 +159,7 @@ been the waterfall. See [the case](/docs/examples/credit-auto-abs-tranches).
 
 **A 22-step consumer ABS priority of payments** — servicer and trustee ahead of
 the notes, five rated classes taking interest then principal in strict
-seniority, a reserve topped to its specified level, an overcollateralisation
+seniority, a reserve topped to its specified level, an overcollateralization
 target, and a certificateholder taking what survives.
 
 **A private fund carry waterfall** — capital back, a compounding 8% preferred

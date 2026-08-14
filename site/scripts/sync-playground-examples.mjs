@@ -127,7 +127,7 @@ const EXAMPLES = [
     title: "CRE: multi-file deal",
     category: "Real deals",
     dir: "examples/cre_multi_file",
-    summary: "A realistic deal organised across four files.",
+    summary: "A realistic deal organized across four files.",
     tryThis: "Follow a lease from contracts.cfdl through to the cash-flow table.",
     docsHref: "/docs/examples/cre_multi_file",
   },

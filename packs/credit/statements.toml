@@ -183,8 +183,8 @@ depth = 1
 categories = ["investing.purchase"]
 display = "positive"
 
-# The same collections, annually. A pool is modelled monthly because that is
-# how it amortises; an investor report is read by year.
+# The same collections, annually. A pool is modeled monthly because that is
+# how it amortizes; an investor report is read by year.
 [[statements]]
 id = "collections_annual"
 label = "Collections statement (annual)"
@@ -364,7 +364,7 @@ subtotal = "domain.credit.total_investment_income"
 
 [[statements.rows]]
 kind = "line"
-label = "Scheduled amortisation of principal"
+label = "Scheduled amortization of principal"
 depth = 1
 categories = ["operating.collection.principal"]
 

@@ -6,7 +6,7 @@
 # is a market observable.
 #
 # HIERARCHY IS OPTIONAL, AND CRE IS THE CLEAREST CASE FOR WHY. The same
-# building can be modelled as one asset with a blended rent roll, as a set of
+# building can be modeled as one asset with a blended rent roll, as a set of
 # unit types, as individual suites, or by use (retail podium, office tower).
 # All four are correct; which is right depends on what the model is for. So
 # `part_of` exists and nothing requires it.
@@ -43,14 +43,14 @@ name = "year_built"
 field_type = "integer"
 required = false
 
-# A suite is a property modelled at a finer grain. It is the same class of
+# A suite is a property modeled at a finer grain. It is the same class of
 # thing as the building, which is why it is not a separate family.
 [[entities]]
 type_id = "CRE.Asset.Unit"
 family = "asset"
 class = "real"
 lifecycle = "cre.unit"
-description = "A leasable unit or suite. Use when the model needs lease-by-lease detail; a property modelled at the building level needs none."
+description = "A leasable unit or suite. Use when the model needs lease-by-lease detail; a property modeled at the building level needs none."
 
 [[entities.fields]]
 name = "rentable_area"
@@ -67,7 +67,7 @@ required = false
 type_id = "CRE.Asset.Portfolio"
 family = "asset"
 class = "real"
-description = "A grouping of properties modelled as one."
+description = "A grouping of properties modeled as one."
 
 [[entities]]
 type_id = "CRE.Asset.EquityInterest"
@@ -146,7 +146,7 @@ required = false
 lifecycle_id = "cre.property"
 initial = "operating"
 states = ["predevelopment", "construction", "lease_up", "operating", "repositioning", "disposed"]
-description = "Initial state is `operating` because most models start with a stabilised asset; a development model declares `predevelopment` explicitly."
+description = "Initial state is `operating` because most models start with a stabilized asset; a development model declares `predevelopment` explicitly."
 
 [[lifecycles.transitions]]
 from = "predevelopment"
@@ -160,7 +160,7 @@ description = "Certificate of occupancy."
 [[lifecycles.transitions]]
 from = "lease_up"
 to = "operating"
-description = "Stabilisation — commonly an occupancy threshold."
+description = "Stabilization — commonly an occupancy threshold."
 
 [[lifecycles.transitions]]
 from = "operating"
@@ -174,7 +174,7 @@ to = "lease_up"
 from = "operating"
 to = "disposed"
 
-# The unit lifecycle is what rollover modelling is really about: a suite is
+# The unit lifecycle is what rollover modeling is really about: a suite is
 # occupied, then it rolls, then it is either renewed or re-let after downtime.
 [[lifecycles]]
 lifecycle_id = "cre.unit"
@@ -221,7 +221,7 @@ type_id = "CRE.Contract.UnitLease"
 contract_name = "cre.lease_unit"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
-description = "A lease modelled at unit grain, with recoveries and expense stops."
+description = "A lease modeled at unit grain, with recoveries and expense stops."
 
 [[contracts]]
 type_id = "CRE.Contract.Rollover"

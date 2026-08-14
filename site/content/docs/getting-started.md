@@ -28,7 +28,7 @@ stream company.revenue on entity asset.company inflow currency USD {
 }
 ```
 
-Hit **Run**. The compiler and engine execute entirely in your browser.
+Click **Run**. The compiler and engine execute entirely in your browser.
 
 What each line does:
 

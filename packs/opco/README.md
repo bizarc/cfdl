@@ -123,7 +123,7 @@ TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate) * (1 - selli
 |---|---|---|
 | `base_value` | the terminal-period flow, **before** the `(1 + g)` step | *required* |
 | `growth_rate` | perpetual growth; state `0` for a flat perpetuity | *required* |
-| `discount_rate` | terminal capitalisation rate | *required* |
+| `discount_rate` | terminal capitalization rate | *required* |
 | `selling_costs` | fraction deducted from proceeds | `0` |
 
 **`discount_rate` is a term, not the run's NPV rate.** That is deliberate. A
@@ -131,7 +131,7 @@ terminal cost of capital legitimately differs from the near-term one — it is t
 rate for a business that has reached steady state — and the published models
 that state these terminals build it explicitly, usually from their own CAPM
 inputs. The run's `annual_discount_rate` *discounts* the resulting cash flow;
-this rate *capitalises* it.
+this rate *capitalizes* it.
 
 **Match the rate to the flow.** A cost of equity belongs against a dividend or
 FCFE; a cost of capital belongs against FCFF. The contract is deliberately

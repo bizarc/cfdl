@@ -91,7 +91,7 @@ A field HOLDS, MOVES BY RULE, or is WRITTEN BY AN EVENT:
 The three compose in the order the engine already runs — states, then events,
 then streams — so a rule computes the period's value, an event may overwrite it,
 and outputs read what was committed. A building changes its use; a pool
-amortises its factor until a trigger resets it.
+amortizes its factor until a trigger resets it.
 
 `=` takes a LITERAL and nothing else. A field stated with `=` is a fact about
 the thing, and a computed one is not a fact but a rule: `occupancy = base * 0.95`
@@ -231,7 +231,7 @@ closes it before stage 3 can open it.
 
 It also argues for a narrower rule later: a property **declared by the
 ontology** is knowable at compile time, so a typo in one should be an error
-rather than a null, and open-world behaviour should be reserved for lifecycle
+rather than a null, and open-world behavior should be reserved for lifecycle
 status fields. That is a separate change and is noted here so it is not lost.
 
 ### Spelling
@@ -263,7 +263,7 @@ aggregate the engine computes by walking the relation — reconciled against a
 published schedule.
 
 So the auto ABS case with 43 sub-pools is the same shape wearing the wrong
-clothes. Modelled properly it is 43 entities, each `part of` the pool, each
+clothes. Modeled properly it is 43 entities, each `part of` the pool, each
 carrying its own contract and its own factor. The suffix disappears because
 identity comes from the entity. Aggregation is free because it is the relation
 the parent already aggregates by. And the grain becomes the modeller's choice,

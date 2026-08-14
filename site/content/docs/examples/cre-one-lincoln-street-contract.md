@@ -47,7 +47,7 @@ development's funding profile is per-deal data — sixteen published quarters
 here, an S-curve or a contractor's schedule on the next deal — and all three are
 the same object. What the contract adds is the funding convention.
 
-The curve is stated ANNUALISED — each point is the exhibit's quarterly figure
+The curve is stated ANNUALIZED — each point is the exhibit's quarterly figure
 times four — and the contract divides by periods-per-year, the same convention
 every annual quantity in the pack follows. On this quarterly model that divides
 straight back to the published number. It matters because a curve is a level: a
@@ -79,8 +79,8 @@ rounds interest to whole thousands, and its stated debt-service total of
 16,312,000 is the sum of those rounded quarterlies against the engine's
 16,310,570 of exact ones.
 
-**Interest is paid, not capitalised**, as the exhibit funds it from the equity
-budget as a separate line. A capitalising facility compounds and is a different
+**Interest is paid, not capitalized**, as the exhibit funds it from the equity
+budget as a separate line. A capitalizing facility compounds and is a different
 recurrence; the contract does not model it.
 
 ## The model
@@ -103,7 +103,7 @@ recurrence; the contract does not model it.
 // contract is wrong.
 //
 // THE DRAW SCHEDULE STAYS A CURVE. It is per-deal data — sixteen published
-// quarters here — so the contract names it rather than parameterising its
+// quarters here — so the contract names it rather than parameterizing its
 // shape. Everything the contract adds is the funding CONVENTION: equity first,
 // the facility behind it, interest on the drawn balance.
 
@@ -115,7 +115,7 @@ time calendar quarterly from 2000-01 for 16
 entity asset tower : CRE.Asset.RealProperty
 
 // Exhibit 6's quarterly funding requirement, totalling $285,145,000 — stated
-// as an ANNUALISED rate, which is how a CRE contract reads a curve. Each point
+// as an ANNUALIZED rate, which is how a CRE contract reads a curve. Each point
 // is the exhibit's quarterly figure x 4, so on this quarterly model the
 // contract divides straight back to the published number. Stating per-period
 // totals instead would be correct here and wrong the moment the same schedule

@@ -1,6 +1,6 @@
 ## The case
 
-Subprime auto receivables backing a securitisation, measured at zero prepayment
+Subprime auto receivables backing a securitization, measured at zero prepayment
 speed. The collateral is 43 level-pay sub-pools at 43 different rates and terms,
 four of them at a 0% promotional annual rate. Weighted average life is the
 standard summary of when principal comes back.
@@ -21,7 +21,7 @@ filer retains copyright, so figures are asserted against rather than reproduced.
 | Pack | `credit` |
 | Contract types | `credit.pool_level_pay`, 43 instances |
 | Language features | many instances of one contract type in a single model |
-| Conventions | level-pay amortisation, a promotional 0% rate, zero prepayment speed |
+| Conventions | level-pay amortization, a promotional 0% rate, zero prepayment speed |
 
 ## The result
 

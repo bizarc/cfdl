@@ -34,7 +34,7 @@
 # Declared states express the recurrence directly, and both lines now reproduce
 # the published figures EXACTLY over 29 years. Note the total expense line needs
 # FOUR states, one per published sub-line: the workbook rounds each sub-line
-# before summing, and rounding the sum is different arithmetic. Modelling the
+# before summing, and rounding the sum is different arithmetic. Modeling the
 # total as one rounded line still left 11.00.
 #
 # This is one half of the acceptance test for docs/14_state_and_recurrence.md.
@@ -51,7 +51,7 @@ period_tolerance = 0.5
 # full precision, so the money lines agree to within a dollar and no closer.
 # The DSCR is quoted to sixteen significant figures and agrees to five decimals
 # — but it is computed from the ROUNDED NOI over the ROUNDED debt service, so
-# the residual is that rounding rather than a modelling difference. NOTES.md
+# the residual is that rounding rather than a modeling difference. NOTES.md
 # records all four values and the differences.
 #
 # A single 1.0 would assert nothing about the ratio; a single 1e-4 would fail

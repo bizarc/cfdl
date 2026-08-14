@@ -7,7 +7,7 @@ generated: regions
 
 # Statements
 
-A **statement** is the artifact a practitioner recognises: an operating pro
+A **statement** is the artifact a practitioner recognizes: an operating pro
 forma, a remittance report, a free cash flow build-up. CFDL produces one per
 period from the model you already wrote — you do not build it, and you do not
 maintain it alongside the model.

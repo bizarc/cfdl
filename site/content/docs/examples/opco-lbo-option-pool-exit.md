@@ -104,7 +104,7 @@ a finite ordered test rather than a search.
 // pays management, and the strikes are laddered precisely so that later
 // tranches only pay in better outcomes.
 //
-// Modelled at the 8.0x exit multiple — the same multiple the deal was entered
+// Modeled at the 8.0x exit multiple — the same multiple the deal was entered
 // at, so it is the case where the sponsor's return comes from deleveraging and
 // growth rather than from multiple expansion. The other five published columns
 // are reconciled in NOTES.md.

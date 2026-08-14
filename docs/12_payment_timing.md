@@ -92,7 +92,7 @@ precisely simply produces a more precise offset.
 rule. `on day 15` asks where in the period the 15th falls, and the answer
 depends on how long the period is — half a month, a sixth of a quarter, a
 twenty-fourth of a year. `mid` says the cash arrived evenly and is therefore
-summarised at the midpoint, which is half a period on every calendar. It is
+summarized at the midpoint, which is half a period on every calendar. It is
 what project finance and banker DCFs mean by mid-period or mid-year
 discounting, and it applies to flows rather than to prices: a terminal value or
 a sale is struck at a point in time and is discounted whole.
@@ -204,7 +204,7 @@ Rules:
 ### Discounting is at bucket granularity
 
 A payment is discounted from the period it lands in. The fraction of a period
-between that period's boundary and the actual due date is **not** modelled.
+between that period's boundary and the actual due date is **not** modeled.
 
 On a monthly grid at 12% that is worth roughly 0.5% on an affected flow, set
 against the first-order effect — moving the cash two periods later — which is
@@ -254,7 +254,7 @@ satisfied by matching whatever the engine currently does:
 - a par bond discounted at its coupon rate is worth par;
 - a level annuity matches `(1 - (1+i)^-n) / i`;
 - an annuity due is worth exactly `(1+i)` times the ordinary annuity;
-- a fully-amortising loan discounted at its own rate is worth its principal.
+- a fully-amortizing loan discounted at its own rate is worth its principal.
 
 The third is the direct test of this section. The benchmark suite compares
 each model against a reference implementation, which cannot catch a convention

@@ -37,14 +37,14 @@ implementations.
 > and it is the USD credit default. A misspelling is `E5019_UNKNOWN_DAY_COUNT`,
 > not a silent fallback.
 >
-> **Amortisation has its own day count.** A level-pay pool strikes its payment
+> **Amortization has its own day count.** A level-pay pool strikes its payment
 > once and then accrues interest period by period, so `amortization_day_count`
 > selects the basis the payment is struck from and defaults to `day_count`.
 > Setting `day_count = "act/360"` with `amortization_day_count = "30/360"` — the
 > common US commercial case — holds the payment constant while interest varies
 > with month length and scheduled principal absorbs the difference. Setting only
 > `day_count` leaves every existing model unchanged. Applies to
-> `credit.pool_level_pay`; IO/bullet contracts have no amortisation to strike.
+> `credit.pool_level_pay`; IO/bullet contracts have no amortization to strike.
 >
 > Annual totals do **not** match across monthly / quarterly / annual, and
 > should not: nominal accrual means a 6% loan is 0.5%/month and 1.5%/quarter,
@@ -87,7 +87,7 @@ SMM and the standard prepayment and default curves; the pack is checked for
 parity against the published industry reference schedule.
 
 - **SMM applies to the balance at the BEGINNING of the period, net of
-  scheduled amortisation only.** Defaults are not removed from the base.
+  scheduled amortization only.** Defaults are not removed from the base.
 - Because both attritions are drawn from that same base, survival is
   **additive**: `k = (1 - mdr) - smm`, not `(1 - mdr)(1 - smm)`.
 - CPR and CDR are effective annual rates and convert by a root
@@ -95,10 +95,10 @@ parity against the published industry reference schedule.
 
 The [mortgage pool conventions benchmark](/docs/examples/credit-mbs-pool-conventions) asserts anchor figures across the life
 of a 30-year pool and passes, including recoveries — a level-pay pool's
-defaulted balance keeps amortising in foreclosure, so what is liquidated is the
-amortised balance rather than face. One limitation remains: age-varying
+defaulted balance keeps amortizing in foreclosure, so what is liquidated is the
+amortized balance rather than face. One limitation remains: age-varying
 prepayment and default curves are not expressible, so only constant-hazard
-pools can be modelled.
+pools can be modeled.
 
 ## Contract types
 
@@ -220,7 +220,7 @@ benchmark purchases at a 1-point discount.
 
 > **A 0% note rate works.** Promotional financing is ordinary in auto and
 > retail credit — it is about 3% of the collateral in the published auto-ABS
-> pool this pack is checked against. `credit.pool_level_pay` amortises it
+> pool this pack is checked against. `credit.pool_level_pay` amortizes it
 > straight line with no interest. This was previously accepted-and-NaN rather
 > than supported: the `rate` validation asked only for non-negative, and the
 > closed form is 0/0 at zero.
@@ -333,7 +333,7 @@ received is operating revenue rather than a financing flow. That is the same
 judgement an IFRS filer makes for a financial institution, and it is why CFDL
 enforces only the root vocabulary and leaves the assignment to the pack.
 
-`principal` covers both scheduled amortisation and a bullet, since both retire
+`principal` covers both scheduled amortization and a bullet, since both retire
 principal. `prepayment` stands apart because it is what a speed assumption
 moves, and every published factor table reports it separately. `recovery` is not
 principal: it arrives after a default, on its own lag, and a weighted average

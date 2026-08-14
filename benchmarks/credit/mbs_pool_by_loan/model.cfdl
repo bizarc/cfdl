@@ -3,14 +3,14 @@ model "mbs-pool-by-loan"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-// THE SAME POOL AS `mbs_pool_conventions`, MODELLED AT A DIFFERENT GRAIN.
+// THE SAME POOL AS `mbs_pool_conventions`, MODELED AT A DIFFERENT GRAIN.
 //
 // That case declares one $100m pool and asserts the published schedule against
 // it. This one declares the SAME $100m as four loans that belong to a pool, and
 // asserts the SAME published figures against the pool.
 //
 // The published numbers are therefore doing two jobs. They still check the
-// conventions — level-pay amortisation, SMM on the gross balance, MDR, a
+// conventions — level-pay amortization, SMM on the gross balance, MDR, a
 // twelve-month recovery lag. And because the pool holds no contract of its own,
 // every figure asserted at the pool level is an aggregate the engine computed
 // by walking `part of`. A rollup that summed the wrong children, or that

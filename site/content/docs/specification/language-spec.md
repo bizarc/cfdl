@@ -11,11 +11,17 @@ layer: specification
 
 **Purpose:** CFDL (Cash Flow Domain Language) is a proprietary, human-readable DSL for defining cash-flow models across asset classes. A CFDL model compiles deterministically to a canonical JSON IR used by valuation engines (deterministic DCF, Monte Carlo, scenarios, risk/metrics).
 
+## Normative keywords
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY** and **OPTIONAL** in this document are to be interpreted as described in BCP 14 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119), [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and only when, they appear in all capitals.
+
+This specification exists so that a second implementation can be written from it. That is the reason the distinction is stated rather than assumed: a reader has to be able to tell a requirement from advice without inferring it from the surrounding sentence.
+
 ---
 
 ## 1. Design goals
 
-### 1.1 Non‑negotiables
+### 1.1 Non-negotiables
 1. **Human-readable, file-based modeling:** models are composed of `*.cfdl` files.
 2. **Deterministic compilation:** the same inputs produce the same canonical IR (subject to explicitly controlled seeds for stochastic runs).
 3. **Separation of concerns:** **Time**, **Structure**, and **Behavior** are separate concepts in the language.
@@ -248,7 +254,7 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
   types are added to those and cannot remove them.
 - Attribute values are **literals**, checked against the type's declared fields.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
-  pool models collective behaviour perfectly well with no loans under it; a
+  pool models collective behavior perfectly well with no loans under it; a
   building needs no units. The modeller chooses the grain and the language does
   not prefer one. Where a parent does have children, its cash is aggregated from
   them **by the relation**, not by a name prefix — published as
@@ -518,7 +524,7 @@ schedule on 2029-06 mid                           // one-shot, same axis
 
 `due`, the default and `mid` say where in its period a payment sits, and so how
 far it is discounted. `mid` is the project-finance mid-period convention: cash
-arrives through the period rather than at one end, so it is summarised at the
+arrives through the period rather than at one end, so it is summarized at the
 midpoint — half a period on **every** calendar, unlike a day rule. Stating two
 positions at once is `E2109_SCHEDULE_CONFLICTING_PLACEMENT`. See
 `docs/12_payment_timing.md`.

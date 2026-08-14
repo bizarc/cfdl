@@ -5,7 +5,7 @@ time calendar monthly from 2018-10 for 64
 
 // THE NOTE CLASSES OF AN AUTO ABS, against the issuer's published grid.
 //
-// `auto_abs_wal` reconciles this deal's COLLATERAL — 43 sub-pools amortising
+// `auto_abs_wal` reconciles this deal's COLLATERAL — 43 sub-pools amortizing
 // to an aggregate the issuer states to the cent. It stops there, and says so:
 // the per-class columns need a sequential-pay waterfall, which did not exist
 // when it was written. This case is that third axis.
@@ -26,7 +26,7 @@ time calendar monthly from 2018-10 for 64
 //
 // NO LOSSES ARE ASSUMED, by the exhibit's own terms — it states the receivables
 // prepay at a constant ABS rate "with no defaults, losses or repurchases". So
-// overcollateralisation never has to build and no trigger can trip. This case
+// overcollateralization never has to build and no trigger can trip. This case
 // checks sequential pay; the loss-driven machinery belongs to a deal that can
 // lose money.
 

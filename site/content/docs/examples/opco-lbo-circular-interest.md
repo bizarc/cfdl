@@ -19,7 +19,7 @@ A sponsor buys a mid-market business for $720mm — 8.0x an LTM adjusted EBITDA 
 $90mm — funded with a $275mm term loan B, $175mm of senior notes, $100mm of
 subordinated notes that pay in kind for three years, a 5% management rollover and
 $158.9mm of sponsor equity. The model runs the four-year hold: a 35% tax rate, a
-$5mm minimum cash balance, 1% mandatory term loan amortisation, and every
+$5mm minimum cash balance, 1% mandatory term loan amortization, and every
 remaining dollar of free cash flow sweeping against the term loan.
 
 The case is the debt schedule. Interest accrues on the **average** of each
@@ -40,7 +40,7 @@ every cash figure, as cached values in the workbook, so the comparison is period
 by period rather than against a single answer.
 
 **Not redistributable.** The workbook carries an "All Rights Reserved" notice and
-no open licence, so it is neither vendored nor wired into the test suite. It was
+no open license, so it is neither vendored nor wired into the test suite. It was
 downloaded once outside the repository and only its output numbers were carried
 across.
 
@@ -118,7 +118,7 @@ those would be piecewise linear, which is a different problem.
 //
 // K(t) is the interest that does NOT depend on the swept balance — the
 // commitment fee on the undrawn revolver, fixed-rate senior notes, the PIK
-// subordinated coupon, amortised financing fees, less interest earned on the
+// subordinated coupon, amortized financing fees, less interest earned on the
 // minimum cash balance. All of it is known before B(t) is, which is exactly
 // what makes collecting B(t) legitimate.
 //
@@ -155,7 +155,7 @@ curve ebit linear {
   2020-01: 92.1526158
 }
 
-// Depreciation and amortisation, and capital expenditure. Equal in every
+// Depreciation and amortization, and capital expenditure. Equal in every
 // projected year — both run at 5.0% of sales — so they cancel out of free cash
 // flow exactly. Carried as separate lines anyway: they cancel by coincidence
 // of assumption, not by construction, and netting them would hide that.
@@ -266,7 +266,7 @@ stream opco.interest.undrawn_revolver on entity asset.target outflow currency US
 }
 
 // Levered free cash flow, which in this structure is exactly the fall in the
-// term loan balance: all of it sweeps, mandatory amortisation included.
+// term loan balance: all of it sweeps, mandatory amortization included.
 stream opco.debt.repayment on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.debt_principal

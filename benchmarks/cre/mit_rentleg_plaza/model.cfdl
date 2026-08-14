@@ -16,7 +16,7 @@
 // metrics aggregate them and `cre.exit_forward` can read them. See NOTES.md.
 //
 // NOTE ON THE 2006 COLUMN: the reversion needs 2006 NOI, one year past the
-// hold. It is derived by `cre.exit_forward` from the modelled streams over the
+// hold. It is derived by `cre.exit_forward` from the modeled streams over the
 // `project 1` tail. That was impossible when this file was written — E2103
 // measured a native stream against the cash horizon, so the operating streams
 // could not reach the tail — and the 2006 NOI was carried inline, duplicating
@@ -233,7 +233,7 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 //     2005 rather than its start — five years, not four, worth $207,783 here.
 //
 // `exit_cap = 0.10` is MIT's "10 times the following year's NOI"; the 5%
-// selling commission is fn 11. The forward NOI is derived from the modelled
+// selling commission is fn 11. The forward NOI is derived from the modeled
 // streams, not restated.
 contract cre.exit_forward on entity asset.rentleg {
   term 2005-01..2005-01

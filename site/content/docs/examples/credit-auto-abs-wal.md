@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-Subprime auto receivables backing a securitisation, measured at zero prepayment
+Subprime auto receivables backing a securitization, measured at zero prepayment
 speed. The collateral is 43 level-pay sub-pools at 43 different rates and terms,
 four of them at a 0% promotional annual rate. Weighted average life is the
 standard summary of when principal comes back.
@@ -36,7 +36,7 @@ filer retains copyright, so figures are asserted against rather than reproduced.
 | Pack | `credit` |
 | Contract types | `credit.pool_level_pay`, 43 instances |
 | Language features | many instances of one contract type in a single model |
-| Conventions | level-pay amortisation, a promotional 0% rate, zero prepayment speed |
+| Conventions | level-pay amortization, a promotional 0% rate, zero prepayment speed |
 
 ## The result
 
@@ -77,12 +77,12 @@ sister cases at 0.5 and 1.5 ABS carry that comparison.
 //
 // At zero speed the exhibit's stated assumptions are exactly this pack's
 // defaults: prepay at a constant zero rate, no defaults, no losses. So
-// cpr = cdr = 0 and each sub-pool simply amortises on schedule.
+// cpr = cdr = 0 and each sub-pool simply amortizes on schedule.
 //
 // 43 funded sub-pools; the exhibit lists 50, of which 7 carry no balance.
 // Aggregate balance 537,640,787.96, terms to 64 months, APRs 0% and 0.905%-9.923%.
 // Four sub-pools are 0% APR promotional financing — see NOTES.md, they are the
-// reason the pack learned to amortise at a zero rate.
+// reason the pack learned to amortize at a zero rate.
 
 version 0.1
 model "auto-abs-wal"

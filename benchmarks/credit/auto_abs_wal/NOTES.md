@@ -1,4 +1,4 @@
-# Auto ABS collateral — matching an issuer's published amortisation
+# Auto ABS collateral — matching an issuer's published amortization
 
 ## The source
 
@@ -51,7 +51,7 @@ initial balance — which this exhibit does not state. It is fitted: 112,026,000
 
 That sounds circular and is not, because **one constant has to fit all eight
 points at once**. A scale factor can move the whole curve up or down; it cannot
-change its shape. If the amortisation were wrong — wrong day count, wrong
+change its shape. If the amortization were wrong — wrong day count, wrong
 annuity factor, wrong handling of the 0% sub-pools, a single mis-stated term —
 no constant would reconcile eight successive points to four decimal places. The
 fit is the test, and the residual is the source's rounding rather than ours.
@@ -78,7 +78,7 @@ ORIGINATION rather than from closing — worth 20 percentage points on this
 seasoned pool at 1.50% ABS — which is recorded in those cases' NOTES.
 
 **The note classes.** Percent-outstanding per class needs a sequential-pay
-waterfall with overcollateralisation and a reserve account. This pack models the
+waterfall with overcollateralization and a reserve account. This pack models the
 collateral side only. That is the waterfall roadmap item, not a gap this case
 can close.
 
@@ -113,5 +113,5 @@ One inconsistency surfaced on the way. The prepayment rule computed "balance net
 of scheduled principal" with a *different* expression than the scheduled
 principal rule itself. The two agree whenever `amortization_day_count` equals
 `day_count`, which every shipped model satisfies, so nothing moved — but under
-an Actual accrual with a 30/360 amortisation they would have disagreed. Both now
+an Actual accrual with a 30/360 amortization they would have disagreed. Both now
 use the one formula.

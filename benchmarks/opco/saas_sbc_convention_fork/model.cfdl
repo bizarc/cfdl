@@ -7,7 +7,7 @@
 // company on the same page. The gap is not a rounding difference: $331mm
 // before, $198mm after, in the first year alone.
 //
-// So SBC is modelled as ITS OWN STREAM rather than netted into the cash flow
+// So SBC is modeled as ITS OWN STREAM rather than netted into the cash flow
 // line. That makes the fork structural: the pre-SBC series and the SBC
 // deduction are separately stated, separately asserted, and the post-SBC
 // series is their sum rather than a second hand-entered series that could

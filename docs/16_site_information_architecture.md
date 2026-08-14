@@ -9,7 +9,7 @@ the object model, the language guide and the eight lessons; "Guides" became
 The current site is a port. `site/content/nav.ts` says so in its own header
 comment — *"Ported from the previous sidebar so the information architecture
 carries over unchanged"* — and the shape it carried over is a repository's
-`docs/` tree, which is organised by **what file exists** rather than by **what
+`docs/` tree, which is organized by **what file exists** rather than by **what
 someone came to do**.
 
 That is not a criticism of the pages. Most of them are good. It is a statement
@@ -151,7 +151,7 @@ The existing eight, plus the one the engine now needs:
 Schedules and calendars
 Contracts and packs
 Multi-file models
-Scenarios and run configs
+Scenarios and run configurations
 Stochastic modeling
 Curves
 Metrics
@@ -169,7 +169,7 @@ reconciliation.
 ### 6. Examples — *modeller* (new top level)
 
 40 pages need a **browsable, filterable index**, not a sidebar list. Filter by
-pack, by feature (amortisation, rollover, MACRS, waterfalls), and by whether the
+pack, by feature (amortization, rollover, MACRS, waterfalls), and by whether the
 case reconciles to a published source. Notebooks belong here too — they are
 worked examples, not a surface.
 
@@ -203,14 +203,14 @@ Terse, complete, **generated wherever a generator can produce it**:
 Language spec  ·  Grammar  ·  Expression environment
 Diagnostics    ·  Compiler spec
 IR schema      ·  Results schema  ·  Pack interface schema
-CLI flags      ·  Run config
+CLI flags      ·  Run configuration
 ```
 
 Two rules for this section. **No narrative** — a reference page answers "what is
 the exact form of X", nothing else. **Generated where possible** — the results
 schema page already regenerates from `docs/schemas/results.schema.json`, and the
 same should hold for the pack reference (from the pack TOMLs) and diagnostics
-(from the code catalogue), so drift becomes impossible rather than discouraged.
+(from the code catalog), so drift becomes impossible rather than discouraged.
 
 ### 10. About — *buyer* (was Project)
 
@@ -274,7 +274,7 @@ gives the documentation a guarantee a ported site cannot make: nothing here is
 stale, because CI runs it.
 
 **The statement view becomes a documentation surface.** It is the artifact a
-practitioner recognises. It now exists (Stage 10) and lives only in a playground
+practitioner recognizes. It now exists (Stage 10) and lives only in a playground
 tab; a pro forma with drill-down from a row to its contributing streams belongs
 beside the prose.
 

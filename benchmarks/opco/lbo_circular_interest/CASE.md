@@ -4,7 +4,7 @@ A sponsor buys a mid-market business for $720mm — 8.0x an LTM adjusted EBITDA 
 $90mm — funded with a $275mm term loan B, $175mm of senior notes, $100mm of
 subordinated notes that pay in kind for three years, a 5% management rollover and
 $158.9mm of sponsor equity. The model runs the four-year hold: a 35% tax rate, a
-$5mm minimum cash balance, 1% mandatory term loan amortisation, and every
+$5mm minimum cash balance, 1% mandatory term loan amortization, and every
 remaining dollar of free cash flow sweeping against the term loan.
 
 The case is the debt schedule. Interest accrues on the **average** of each
@@ -25,7 +25,7 @@ every cash figure, as cached values in the workbook, so the comparison is period
 by period rather than against a single answer.
 
 **Not redistributable.** The workbook carries an "All Rights Reserved" notice and
-no open licence, so it is neither vendored nor wired into the test suite. It was
+no open license, so it is neither vendored nor wired into the test suite. It was
 downloaded once outside the repository and only its output numbers were carried
 across.
 

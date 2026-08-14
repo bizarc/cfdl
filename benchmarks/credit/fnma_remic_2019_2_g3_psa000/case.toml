@@ -21,7 +21,7 @@
 # measured from late-January settlement. The bias is uniform across all seven
 # published speeds and the seven reconcile to the printed tenth once it is
 # accounted for.
-summary = "Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortising on schedule for thirty years."
+summary = "Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortizing on schedule for thirty years."
 pack = "credit"
 period_tolerance = 0.01
 

@@ -1,11 +1,11 @@
 ---
 id: benchmark-credit-mbs-pool-by-loan
-title: "Credit: a mortgage pool modelled loan by loan"
+title: "Credit: a mortgage pool modeled loan by loan"
 slug: "/docs/examples/credit-mbs-pool-by-loan"
 source: benchmarks/credit/mbs_pool_by_loan
 ---
 
-# Credit: a mortgage pool modelled loan by loan
+# Credit: a mortgage pool modeled loan by loan
 
 The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children.
 
@@ -34,7 +34,7 @@ cash flow schedule it publishes for this pool.
 source is neither vendored nor quoted; its figures are carried as anchor values
 and cited as facts.
 
-The reference publishes four columns: interest, scheduled amortisation,
+The reference publishes four columns: interest, scheduled amortization,
 voluntary prepayments and principal recoveries. The pool's cash in a period is
 their sum, so the anchors here are the published figures added together. Addition
 is the only step taken.
@@ -46,7 +46,7 @@ is the only step taken.
 | Pack | `credit` |
 | Declared | five typed assets, one of them a parent; four contract instances |
 | Language features | **`part of` hierarchy**, typed entity fields, per-instance contract suffixes |
-| Conventions | level-pay amortisation, SMM on the gross balance, MDR, a lagged recovery |
+| Conventions | level-pay amortization, SMM on the gross balance, MDR, a lagged recovery |
 
 Two aggregates are asserted, computed by unrelated code:
 
@@ -84,14 +84,14 @@ model "mbs-pool-by-loan"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-// THE SAME POOL AS `mbs_pool_conventions`, MODELLED AT A DIFFERENT GRAIN.
+// THE SAME POOL AS `mbs_pool_conventions`, MODELED AT A DIFFERENT GRAIN.
 //
 // That case declares one $100m pool and asserts the published schedule against
 // it. This one declares the SAME $100m as four loans that belong to a pool, and
 // asserts the SAME published figures against the pool.
 //
 // The published numbers are therefore doing two jobs. They still check the
-// conventions — level-pay amortisation, SMM on the gross balance, MDR, a
+// conventions — level-pay amortization, SMM on the gross balance, MDR, a
 // twelve-month recovery lag. And because the pool holds no contract of its own,
 // every figure asserted at the pool level is an aggregate the engine computed
 // by walking `part of`. A rollup that summed the wrong children, or that

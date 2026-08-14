@@ -6,7 +6,7 @@
 # rather than the pack. This source publishes the DRIVERS, which is what a pack
 # rule consumes. It takes opco off 0-of-10 contract types externally validated.
 #
-# Licence is explicit: "These spreadsheet programs are in Excel and are not copy
+# License is explicit: "These spreadsheet programs are in Excel and are not copy
 # protected. Download them and feel free to modify them to your own
 # specifications." So the workbook is committed under reference/, as with HUD —
 # a reader can open it and check every figure here directly.

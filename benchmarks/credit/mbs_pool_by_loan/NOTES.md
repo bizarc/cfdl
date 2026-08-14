@@ -1,4 +1,4 @@
-# A pool modelled loan by loan — what building it found
+# A pool modeled loan by loan — what building it found
 
 ## Why this case exists next to `mbs_pool_conventions`
 
@@ -7,7 +7,7 @@ redundant. They are not, and the difference is the whole design.
 
 `mbs_pool_conventions` declares one contract on one entity and asserts the
 published schedule against the streams that contract emitted. It proves the
-CONVENTIONS: level-pay amortisation, SMM applied to the gross balance, MDR, a
+CONVENTIONS: level-pay amortization, SMM applied to the gross balance, MDR, a
 twelve-month recovery lag.
 
 Here the pool holds no contract. Four loans do, and the pool is their parent.
@@ -38,7 +38,7 @@ Against the single-pool model, over all 372 periods:
 
 Zero. Not within a tolerance. Splitting $100mm into loans of $40mm, $30mm, $20mm
 and $10mm changes nothing about the pool's cash, which is what a correct rollup
-means and what an incorrect one could not fake — the four loans amortise on four
+means and what an incorrect one could not fake — the four loans amortize on four
 different schedules and only their sum is invariant.
 
 That comparison is not committed as an assertion because both sides are ours.

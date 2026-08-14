@@ -14,6 +14,12 @@ This document specifies the implementation behavior for the **CFDL v0.1 compiler
 
 **Out of scope:**
 - Deterministic/MC engine computations
+
+## Normative keywords
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY** and **OPTIONAL** in this document are to be interpreted as described in BCP 14 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119), [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and only when, they appear in all capitals.
+
+This specification exists so that a second implementation can be written from it. That is the reason the distinction is stated rather than assumed: a reader has to be able to tell a requirement from advice without inferring it from the surrounding sentence.
 - Domain pack content (CRE/Operating), except pack interface touchpoints
 - Correlation (explicitly excluded)
 

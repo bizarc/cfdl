@@ -53,7 +53,7 @@ answered later by a [statement](/docs/reference/statements) rather than by the
 timeline. A schedule finer than the calendar is rejected rather than silently
 collapsed, because occurrences inside one period cannot be told apart.
 
-To value cash beyond the modelled horizon — a terminal value struck off a
+To value cash beyond the modeled horizon — a terminal value struck off a
 forward year — extend the grid without extending the cash:
 
 ```cfdl
@@ -223,7 +223,7 @@ block, so a value that moves needs something with a declared type to belong to.
 
 ## Waterfalls
 
-Some cash is not earned, it is **allocated**. A securitisation pays its tranches
+Some cash is not earned, it is **allocated**. A securitization pays its tranches
 in strict order; a fund returns capital before it pays carry. A `waterfall`
 declares that order over a pot:
 

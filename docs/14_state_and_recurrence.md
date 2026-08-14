@@ -335,7 +335,7 @@ Two off-by-ones, both found by building the fixture rather than by reasoning:
    settlements puts the recurrence a whole interval from the index that reads it.
 2. **`init` belongs to the first tick, not to model period 0.** Otherwise the
    first payment reads `F(1)` where it should read `F(0)` — an off-by-one
-   against every published amortisation schedule.
+   against every published amortization schedule.
 
 `fixtures/valid/state_cadence` pins both. It uses `next prev * 2` so the step
 count is readable straight off the value: a wrong cadence is unmissable rather

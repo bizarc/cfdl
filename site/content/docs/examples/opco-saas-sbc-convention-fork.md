@@ -40,7 +40,7 @@ analysis rather than the company.
 |---|---|
 | Pack | `opco` |
 | Declared | ten native streams |
-| Language features | stock compensation modelled as its own stream, so both conventions come from one model |
+| Language features | stock compensation modeled as its own stream, so both conventions come from one model |
 | Conventions | mid-period discounting, a nine-month stub, a terminal multiple struck on a pre-compensation base |
 
 Compensation is a separate stream on the same date as the flow it burdens, so
@@ -82,7 +82,7 @@ the first quarter carries the cash.
 // company on the same page. The gap is not a rounding difference: $331mm
 // before, $198mm after, in the first year alone.
 //
-// So SBC is modelled as ITS OWN STREAM rather than netted into the cash flow
+// So SBC is modeled as ITS OWN STREAM rather than netted into the cash flow
 // line. That makes the fork structural: the pre-SBC series and the SBC
 // deduction are separately stated, separately asserted, and the post-SBC
 // series is their sum rather than a second hand-entered series that could

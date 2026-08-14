@@ -33,7 +33,7 @@ set at 35.0000000674% of AB's. The two reconstruct the pass-through rate:
 ```
 
 An investor in IO owns a slice of a coupon and nothing else. Their position
-shrinks as AB amortises, they receive not one dollar of principal, and if the
+shrinks as AB amortizes, they receive not one dollar of principal, and if the
 loans prepay quickly they lose most of what they paid.
 
 ## The reference
@@ -156,7 +156,7 @@ time calendar monthly from 2019-02 for 361
 // between 2002 and 2006, so the cash arriving at those groups is another
 // instrument's output and has to be supplied rather than derived. Group 3 is
 // the one backed directly by mortgage-backed securities, so it is complete in
-// this document and is the group modelled here.
+// this document and is the group modeled here.
 //
 // A REMIC IS A FUNCTION FROM DOLLARS RECEIVED TO DOLLARS ALLOCATED, and this
 // group's function is one line: everything to AB. What makes it worth a case is
@@ -193,7 +193,7 @@ entity asset trust : Credit.Asset.LoanPool {
   collateral_type = "residential"
 }
 
-// The Group 3 MBS. `balance` restates the level-pay amortisation the pack
+// The Group 3 MBS. `balance` restates the level-pay amortization the pack
 // already applies — one step per period, at the mortgage rate, against the PSA
 // curve — because a field cannot read a stream. It is not an independent
 // number: `expected.csv` asserts the pack's own cumulative principal against the
@@ -248,7 +248,7 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 // 1 January 2019. 198% PSA is the pricing speed of the seven the decrement
 // table publishes.
 //
-// `rate` is the MORTGAGE rate, because that is what amortises the loans and so
+// `rate` is the MORTGAGE rate, because that is what amortizes the loans and so
 // sets the principal the trust passes through. The 0.451% between it and the
 // 5.00% pass-through rate is the servicing and guaranty strip, and it is
 // carried as `servicing_fee` so that what reaches the trust is 5.00% exactly —

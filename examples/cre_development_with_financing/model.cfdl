@@ -58,7 +58,7 @@ stream loan.construction_interest on entity asset.construction outflow currency 
 
 // Permanent financing: a flat placeholder service, so it stays a stream —
 // cre.permanent_debt would strike the payment from principal, rate and
-// amortisation and change this example's numbers.
+// amortization and change this example's numbers.
 stream loan.permanent_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2027-07 to 2031-12
   category financing.debt_service

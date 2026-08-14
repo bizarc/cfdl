@@ -1,13 +1,13 @@
 ---
 id: guide-scenarios
-title: Scenarios and run configs
+title: Scenarios and run configurations
 slug: /docs/guides/scenarios-and-run-configs
 generated: none
 ---
 
-# Scenarios and run configs
+# Scenarios and run configurations
 
-A compiled model (IR) is evaluated under a **run config** — so the same
+A compiled model (IR) is evaluated under a **run configuration** — so the same
 model answers base case, stress case, and sensitivity questions without
 editing the model file.
 

@@ -209,7 +209,7 @@ assume debt_amount     = 60000000.0
 assume debt_rate       = 0.06
 assume debt_term       = 18.0
 
-// The equipment is $100mm; the reference capitalises $3.1mm of financing into
+// The equipment is $100mm; the reference capitalizes $3.1mm of financing into
 // the installed cost, so the credit and depreciation are taken on the larger
 // figure. Both bases follow from it: the credit on all of it, depreciation on
 // it less half the credit, which is the rule that catches people out.

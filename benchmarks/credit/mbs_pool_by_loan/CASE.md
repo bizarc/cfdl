@@ -19,7 +19,7 @@ cash flow schedule it publishes for this pool.
 source is neither vendored nor quoted; its figures are carried as anchor values
 and cited as facts.
 
-The reference publishes four columns: interest, scheduled amortisation,
+The reference publishes four columns: interest, scheduled amortization,
 voluntary prepayments and principal recoveries. The pool's cash in a period is
 their sum, so the anchors here are the published figures added together. Addition
 is the only step taken.
@@ -31,7 +31,7 @@ is the only step taken.
 | Pack | `credit` |
 | Declared | five typed assets, one of them a parent; four contract instances |
 | Language features | **`part of` hierarchy**, typed entity fields, per-instance contract suffixes |
-| Conventions | level-pay amortisation, SMM on the gross balance, MDR, a lagged recovery |
+| Conventions | level-pay amortization, SMM on the gross balance, MDR, a lagged recovery |
 
 Two aggregates are asserted, computed by unrelated code:
 

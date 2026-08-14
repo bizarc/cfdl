@@ -33,7 +33,7 @@ Three reasons it wins:
 
 3. **The cost is concentrated in the most load-bearing code there is.**
    `evaluate_stream` and the per-period environment are what every number in
-   every benchmark passes through. Changing them to support a modelling choice
+   every benchmark passes through. Changing them to support a modeling choice
    the grain rule handles better is a large blast radius for no gain.
 
 Backlog **7.16** describes the underlying limitation and is answered by the
@@ -189,7 +189,7 @@ Two things to decide with it:
 - **Size.** A daily stream over thirty years is ~11,000 flows. Per stream. The
   ledger is bounded by occurrence count, not period count, and a results file
   that today is period-shaped becomes occurrence-shaped. Whether it is always
-  emitted, emitted on request, or emitted at a summarised grain is a real
+  emitted, emitted on request, or emitted at a summarized grain is a real
   decision, not a detail.
 - **What `series` becomes.** It stays exactly as it is — one value per stream per
   grid period — and is now *derived* from the ledger rather than accumulated
@@ -230,7 +230,7 @@ using `time.t` that are grid-oriented, and they should stay that way.
 
 **`time.date` needs its own decision.** It is currently the accrual *period's*
 start date, so under `on day 15` an expression sees the 1st. Making it the
-flow's own date is more honest and is a real behaviour change for day-rule
+flow's own date is more honest and is a real behavior change for day-rule
 schedules that exist today.
 
 ## 7. One thing that must move with it
@@ -260,7 +260,7 @@ of them than "occurrences are indistinguishable" suggests.
   the period falls in, which the expression environment does not expose"*. A
   dated flow knows its own date, hence its year. Depends on the `time.date`
   decision in §6.
-- **2.2** Actual-basis pool amortisation. The remaining half needs a per-period
+- **2.2** Actual-basis pool amortization. The remaining half needs a per-period
   divisor; with dated occurrences the accrual interval is a property of the flow
   rather than of the grid period it landed in.
 - **7.8** a stream cannot be non-cash. If a flow carries a classification, a
@@ -309,7 +309,7 @@ decision.
 - **`git diff gold/` must be empty.** Every model that exists today has a stream
   cadence at or coarser than the grid, which is exactly the case where the
   substitutions in §2 are harmless. If a golden moves, the restructure changed
-  behaviour it should not have.
+  behavior it should not have.
 - **The billing substitution is the one to probe.** Construct a coarser-than-grid
   stream with `net <n>` — a quarterly accrual on a monthly grid — and confirm the
   billing date is the quarter's close both before and after.

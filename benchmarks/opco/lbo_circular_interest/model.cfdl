@@ -27,7 +27,7 @@
 //
 // K(t) is the interest that does NOT depend on the swept balance — the
 // commitment fee on the undrawn revolver, fixed-rate senior notes, the PIK
-// subordinated coupon, amortised financing fees, less interest earned on the
+// subordinated coupon, amortized financing fees, less interest earned on the
 // minimum cash balance. All of it is known before B(t) is, which is exactly
 // what makes collecting B(t) legitimate.
 //
@@ -64,7 +64,7 @@ curve ebit linear {
   2020-01: 92.1526158
 }
 
-// Depreciation and amortisation, and capital expenditure. Equal in every
+// Depreciation and amortization, and capital expenditure. Equal in every
 // projected year — both run at 5.0% of sales — so they cancel out of free cash
 // flow exactly. Carried as separate lines anyway: they cancel by coincidence
 // of assumption, not by construction, and netting them would hide that.
@@ -175,7 +175,7 @@ stream opco.interest.undrawn_revolver on entity asset.target outflow currency US
 }
 
 // Levered free cash flow, which in this structure is exactly the fall in the
-// term loan balance: all of it sweeps, mandatory amortisation included.
+// term loan balance: all of it sweeps, mandatory amortization included.
 stream opco.debt.repayment on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
   category financing.debt_principal

@@ -7,7 +7,7 @@ source: benchmarks/credit/fnma_remic_2019_2_g3_psa000
 
 # Credit: Fannie Mae REMIC at 0% PSA
 
-Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortising on schedule for thirty years.
+Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortizing on schedule for thirty years.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-No prepayments at all — and not the deal's own loans. For this column the supplement swaps the collateral for its stated alternative: new loans with 360-month original and remaining terms at 7.50%, so the pool amortises on pure schedule for thirty years and the strip to the 5.00% pass-through is 2.50% rather than 0.451%. The class takes until January 2049 to retire, and the table publishes a value in every one of the thirty years.
+No prepayments at all — and not the deal's own loans. For this column the supplement swaps the collateral for its stated alternative: new loans with 360-month original and remaining terms at 7.50%, so the pool amortizes on pure schedule for thirty years and the strip to the 5.00% pass-through is 2.50% rather than 0.451%. The class takes until January 2049 to retire, and the table publishes a value in every one of the thirty years.
 
 The deal is Security Group 3 of Fannie Mae REMIC Trust 2019-2: a $148,372,434
 pass-through with the coupon stripped between a principal class and a notional

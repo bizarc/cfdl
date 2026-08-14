@@ -576,7 +576,7 @@ const benchmarkTitles = {
   "credit/fnma_remic_2019_2_g3_psa1000": "Credit: Fannie Mae REMIC at 1000% PSA",
   "credit/io_bullet_loan": "Credit: IO/bullet bridge loan",
   "credit/level_pay_pool": "Credit: level-pay auto pool",
-  "credit/mbs_pool_by_loan": "Credit: a mortgage pool modelled loan by loan",
+  "credit/mbs_pool_by_loan": "Credit: a mortgage pool modeled loan by loan",
   "credit/mbs_pool_conventions": "Credit: mortgage pool conventions",
   "credit/mbs_pool_ramped": "Credit: mortgage pool on a prepayment ramp",
   "energy/crest_solar_cost_based": "Energy: cost-based solar feed-in tariff",

@@ -29,7 +29,7 @@ Three groups, eight classes.
 Groups 1 and 2 are **Structured Collateral** — their assets are seventeen REMIC
 and RCR certificates from Fannie Mae deals issued 2002–2006, listed in Exhibit A
 of the supplement. Group 3 is backed directly by mortgage-backed securities and
-is the group modelled here.
+is the group modeled here.
 
 ## Group 3
 

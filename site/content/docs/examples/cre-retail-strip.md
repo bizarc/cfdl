@@ -7,7 +7,7 @@ source: benchmarks/cre/retail_strip
 
 # CRE: retail strip with expense stops
 
-A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold.
+A retail strip center with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -15,17 +15,17 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-A retail strip centre held for ten years. An anchor tenant pays base rent plus
+A retail strip center held for ten years. An anchor tenant pays base rent plus
 percentage rent above a stated breakpoint; inline shops sit on net leases with
 staggered expiries. Operating expense recoveries run off a base-year stop that is
-grossed up to 95% occupancy, so the landlord recovers as though the centre were
-nearly full even when it is not. The centre is sold on forward net operating
+grossed up to 95% occupancy, so the landlord recovers as though the center were
+nearly full even when it is not. The center is sold on forward net operating
 income.
 
 ## The reference
 
-Retail centre valuation conventions — base-year gross-ups and percentage rent
-as practised in institutional retail underwriting.
+Retail center valuation conventions — base-year gross-ups and percentage rent
+as practiced in institutional retail underwriting.
 
 **Not redistributable.** The source cannot be published, so the reference is an
 independent recreation of its conventions, built separately from the model and
@@ -41,7 +41,7 @@ compared against it period by period.
 | Conventions | a base-year expense stop with a 95% gross-up, percentage rent over a breakpoint, net leases, staggered rollover |
 
 A gross-up implemented as a flat recovery understates income in every year the
-centre sits below the gross-up threshold.
+center sits below the gross-up threshold.
 
 ## The result
 

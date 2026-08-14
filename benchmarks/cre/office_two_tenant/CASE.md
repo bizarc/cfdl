@@ -4,14 +4,14 @@ An institutional two-tenant office building held for ten years. Tenant A takes a
 five-year lease with three months free and 3% anniversary escalations; Tenant B
 takes seven years from mid-year one at 2.5%. Both recover operating expenses
 above their own expense stop, at different pro-rata shares. Tenant A's expiry is
-modelled as a probability-weighted rollover — 70% renewal at one rent, otherwise
+modeled as a probability-weighted rollover — 70% renewal at one rent, otherwise
 a new tenant at market after three months of downtime, with different tenant
 improvement and leasing commission costs on each branch. A permanent mortgage
 runs underneath, and the building is sold on forward net operating income.
 
 ## The reference
 
-Institutional lease-by-lease office DCF conventions, as practised by the
+Institutional lease-by-lease office DCF conventions, as practiced by the
 commercial valuation software this kind of model is built in.
 
 **Not redistributable.** The source cannot be published, so the reference is an

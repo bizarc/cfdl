@@ -439,7 +439,7 @@ OpCo pack codes:
   meaning anything.
 - `E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE` — the terminal-period flow the
   perpetuity is struck on.
-- `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` — the terminal capitalisation
+- `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` — the terminal capitalization
   rate, stated on the contract rather than taken from the run's discount rate.
 - `E7028_OPCO_PERPETUITY_MISSING_GROWTH` — state 0 for a flat perpetuity.
 - `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` — a fraction between 0 and 1.
@@ -529,7 +529,7 @@ Rules:
 
   An earlier revision of this page said messages "may be asserted via substring
   match to allow minor wording changes". No runner has ever done that. The
-  exact comparison is the better behaviour and is kept deliberately: a
+  exact comparison is the better behavior and is kept deliberately: a
   diagnostic's wording is part of its contract with the reader, and a silent
   drift in what the compiler says is exactly as bad as a silent drift in what
   it computes. Making a reword show up in a diff is the point, not friction.

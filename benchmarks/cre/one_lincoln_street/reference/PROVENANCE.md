@@ -11,7 +11,7 @@
 | Size |   203209 bytes |
 | SHA-256 | `26a1178e700b36547615d68bbf671c08c3ea37fbfc53b53fd82aaaa51bf920cf` |
 
-## Licence
+## License
 
 MIT OpenCourseWare publishes under **Creative Commons BY-NC-SA 4.0**, which
 permits redistribution with attribution for non-commercial use. The PDF is

@@ -7,7 +7,7 @@ PPIAF *Toolkit for Public-Private Partnerships in Roads and Highways*, Module 6
 
 - Toolkit landing page:
   https://ppp.worldbank.org/library/toolkit-public-private-partnerships-roads-and-highways
-- Workbook (as archived; the live PPIAF paths have since been reorganised):
+- Workbook (as archived; the live PPIAF paths have since been reorganized):
   `www.ppiaf.org/sites/ppiaf.org/files/documents/toolkits/highwaystoolkit/6/financial_models/Numerical_model_Operis_v3.xls`
 - User guide:
   `www.ppiaf.org/sites/ppiaf.org/files/documents/toolkits/highwaystoolkit/6/pdf-version/numerical_model.pdf`
@@ -23,11 +23,11 @@ the reference; they are carried into `expected.csv` and `expected_metrics.json`
 as numbers.
 
 The user guide supplies the assumptions and the stated formulas — the ADSCR
-subsidy rule, the CAFDS definition, the mid-year capitalisation of construction
+subsidy rule, the CAFDS definition, the mid-year capitalization of construction
 interest, the regressive variable-cost scale and the tax-in-arrears rule. The
 model here is built from those, not by transcribing spreadsheet formulas.
 
-## Licence
+## License
 
 **Do not vendor.** Both files are freely downloadable and freely citable, and
 the toolkit is a World Bank / PPIAF publication, but neither the workbook nor

@@ -33,7 +33,7 @@ run monte_carlo trials 20000 seed 42
 Every Monte Carlo run declares an explicit seed. Each assumption gets its own
 deterministic draw stream, so **adding a new assumption never reshuffles
 another assumption's draws** — results are reproducible byte-for-byte across
-machines and runs. The run config can override or add distributions without
+machines and runs. The run configuration can override or add distributions without
 touching the model.
 
 ## Scenario-consistent branching

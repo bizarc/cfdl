@@ -15,7 +15,7 @@ A regulated utility in steady state has one flat cost of capital. The valuation
 nothing to be dishonest about. That is what makes this the case that closes the
 gap — not a new engine capability.
 
-Same author and same licence as the FCFF model already committed, so the
+Same author and same license as the FCFF model already committed, so the
 workbook sits in `reference/` and a reader can open it.
 
 ## What is asserted

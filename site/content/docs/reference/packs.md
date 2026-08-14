@@ -38,7 +38,7 @@ missing-term error at compile time. It is never silently zero.
 | Pack | For |
 |---|---|
 | [`cre`](/docs/packs/cre) | Commercial real estate — leases, rollover, operating expenses, permanent debt, exit |
-| [`credit`](/docs/packs/credit) | Loan pools and structured credit — amortisation, prepayment, defaults, recoveries |
+| [`credit`](/docs/packs/credit) | Loan pools and structured credit — amortization, prepayment, defaults, recoveries |
 | [`energy`](/docs/packs/energy) | Generation projects — PPAs, merchant revenue, O&M, tax credits, project debt |
 | [`opco`](/docs/packs/opco) | Operating companies — revenue and cost lines, working capital, leverage, exit |
 

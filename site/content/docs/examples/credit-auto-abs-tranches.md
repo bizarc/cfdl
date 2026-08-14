@@ -29,7 +29,7 @@ Exhibit 99.4 to the Form 8-K of Ally Auto Receivables Trust 2017-3, filed
 distribution date, the percent of that class still outstanding.
 
 `auto_abs_wal` reconciles the collateral in the same exhibit — 43 sub-pools
-amortising to an aggregate the issuer states to the cent — and stops there,
+amortizing to an aggregate the issuer states to the cent — and stops there,
 recording that the per-class columns need a sequential-pay waterfall. This case
 is that axis, on the same 43 sub-pools unchanged.
 
@@ -94,7 +94,7 @@ The exhibit's pool table is exact where it can be — balances to the cent,
 integer remaining terms — but prints each pool's APR to three decimals, while
 the issuer ran on unrounded receivables data. Half of that last printed digit
 (±0.0005%) is enough to move tail cumulative principal by up to $248,
-concentrated in the seven large 51–53-month pools still amortising in 2022;
+concentrated in the seven large 51–53-month pools still amortizing in 2022;
 the $74 the cells prove fits inside it several times over. The signature
 agrees: the excess is small, one-signed, and appears only in the deal's final
 four months, in the last two classes to pay — accumulated input drift
@@ -109,8 +109,8 @@ half-digit would fit the benchmark to its own reference, and the model already
 sits at the information floor of the published data.
 
 The exhibit's tables assume the receivables prepay at a constant ABS rate "with
-no defaults, losses or repurchases". With no losses, overcollateralisation never
-has to build and no trigger can trip, so neither is modelled here. Interest is
+no defaults, losses or repurchases". With no losses, overcollateralization never
+has to build and no trigger can trip, so neither is modeled here. Interest is
 collected and paid but never retires a note, and the published tables are about
 principal, so it does not appear either.
 
@@ -131,7 +131,7 @@ time calendar monthly from 2018-10 for 64
 
 // THE NOTE CLASSES OF AN AUTO ABS, against the issuer's published grid.
 //
-// `auto_abs_wal` reconciles this deal's COLLATERAL — 43 sub-pools amortising
+// `auto_abs_wal` reconciles this deal's COLLATERAL — 43 sub-pools amortizing
 // to an aggregate the issuer states to the cent. It stops there, and says so:
 // the per-class columns need a sequential-pay waterfall, which did not exist
 // when it was written. This case is that third axis.
@@ -152,7 +152,7 @@ time calendar monthly from 2018-10 for 64
 //
 // NO LOSSES ARE ASSUMED, by the exhibit's own terms — it states the receivables
 // prepay at a constant ABS rate "with no defaults, losses or repurchases". So
-// overcollateralisation never has to build and no trigger can trip. This case
+// overcollateralization never has to build and no trigger can trip. This case
 // checks sequential pay; the loss-driven machinery belongs to a deal that can
 // lose money.
 

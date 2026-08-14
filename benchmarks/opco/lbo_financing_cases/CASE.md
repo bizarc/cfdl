@@ -15,7 +15,7 @@ changes:
 | Low leverage | 3.0x @ L+2.75% | 1.5x @ 6.0% | — | 4.4x |
 
 The subordinated notes pay in kind for three years. Every dollar of free cash
-flow after a 1% mandatory amortisation sweeps against the term loan, and
+flow after a 1% mandatory amortization sweeps against the term loan, and
 interest accrues on the average balance — so the balance depends on the interest
 that depends on the balance.
 
@@ -27,7 +27,7 @@ switch, and publishes a five-year multiple and return for each of the three
 structures across a grid of entry and exit multiples.
 
 **Not redistributable.** The workbook carries an "All Rights Reserved" notice
-and no open licence, so it is neither vendored nor wired into the test suite. It
+and no open license, so it is neither vendored nor wired into the test suite. It
 was downloaded once outside the repository and only its output numbers were
 carried across.
 
@@ -43,7 +43,7 @@ two structures it publishes the returns and nothing in between.
 | Language features | **run-config scenarios**, `cfg.*` parameters, declared state with `init`/`next`, curves |
 | Conventions | average-balance interest, payment-in-kind accrual, a 100% cash sweep, tranche sizing to a debt increment, a sponsor cheque struck as the plug |
 
-The financing case is the **run config**, not the model: the deterministic run is
+The financing case is the **run configuration**, not the model: the deterministic run is
 Base and two scenarios override the tranche sizes, coupons and the sponsor's
 cheque. That is what the source's own case switch does.
 

@@ -2,7 +2,7 @@
 
 ## Context
 
-The goal is a deep, course-grade authoring guide for CFDL — usable as the basis of an MBA class or professional training program. It is a **separate property from cfdl.dev** but shares the logo and design system. The existing site's "Learn the language" track is a *tour* (15–25 lines per construct); this guide is the *course*: modelling judgment, construct interaction, one deal carried end to end, finance semantics, and failure-mode pedagogy.
+The goal is a deep, course-grade authoring guide for CFDL — usable as the basis of an MBA class or professional training program. It is a **separate property from cfdl.dev** but shares the logo and design system. The existing site's "Learn the language" track is a *tour* (15–25 lines per construct); this guide is the *course*: modeling judgment, construct interaction, one deal carried end to end, finance semantics, and failure-mode pedagogy.
 
 Locked decisions:
 - **Audience:** dual-tracked — a core track for finance professionals new to code, plus optional deep-dive chapters for technical readers.
@@ -33,7 +33,7 @@ Structure: **5 parts, ~24 chapters + 2 appendices.** Each chapter = concept → 
 ### Part II — The core language (packless modeling)
 4. **Streams and schedules.** Direction/sign discipline, currency; the full schedule sub-language: cadences, `on day`/`eom`, `due` (annuity due vs ordinary — the finance meaning), phase-driven schedules, business-day conventions and calendars, `except`/`also`, `net N days` payment terms vs accrual.
 5. **Expressions.** The environment (`model/time/entity/cfg/obs/inputs/state/prev`), decimal-first arithmetic, the TVM builtins (`pv/fv/pmt/ipmt/ppmt/nper/rate`) mapped to their Excel equivalents, date functions, `if`.
-6. **Assumptions and inputs.** `assume x = …`, cfg/obs, what belongs in the model vs the run config; scenario thinking.
+6. **Assumptions and inputs.** `assume x = …`, cfg/obs, what belongs in the model vs the run configuration; scenario thinking.
 7. **Curves.** Rate curves, price decks, escalation paths; step vs linear interpolation; `curve_value`; clamping behavior; when a curve vs an assumption.
 8. **State and recurrence.** `init`/`next`, `prev`, why same-period cycles are impossible by construction; balances, rounded-escalation, waterfall-adjacent accumulators. The canonical "match a published escalating figure" case.
 9. **Growth, ramps, and guards.** `pow` compounding, `clamp` ramps, `active when`, phase gating — the idiom kit for real models.

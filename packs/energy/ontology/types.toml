@@ -63,7 +63,7 @@ required = false
 type_id = "Energy.Asset.Portfolio"
 family = "asset"
 class = "real"
-description = "A grouping of facilities modelled as one. Use only when the grain is the portfolio; a facility needs no parent to exist."
+description = "A grouping of facilities modeled as one. Use only when the grain is the portfolio; a facility needs no parent to exist."
 
 # A tax-equity or sponsor interest is a claim on the project, not the plant
 # itself — so it is financial even though what it claims is real.

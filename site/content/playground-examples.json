@@ -212,7 +212,7 @@
     "title": "CRE: multi-file deal",
     "category": "Real deals",
     "order": 11,
-    "summary": "A realistic deal organised across four files.",
+    "summary": "A realistic deal organized across four files.",
     "tryThis": "Follow a lease from contracts.cfdl through to the cash-flow table.",
     "docsHref": "/docs/examples/cre_multi_file",
     "source": "examples/cre_multi_file",

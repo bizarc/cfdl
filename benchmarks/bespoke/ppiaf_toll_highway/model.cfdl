@@ -76,7 +76,7 @@ assume var_band3_rate      = 0.3
 assume var_band4_rate      = 0.15
 
 // --- financing ------------------------------------------------------------
-assume equity_pct          = 0.10      // of construction cost, excluding capitalised interest
+assume equity_pct          = 0.10      // of construction cost, excluding capitalized interest
 assume fee_pct             = 0.015     // arrangement fees, % of the debt requirement
 assume rate_t1             = 0.04
 assume rate_t2             = 0.045
@@ -102,7 +102,7 @@ entity asset concession : Asset.Real
 //   tranche 2    15 yrs   6 yrs     2015 (t=7)          9      4.5%
 //   tranche 3    10 yrs   6 yrs     2015 (t=7)          4      5.0%
 //
-// During construction the tranches DRAW and interest CAPITALISES: the year's
+// During construction the tranches DRAW and interest CAPITALIZES: the year's
 // draw is taken mid-year, so it accrues half a year of interest while the
 // opening balance accrues a full one. After construction interest is paid in
 // cash, and once the grace period ends each tranche repays on a constant
@@ -193,7 +193,7 @@ entity asset tranche3 : Asset.Financial {
 // figures the tax charge is computed from.
 //
 // `capital` accumulates every use of funds during construction — works,
-// concessionaire costs, fees, and the interest capitalised into each tranche —
+// concessionaire costs, fees, and the interest capitalized into each tranche —
 // and then holds. It is the depreciation base, and because it stops moving at
 // t=4 the operating years can read it through `prev` without a lag.
 //
@@ -329,7 +329,7 @@ stream infra.funding.equity on entity asset.concession inflow currency USD {
              * pow(1.0 + inputs.inflation, time.t)
 }
 
-// Each tranche's cash drawdown. Capitalised interest is not drawn cash — it is
+// Each tranche's cash drawdown. Capitalized interest is not drawn cash — it is
 // rolled into the balance — so it is visible in the balances, not here.
 stream infra.funding.draw_t1 on entity asset.concession inflow currency USD {
   schedule every year from 2009-01 to 2012-01
@@ -444,7 +444,7 @@ stream infra.tax.corporate on entity asset.concession outflow currency USD {
 //
 // This is the line the whole case exists for. The authority pays whatever it
 // takes to hold cover at 1.30x, and nothing once the project covers itself —
-// which is why 2013 is unsubsidised at 1.77x, and why the payments stop dead
+// which is why 2013 is unsubsidized at 1.77x, and why the payments stop dead
 // after 2028 when the last tranche is repaid and debt service goes to zero.
 // ---------------------------------------------------------------------------
 

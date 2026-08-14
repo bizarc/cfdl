@@ -6,6 +6,12 @@ Domain packs provide *additions and overrides* on top of a single core language:
 
 Core principle: **Packs may extend validation and provide defaults/templates, but MUST NOT change core language semantics.**
 
+## Normative keywords
+
+The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **MAY** and **OPTIONAL** in this document are to be interpreted as described in BCP 14 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119), [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and only when, they appear in all capitals.
+
+This document is the contract a pack author writes against. That is the reason the distinction is stated rather than assumed: a pack author has to be able to tell a requirement from advice without inferring it from the surrounding sentence.
+
 ---
 
 ## 1) Overview
@@ -137,8 +143,8 @@ Rules:
   (`E5014_RULE_CADENCE_UNSUPPORTED`), which is what lets a pack carry neutral
   and month-locked rules side by side mid-migration.
 - Every entrypoint is optional; a pack supplies only what it defines. The
-  recognised keys are `aliases`, `templates`, `lowering`, `metrics` and
-  `validations`, each a path relative to the pack directory. An unrecognised
+  recognized keys are `aliases`, `templates`, `lowering`, `metrics` and
+  `validations`, each a path relative to the pack directory. An unrecognized
   key is accepted and ignored, so check spelling: `packs/cre/pack.toml` once
   declared `defaults = "defaults.toml"`, which the loader has no field for, and
   the file sat unread.
@@ -296,7 +302,7 @@ schedule_every = "quarter"
 ```
 
 Values are the schedule intervals: `day`, `week`, `month`, `quarter`, `year`.
-An unrecognised value is `E5012_RULE_INVALID_INTERVAL`. An interval finer than
+An unrecognized value is `E5012_RULE_INVALID_INTERVAL`. An interval finer than
 the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — occurrences
 inside one period share that period's environment and cannot be told apart, so
 a pack cannot express what a model may not.
@@ -831,7 +837,7 @@ Dividing by `(360 / days)` is multiplying by `days / 360`, so a 31-day January
 accrues more than a 28-day February — which is the point of an Actual
 convention. On a daily grid it collapses to `rate / 360`. The default expands
 to exactly the same text as `{{model.periods_per_year}}`, so a rule can adopt
-the placeholder without changing any existing model. An unrecognised value is
+the placeholder without changing any existing model. An unrecognized value is
 `E5019_UNKNOWN_DAY_COUNT` rather than a silent fallback: act/360 against
 act/365 is about 1.4% of interest.
 
@@ -840,11 +846,11 @@ index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
 `om_year`), which spread by `{{model.periods_per_year}}` regardless of day
 count.
 
-**Amortisation is a second, separate basis.** An amortising loan strikes its
+**Amortization is a second, separate basis.** An amortizing loan strikes its
 level payment once, from a schedule the parties agree, and then accrues interest
 period by period on whatever the accrual convention says; principal is the plug.
 Those are two different divisors, and collapsing them makes the payment itself
-move with month length — which no amortising instrument does.
+move with month length — which no amortizing instrument does.
 `{{model.amortization_divisor}}` reads an `amortization_day_count` term and
 expands by the same table as `{{model.accrual_divisor}}`, **defaulting to
 `day_count`** when absent. So:
@@ -854,7 +860,7 @@ expands by the same table as `{{model.accrual_divisor}}`, **defaulting to
 - `day_count = "act/360"` with `amortization_day_count = "30/360"` is the
   common US commercial case — a fixed payment, interest varying by month length.
 
-An amortising rule should therefore strike the annuity factor from
+An amortizing rule should therefore strike the annuity factor from
 `{{model.amortization_divisor}}`, accrue interest from
 `{{model.accrual_divisor}}`, and make scheduled principal the difference.
 `amortization_day_count` is validated by the same `E5019_UNKNOWN_DAY_COUNT`.

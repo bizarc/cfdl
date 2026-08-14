@@ -22,7 +22,7 @@ recreated independently of the model and compared period by period.
 | Pack | `opco` |
 | Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.working_capital_policy`, `opco.term_debt`, `opco.cash_taxes`, `opco.acquisition`, `opco.exit_ebitda` |
 | Language features | pack contracts across an entry, a hold and an exit |
-| Conventions | entry at a multiple, days-based working capital, debt amortisation from operating cash flow, an exit on trailing EBITDA |
+| Conventions | entry at a multiple, days-based working capital, debt amortization from operating cash flow, an exit on trailing EBITDA |
 
 The widest span of the opco pack's contract surface: entry, hold and exit
 rather than one mechanic.

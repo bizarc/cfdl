@@ -203,7 +203,7 @@ results.plot.cumulative()
 
 ## Metrics
 
-Core metrics (NPV/IRR/MOIC/...) plus the pack's domain metrics, with their source labelled.
+Core metrics (NPV/IRR/MOIC/...) plus the pack's domain metrics, with their source labeled.
 
 ```python
 results.metrics_frame()

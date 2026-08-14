@@ -18,7 +18,7 @@ Commercial Real Estate (CRE) examples show construction → lease-up → stabili
 | [cre_multi_file](/docs/examples/cre_multi_file) | Full lifecycle split across `time.cfdl`, `structure.cfdl`, `contracts.cfdl`. |
 | [cre_development_with_financing](/docs/examples/cre_development_with_financing) | Full lifecycle plus **construction** and **permanent** loan streams (time-bounded; no events). |
 
-## Run configs
+## Run configurations
 
 Each example directory includes a `run.json` (and/or `run.base.json`, `run.stress.json`) for deterministic runs. Example:
 

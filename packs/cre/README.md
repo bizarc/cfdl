@@ -64,7 +64,7 @@ the drawn balance through the build. Emits three streams — the equity draw
 
 | term | | |
 |---|---|---|
-| `draw_curve` | required | the NAME of a declared `curve` giving required funding as an ANNUALISED rate |
+| `draw_curve` | required | the NAME of a declared `curve` giving required funding as an ANNUALIZED rate |
 | `equity_commitment` | required | equity funds up to this, then the facility takes over |
 | `rate` | required | nominal annual |
 | `draw_accrual_fraction` | 0.5 | where in the period a draw lands: 0.5 drawn ratably, 0 at the end, 1 at the start |
@@ -77,13 +77,13 @@ curve's SHAPE (a steepness parameter, a flat-or-S-curve enum) states an
 implementation choice as though the parties had agreed it. The contract names
 the curve; the model declares it.
 
-**State the curve ANNUALISED.** Every read divides by the rule's
+**State the curve ANNUALIZED.** Every read divides by the rule's
 periods-per-year, the same convention `rent_year` and `opex_year` follow. This
 is what keeps the contract cadence-neutral, and it is not cosmetic: a `curve` is
 a LEVEL, so a step curve returns its last point on every date whether or not a
 point was declared there. A schedule stated as per-period TOTALS and then run on
 a finer calendar would repeat each figure and fund several times the money, with
-no diagnostic. Annualised, one sparse point — `2026-01: 4000` — funds 4,000 a
+no diagnostic. Annualized, one sparse point — `2026-01: 4000` — funds 4,000 a
 year on a quarterly model and on a monthly one alike, and re-graining spreads a
 quarter's funding across its months, which is the only defensible reading when
 nothing finer was stated.
@@ -95,13 +95,13 @@ by arithmetic rather than by a rule. The published One Lincoln Street case is
 shipped twice, once built from primitives and once through this contract, and
 the two agree in all 48 cells with zero difference.
 
-**Interest is paid, not capitalised.** A capitalising facility compounds and is
+**Interest is paid, not capitalized.** A capitalizing facility compounds and is
 a different recurrence — affine in the closing balance, so it collects rather
-than needing a solver — and is not modelled here.
+than needing a solver — and is not modeled here.
 
 ### `cre.permanent_debt`
 
-A commercial mortgage on a stabilised property. Emits one stream,
+A commercial mortgage on a stabilized property. Emits one stream,
 `loan.permanent_debt_service`, which is the exact name `domain.cre.debt_service`
 selects — and therefore what `domain.cre.dscr` divides by.
 
@@ -109,22 +109,22 @@ selects — and therefore what `domain.cre.dscr` divides by.
 |---|---|---|
 | `principal` | loan amount | *required* |
 | `rate` | nominal annual rate | *required* |
-| `amort_months` | amortisation term — strikes the payment | *required* |
-| `io_months` | interest-only months before amortisation begins | `0` |
-| `balloon_at_maturity` | `1` pays the unamortised balance as debt service at `term_end` | `0` |
+| `amort_months` | amortization term — strikes the payment | *required* |
+| `io_months` | interest-only months before amortization begins | `0` |
+| `balloon_at_maturity` | `1` pays the unamortized balance as debt service at `term_end` | `0` |
 | `payment_frequency` | `day`/`week`/`month`/`quarter`/`year` | the model calendar |
 | `day_count`, `amortization_day_count` | interest accrual and payment bases | `30/360` |
 
-**`amort_months` is normally longer than the term.** A 30-year amortisation on a
+**`amort_months` is normally longer than the term.** A 30-year amortization on a
 10-year loan is the standard commercial structure, and it is why a balloon
 exists at all.
 
 **The balloon defaults off.** Coverage is measured on *periodic* debt service, so
-folding an unamortised balance into the final period would make that period's
+folding an unamortized balance into the final period would make that period's
 DSCR meaningless; the standard pro forma repays it out of the sale. Turn it on
 when the payoff genuinely belongs in the debt service line.
 
-**Not modelled:** sizing to a target coverage ratio (a solve), refinance (needs
+**Not modeled:** sizing to a target coverage ratio (a solve), refinance (needs
 the events layer), and mortgage insurance — MIP is not a payment on the debt.
 
 ## Expected terms (authoring contract)
@@ -165,9 +165,9 @@ CRE contracts are additionally checked at compile time by pack validations
 (`E6xxx_*`) covering missing required terms, term ranges outside the model
 timeline, and out-of-range cap rates.
 
-## Scenario testing (run config overrides)
+## Scenario testing (run configuration overrides)
 
-The engine supports deterministic scenario overrides through run config files.
+The engine supports deterministic scenario overrides through run configuration files.
 CRE fixtures and examples include:
 
 - `run.base.json`
@@ -197,7 +197,7 @@ Determinism guarantees for this pack:
 - deterministic file-based pack loading
 - deterministic lowering rule application order
 - deterministic IDs from compiler seed + stable keys
-- deterministic results under identical IR + run config inputs
+- deterministic results under identical IR + run configuration inputs
 
 Owner binding notes:
 
@@ -241,7 +241,7 @@ time.date)`), not model years.
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
-| `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALISED), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
+| `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALIZED), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the

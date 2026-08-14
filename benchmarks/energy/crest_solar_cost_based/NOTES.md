@@ -20,12 +20,12 @@ clear a target return, which is what a feed-in tariff or a cost-based incentive
 has to be set to.
 
 An independent contributor has **ported the solar variant to Python**. The port
-is a separate work by a separate author, and it materialises things the
+is a separate work by a separate author, and it materializes things the
 spreadsheet buries in formulas — most visibly, it carries the MACRS half-year
 convention as its own data file rather than as a branch inside a cell.
 
 **Neither is vendored and neither is in CI.** The workbook carries no stated
-licence, and the port declares none at all, which means default copyright. The
+license, and the port declares none at all, which means default copyright. The
 port was cloned outside this repo, run once, and only its **output numbers**
 were carried across. That is the same handling `utility_pv_singleowner` gives
 the laboratory's own tool, and the reason there is no `reference_gen.py` here:
@@ -42,7 +42,7 @@ on import-era numpy with `AttributeError: module 'numpy' has no attribute
 The fix is the smallest one available: install `numpy-financial` and rebind the
 four names onto the numpy module before importing the port. `numpy-financial`
 **is** the same implementation, relocated — so this restores the port's original
-behaviour rather than substituting for it. The port's own files stay
+behavior rather than substituting for it. The port's own files stay
 byte-identical to upstream.
 
 - port commit `9c915ed57bea7cbedd70fa15a044d467f0042ddb` (2 August 2019)

@@ -7,7 +7,7 @@ source: benchmarks/credit/level_pay_pool
 
 # Credit: level-pay auto pool
 
-A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal.
+A level-payment amortizing loan pool — the constant instalment that splits into shrinking interest and growing principal.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -24,7 +24,7 @@ servicing strip and a 1% prepayment penalty.
 ## The reference
 
 Level-payment pool conventions as defined by the standard market formulas for
-amortising collateral — the same definitional source the mortgage cases use.
+amortizing collateral — the same definitional source the mortgage cases use.
 
 **Not redistributable.** The source cannot be published, so its conventions are
 recreated independently of the model and compared month by month.
@@ -39,7 +39,7 @@ comparison is against a month-by-month recursion of the same convention.
 | Pack | `credit` |
 | Contract types | `credit.pool_level_pay`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
-| Conventions | level-pay amortisation, CPR, CDR, loss severity, recovery lag, a servicing strip, a prepayment penalty, purchase at a discount |
+| Conventions | level-pay amortization, CPR, CDR, loss severity, recovery lag, a servicing strip, a prepayment penalty, purchase at a discount |
 
 ## The result
 

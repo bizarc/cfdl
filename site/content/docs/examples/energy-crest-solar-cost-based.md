@@ -35,7 +35,7 @@ run; the comparison is three-way.
 It publishes a complete annual cash flow, so every line is checkable period by
 period.
 
-**Not redistributable.** The spreadsheet states no licence and the port declares
+**Not redistributable.** The spreadsheet states no license and the port declares
 none, which means default copyright. Neither is vendored or wired into the test
 suite: the port was cloned outside the repository, run once, and only its output
 numbers carried across.
@@ -47,7 +47,7 @@ numbers carried across.
 | Pack | `energy` |
 | Contract types | `energy.ppa`, `energy.om` (four instances), `energy.debt_service` |
 | Language features | contracts with per-instance suffixes, one native stream, term units |
-| Conventions | production degradation, three escalation rates including a **negative** one, level-pay amortisation |
+| Conventions | production degradation, three escalation rates including a **negative** one, level-pay amortization |
 
 The four operating expense contracts are the same type at different escalators,
 which is why they are asserted as separate lines rather than as one total.

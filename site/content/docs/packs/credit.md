@@ -11,7 +11,7 @@ Loan pools and structured credit: what a pool collects, and what reaches a note 
 
 ## What it models
 
-A pool amortising to schedule while prepaying and defaulting against market-standard curves — CPR, SMM, PSA and SDA — with recoveries arriving on a lag and a servicing fee taken off the top. Fixed and floating coupons, the latter reset off a declared curve.
+A pool amortizing to schedule while prepaying and defaulting against market-standard curves — CPR, SMM, PSA and SDA — with recoveries arriving on a lag and a servicing fee taken off the top. Fixed and floating coupons, the latter reset off a declared curve.
 
 ## Contracts
 

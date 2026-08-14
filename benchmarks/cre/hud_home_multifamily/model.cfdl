@@ -74,7 +74,7 @@ assume opex_taxes_ins     = 14863.00
 assume opex_trend         = 0.025
 assume reserve_y1         = 21013.00    // replacement reserve deposit
 // The first mortgage, from the workbook's First Mortgage Sizing tab. Its
-// published payment is labelled "Calculated Monthly P+I+MIP Payment" — the
+// published payment is labeled "Calculated Monthly P+I+MIP Payment" — the
 // three are one line on the pro forma, and only two of them are debt service.
 assume first_mortgage     = 150000.00   // sizing tab, calculated loan amount
 assume mip_rate           = 0.0045      // sizing tab, 0.450% of original principal
@@ -182,7 +182,7 @@ stream cre.ops.expense on entity asset.home_project outflow currency USD {
 // ---------------------------------------------------------------------------
 
 // The pro forma carries ONE debt line and the workbook defines it as P+I+MIP,
-// so it was modelled as one number and the two published components could not
+// so it was modeled as one number and the two published components could not
 // be checked separately. Mortgage insurance is not a payment on the debt —
 // and coverage here is measured against the whole line, which is
 // what `financing.*` folds to.

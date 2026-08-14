@@ -335,14 +335,14 @@ schedule_to = ""
 # dividends, free cash flow to firm, free cash flow to equity — is deliberately
 # not the contract's business, and `discount_rate` must be the matching rate:
 # a cost of equity against a dividend, a cost of capital against FCFF. Mixing
-# them is a real modelling error the pack cannot detect.
+# them is a real modeling error the pack cannot detect.
 #
 # `discount_rate` IS A TERM, not the run's NPV rate. That is deliberate rather
 # than a limitation: a terminal cost of capital legitimately differs from the
 # near-term rate — it is the rate for a business that has reached steady state
 # — and the sources that publish these models state it explicitly, usually
 # built from their own CAPM inputs. The run's `annual_discount_rate` discounts
-# the resulting cash flow; this rate capitalises it. They are different numbers
+# the resulting cash flow; this rate capitalizes it. They are different numbers
 # doing different jobs, and E7025 guards the one that must hold: r > g.
 #
 # NO `mid`. benchmarks/opco/banker_dcf_conventions Finding 6 established that

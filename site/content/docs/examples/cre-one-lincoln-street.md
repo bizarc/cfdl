@@ -7,7 +7,7 @@ source: benchmarks/cre/one_lincoln_street
 
 # CRE: office development joint venture
 
-A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing.
+A ground-up office development drawing on a construction facility, capitalizing interest through the build, then stabilizing and refinancing.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -18,7 +18,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 A ground-up office development in Boston: a 36-storey building funded quarter by
 quarter across a 2000–2003 construction period. Equity goes in first against a
 $110,738,000 commitment; once that is exhausted the construction facility draws
-the balance, and interest capitalises into the loan through the build.
+the balance, and interest capitalizes into the loan through the build.
 
 ## The reference
 
@@ -39,7 +39,7 @@ published drivers.
 | Pack | `cre` |
 | Declared | one curve, one state, three native streams |
 | Language features | a curve read per period, declared state as a running total |
-| Conventions | equity-first funding, a facility that draws only once equity depletes, capitalised construction interest |
+| Conventions | equity-first funding, a facility that draws only once equity depletes, capitalized construction interest |
 
 The case runs on native streams and a declared state rather than a pack
 contract: `cre.construction_stub` takes a flat draw and cannot express an
@@ -48,7 +48,7 @@ equity-first waterfall that depletes mid-quarter.
 ## The result
 
 Equity contribution and construction draw reproduce **exactly to the dollar**
-across all sixteen quarters. Capitalised interest reconciles to the exhibit's
+across all sixteen quarters. Capitalized interest reconciles to the exhibit's
 stated $16,310,570 of accrued construction interest.
 
 Asserted: three stream columns quarter by quarter, plus the interest total.
@@ -71,7 +71,7 @@ exactly.
 // interest schedule, quarter by quarter across the whole 2000-2003 build.
 //
 // WHY THIS EXHIBIT RATHER THAN THE OPERATING PRO FORMA. Exhibit 5 publishes an
-// eleven-year stabilised pro forma, but the lease-level assumptions that drive
+// eleven-year stabilized pro forma, but the lease-level assumptions that drive
 // its rent, absorption and reimbursement lines are not published — so most of
 // it could only be asserted by feeding in the answers. Exhibit 7 publishes the
 // DRIVERS (a sixteen-quarter draw schedule, an 8% rate, a $110,738,000 equity
@@ -94,9 +94,9 @@ exactly.
 // to occur ratably throughout the quarter", so a quarter's own draw earns half
 // a quarter of interest.
 //
-// Interest is PAID, not capitalised — the exhibit's closing balance is opening
+// Interest is PAID, not capitalized — the exhibit's closing balance is opening
 // plus draw with no interest added, and the interest is funded from the equity
-// budget as a stated line. Modelling it as capitalised would compound it.
+// budget as a stated line. Modeling it as capitalized would compound it.
 
 version 0.1
 model "one-lincoln-street"

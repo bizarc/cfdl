@@ -40,7 +40,7 @@ B(t) = [ B(t-1) * (1 + k) - (1 - tax) * (EBIT(t) - K(t)) - C(t) ] / (1 - k)
 
 `K(t)` is the interest that does **not** depend on the swept balance — the
 commitment fee on the undrawn revolver, the fixed-rate senior notes, the PIK
-subordinated coupon, amortised financing fees, less interest earned on the
+subordinated coupon, amortized financing fees, less interest earned on the
 minimum cash balance. All of it is known before `B(t)` is, which is precisely
 what makes collecting `B(t)` legitimate. `C(t)` is the non-EBIT cash flow: D&A
 back, non-cash interest back, working capital, less capital expenditure.
@@ -119,7 +119,7 @@ that every LBO is closed-form. A deal with a live revolver needs more.
   They need the equity waterfall and a management rollover, which is a separate
   build; the debt schedule is what the circularity claim rests on.
 - **The revolver as a mechanism.** It is present as a commitment fee only,
-  because it is never drawn. Modelling a revolver that actually draws is the
+  because it is never drawn. Modeling a revolver that actually draws is the
   first thing that would break the closed form, per above.
 - **The other two financing cases.** The reference publishes Base (6.0x), High
   Leverage (7.5x) and Low Leverage (4.5x); only Base is reproduced here. The
@@ -129,8 +129,8 @@ that every LBO is closed-form. A deal with a live revolver needs more.
 ## The source
 
 A publicly downloadable seven-step LBO teaching model, free and without
-registration, published by a financial-modelling site. It carries an explicit
-"All Rights Reserved" notice and no open licence, so it is **neither vendored
+registration, published by a financial-modeling site. It carries an explicit
+"All Rights Reserved" notice and no open license, so it is **neither vendored
 nor wired into CI**: it was downloaded once outside this repo, its cached
 values read, and only those numbers carried across. The same handling
 `crest_solar_cost_based` and `utility_pv_singleowner` give their references.
@@ -139,5 +139,5 @@ The deal: $90mm LTM adjusted EBITDA acquired at 8.0x for a $720mm transaction
 value, funded with $275mm term loan B, $175mm senior notes, $100mm
 subordinated notes, a 5% management rollover and $158.9mm of sponsor equity,
 against $15mm of transaction expenses and $9.9mm of financing fees. Four-year
-hold, 35% tax rate, $5mm minimum cash, 1% mandatory term loan amortisation with
+hold, 35% tax rate, $5mm minimum cash, 1% mandatory term loan amortization with
 a 100% sweep of the remainder.

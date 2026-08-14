@@ -5734,7 +5734,7 @@
           },
           {
             "kind": "line",
-            "label": "Mandatory amortisation and sweep",
+            "label": "Mandatory amortization and sweep",
             "depth": 1,
             "display_sign": -1.0,
             "values": [

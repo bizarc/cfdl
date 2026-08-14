@@ -75,7 +75,7 @@ valid.
 ## Read it annually
 
 The CRE pack publishes a monthly statement and an annual one from the same run.
-Nothing is re-modelled: the annual view regroups the same ledger, and its
+Nothing is re-modeled: the annual view regroups the same ledger, and its
 columns are years rather than months.
 
 Where you need a different grain than a pack offers, that is a pack change —

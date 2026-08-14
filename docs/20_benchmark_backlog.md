@@ -4,7 +4,7 @@ Status: informative. Coverage the benchmark suite does not yet have.
 
 `docs/13_feature_backlog.md` holds capability the language or a pack cannot
 express. This holds something different: things the language **can** express and
-the suite has not yet checked — deals read but not modelled, axes of validation
+the suite has not yet checked — deals read but not modeled, axes of validation
 nobody has opened, and assertion shapes that turned out to be weaker than they
 looked.
 
@@ -20,7 +20,7 @@ Ordered within each section by how much it would prove, not by effort.
 
 ---
 
-## 1. Deals read and not modelled
+## 1. Deals read and not modeled
 
 ### 1.1 Ginnie Mae REMIC Trust 2026-100 — fifteen groups reconciled, one shipped and withdrawn
 
@@ -48,9 +48,9 @@ covers today:
 Group 14 is the exception and belongs to §2.1: its only class is notional and
 backed by 21 certificates of other deals.
 
-Provenance: modelled end to end in August 2026, validated against the Offering
+Provenance: modeled end to end in August 2026, validated against the Offering
 Circular Supplement dated 24 June 2026, then withdrawn at the author's request
-in favour of a different deal. The reference model is not in the repository.
+in favor of a different deal. The reference model is not in the repository.
 
 ### 1.2 Fannie Mae REMIC Trust 2019-2, Groups 1 and 2 — structured collateral
 
@@ -65,7 +65,7 @@ another instrument's output. Exhibit A supplies each certificate's January 2019
 factor, its balance in the trust, and its pool's WAC, WAM and WALA — the values —
 but not those seventeen deals' priority sequences.
 
-Treating each underlying certificate as simply amortising its own stated balance
+Treating each underlying certificate as simply amortizing its own stated balance
 gets **all 14 published weighted average lives exact**, and most decrement
 columns inside the 0.5pp floor — the underlying PACs are 94–98% retired, so their
 supports are long gone and the schedules no longer bind. But three of fourteen
@@ -115,14 +115,14 @@ happens to use.
 Provenance: raised while assessing Fannie Mae 2019-2, after two consecutive
 write-ups wrongly called this a blocker rather than a compositional boundary.
 
-### 2.2 Realised performance, rather than a published projection
+### 2.2 Realized performance, rather than a published projection
 
 Every case in the suite reproduces a **projection**: a table the issuer computed
 at pricing, under assumptions the issuer stated. That is a real and checkable
 claim — the model does the arithmetic the issuer did — but it is not the claim a
 reader is most likely to assume, which is that the model describes what happened.
 
-Nothing checks a model against realised experience. Doing so needs a factor
+Nothing checks a model against realized experience. Doing so needs a factor
 series per pool or per CUSIP, which agency issuers publish monthly: Fannie Mae
 through PoolTalk and Data Dynamics, Ginnie Mae through its monthly REMIC factor
 files. `fnma_remic_2019_2_g3` is a natural first subject — it settled in January
@@ -131,7 +131,7 @@ projection.
 
 The two axes answer different questions and the suite should be able to say which
 it is doing. A case of this kind also needs a tolerance story that is not
-rounding: divergence from realised experience is *information*, not error, and a
+rounding: divergence from realized experience is *information*, not error, and a
 case that fails when prepayments differ from 198% PSA would be asserting the
 wrong thing.
 
@@ -157,7 +157,7 @@ one table), August 2026.
 
 ### 2.4 Class types nothing exercises
 
-Both REMIC deals modelled use PAC, TAC, SEQ, AD, Z, PT and NTL. Fannie Mae's
+Both REMIC deals modeled use PAC, TAC, SEQ, AD, Z, PT and NTL. Fannie Mae's
 Exhibit A defines a good deal more, and the harder ones are untouched:
 
 | | |

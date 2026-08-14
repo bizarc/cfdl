@@ -3818,7 +3818,7 @@
           },
           {
             "kind": "line",
-            "label": "Scheduled amortisation of principal",
+            "label": "Scheduled amortization of principal",
             "depth": 1,
             "display_sign": 1.0,
             "values": [

@@ -152,5 +152,5 @@ either. That is why there is no `opco.sbc.stub_2024` line.
 The **equity bridge** — enterprise value less net debt, divided by diluted
 shares, giving the published $40.80-$52.20 per share range. It reconciles on the
 filing's disclosed balance sheet and share count, but it is arithmetic on
-constants rather than cash flow, so it is not modelled here. The same choice
+constants rather than cash flow, so it is not modeled here. The same choice
 `banker_dcf_conventions` made, for the same reason.

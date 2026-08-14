@@ -303,7 +303,7 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Mandatory amortisation and sweep"
+label = "Mandatory amortization and sweep"
 depth = 1
 categories = ["financing.debt_principal"]
 display = "positive"

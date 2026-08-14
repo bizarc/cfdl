@@ -83,24 +83,24 @@ checked, and a write-up of the reference and the residual.
 | [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) | A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends. |
 | [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) | A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate. |
 | [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) | An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years. |
-| [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalising interest through the build, then stabilising and refinancing. |
+| [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalizing interest through the build, then stabilizing and refinancing. |
 | [CRE: office development, through the pack contract](/docs/examples/cre-one-lincoln-street-contract) | The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance. |
-| [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip centre with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
-| [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortising to schedule with prepayments taken as a constant share of the original balance. |
+| [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip center with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
+| [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortizing to schedule with prepayments taken as a constant share of the original balance. |
 | [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) | The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens. |
 | [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) | The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date. |
 | [Credit: auto ABS weighted average life](/docs/examples/credit-auto-abs-wal) | An auto loan pool measured for weighted average life, the standard summary of when principal actually comes back. |
 | [Credit: floating-rate bridge pool](/docs/examples/credit-float-bridge-pool) | A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination. |
 | [Credit: Fannie Mae REMIC with a stripped coupon](/docs/examples/credit-fnma-remic-2019-2-g3) | Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal. |
-| [Credit: Fannie Mae REMIC at 0% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa000) | Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortising on schedule for thirty years. |
+| [Credit: Fannie Mae REMIC at 0% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa000) | Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortizing on schedule for thirty years. |
 | [Credit: Fannie Mae REMIC at 100% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa100) | Group 3 of a Fannie Mae REMIC at 100% of the standard prepayment curve — the slow column of the issuer's decrement table. |
 | [Credit: Fannie Mae REMIC at 1000% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa1000) | Group 3 of a Fannie Mae REMIC at 1000% PSA — the table's fastest column, past half the pool prepaying every year. |
 | [Credit: Fannie Mae REMIC at 300% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa300) | Group 3 of a Fannie Mae REMIC at 300% PSA — one and a half times its pricing speed, retiring the pass-through class in fifteen years. |
 | [Credit: Fannie Mae REMIC at 400% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa400) | Group 3 of a Fannie Mae REMIC at 400% PSA — a fast pool, and the column whose weighted average life pins the timing convention hardest. |
 | [Credit: Fannie Mae REMIC at 700% PSA](/docs/examples/credit-fnma-remic-2019-2-g3-psa700) | Group 3 of a Fannie Mae REMIC at 700% PSA — a refinancing wave, with the class under two years of average life. |
 | [Credit: IO/bullet bridge loan](/docs/examples/credit-io-bullet-loan) | An interest-only loan repaying its entire principal in a single balloon at maturity. |
-| [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) | A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal. |
-| [Credit: a mortgage pool modelled loan by loan](/docs/examples/credit-mbs-pool-by-loan) | The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children. |
+| [Credit: level-pay auto pool](/docs/examples/credit-level-pay-pool) | A level-payment amortizing loan pool — the constant instalment that splits into shrinking interest and growing principal. |
+| [Credit: a mortgage pool modeled loan by loan](/docs/examples/credit-mbs-pool-by-loan) | The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children. |
 | [Credit: mortgage pool conventions](/docs/examples/credit-mbs-pool-conventions) | A mortgage pool priced under standard market conventions, reconciling published factors, CPR and SMM against a fixed prepayment vector. |
 | [Credit: mortgage pool on a prepayment ramp](/docs/examples/credit-mbs-pool-ramped) | A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off. |
 | [OpCo: banker DCF conventions](/docs/examples/opco-banker-dcf-conventions) | An operating company discounted cash flow built to standard banking conventions, from revenue through unlevered free cash flow to enterprise value. |
@@ -125,5 +125,5 @@ it against mathematics:
   an annuity due is worth exactly `(1+i)` times the ordinary annuity. These hold
   for any correct implementation and cannot be satisfied by copying what the
   engine currently does.
-- **Cadence parity** — one deal modelled on every calendar must produce the same
+- **Cadence parity** — one deal modeled on every calendar must produce the same
   annual economics.

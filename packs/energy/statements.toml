@@ -40,7 +40,7 @@ formula = "sum(operating.revenue.*, operating.expense.*)"
 #
 # `operating.*` rather than `ebitda + tax_benefit`, so a new operating category
 # joins it without this file changing. That does mean tax credits are IN CFADS,
-# which is the convention where they are monetised as cash; where they are not,
+# which is the convention where they are monetized as cash; where they are not,
 # the model should not classify them as operating.
 [[subtotals]]
 id = "domain.energy.cfads"

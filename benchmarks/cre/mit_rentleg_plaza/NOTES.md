@@ -25,7 +25,7 @@ year and carried its 2006 NOI as an inline closed form, duplicating the opex
 formula.
 
 Fixed. The bound now spans the evaluation window and is mirrored onto lowered
-streams. The reversion derives 2006 NOI from the modelled streams over
+streams. The reversion derives 2006 NOI from the modeled streams over
 `project 1`, and the duplicated formula is gone.
 
 ## 3. RESOLVED — disposals settle at the end of their period

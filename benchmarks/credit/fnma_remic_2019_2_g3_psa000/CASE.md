@@ -1,6 +1,6 @@
 ## The case
 
-No prepayments at all — and not the deal's own loans. For this column the supplement swaps the collateral for its stated alternative: new loans with 360-month original and remaining terms at 7.50%, so the pool amortises on pure schedule for thirty years and the strip to the 5.00% pass-through is 2.50% rather than 0.451%. The class takes until January 2049 to retire, and the table publishes a value in every one of the thirty years.
+No prepayments at all — and not the deal's own loans. For this column the supplement swaps the collateral for its stated alternative: new loans with 360-month original and remaining terms at 7.50%, so the pool amortizes on pure schedule for thirty years and the strip to the 5.00% pass-through is 2.50% rather than 0.451%. The class takes until January 2049 to retire, and the table publishes a value in every one of the thirty years.
 
 The deal is Security Group 3 of Fannie Mae REMIC Trust 2019-2: a $148,372,434
 pass-through with the coupon stripped between a principal class and a notional

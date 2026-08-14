@@ -43,7 +43,7 @@ description = "Month of the fiscal year end. Matters because a valuation date th
 type_id = "OpCo.Asset.BusinessSegment"
 family = "asset"
 class = "financial"
-description = "A division modelled separately. Use only when the grain is the segment; a consolidated model needs none."
+description = "A division modeled separately. Use only when the grain is the segment; a consolidated model needs none."
 
 [[entities]]
 type_id = "OpCo.Asset.EquityInterest"
@@ -64,18 +64,18 @@ required = false
 unit = "shares"
 
 # Intangibles are the third class, and this is where they arise: a royalty
-# stream or a licence is neither a real thing nor a claim on a balance sheet.
+# stream or a license is neither a real thing nor a claim on a balance sheet.
 [[entities]]
 type_id = "OpCo.Asset.IntangibleRight"
 family = "asset"
 class = "intangible"
-description = "A royalty, licence or contractual right valued on its own cash flows."
+description = "A royalty, license or contractual right valued on its own cash flows."
 
 [[entities.fields]]
 name = "right_type"
 field_type = "string"
 required = false
-description = "royalty | licence | franchise | patent"
+description = "royalty | license | franchise | patent"
 
 [[entities.fields]]
 name = "expiry"

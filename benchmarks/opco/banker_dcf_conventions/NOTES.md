@@ -48,7 +48,7 @@ the floor the source can support.
 
 The equity bridge (less debt, plus cash, less the present value of deferred tax
 liabilities) reconciles to the published implied equity values on the same
-figures. It is not modelled here because it is arithmetic on disclosed
+figures. It is not modeled here because it is arithmetic on disclosed
 constants, not cash flow.
 
 ## Finding 1 — mid-period discounting had no spelling
@@ -59,7 +59,7 @@ all of it from 31 December overstates the discount by half a year. The filing
 states it explicitly.
 
 CFDL could not say it. The engine has always supported a fractional per-stream
-offset — `npv_with_offsets` factorises `(1+r)^-offset` out of each series, and
+offset — `npv_with_offsets` factorizes `(1+r)^-offset` out of each series, and
 `discount_offset` returns a float — but nothing produced 0.5. `due` gives 0.0,
 the default and `on eom` give 1.0, and a day rule gave `n/30`.
 
@@ -88,7 +88,7 @@ On a monthly grid those agree. Nowhere else:
 
 It went unnoticed because the only fixture using a day rule is daily, where the
 error is half a day. It is the same class of bug as the 42 pack rules that
-divided by a literal 12 — a monthly assumption generalised without being
+divided by a literal 12 — a monthly assumption generalized without being
 re-derived — but in the engine rather than in a pack, and `tools/cadence-parity.py`
 could not have caught it because packs do not emit day rules.
 
@@ -189,4 +189,4 @@ native operating lines.
 
 Validating the pack's own rules needs a source that discloses *drivers* rather
 than *outputs* — a sponsor model with a stated growth rate, margin path and
-working-capital policy. The LBO sources in the catalogue are the candidates.
+working-capital policy. The LBO sources in the catalog are the candidates.

@@ -16,7 +16,7 @@
 #   r        = note_rate / ppy       [NOMINAL annual rate: divide]
 #   Two rate bases. Interest accrues on `day_count`; the constant payment is
 #   struck on `amortization_day_count`, which defaults to it. Scheduled
-#   The scheduled-balance factor S is built from the AMORTISATION basis too:
+#   The scheduled-balance factor S is built from the AMORTIZATION basis too:
 #   it describes the path the loan was underwritten to follow, not the rate
 #   money accrues at. Only the bare rate multiplier is on the accrual basis.
 #   principal is then the PLUG — payment less interest — so an Actual/360 loan
@@ -76,7 +76,7 @@
 #   performing balance.
 #
 #   PREPAYMENT BASE — SMM is defined on the balance outstanding at the
-#   BEGINNING of the period, net of SCHEDULED amortisation only; defaults are
+#   BEGINNING of the period, net of SCHEDULED amortization only; defaults are
 #   NOT removed from the base. This pack previously applied SMM to the balance
 #   net of defaults, understating prepayments by the default rate and
 #   contradicting the definition of the quantity it calls SMM. Checked for
@@ -92,30 +92,30 @@
 #   internally inconsistent, and the published ending balance says so:
 #   97,934,244 additive against 97,944,237 multiplicative.
 #
-#   RECOVERY — a defaulted loan keeps amortising while it sits in foreclosure,
-#   so what is liquidated is the AMORTISED balance, not face. The loss is
-#   severity x the original face; the recovery is the amortised balance less
+#   RECOVERY — a defaulted loan keeps amortizing while it sits in foreclosure,
+#   so what is liquidated is the AMORTIZED balance, not face. The loss is
+#   severity x the original face; the recovery is the amortized balance less
 #   that loss. For a level-pay pool that gives
 #       recovery(p) = face(p-lag) * ( S(p)/S(p-lag) - severity )
 #   where S is the scheduled balance factor already in the closed forms above,
 #   and the ratio reduces to numerators because S shares a denominator.
 #
 #   Floored at zero. A defaulted loan cannot repay less than nothing, so the
-#   loss is capped at the amortised balance. On a 30-year pool the ratio never
+#   loss is capped at the amortized balance. On a 30-year pool the ratio never
 #   falls below severity and the floor never binds, which is why the published
-#   schedule could not reveal this — it shows up on a short amortising term,
+#   schedule could not reveal this — it shows up on a short amortizing term,
 #   where the balance is nearly gone by the time foreclosure completes.
 #
 #   This applies to LEVEL-PAY ONLY, and the asymmetry is deliberate: an
-#   IO/bullet loan has no scheduled amortisation, so its defaulted balance does
-#   not amortise in foreclosure and (1 - severity) of face is already correct
+#   IO/bullet loan has no scheduled amortization, so its defaulted balance does
+#   not amortize in foreclosure and (1 - severity) of face is already correct
 #   there. Do not "fix" the IO rules to match.
 #
 #   ZERO NOTE RATE — supported. The closed form for S(p) is 0/0 at r = 0, so
 #   it is written as a ratio of annuity present values instead,
 #   S(p) = pv(r, n - p, -1) / pv(r, n, -1), with the level payment factor as
 #   -pmt(r, n - p, 1). Both are exact identities of the closed form and both
-#   carry the r = 0 limit already, so a 0% promotional pool amortises straight
+#   carry the r = 0 limit already, so a 0% promotional pool amortizes straight
 #   line with no interest and no special case anywhere. Verified against all
 #   107 goldens: byte-identical for every non-zero rate.
 #

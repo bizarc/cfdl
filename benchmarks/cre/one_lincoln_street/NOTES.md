@@ -15,7 +15,7 @@ The same course's Problem Set 1 is `benchmarks/cre/mit_rentleg_plaza`.
 
 ## Which exhibit, and why
 
-Exhibit 5 is an eleven-year stabilised pro forma and is the obvious target. It
+Exhibit 5 is an eleven-year stabilized pro forma and is the obvious target. It
 is not used, deliberately.
 
 Its derived lines do reconcile internally — for 2004, effective gross income
@@ -25,7 +25,7 @@ that drive base rent, absorption and turnover vacancy, and the two
 reimbursement lines are not published. Asserting Exhibit 5 would mean stating
 most of it as input and then checking that the engine added it up, which is the
 failure this programme keeps naming: a source that publishes results rather
-than drivers validates arithmetic, not modelling.
+than drivers validates arithmetic, not modeling.
 
 **Exhibit 7 publishes both.** Three drivers — a sixteen-quarter draw schedule,
 an 8.00% rate compounded quarterly, and a $110,738,000 net equity commitment —
@@ -66,9 +66,9 @@ One state, and the rest is closed form. The halved draw is the exhibit's own
 convention — funding "assumed to occur ratably throughout the quarter", so a
 quarter's own draw earns half a quarter of interest.
 
-**Interest is paid, not capitalised.** The exhibit's closing balance is opening
+**Interest is paid, not capitalized.** The exhibit's closing balance is opening
 plus draw with nothing added, and the interest is funded from the equity budget
-as a separate stated line ($16,312,000 of the gross $175,000,000). Capitalising
+as a separate stated line ($16,312,000 of the gross $175,000,000). Capitalizing
 it would compound it and drift immediately.
 
 ## Why the metric tolerance is wider than the series tolerance
@@ -78,7 +78,7 @@ against the exhibit's stated total of 16,312,000.
 
 The exhibit's total is the sum of its **rounded** quarterly figures. The engine
 sums the exact ones. The 1,430 difference is nine quarters of rounding
-accumulating in one direction, not a modelling difference — each quarter is
+accumulating in one direction, not a modeling difference — each quarter is
 individually within 480. Asserting the engine's exact sum against the exhibit's
 rounded sum at a tolerance tight enough to look impressive would have meant
 picking a number that hid the reason.

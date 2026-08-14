@@ -11,7 +11,7 @@ what it is owed, up to what is left, and the remainder passes down. It is not a
 dependency graph to be solved, which is why it needs no cycle detection and does
 not relax any stream reference rule — the boundary `docs/14` §5 settled.
 
-This is the gate on roughly two thirds of the pack roadmap: securitisation
+This is the gate on roughly two thirds of the pack roadmap: securitization
 tranches, private-fund carry, CMBS, RMBS, and the LBO exit waterfall that
 `benchmarks/opco/lbo_option_pool_exit` currently expresses by hand.
 
@@ -115,7 +115,7 @@ step takes `min(what it is owed, what remains)` and reduces it. A step that is
 gated off by `when` takes nothing and does not consume.
 
 Every step emits a stream, so a waterfall is not a new kind of output: it is a
-declaration that lowers to per-step cash flows, categorised and attributable to
+declaration that lowers to per-step cash flows, categorized and attributable to
 a payee. That keeps statements, metrics and the results schema unchanged.
 
 ## 5. What has to be decided before implementation
@@ -198,7 +198,7 @@ AmeriCredit deal":
 > wrong.
 
 A second rule follows from what the roadmap actually contains: **a template
-parameterises the ordering, it does not hide it.** `sequential_pay` taking an
+parameterizes the ordering, it does not hide it.** `sequential_pay` taking an
 ordered list of classes is useful. A template that reduces the twenty-two steps
 to three terms is a trap, because the next deal differs in the ordering and
 nothing about it can be reused.
@@ -243,7 +243,7 @@ trigger that permanently reorders priority is an asset changing state, which
 this language already has. A waterfall gated with `active in state` reuses
 lifecycles, events and the transition log rather than inventing a parallel
 mechanism — and the transition log then records *when* the deal flipped to rapid
-amortisation, which is exactly what an analyst asks.
+amortization, which is exactly what an analyst asks.
 
 ## 10. When a waterfall runs
 
@@ -375,7 +375,7 @@ Newton needs a derivative, can diverge or oscillate on a polynomial with several
 sign changes, and its iterate path depends on floating-point detail — so the
 same model could converge differently on two machines. Byte-reproducibility is
 the property everything else here is built on. A bracketed method converges
-deterministically or fails deterministically, which is the behaviour to want,
+deterministically or fails deterministically, which is the behavior to want,
 and it is what `irr_with_offsets` already does with a fixed bracket and a fixed
 iteration count.
 
@@ -451,7 +451,7 @@ to remember.
 `fixtures/valid/waterfall_abs_22_step` encodes the whole priority of payments —
 a servicer and trustee ahead of the notes, five rated classes taking interest
 then principal in strict seniority, a reserve topped to its specified level, an
-overcollateralisation target, and a certificateholder taking what survives.
+overcollateralization target, and a certificateholder taking what survives.
 
 It runs with no warnings and allocates its pot exactly. The step that proves the
 design is Class B's target:
@@ -513,7 +513,7 @@ cover all three:
 | catch-up on the preferred only | preferred | 4,000,000.0000 | 26,000,000.0000 |
 
 All three exact. That is the sharper test of the primitive: not whether it can
-say one deal, but whether one definition parameterises into a family of them.
+say one deal, but whether one definition parameterizes into a family of them.
 
 **And it settles the solver question against numbers.** The GP catch-up is the
 tier most often said to need iteration. It is `X = pref / 4` — one division, as
@@ -521,7 +521,7 @@ tier most often said to need iteration. It is `X = pref / 4` — one division, a
 
 ### The IRR-hurdle structure — a claim tested and falsified
 
-The source catalogue describes this structure as *"requiring a circular solve:
+The source catalog describes this structure as *"requiring a circular solve:
 the split determines cash flows which determine the IRR which determines the
 split"*, and calls it the case that "trips up most declarative modeling tools".
 
@@ -551,7 +551,7 @@ What is left is choosing a tier: an ordered discrete test for the largest tier
 whose implied rate the deal beats. The same shape as the option ladder in
 `benchmarks/opco/lbo_option_pool_exit`, and it enumerates rather than iterates.
 
-So §12's claim survives contact with the case the catalogue nominated to break
+So §12's claim survives contact with the case the catalog nominated to break
 it. A hurdle RATE is an input; only the payment that reaches it is unknown, and
 that is arithmetic.
 

@@ -18,7 +18,7 @@ set at 35.0000000674% of AB's. The two reconstruct the pass-through rate:
 ```
 
 An investor in IO owns a slice of a coupon and nothing else. Their position
-shrinks as AB amortises, they receive not one dollar of principal, and if the
+shrinks as AB amortizes, they receive not one dollar of principal, and if the
 loans prepay quickly they lose most of what they paid.
 
 ## The reference

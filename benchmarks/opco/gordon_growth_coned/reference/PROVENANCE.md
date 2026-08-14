@@ -11,7 +11,7 @@
 | Size |    30720 bytes |
 | SHA-256 | `d8fc9f0ed5ebede8115f5e7175f92a6d8ed2f8a08e160e24347e5426a08480e6` |
 
-## Licence
+## License
 
 The index page states:
 

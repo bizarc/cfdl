@@ -36,7 +36,7 @@ zero; the certificate closing date is 15 September 2018; no event of default
 occurs; and the servicer does not exercise its 10% clean-up call except in the
 "to call" rows.
 
-Because the tables assume no losses, overcollateralisation never has to build
+Because the tables assume no losses, overcollateralization never has to build
 and no trigger can trip. This case validates sequential pay — interest by class
 at its own coupon and day count, then principal by seniority — and the clean-up
 call. It does not exercise the OC or trigger machinery; that is what the
@@ -62,7 +62,7 @@ original principal.
 | **total** | **1,053,230,000.00** |
 
 A-3, A-4, B, C and D still stood at a factor of 1,000.00000000, so their stated
-beginning balances ARE their originals. A-2 had begun amortising, at a factor of
+beginning balances ARE their originals. A-2 had begun amortizing, at a factor of
 239.65123125 against a balance of 88,999,277.75, which puts its original at
 371,370,000.003. A-1 had already retired and reports zero, so it is backed out
 of the aggregate: the beginning aggregate note pool factor of 475.54596598

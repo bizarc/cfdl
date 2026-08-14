@@ -79,14 +79,14 @@ contract cre.exit_forward on entity asset.tower {
   }
 }
 
-// Permanent debt: $6m at 5.50%, 25-year amortisation, 10-year hold.
+// Permanent debt: $6m at 5.50%, 25-year amortization, 10-year hold.
 //
 // Was a hand-written stream computing its own `pmt`. `cre.permanent_debt`
 // states the loan instead of its arithmetic, and reproduces the same
 // 4,421,429.94 of debt service — the payment is identical because with one
 // combined stream principal is the plug.
 //
-// The balloon stays off (the default): the unamortised $4.5m is repaid out of
+// The balloon stays off (the default): the unamortized $4.5m is repaid out of
 // the sale, not as debt service, and folding it into the final period would
 // make that period's DSCR meaningless.
 contract cre.permanent_debt on entity asset.tower {

@@ -25,7 +25,7 @@ Every surface (CLI, Python, playground, API server) runs the same pipeline:
    a canonical **IR** (intermediate representation) JSON document. Same
    sources + same pack version + same compiler version ⇒ identical IR.
 2. **Run** — the engine evaluates every stream over the model's time grid,
-   applies scenarios and Monte Carlo trials from the run config, and emits a
+   applies scenarios and Monte Carlo trials from the run configuration, and emits a
    **Results** JSON document: per-stream cash flows, core metrics
    (NPV/IRR/MOIC/payback/WAL), pack domain metrics, and Monte Carlo
    summaries with percentiles.

@@ -5,6 +5,6 @@
 # is an independent month-by-month recursion of the same convention.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.
-summary = "A level-payment amortising loan pool — the constant instalment that splits into shrinking interest and growing principal."
+summary = "A level-payment amortizing loan pool — the constant instalment that splits into shrinking interest and growing principal."
 pack = "credit"
 period_tolerance = 0.01

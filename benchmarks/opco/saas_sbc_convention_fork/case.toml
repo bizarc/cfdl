@@ -9,7 +9,7 @@
 # convention in software valuation, disclosed side by side, which almost never
 # happens.
 #
-# SBC is therefore modelled as its own stream rather than netted into the cash
+# SBC is therefore modeled as its own stream rather than netted into the cash
 # flow line, and `model.net_cash_flow` asserts that pre-SBC minus SBC equals
 # the filing's published POST-SBC series. The fork is structural: one model
 # yields both conventions, and the post-SBC series cannot drift from the

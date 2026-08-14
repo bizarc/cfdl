@@ -15,7 +15,7 @@
 // contract is wrong.
 //
 // THE DRAW SCHEDULE STAYS A CURVE. It is per-deal data — sixteen published
-// quarters here — so the contract names it rather than parameterising its
+// quarters here — so the contract names it rather than parameterizing its
 // shape. Everything the contract adds is the funding CONVENTION: equity first,
 // the facility behind it, interest on the drawn balance.
 
@@ -27,7 +27,7 @@ time calendar quarterly from 2000-01 for 16
 entity asset tower : CRE.Asset.RealProperty
 
 // Exhibit 6's quarterly funding requirement, totalling $285,145,000 — stated
-// as an ANNUALISED rate, which is how a CRE contract reads a curve. Each point
+// as an ANNUALIZED rate, which is how a CRE contract reads a curve. Each point
 // is the exhibit's quarterly figure x 4, so on this quarterly model the
 // contract divides straight back to the published number. Stating per-period
 // totals instead would be correct here and wrong the moment the same schedule

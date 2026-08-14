@@ -143,7 +143,7 @@ the preference or convert), in the money throughout here.
 
 The same publicly downloadable seven-step LBO teaching model as
 `lbo_circular_interest` — free, no registration, "All Rights Reserved" with no
-open licence. Neither vendored nor in CI: downloaded once outside this repo,
+open license. Neither vendored nor in CI: downloaded once outside this repo,
 cached values read, only numbers carried across.
 
 ## The split became a waterfall, and what that changed

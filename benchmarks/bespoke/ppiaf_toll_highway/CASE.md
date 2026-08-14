@@ -7,7 +7,7 @@ vehicle per kilometre, and traffic grows 3% a year for the life of the deal.
 
 Almost every mechanic in it is a phase change. Construction draws on three debt
 tranches at once — 80% at 4.0% over twenty years, 10% at 4.5% over fifteen, 10%
-at 5.0% over ten — with interest capitalising into each balance rather than
+at 5.0% over ten — with interest capitalizing into each balance rather than
 being paid, and each tranche's grace period ending in a different year, so the
 first tranche starts repaying in 2014 and the other two in 2015. Operating cost
 is a regressive scale: the first ten thousand vehicles a day cost nothing to
@@ -46,7 +46,7 @@ output numbers were carried across. See SOURCE.md.
 | Pack | **none** — written from the bare language |
 | Declared | five entities, nine declared fields, twenty-one native streams |
 | Language features | declared state with `init`/`next`, cross-field `prev` reads, a state that snapshots and then holds, `min`/`max`/`pow` |
-| Conventions | mid-year drawdown with capitalised interest, constant P+I annuities off three different grace periods, VAT stripped from an inclusive toll, tax in arrears with loss carryforward, a regressive cost scale, an ADSCR-targeted subsidy |
+| Conventions | mid-year drawdown with capitalized interest, constant P+I annuities off three different grace periods, VAT stripped from an inclusive toll, tax in arrears with loss carryforward, a regressive cost scale, an ADSCR-targeted subsidy |
 
 **This is the first case in the suite with no pack**, and that is half the
 point of it. A toll road is none of the four: it has no generation and no
@@ -86,7 +86,7 @@ totals reproduce the workbook's cached values.
 | 1st tranche annuity (P+I) | 51.937347 | 51.937347 |
 | subsidy, 2014 | 21.697430 | 21.697430 |
 | subsidy, nominal, whole concession | 351.951289 | 351.951289 |
-| ADSCR, 2013 (unsubsidised) | 1.769033 | 1.769033 |
+| ADSCR, 2013 (unsubsidized) | 1.769033 | 1.769033 |
 
 Asserted: the works, equity, fee and per-tranche drawdown lines through
 construction; all three tranche balances across all fifty years; per-tranche
@@ -97,7 +97,7 @@ subsidy; corporate tax; profit before tax; and the depreciable capital base —
 ## The delta
 
 The declared state agrees to **2.7e-12** — machine epsilon over a fifty-year
-recursion. The cash streams agree to **8.9e-7**, which is not a modelling
+recursion. The cash streams agree to **8.9e-7**, which is not a modeling
 difference: the results file publishes stream amounts rounded to six decimal
 places, and these are USD millions, so 8.9e-7 is fifty cents on figures in the
 hundreds of millions. The per-period tolerance is set at 1e-5 to sit just above
@@ -106,7 +106,7 @@ that rounding floor.
 One thing the case does **not** assert is the reference's equity IRR, project
 IRR and NPV. Those need the dividend policy — distributable reserves are the
 lesser of the cash balance and cumulated retained profit — and a balance sheet
-to carry cash between years, neither of which is modelled here. The spine that
+to carry cash between years, neither of which is modeled here. The spine that
 determines them is: revenue, cost, tax, subsidy and all three debt schedules
 are all asserted, so anything downstream would be arithmetic on numbers that
 already agree.

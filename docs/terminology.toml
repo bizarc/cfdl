@@ -33,47 +33,81 @@ conformance_claimed = false
 # Preferred forms. Each entry resolves a conflict the corpus actually contains.
 # ---------------------------------------------------------------------------
 
-# US spelling throughout. The corpus is not split along a clean national line —
-# `behavior` and `modeling` lean American while `amortisation` and `amortising`
-# lean British — so no convention is being overturned. US is chosen because the
-# larger share of the corpus and the primary readership already use it.
+# ---------------------------------------------------------------------------
+# Spelling: US throughout.
+#
+# The corpus was not split along a clean national line — `behavior` and
+# `modeling` leaned American while `amortisation` and `amortising` leaned
+# British — so no convention was overturned. There was no convention. US was
+# chosen because the larger share of the corpus and the primary readership
+# already used it.
+#
+# APPLIED. 431 replacements across 41 forms, in published content and the
+# sources that generate it. The audit measured only published prose and found 7
+# conflicting pairs; sweeping the sources that FEED that prose found 41. Any
+# future measurement should read the sources, not the rendered pages.
+#
+# THREE THINGS THIS RULE DOES NOT TOUCH, each learned by breaking something:
+#
+#   1. Identifiers. `packs/credit/ontology/types.toml` keeps the lifecycle state
+#      `amortising` in `initial`, `states` and every transition. A state name is
+#      a pack API: a model may declare it, so renaming it is a breaking change
+#      with a deprecation path, not a spelling fix. Filed separately.
+#   2. Generated-region keys. `<!-- cfdl:generated diagnostics-catalogue -->` is
+#      a key that sync-content.mjs looks up by name. Note that snake_case
+#      protects itself from a \b-anchored rule and a hyphen does not.
+#   3. `config`. See the `run configuration` entry below.
+# ---------------------------------------------------------------------------
 
-[[preferred]]
-use = "modeling"
-instead_of = ["modelling"]
-occurrences = { modeling = 28, modelling = 5 }
+[spelling]
+convention = "US"
+replacements_applied = 431
+forms_applied = 41
+scope = "published content and its generating sources; not gold/, fixtures/, research/, or *.ts"
 
-[[preferred]]
-use = "amortization"
-instead_of = ["amortisation"]
-occurrences = { amortization = 3, amortisation = 21 }
-note = "The minority form wins here. Consistency with the rest of the US spelling decision is worth 21 replacements."
-
-[[preferred]]
-use = "amortizing"
-instead_of = ["amortising"]
-occurrences = { amortizing = 4, amortising = 19 }
-
-[[preferred]]
-use = "amortize"
-instead_of = ["amortise"]
-occurrences = { amortize = 1, amortise = 1 }
-
-[[preferred]]
-use = "behavior"
-instead_of = ["behaviour"]
-occurrences = { behavior = 25, behaviour = 6 }
-
-[[preferred]]
-use = "license"
-instead_of = ["licence"]
-occurrences = { license = 9, licence = 4 }
-note = "One form for both noun and verb, per the US convention."
-
-[[preferred]]
-use = "catalog"
-instead_of = ["catalogue"]
-occurrences = { catalog = 1, catalogue = 2 }
+[spelling.map]
+modelled = "modeled"
+modelling = "modeling"
+amortisation = "amortization"
+amortising = "amortizing"
+amortise = "amortize"
+amortised = "amortized"
+amortises = "amortizes"
+unamortised = "unamortized"
+behaviour = "behavior"
+licence = "license"
+catalogue = "catalog"
+centre = "center"
+labelled = "labeled"
+favour = "favor"
+organised = "organized"
+summarised = "summarized"
+recognised = "recognized"
+recognises = "recognizes"
+unrecognised = "unrecognized"
+realised = "realized"
+capitalised = "capitalized"
+capitalising = "capitalizing"
+capitalises = "capitalizes"
+capitalisation = "capitalization"
+stabilised = "stabilized"
+stabilising = "stabilizing"
+stabilisation = "stabilization"
+annualised = "annualized"
+securitisation = "securitization"
+overcollateralisation = "overcollateralization"
+unsubsidised = "unsubsidized"
+practised = "practiced"
+categorised = "categorized"
+monetised = "monetized"
+reorganised = "reorganized"
+generalised = "generalized"
+generalising = "generalizing"
+factorises = "factorizes"
+materialises = "materializes"
+parameterised = "parameterized"
+parameterises = "parameterizes"
+parameterising = "parameterizing"
 
 # One concept, one term.
 
@@ -81,7 +115,33 @@ occurrences = { catalog = 1, catalogue = 2 }
 use = "run configuration"
 instead_of = ["run config", "run settings"]
 occurrences = { "run configuration" = 57, "run config" = 7, "run settings" = 2 }
-note = "Spell it out. `run config` is acceptable inside a code span where it names a literal file or field."
+note = "Spell it out in prose."
+# DOES NOT APPLY TO `config` ON ITS OWN. `config` names a different thing in this
+# platform and normalizing the two together would destroy a real distinction:
+#
+#   run configuration   the object a compiled model is evaluated under —
+#                       scenarios, seeds, rate, as-of date
+#   cfg / config        the EXPRESSION NAMESPACE, `cfg.<path>`, which reads the
+#                       scenario knobs out of that object
+#
+# So a run configuration CONTAINS what `cfg.*` reads; they are not synonyms.
+# docs/03_expression_environment.md glosses `cfg` as "run-config values
+# (scenario knobs)", and that gloss is the binding between the identifier and
+# its meaning. Leave it alone: rewriting it to "run configuration values" would
+# loosen the tie to `cfg` without making anything clearer.
+never_rewrite = [
+  "cfg",
+  "cfg.<path>",
+  "config namespace",
+  "run-config values",           # the gloss in docs/03, line 70
+  "config",                      # also a JSON key in learn/content/exercises.json
+]
+
+[[technical_name]]
+term = "config namespace"
+category = "language"
+definition = "The `cfg.<path>` expression binding, which reads scenario knobs from the run configuration. Distinct from the run configuration itself."
+note = "Registered so the one-concept-one-term rule never collapses this into `run configuration`."
 
 [[preferred]]
 use = "results document"

@@ -48,7 +48,7 @@ contract carrying a curve's shape — a steepness parameter, a flat-or-S-curve
 enum — states an implementation choice as though the parties had agreed it, and
 the next deal disagrees. The contract names the curve; the model declares it.
 
-**And the curve is annualised, which the first version of this contract got
+**And the curve is annualized, which the first version of this contract got
 wrong.** It read the curve as a per-period total, which is correct on the grain
 the schedule was written at and silently multiplies on any finer one — a
 quarterly schedule run monthly funded three times the money, because a step
@@ -59,8 +59,8 @@ blamed the language.
 
 ## What this case does not cover
 
-Capitalised interest. The exhibit pays it from the equity budget as a stated
-line, so the contract models the paid form. A capitalising facility is a
+Capitalized interest. The exhibit pays it from the equity budget as a stated
+line, so the contract models the paid form. A capitalizing facility is a
 different recurrence — affine in the closing balance, so it collects to
 `next (prev * (1 + r*f) + D) / (1 - r*f)` rather than needing a solver — and is
 a follow-on.

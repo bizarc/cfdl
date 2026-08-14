@@ -44,7 +44,7 @@ choose from. The language itself defines:
 - `Asset.Real` — a physical thing: land, a building, plant, equipment, a reserve.
 - `Asset.Financial` — a claim on cash: a loan, a pool, a security, an equity
   interest, a going concern.
-- `Asset.Intangible` — a right without physical form: a royalty, a licence, a
+- `Asset.Intangible` — a right without physical form: a royalty, a license, a
   patent.
 - `Party` — anyone a contract is with.
 
@@ -54,10 +54,10 @@ lowering rule and lowering rules are what a pack is.
 
 ## Assets can nest, and never have to
 
-A building can be modelled as one asset with a blended rent roll, as a set of
+A building can be modeled as one asset with a blended rent roll, as a set of
 unit types, or suite by suite. All three are correct; which is right depends on
-what the model is for. The same is true of a loan pool modelled as a pool or as
-its loans, and a field modelled as a field or as its wells.
+what the model is for. The same is true of a loan pool modeled as a pool or as
+its loans, and a field modeled as a field or as its wells.
 
 So hierarchy exists and nothing requires it. Declare it with `part of`:
 
@@ -154,7 +154,7 @@ An event fires in the first period where its condition holds. It cannot fire
 between periods, because there is nothing between them — so **the calendar
 sets how precisely a condition can be met**.
 
-That is a modelling choice with money attached whenever an event decides who
+That is a modeling choice with money attached whenever an event decides who
 gets paid. A tax-equity partnership flips when its investor's return reaches a
 target; on an annual grid the test can only be asked at year ends. In
 [a worked case](/docs/examples/energy-tax-equity-flip) the investor is $445,000

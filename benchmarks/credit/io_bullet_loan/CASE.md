@@ -1,14 +1,14 @@
 ## The case
 
 A $10mm interest-only bridge pool at 7.25% for 60 months, bought at par. Nothing
-amortises: the borrower pays interest monthly and the entire principal returns in
+amortizes: the borrower pays interest monthly and the entire principal returns in
 a single balloon at maturity. Against that sit a 5% constant prepayment rate, a
 1.5% default rate, 40% loss severity and a four-month recovery lag.
 
 ## The reference
 
 Interest-only and bullet-maturity conventions as defined by the standard market
-formulas for non-amortising collateral.
+formulas for non-amortizing collateral.
 
 **Not redistributable.** The source cannot be published, so its conventions are
 recreated independently of the model and compared month by month.
@@ -22,7 +22,7 @@ recreated independently of the model and compared month by month.
 | Language features | a pack contract paired with a purchase price |
 | Conventions | interest-only accrual, a bullet maturity, CPR, CDR, severity, recovery lag |
 
-With no scheduled amortisation, weighted average life is driven entirely by
+With no scheduled amortization, weighted average life is driven entirely by
 prepayment and default.
 
 ## The result

@@ -16,7 +16,7 @@ rule consumes. This case is built entirely from `opco.revenue_line`,
 `opco.opex_line`, `opco.cash_taxes` and `opco.capex_line`, with no native
 streams at all.
 
-The licence is explicit — *"not copy protected… feel free to modify them to your
+The license is explicit — *"not copy protected… feel free to modify them to your
 own specifications"* — so the workbook is committed under `reference/`. Second
 source in the repo a reader can open and mark us against.
 

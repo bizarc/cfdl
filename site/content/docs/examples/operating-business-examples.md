@@ -16,7 +16,7 @@ Operating Business (OpCo) examples show revenue, opex, working capital, and exit
 | [opco_basic](/docs/examples/opco_basic) | Full OpCo: revenue, opex, **working capital**, exit multiple. |
 | [opco_multi_file](/docs/examples/opco_multi_file) | Full OpCo split across `structure.cfdl`, `contracts.cfdl`. |
 
-## Run configs
+## Run configurations
 
 Each example directory includes a `run.json` for deterministic runs. Example:
 

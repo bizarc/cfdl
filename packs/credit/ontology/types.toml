@@ -3,10 +3,10 @@
 # See packs/energy/ontology/types.toml for what the four families mean.
 #
 # HIERARCHY IS OPTIONAL, AND CREDIT IS THE CASE THAT PROVES IT MATTERS. A
-# mortgage-backed security can be modelled as ONE pool asset carrying
-# collective behaviour — CPR, CDR, severity, recovery lag — or as a COLLECTION
+# mortgage-backed security can be modeled as ONE pool asset carrying
+# collective behavior — CPR, CDR, severity, recovery lag — or as a COLLECTION
 # of individual loans. The pool form is right for pricing and for convention
-# work; the loan form is right when the question needs loan-level behaviour,
+# work; the loan form is right when the question needs loan-level behavior,
 # such as individual default simulation or a scenario that acts on one
 # borrower. Both are first-class here. `part_of` exists so a model can be
 # built either way, and nothing requires it.
@@ -24,7 +24,7 @@ type_id = "Credit.Asset.LoanPool"
 family = "asset"
 class = "financial"
 lifecycle = "credit.pool"
-description = "A pool of loans modelled by its collective behaviour. Needs no children: the pool IS the grain."
+description = "A pool of loans modeled by its collective behavior. Needs no children: the pool IS the grain."
 
 [[entities.fields]]
 name = "collateral_type"
@@ -55,7 +55,7 @@ type_id = "Credit.Asset.Loan"
 family = "asset"
 class = "financial"
 lifecycle = "credit.loan"
-description = "A single loan. Use when the model needs loan-level behaviour — individual default paths, borrower-level scenarios — otherwise model the pool."
+description = "A single loan. Use when the model needs loan-level behavior — individual default paths, borrower-level scenarios — otherwise model the pool."
 
 [[entities.fields]]
 name = "original_balance"
@@ -138,7 +138,7 @@ required = false
 # ---------------------------------------------------------------------------
 # Lifecycles
 #
-# A pool never defaults as a whole — it amortises and its collateral decays, so
+# A pool never defaults as a whole — it amortizes and its collateral decays, so
 # its lifecycle is about the pool's life, not its credit. A LOAN has credit
 # states, which is one more reason the two are different types rather than one
 # type at two grains.
@@ -152,7 +152,7 @@ states = ["warehouse", "amortising", "called", "retired"]
 [[lifecycles.transitions]]
 from = "warehouse"
 to = "amortising"
-description = "Securitisation closes."
+description = "Securitization closes."
 
 [[lifecycles.transitions]]
 from = "amortising"
@@ -211,7 +211,7 @@ type_id = "Credit.Contract.LevelPayPool"
 contract_name = "credit.pool_level_pay"
 subject_family = "asset"
 parties = ["holder"]
-description = "Amortising pool with prepayment, default, severity and recovery lag."
+description = "Amortizing pool with prepayment, default, severity and recovery lag."
 
 [[contracts]]
 type_id = "Credit.Contract.InterestOnlyPool"
@@ -292,7 +292,7 @@ from_family = "asset"
 to_family = "asset"
 cardinality = "many_to_one"
 inverse = "contains"
-description = "Optional hierarchy — loans within a pool, or a tranche's claim on one. Never required: a pool models collective behaviour perfectly well with no children."
+description = "Optional hierarchy — loans within a pool, or a tranche's claim on one. Never required: a pool models collective behavior perfectly well with no children."
 
 [[relations]]
 relation_id = "secured_by"

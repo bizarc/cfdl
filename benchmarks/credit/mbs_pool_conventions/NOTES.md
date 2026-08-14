@@ -40,10 +40,10 @@ performed against the full schedule; only the anchors are committed.
 The pack applied SMM to the balance **net of defaults**. SMM is defined on the
 loans outstanding at the *beginning* of the month, via
 `SMM = (Fsched − F2) / Fsched` where `Fsched = F1 × BAL2/BAL1` — the beginning
-balance after *scheduled amortisation only*. Defaults are not removed.
+balance after *scheduled amortization only*. Defaults are not removed.
 
 Period 1: reference 999,329, the pack 989,336 — short by exactly the 1% MDR. The
-pack's rules header described this behaviour but cited nothing; it was a
+pack's rules header described this behavior but cited nothing; it was a
 misreading of the quantity it calls SMM, not a competing convention.
 
 **And the survival factor changes with it**, which is not obvious. Prepayments
@@ -62,34 +62,34 @@ carried the same misreading as the engine, which is why they had always agreed
 ### 2. The recovery basis — fixed
 
 The pack recovered `(1 − severity)` of **face** after the lag. A defaulted loan
-keeps amortising while it sits in foreclosure, so what is liquidated is the
-**amortised** balance.
+keeps amortizing while it sits in foreclosure, so what is liquidated is the
+**amortized** balance.
 
-The reference's amortised-default-balance column gives the mechanism exactly, in
+The reference's amortized-default-balance column gives the mechanism exactly, in
 three relationships that hold on every row:
 
 ```
-recovery + loss = amortised default balance
+recovery + loss = amortized default balance
 loss            = severity x ORIGINAL defaulted face
-amortised bal   = face x S(p)/S(p-lag)     S = the scheduled balance factor
+amortized bal   = face x S(p)/S(p-lag)     S = the scheduled balance factor
                                            already inside the pack's closed form
 ```
 
 So `recovery(p) = face(p−lag) × [ S(p)/S(p−lag) − severity ]`, floored at zero.
 **336 of 336 asserted recoveries now agree within 0.51** (whole-dollar rounding
 in the source is the binding constraint, not the engine). Level-pay only: an
-IO/bullet loan's defaulted balance does not amortise, so face is already right
+IO/bullet loan's defaulted balance does not amortize, so face is already right
 there, and the asymmetry in `lowering/rules.toml` is deliberate.
 
 The zero floor does not bind anywhere on a 30-year pool, which is why the
-reference could not have revealed it. It binds on a short amortising term, where
+reference could not have revealed it. It binds on a short amortizing term, where
 the balance is nearly gone by the time foreclosure completes — `credit_pool_smoke`
 (12 months) fell 9,573.67 → 2,700.77 on this change, far more than the 1–8% the
 30-year case suggested.
 
 ### 3. A payment struck from a varying divisor — fixed
 
-Generalising the accrual divisor into the level-pay closed form had made
+Generalizing the accrual divisor into the level-pay closed form had made
 `day_count = "act/360"` recompute *both* interest and scheduled principal from a
 divisor that varies with month length, so the implied payment swung 697k–754k
 where the market holds it fixed. `amortization_day_count` now strikes the

@@ -198,6 +198,17 @@ true.
 
 ### 4.4 Vocabulary consistency — fail, and the cheapest thing to fix
 
+> **RESOLVED.** US spelling was applied across published content and its
+> generating sources: 431 replacements across 41 forms. The decision and the
+> full map are in `terminology.toml`. The figures below are the measurement that
+> prompted it and are left as recorded.
+>
+> One correction the fix produced, worth more than the fix: this section
+> measured *published prose* and found 7 conflicting pairs. The sweep had to run
+> over the **sources** that generate that prose, and those held 41. A published
+> page is a rendering; measuring it understates what is actually inconsistent.
+> Re-measure sources, not pages.
+
 STE's central rule is one word, one form, one meaning. Both spellings of the
 same word are currently published:
 
@@ -466,11 +477,11 @@ Ordered by value per unit of effort. Backlog items are appended to
 
 | # | Action | Effort | Why it ranks here |
 |---|---|---|---|
-| 1 | Define RFC 2119 keywords in the three specs | Hours | 143 undefined keywords in documents meant to support a second implementation |
-| 2 | Resolve spelling conflicts per `terminology.toml` | Hours | Mechanical; ends a visible inconsistency permanently |
-| 3 | Fix `Hit **Run**` and settle one verb for control activation | Minutes | The most-read procedural line on the site |
+| 1 | ~~Define RFC 2119 keywords in the three specs~~ **DONE** | Hours | 143 undefined keywords in documents meant to support a second implementation |
+| 2 | ~~Resolve spelling conflicts per `terminology.toml`~~ **DONE** | Hours | Mechanical; ends a visible inconsistency permanently |
+| 3 | ~~Fix `Hit **Run**` and settle one verb for control activation~~ **DONE** | Minutes | The most-read procedural line on the site |
 | 4 | Fix number and currency formats in `benchmarks/*/*/{case.toml,CASE.md}` | Hours | U+00D7 in 4 files, `$Xmm` in 37; mechanical, and both are published |
-| 5 | Settle `run configuration` as the single term | Hours | Three names for one object across 66 uses |
+| 5 | ~~Settle `run configuration` as the single term~~ **DONE in prose** | Hours | Three names for one object. The slug `/docs/guides/scenarios-and-run-configs` still reads `run-configs`; changing it is a URL change needing a redirect, so it was left alone |
 | 6 | Rewrite exercise prompts to Tier A | Days | 43% over the procedural limit; the most instruction-shaped text in the estate |
 | 7 | Add `description` frontmatter to 111 site pages | Days | No page currently has a meta description |
 | 8 | Generate a glossary page from `terminology.toml` | Days | Required by 26514/82079-1; two specialist vocabularies are currently unglossed |

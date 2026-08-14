@@ -308,7 +308,7 @@ schedule_to = ""
 selling_costs = "0"
 
 # ---------------------------------------------------------------------------
-# cre.permanent_debt — a commercial mortgage on a stabilised property.
+# cre.permanent_debt — a commercial mortgage on a stabilized property.
 #
 # Emits ONE stream, `loan.permanent_debt_service`, because that is the exact
 # name `domain.cre.debt_service` selects (metrics.toml). Selectors match by
@@ -316,8 +316,8 @@ selling_costs = "0"
 # the metric summing nothing — and `require_positive` would then omit both it
 # and `domain.cre.dscr` silently rather than erroring.
 #
-# THE DEFINING FEATURE IS THAT AMORTISATION AND MATURITY DIFFER. A 30-year
-# amortisation on a 10-year term is the normal commercial structure, so
+# THE DEFINING FEATURE IS THAT AMORTIZATION AND MATURITY DIFFER. A 30-year
+# amortization on a 10-year term is the normal commercial structure, so
 # `amort_months` strikes the payment while `term_end` sets maturity:
 #
 #   payment index k = p - io_months + 1     (1-based, p = periods elapsed)
@@ -325,7 +325,7 @@ selling_costs = "0"
 #
 # THE BALLOON DEFAULTS OFF, and that is a convention rather than an oversight.
 # Debt service coverage is measured on PERIODIC debt service; folding an
-# unamortised balance into the final period would make that period's DSCR
+# unamortized balance into the final period would make that period's DSCR
 # meaningless. The standard pro forma carries the payoff against the sale in
 # the reversion, not as a debt service line. `balloon_at_maturity = 1` opts in.
 #
@@ -339,12 +339,12 @@ selling_costs = "0"
 # directly and the distinction is live.
 #
 # `principal` and `rate` are deliberately NOT defaulted. A mortgage with an
-# unstated balance or an unstated rate is not a modelling shortcut, it is a
+# unstated balance or an unstated rate is not a modeling shortcut, it is a
 # missing term, and E5006 should say so rather than the pack inventing a zero.
 #
 # Sizing to a target coverage ratio is a solve and is out of scope. So is
 # refinance, which needs the events layer — no pack emits events. Mortgage
-# insurance (FHA/HUD MIP) is not modelled: it is not debt service, and the one
+# insurance (FHA/HUD MIP) is not modeled: it is not debt service, and the one
 # committed source that carries it states P+I+MIP as a single published line.
 # ---------------------------------------------------------------------------
 
@@ -378,14 +378,14 @@ payment_frequency = ""
 # parameter as though it were something the parties agreed, and the next deal
 # disagrees with it.
 #
-# THE CURVE CARRIES AN ANNUALISED FUNDING RATE, and every read divides by
+# THE CURVE CARRIES AN ANNUALIZED FUNDING RATE, and every read divides by
 # `{{model.periods_per_year}}`. That is the same convention `rent_year`,
 # `opex_year` and opco's `growth_curve` already follow, and it is what makes
 # the contract cadence-neutral: a `curve` is a LEVEL, so a step curve returns
 # the last point at or before the date whether or not a point was declared
 # there. Read as a per-period TOTAL instead, a schedule stated quarterly and
 # run monthly repeats each quarter's figure three times and funds three times
-# the money, silently. Annualised, the same sparse curve is correct on every
+# the money, silently. Annualized, the same sparse curve is correct on every
 # calendar, and re-graining spreads a quarter's funding evenly across its
 # months — which is the only defensible reading when nothing finer was stated.
 #
@@ -410,10 +410,10 @@ payment_frequency = ""
 # shape any construction contract has to take, and it is why this one carries a
 # cumulative field rather than a running balance.
 #
-# INTEREST IS PAID, NOT CAPITALISED. Capitalising compounds it, which is a
+# INTEREST IS PAID, NOT CAPITALIZED. Capitalizing compounds it, which is a
 # different instrument and a different recurrence; the shipped case funds
 # interest from the equity budget as a separate stated line, which is what the
-# published exhibit does. A capitalising variant collects to
+# published exhibit does. A capitalizing variant collects to
 # `next (prev * (1 + r*f) + D) / (1 - r*f)` and is a follow-on, not a flag.
 # ---------------------------------------------------------------------------
 

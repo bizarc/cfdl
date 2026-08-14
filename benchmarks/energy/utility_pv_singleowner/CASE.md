@@ -3,7 +3,7 @@
 A 100 MW-AC utility-scale photovoltaic project in a single-owner structure,
 generating 250 GWh in its first year. It sells under a 25-year power purchase
 agreement at $45/MWh escalating 2% a year, against 0.5% annual module
-degradation. $60mm of debt amortises over 18 years at 6%. A 30% investment tax
+degradation. $60mm of debt amortizes over 18 years at 6%. A 30% investment tax
 credit lands in the first operating year, and the project depreciates on the
 five-year MACRS schedule, on a basis reduced by half the credit.
 

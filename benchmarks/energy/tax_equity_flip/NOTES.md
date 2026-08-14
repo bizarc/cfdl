@@ -8,7 +8,7 @@ lifecycle transition fired.
 
 The US national laboratory's open-source system-advisor model, leveraged
 partnership-flip configuration, driven through its Python bindings. BSD-3
-licensed, so the constraint is not the licence but the standing rule that the
+licensed, so the constraint is not the license but the standing rule that the
 validation *mechanism* does not persist in the repo. It was installed in a
 throwaway virtualenv outside the working tree, run once, and discarded.
 
@@ -36,7 +36,7 @@ outputs read are `flip_actual_year`, `cf_tax_investor_aftertax_cash` and
 ## The installed cost is larger than the equipment
 
 The reference reports `cost_prefinancing` of $100mm and `cost_installed` of
-$103.1mm: it capitalises $3.1mm of financing into the basis, and both the
+$103.1mm: it capitalizes $3.1mm of financing into the basis, and both the
 credit and depreciation are taken on the larger figure. The model states the
 installed cost rather than deriving the financing component, which is the one
 input carried across rather than computed. Everything downstream follows:

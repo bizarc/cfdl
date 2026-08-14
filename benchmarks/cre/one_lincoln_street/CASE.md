@@ -3,7 +3,7 @@
 A ground-up office development in Boston: a 36-storey building funded quarter by
 quarter across a 2000–2003 construction period. Equity goes in first against a
 $110,738,000 commitment; once that is exhausted the construction facility draws
-the balance, and interest capitalises into the loan through the build.
+the balance, and interest capitalizes into the loan through the build.
 
 ## The reference
 
@@ -24,7 +24,7 @@ published drivers.
 | Pack | `cre` |
 | Declared | one curve, one state, three native streams |
 | Language features | a curve read per period, declared state as a running total |
-| Conventions | equity-first funding, a facility that draws only once equity depletes, capitalised construction interest |
+| Conventions | equity-first funding, a facility that draws only once equity depletes, capitalized construction interest |
 
 The case runs on native streams and a declared state rather than a pack
 contract: `cre.construction_stub` takes a flat draw and cannot express an
@@ -33,7 +33,7 @@ equity-first waterfall that depletes mid-quarter.
 ## The result
 
 Equity contribution and construction draw reproduce **exactly to the dollar**
-across all sixteen quarters. Capitalised interest reconciles to the exhibit's
+across all sixteen quarters. Capitalized interest reconciles to the exhibit's
 stated $16,310,570 of accrued construction interest.
 
 Asserted: three stream columns quarter by quarter, plus the interest total.

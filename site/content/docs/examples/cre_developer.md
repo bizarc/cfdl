@@ -22,7 +22,7 @@ Run stress case:
 
 ## Scenario knobs
 
-The provided run configs demonstrate deterministic override testing with:
+The provided run configurations demonstrate deterministic override testing with:
 
 - `stream.cre.lease.base_rent.amount`
 - `stream.ops_expense.amount`

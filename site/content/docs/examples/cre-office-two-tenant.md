@@ -19,14 +19,14 @@ An institutional two-tenant office building held for ten years. Tenant A takes a
 five-year lease with three months free and 3% anniversary escalations; Tenant B
 takes seven years from mid-year one at 2.5%. Both recover operating expenses
 above their own expense stop, at different pro-rata shares. Tenant A's expiry is
-modelled as a probability-weighted rollover — 70% renewal at one rent, otherwise
+modeled as a probability-weighted rollover — 70% renewal at one rent, otherwise
 a new tenant at market after three months of downtime, with different tenant
 improvement and leasing commission costs on each branch. A permanent mortgage
 runs underneath, and the building is sold on forward net operating income.
 
 ## The reference
 
-Institutional lease-by-lease office DCF conventions, as practised by the
+Institutional lease-by-lease office DCF conventions, as practiced by the
 commercial valuation software this kind of model is built in.
 
 **Not redistributable.** The source cannot be published, so the reference is an
@@ -144,14 +144,14 @@ contract cre.exit_forward on entity asset.tower {
   }
 }
 
-// Permanent debt: $6m at 5.50%, 25-year amortisation, 10-year hold.
+// Permanent debt: $6m at 5.50%, 25-year amortization, 10-year hold.
 //
 // Was a hand-written stream computing its own `pmt`. `cre.permanent_debt`
 // states the loan instead of its arithmetic, and reproduces the same
 // 4,421,429.94 of debt service — the payment is identical because with one
 // combined stream principal is the plug.
 //
-// The balloon stays off (the default): the unamortised $4.5m is repaid out of
+// The balloon stays off (the default): the unamortized $4.5m is repaid out of
 // the sale, not as debt service, and folding it into the final period would
 // make that period's DSCR meaningless.
 contract cre.permanent_debt on entity asset.tower {

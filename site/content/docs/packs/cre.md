@@ -11,7 +11,7 @@ Commercial real estate: income-producing property held, operated and sold.
 
 ## What it models
 
-A lease-by-lease institutional DCF. Rent escalating on its anniversary, expense recoveries above a stop, vacancy and free rent, rollover at expiry blended across renewal and re-letting, tenant improvements and leasing commissions below the NOI line, amortising debt with an optional interest-only period, and a reversion struck at a cap rate off a forward year's income.
+A lease-by-lease institutional DCF. Rent escalating on its anniversary, expense recoveries above a stop, vacancy and free rent, rollover at expiry blended across renewal and re-letting, tenant improvements and leasing commissions below the NOI line, amortizing debt with an optional interest-only period, and a reversion struck at a cap rate off a forward year's income.
 
 ## Contracts
 

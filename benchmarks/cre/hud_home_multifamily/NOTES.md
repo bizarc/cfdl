@@ -121,7 +121,7 @@ from its rounded print. Confirmed binding — at 0.4 the case fails.
 
 ### One state per sub-line, not one for the total
 
-Modelling the total as a single rounded line closed most of the gap and left
+Modeling the total as a single rounded line closed most of the gap and left
 **11.00**. The workbook rounds each of its four sub-lines *before* summing them,
 and rounding the sum is different arithmetic — 12,607.5 rounds up on its own and
 disappears inside a total.
@@ -146,7 +146,7 @@ This case does not, for one reason — not the two originally recorded here.
 states $150,000 at 4.00% over a 15-year term, paid monthly:
 `pmt(0.04/12, 180, 150000) x 12 = 13,314.38`, exactly the workbook's own
 "Annual P+I as % of loan amount" of 8.876255% applied to the principal. This
-file first claimed a monthly-paying loan could not be modelled on an annual
+file first claimed a monthly-paying loan could not be modeled on an annual
 calendar. Measured with the check bypassed, the contract returns **13,314.3827**
 on this model, to the cent. The engine sums the twelve monthly accruals into the
 year; `E2108_SCHEDULE_FINER_THAN_CALENDAR` is what refuses it, and that check is
@@ -163,10 +163,10 @@ mortgage insurance    675.00   = 0.450% of the original principal, flat
 ```
 
 Mortgage insurance is not a payment on the debt, and `cre.permanent_debt` does
-not invent one. Modelling it would mean either putting a `mip_rate` on a debt
+not invent one. Modeling it would mean either putting a `mip_rate` on a debt
 contract that has no business carrying it, or fitting principal and rate
 backwards until the total happened to land on 13,989.38 — reproducing the number
-while modelling something that is not the loan.
+while modeling something that is not the loan.
 
 So the stream stays hand-written and the assertion stays at the workbook's own
 195,846. Recorded as `docs/13_feature_backlog.md` 7.14.

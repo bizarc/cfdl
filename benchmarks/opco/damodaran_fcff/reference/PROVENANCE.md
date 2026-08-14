@@ -11,14 +11,14 @@
 | Size | 281 KB |
 | SHA-256 | `d6ffb67d965dc22463e4d013636befab3da431e7fc608936a82612fa73198e72` |
 
-## Licence
+## License
 
 Stated on the author's own index page:
 
 > These spreadsheet programs are in Excel and are not copy protected. Download
 > them and feel free to modify them to your own specifications.
 
-No registration, no paywall, no formal open-source licence. That permission is
+No registration, no paywall, no formal open-source license. That permission is
 explicit enough to redistribute, so the workbook is committed — the second
 source in this repo where a reader can open the reference and mark us, rather
 than take the reconciliation on trust. (The first is
