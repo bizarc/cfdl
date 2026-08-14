@@ -1,0 +1,470 @@
+# CFDL controlled terminology register
+#
+# The single source for approved word forms, Technical Names, and Technical
+# Verbs. The rules that use it are in 22_cfdl_controlled_english.md; the
+# evidence for each entry is in 21_documentation_standards_audit.md.
+#
+# WHY THIS FILE EXISTS. ASD-STE100's central rule is one word, one form, one
+# meaning. The audit found the same words spelled two ways and one object
+# carrying three names, because nothing recorded a decision. This file is that
+# record.
+#
+# It has a second job. STE caps a noun cluster at three words, and much of this
+# domain's vocabulary is longer than that — a "term power purchase agreement" is
+# what the instrument is called. STE's own answer is to register such phrases as
+# Technical Names, after which the cap does not apply. Registration is therefore
+# not bookkeeping: it is what keeps a correct term from being flagged and
+# rewritten into a wrong one.
+#
+# TOML because tools/ already parses it with tomllib (see
+# tools/check-pack-validations.py and tools/benchmark-runner.py), so a future
+# gate reads this with no new dependency.
+#
+# `occurrences` is the count in published prose — site/content/docs/**/*.md,
+# learn/content/chapters/*.mdx, and training/exercises/*/*/README.md, with code
+# fences and frontmatter removed — at the time of the audit. It is provenance,
+# not a target, and it goes stale. Re-measure before relying on it.
+
+schema_version = 1
+derived_from = "ASD-STE100 Issue 9"
+conformance_claimed = false
+
+# ---------------------------------------------------------------------------
+# Preferred forms. Each entry resolves a conflict the corpus actually contains.
+# ---------------------------------------------------------------------------
+
+# US spelling throughout. The corpus is not split along a clean national line —
+# `behavior` and `modeling` lean American while `amortisation` and `amortising`
+# lean British — so no convention is being overturned. US is chosen because the
+# larger share of the corpus and the primary readership already use it.
+
+[[preferred]]
+use = "modeling"
+instead_of = ["modelling"]
+occurrences = { modeling = 28, modelling = 5 }
+
+[[preferred]]
+use = "amortization"
+instead_of = ["amortisation"]
+occurrences = { amortization = 3, amortisation = 21 }
+note = "The minority form wins here. Consistency with the rest of the US spelling decision is worth 21 replacements."
+
+[[preferred]]
+use = "amortizing"
+instead_of = ["amortising"]
+occurrences = { amortizing = 4, amortising = 19 }
+
+[[preferred]]
+use = "amortize"
+instead_of = ["amortise"]
+occurrences = { amortize = 1, amortise = 1 }
+
+[[preferred]]
+use = "behavior"
+instead_of = ["behaviour"]
+occurrences = { behavior = 25, behaviour = 6 }
+
+[[preferred]]
+use = "license"
+instead_of = ["licence"]
+occurrences = { license = 9, licence = 4 }
+note = "One form for both noun and verb, per the US convention."
+
+[[preferred]]
+use = "catalog"
+instead_of = ["catalogue"]
+occurrences = { catalog = 1, catalogue = 2 }
+
+# One concept, one term.
+
+[[preferred]]
+use = "run configuration"
+instead_of = ["run config", "run settings"]
+occurrences = { "run configuration" = 57, "run config" = 7, "run settings" = 2 }
+note = "Spell it out. `run config` is acceptable inside a code span where it names a literal file or field."
+
+[[preferred]]
+use = "results document"
+instead_of = ["output document", "results doc"]
+occurrences = { "results document" = 9, "output document" = 2 }
+
+[[preferred]]
+use = "click"
+instead_of = ["hit", "press", "tap"]
+occurrences = { click = 1, hit = 7, press = 1 }
+note = "`hit` is not an approved instruction verb. site/content/docs/getting-started.md:31 reads `Hit **Run**` and is the most-read procedural line on the site. `press` stays correct for a physical keyboard key."
+
+# ---------------------------------------------------------------------------
+# Technical Names — language constructs.
+#
+# Approved as nouns with the stated meaning. Each is exempt from the STE
+# dictionary and, where multi-word, from the noun-cluster cap.
+# ---------------------------------------------------------------------------
+
+[[technical_name]]
+term = "entity"
+category = "language"
+definition = "A thing the model is about. An asset produces or consumes cash; a party contracts, owns, or lends."
+occurrences = 191
+
+[[technical_name]]
+term = "stream"
+category = "language"
+definition = "A dated, directed movement of cash attached to an entity and laid out on the timeline."
+occurrences = 264
+
+[[technical_name]]
+term = "contract"
+category = "language"
+definition = "A first-class agreement carrying terms and effects."
+occurrences = 272
+
+[[technical_name]]
+term = "assumption"
+category = "language"
+definition = "A declared input to the model, constant or stochastic. Declared with `assume`."
+occurrences = 33
+
+[[technical_name]]
+term = "curve"
+category = "language"
+definition = "A named series of values indexed by time."
+occurrences = 98
+
+[[technical_name]]
+term = "fact field"
+category = "language"
+definition = "A field on an entity that takes a literal and nothing else. A value that moves must be a rule field."
+occurrences = 160          # count is for "field"; the two kinds are not counted separately
+
+[[technical_name]]
+term = "rule field"
+category = "language"
+definition = "A field carrying a recurrence: `init` gives the first period's value, `next` is evaluated each later period with `prev` bound to the field's own previous value."
+occurrences = 160          # as above
+
+[[technical_name]]
+term = "event"
+category = "language"
+definition = "A construct that fires on a condition and changes model state."
+occurrences = 76
+
+[[technical_name]]
+term = "option"
+category = "language"
+definition = "An electable right held by a party."
+occurrences = 53
+
+[[technical_name]]
+term = "waterfall"
+category = "language"
+definition = "An ordered distribution of cash through steps by seniority."
+occurrences = 100
+note = "Also the finance term. One meaning covers both here, which is why it is registered once."
+
+[[technical_name]]
+term = "pack"
+category = "language"
+definition = "A domain vocabulary supplying types, roles, and terms to a model."
+occurrences = 580
+
+[[technical_name]]
+term = "grain"
+category = "language"
+definition = "How finely the model slices time and things. Timeline grain and entity grain are independent choices."
+occurrences = 65
+
+[[technical_name]]
+term = "scenario"
+category = "language"
+definition = "A named set of overrides applied to a run."
+occurrences = 38
+
+[[technical_name]]
+term = "statement"
+category = "language"
+definition = "A per-period report published from the model's results."
+occurrences = 87
+
+[[technical_name]]
+term = "metric"
+category = "language"
+definition = "A derived summary figure over the model's cash flows."
+occurrences = 98
+
+[[technical_name]]
+term = "schedule"
+category = "language"
+definition = "The set of dates on which a stream pays."
+occurrences = 166
+
+[[technical_name]]
+term = "diagnostic"
+category = "compiler"
+definition = "A compiler message carrying a stable code and a source span."
+occurrences = 20
+
+[[technical_name]]
+term = "span"
+category = "compiler"
+definition = "The region of source a diagnostic points at."
+occurrences = 23
+
+[[technical_name]]
+term = "lowering"
+category = "compiler"
+definition = "The compiler stage that reduces language constructs to the canonical IR. A technical noun, so exempt from the rule against -ing forms."
+occurrences = 94
+
+[[technical_name]]
+term = "IR"
+category = "compiler"
+definition = "The canonical JSON intermediate representation a model compiles to."
+expand_on_first_use = "intermediate representation (IR)"
+
+# ---------------------------------------------------------------------------
+# Technical Names — finance.
+#
+# Registered so the three-word noun-cluster cap does not fire on terms that are
+# correct as written. Rewriting these to fit a word count would produce
+# documentation that is shorter and wrong.
+# ---------------------------------------------------------------------------
+
+[[technical_name]]
+term = "term power purchase agreement"
+category = "finance"
+definition = "A power offtake contract for a fixed term."
+occurrences = 2
+exempt_from_noun_cluster = true
+
+[[technical_name]]
+term = "weighted average life"
+category = "finance"
+definition = "The average time to principal return, weighted by principal repaid."
+occurrences = 39
+exempt_from_noun_cluster = true
+note = "The axis convention this is measured on is not settled. Do not state one in prose without checking."
+
+[[technical_name]]
+term = "working capital"
+category = "finance"
+definition = "Receivables, payables, and inventory, modeled on a days-based policy."
+occurrences = 17
+exempt_from_noun_cluster = true
+
+[[technical_name]]
+term = "expense stop"
+category = "finance"
+definition = "The expense level above which recoveries are billed to a tenant."
+occurrences = 3
+exempt_from_noun_cluster = true
+
+[[technical_name]]
+term = "cap rate"
+category = "finance"
+definition = "The capitalization rate applied to stabilized income to derive value."
+occurrences = 14
+
+[[technical_name]]
+term = "lease-up"
+category = "finance"
+definition = "The period during which vacant space is let to stabilized occupancy."
+occurrences = 18
+
+[[technical_name]]
+term = "reversion"
+category = "finance"
+definition = "The terminal value realized at the end of a hold."
+occurrences = 14
+
+[[technical_name]]
+term = "takeout"
+category = "finance"
+definition = "Permanent financing that repays construction debt."
+occurrences = 8
+
+[[technical_name]]
+term = "promote"
+category = "finance"
+definition = "The sponsor's disproportionate share of profit above a return hurdle."
+occurrences = 12
+
+[[technical_name]]
+term = "catch-up"
+category = "finance"
+definition = "The waterfall tier that restores a party to its target share after a preferred return is paid."
+occurrences = 8
+
+[[technical_name]]
+term = "covenant"
+category = "finance"
+definition = "A contractual test the borrower must satisfy."
+occurrences = 11
+
+[[technical_name]]
+term = "DSCR"
+category = "finance"
+definition = "Debt service coverage ratio."
+expand_on_first_use = "debt service coverage ratio (DSCR)"
+occurrences = 22
+
+[[technical_name]]
+term = "MOIC"
+category = "finance"
+definition = "Multiple of invested capital."
+expand_on_first_use = "multiple of invested capital (MOIC)"
+occurrences = 19
+
+[[technical_name]]
+term = "IRR"
+category = "finance"
+definition = "Internal rate of return: the discount rate at which NPV is zero. Undefined for a series that never changes sign."
+expand_on_first_use = "internal rate of return (IRR)"
+occurrences = 39
+
+[[technical_name]]
+term = "NPV"
+category = "finance"
+definition = "Net present value."
+expand_on_first_use = "net present value (NPV)"
+occurrences = 71
+
+[[technical_name]]
+term = "PPA"
+category = "finance"
+definition = "Power purchase agreement."
+expand_on_first_use = "power purchase agreement (PPA)"
+occurrences = 24
+
+[[technical_name]]
+term = "EBITDA"
+category = "finance"
+definition = "Earnings before interest, taxes, depreciation, and amortization."
+occurrences = 17
+
+# ---------------------------------------------------------------------------
+# Technical Verbs.
+# ---------------------------------------------------------------------------
+
+[[technical_verb]]
+term = "compile"
+definition = "To translate a model into the canonical IR."
+occurrences = 85
+
+[[technical_verb]]
+term = "lower"
+definition = "To reduce a language construct to its IR form."
+occurrences = 12
+
+[[technical_verb]]
+term = "evaluate"
+definition = "To compute a value for a period."
+occurrences = 13
+
+[[technical_verb]]
+term = "resolve"
+definition = "To bind a name to its declaration."
+occurrences = 19
+
+[[technical_verb]]
+term = "discount"
+definition = "To apply a discount rate to a future cash flow."
+occurrences = 36
+
+[[technical_verb]]
+term = "accrue"
+definition = "To recognize an amount in a period without paying it."
+occurrences = 2
+
+[[technical_verb]]
+term = "escalate"
+definition = "To increase an amount on a stated schedule."
+occurrences = 1
+
+[[technical_verb]]
+term = "seed"
+definition = "To fix the random draw so a stochastic run reproduces."
+occurrences = 22
+
+[[technical_verb]]
+term = "diff"
+definition = "To compare two artefacts and report the differences."
+occurrences = 13
+
+# ---------------------------------------------------------------------------
+# Pedagogical metaphors — Tier C only.
+#
+# Permitted in the training material on two conditions: registered here, and
+# used alongside the plain term rather than instead of it. A metaphor may
+# introduce a concept; it may not be the only name the reader is given.
+#
+# Registering them is the point. It turns a stylistic habit into a decision a
+# reviewer can audit.
+# ---------------------------------------------------------------------------
+
+[[pedagogical]]
+metaphor = "the spine"
+stands_for = "the model timeline"
+occurrences = 2
+
+[[pedagogical]]
+metaphor = "the cast"
+stands_for = "the entities"
+occurrences = 12
+
+[[pedagogical]]
+metaphor = "the atoms"
+stands_for = "the streams"
+occurrences = 2
+
+[[pedagogical]]
+metaphor = "smells"
+stands_for = "signs of a modeling problem"
+occurrences = 4
+
+[[pedagogical]]
+metaphor = "idiom kit"
+stands_for = "the set of recurring modeling patterns"
+occurrences = 2
+
+[[pedagogical]]
+metaphor = "storyline"
+stands_for = "one economic subject and the constructs that express it"
+occurrences = 10
+
+# ---------------------------------------------------------------------------
+# Not approved.
+#
+# Seeded from the ornament list already encoded in tools/check-site-voice.py so
+# the two cannot drift. All currently measure zero in published prose — that
+# gate works, and this section exists to keep it that way rather than to report
+# a problem.
+# ---------------------------------------------------------------------------
+
+[[not_approved]]
+terms = [
+  "blazing", "blazingly", "lightning-fast", "world-class", "cutting-edge",
+  "state-of-the-art", "revolutionary", "seamless", "seamlessly", "effortless",
+  "effortlessly", "game-changer", "game-changing", "best-in-class",
+  "unparalleled", "robust and", "powerful and", "simply put", "crown jewel",
+]
+reason = "Marketing ornament. Each is a claim the reader should be left to make."
+use_instead = "State what the software does."
+enforced_by = "tools/check-site-voice.py"
+occurrences = 0
+
+[[not_approved]]
+terms = ["mm"]
+reason = "Reads as millimetres. Not a standard abbreviation for millions outside a trading desk."
+use_instead = "m — write $33.6m, not $33.6mm"
+context = "currency"
+
+[[not_approved]]
+terms = ["×"]
+reason = "U+00D7 multiplication sign. Present in the generated benchmark pages."
+use_instead = "x — write 8.0x"
+
+[[not_approved]]
+terms = ["‑"]
+reason = "U+2011 non-breaking hyphen. Invisible in review and breaks search. Present in docs/01_language_spec.md."
+use_instead = "- (U+002D)"
