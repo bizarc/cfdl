@@ -117,7 +117,10 @@
 
   --cfdl-text-primary: var(--p-slate-900);
   --cfdl-text-secondary: var(--p-slate-600);
-  --cfdl-text-muted: var(--p-slate-500);
+  /* Not slate-500: #6b7888 is 4.49:1 on white and 4.23:1 on the raised
+     surface — both under WCAG's 4.5:1 for body-size text. This value holds
+     5.3:1 on white and 5.0:1 on raised. Muted, not illegible. */
+  --cfdl-text-muted: #5f6c7b;
   --cfdl-text-inverse: var(--p-slate-0);
   --cfdl-text-accent: var(--p-brand-600);
 
@@ -167,7 +170,11 @@
 
   --cfdl-text-primary: #e8edf4;
   --cfdl-text-secondary: var(--p-slate-400);
-  --cfdl-text-muted: var(--p-slate-500);
+  /* Not slate-500: #6b7888 is 4.18:1 on the page and 3.81:1 on the raised
+     surface. This value holds 5.9:1 / 5.3:1 / 6.0:1 on page, raised and
+     sunken. The dark theme needed LIGHTER where light needed darker, which
+     is why the semantic token no longer shares one primitive. */
+  --cfdl-text-muted: #8391a3;
   --cfdl-text-inverse: var(--p-slate-950);
   --cfdl-text-accent: var(--p-brand-300);
 

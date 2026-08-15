@@ -163,11 +163,20 @@ export function ResultsPanel({
           <p className="text-sm text-muted">{tab} is open in the expanded view.</p>
         </div>
       ) : (
-        <div className={bodyClass}>{body}</div>
+        // Focusable because it scrolls: a keyboard user must be able to reach
+        // a scroll container to scroll it. Named so the tab stop says what it is.
+        <div tabIndex={0} role="region" aria-label="Run results" className={bodyClass}>
+          {body}
+        </div>
       )}
 
       <ExpandOverlay open={expanded} onOpenChange={setExpanded} title={`${tab} · CFDL playground`}>
-        <div className={cn("flex h-full min-h-0 flex-col", !selfScroll && "overflow-auto p-4")}>
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Run results, expanded"
+          className={cn("flex h-full min-h-0 flex-col", !selfScroll && "overflow-auto p-4")}
+        >
           {body}
         </div>
       </ExpandOverlay>

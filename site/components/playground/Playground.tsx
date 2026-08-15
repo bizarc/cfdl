@@ -374,7 +374,7 @@ export function Playground() {
             />
           </section>
 
-          {wide ? <Splitter onDrag={setSplit} onReset={() => setSplit(50)} mainRef={mainRef} /> : null}
+          {wide ? <Splitter split={split} onDrag={setSplit} onReset={() => setSplit(50)} mainRef={mainRef} /> : null}
 
           <section className="min-h-0 min-w-0">
             <ResultsPanel
@@ -440,10 +440,12 @@ function useMediaQuery(query: string): boolean {
  * move events and drop the drag.
  */
 function Splitter({
+  split,
   onDrag,
   onReset,
   mainRef,
 }: {
+  split: number;
   onDrag: (pct: number) => void;
   onReset: () => void;
   mainRef: React.RefObject<HTMLElement | null>;
@@ -462,6 +464,12 @@ function Splitter({
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize editor and results"
+      // A FOCUSABLE separator is a widget, and ARIA requires the value trio on
+      // it — without aria-valuenow a screen reader announces a resizer it can
+      // find but cannot describe. The bounds mirror the 20/80 clamp in move().
+      aria-valuemin={20}
+      aria-valuemax={80}
+      aria-valuenow={Math.round(split)}
       tabIndex={0}
       onPointerDown={(e) => {
         // Capture is an optimisation, not the mechanism — a pointer id the

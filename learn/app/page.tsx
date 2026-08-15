@@ -55,7 +55,7 @@ export default function Home() {
         {start && (
           <p className="mt-3 text-sm text-muted">
             Begins with{" "}
-            <Link href={start.slug} className="text-accent-text hover:underline">
+            <Link href={start.slug} className="text-accent-text underline decoration-accent-text/40 hover:decoration-accent-text">
               {start.title}
             </Link>{" "}
             — no install required.

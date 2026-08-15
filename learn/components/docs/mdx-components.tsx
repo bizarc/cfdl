@@ -74,7 +74,14 @@ export const mdxComponents = {
     <hr {...p} className={cn("my-10 border-subtle", p.className)} />
   ),
   table: (p: ComponentPropsWithoutRef<"table">) => (
-    <div className="my-6 overflow-x-auto rounded-lg border border-default">
+    // tabIndex so a keyboard user can scroll a wide table at all; the role and
+    // label are what make that stop being an unnamed tab stop.
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Table, scrolls horizontally"
+      className="my-6 overflow-x-auto rounded-lg border border-default"
+    >
       <table {...p} className={cn("w-full border-collapse text-sm", p.className)} />
     </div>
   ),
@@ -141,8 +148,11 @@ export const mdxComponents = {
     "data-lang"?: string;
   }) => (
     <div className="group relative">
+      {/* tabIndex: a wide code block scrolls horizontally, and a scroll
+          container a keyboard cannot reach is one it cannot scroll. */}
       <pre
         {...p}
+        tabIndex={0}
         className={cn(
           "my-6 overflow-x-auto rounded-lg border border-default p-4 pr-24 font-mono text-[13px] leading-relaxed",
           p.className,
