@@ -2027,10 +2027,17 @@ implementation must decide each:
   — the transition is logged and the series never shows the value. Either the
   write should suspend the rule for that period, or targeting a rule-bearing
   field should be a diagnostic.
-- `phase_enter("name")` evaluates in schedule position but not in an event
-  condition ("unknown function; using false" at run time), so an event
-  cannot yet fire on the boundary of a declared phase — the natural join
-  between calendar phases and a state machine.
+- An event cannot fire on the boundary of a declared phase — the natural
+  join between calendar phases and a state machine — and the defect is in
+  the spec, not the engine. The grammar declares `phase_enter` for schedule
+  position only, and the engine implements the grammar completely; but `01`
+  section 6.4 describes the phase helpers as "schedule helpers (see §11)
+  and event helpers (see §13)", and section 13 defines no phase helper of
+  any kind. The cross-reference dangles. Either define the event-position
+  form section 6.4 alludes to, or correct section 6.4 to stop promising it.
+  (Written in event position anyway, the call parses as an unknown function
+  and degrades at run time — "unknown function; using false" — which is how
+  the dangling promise was found.)
 - A date literal does not compare against `time.t` ("cannot compare date and
   number; using false"), so a mistyped condition produces a dead event that
   compiles. All three degrade with a warning rather than failing; a dead

@@ -634,10 +634,10 @@ curve depreciation {
 // and the same machinery would carry it.
 // ---------------------------------------------------------------------------
 
-// `phase_enter("reduced_plant")` is the specified condition for this (01
-// section 6.4). The helper evaluates in schedule position but not yet in an
-// event condition, so the boundary is stated by period index here. One
-// period is one year: t=11 is 2036, t=36 is 2061.
+// The grammar declares `phase_enter` for schedule position only, so an
+// event states its boundary by period index. One period is one year: t=11
+// is 2036, t=36 is 2061. The phase declarations above name the same eras;
+// the dates appear in both places by necessity, not by choice.
 event concentrator_one_offline when time.t >= 11 {
   set entity asset.mine.status = "reduced"
 }
