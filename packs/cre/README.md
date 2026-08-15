@@ -270,7 +270,7 @@ does exactly that and says why.
 
 `cre.lease`, `cre.ops_revenue`, `cre.ops_expense`, `cre.exit_cap`, and
 `cre.construction_stub` model a property at the whole-asset level, for when
-lease-by-lease detail isn't warranted. They follow the same conventions as
+lease-by-lease detail is not warranted. They follow the same conventions as
 the lease-by-lease set: schedules run over the contract's own term, time is
 measured from `term_start`, and every material value is a required term —
 the pack supplies no amounts, rates, or dates of its own.

@@ -74,7 +74,7 @@ The deliberate boundary to understand: exercise is **rule-based, not optimal**. 
 
 **Two events racing.** Two events, same period, both writing the same field — the model has claimed two regimes at once. Order-dependence is a smell here as it is everywhere; give the events mutually exclusive conditions and the question disappears.
 
-**A guard reading a field before anything sets it.** A lifecycle guard like `!= "refinanced"` works from period 0 because an unset field simply isn't equal to the string. But an equality guard (`== "operating"`) on a field nothing has set yet is false forever — declare the starting regime as a fact field (`status = "operating"`) so the model states its initial condition instead of relying on absence.
+**A guard reading a field before anything sets it.** A lifecycle guard like `!= "refinanced"` works from period 0 because an unset field is simply not equal to the string. But an equality guard (`== "operating"`) on a field nothing has set yet is false forever — declare the starting regime as a fact field (`status = "operating"`) so the model states its initial condition instead of relying on absence.
 
 ## Exercises
 

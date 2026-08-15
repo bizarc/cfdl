@@ -35,7 +35,7 @@ Both documents have published JSON Schemas — see the
 [IR schema](/docs/specification/ir-schema) and
 [Results schema](/docs/specification/results-schema).
 
-## What's in a model
+## What a model contains
 
 - **Time** — one calendar declaration (`time calendar monthly from 2026-01
   for 72`) defines the period grid everything else lands on.

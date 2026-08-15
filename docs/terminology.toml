@@ -77,6 +77,7 @@ convention = "US"
 replacements_applied = 537
 forms_applied = 41
 scope = "every tracked file. gold/ is re-blessed, never edited; tools/audit-measure.py holds the UK forms as data and is exempt."
+enforced_by = "tools/check-site-voice.py, which loads [spelling.map] at run time"
 
 [spelling.map]
 modelled = "modeled"

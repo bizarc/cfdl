@@ -46,7 +46,7 @@ metrics, directly comparable.
 
 ## Sensitivity sweeps
 
-Generate configs programmatically (they're plain JSON) or drive sweeps from
+Generate configurations programmatically (they are plain JSON) or drive sweeps from
 the [Python SDK](/docs/python-sdk), where `results.scenarios()` lands each
 scenario as a DataFrame row.
 

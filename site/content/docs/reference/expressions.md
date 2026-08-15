@@ -86,7 +86,7 @@ current build accepts.
 ## Related
 
 - [Curves](/docs/guides/curves) — feeding observed series into `obs.*`.
-- [Scenarios and run configs](/docs/guides/scenarios-and-run-configs) — where
+- [Scenarios and run configurations](/docs/guides/scenarios-and-run-configs) — where
   `inputs.*` and `cfg.*` come from.
 - [Expression environment](/docs/specification/expression-environment) — the
   normative definition: types, coercion, and evaluation order.

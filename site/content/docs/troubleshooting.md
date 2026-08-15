@@ -14,7 +14,7 @@ Organized by surface. Diagnostic codes (`E….`) are cataloged in the
 
 - **`use pack` fails to resolve** — pass `--packs <dir>` pointing at a packs
   directory: an extracted `cfdl-packs-<version>.tar.gz`, or a `packs/`
-  directory beside your model. Check what's visible with
+  directory beside your model. Check what is visible with
   `cfdl pack list --path <dir>`.
 - **Domain metrics missing from results** — `cfdl run` needs `--pack <name>`
   (e.g. `--pack cre`) to apply a pack's metric set; core metrics
@@ -44,7 +44,7 @@ Organized by surface. Diagnostic codes (`E….`) are cataloged in the
 - **`monte_carlo.status: "not_run"`** — Monte Carlo is enabled by the
   run-config (`"monte_carlo": { "trial_count": N, "seed": S }`), not by the
   model alone.
-- **Results differ between machines** — they shouldn't: runs are
+- **Results differ between machines** — they should not: runs are
   byte-reproducible given the same release. Confirm the same version
   (results carry `engine.version` and `model_hash`) and the same seed.
 
@@ -60,7 +60,7 @@ Organized by surface. Diagnostic codes (`E….`) are cataloged in the
 ## Python SDK
 
 - **`CompileError` / `RunError`** — both carry structured details
-  (`CompileError.diagnostics` has codes and spans; don't parse the string
+  (`CompileError.diagnostics` has codes and spans; do not parse the string
   form).
 - **Import fails after checkout install** — editable installs build the
   native module; a Rust toolchain must be available. See

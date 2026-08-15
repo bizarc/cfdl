@@ -32,7 +32,7 @@ you would reach for it, and how to get a particular result.
 | [Diagnostics](/docs/specification/diagnostics) | The complete code register, with severities |
 | [Pack interface](/docs/specification/pack-interface) | How a domain pack extends the language |
 | [IR schema](/docs/specification/ir-schema) | The compiled intermediate representation |
-| [Results schema](/docs/specification/results-schema) | The run output document |
+| [Results schema](/docs/specification/results-schema) | The results document |
 
 The two JSON schemas are also served directly, for validation in your own
 tooling: [IR](/schemas/CFDL_v0_1_IR.schema.json) ·

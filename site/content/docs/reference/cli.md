@@ -62,7 +62,7 @@ Evaluates compiled IR and writes Results JSON.
 
 - `--config` — a [run-config file](/docs/reference/run-config): discount rate,
   parameter overrides, scenarios, Monte Carlo.
-- `--rate` — fallback annual discount rate when the config doesn't set one
+- `--rate` — fallback annual discount rate when the config does not set one
   (default `0.0`).
 - `--as-of` — valuation as-of date.
 - `--pack <name>` — computes that pack's domain metrics in addition to the

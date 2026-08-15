@@ -109,7 +109,7 @@ No step can overdraw the pot, pay negatively (a step is a payment, not a clawbac
 
 **A step that reads like the document but ranks differently.** The construct guarantees seniority *within the order you wrote* — it cannot know the indenture ordered things differently. Transcribe in document order, then have the person who knows the document read your steps top to bottom. That review is the point of the shape matching.
 
-**A sweep that isn't last.** `remaining` mid-list is legal — sometimes correct (the promote above) — but a *final* sweep left off the end silently strands cash in the pot. If the pot should always empty, end with `= remaining` and check the residual series is what equity expects.
+**A sweep that is not last.** `remaining` mid-list is legal — sometimes correct (the promote above) — but a *final* sweep left off the end silently strands cash in the pot. If the pot should always empty, end with `= remaining` and check the residual series is what equity expects.
 
 ## Exercises
 

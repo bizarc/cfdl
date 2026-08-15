@@ -230,11 +230,17 @@ For example: `ste-allow: S2 the split sentence loses the causal link`.
 A reason is required. An annotation without one is a defect, because the value
 of the escape hatch is the record it leaves, not the suppression it performs.
 
-**Nothing enforces this yet.** The annotation is specified now so that prose
-written from today carries it, and so the gate — when built — reads a convention
-that already exists rather than imposing a new one. Enforcement should extend
-`tools/check-site-voice.py`, which already discovers every site-facing source in
-its `sources()` function and is already wired into `make ci`.
+**The mechanical subset is enforced.** `tools/check-site-voice.py` checks every
+site-facing source — the specifications included — for retired spellings (W1,
+from the register's `[spelling.map]`), retired synonyms (W2), `hit` aimed at a
+control (W3), the number formats of §4, and contractions (V6). Word lists load
+from `terminology.toml` at run time, so the gate and the register cannot drift,
+and `ste-allow: <rule id> <reason>` waives a line.
+
+**What the gate deliberately does not check:** sentence length (S1–S2), voice
+(V1–V2), imperative form (P1–P2), and everything else that requires judgment.
+Those live in review against this document, not in a regex — a gate that flags
+judgment gets disabled, and then it checks nothing.
 
 ---
 

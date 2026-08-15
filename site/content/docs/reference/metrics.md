@@ -98,4 +98,4 @@ Generated from each pack's declarations.
 - [Metrics guide](/docs/guides/metrics) — choosing and interpreting them.
 - [Statements](/docs/reference/statements) — the per-period view.
 - [Results schema](/docs/specification/results-schema) — where each metric sits
-  in the output document.
+  in the results document.
