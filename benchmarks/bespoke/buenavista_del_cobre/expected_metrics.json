@@ -1,0 +1,17 @@
+{
+  "model.npv": {
+    "value": 3402.773454,
+    "tolerance": 0.0001,
+    "source": "reference after-tax NPV at the filing's 10%; filing prints 3,405"
+  },
+  "stream.mine.revenue.copper.total": {
+    "value": 71442.0,
+    "tolerance": 0.0001,
+    "source": "reference LOM copper revenue; filing prints 71,439"
+  },
+  "stream.mine.capital.capex.total": {
+    "value": -8317.0,
+    "tolerance": 0.0001,
+    "source": "reference LOM capital; filing prints 8,317"
+  }
+}

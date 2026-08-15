@@ -612,6 +612,7 @@ if (fs.existsSync(benchRoot)) {
 // none — without inventing models that nothing validates.
 
 const benchmarkTitles = {
+  "bespoke/buenavista_del_cobre": "Bespoke: open-pit copper mine",
   "bespoke/ppiaf_toll_highway": "Bespoke: tolled highway PPP concession",
   "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
   "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
