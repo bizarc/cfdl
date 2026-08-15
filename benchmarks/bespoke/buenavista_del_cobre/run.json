@@ -1,0 +1,662 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.1,
+    "parameters": {
+      "cfg.price_cu": 3.3,
+      "cfg.price_mo": 10.0,
+      "cfg.price_zn": 1.15,
+      "cfg.opex_factor": 1.0,
+      "cfg.capex_factor": 1.0
+    }
+  },
+  "scenarios": {
+    "opex_m30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.7,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_m25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.75,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_m20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.8,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_m15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.85,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_m10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.9,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 0.95,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.05,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.1,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.15,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.2,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.25,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "opex_p30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.3,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "capex_m30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.7
+      }
+    },
+    "capex_m25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.75
+      }
+    },
+    "capex_m20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.8
+      }
+    },
+    "capex_m15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.85
+      }
+    },
+    "capex_m10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.9
+      }
+    },
+    "capex_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 0.95
+      }
+    },
+    "capex_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.05
+      }
+    },
+    "capex_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.1
+      }
+    },
+    "capex_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.15
+      }
+    },
+    "capex_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.2
+      }
+    },
+    "capex_p25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.25
+      }
+    },
+    "capex_p30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.3
+      }
+    },
+    "commodity_m30": {
+      "parameters": {
+        "cfg.price_cu": 2.31,
+        "cfg.price_mo": 7.0,
+        "cfg.price_zn": 0.805,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_m25": {
+      "parameters": {
+        "cfg.price_cu": 2.475,
+        "cfg.price_mo": 7.5,
+        "cfg.price_zn": 0.8625,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_m20": {
+      "parameters": {
+        "cfg.price_cu": 2.64,
+        "cfg.price_mo": 8.0,
+        "cfg.price_zn": 0.92,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_m15": {
+      "parameters": {
+        "cfg.price_cu": 2.805,
+        "cfg.price_mo": 8.5,
+        "cfg.price_zn": 0.9775,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_m10": {
+      "parameters": {
+        "cfg.price_cu": 2.97,
+        "cfg.price_mo": 9.0,
+        "cfg.price_zn": 1.035,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.135,
+        "cfg.price_mo": 9.5,
+        "cfg.price_zn": 1.0925,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.465,
+        "cfg.price_mo": 10.5,
+        "cfg.price_zn": 1.2075,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.63,
+        "cfg.price_mo": 11.0,
+        "cfg.price_zn": 1.265,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.795,
+        "cfg.price_mo": 11.5,
+        "cfg.price_zn": 1.3225,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.96,
+        "cfg.price_mo": 12.0,
+        "cfg.price_zn": 1.38,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p25": {
+      "parameters": {
+        "cfg.price_cu": 4.125,
+        "cfg.price_mo": 12.5,
+        "cfg.price_zn": 1.4375,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "commodity_p30": {
+      "parameters": {
+        "cfg.price_cu": 4.29,
+        "cfg.price_mo": 13.0,
+        "cfg.price_zn": 1.495,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m30": {
+      "parameters": {
+        "cfg.price_cu": 2.31,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m25": {
+      "parameters": {
+        "cfg.price_cu": 2.475,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m20": {
+      "parameters": {
+        "cfg.price_cu": 2.64,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m15": {
+      "parameters": {
+        "cfg.price_cu": 2.805,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m10": {
+      "parameters": {
+        "cfg.price_cu": 2.97,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.135,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.465,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.63,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.795,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.96,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p25": {
+      "parameters": {
+        "cfg.price_cu": 4.125,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "copper_p30": {
+      "parameters": {
+        "cfg.price_cu": 4.29,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 7.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 7.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 8.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 8.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 9.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 9.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 11.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 11.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 12.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 12.5,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "molybdenum_p30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 13.0,
+        "cfg.price_zn": 1.15,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 0.805,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 0.8625,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 0.92,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 0.9775,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.035,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_m5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.0925,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p5": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.2075,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p10": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.265,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p15": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.3225,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p20": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.38,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p25": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.4375,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    },
+    "zinc_p30": {
+      "parameters": {
+        "cfg.price_cu": 3.3,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.495,
+        "cfg.opex_factor": 1.0,
+        "cfg.capex_factor": 1.0
+      }
+    }
+  }
+}

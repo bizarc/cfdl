@@ -112,9 +112,10 @@ checked, and a write-up of the reference and the residual.
 | [OpCo: one buyout at three capital structures](/docs/examples/opco-lbo-financing-cases) | One sponsor buyout run at three capital structures, with the published five-year multiple and return reproduced for each. |
 | [OpCo: LBO exit waterfall with an option pool](/docs/examples/opco-lbo-option-pool-exit) | A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool. |
 | [OpCo: SaaS DCF and the stock-compensation fork](/docs/examples/opco-saas-sbc-convention-fork) | A subscription software business valued on discounted cash flow, with stock-based compensation carried as its own line so the same model states value before and after it. |
+| [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) | A 41-year open-pit copper mine from Southern Copper's SEC technical report, carrying three payable metals, six cost lines and a four-layer Mexican fiscal stack that resolves in one pass without a solver. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*38 cases.*
+*39 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite
