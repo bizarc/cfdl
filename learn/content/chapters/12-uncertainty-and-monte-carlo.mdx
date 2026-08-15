@@ -63,12 +63,12 @@ Two properties of the machinery matter to a practitioner. **The seed makes trial
 
 ## Reading a distribution like a practitioner
 
-The deterministic case runs through the distributions' central values, so the number the committee saw is still in the report, unchanged. Around it, the questions worth asking of the percentiles, in the order they usually matter:
+The deterministic case runs through the distributions' central values, so the number the committee saw is still in the report, unchanged. Around it, the checks worth making on the percentiles, in the order they usually matter:
 
-1. **Does the base case sit near the median?** If the deterministic NPV is far from p50, your central values and your distributions disagree about the deal — usually a skewed input (that LogNormal) pulling the mean away from the mode. Understand why before quoting either number.
-2. **What is the p05 — and can you survive it?** The downside tail is the lender's and the risk committee's question. A deal with a fine mean and a fatal p05 is a different deal from one with the same mean and a boring p05; no point estimate distinguishes them.
-3. **What fraction of trials go negative?** "Eleven percent of paths lose money" is the sentence that changes meetings — concrete, checkable, and impossible to produce from a base case and a downside case alone.
-4. **Which input drives the spread?** Widen one distribution at a time and watch the output percentiles move. Ten minutes of this identifies the assumption worth diligence money — the one whose uncertainty actually propagates.
+1. **Check that the base case sits near the median.** If the deterministic NPV is far from p50, your central values and your distributions disagree about the deal — usually a skewed input (that LogNormal) pulling the mean away from the mode. Understand why before quoting either number.
+2. **Read the p05, and decide whether the deal survives it.** The downside tail is the lender's and the risk committee's question. A deal with a fine mean and a fatal p05 is a different deal from one with the same mean and a boring p05; no point estimate distinguishes them.
+3. **Count the fraction of trials that go negative.** "Eleven percent of paths lose money" is the sentence that changes meetings — concrete, checkable, and impossible to produce from a base case and a downside case alone.
+4. **Find the input that drives the spread.** Widen one distribution at a time and watch the output percentiles move. Ten minutes of this identifies the assumption worth diligence money — the one whose uncertainty actually propagates.
 
 ## Branching: when uncertainty is a fork, not a wobble
 

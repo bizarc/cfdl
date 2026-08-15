@@ -51,11 +51,11 @@ Chapter 2 said stream names are yours to design; a large model is where that des
 
 House rules this course has been quietly following, stated once as a checklist — the review standard for every model from here to the capstone:
 
-1. **Dates live in phases.** Streams reference `phase_start`/`phase_enter`; the phase block at the top of `model.cfdl` is the deal's entire calendar. (Chapter 9's slip test: one date edit re-derives the model.)
-2. **Opinions live in assumptions.** A number in an expression is structure; anything a committee might debate reads from `inputs.*`. (Chapter 6's four questions.)
-3. **Expressions read aloud.** Structure over results, names over repeats, decomposition over cleverness. (Chapter 5's three habits.)
-4. **Comments state claims, not mechanics.** `// Net-45 per the MSA, signed 2026-03` earns its line; `// multiply rent by occupancy` restates the code. The best comments cite the document the claim came from — the model as annotated deal file.
-5. **One hand-checked number per file.** The chapter-3 habit, scaled: each economic file's total, verified once by hand, noted in a comment. A model whose every file carries a checked anchor is a model whose next error is *localized*.
+1. **Put dates in phases.** Streams reference `phase_start`/`phase_enter`; the phase block at the top of `model.cfdl` is the deal's entire calendar. (Chapter 9's slip test: one date edit re-derives the model.)
+2. **Put opinions in assumptions.** A number in an expression is structure; anything a committee might debate reads from `inputs.*`. (Chapter 6's four tests.)
+3. **Write expressions that read aloud.** Structure over results, names over repeats, decomposition over cleverness. (Chapter 5's three habits.)
+4. **Make comments state claims, not mechanics.** `// Net-45 per the MSA, signed 2026-03` earns its line; `// multiply rent by occupancy` restates the code. The best comments cite the document the claim came from — the model as annotated deal file.
+5. **Hand-check one number per file.** The chapter-3 habit, scaled: each economic file's total, verified once by hand, noted in a comment. A model whose every file carries a checked anchor is a model whose next error is *localized*.
 
 None of these is enforced by the compiler — they are what the compiler cannot check, which is exactly why they belong to style. A team that adopts them gets models that review like documents; the capstone is written to this standard so you can read a full deal built this way before writing one.
 

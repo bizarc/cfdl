@@ -6,10 +6,10 @@ entity asset clinic : Asset.Real
 
 // This model works — and violates the style checklist. Apply rules 1 and 2
 // without changing any total:
-//   1. Dates live in phases: declare `phase fitout` (2026-01 to 2026-03)
+//   1. Put dates in phases: declare `phase fitout` (2026-01 to 2026-03)
 //      and `phase operations` (2026-04 to 2028-06), then make every
 //      schedule read the phases instead of dates.
-//   2. Opinions live in assumptions: hoist 21500 (visit revenue), 0.62
+//   2. Put opinions in assumptions: hoist 21500 (visit revenue), 0.62
 //      (staff cost ratio), and 30000 (fitout cost) onto an assumption page.
 stream clinic.visit_revenue on entity asset.clinic inflow currency USD {
   schedule every month from 2026-04 to 2028-06
