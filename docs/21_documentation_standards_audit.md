@@ -488,9 +488,12 @@ Ordered by value per unit of effort. Backlog items are appended to
 | 9 | ~~Convert `learn` procedural sections to imperative steps~~ **DONE** | Days | Four sections converted (ch. 3 descent, ch. 6 routing, ch. 12 distribution checks, ch. 13 style rules), five cross-references updated with them. Ch. 15 and ch. 19 were inspected and left alone: their steps were already condition-first imperatives, and rewriting conformant prose to satisfy an audit line would be churn |
 | 10 | ~~WCAG 2.2 AA assessment and remediation~~ **ASSESSED AND REMEDIATED** (`docs/23`) | Unknown until assessed | Five findings, all fixed and re-verified: the muted token failed contrast in both themes, the splitter lacked its ARIA value trio, scroll regions were keyboard-unreachable. Zero axe violations after. The human AT pass is backlog 7.35; conformance is not claimed until it runs |
 | 11 | ~~Extend `check-site-voice.py` with CFDL-CE rules~~ **DONE** | Days | The mechanical subset: retired spellings and synonyms load from `terminology.toml` at run time, plus number formats, `hit`, and contractions. The specifications are now checked too (CE rules only — the narrative exemption stands). Negative-tested: fires on each rule, exempts code spans, arithmetic `×`, and `ste-allow:` lines |
-| 12 | Reduce `learn` sentence length toward the 25-word descriptive limit | Weeks | 31% over; last because it is the change most likely to cost pedagogy for conformance |
+| 12 | ~~Reduce `learn` sentence length toward the 25-word descriptive limit~~ **REMOVED** | Weeks | Closed without action, by decision (2026-08-14). The finding stands — 31% of chapter sentences exceed the descriptive limit — but the prose is long in the service of holding two ideas together, and shortening it mechanically trades pedagogy for conformance. Tier C's S1–S2 remain a target for new writing, not a debt to pay down |
 
-Item 12 is deliberately last. The audit's position is that `learn`'s sentence
-length is a real finding but the lowest-priority one, because the prose is long
-in the service of holding two ideas together and shortening it mechanically
-would not make the curriculum easier to learn from.
+Item 12 was removed from the register by decision rather than completed. The
+audit ranked it last because the chapters' long sentences hold two ideas in
+tension on purpose, and the owner agreed the trade was not worth making: the
+existing chapters keep their prose, and Tier C's sentence-length limits in
+`22_cfdl_controlled_english.md` apply to writing from here forward. With that,
+every item on this register is closed — ten done, one assessed with its human
+follow-up filed as backlog 7.35, one declined with its reason on the record.
