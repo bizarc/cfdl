@@ -6,7 +6,7 @@ import { Check } from "lucide-react";
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
-/** Shared label + optional hint/error wrapper, so every control is labelled. */
+/** Shared label + optional hint/error wrapper, so every control is labeled. */
 export function Field({
   label,
   hint,

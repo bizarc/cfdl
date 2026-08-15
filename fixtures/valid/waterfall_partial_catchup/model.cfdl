@@ -27,7 +27,7 @@ time calendar annual from 2020-01 for 6
 //
 // WHERE THE RATE ACTUALLY CHANGES THE ANSWER is when the money runs out inside
 // the tier, which is the whole reason the structure is negotiated. The
-// `early_exit` scenarios stop there, on $15.5mm of proceeds. A full catch-up
+// `early_exit` scenarios stop there, on $15.5m of proceeds. A full catch-up
 // hands the GP the whole $806,719 left above the preferred; a 50/50 catch-up
 // splits it, and the GP takes $403,360. Same deal, same money, one negotiated
 // number between them.

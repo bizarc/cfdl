@@ -35,7 +35,7 @@ time calendar annual from 2000-01 for 4
 // expression covers both regimes with no branch.
 //
 // EQUITY IS THE VENTURE'S STATED MINIMUM, split as the case states: the greater
-// of $175mm or 50% of total development cost, contributed 10% by MSGW and 90%
+// of $175m or 50% of total development cost, contributed 10% by MSGW and 90%
 // by STRS. Preference accrues through the four construction years, when the
 // development distributes nothing because it earns nothing.
 //
@@ -57,7 +57,7 @@ entity party msgw : Party { name = "MSGW III" }
 entity party strs : Party { name = "Midwest State Teachers Retirement System" }
 entity party cpa  : Party { name = "Columbia Plaza Associates" }
 
-assume msgw_capital = 17500000.0          // 10% of the $175mm venture equity
+assume msgw_capital = 17500000.0          // 10% of the $175m venture equity
 assume strs_capital = 157500000.0         // 90%
 assume pref_rate    = 0.11
 assume net_sale_proceeds = 300000000.0    // overridden by the shortfall scenario

@@ -161,7 +161,7 @@ target; on an annual grid the test can only be asked at year ends. In
 short of its hurdle at the end of year two and two months of cash clear it, but
 the annual grid has no period between month 24 and month 36 in which to notice.
 The same deal on a monthly calendar flips **ten months earlier**, and about
-$3.5mm changes hands on the strength of one line.
+$3.5m changes hands on the strength of one line.
 
 The same applies to a covenant test, a cash trap, a rate step, or any trigger
 whose date is not written into a contract. Choose the grid the test is actually

@@ -16,7 +16,7 @@
       "symbol": "asset.pool",
       "type": "Asset.Financial",
       "fields": {
-        "amortisation": "10.0"
+        "amortization": "10.0"
       },
       "rules": {
         "balance": {
@@ -26,7 +26,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "max(0.0, prev - asset.pool.amortisation)"
+            "src": "max(0.0, prev - asset.pool.amortization)"
           }
         }
       },
@@ -64,7 +64,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "asset.pool.amortisation"
+        "src": "asset.pool.amortization"
       },
       "active_when": {
         "lang": "cfdl",

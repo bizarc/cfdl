@@ -59,8 +59,8 @@
   "contracts": [],
   "streams": [
     {
-      "id": "db975c11ee1d5cca8de977993079d632",
-      "name": "credit.amortisation",
+      "id": "65afa881ee9f927025293112519ded1a",
+      "name": "credit.amortization",
       "owner": {
         "symbol": "asset.pool"
       },

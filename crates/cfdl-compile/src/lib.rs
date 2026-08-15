@@ -700,7 +700,7 @@ struct IrProvenance {
 /// anything was accepted and produced a wrong answer with no signal. Each check
 /// below closes one of those.
 /// Check that every party binding names a declared party, in a role its
-/// contract type recognises.
+/// contract type recognizes.
 ///
 /// A role belongs to the AGREEMENT, not to the entity — the same party is
 /// lessor in one contract and lender in another — so the role list comes from
@@ -3737,7 +3737,7 @@ fn lower_rule_state_schedule(
     if rule.field_name.is_empty() {
         return None;
     }
-    // Absent means every model period — the behaviour of every state written
+    // Absent means every model period — the behavior of every state written
     // before states had a clock, so an unset field changes nothing.
     if rule.field_every.is_empty() && rule.field_from.is_empty() && rule.field_to.is_empty() {
         return None;

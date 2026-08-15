@@ -4,7 +4,7 @@ time calendar annual from 2020-01 for 6
 
 // A PRIVATE FUND CARRY WATERFALL — the ordered kind.
 //
-// $10mm called, $30mm returned five years later, split on a whole-of-fund
+// $10m called, $30m returned five years later, split on a whole-of-fund
 // waterfall: capital back, then a compounding 8% preferred return, then a full
 // GP catch-up, then 80/20. Each tier is paid only out of what the tier above
 // left, which is what makes this an ordered allocation rather than a set of

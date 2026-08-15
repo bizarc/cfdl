@@ -1,6 +1,6 @@
 ## The case
 
-A $10mm interest-only bridge pool at 7.25% for 60 months, bought at par. Nothing
+A $10m interest-only bridge pool at 7.25% for 60 months, bought at par. Nothing
 amortizes: the borrower pays interest monthly and the entire principal returns in
 a single balloon at maturity. Against that sit a 5% constant prepayment rate, a
 1.5% default rate, 40% loss severity and a four-month recovery lag.

@@ -36,7 +36,7 @@ contract cre.property_opex on entity asset.tower {
 // The operating terms run through the projection tail so the exit has a
 // forward year to read. A hand-written stream could not reach the tail
 // before E2103 was widened; a pack contract always could.
-// Exit on forward NOI derived from the modelled streams over the next YEAR,
+// Exit on forward NOI derived from the modeled streams over the next YEAR,
 // which is `project 12` periods on this grid — the window that used to be a
 // hardcoded twelve.
 contract cre.exit_forward on entity asset.tower {

@@ -20,7 +20,7 @@ at market prices — with a separate flat capacity payment for being available. 
 claims the production tax credit over its first ten years and depreciates on the
 five-year MACRS schedule. Because the production credit and the investment credit
 are mutually exclusive, there is no basis reduction here: depreciation runs on
-the full $100mm.
+the full $100m.
 
 ## The reference
 

@@ -37,7 +37,7 @@ event covenant_breach when asset.pool.balance <= asset.pool.trigger_level {
 }
 
 // The balance is a field a rule moves, read by a stream at its own name.
-stream credit.amortisation on entity asset.pool outflow currency USD {
+stream credit.amortization on entity asset.pool outflow currency USD {
   schedule every year from 2027-01 to 2030-01
   amount = asset.pool.balance * 0.02
 }

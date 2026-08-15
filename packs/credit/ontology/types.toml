@@ -146,21 +146,21 @@ required = false
 
 [[lifecycles]]
 lifecycle_id = "credit.pool"
-initial = "amortising"
-states = ["warehouse", "amortising", "called", "retired"]
+initial = "amortizing"
+states = ["warehouse", "amortizing", "called", "retired"]
 
 [[lifecycles.transitions]]
 from = "warehouse"
-to = "amortising"
+to = "amortizing"
 description = "Securitization closes."
 
 [[lifecycles.transitions]]
-from = "amortising"
+from = "amortizing"
 to = "called"
 description = "Clean-up call exercised."
 
 [[lifecycles.transitions]]
-from = "amortising"
+from = "amortizing"
 to = "retired"
 
 [[lifecycles.transitions]]

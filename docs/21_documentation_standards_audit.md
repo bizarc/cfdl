@@ -480,7 +480,7 @@ Ordered by value per unit of effort. Backlog items are appended to
 | 1 | ~~Define RFC 2119 keywords in the three specs~~ **DONE** | Hours | 143 undefined keywords in documents meant to support a second implementation |
 | 2 | ~~Resolve spelling conflicts per `terminology.toml`~~ **DONE** | Hours | Mechanical; ends a visible inconsistency permanently |
 | 3 | ~~Fix `Hit **Run**` and settle one verb for control activation~~ **DONE** | Minutes | The most-read procedural line on the site |
-| 4 | Fix number and currency formats in `benchmarks/*/*/{case.toml,CASE.md}` | Hours | U+00D7 in 4 files, `$Xmm` in 37; mechanical, and both are published |
+| 4 | ~~Fix number and currency formats~~ **DONE** | Hours | 6 valuation multiples (`8.0×`→`8.0x`) and 164 currency figures (`$33.6mm`→`$33.6m`) across 63 files. The multiplication sign was **kept** wherever it is doing arithmetic (`6,000 × 12 = 72,000`) or naming a grid (`3×3`); only valuation multiples changed |
 | 5 | ~~Settle `run configuration` as the single term~~ **DONE in prose** | Hours | Three names for one object. The slug `/docs/guides/scenarios-and-run-configs` still reads `run-configs`; changing it is a URL change needing a redirect, so it was left alone |
 | 6 | Rewrite exercise prompts to Tier A | Days | 43% over the procedural limit; the most instruction-shaped text in the estate |
 | 7 | Add `description` frontmatter to 111 site pages | Days | No page currently has a meta description |

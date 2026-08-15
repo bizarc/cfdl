@@ -30,7 +30,7 @@ them.
 
 ## Sizes are derived, not transcribed
 
-The reference sizes each tranche as leverage × LTM EBITDA rounded to a $25mm
+The reference sizes each tranche as leverage × LTM EBITDA rounded to a $25m
 increment, and the sponsor's cheque is the plug that balances sources against
 uses. Reproducing both rules is what lets the other two structures be *derived*
 rather than read off:

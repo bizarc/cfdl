@@ -12,7 +12,7 @@ stream co.on_time on entity asset.co inflow currency USD {
   amount = 1000
 }
 
-// net 0 is the historical behaviour, stated explicitly.
+// net 0 is the historical behavior, stated explicitly.
 stream co.net0 on entity asset.co inflow currency USD {
   schedule every month net 0 from 2026-01 to 2026-06
   amount = 1000

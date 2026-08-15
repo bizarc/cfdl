@@ -1415,7 +1415,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // them consistently.
     //
     // AN ENTITY WITH NO CHILDREN IS UNAFFECTED: its series is its own streams,
-    // which is the pool that models collective behaviour directly. The grain
+    // which is the pool that models collective behavior directly. The grain
     // stays the modeller's choice.
     //
     // Like a subtotal, this is a fold OF the cash and never counts AS cash: it
@@ -1734,7 +1734,7 @@ fn bucket_label(date: &Date, calendar: &str) -> String {
         "annual" => format!("{:04}", date.year),
         "quarterly" => format!("{:04}-Q{}", date.year, (date.month - 1) / 3 + 1),
         "daily" => format!("{:04}-{:02}-{:02}", date.year, date.month, date.day),
-        // monthly, and anything unrecognised: a year-month is never wrong,
+        // monthly, and anything unrecognized: a year-month is never wrong,
         // only less precise than it could be.
         _ => format!("{:04}-{:02}", date.year, date.month),
     }
@@ -2627,7 +2627,7 @@ fn compute_states(
 
             let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
             // A RULE MAY READ A LITERAL FIELD. It is a constant, so there is no
-            // ordering question and nothing to sequence — `amortisation = 10.0`
+            // ordering question and nothing to sequence — `amortization = 10.0`
             // means the same thing in every period.
             //
             // Rule-bearing fields stay out: their period-close value does not
@@ -2913,7 +2913,7 @@ fn discount_offset(schedule: &IrSchedule, calendar: &str) -> f64 {
 
 /// Present value of streams that each carry their own position in period.
 ///
-/// `v / (1+r)^(t + offset)` factorises to `[v / (1+r)^offset] / (1+r)^t`, so a
+/// `v / (1+r)^(t + offset)` factorizes to `[v / (1+r)^offset] / (1+r)^t`, so a
 /// stream's offset is a constant scale on its whole series.
 fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
     let mut total = 0.0_f64;
@@ -3360,8 +3360,8 @@ fn apply_schedule_indices(
 
                 // period_index clamps a date past the end to the last period,
                 // which would pile deferred cash into the final bucket and
-                // overstate it. A payment that falls outside the modelled
-                // horizon is a modelling error, not a rounding one.
+                // overstate it. A payment that falls outside the modeled
+                // horizon is a modeling error, not a rounding one.
                 if beyond_timeline(timeline, &rolled) {
                     return Err(EngineError::Schedule(format!(
                         "a payment accruing in period {} settles on {} under these payment terms, past the end of the model timeline. Extend the timeline so the cash has a period to land in.",
@@ -4508,7 +4508,7 @@ fn probability_negative(values: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    /// A minimal one-stream IR, with the amount parameterised so a test can
+    /// A minimal one-stream IR, with the amount parameterized so a test can
     /// change the model without changing anything else about the run.
     #[cfg(test)]
     fn probe_ir(amount: &str) -> String {
@@ -4536,7 +4536,7 @@ mod tests {
     /// A golden diff says "this document changed"; it cannot say whether the
     /// change was a real behavioural difference or a run-to-run wobble, and a
     /// wobble would surface as a flapping test rather than as the defect it is.
-    /// The property the whole decoupling exists for: the same cash, modelled
+    /// The property the whole decoupling exists for: the same cash, modeled
     /// at two different grains, values the same when valued at one convention.
     ///
     /// Before this, `ppy` came from `ir.time.calendar`, so a model's CALENDAR
@@ -4545,7 +4545,7 @@ mod tests {
     /// (1.12)^(1/12)-1 gives ~$2,323,050, about +1.3%" — and attributes it to
     /// the rebuild. It is not the rebuild. Summing a year's cash and then
     /// discounting at the annual rate is the same arithmetic whichever grain
-    /// the cash was modelled on, and this asserts exactly that.
+    /// the cash was modeled on, and this asserts exactly that.
     #[test]
     fn the_same_cash_values_the_same_at_one_convention_whatever_grain_it_was_modelled_on() {
         use super::*;

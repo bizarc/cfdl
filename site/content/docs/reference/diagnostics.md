@@ -47,7 +47,7 @@ the language's codes.
 Every code CFDL can emit. This table is generated from the specification's
 register, so it cannot fall behind the language.
 
-<!-- cfdl:generated diagnostics-catalogue -->
+<!-- cfdl:generated diagnostics-catalog -->
 | Code | Family | Meaning |
 |---|---|---|
 | `E0001_UNEXPECTED_TOKEN` | Parse errors | the parser met a token it cannot use here. |
@@ -209,7 +209,7 @@ register, so it cannot fall behind the language.
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
 *157 codes.*
-<!-- /cfdl:generated diagnostics-catalogue -->
+<!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related
 

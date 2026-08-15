@@ -26,7 +26,7 @@ What I1 deliberately does NOT cover:
   * Nominally-accruing debt. `rate / ppy` is a genuinely different accrual per
     cadence: a 6% loan is 0.5%/month and 1.5%/quarter, whose effective annual
     rates differ, and every loan document agrees. Those rules are checked
-    against a ppy-parameterised reference generator instead, not against each
+    against a ppy-parameterized reference generator instead, not against each
     other.
 
   * Leap years on a DAILY grid. An annual quantity spread as X_year / 365 is

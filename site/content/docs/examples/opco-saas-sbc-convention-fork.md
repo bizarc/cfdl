@@ -18,8 +18,8 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 A sponsor take-private of a subscription-software business. Stock-based
 compensation is the most contested convention in software valuation, and the
 source discloses free cash flow **both ways** — before and after it — for the
-same company on the same page. The gap is not a rounding difference: $331mm
-before, $198mm after, in the first year alone. Two thirds of first-year cash
+same company on the same page. The gap is not a rounding difference: $331m
+before, $198m after, in the first year alone. Two thirds of first-year cash
 flow turns on the convention.
 
 ## The reference
@@ -49,7 +49,7 @@ from the pre-compensation one.
 
 ## The result
 
-`model.npv` = **7,096** against the filing's published 7,096, at 13.5% and 16.0×.
+`model.npv` = **7,096** against the filing's published 7,096, at 13.5% and 16.0x.
 
 All twelve cells of the disclosed grid reconcile, worst **±0.50 on ~7,000** —
 0.007%, inside the filing's own whole-million rounding.
@@ -79,8 +79,8 @@ the first quarter carries the cash.
 // WHAT THIS CASE IS FOR: stock-based compensation is the most contested
 // convention in software valuation, and this filing is unusual in disclosing
 // unlevered free cash flow BOTH WAYS — before SBC and after it — for the same
-// company on the same page. The gap is not a rounding difference: $331mm
-// before, $198mm after, in the first year alone.
+// company on the same page. The gap is not a rounding difference: $331m
+// before, $198m after, in the first year alone.
 //
 // So SBC is modeled as ITS OWN STREAM rather than netted into the cash flow
 // line. That makes the fork structural: the pre-SBC series and the SBC
@@ -125,7 +125,7 @@ entity asset target : OpCo.Asset.Enterprise
 
 // Terminal value: an NTM unlevered-FCF multiple struck at 31 December 2028 on
 // terminal-year (FY2029E) unlevered FCF. 16.0x sits inside the disclosed
-// 15.0x-18.0x range; $696mm is the disclosed FY2029E figure, PRE-SBC.
+// 15.0x-18.0x range; $696m is the disclosed FY2029E figure, PRE-SBC.
 assume terminal_ntm_multiple = 16.0
 assume terminal_year_ufcf    = 696.0
 
@@ -135,7 +135,7 @@ assume terminal_year_ufcf    = 696.0
 
 // THE ONE FIGURE THAT IS NOT DISCLOSED. The filing states FY2024E unlevered
 // FCF as a full year and notes the analysis includes only Q2-Q4; it does not
-// publish the quarterly split. $135.51mm is solved from the published grid —
+// publish the quarterly split. $135.51m is solved from the published grid —
 // one unknown against twelve published enterprise values, which leaves eleven
 // degrees of freedom, and every one of the twelve then lands within the
 // filing's own whole-$mm rounding.

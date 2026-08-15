@@ -1,10 +1,10 @@
 ## The case
 
-A sponsor buys a mid-market business for $720mm — 8.0x an LTM adjusted EBITDA of
-$90mm — funded with a $275mm term loan B, $175mm of senior notes, $100mm of
+A sponsor buys a mid-market business for $720m — 8.0x an LTM adjusted EBITDA of
+$90m — funded with a $275m term loan B, $175m of senior notes, $100m of
 subordinated notes that pay in kind for three years, a 5% management rollover and
-$158.9mm of sponsor equity. The model runs the four-year hold: a 35% tax rate, a
-$5mm minimum cash balance, 1% mandatory term loan amortization, and every
+$158.9m of sponsor equity. The model runs the four-year hold: a 35% tax rate, a
+$5m minimum cash balance, 1% mandatory term loan amortization, and every
 remaining dollar of free cash flow sweeping against the term loan.
 
 The case is the debt schedule. Interest accrues on the **average** of each

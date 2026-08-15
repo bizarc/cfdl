@@ -24,7 +24,7 @@ a value range and little else. This one discloses:
 - the unlevered free cash flow build-up, line by line, for six fiscal periods;
 - the discount rate range (9.5% / 10.375% / 11.25%);
 - the terminal value method — a **forward (NTM)** unlevered-FCF multiple of
-  20.0x / 25.0x / 30.0x on terminal-year UFCF of $891mm;
+  20.0x / 25.0x / 30.0x on terminal-year UFCF of $891m;
 - the discounting convention, stated as mid-period;
 - the dilution assumption, ~2% cumulative, ramping 0.5%/yr;
 - and a 3x3 grid of implied enterprise values, equity values and per-share

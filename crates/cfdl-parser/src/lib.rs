@@ -105,7 +105,7 @@ pub struct EntityStmt {
     pub fields: Vec<EntityField>,
     /// The parent this entity belongs to, if the model groups it.
     ///
-    /// ALWAYS OPTIONAL. A pool models collective behaviour perfectly well with
+    /// ALWAYS OPTIONAL. A pool models collective behavior perfectly well with
     /// no loans under it; a building needs no units. The modeller chooses the
     /// grain and the language does not prefer one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -137,7 +137,7 @@ pub struct EntityLiteralField {
 /// an event writes it. They compose in the order the engine already runs —
 /// states, then events, then streams — so a rule computes the period's value,
 /// an event may overwrite it, and outputs read what was committed. A building
-/// changes its use, a pool amortises its factor and then a trigger resets it.
+/// changes its use, a pool amortizes its factor and then a trigger resets it.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EntityField {
     pub name: String,
@@ -264,7 +264,7 @@ pub struct ContractStmt {
     /// `payment net <n>` — days between a flow being earned and its cash
     /// moving. Applies to every stream the contract lowers. `None` means the
     /// cash lands in the period that earned it, which is the historical
-    /// behaviour and what every model without the clause gets.
+    /// behavior and what every model without the clause gets.
     pub payment_net: Option<PaymentTerms>,
     pub terms: BTreeMap<String, ContractTerm>,
     /// Who the contract is between, by role. `parties` has been a reserved
@@ -975,7 +975,7 @@ impl<'a> Parser<'a> {
                     return None;
                 }
                 // `part of <entity>` — optional hierarchy. Never required: a
-                // pool models collective behaviour with no loans under it, and
+                // pool models collective behavior with no loans under it, and
                 // a building needs no units. The modeller chooses the grain.
                 TokenKind::Ident(ref ident) if ident == "part" => {
                     let part_tok = self.bump();
@@ -1647,7 +1647,7 @@ impl<'a> Parser<'a> {
                     // docs/10_implementation_status.md is explicit that a
                     // construct either works end to end or is rejected.
                     //
-                    // consume_stream_item skips to the next recognised item, so
+                    // consume_stream_item skips to the next recognized item, so
                     // one bad item yields one diagnostic rather than one per
                     // token.
                     let span = tok.span;

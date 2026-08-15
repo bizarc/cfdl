@@ -215,7 +215,7 @@ def main() -> int:
     # that was renumbered, or invented while writing, produces a page that reads
     # authoritatively and sends someone looking for an error that cannot occur.
     #
-    # The generated catalogue on those pages comes from the register and so
+    # The generated catalog on those pages comes from the register and so
     # cannot drift; this covers the sentences AROUND it. Region interiors are
     # skipped for that reason — they are the register, restated.
     site_docs = REPO_ROOT / "site" / "content" / "docs"

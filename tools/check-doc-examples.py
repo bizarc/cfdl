@@ -257,7 +257,7 @@ def stream_totals(results: dict) -> dict[str, float]:
     prove every documented stream carries flow, so a field has nothing to say
     to it.
 
-    A field is recognised by its shape rather than a prefix: it publishes under
+    A field is recognized by its shape rather than a prefix: it publishes under
     the entity that owns it — `asset.trust.available_funds` — because `state.`
     named a model-level state and a field is not one.
     """

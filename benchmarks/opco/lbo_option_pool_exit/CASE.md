@@ -37,7 +37,7 @@ as an exercise.
 
 Value per share **20.877119**, sponsor proceeds **487.546139**, management
 proceeds **132.569706** — each matching the published figure exactly. Option
-intrinsic value comes to $12.912mm across the five exercised tranches.
+intrinsic value comes to $12.912m across the five exercised tranches.
 
 Verified at all six published exit multiples; the exercising set is unique at
 every one.

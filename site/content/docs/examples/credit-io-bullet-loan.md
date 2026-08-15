@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-A $10mm interest-only bridge pool at 7.25% for 60 months, bought at par. Nothing
+A $10m interest-only bridge pool at 7.25% for 60 months, bought at par. Nothing
 amortizes: the borrower pays interest monthly and the entire principal returns in
 a single balloon at maturity. Against that sit a 5% constant prepayment rate, a
 1.5% default rate, 40% loss severity and a four-month recovery lag.
@@ -62,7 +62,7 @@ time calendar monthly from 2026-01 for 64
 
 entity asset buyer : Credit.Asset.LoanPool
 
-// $10mm interest-only pool, 7.25%, 60-month bullet, 5 CPR, 1.5 CDR,
+// $10m interest-only pool, 7.25%, 60-month bullet, 5 CPR, 1.5 CDR,
 // 40% severity, 4-month recovery lag. Contract term spans
 // term_months + recovery_lag_months for the recovery tail.
 contract credit.pool_io_bullet.bridge_a on entity asset.buyer {

@@ -52,7 +52,7 @@ assume dilution_term = 0.020
 
 // Terminal value: a forward (NTM) multiple on the terminal year's unlevered
 // free cash flow, struck as of the start of that year. 25.0x is the midpoint
-// of the disclosed 20.0x-30.0x range; $891mm is the disclosed FY30E UFCF.
+// of the disclosed 20.0x-30.0x range; $891m is the disclosed FY30E UFCF.
 assume terminal_ntm_multiple = 25.0
 assume terminal_year_ufcf    = 891.0
 

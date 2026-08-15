@@ -22,9 +22,9 @@
  *
  * Markers are HTML comments so they survive markdown rendering unseen:
  *
- *   <!-- cfdl:generated diagnostics-catalogue -->
+ *   <!-- cfdl:generated diagnostics-catalog -->
  *   ...script-owned lines...
- *   <!-- /cfdl:generated diagnostics-catalogue -->
+ *   <!-- /cfdl:generated diagnostics-catalog -->
  */
 import fs from "node:fs";
 import path from "node:path";

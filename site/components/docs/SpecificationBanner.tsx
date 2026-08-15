@@ -11,7 +11,7 @@ import { FileText } from "lucide-react";
  *
  * Driven by `layer: specification` in frontmatter, which `sync-content.mjs`
  * emits for every page it puts under `specification/`. That matters: a new
- * specification page cannot be added without being labelled as one, because the
+ * specification page cannot be added without being labeled as one, because the
  * label is not a per-page decision anybody can forget.
  */
 export function SpecificationBanner() {

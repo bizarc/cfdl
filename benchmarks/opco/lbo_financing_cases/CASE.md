@@ -1,7 +1,7 @@
 ## The case
 
-A sponsor buys a mid-market business for $720mm — 8.0x an LTM adjusted EBITDA of
-$90mm — holds it five years and sells at the same multiple. Revenue grows
+A sponsor buys a mid-market business for $720m — 8.0x an LTM adjusted EBITDA of
+$90m — holds it five years and sells at the same multiple. Revenue grows
 5, 6, 7, 6 and 5 per cent; margin, depreciation and capital expenditure hold at
 their trailing ratios; working capital turns on stated days.
 
@@ -48,9 +48,9 @@ Base and two scenarios override the tranche sizes, coupons and the sponsor's
 cheque. That is what the source's own case switch does.
 
 Sizes are not stated as inputs. Each tranche is its leverage multiple times LTM
-EBITDA rounded to a $25mm increment, and the sponsor's cheque is whatever
-balances sources against uses. Base checks the rule — its published $275mm,
-$175mm and $100mm are what 3.0x, 2.0x and 1.0x round to — and the other two
+EBITDA rounded to a $25m increment, and the sponsor's cheque is whatever
+balances sources against uses. Base checks the rule — its published $275m,
+$175m and $100m are what 3.0x, 2.0x and 1.0x round to — and the other two
 structures are derived rather than transcribed.
 
 ## The result

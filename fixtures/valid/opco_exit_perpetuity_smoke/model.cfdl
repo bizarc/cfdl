@@ -16,7 +16,7 @@ stream firm.fcff on entity asset.firm inflow currency USD {
 
 // Struck on the terminal year's flow, at a terminal cost of capital that is
 // deliberately NOT the run's discount rate: a business in steady state is
-// capitalised at a steady-state rate. The contract applies the (1 + g) step,
+// capitalized at a steady-state rate. The contract applies the (1 + g) step,
 // so base_value is the terminal flow itself.
 //
 // The exit settles at the END of its period, so it discounts the full five

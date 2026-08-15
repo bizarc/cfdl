@@ -38,7 +38,7 @@ An annual grid asks a covenant test, a flip test or a cash-trap test twelve
 times less often than a monthly one, and each miss delays the consequence to
 the next year end. On the [tax-equity flip](/docs/examples/energy-tax-equity-flip)
 the same deal flips ten months later on an annual calendar than a monthly one,
-moving about $3.5mm.
+moving about $3.5m.
 
 Choose the grid the test is actually performed on, not the grid the reporting
 happens to use.

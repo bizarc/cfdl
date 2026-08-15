@@ -6,7 +6,7 @@ time calendar annual from 2020-01 for 6
 //
 // Three participants — management, a sponsor promote and the limited partners.
 // Management and the sponsor vest a percentage of equity that STEPS UP as the
-// LP's IRR crosses each of eight hurdles. The source catalogue describes this
+// LP's IRR crosses each of eight hurdles. The source catalog describes this
 // structure as "requiring a circular solve: the split determines cash flows
 // which determine the IRR which determines the split".
 //
@@ -30,7 +30,7 @@ time calendar annual from 2020-01 for 6
 // So the waterfall itself is three plain steps.
 
 entity asset deal : Asset.Financial {
-  // The deal's own realised return — a fact about the deal.
+  // The deal's own realized return — a fact about the deal.
   deal_irr init pow(inputs.proceeds / inputs.called_capital, 1.0 / inputs.hold_years) - 1.0
            next prev
 }

@@ -234,7 +234,7 @@ benchmark purchases at a 1-point discount.
 
 ## Quick start
 
-A $25mm level-pay pool with prepayments, defaults, a servicing strip, and a prepayment penalty:
+A $25m level-pay pool with prepayments, defaults, a servicing strip, and a prepayment penalty:
 
 ```cfdl
 version 0.1
@@ -266,7 +266,7 @@ contract credit.purchase.auto_a on entity asset.buyer {
 ```
 
 `credit.purchase` takes the dollar purchase amount — a 1-point discount
-(99.0) on the $25mm balance here.
+(99.0) on the $25m balance here.
 
 Let the contract term span `term_months + recovery_lag_months` so lagged
 recoveries have periods to land in.

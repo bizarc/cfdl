@@ -23,7 +23,7 @@
 # THE CASE FOUND AN ENGINE DEFECT, AND THE FIX IS NOW ITS PROOF. An option's
 # `exercise when` was evaluated in a pre-pass whose environment carried no
 # declared state, so `asset.target.value_per_share` warned and evaluated FALSE: every
-# option silently declined to exercise and $12.9mm of intrinsic value vanished
+# option silently declined to exercise and $12.9m of intrinsic value vanished
 # from a model that still ran clean. The resolved value had to be restated as
 # an assumption for the options to read.
 #

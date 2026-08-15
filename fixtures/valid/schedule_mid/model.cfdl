@@ -3,7 +3,7 @@ model "schedule-mid"
 time calendar annual from 2026-01 for 4
 entity asset co : Asset.Financial
 
-// Mid-period: cash summarised at the midpoint of the period that earned it.
+// Mid-period: cash summarized at the midpoint of the period that earned it.
 // Half a period on every calendar, because it is a convention and not a date.
 stream co.flow_mid on entity asset.co inflow currency USD {
   schedule every year mid from 2026-01 to 2029-01

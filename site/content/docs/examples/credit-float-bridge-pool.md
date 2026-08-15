@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-A $15mm floating-rate bridge pool. The coupon is a benchmark rate plus 275 basis
+A $15m floating-rate bridge pool. The coupon is a benchmark rate plus 275 basis
 points, resetting each period off a stepped forward curve, with a 7.00% floor
 that binds in the early periods. It runs 36 months to a bullet, bought at par,
 against a 10% prepayment rate, a 2.5% default rate, 45% severity and a five-month
@@ -74,7 +74,7 @@ curve sofr {
 
 entity asset buyer : Credit.Asset.LoanPool
 
-// $15mm floating IO bridge pool: SOFR + 275, coupon floored at 7.00% (binds
+// $15m floating IO bridge pool: SOFR + 275, coupon floored at 7.00% (binds
 // once SOFR + margin falls below it) and capped at 9.00% (never binds),
 // 36-month bullet, 10 CPR, 2.5 CDR, 45% severity, 5-month recovery lag.
 // Contract term spans term_months + recovery_lag_months.

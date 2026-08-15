@@ -22,7 +22,7 @@ and the design notes are not published and are deliberately not read here — th
 is a gate on what escapes, not a style rule for the repository.
 
 The specification pages are exempt for the internal-cross-reference rule: they
-are normative documents published as a labelled section, and a spec citing
+are normative documents published as a labeled section, and a spec citing
 another spec by filename is legitimate.
 
 ESCAPE HATCH. Append `site-allow: <reason>` on the offending line, following the

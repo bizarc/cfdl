@@ -15,7 +15,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-A $25mm auto loan pool at 6.5% over 120 months, bought at a one-point discount.
+A $25m auto loan pool at 6.5% over 120 months, bought at a one-point discount.
 Every borrower pays the same instalment each month, which splits into shrinking
 interest and growing principal. Layered on top: an 8% constant prepayment rate, a
 2% default rate, 35% loss severity, a six-month recovery lag, a 50 basis point
@@ -65,7 +65,7 @@ time calendar monthly from 2026-01 for 126
 
 entity asset buyer : Credit.Asset.LoanPool
 
-// $25mm homogeneous level-pay pool, 6.5% note rate, 10-year amortization,
+// $25m homogeneous level-pay pool, 6.5% note rate, 10-year amortization,
 // 8 CPR, 2 CDR, 35% severity, 6-month recovery lag, 50bp servicing strip,
 // 1% prepayment penalty. The contract term spans term_months +
 // recovery_lag_months so recoveries have periods to land in.

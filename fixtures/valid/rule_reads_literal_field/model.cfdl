@@ -4,7 +4,7 @@ time calendar annual from 2026-01 for 4
 
 // A RULE READS A STATED FACT.
 //
-// `amortisation` is a literal: a constant, the same in every period. A rule may
+// `amortization` is a literal: a constant, the same in every period. A rule may
 // read it, because there is no ordering question and nothing to sequence.
 //
 // This is what a field is for. Written the other way —
@@ -12,7 +12,7 @@ time calendar annual from 2026-01 for 4
 //     balance init 100.0 next prev - 10.0
 //
 // — the amount is stated twice, in the literal and in the rule, and nothing
-// keeps them in step. The whole argument for declaring `amortisation` once is
+// keeps them in step. The whole argument for declaring `amortization` once is
 // that everything reads it.
 //
 // WHAT A RULE STILL MAY NOT READ is a field that MOVES. Its period-close value
@@ -22,13 +22,13 @@ time calendar annual from 2026-01 for 4
 // exactly what the engine resolves.
 
 entity asset pool : Asset.Financial {
-  amortisation = 10.0
-  balance init 100.0 next max(0.0, prev - asset.pool.amortisation)
+  amortization = 10.0
+  balance init 100.0 next max(0.0, prev - asset.pool.amortization)
 }
 
 entity party lender : Party { name = "Lender" }
 
 stream credit.principal on entity asset.pool outflow currency USD {
   schedule every year from 2027-01 to 2029-01
-  amount = asset.pool.amortisation
+  amount = asset.pool.amortization
 }

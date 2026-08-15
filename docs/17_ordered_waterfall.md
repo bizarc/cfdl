@@ -487,7 +487,7 @@ it again.
 ### The fund carry tier — and the first numeric check
 
 `fixtures/valid/waterfall_fund_carry` reproduces a published distribution
-waterfall exactly: $10mm called, $30mm returned after five years, split as
+waterfall exactly: $10m called, $30m returned after five years, split as
 capital back, a compounding 8% preferred, a full GP catch-up, then 80/20.
 
 | tier | CFDL | published |
@@ -579,7 +579,7 @@ steps join the visible series as it finishes, so a later one may read an earlier
 one, exactly as a step may read the steps above it. An order, not a graph.
 
 The fund tier is `waterfall_fund_carry` unchanged, so the pot is already
-verified: its GP carry comes to exactly $4,000,000, which is 20% of the $20mm
+verified: its GP carry comes to exactly $4,000,000, which is 20% of the $20m
 profit — the definition of a full catch-up. The rest is checkable by hand: a 40%
 team pool leaves the firm $2,400,000, and a 20% strip of that is $480,000 to the
 stakes investor and $1,920,000 to the founders.
@@ -615,9 +615,9 @@ its own, which keeps the two halves of one tier consistent when the step above
 clamps.
 
 **Where the rate changes the answer** is exactly there — which is why the number
-is negotiated at all. On $15.5mm of proceeds the full catch-up hands the GP the
+is negotiated at all. On $15.5m of proceeds the full catch-up hands the GP the
 whole $806,719 above the preferred; the 50/50 catch-up splits it, and the GP
-takes $403,360. On $30mm both end at $4,000,000, because a catch-up that
+takes $403,360. On $30m both end at $4,000,000, because a catch-up that
 completes changes the path and not the destination.
 
 ### A CRE development JV — `fixtures/valid/waterfall_cre_jv_promote`
@@ -669,10 +669,10 @@ takes the remainder, so `E1344` is satisfied by the structure rather than by an
 added line.
 
 **Both regimes are checkable by hand.** Capital is the venture's stated minimum
-— $175mm, 10% MSGW and 90% STRS — so after three construction years the
-entitlements are 17.5mm and 157.5mm each times 1.11³. On $300mm of proceeds both
+— $175m, 10% MSGW and 90% STRS — so after three construction years the
+entitlements are 17.5mm and 157.5mm each times 1.11³. On $300m of proceeds both
 preferences pay in full and the residual splits 20,625,955.50 / 30,938,933.25 /
-9,099,686.25. On $200mm the pot cannot cover them, and because the capital split
+9,099,686.25. On $200m the pot cannot cover them, and because the capital split
 is 10/90 the pari passu answer is exactly **20,000,000 and 180,000,000, with CPA
 at zero** — which is what the scenario produces.
 

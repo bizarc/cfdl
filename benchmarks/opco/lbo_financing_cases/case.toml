@@ -11,11 +11,11 @@
 # on a published multiple. A single convention error anywhere moves it.
 #
 # THE SIZES ARE NOT INPUTS. The reference sizes each tranche as its leverage
-# multiple times LTM EBITDA rounded to a $25mm increment, and the sponsor's
+# multiple times LTM EBITDA rounded to a $25m increment, and the sponsor's
 # cheque is the plug that balances sources against uses. Both rules are
 # reproduced in the model, which is why the three cases differ only in leverage
 # and pricing. The rule is checked by Base, whose sizes the source publishes:
-# 3.0x, 2.0x and 1.0x of $90mm round to $275mm, $175mm and $100mm.
+# 3.0x, 2.0x and 1.0x of $90m round to $275m, $175m and $100m.
 #
 # The Base debt schedule is asserted period by period in expected.csv because
 # it is published; the other two are asserted on returns alone in

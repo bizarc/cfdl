@@ -1,4 +1,4 @@
-# Benchmark case: $10mm IO/bullet bridge pool, 7.25% / 60mo bullet, 5 CPR,
+# Benchmark case: $10m IO/bullet bridge pool, 7.25% / 60mo bullet, 5 CPR,
 # 1.5 CDR, 40% severity, 4mo recovery lag, purchased at par.
 # Reference: reference_gen.py (independent implementation).
 # Status: pending practitioner Excel review.

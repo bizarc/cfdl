@@ -36,8 +36,8 @@ Against the single-pool model, over all 372 periods:
 
     max |entity.asset.pool.net_cash_flow − model.net_cash_flow| = 0.0
 
-Zero. Not within a tolerance. Splitting $100mm into loans of $40mm, $30mm, $20mm
-and $10mm changes nothing about the pool's cash, which is what a correct rollup
+Zero. Not within a tolerance. Splitting $100m into loans of $40m, $30m, $20m
+and $10m changes nothing about the pool's cash, which is what a correct rollup
 means and what an incorrect one could not fake — the four loans amortize on four
 different schedules and only their sum is invariant.
 

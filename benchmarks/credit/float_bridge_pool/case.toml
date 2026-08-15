@@ -1,4 +1,4 @@
-# Benchmark case: $15mm floating IO bridge pool, SOFR + 275 off a stepped
+# Benchmark case: $15m floating IO bridge pool, SOFR + 275 off a stepped
 # forward curve with a binding 7.00% floor, 36mo bullet, 10 CPR, 2.5 CDR,
 # 45% severity, 5mo recovery lag, purchased at par.
 # Exercises the `curve` concept end-to-end (curve statement -> IR ->

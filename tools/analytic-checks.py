@@ -13,7 +13,7 @@ the definition of present value, so it holds for any correct implementation and
 cannot be satisfied by copying whatever the engine currently does:
 
   * a par bond discounted at its coupon rate is worth par (NPV = 0);
-  * a fully-amortising loan discounted at its own rate is worth its principal;
+  * a fully-amortizing loan discounted at its own rate is worth its principal;
   * a level annuity matches the closed-form annuity factor
     a(n,i) = (1 - (1+i)^-n) / i;
   * an annuity due is worth exactly (1+i) times the ordinary annuity.
@@ -214,12 +214,12 @@ stream holder.payment on entity legal.holder inflow currency USD {
     return npv(run_model(due, 0.06)), npv(run_model(ordinary, 0.06)) * (1.0 + i)
 
 
-@check("a fully-amortising loan discounted at its own rate is worth its principal")
+@check("a fully-amortizing loan discounted at its own rate is worth its principal")
 def amortising_loan() -> tuple[float, float]:
     # 100,000 over 60 months at 6%. Level payments from pmt(); discounted at
     # the loan rate the payments are worth exactly the amount advanced.
     src = """version 0.1
-model "amortising-loan"
+model "amortizing-loan"
 time calendar monthly from 2026-01 for 61
 entity legal lender
 stream lender.advance on entity legal.lender outflow currency USD {
@@ -563,11 +563,11 @@ stream investor.repay on entity legal.investor inflow currency USD {
 EXACT = 1e-6  # published metrics and stream amounts are rounded to six decimals
 
 
-@check("a zero-hazard pool amortises exactly like an ipmt/ppmt loan", EXACT)
+@check("a zero-hazard pool amortizes exactly like an ipmt/ppmt loan", EXACT)
 def pool_equals_plain_loan() -> tuple[float, float]:
     # THE one worth having. credit.pool_level_pay reaches its answer through a
     # closed-form pool factor built for constant prepayment and default; with
-    # both set to zero it must collapse to an ordinary amortising loan. ipmt and
+    # both set to zero it must collapse to an ordinary amortizing loan. ipmt and
     # ppmt compute that from an entirely different code path in cfdl-calc, so a
     # defect in the pack's lowering OR in the annuity split shows up here and
     # nowhere else in the suite.
@@ -938,7 +938,7 @@ contract opco.exit_perpetuity.{suffix} on entity legal.firm {{
 
 @check("a flat perpetuity is base / r", tol=1e-6)
 def perpetuity_flat_is_base_over_rate() -> tuple[float, float]:
-    # g = 0 collapses the Gordon form to the simple capitalisation every
+    # g = 0 collapses the Gordon form to the simple capitalization every
     # practitioner checks by eye: a $100 flow at 8% is worth $1,250.
     return _perpetuity(100.0, 0.0, 0.08, "flat"), 100.0 / 0.08
 

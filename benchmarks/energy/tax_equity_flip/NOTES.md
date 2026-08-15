@@ -35,8 +35,8 @@ outputs read are `flip_actual_year`, `cf_tax_investor_aftertax_cash` and
 
 ## The installed cost is larger than the equipment
 
-The reference reports `cost_prefinancing` of $100mm and `cost_installed` of
-$103.1mm: it capitalizes $3.1mm of financing into the basis, and both the
+The reference reports `cost_prefinancing` of $100m and `cost_installed` of
+$103.1m: it capitalizes $3.1m of financing into the basis, and both the
 credit and depreciation are taken on the larger figure. The model states the
 installed cost rather than deriving the financing component, which is the one
 input carried across rather than computed. Everything downstream follows:
@@ -60,7 +60,7 @@ differs by a factor of nearly twenty.
 
 Running the identical deal monthly moves the flip ten months earlier, because
 the annual grid has no period boundary between month 24 and month 36 at which
-the test can pass. Roughly $3.5mm of cash changes hands on the strength of a
+the test can pass. Roughly $3.5m of cash changes hands on the strength of a
 calendar line. The monthly model is `fixtures/valid/flip_monthly_grain`; no
 external source publishes a monthly answer for it, so it is a fixture with a
 golden rather than a benchmark.

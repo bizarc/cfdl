@@ -69,7 +69,7 @@ Stream 'mgmt_options_12_50' exercise when evaluation failed [EXPR_EVAL]:
 unknown variable `state.value_per_share`; using false.
 ```
 
-so every option silently declined to exercise and **$12.9mm of intrinsic value
+so every option silently declined to exercise and **$12.9m of intrinsic value
 disappeared** from a model that still ran clean to anyone not reading warnings.
 This case only caught it because the reference publishes the answer.
 
@@ -117,14 +117,14 @@ fires is not tested, and the boundary at $20.00 (in, by $0.88) against $22.50
 | management proceeds | 132.569706 | 132.569706 |
 
 Option intrinsic value by tranche: 4.188560, 3.438560, 2.938560, 1.688560,
-0.657839 — $12.912mm in total across the five exercised tranches.
+0.657839 — $12.912m in total across the five exercised tranches.
 
 A convention worth recording: management proceeds are published **gross** of
 the strikes paid in, because those strike proceeds are already inside total
 cash to shareholders. Netting them would double-count. Sponsor 487.546 +
 management 132.570 = 620.116, the published total.
 
-The preferred is a third mechanic the case pins for free: $158.9375mm accruing
+The preferred is a third mechanic the case pins for free: $158.9375m accruing
 8% for five years, converting one-for-one at $10.00 — 158.9375 x 1.08^5 =
 233.53133, giving 23.353133m shares. The conversion is itself an option (take
 the preference or convert), in the money throughout here.
@@ -136,7 +136,7 @@ the preference or convert), in the money throughout here.
   than cash flow.
 - **The other five exit multiples**, and the three financing cases. Each needs a
   separate run; all six multiples are reconciled in the table above.
-- **The debt schedule** that produces the $378.73mm of net debt at exit — that
+- **The debt schedule** that produces the $378.73m of net debt at exit — that
   is `lbo_circular_interest`, which asserts it period by period.
 
 ## The source

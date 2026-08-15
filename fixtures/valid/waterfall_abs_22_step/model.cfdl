@@ -8,7 +8,7 @@ time calendar monthly from 2017-02 for 6
 // The structure is a consumer auto ABS: a servicer and a trustee paid ahead of
 // the notes, five rated classes paid interest then principal in strict
 // seniority, a reserve account topped to a specified level, an
-// overcollateralisation target that excess spread turbos toward, and a
+// overcollateralization target that excess spread turbos toward, and a
 // certificateholder taking whatever survives.
 //
 // This fixture is about EXPRESSIVENESS, not about numbers: the source
@@ -188,7 +188,7 @@ waterfall abs.distribution on entity asset.trust {
   // 19. the reserve account, up to its specified amount
   pay reserve_topup     to asset.reserve   = inputs.specified_reserve - asset.trust.reserve_balance
 
-  // 20. principal to achieve the specified overcollateralisation
+  // 20. principal to achieve the specified overcollateralization
   pay oc_build          to asset.class_a1  = asset.trust.pool_balance - inputs.oc_target
 
   // 21. trustee amounts in excess of the cap that held them at step 2

@@ -18,7 +18,7 @@ time calendar annual from 2016-01 for 6
 // be right to land on a published multiple.
 //
 // Sizes are not stated as inputs. The reference sizes each tranche as its
-// leverage multiple times LTM EBITDA, rounded to a $25mm increment, and the
+// leverage multiple times LTM EBITDA, rounded to a $25m increment, and the
 // sponsor's cheque is the plug that balances sources against uses. Both rules
 // are reproduced below, which is why the three cases differ only in leverage
 // and pricing.
@@ -97,8 +97,8 @@ assume cash_at_exit      = 5.0          // the minimum cash balance
 // The deterministic run is Base; the two scenarios are the other structures.
 
 
-assume commitment_fee = 0.35   // 0.35% on a $100mm undrawn revolver
-assume interest_income = 0.0125 // 0.25% on the $5mm minimum cash balance
+assume commitment_fee = 0.35   // 0.35% on a $100m undrawn revolver
+assume interest_income = 0.0125 // 0.25% on the $5m minimum cash balance
 
 // --- The debt schedule -------------------------------------------------------
 // Subordinated notes pay in kind for three years. A PIK coupon on an average

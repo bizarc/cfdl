@@ -70,7 +70,7 @@ grid's date.
 
 Three cells exceed the floor, by 0.0003–0.0005 percentage points — C at
 04/15/22, D at 07/15/22 and 08/15/22. Net of rounding, the disagreement those
-cells prove is at most $74 on the $537.6mm pool.
+cells prove is at most $74 on the $537.6m pool.
 
 ## The delta
 

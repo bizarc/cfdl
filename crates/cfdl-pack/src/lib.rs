@@ -191,7 +191,7 @@ impl PackOntology {
                 asset(
                     "Asset.Intangible",
                     "intangible",
-                    "A right without a physical form — a royalty, a licence, a patent.",
+                    "A right without a physical form — a royalty, a license, a patent.",
                 ),
                 OntologyEntity {
                     type_id: "Party".to_string(),
@@ -1653,7 +1653,7 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
 
     // A lifecycle exists to make the state space TOTAL. An initial state
     // outside the declared set would leave an entity starting nowhere, which
-    // is exactly the null-until-first-write behaviour this replaces.
+    // is exactly the null-until-first-write behavior this replaces.
     let mut seen_lifecycles: BTreeSet<&str> = BTreeSet::new();
     for lifecycle in &ontology.lifecycles {
         if !seen_lifecycles.insert(lifecycle.lifecycle_id.as_str()) {
@@ -1933,7 +1933,7 @@ fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, Pac
 
     let mut validations = parsed.validations;
     // Deterministic order: diagnostics are sorted downstream, but a stable
-    // load order keeps behaviour reproducible.
+    // load order keeps behavior reproducible.
     validations.sort_by(|a, b| {
         a.contract_names()
             .cmp(&b.contract_names())

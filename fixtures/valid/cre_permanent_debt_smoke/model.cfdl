@@ -9,7 +9,7 @@ entity asset tower : CRE.Asset.RealProperty
 //
 //   periods  0-23   interest only        6,000,000 * 0.055/12 = 27,500.00
 //   periods 24-58   level payment        pmt(0.055/12, 300, 6,000,000)
-//   period     59   payment + balloon    the unamortised balance falls due
+//   period     59   payment + balloon    the unamortized balance falls due
 //
 // The balloon is opted into here precisely because it is OFF by default —
 // a fixture that only exercised the default would never see it. Debt service

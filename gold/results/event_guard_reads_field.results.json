@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "98b7e52ec8226d692f851e8680e6528cf4b4e63833d7977d92a081e79c16c783",
-  "ledger_hash": "ea379a9fbf768fc8808568c28cbc2f23635a39cc054ba09f82f47f5b5258d1b1",
+  "model_hash": "4d84a9294e3e392942243b5de9848cc0ba8e6c2837e6e26d066ed653c90f9357",
+  "ledger_hash": "86ceb9a55b28b918085ef76b116b8e1e63b190636e92e545e582486db432d8f7",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -28,7 +28,7 @@
       },
       "run.annual_discount_rate": 0.0,
       "run.periods_per_year": 1.0,
-      "stream.credit.amortisation.total": {
+      "stream.credit.amortization.total": {
         "amount": -6.0,
         "currency": "USD"
       }
@@ -149,7 +149,7 @@
           }
         ]
       },
-      "stream.credit.amortisation": {
+      "stream.credit.amortization": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",

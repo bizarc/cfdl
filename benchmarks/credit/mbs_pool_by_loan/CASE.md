@@ -1,12 +1,12 @@
 ## The case
 
-A $100mm agency mortgage pool — 8% weighted average coupon, 360-month term, 20%
+A $100m agency mortgage pool — 8% weighted average coupon, 360-month term, 20%
 loss severity, twelve-month recovery lag, prepaying at a flat 1% single monthly
 mortality against a 1% monthly default rate.
 
 It is the same pool as the mortgage pool conventions case, at a different
-grain. There it is one pool. Here it is **four loans of $40mm, $30mm, $20mm and
-$10mm that belong to a pool**, and the pool itself holds no contract. Every
+grain. There it is one pool. Here it is **four loans of $40m, $30m, $20m and
+$10m that belong to a pool**, and the pool itself holds no contract. Every
 figure asserted against the pool is an aggregate.
 
 ## The reference
@@ -50,7 +50,7 @@ with the published schedule within the tolerance the source's rounding allows.
 
 The rollup is also exact against the single-pool model: over all 372 periods,
 `entity.asset.pool.net_cash_flow` here and `model.net_cash_flow` there agree to
-**zero** — not within a tolerance, exactly. Splitting $100mm into four unequal
+**zero** — not within a tolerance, exactly. Splitting $100m into four unequal
 loans changes nothing about the pool's cash.
 
 ## The delta

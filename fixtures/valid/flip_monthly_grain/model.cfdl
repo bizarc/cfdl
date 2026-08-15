@@ -19,14 +19,14 @@ time calendar monthly from 2026-01 for 312
 // annual grid has no period between month 24 and month 36 in which to notice,
 // so the event cannot fire until the next year end — and the investor keeps
 // 98% of the cash for ten months it was no longer entitled to. On this deal
-// that is about $3.5mm.
+// that is about $3.5m.
 //
 // SO THE GRID IS AN ECONOMIC ASSUMPTION, not a presentation choice, whenever
 // an event decides who gets paid. A model that states its flip date hides
 // that; one that derives it cannot.
 //
 // WHAT IS DELIBERATELY NOT MONTHLY: the credit and the tax benefits. Those are
-// realised on a return, once a year — spreading them monthly would move the
+// realized on a return, once a year — spreading them monthly would move the
 // flip earlier for a reason that is not real. Only the operating cash sits on
 // the monthly grid, which is where it actually sits.
 

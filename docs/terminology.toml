@@ -42,28 +42,41 @@ conformance_claimed = false
 # chosen because the larger share of the corpus and the primary readership
 # already used it.
 #
-# APPLIED. 431 replacements across 41 forms, in published content and the
-# sources that generate it. The audit measured only published prose and found 7
-# conflicting pairs; sweeping the sources that FEED that prose found 41. Any
-# future measurement should read the sources, not the rendered pages.
+# APPLIED, IN TWO ROUNDS. 431 replacements across 41 forms in published content
+# and its generating sources, then 106 more across every remaining tracked file:
+# Rust and TypeScript comments, the benchmark reference generators, the tool
+# scripts, the fixtures, CHANGELOG.md and the research notes. **Zero UK forms
+# remain in any tracked file.**
 #
-# THREE THINGS THIS RULE DOES NOT TOUCH, each learned by breaking something:
+# The audit measured only published prose and found 7 conflicting pairs.
+# Sweeping the sources that FEED that prose found 41. Sweeping the whole
+# repository found more still. Measure sources, never rendered pages.
 #
-#   1. Identifiers. `packs/credit/ontology/types.toml` keeps the lifecycle state
-#      `amortising` in `initial`, `states` and every transition. A state name is
-#      a pack API: a model may declare it, so renaming it is a breaking change
-#      with a deprecation path, not a spelling fix. Filed separately.
-#   2. Generated-region keys. `<!-- cfdl:generated diagnostics-catalogue -->` is
-#      a key that sync-content.mjs looks up by name. Note that snake_case
-#      protects itself from a \b-anchored rule and a hyphen does not.
-#   3. `config`. See the `run configuration` entry below.
+# IDENTIFIERS WERE RENAMED TOO, deliberately and with their dependents:
+#
+#   - `packs/credit` lifecycle state `amortising` -> `amortizing`, in `initial`,
+#     `states` and every transition. This is a PACK API CHANGE, not a spelling
+#     fix: a model may declare the state by name, so an existing model that says
+#     `amortising` will no longer resolve. Nothing in this repository referenced
+#     it. Done on an explicit instruction that the American spelling applies
+#     repo-wide.
+#   - Fixture field and stream names (`amortisation` -> `amortization` in
+#     `rule_reads_literal_field` and `event_guard_reads_field`), which changed
+#     three IR goldens and their derived model hashes.
+#   - The generated-region key `diagnostics-catalogue` -> `diagnostics-catalog`,
+#     renamed in the page markers and in sync-content.mjs together. The first
+#     attempt renamed only the markers and the site build failed hard. Note that
+#     snake_case protects itself from a \b-anchored rule and a hyphen does not.
+#
+# ONE THING THIS RULE STILL DOES NOT TOUCH: `config`. See the `run
+# configuration` entry below — it is a different word for a different thing.
 # ---------------------------------------------------------------------------
 
 [spelling]
 convention = "US"
-replacements_applied = 431
+replacements_applied = 537
 forms_applied = 41
-scope = "published content and its generating sources; not gold/, fixtures/, research/, or *.ts"
+scope = "every tracked file. gold/ is re-blessed, never edited; tools/audit-measure.py holds the UK forms as data and is exempt."
 
 [spelling.map]
 modelled = "modeled"

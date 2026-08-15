@@ -52,7 +52,7 @@ as an exercise.
 
 Value per share **20.877119**, sponsor proceeds **487.546139**, management
 proceeds **132.569706** — each matching the published figure exactly. Option
-intrinsic value comes to $12.912mm across the five exercised tranches.
+intrinsic value comes to $12.912m across the five exercised tranches.
 
 Verified at all six published exit multiples; the exercising set is unique at
 every one.
@@ -148,11 +148,11 @@ assume exit_ebitda      = 119.29345470000001
 assume exit_multiple    = 8.0
 assume net_debt         = 378.7317924367603
 
-// Sponsor preferred: $158.9375mm at $10.00/share, accruing 8% for five years,
+// Sponsor preferred: $158.9375m at $10.00/share, accruing 8% for five years,
 // converting one-for-one. 158.9375 * 1.08^5 = 233.53133.
 assume preferred_shares = 23.353133120640006
 
-// Management rollover: $36mm at $10.00/share.
+// Management rollover: $36m at $10.00/share.
 assume rollover_shares  = 3.6
 
 

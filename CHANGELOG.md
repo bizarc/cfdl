@@ -235,7 +235,7 @@ reasons.
 
 ### Added: `cre.permanent_debt`
 
-A commercial mortgage on a stabilised property — the CRE pack previously had no
+A commercial mortgage on a stabilized property — the CRE pack previously had no
 debt contract at all, so every model hand-wrote its mortgage and
 `domain.cre.dscr` worked only because the metric matched a stream *name* by
 convention.
@@ -246,7 +246,7 @@ convention.
     }
 
 `amort_months` strikes the payment and is normally longer than the term — the
-30-year-amortisation-on-a-10-year-loan structure is what a commercial mortgage
+30-year-amortization-on-a-10-year-loan structure is what a commercial mortgage
 is. Optional interest-only period; the balloon is opt-in via
 `balloon_at_maturity` and defaults OFF, because coverage is measured on periodic
 debt service and the standard pro forma repays the balance from the sale.
@@ -266,7 +266,7 @@ component of value in a DCF had no contract.
 contract applies it. `discount_rate` is a contract term, not the run's NPV rate:
 a terminal cost of capital is the rate for a business in steady state, and the
 published models that state these terminals build it from their own CAPM inputs.
-The run's rate discounts the result; this one capitalises it.
+The run's rate discounts the result; this one capitalizes it.
 
 Diagnostics `E7025`–`E7029`. `E7025` guards `r > g`, below which the perpetuity
 has no finite value.
@@ -487,7 +487,7 @@ WAL this engine has ever reported was one period short.
 
 Reconstructed from an issuer-published auto-ABS schedule, the effect is not
 academic: a class with a published WAL of 0.37 years came out at 0.286, a 23%
-understatement. Short amortising deals are hit hardest, because one period is a
+understatement. Short amortizing deals are hit hardest, because one period is a
 larger share of a shorter life.
 
 A flow's time is now `(period + offset) / ppy`, where `offset` is the same
@@ -512,7 +512,7 @@ Time-weighted metrics now net **within** an offset rather than across one: two
 flows in one period at different points in it are not the same cash at the same
 moment, so a purchase settling on its date no longer cancels that period's
 collections. Where every stream shares a placement this is exactly the previous
-behaviour. `model.moic` is deliberately unchanged — it is a ratio of cash in to
+behavior. `model.moic` is deliberately unchanged — it is a ratio of cash in to
 cash out and does not depend on when the cash moved.
 
 Numbers that move:
@@ -672,7 +672,7 @@ Packs work outside the United States. Breaking: see below.
 All 58 lowering rules across the four packs hardcoded `currency = "USD"`, and
 the compiler fell back to the model's currency only when a rule left the field
 empty. An INR model using the energy pack therefore reported INR metrics over
-USD-labelled streams — a PPA in Rajasthan is not a USD contract.
+USD-labeled streams — a PPA in Rajasthan is not a USD contract.
 
 Nothing caught it. `E2107_STREAM_CURRENCY_MISMATCH` lives in `cfdl-validate`,
 which runs on the AST and so sees only hand-written streams; pack-lowered
@@ -714,7 +714,7 @@ releases undetected.
 
 ## [0.5.2] - 2026-07-28
 
-Release-pipeline fixes. No behaviour change: the compiler, engine and packs
+Release-pipeline fixes. No behavior change: the compiler, engine and packs
 are identical to 0.5.0.
 
 - `distribution/scripts/package_docs.sh` named three documents that were
@@ -738,7 +738,7 @@ had each been failing independently since v0.3.0 or earlier.
 
 ## [0.5.1] - 2026-07-28
 
-Release-pipeline fixes. No behaviour change: the compiler, engine and packs
+Release-pipeline fixes. No behavior change: the compiler, engine and packs
 are identical to 0.5.0.
 
 - The VS Code extension's `package-lock.json` still declared `0.0.1` while
@@ -809,7 +809,7 @@ conversion in the amount expression — the language applies no implicit FX.
   `triangular`) and `clip` now work from `run.json`, matching what
   `assume x ~ Dist(...)` offers. `stdev` is accepted alongside `stddev`.
 - Unknown keys are rejected. Parsing was lenient and the override consumers
-  ignore unrecognised keys, so a misspelling produced a clean run with wrong
+  ignore unrecognized keys, so a misspelling produced a clean run with wrong
   numbers and no warning.
 - `docs/schemas/run.schema.json` — the format had no schema at all.
 - An in-source `run monte_carlo trials N seed S` is honoured. It was parsed and
@@ -874,7 +874,7 @@ See `docs/12_payment_timing.md`.
 present value, so they hold for any correct implementation and cannot be
 satisfied by making two implementations agree: a par bond is worth par, a level
 annuity matches `(1-(1+i)^-n)/i`, an annuity due is worth `(1+i)` times the
-ordinary annuity, and a fully-amortising loan is worth its principal. Part of
+ordinary annuity, and a fully-amortizing loan is worth its principal. Part of
 `make ci`.
 
 The benchmark suite compares each model against a reference implementation,

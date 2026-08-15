@@ -86,7 +86,7 @@ By the end of year 2 the investor is $445,000 short of its hurdle, and two
 months of operating cash clear it — but an annual grid has no period between
 month 24 and month 36 in which to notice, so the event cannot fire until the
 next year end. The investor keeps 98% of the cash for ten months it was no
-longer entitled to, worth about $3.5mm here.
+longer entitled to, worth about $3.5m here.
 
 The grid is therefore an economic assumption whenever an event decides who
 gets paid, not a presentation choice. No external source publishes the monthly
@@ -209,7 +209,7 @@ assume debt_amount     = 60000000.0
 assume debt_rate       = 0.06
 assume debt_term       = 18.0
 
-// The equipment is $100mm; the reference capitalizes $3.1mm of financing into
+// The equipment is $100m; the reference capitalizes $3.1m of financing into
 // the installed cost, so the credit and depreciation are taken on the larger
 // figure. Both bases follow from it: the credit on all of it, depreciation on
 // it less half the credit, which is the rule that catches people out.
@@ -221,7 +221,7 @@ assume preflip_share   = 0.98
 assume postflip_share  = 0.05
 
 assume hurdle          = 0.08
-assume investor_equity = 42238000.0      // 98% of $43.1mm of equity
+assume investor_equity = 42238000.0      // 98% of $43.1m of equity
 
 // ---------------------------------------------------------------------------
 // The project, before anybody is paid

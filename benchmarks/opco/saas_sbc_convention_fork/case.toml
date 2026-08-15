@@ -5,7 +5,7 @@
 # how CFDL places cash inside a period and discounts it. This case is here for
 # a different reason: the filing discloses unlevered free cash flow BOTH WAYS,
 # before and after stock-based compensation, for the same company on the same
-# page. $331mm before, $198mm after, in year one. That is the most contested
+# page. $331m before, $198m after, in year one. That is the most contested
 # convention in software valuation, disclosed side by side, which almost never
 # happens.
 #
@@ -34,7 +34,7 @@
 #
 # The asserted cell is 13.5% WACC and 16.0x — the middle discount rate, and a
 # multiple inside the disclosed 15.0x-18.0x range. Published implied enterprise
-# value $7,096mm. The other eleven cells need a different rate or multiple per
+# value $7,096m. The other eleven cells need a different rate or multiple per
 # run, so they live in NOTES.md.
 #
 # tolerance 1.0 — a million on seven billion, set by the filing's rounding

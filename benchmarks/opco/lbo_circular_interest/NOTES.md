@@ -135,9 +135,9 @@ nor wired into CI**: it was downloaded once outside this repo, its cached
 values read, and only those numbers carried across. The same handling
 `crest_solar_cost_based` and `utility_pv_singleowner` give their references.
 
-The deal: $90mm LTM adjusted EBITDA acquired at 8.0x for a $720mm transaction
-value, funded with $275mm term loan B, $175mm senior notes, $100mm
-subordinated notes, a 5% management rollover and $158.9mm of sponsor equity,
-against $15mm of transaction expenses and $9.9mm of financing fees. Four-year
-hold, 35% tax rate, $5mm minimum cash, 1% mandatory term loan amortization with
+The deal: $90m LTM adjusted EBITDA acquired at 8.0x for a $720m transaction
+value, funded with $275m term loan B, $175m senior notes, $100m
+subordinated notes, a 5% management rollover and $158.9m of sponsor equity,
+against $15m of transaction expenses and $9.9m of financing fees. Four-year
+hold, 35% tax rate, $5m minimum cash, 1% mandatory term loan amortization with
 a 100% sweep of the remainder.

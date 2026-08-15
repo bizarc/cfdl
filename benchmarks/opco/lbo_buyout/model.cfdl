@@ -43,7 +43,7 @@ contract opco.capex_line on entity asset.target {
   }
 }
 
-// 5.0x leverage: $21mm term loan, 8.5%, 12 months IO then 7-year
+// 5.0x leverage: $21m term loan, 8.5%, 12 months IO then 7-year
 // amortization, balloon at exit.
 contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
@@ -64,7 +64,7 @@ contract opco.cash_taxes on entity asset.target {
   }
 }
 
-// Entry at 8.0x annualized run-rate EBITDA = 8.0 * (350k * 12) = $33.6mm.
+// Entry at 8.0x annualized run-rate EBITDA = 8.0 * (350k * 12) = $33.6m.
 contract opco.acquisition on entity asset.target {
   term 2026-01..2026-01
   terms {

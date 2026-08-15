@@ -71,7 +71,7 @@ By the end of year 2 the investor is $445,000 short of its hurdle, and two
 months of operating cash clear it — but an annual grid has no period between
 month 24 and month 36 in which to notice, so the event cannot fire until the
 next year end. The investor keeps 98% of the cash for ten months it was no
-longer entitled to, worth about $3.5mm here.
+longer entitled to, worth about $3.5m here.
 
 The grid is therefore an economic assumption whenever an event decides who
 gets paid, not a presentation choice. No external source publishes the monthly

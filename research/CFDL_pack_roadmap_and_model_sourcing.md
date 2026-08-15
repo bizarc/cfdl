@@ -11,7 +11,7 @@ Two questions, researched separately and then reconciled against each other:
 
 1. **Which asset classes belong on the domain-pack roadmap** beyond `energy`, `cre`, `credit` and `opco`?
    40 candidates, each scored on how it is actually valued, what makes its cash flows structurally
-   distinct, what a modelling language must express to model it faithfully, how much reuses existing
+   distinct, what a modeling language must express to model it faithfully, how much reuses existing
    pack primitives, market size, and who would buy it.
 
 2. **Where to source real cash flow models** — for the four existing packs and for the candidates — so
@@ -63,9 +63,9 @@ Three of these dominate, and they are not independent:
   equity (per-partner capital accounts, outside basis, suspended losses).
 - **Cohort / vintage stock** — a vector of units each carrying an age, a rate and a hazard of leaving
   — is the same shape in self-storage tenants, seniors-housing residents, fibre subscribers, container
-  fleets, music-catalogue songs and orchard blocks. Building it once unlocks six or seven packs.
+  fleets, music-catalog songs and orchard blocks. Building it once unlocks six or seven packs.
 - **The ordered waterfall with trigger-gated branching** is shared by CLOs, CMBS, RMBS, aircraft ABS,
-  whole-business securitisation, NPL acquisition leverage, receivables facilities and every fund-level
+  whole-business securitization, NPL acquisition leverage, receivables facilities and every fund-level
   carry structure — plus, in a per-asset form, film ultimates and litigation finance.
 
 That is the argument for the Tier 1 list below: it is chosen so that each entry either needs nothing
@@ -103,7 +103,7 @@ assets (~60%) and the only Tier 1 entry that needs *nothing new from the engine*
 roll: stacked independent contracts each with its own commencement, term, fixed or CPI escalator and
 renewal option — which is what the `cre` lease-by-lease engine already does. The new parts are all
 closed-form over dated events: a lease-up and amendment arrival rate, the ground lease as a
-contra-revenue stream with its own escalator and expiry (and a buyout modelled as a capital event),
+contra-revenue stream with its own escalator and expiry (and a buyout modeled as a capital event),
 and dated MNO-consolidation churn rather than a percentage. Shippable against today's engine.
 
 **5. Mortgage servicing rights.** The best narrow-fast candidate: a compact model (survival-weighted
@@ -115,12 +115,12 @@ machinery RMBS later needs. ~$245bn UPB traded in 2025 at 5.0–5.5x multiples.
 
 **6. Data centers.** Highest-demand real asset class right now (North American supply 8,155 MW in
 H1 2025, 74.3% of construction preleased, 1.6% vacancy — CBRE) and ~50% reuse across two packs at
-once: `cre` for the contract stack, escalators and TI amortisation, `energy` for power curves,
+once: `cre` for the contract stack, escalators and TI amortization, `energy` for power curves,
 energisation milestones and MACRS/ITC on on-site generation. The main new primitive is a capacity
 dimension — contracts denominated in kW with a contracted-vs-utilised split and a PUE multiplier on
 the power pass-through — which is an extension of the existing recovery/expense-stop concept. Also
 needs milestone-gated revenue commencement (a phase starts at `max(construction_complete,
-energization_date)`) and a capitalised construction-interest balance.
+energization_date)`) and a capitalized construction-interest balance.
 
 **7. District energy & waste-to-energy.** The cheapest pack to build, ~65% reuse, and best treated as
 an **`energy` pack extension rather than a greenfield pack**. Merchant power, contracted offtake,
@@ -149,7 +149,7 @@ and needs nothing new. The rest is a USALI departmental build off occupancy × A
 **10. Toll roads & availability-payment P3 concessions.** The strategic entry into infrastructure
 proper, and the reuse from `energy` is better than it looks: an availability payment is a contracted
 revenue stream with an escalator and a performance deduction — structurally a PPA with a curtailment
-adjustment — and P3 senior debt is the same sculpted amortisation. USDOT publishes standardised model
+adjustment — and P3 senior debt is the same sculpted amortization. USDOT publishes standardised model
 contract guides for both availability-payment and toll concessions, so the deduction regime
 (hourly × segment × time factors, with peak-hour weights up to 0.35) is documented rather than
 proprietary. **Sequencing note:** ship fixed-term availability-payment concessions first. The
@@ -193,7 +193,7 @@ These are the most *differentiated* packs — nobody models them well — but th
 inventory state machine, once built, substantially de-risks the other two. Sequence after the cohort
 primitive proves out in self-storage.
 
-**Recombinations of Tier 1 primitives (11):** whole-business securitisation, music catalogues, film
+**Recombinations of Tier 1 primitives (11):** whole-business securitization, music catalogues, film
 libraries, pharma royalties, litigation finance, NPL portfolios, trade receivables, venture debt,
 equipment lease portfolios, GP stakes, continuation vehicles. Each is real, and several are
 commercially attractive — music and pharma royalties in particular need only cohort/decay/lag
@@ -249,13 +249,13 @@ These are the ones worth building first, because each yields an unambiguous publ
 CFDL either reproduces or does not.
 
 **CRE.** MIT OpenCourseWare 11.431J Problem Set 1 is the sharpest precision target in the entire
-catalogue: a 30,000 SF office building, two suites at different expense stops ($4.00 and $5.00/SF),
+catalog: a 30,000 SF office building, two suites at different expense stops ($4.00 and $5.00/SF),
 $14.00/SF market rent, differentiated new-vs-renewal TI ($10 vs $3/SF), 5 months free rent, opex
 growing 4% — and a **published exact answer of $2,292,810**. It is CC BY-NC-SA, so it can ship in the
 repo. Case Assignment 3 (One Lincoln Street, Boston — a real 36-storey, $330.5m development with
 $285.1m of quarterly construction draws, $16.3m of accrued construction interest, an 11% cumulative
 compounding preferred and a three-party JV) is the most credible *named* example deal available under
-a redistributable licence. Beyond that: A.CRE's commercial mortgage model for day-count conventions
+a redistributable license. Beyond that: A.CRE's commercial mortgage model for day-count conventions
 (30/360, Actual/360, Actual/365) and yield maintenance — exact, unambiguous computations where any
 discrepancy is a bug, not a convention difference — and A.CRE's waterfall model with catch-up and
 clawback, where clawback specifically tests whether the language can express a distribution that is
@@ -267,7 +267,7 @@ nrel-pysam`) turns it into a headless oracle** — a harness can sweep hundreds 
 combinations and diff every annual cash flow array against CFDL, which is far stronger than
 reconciling one hand-built spreadsheet. There is also a three-way check available: NREL CREST exists
 as Excel *and* as an independent Python port, so CFDL as a third implementation gives three-way
-agreement, and the port materialises the MACRS half-year convention as data (`macrs_halfyear.csv`)
+agreement, and the port materializes the MACRS half-year convention as data (`macrs_halfyear.csv`)
 rather than burying it in a formula. For infrastructure, the PPIAF highway PPP numerical model is the
 richest single set of verifiable numbers found anywhere: a 125 km 2×2 toll highway, 10,000 vehicles/day
 at opening growing 3%, tolls at $0.13 and $0.25/vehicle/km, three debt tranches with distinct
@@ -294,11 +294,11 @@ and post-SBC — $331m vs $198m in year one, a convention fork that moves value 
 Genentech (a 16-year forecast driven by patent cliffs), and Deutsche Bank on Wanda Sports (explicit
 contract-renewal scenario branching). For debt mechanics, Multiple Expansion's 7-step LBO build is the
 densest free test available: revolver with commitment fee and minimum cash, TLB with mandatory
-amortisation plus an excess-cash-flow sweep, across three leverage cases. Damodaran's library supplies
+amortization plus an excess-cash-flow sweep, across three leverage cases. Damodaran's library supplies
 the textbook anchors (FCFF Ginzu, the LBO model, and ~24 named-company valuations covering banks,
 cyclicals, distressed and emerging-market cases). And CalPERS publishes real net IRRs and multiples on
 real, irregularly-timed LP cash flows across hundreds of funds — the largest free accuracy benchmark
-for IRR and multiple computation anywhere in the catalogue.
+for IRR and multiple computation anywhere in the catalog.
 
 ## Reference models for the roadmap candidates
 
@@ -313,13 +313,13 @@ NSR package coexisting with a 10% net profits interest, testing royalty-waterfal
 Gabriel (Peru's sliding-scale IEM and mining royalty, both progressive in operating margin).
 
 Elsewhere: UC Davis's 2024 almond cost study is probably the cleanest free permanent-crop benchmark in
-existence (105-acre farm, cumulative establishment cost $17,292/acre through year 3, amortised over 22
+existence (105-acre farm, cumulative establishment cost $17,292/acre through year 3, amortized over 22
 productive years at 8.25%). The University of Georgia loblolly pine rotation study demonstrates that
 the *discount rate determines the optimal rotation* — a structural result, so reproducing the SEV
 ranking flip between 4% and 6% proves more than matching one number. The Appraisal Journal LEV paper
 publishes two exact intermediate values (NFV $916.76, LEV $408.65/acre) from fully disclosed inputs.
 `dcapy` (MIT) is a runnable decline-curve and well-economics reference. Mills Music Trust discloses
-decades of realised music-royalty receipts, so a catalogue model can be *back-tested* rather than only
+decades of realized music-royalty receipts, so a catalog model can be *back-tested* rather than only
 built. Royalty Pharma's 10-K is the richest single disclosure of royalty mechanics — tiers with
 annual resets, per-asset expiries, perpetual and finite royalties in one portfolio, milestones.
 
@@ -328,8 +328,8 @@ annual resets, per-asset expiries, perpetual and finite royalties in one portfol
 This distinction matters more than it first appears, because CFDL is source-available and benchmarks
 get committed.
 
-**Can ship as example deals (explicit permissive licence):** MIT OpenCourseWare (CC BY-NC-SA —
-attribution, non-commercial, share-alike) is the only *content* in the catalogue with an unambiguous
+**Can ship as example deals (explicit permissive license):** MIT OpenCourseWare (CC BY-NC-SA —
+attribution, non-commercial, share-alike) is the only *content* in the catalog with an unambiguous
 reuse grant; MIT 15.414 and 11.431J together cover CRE DCF, development JVs, after-tax analysis,
 divisional WACC and covenant mechanics. On the code side: SAM and PySAM (BSD-3), Hastructure (BSD-3),
 `pyforma` (BSD-3), `dcapy` (MIT), AbsBox (Apache-2.0). The World Bank guarantee scenario-analysis
@@ -350,7 +350,7 @@ reproduce numbers rather than republishing files.
 
 1. **Replace one in-house reference with an external one, end to end**, to prove the harness works
    before scaling it. The cleanest candidate is MIT 11.431J PS1 → a new `benchmarks/cre/mit_ocw_ps1/`
-   asserting $2,292,810, since the licence permits shipping the source alongside it.
+   asserting $2,292,810, since the license permits shipping the source alongside it.
 2. **Stand up the PySAM oracle** for `benchmarks/energy/`. `pip install nrel-pysam`, express the
    existing solar and wind benchmarks as Singleowner configurations, and diff annual arrays. This
    converts energy validation from "we wrote a second implementation" to "we agree with NREL",
@@ -378,7 +378,7 @@ reproduce numbers rather than republishing files.
   Link check column.
 - One minor discrepancy: the "A Simple Model" distribution waterfall entry is described as five worked
   structures; the current page text describes four.
-- Licence statements are as found on the publisher's page. "Not stated" means no terms were located —
+- License statements are as found on the publisher's page. "Not stated" means no terms were located —
   it is not a grant of rights. Confirm before committing any file.
 - The **Capability Requirements** sheet's primitive-family column is auto-tagged from the requirement
   text by keyword and is intended for counting and sorting, not as an authoritative taxonomy. 18 of
@@ -412,4 +412,4 @@ Reference models: [MIT OCW 11.431J Problem Set 1](https://ocw.mit.edu/courses/11
 [UC Davis 2024 almond cost study](https://coststudyfiles.ucdavis.edu/2024/09/30/AlmondsSJVNorth%20Final%20draft4.pdf) ·
 [Appraisal Journal — Land Expectation Value](https://www.timbertax.org/getstarted/appraisal/papers/pdf/ajoct96.PDF)
 
-Full source list with links, licences and per-entry detail: **`CFDL_pack_roadmap_and_model_catalogue.xlsx`**, *Model Catalogue* sheet.
+Full source list with links, licences and per-entry detail: **`CFDL_pack_roadmap_and_model_catalogue.xlsx`**, *Model Catalog* sheet.

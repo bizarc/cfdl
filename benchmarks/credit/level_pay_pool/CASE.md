@@ -1,6 +1,6 @@
 ## The case
 
-A $25mm auto loan pool at 6.5% over 120 months, bought at a one-point discount.
+A $25m auto loan pool at 6.5% over 120 months, bought at a one-point discount.
 Every borrower pays the same instalment each month, which splits into shrinking
 interest and growing principal. Layered on top: an 8% constant prepayment rate, a
 2% default rate, 35% loss severity, a six-month recovery lag, a 50 basis point

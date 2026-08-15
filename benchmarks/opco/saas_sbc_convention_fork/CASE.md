@@ -3,8 +3,8 @@
 A sponsor take-private of a subscription-software business. Stock-based
 compensation is the most contested convention in software valuation, and the
 source discloses free cash flow **both ways** — before and after it — for the
-same company on the same page. The gap is not a rounding difference: $331mm
-before, $198mm after, in the first year alone. Two thirds of first-year cash
+same company on the same page. The gap is not a rounding difference: $331m
+before, $198m after, in the first year alone. Two thirds of first-year cash
 flow turns on the convention.
 
 ## The reference
@@ -34,7 +34,7 @@ from the pre-compensation one.
 
 ## The result
 
-`model.npv` = **7,096** against the filing's published 7,096, at 13.5% and 16.0×.
+`model.npv` = **7,096** against the filing's published 7,096, at 13.5% and 16.0x.
 
 All twelve cells of the disclosed grid reconcile, worst **±0.50 on ~7,000** —
 0.007%, inside the filing's own whole-million rounding.

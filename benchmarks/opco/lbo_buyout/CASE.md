@@ -1,6 +1,6 @@
 ## The case
 
-A five-year leveraged buyout of a services business. Entry at 8.0× a $33.6mm
+A five-year leveraged buyout of a services business. Entry at 8.0x a $33.6m
 run-rate EBITDA, funded with term debt; the business grows, pays the debt down
 out of operating cash flow, and is sold at an exit multiple. Working capital
 moves on a days-based policy — receivables, payables and inventory — rather than

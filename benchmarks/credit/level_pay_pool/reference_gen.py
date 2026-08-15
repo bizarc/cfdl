@@ -47,7 +47,7 @@ def main():
         sched = performing * c
         # By convention SMM is the fraction of the balance
         # outstanding AT THE BEGINNING of the month, net of SCHEDULED
-        # amortisation only — defaults are not removed from the base. This
+        # amortization only — defaults are not removed from the base. This
         # reference previously used the post-default balance, the same
         # misreading as the engine, which is why the two agreed. The published
         # The external reference is the tiebreaker; see
@@ -55,15 +55,15 @@ def main():
         prepay = (bal - bal * c) * smm
         penalty = prepay * PREPAY_PENALTY_RATE
         bal = performing - sched - prepay
-        # A defaulted loan keeps amortising while it sits in foreclosure, so what
-        # is liquidated is the AMORTISED balance, not face: the loss is severity
-        # x original face, and the recovery is the amortised balance less that
-        # loss. S is the scheduled balance factor, so the amortisation over the
+        # A defaulted loan keeps amortizing while it sits in foreclosure, so what
+        # is liquidated is the AMORTIZED balance, not face: the loss is severity
+        # x original face, and the recovery is the amortized balance less that
+        # loss. S is the scheduled balance factor, so the amortization over the
         # lag is S(p + lag) / S(p). Applies to level-pay only — an IO loan has
-        # no scheduled amortisation, so face is correct there.
+        # no scheduled amortization, so face is correct there.
         S = lambda q: ((1.0 + r) ** TERM_MONTHS - (1.0 + r) ** q) / ((1.0 + r) ** TERM_MONTHS - 1.0)
         # Floored: a defaulted loan cannot repay less than nothing, so the loss
-        # is capped at the amortised balance. Binds only on short terms.
+        # is capped at the amortized balance. Binds only on short terms.
         recoveries[p + RECOVERY_LAG] += default * max(0.0, S(p + RECOVERY_LAG) / S(p) - SEVERITY)
         net[p] += interest + sched + prepay + penalty - servicing
         principal_flows[p] += sched + prepay

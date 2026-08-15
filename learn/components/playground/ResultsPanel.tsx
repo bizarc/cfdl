@@ -446,7 +446,7 @@ function CashFlowsTab({
     const weight = (name: string) => vals(name).reduce((acc, v) => acc + Math.abs(v), 0);
     const ranked = [...componentNames].sort((a, b) => weight(b) - weight(a));
 
-    // Auto mode keeps the old top-six behaviour and folds the tail into one
+    // Auto mode keeps the old top-six behavior and folds the tail into one
     // band so the stack still sums to the net line. An explicit selection is
     // taken literally — a reader who picked three streams means three.
     const auto = series === null;

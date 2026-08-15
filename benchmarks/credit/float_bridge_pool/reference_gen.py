@@ -65,7 +65,7 @@ def main():
         if p < TERM_MONTHS - 1:
             # By convention SMM is the fraction of the balance
             # outstanding AT THE BEGINNING of the month, net of SCHEDULED
-            # amortisation only — defaults are not removed from the base. This
+            # amortization only — defaults are not removed from the base. This
             # reference previously used the post-default balance, the same
             # misreading as the engine, which is why the two agreed. The published
             # The external reference is the tiebreaker; see

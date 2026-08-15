@@ -20,9 +20,9 @@ time calendar annual from 2020-01 for 6
 // cycle.
 //
 // TIER ONE IS THE VERIFIED CASE. The fund waterfall is `waterfall_fund_carry`
-// unchanged — $10mm called, $30mm back after five years, an 8% compounding
+// unchanged — $10m called, $30m back after five years, an 8% compounding
 // preferred, a full catch-up, then 80/20 — and its GP carry comes to exactly
-// $4,000,000, which is 20% of the $20mm profit. A full catch-up is defined by
+// $4,000,000, which is 20% of the $20m profit. A full catch-up is defined by
 // producing that number, so the pot the firm-level waterfalls draw on is
 // checkable by hand before any of them run.
 

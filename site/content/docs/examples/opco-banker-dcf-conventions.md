@@ -46,7 +46,7 @@ parties, so the case describes the *analysis* rather than the company.
 ## The result
 
 `model.npv` = **15,764** against the filing's published 15,764, at the center of
-the disclosed grid — 10.375% discount rate, 25.0× terminal multiple.
+the disclosed grid — 10.375% discount rate, 25.0x terminal multiple.
 
 All nine cells of the grid reconcile; the worst is +1.17 on $19bn. The other
 eight need a different rate or multiple per run, so the asserted cell is the
@@ -119,7 +119,7 @@ assume dilution_term = 0.020
 
 // Terminal value: a forward (NTM) multiple on the terminal year's unlevered
 // free cash flow, struck as of the start of that year. 25.0x is the midpoint
-// of the disclosed 20.0x-30.0x range; $891mm is the disclosed FY30E UFCF.
+// of the disclosed 20.0x-30.0x range; $891m is the disclosed FY30E UFCF.
 assume terminal_ntm_multiple = 25.0
 assume terminal_year_ufcf    = 891.0
 

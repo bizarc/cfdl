@@ -31,7 +31,7 @@ the conventions are what is being validated and they belong to no one.
 What makes it usable is completeness. It discloses the unlevered FCF build-up
 line by line **and** the SBC line **and** the post-SBC series, the discount
 rate range (12.50% / 13.50% / 14.50%), the terminal method (an NTM unlevered-FCF
-multiple of 15.0x / 16.0x / 17.0x / 18.0x on terminal-year uFCF of $696mm), the
+multiple of 15.0x / 16.0x / 17.0x / 18.0x on terminal-year uFCF of $696m), the
 discounting convention (stated as mid-period), the valuation date (31 March
 2024), and a **3x4 grid of implied enterprise values**.
 
@@ -66,7 +66,7 @@ directly:
 | 13.50% | 381.33 | 4.751 | 695.9 |
 | 14.50% | 365.67 | 4.753 | 695.9 |
 
-The base is **$696mm — the pre-SBC terminal-year figure** — not the $484mm it
+The base is **$696m — the pre-SBC terminal-year figure** — not the $484m it
 would be post-SBC. And the exponent is 4.75, confirming the terminal value is
 discounted **whole** rather than mid-period. Meanwhile the intercept of the
 same lines gives the present value of the explicit flows: ~1,016 / 994 / 973,
@@ -133,7 +133,7 @@ not recoverable from the disclosed figures.
 
 It is solved from the published grid instead: **one unknown against twelve
 published enterprise values**, which leaves eleven degrees of freedom. At the
-solved value of **$135.51mm**, all twelve land within ±0.50. A fitted parameter
+solved value of **$135.51m**, all twelve land within ±0.50. A fitted parameter
 that reproduces twelve independent published numbers to four significant
 figures is a reconstruction, not a curve fit — but it is stated plainly here,
 and in `model.cfdl` at the line itself, because it is the one figure in the
@@ -142,7 +142,7 @@ case that is not the filing's.
 It is **68.4% of the full year, not 75%**, and the direction is the expected
 one: this is an annual-prepaid subscription business, so Q1 carries a
 disproportionate share of the year's cash collection. A model that assumed a
-flat 75% would overstate the stub by $13mm and the enterprise value by ~$12mm.
+flat 75% would overstate the stub by $13m and the enterprise value by ~$12m.
 
 The stub is stated post-SBC, because its pre-SBC/SBC split is not recoverable
 either. That is why there is no `opco.sbc.stub_2024` line.

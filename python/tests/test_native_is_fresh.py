@@ -2,7 +2,7 @@
 
 The editable install compiles `cfdl_sdk._native` from the Rust crates once;
 nothing rebuilds it when the engine changes. A stale module silently passes
-tests against old behaviour — this exact situation was found during a
+tests against old behavior — this exact situation was found during a
 pre-launch surface check, where the installed SDK still accepted a model the
 engine had learned to reject days earlier.
 """

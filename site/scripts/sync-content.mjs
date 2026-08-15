@@ -113,7 +113,7 @@ function renderDoc(frontmatter, sourcePath, body, layer) {
     "generated: full",
     // Drives the banner in app/docs/[[...slug]]/page.tsx. Emitted here rather
     // than written per page, so a new specification page cannot be added
-    // without being labelled as one.
+    // without being labeled as one.
     ...(layer ? [`layer: ${layer}`] : []),
     "---",
     "",
@@ -1118,7 +1118,7 @@ function packStatements() {
  * GROUPING IS EDITORIAL and lives below; the LIST is not. Anything the engine
  * gains that this file has not been told about lands under "Other" rather than
  * being silently dropped, so the page is always complete even when it is not
- * yet organised.
+ * yet organized.
  */
 const BUILTIN_GROUPS = [
   ["Arithmetic", ["abs", "min", "max", "clamp", "exp", "ln", "pow", "sum", "avg"]],
@@ -1298,7 +1298,7 @@ function packMetrics() {
 }
 
 const dataRegions = [
-  { page: "reference/diagnostics.md", key: "diagnostics-catalogue", body: diagnosticsCatalogue() },
+  { page: "reference/diagnostics.md", key: "diagnostics-catalog", body: diagnosticsCatalogue() },
   { page: "reference/statements.md", key: "pack-statements", body: packStatements() },
   { page: "reference/expressions.md", key: "expression-builtins", body: expressionBuiltins() },
   { page: "reference/packs.md", key: "pack-contracts", body: packContracts() },

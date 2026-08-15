@@ -7,7 +7,7 @@ time calendar annual from 2026-01 for 1
 // type, the field and the state are all misspelled, and the model still ran.
 entity asset tower : CRE.Asset.RealProprty {
   asset_clas = "office"
-  state stabilised
+  state stabilized
 }
 
 stream cre.rent on entity asset.tower inflow currency USD {

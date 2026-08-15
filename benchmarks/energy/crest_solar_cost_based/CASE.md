@@ -8,7 +8,7 @@ paid a flat 23.15 c/kWh.
 Five operating expense lines run against it, and they do not share an escalator:
 fixed operations and maintenance, insurance and a land lease each inflate at
 1.6%; a payment in lieu of property tax **abates 10% a year** on a stated
-schedule; and a royalty takes 3% of tariff revenue. $3.15mm of level-pay debt
+schedule; and a royalty takes 3% of tariff revenue. $3.15m of level-pay debt
 runs 18 years at 7%, maturing seven years before the asset does.
 
 ## The reference
