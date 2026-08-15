@@ -48,21 +48,25 @@ PAGES = {
         "id": "notebook-energy",
         "slug": "energy-solar-microgrid",
         "pack": "energy",
+        "description": "A solar microgrid modeled end to end in Python: build the model, run it, and read the cash flows and metrics it produces.",
     },
     "02_cre_office_acquisition": {
         "id": "notebook-cre",
         "slug": "cre-office-acquisition",
         "pack": "cre",
+        "description": "A commercial real estate acquisition modeled end to end in Python, from assumptions through cash flows, metrics, and charts.",
     },
     "03_credit_loan_pool": {
         "id": "notebook-credit",
         "slug": "credit-loan-pool",
         "pack": "credit",
+        "description": "A loan pool modeled end to end in Python: prepayment and default assumptions, period cash flows, and the metrics they imply.",
     },
     "04_opco_lbo": {
         "id": "notebook-opco",
         "slug": "opco-lbo",
         "pack": "opco",
+        "description": "An operating company leveraged buyout modeled end to end in Python, run through the engine with its cash flows and returns charted.",
     },
 }
 
@@ -220,6 +224,7 @@ def render(path: pathlib.Path, notebook: dict) -> tuple[str, dict[str, bytes], s
         f"id: {meta['id']}",
         f'title: "{title}"',
         f'slug: "/docs/notebooks/{slug}"',
+        f'description: "{meta["description"]}"',
         f"source: examples/notebooks/{path.name}",
         # Declares who owns the bytes, for the site's manifest check. This
         # script does, wholly — the page is re-rendered from the notebook.
@@ -245,6 +250,7 @@ def index_page(toc: list[tuple[str, str, str]]) -> str:
         "id: notebooks",
         'title: "Notebooks"',
         'slug: "/docs/notebooks"',
+        'description: "Worked CFDL models in Jupyter — one per domain pack, each building a model in Python and reading its results."',
         "generated: full",
         "---",
         "",

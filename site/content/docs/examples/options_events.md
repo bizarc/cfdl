@@ -2,6 +2,7 @@
 id: example-options_events
 title: "Events and options"
 slug: "/docs/examples/options_events"
+description: "An event fires when its condition first becomes true."
 ---
 
 An **event** fires when its condition first becomes true. It can set entity

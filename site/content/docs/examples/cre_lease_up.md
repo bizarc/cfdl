@@ -2,6 +2,7 @@
 id: example-cre-lease-up
 title: "CRE: lease-up"
 slug: "/docs/examples/cre_lease_up"
+description: "This example uses a pack contract for a formal lease (formal agreement with another party)."
 ---
 
 This example uses a pack **contract** for a formal lease (formal agreement with another party).

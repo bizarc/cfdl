@@ -2,6 +2,7 @@
 id: compiler-spec
 title: "Compiler spec (v0.1)"
 slug: "/docs/specification/compiler-spec"
+description: "How a conforming compiler turns CFDL source into validated canonical IR: pipeline stages, resolution order, and the diagnostics it must raise."
 source: docs/04_compiler_spec.md
 generated: full
 layer: specification

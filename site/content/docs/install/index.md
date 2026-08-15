@@ -2,6 +2,7 @@
 id: install-index
 title: Install and setup
 slug: /docs/install
+description: "Choose the surface that matches how you work: the CLI, Python, the API server, VS Code, or the browser playground."
 generated: none
 ---
 

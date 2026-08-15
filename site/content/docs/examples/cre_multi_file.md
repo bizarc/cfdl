@@ -2,6 +2,7 @@
 id: example-cre-multi-file
 title: "CRE: multi-file model"
 slug: "/docs/examples/cre_multi_file"
+description: "This example uses pack contracts in contracts.cfdl for lease, construction stub, and exit; standalone streams for ops revenue and ops expense (per guidance)."
 ---
 
 This example uses pack **contracts** in `contracts.cfdl` for lease, construction stub, and exit; **standalone streams** for ops revenue and ops expense (per guidance).

@@ -2,6 +2,7 @@
 id: notebook-credit
 title: "Credit loan pool (level-pay)"
 slug: "/docs/notebooks/credit-loan-pool"
+description: "A loan pool modeled end to end in Python: prepayment and default assumptions, period cash flows, and the metrics they imply."
 source: examples/notebooks/03_credit_loan_pool.ipynb
 generated: full
 ---

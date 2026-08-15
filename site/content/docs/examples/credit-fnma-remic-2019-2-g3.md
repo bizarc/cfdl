@@ -2,6 +2,7 @@
 id: benchmark-credit-fnma-remic-2019-2-g3
 title: "Credit: Fannie Mae REMIC with a stripped coupon"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3"
+description: "Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal."
 source: benchmarks/credit/fnma_remic_2019_2_g3
 ---
 

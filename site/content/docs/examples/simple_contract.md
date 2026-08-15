@@ -2,6 +2,7 @@
 id: example-simple_contract
 title: "A simple contract"
 slug: "/docs/examples/simple_contract"
+description: "This example uses the CRE pack with a single contract for a formal lease agreement (lease = formal agreement with another party)."
 ---
 
 This example uses the CRE pack with a single **contract** for a formal lease agreement (lease = formal agreement with another party).

@@ -2,6 +2,7 @@
 id: example-minimal_model
 title: "Minimal model"
 slug: "/docs/examples/minimal_model"
+description: "This is the smallest practical CFDL model"
 ---
 
 This is the smallest practical CFDL model:

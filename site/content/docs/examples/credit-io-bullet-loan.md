@@ -2,6 +2,7 @@
 id: benchmark-credit-io-bullet-loan
 title: "Credit: IO/bullet bridge loan"
 slug: "/docs/examples/credit-io-bullet-loan"
+description: "An interest-only loan repaying its entire principal in a single balloon at maturity."
 source: benchmarks/credit/io_bullet_loan
 ---
 

@@ -2,6 +2,7 @@
 id: notebook-opco
 title: "Operating company LBO"
 slug: "/docs/notebooks/opco-lbo"
+description: "An operating company leveraged buyout modeled end to end in Python, run through the engine with its cash flows and returns charted."
 source: examples/notebooks/04_opco_lbo.ipynb
 generated: full
 ---

@@ -18,7 +18,8 @@
     "check:dialogs": "node scripts/check-no-native-dialogs.mjs",
     "check:notebooks": "node scripts/check-notebooks-fresh.mjs",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "check:descriptions": "node scripts/check-descriptions.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

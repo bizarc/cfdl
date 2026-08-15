@@ -2,6 +2,7 @@
 id: stochastic-modeling
 title: Stochastic modeling
 slug: /docs/stochastic-modeling
+description: "Get the deterministic number and the distribution around it from one model, with seeded draws that reproduce byte for byte."
 generated: none
 ---
 

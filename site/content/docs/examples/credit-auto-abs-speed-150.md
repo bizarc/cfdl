@@ -2,6 +2,7 @@
 id: benchmark-credit-auto-abs-speed-150
 title: "Credit: auto ABS at 1.5x prepayment speed"
 slug: "/docs/examples/credit-auto-abs-speed-150"
+description: "The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens."
 source: benchmarks/credit/auto_abs_speed_150
 ---
 

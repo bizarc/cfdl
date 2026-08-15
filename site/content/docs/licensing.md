@@ -2,6 +2,7 @@
 id: licensing
 title: Licensing
 slug: /docs/licensing
+description: "CFDL is source available under the Business Source License 1.1. What that permits, what it restricts, and when it converts."
 generated: none
 ---
 

@@ -2,6 +2,7 @@
 id: notebook-energy
 title: "Solar PPA microgrid"
 slug: "/docs/notebooks/energy-solar-microgrid"
+description: "A solar microgrid modeled end to end in Python: build the model, run it, and read the cash flows and metrics it produces."
 source: examples/notebooks/01_energy_solar_microgrid.ipynb
 generated: full
 ---

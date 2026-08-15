@@ -2,6 +2,7 @@
 id: python-sdk
 title: Python SDK
 slug: /docs/python-sdk
+description: "Compile and run models from Python, with pandas accessors over the results and the engine embedded in-process."
 generated: none
 ---
 

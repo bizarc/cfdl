@@ -2,6 +2,7 @@
 id: benchmark-credit-fnma-remic-2019-2-g3-psa400
 title: "Credit: Fannie Mae REMIC at 400% PSA"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3-psa400"
+description: "Group 3 of a Fannie Mae REMIC at 400% PSA — a fast pool, and the column whose weighted average life pins the timing convention hardest."
 source: benchmarks/credit/fnma_remic_2019_2_g3_psa400
 ---
 

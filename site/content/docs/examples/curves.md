@@ -2,6 +2,7 @@
 id: example-curves
 title: "Curves"
 slug: "/docs/examples/curves"
+description: "A curve is a dated series — a forward price, an index, a rate path —"
 ---
 
 A **curve** is a dated series — a forward price, an index, a rate path —

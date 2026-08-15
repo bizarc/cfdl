@@ -2,6 +2,7 @@
 id: benchmark-opco-lbo-circular-interest
 title: "OpCo: LBO debt schedule with average-balance interest"
 slug: "/docs/examples/opco-lbo-circular-interest"
+description: "A leveraged buyout's debt schedule, where interest accrues on the average balance and every dollar of free cash flow sweeps against the term loan."
 source: benchmarks/opco/lbo_circular_interest
 ---
 

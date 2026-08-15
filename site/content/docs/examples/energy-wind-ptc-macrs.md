@@ -2,6 +2,7 @@
 id: benchmark-energy-wind-ptc-macrs
 title: "Energy: wind with PTC and MACRS"
 slug: "/docs/examples/energy-wind-ptc-macrs"
+description: "A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule."
 source: benchmarks/energy/wind_ptc_macrs
 ---
 

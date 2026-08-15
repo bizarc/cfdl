@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -89,7 +89,7 @@ bench:
 # there. A release build of the whole engine used to be required just to satisfy
 # a freshness stamp on a 2 MB artifact only the website consumes, which was the
 # single largest cost in this loop.
-ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice rule-fragments doc-examples training-examples shipped-examples benchmark-cases
+ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice glossary-check rule-fragments doc-examples training-examples shipped-examples benchmark-cases
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
@@ -123,6 +123,7 @@ verify-site-nofresh:
 	cd site && npm run check:links
 	cd site && npm run check:examples
 	cd site && npm run check:dialogs
+	cd site && npm run check:descriptions
 	# The learn app mirrors the design system from site/; a site-side edit to a
 	# shared file fails here until learn/ is re-synced. Runs plain node, so it
 	# needs no npm ci in learn/.
@@ -153,6 +154,15 @@ wasm:
 # Internal engineering narrative must not reach the documentation site. Lives
 # in the fast loop rather than the site gates: it reads repository files and
 # needs no node_modules, no venv and no toolchain.
+# The glossary page is generated from the terminology register, so a term is
+# defined in exactly one place. Lives in the fast loop: it reads two repository
+# files and needs no node_modules and no toolchain.
+glossary:
+	$(PYGATE) tools/gen-glossary.py
+
+glossary-check:
+	$(PYGATE) tools/gen-glossary.py --check
+
 site-voice:
 	$(PYGATE) tools/check-site-voice.py
 

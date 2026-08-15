@@ -2,6 +2,7 @@
 id: example-uncertainty
 title: "Uncertainty and Monte Carlo"
 slug: "/docs/examples/uncertainty"
+description: "An assumption can be a distribution rather than a number, which is what"
 ---
 
 An assumption can be a **distribution** rather than a number, which is what

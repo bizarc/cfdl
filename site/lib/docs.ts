@@ -7,6 +7,15 @@ export interface DocMeta {
   title: string;
   /** Path on disk, relative to content/docs. */
   file: string;
+  /**
+   * One sentence saying what the page is. Becomes the `<meta name="description">`
+   * and the text a search result or a link preview shows under the title.
+   *
+   * Optional in the type because a page can be added without one; the
+   * `check-descriptions` gate is what makes it required in practice. Without
+   * that split, adding a page would be a type error in an unrelated file.
+   */
+  description?: string;
 }
 
 export interface Doc extends DocMeta {
@@ -76,6 +85,7 @@ export function getAllDocs(): Doc[] {
       file: rel,
       body,
       layer: data.layer,
+      description: data.description,
     };
   });
 

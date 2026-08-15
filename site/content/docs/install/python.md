@@ -2,6 +2,7 @@
 id: install-python
 title: Install for Python
 slug: /docs/install/python
+description: "Install cfdl_sdk, which embeds the compiler and engine in-process as a Rust extension module."
 generated: none
 ---
 

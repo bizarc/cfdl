@@ -2,6 +2,7 @@
 id: install-vscode
 title: "VS Code and LSP"
 slug: "/docs/install/vscode"
+description: "Install the CFDL extension and language server for VS Code: syntax highlighting, inline diagnostics, and hover documentation."
 source: distribution/install-configure.md
 generated: full
 ---

@@ -2,6 +2,7 @@
 id: notebooks
 title: "Notebooks"
 slug: "/docs/notebooks"
+description: "Worked CFDL models in Jupyter — one per domain pack, each building a model in Python and reading its results."
 generated: full
 ---
 

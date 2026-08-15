@@ -2,6 +2,7 @@
 id: pack-interface
 title: "Pack interface (v0.1)"
 slug: "/docs/specification/pack-interface"
+description: "The contract a domain pack is written against: type registries, aliases, lowering rules, metrics, and validations."
 source: docs/07_pack_interface.md
 generated: full
 layer: specification

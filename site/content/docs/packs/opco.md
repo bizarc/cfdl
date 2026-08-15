@@ -2,6 +2,7 @@
 id: pack-opco
 title: "OpCo"
 slug: "/docs/packs/opco"
+description: "The OpCo pack: revenue and cost lines, working capital, leverage, and an exit for a business valued on its cash flow."
 generated: regions
 ---
 

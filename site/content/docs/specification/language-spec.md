@@ -2,6 +2,7 @@
 id: language-spec
 title: "Language spec (v0.1)"
 slug: "/docs/specification/language-spec"
+description: "The normative specification for CFDL v0.1 — entities, contracts, streams, time, and the canonical IR a model compiles to."
 source: docs/01_language_spec.md
 generated: full
 layer: specification

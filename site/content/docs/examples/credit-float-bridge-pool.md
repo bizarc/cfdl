@@ -2,6 +2,7 @@
 id: benchmark-credit-float-bridge-pool
 title: "Credit: floating-rate bridge pool"
 slug: "/docs/examples/credit-float-bridge-pool"
+description: "A floating-rate bridge loan pool priced off a forward curve, where the coupon resets each period rather than being fixed at origination."
 source: benchmarks/credit/float_bridge_pool
 ---
 

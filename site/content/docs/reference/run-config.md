@@ -2,6 +2,7 @@
 id: reference-run-config
 title: Run-config reference
 slug: /docs/reference/run-config
+description: "The run-config JSON: discount rate, as-of date, parameter overrides, named scenarios, and Monte Carlo settings."
 generated: none
 ---
 

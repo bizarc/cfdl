@@ -2,6 +2,7 @@
 id: specification
 title: "Specification"
 slug: "/docs/specification"
+description: "The normative definition of CFDL: the grammar, the expression environment, the compiler's obligations, the diagnostic register, the pack interface, and the schemas."
 generated: none
 ---
 

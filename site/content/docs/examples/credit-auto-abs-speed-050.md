@@ -2,6 +2,7 @@
 id: benchmark-credit-auto-abs-speed-050
 title: "Credit: auto ABS at 0.5x prepayment speed"
 slug: "/docs/examples/credit-auto-abs-speed-050"
+description: "An auto loan pool prepaying at 0.5 ABS, amortizing to schedule with prepayments taken as a constant share of the original balance."
 source: benchmarks/credit/auto_abs_speed_050
 ---
 

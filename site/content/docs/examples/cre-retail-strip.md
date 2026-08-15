@@ -2,6 +2,7 @@
 id: benchmark-cre-retail-strip
 title: "CRE: retail strip with expense stops"
 slug: "/docs/examples/cre-retail-strip"
+description: "A retail strip center with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold."
 source: benchmarks/cre/retail_strip
 ---
 

@@ -2,6 +2,7 @@
 id: pack-credit
 title: "Credit"
 slug: "/docs/packs/credit"
+description: "The credit pack: loan pools amortizing to schedule while prepaying and defaulting, and what reaches each note holder."
 generated: regions
 ---
 

@@ -2,6 +2,7 @@
 id: faq
 title: FAQ
 slug: /docs/faq
+description: "Common questions about CFDL — what it is for, how it is licensed, how it differs from a spreadsheet, and what it deliberately does not do."
 generated: none
 ---
 

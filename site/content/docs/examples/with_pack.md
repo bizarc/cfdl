@@ -2,6 +2,7 @@
 id: example-with_pack
 title: "Using an industry pack"
 slug: "/docs/examples/with_pack"
+description: "This example shows a slightly larger pack-enabled model using pack contracts for revenue and opex."
 ---
 
 This example shows a slightly larger pack-enabled model using pack **contracts** for revenue and opex. In real models, individual revenue/opex items are often modeled as **streams**; see [When to use streams vs contracts](/docs/language-guide).

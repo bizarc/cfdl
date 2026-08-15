@@ -2,6 +2,7 @@
 id: ir-schema
 title: "IR schema (v0.1)"
 slug: "/docs/specification/ir-schema"
+description: "The JSON schema for the canonical intermediate representation a CFDL model compiles to."
 source: docs/05_ir_schema.md
 generated: full
 layer: specification

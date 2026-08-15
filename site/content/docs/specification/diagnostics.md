@@ -2,6 +2,7 @@
 id: diagnostics
 title: "Diagnostics reference"
 slug: "/docs/specification/diagnostics"
+description: "Every CFDL diagnostic code, what raises it, and what the compiler guarantees about code stability."
 source: docs/08_diagnostics.md
 generated: full
 layer: specification

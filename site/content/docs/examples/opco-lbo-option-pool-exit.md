@@ -2,6 +2,7 @@
 id: benchmark-opco-lbo-option-pool-exit
 title: "OpCo: LBO exit waterfall with an option pool"
 slug: "/docs/examples/opco-lbo-option-pool-exit"
+description: "A leveraged buyout's exit waterfall, splitting proceeds between an accruing preferred, rolled-over management equity and a laddered management option pool."
 source: benchmarks/opco/lbo_option_pool_exit
 ---
 

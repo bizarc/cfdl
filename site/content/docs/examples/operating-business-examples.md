@@ -2,6 +2,7 @@
 id: operating-business-examples
 title: "Operating business examples"
 slug: "/docs/examples/operating-business-examples"
+description: "Operating company models: revenue, operating cost, working capital, and an exit multiple for DCF-style valuation."
 generated: none
 ---
 

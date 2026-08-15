@@ -2,6 +2,7 @@
 id: reference-expressions
 title: "Expressions"
 slug: "/docs/reference/expressions"
+description: "What an expression may read and what it may do: bindings, operators, functions, and the order things evaluate in."
 generated: regions
 ---
 

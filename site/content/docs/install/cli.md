@@ -2,6 +2,7 @@
 id: install-cli
 title: Install the CLI
 slug: /docs/install/cli
+description: "Install the cfdl binary and use it to compile, validate, and run models from the command line."
 generated: none
 ---
 

@@ -2,6 +2,7 @@
 id: pack-cre
 title: "CRE"
 slug: "/docs/packs/cre"
+description: "The CRE pack: a lease-by-lease institutional DCF with escalating rent, expense recoveries above a stop, lease-up, and an exit on a cap rate."
 generated: regions
 ---
 

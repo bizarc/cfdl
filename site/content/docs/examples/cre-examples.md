@@ -2,6 +2,7 @@
 id: cre-examples
 title: "CRE examples"
 slug: "/docs/examples/cre-examples"
+description: "Commercial real estate models: construction, lease-up, stabilized operation, exit on a cap rate, and construction-to-permanent financing."
 generated: none
 ---
 

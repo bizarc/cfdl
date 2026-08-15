@@ -2,6 +2,7 @@
 id: guide-reading-results
 title: Reading results and IR
 slug: /docs/guides/reading-results
+description: "The two JSON documents a run produces — the canonical IR and the results — and how to read each."
 generated: none
 ---
 

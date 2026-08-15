@@ -2,6 +2,7 @@
 id: reference-statements
 title: "Statements"
 slug: "/docs/reference/statements"
+description: "How a statement is produced — an operating pro forma, a remittance report, a cash flow build-up — and how to put your own lines on one."
 generated: regions
 ---
 

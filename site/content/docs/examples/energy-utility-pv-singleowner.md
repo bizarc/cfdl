@@ -2,6 +2,7 @@
 id: benchmark-energy-utility-pv-singleowner
 title: "Energy: utility-scale PV, single owner"
 slug: "/docs/examples/energy-utility-pv-singleowner"
+description: "A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor."
 source: benchmarks/energy/utility_pv_singleowner
 ---
 

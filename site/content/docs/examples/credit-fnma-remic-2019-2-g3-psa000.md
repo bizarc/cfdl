@@ -2,6 +2,7 @@
 id: benchmark-credit-fnma-remic-2019-2-g3-psa000
 title: "Credit: Fannie Mae REMIC at 0% PSA"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3-psa000"
+description: "Group 3 of a Fannie Mae REMIC with the mortgage loans never prepaying — the supplement's own alternative collateral of new 7.50% thirty-year loans, amortizing on schedule for thirty years."
 source: benchmarks/credit/fnma_remic_2019_2_g3_psa000
 ---
 

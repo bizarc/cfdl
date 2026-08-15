@@ -2,6 +2,7 @@
 id: guide-schedules
 title: Schedules and calendars
 slug: /docs/guides/schedules-and-calendars
+description: "One master timeline, and how every stream occurrence lands on it: calendars, schedules, stubs, and day rules."
 generated: none
 ---
 

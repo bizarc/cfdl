@@ -2,6 +2,7 @@
 id: benchmarks
 title: "Validation"
 slug: "/docs/benchmarks"
+description: "How the numbers are validated: every pack is diffed period by period against an independent reference implementation on every commit."
 generated: regions
 ---
 

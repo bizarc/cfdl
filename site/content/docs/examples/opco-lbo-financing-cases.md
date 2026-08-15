@@ -2,6 +2,7 @@
 id: benchmark-opco-lbo-financing-cases
 title: "OpCo: one buyout at three capital structures"
 slug: "/docs/examples/opco-lbo-financing-cases"
+description: "One sponsor buyout run at three capital structures, with the published five-year multiple and return reproduced for each."
 source: benchmarks/opco/lbo_financing_cases
 ---
 

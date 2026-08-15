@@ -2,6 +2,7 @@
 id: expression-environment
 title: "Expression environment (v0.1)"
 slug: "/docs/specification/expression-environment"
+description: "What an expression may read — time, inputs, cfg, obs, and entity fields — and the rules that constrain each binding."
 source: docs/03_expression_environment.md
 generated: full
 layer: specification

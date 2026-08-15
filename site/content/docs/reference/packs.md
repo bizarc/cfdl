@@ -2,6 +2,7 @@
 id: reference-packs
 title: "Pack contracts"
 slug: "/docs/reference/packs"
+description: "The contracts each pack ships, the terms they accept, and the streams they expand into."
 generated: regions
 ---
 

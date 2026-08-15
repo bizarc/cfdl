@@ -2,6 +2,7 @@
 id: language-guide
 title: "Language guide"
 slug: "/docs/language-guide"
+description: "A tour of the language: declare what a deal is — the parties, the money, the timing, the basis — and let the engine derive the cash."
 generated: none
 ---
 

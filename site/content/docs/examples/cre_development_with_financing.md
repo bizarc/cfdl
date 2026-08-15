@@ -2,6 +2,7 @@
 id: example-cre-development-with-financing
 title: "CRE: development with financing"
 slug: "/docs/examples/cre_development_with_financing"
+description: "This example models a development lifecycle with construction-phase financing (interest-only) and permanent financing (debt service)."
 ---
 
 This example models a development lifecycle with **construction-phase financing** (interest-only) and **permanent financing** (debt service). The transition is **hardcoded by stream dates**: no events are used.

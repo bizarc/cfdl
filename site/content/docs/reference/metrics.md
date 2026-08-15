@@ -2,6 +2,7 @@
 id: reference-metrics
 title: "Metrics"
 slug: "/docs/reference/metrics"
+description: "The scalars a run reports beside its cash flows — model metrics on every run, domain metrics from the active pack."
 generated: regions
 ---
 

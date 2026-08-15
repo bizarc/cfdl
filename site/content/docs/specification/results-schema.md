@@ -2,6 +2,7 @@
 id: results-schema
 title: "Results schema (v0.1)"
 slug: "/docs/specification/results-schema"
+description: "The JSON schema for a results document: series, metrics, statements, and the provenance of the run that produced them."
 source: docs/06_results_schema.md
 generated: full
 layer: specification

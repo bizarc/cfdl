@@ -2,6 +2,7 @@
 id: guide-waterfalls
 title: Waterfalls
 slug: /docs/guides/waterfalls
+description: "Declare a priority of payments: ordered steps sharing out a pot of cash, with hurdles, catch-ups, and a promote."
 generated: none
 ---
 

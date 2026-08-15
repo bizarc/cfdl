@@ -2,6 +2,7 @@
 id: api-server
 title: API server
 slug: /docs/api-server
+description: "Run CFDL behind a self-hostable HTTP API: endpoints, request and response shapes, limits, and deployment notes."
 generated: none
 ---
 

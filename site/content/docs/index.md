@@ -2,6 +2,7 @@
 id: index
 title: Documentation
 slug: /docs
+description: "Documentation for CFDL, a deterministic language for cash-flow models across energy, real estate, credit, and operating businesses."
 generated: none
 ---
 

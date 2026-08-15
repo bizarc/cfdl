@@ -2,6 +2,7 @@
 id: object-model
 title: "The object model"
 slug: "/docs/object-model"
+description: "The four kinds of thing a model declares — time, entities, streams, and contracts — and how everything else is built from them."
 generated: none
 ---
 

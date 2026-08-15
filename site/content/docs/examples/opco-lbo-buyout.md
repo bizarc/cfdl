@@ -2,6 +2,7 @@
 id: benchmark-opco-lbo-buyout
 title: "OpCo: leveraged buyout"
 slug: "/docs/examples/opco-lbo-buyout"
+description: "A leveraged buyout: entry at a stated multiple, debt paid down out of operating cash flow, and an exit that returns the sponsor's equity."
 source: benchmarks/opco/lbo_buyout
 ---
 

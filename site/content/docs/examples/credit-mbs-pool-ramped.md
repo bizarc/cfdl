@@ -2,6 +2,7 @@
 id: benchmark-credit-mbs-pool-ramped
 title: "Credit: mortgage pool on a prepayment ramp"
 slug: "/docs/examples/credit-mbs-pool-ramped"
+description: "A mortgage pool on a ramping prepayment curve, where speeds build over the first thirty months before levelling off."
 source: benchmarks/credit/mbs_pool_ramped
 ---
 

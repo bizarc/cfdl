@@ -2,6 +2,7 @@
 id: benchmark-opco-gordon-growth-coned
 title: "OpCo: stable-growth dividend discount"
 slug: "/docs/examples/opco-gordon-growth-coned"
+description: "A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form."
 source: benchmarks/opco/gordon_growth_coned
 ---
 

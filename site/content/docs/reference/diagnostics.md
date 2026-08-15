@@ -2,6 +2,7 @@
 id: reference-diagnostics
 title: "Diagnostics"
 slug: "/docs/reference/diagnostics"
+description: "Every problem CFDL reports, by stable code, with its severity and what raises it."
 generated: regions
 ---
 

@@ -2,6 +2,7 @@
 id: benchmark-energy-solar-ppa-microgrid
 title: "Energy: solar PPA microgrid"
 slug: "/docs/examples/energy-solar-ppa-microgrid"
+description: "A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price."
 source: benchmarks/energy/solar_ppa_microgrid
 ---
 

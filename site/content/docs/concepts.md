@@ -2,6 +2,7 @@
 id: concepts
 title: How CFDL works
 slug: /docs/concepts
+description: "What CFDL is and how it works — you declare the deal, the engine derives the cash flows, and the same model always gives the same answer."
 generated: none
 ---
 

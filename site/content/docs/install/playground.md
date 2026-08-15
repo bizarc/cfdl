@@ -2,6 +2,7 @@
 id: install-playground
 title: Playground (zero install)
 slug: /docs/install/playground
+description: "Run the real compiler and engine in your browser through WebAssembly. Nothing to install, and nothing leaves your machine."
 generated: none
 ---
 

@@ -2,6 +2,7 @@
 id: guide-statements
 title: "Statements and reporting"
 slug: "/docs/guides/statements"
+description: "Get a pro forma out of a model, put your own lines on it, and read it at the grain you report in."
 generated: none
 ---
 

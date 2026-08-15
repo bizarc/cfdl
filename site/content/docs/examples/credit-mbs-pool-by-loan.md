@@ -2,6 +2,7 @@
 id: benchmark-credit-mbs-pool-by-loan
 title: "Credit: a mortgage pool modeled loan by loan"
 slug: "/docs/examples/credit-mbs-pool-by-loan"
+description: "The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children."
 source: benchmarks/credit/mbs_pool_by_loan
 ---
 

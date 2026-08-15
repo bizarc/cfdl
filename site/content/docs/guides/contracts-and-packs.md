@@ -2,6 +2,7 @@
 id: guide-contracts-packs
 title: Contracts and packs
 slug: /docs/guides/contracts-and-packs
+description: "When to declare a contract instead of building streams by hand, and what a domain pack expands that contract into."
 generated: none
 ---
 

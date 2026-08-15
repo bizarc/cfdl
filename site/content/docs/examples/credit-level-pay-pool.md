@@ -2,6 +2,7 @@
 id: benchmark-credit-level-pay-pool
 title: "Credit: level-pay auto pool"
 slug: "/docs/examples/credit-level-pay-pool"
+description: "A level-payment amortizing loan pool — the constant instalment that splits into shrinking interest and growing principal."
 source: benchmarks/credit/level_pay_pool
 ---
 

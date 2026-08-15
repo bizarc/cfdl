@@ -86,6 +86,29 @@ function normalizeLinks(markdown) {
     .replaceAll("`docs/USER_GUIDE.md`", "[Python SDK](/docs/python-sdk)"));
 }
 
+/**
+ * The first sentence of a README, for a page's `description` frontmatter.
+ *
+ * Derived rather than authored a second time. An example's README already opens
+ * by saying what the example is, and a separately written meta description is
+ * one more sentence that can quietly stop being true.
+ *
+ * Bold and inline code are stripped because the description is rendered as
+ * plain text in a search result, where `**` is just noise.
+ */
+function firstSentence(markdown) {
+  const prose = markdown
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l && !l.startsWith("#") && !l.startsWith("```") && !l.startsWith("|"));
+  if (!prose) return "";
+  const flat = prose.replace(/\*\*/g, "").replace(/`/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+  const end = flat.search(/\.\s|\.$/);
+  // A lead-in ending in a colon ("This is the smallest practical model:") is a
+  // whole thought without its list; drop the colon rather than publish it.
+  return (end === -1 ? flat.replace(/:$/, "") : flat.slice(0, end + 1)).trim();
+}
+
 function toPosix(p) {
   return p.split(path.sep).join("/");
 }
@@ -259,7 +282,23 @@ const docSpecs = [
     frontmatter: {
       id: "install-vscode",
       title: '"VS Code and LSP"',
-      slug: '"/docs/install/vscode"'
+      slug: '"/docs/install/vscode"',
+      description:
+        '"Install the CFDL extension and language server for VS Code: syntax highlighting, inline diagnostics, and hover documentation."'
+    }
+  },
+  {
+    // Generated from docs/terminology.toml by tools/gen-glossary.py, then copied
+    // here like any other docs/*.md. Two generators in series, so the register
+    // stays the only place a term is defined.
+    source: "docs/glossary.md",
+    output: "glossary.md",
+    frontmatter: {
+      id: "glossary",
+      title: '"Glossary"',
+      slug: '"/docs/glossary"',
+      description:
+        '"Every term CFDL uses in a specific sense — the language constructs, the compiler vocabulary, and the finance terms the packs assume — with one definition each."'
     }
   },
   {
@@ -269,7 +308,9 @@ const docSpecs = [
     frontmatter: {
       id: "language-spec",
       title: '"Language spec (v0.1)"',
-      slug: '"/docs/specification/language-spec"'
+      slug: '"/docs/specification/language-spec"',
+      description:
+        '"The normative specification for CFDL v0.1 — entities, contracts, streams, time, and the canonical IR a model compiles to."'
     }
   },
   {
@@ -279,7 +320,9 @@ const docSpecs = [
     frontmatter: {
       id: "grammar",
       title: '"Grammar (EBNF)"',
-      slug: '"/docs/specification/grammar"'
+      slug: '"/docs/specification/grammar"',
+      description:
+        '"The complete EBNF grammar for CFDL v0.1."'
     }
   },
   {
@@ -289,7 +332,9 @@ const docSpecs = [
     frontmatter: {
       id: "compiler-spec",
       title: '"Compiler spec (v0.1)"',
-      slug: '"/docs/specification/compiler-spec"'
+      slug: '"/docs/specification/compiler-spec"',
+      description:
+        '"How a conforming compiler turns CFDL source into validated canonical IR: pipeline stages, resolution order, and the diagnostics it must raise."'
     },
     digestOnly: true
   },
@@ -300,7 +345,9 @@ const docSpecs = [
     frontmatter: {
       id: "diagnostics",
       title: '"Diagnostics reference"',
-      slug: '"/docs/specification/diagnostics"'
+      slug: '"/docs/specification/diagnostics"',
+      description:
+        '"Every CFDL diagnostic code, what raises it, and what the compiler guarantees about code stability."'
     }
   },
   {
@@ -310,7 +357,9 @@ const docSpecs = [
     frontmatter: {
       id: "pack-interface",
       title: '"Pack interface (v0.1)"',
-      slug: '"/docs/specification/pack-interface"'
+      slug: '"/docs/specification/pack-interface"',
+      description:
+        '"The contract a domain pack is written against: type registries, aliases, lowering rules, metrics, and validations."'
     }
   },
   {
@@ -320,7 +369,9 @@ const docSpecs = [
     frontmatter: {
       id: "expression-environment",
       title: '"Expression environment (v0.1)"',
-      slug: '"/docs/specification/expression-environment"'
+      slug: '"/docs/specification/expression-environment"',
+      description:
+        '"What an expression may read — time, inputs, cfg, obs, and entity fields — and the rules that constrain each binding."'
     }
   },
   {
@@ -330,7 +381,9 @@ const docSpecs = [
     frontmatter: {
       id: "ir-schema",
       title: '"IR schema (v0.1)"',
-      slug: '"/docs/specification/ir-schema"'
+      slug: '"/docs/specification/ir-schema"',
+      description:
+        '"The JSON schema for the canonical intermediate representation a CFDL model compiles to."'
     }
   },
   {
@@ -340,7 +393,9 @@ const docSpecs = [
     frontmatter: {
       id: "results-schema",
       title: '"Results schema (v0.1)"',
-      slug: '"/docs/specification/results-schema"'
+      slug: '"/docs/specification/results-schema"',
+      description:
+        '"The JSON schema for a results document: series, metrics, statements, and the provenance of the run that produced them."'
     }
   }
 ];
@@ -381,6 +436,7 @@ const exampleIndexLines = [
   "id: examples",
   'title: "Examples"',
   'slug: "/docs/examples"',
+  'description: "Complete CFDL models that run: eight short lessons, a few longer domain models, and the benchmark models checked against published references."',
   "---",
   "",
   "Every example on this page is a complete model that runs. They come in three",
@@ -409,6 +465,7 @@ for (const name of exampleDirs) {
     `id: example-${name}`,
     `title: "${exampleTitle(name)}"`,
     `slug: "/docs/examples/${name}"`,
+    `description: ${JSON.stringify(firstSentence(readme))}`,
     "---",
     "",
     readme.trimEnd(),
@@ -486,6 +543,7 @@ for (const name of domainExampleOrder) {
     `id: example-${name.replaceAll("_", "-")}`,
     `title: "${exampleTitle(name)}"`,
     `slug: "/docs/examples/${name}"`,
+    `description: ${JSON.stringify(firstSentence(body.join("\n")))}`,
     "---",
     "",
     ...body
@@ -795,6 +853,9 @@ for (const { pack, name } of benchCases) {
       `id: benchmark-${slug}`,
       `title: "${title}"`,
       `slug: "/docs/examples/${slug}"`,
+      // The case's own one-sentence summary, which is also this page's opening
+      // line. A second, separate sentence would be one more thing to keep true.
+      `description: ${JSON.stringify(benchmarkSummary(caseDir))}`,
       `source: benchmarks/${key}`,
       "---",
       "",

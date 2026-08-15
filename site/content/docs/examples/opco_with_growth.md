@@ -2,6 +2,7 @@
 id: example-opco-with-growth
 title: "OpCo: growth via expressions"
 slug: "/docs/examples/opco_with_growth"
+description: "This example uses pack contracts throughout: opco.revenue_line and opco.opex_line for operations, opco.exit_multiple for the exit."
 ---
 
 This example uses pack **contracts** throughout: `opco.revenue_line` and `opco.opex_line` for operations, `opco.exit_multiple` for the exit.

@@ -2,6 +2,7 @@
 id: benchmark-energy-crest-solar-cost-based
 title: "Energy: cost-based solar feed-in tariff"
 slug: "/docs/examples/energy-crest-solar-cost-based"
+description: "A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty."
 source: benchmarks/energy/crest_solar_cost_based
 ---
 

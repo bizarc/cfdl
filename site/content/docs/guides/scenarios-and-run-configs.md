@@ -2,6 +2,7 @@
 id: guide-scenarios
 title: Scenarios and run configurations
 slug: /docs/guides/scenarios-and-run-configs
+description: "Evaluate one compiled model under many run configurations: base case, stress case, and sensitivities, without editing the model."
 generated: none
 ---
 

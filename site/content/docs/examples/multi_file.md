@@ -2,6 +2,7 @@
 id: example-multi_file
 title: "Multi-file model"
 slug: "/docs/examples/multi_file"
+description: "This example demonstrates splitting model content by concern"
 ---
 
 This example demonstrates splitting model content by concern:

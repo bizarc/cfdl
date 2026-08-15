@@ -2,6 +2,7 @@
 id: reference
 title: "Reference"
 slug: "/docs/reference"
+description: "Look-up material for building models: what each construct does, when to reach for it, and how to get a particular result."
 generated: none
 ---
 

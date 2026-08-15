@@ -2,6 +2,7 @@
 id: guide-metrics
 title: Metrics
 slug: /docs/guides/metrics
+description: "How the engine computes metrics, which ones every model gets, and which arrive from the active domain pack."
 generated: none
 ---
 

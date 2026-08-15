@@ -2,6 +2,7 @@
 id: benchmark-bespoke-ppiaf-toll-highway
 title: "Bespoke: tolled highway PPP concession"
 slug: "/docs/examples/bespoke-ppiaf-toll-highway"
+description: "A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x."
 source: benchmarks/bespoke/ppiaf_toll_highway
 ---
 

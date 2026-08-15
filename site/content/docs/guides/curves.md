@@ -2,6 +2,7 @@
 id: guide-curves
 title: Curves
 slug: /docs/guides/curves
+description: "Declare named, date-indexed series — rate curves, price decks, escalation paths — and read them from expressions."
 generated: none
 ---
 

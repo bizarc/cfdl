@@ -2,6 +2,7 @@
 id: guide-multi-file
 title: Multi-file models
 slug: /docs/guides/multi-file-models
+description: "Split a growing model across files by concern, and how names resolve across them."
 generated: none
 ---
 

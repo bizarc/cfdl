@@ -2,6 +2,7 @@
 id: benchmark-credit-auto-abs-tranches
 title: "Credit: auto ABS note classes"
 slug: "/docs/examples/credit-auto-abs-tranches"
+description: "The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date."
 source: benchmarks/credit/auto_abs_tranches
 ---
 

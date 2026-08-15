@@ -2,6 +2,7 @@
 id: example-cre-developer
 title: "CRE: developer lifecycle"
 slug: "/docs/examples/cre_developer"
+description: "This example uses the cre pack (0.1.0) for the formal lease and construction stub and exit; standalone streams for ops revenue and ops expense (per guidance: individual revenue/expense items → stream)."
 ---
 
 This example uses the `cre` pack (`0.1.0`) for the formal lease and construction stub and exit; **standalone streams** for ops revenue and ops expense (per guidance: individual revenue/expense items → stream).

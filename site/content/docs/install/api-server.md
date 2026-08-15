@@ -2,6 +2,7 @@
 id: install-api-server
 title: Run the API server
 slug: /docs/install/api-server
+description: "Run cfdl-server, a self-hostable HTTP API over the compiler and engine, with packs embedded and no filesystem access."
 generated: none
 ---
 

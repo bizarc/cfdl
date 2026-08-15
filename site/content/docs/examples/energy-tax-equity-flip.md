@@ -2,6 +2,7 @@
 id: benchmark-energy-tax-equity-flip
 title: "Energy: a tax-equity flip, with the date derived"
 slug: "/docs/examples/energy-tax-equity-flip"
+description: "A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model."
 source: benchmarks/energy/tax_equity_flip
 ---
 

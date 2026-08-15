@@ -1,6 +1,7 @@
 ---
 id: getting-started
 title: Getting started
+description: "Ten minutes from nothing to a running model with a probability distribution around its NPV. No install needed for the first half."
 generated: none
 ---
 

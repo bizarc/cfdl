@@ -2,6 +2,7 @@
 id: notebook-cre
 title: "CRE office acquisition (institutional lease-by-lease DCF)"
 slug: "/docs/notebooks/cre-office-acquisition"
+description: "A commercial real estate acquisition modeled end to end in Python, from assumptions through cash flows, metrics, and charts."
 source: examples/notebooks/02_cre_office_acquisition.ipynb
 generated: full
 ---

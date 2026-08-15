@@ -2,6 +2,7 @@
 id: example-first_stream
 title: "Your first stream"
 slug: "/docs/examples/first_stream"
+description: "This example expands from minimal model by adding"
 ---
 
 This example expands from minimal model by adding:

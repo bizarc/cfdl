@@ -2,6 +2,7 @@
 id: benchmark-credit-fnma-remic-2019-2-g3-psa300
 title: "Credit: Fannie Mae REMIC at 300% PSA"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3-psa300"
+description: "Group 3 of a Fannie Mae REMIC at 300% PSA — one and a half times its pricing speed, retiring the pass-through class in fifteen years."
 source: benchmarks/credit/fnma_remic_2019_2_g3_psa300
 ---
 

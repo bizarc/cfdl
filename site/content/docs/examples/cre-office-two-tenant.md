@@ -2,6 +2,7 @@
 id: benchmark-cre-office-two-tenant
 title: "CRE: two-tenant office"
 slug: "/docs/examples/cre-office-two-tenant"
+description: "An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years."
 source: benchmarks/cre/office_two_tenant
 ---
 

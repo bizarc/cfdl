@@ -2,6 +2,7 @@
 id: example-opco-multi-file
 title: "OpCo: multi-file model"
 slug: "/docs/examples/opco_multi_file"
+description: "This example uses standalone streams in contracts.cfdl for revenue and opex (per guidance); pack contracts for working capital and exit."
 ---
 
 This example uses **standalone streams** in `contracts.cfdl` for revenue and opex (per guidance); pack **contracts** for working capital and exit.

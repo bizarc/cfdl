@@ -1,6 +1,7 @@
 ---
 id: troubleshooting
 title: Troubleshooting
+description: "Fixes for what comes up most, organized by surface: the CLI, compile errors, Monte Carlo, and VS Code."
 generated: none
 ---
 

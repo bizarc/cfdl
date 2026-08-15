@@ -2,6 +2,7 @@
 id: packs-overview
 title: Domain packs
 slug: /docs/packs
+description: "What a domain pack is, what it ships, and when a model should state business terms instead of building streams by hand."
 generated: none
 ---
 

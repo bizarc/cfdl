@@ -2,6 +2,7 @@
 id: example-cre-phased
 title: "CRE: phased development"
 slug: "/docs/examples/cre_phased"
+description: "This example uses pack contracts for lease, construction stub, and exit; standalone streams for ops revenue and ops expense (per guidance)."
 ---
 
 This example uses pack **contracts** for lease, construction stub, and exit; **standalone streams** for ops revenue and ops expense (per guidance).

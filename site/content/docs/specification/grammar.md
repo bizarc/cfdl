@@ -2,6 +2,7 @@
 id: grammar
 title: "Grammar (EBNF)"
 slug: "/docs/specification/grammar"
+description: "The complete EBNF grammar for CFDL v0.1."
 source: docs/02_grammar.md
 generated: full
 layer: specification

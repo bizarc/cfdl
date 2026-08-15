@@ -2,6 +2,7 @@
 id: pack-energy
 title: "Energy"
 slug: "/docs/packs/energy"
+description: "The energy pack: contracted and merchant revenue, operating cost, tax benefits, and project debt for a generating asset."
 generated: regions
 ---
 

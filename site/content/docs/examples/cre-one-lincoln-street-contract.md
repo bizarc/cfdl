@@ -2,6 +2,7 @@
 id: benchmark-cre-one-lincoln-street-contract
 title: "CRE: office development, through the pack contract"
 slug: "/docs/examples/cre-one-lincoln-street-contract"
+description: "The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance."
 source: benchmarks/cre/one_lincoln_street_contract
 ---
 

@@ -2,6 +2,7 @@
 id: reference-cli
 title: CLI reference
 slug: /docs/reference/cli
+description: "Every cfdl command and flag, including the structured-output mode and what each exit code means."
 generated: none
 ---
 

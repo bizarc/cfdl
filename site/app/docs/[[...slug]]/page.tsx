@@ -65,7 +65,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const doc = getDocBySlug(slugFromParams(await params));
   if (!doc) return {};
-  return { title: doc.title };
+  // openGraph as well as the plain description: a link pasted into Slack or a
+  // chat renders the OG card, not the meta tag, and a docs link shared that way
+  // is how most people meet a page they did not search for.
+  return {
+    title: doc.title,
+    ...(doc.description
+      ? {
+          description: doc.description,
+          openGraph: { title: doc.title, description: doc.description },
+        }
+      : {}),
+  };
 }
 
 export default async function DocPage({ params }: { params: Promise<Params> }) {

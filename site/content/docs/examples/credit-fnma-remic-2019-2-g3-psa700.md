@@ -2,6 +2,7 @@
 id: benchmark-credit-fnma-remic-2019-2-g3-psa700
 title: "Credit: Fannie Mae REMIC at 700% PSA"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3-psa700"
+description: "Group 3 of a Fannie Mae REMIC at 700% PSA — a refinancing wave, with the class under two years of average life."
 source: benchmarks/credit/fnma_remic_2019_2_g3_psa700
 ---
 

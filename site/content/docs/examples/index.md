@@ -2,6 +2,7 @@
 id: examples
 title: "Examples"
 slug: "/docs/examples"
+description: "Complete CFDL models that run: eight short lessons, a few longer domain models, and the benchmark models checked against published references."
 ---
 
 Every example on this page is a complete model that runs. They come in three
