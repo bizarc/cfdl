@@ -30,7 +30,7 @@
 # rounding is absorbed one level up, inside reference_gen.py, which diffs all
 # eight derived lines against the printed figures and fails outside 2.5.
 #
-# Status: verified. 41 periods x 20 columns, 3 metrics and 72 scenarios
+# Status: verified. 41 periods x 19 columns, 3 metrics and 72 scenarios
 # reproduce; the reference in turn reproduces the filing's 21 printed annual
 # columns inside its rounding, both published NPVs to within 0.10%, and all 78
 # points of the sensitivity matrix to within 1.57% of the base NPV.

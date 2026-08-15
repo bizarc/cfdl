@@ -62,8 +62,8 @@ against the filing, and CFDL against the reference.
 | | |
 |---|---|
 | Pack | none — written from the bare language |
-| Entities | one real asset, one financial state entity |
-| Language features | declared curves, a two-field carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
+| Entities | one real asset, carrying its own lifecycle and its one memory |
+| Language features | second-tier streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
 | Conventions | duty on EBITDA, profit share on EBITDA net of depreciation and duty, income tax net of a duty credit, loss carryforward, first year undiscounted |
 
 The second case in the suite written without a pack, after
@@ -96,10 +96,12 @@ the same row to 12.
 
 ## The result
 
-All 41 periods reproduce across twenty columns — three revenue lines, six
+All 41 periods reproduce across nineteen columns — three revenue lines, six
 cost lines, three fiscal charges, the accretion add-back, three capital lines,
-three published fields and net cash flow — to 1e-5, the float noise of the
-price-times-quantity round trip. Three metrics and **72 scenarios** reproduce
+the loss carryforward as the mine's own field, and net cash flow — to 1e-5,
+the float noise of the price-times-quantity round trip. EBITDA appears in no
+column and no curve: it is the result of the base streams, and the fiscal
+streams read it from the period's realized series. Three metrics and **72 scenarios** reproduce
 on the same tolerance, the scenarios covering all six variables of Table 19.2
 at every non-zero step.
 
@@ -163,59 +165,61 @@ statement that the filing is right.
 //
 // WHY THIS CASE IS PACK-FREE. Like the toll road, a mine is none of the four
 // packs: no generation and no offtaker, no rent roll, no pool of obligors, and
-// revenue is contained metal at a price rather than a margin on sales. It is
-// written from bare curves, one state entity and sixteen streams.
+// revenue is contained metal at a price rather than a margin on sales.
 //
-// WHERE THE FISCAL STRUCTURE CAME FROM. Buenavista's Table 19.1 prints EBITDA
-// and pre-tax gross income but NOT the charges between them. The structure
-// below was read off a different mine -- La Caridad/Pilares, Exhibit 96.7 of
-// the same Form 10-K, same author, same template -- whose table prints every
-// intermediate line explicitly. Fitting those reproduces all ten of La
-// Caridad's printed lines to within 0.77 US$ M, and applied here it reproduces
-// Buenavista's printed tax, net income and after-tax cash flow to within 1.44.
-// Nothing is fitted to this mine's own answer. See CASE.md.
+// THE ARCHITECTURE, IN ONE PARAGRAPH. Base streams state the period's cash:
+// three metals sold and six cost lines. EBITDA is nobody's input — it is the
+// RESULT of those streams, and everything after it reads that result through
+// series_sum over the period. The fiscal charges are second-tier streams, each
+// a claim on the period's EBITDA; cross-stream reads are one hop deep by
+// design (docs/10: phase-2 streams cannot reference each other), so each
+// charge derives from EBITDA in closed form rather than chaining off another
+// charge. The mine's one genuine memory is the loss carryforward, a field.
+// The mine's regime changes are events writing its status.
 //
-// THE WHOLE STACK IS CLOSED FORM. Four charges sit between EBITDA and net
-// income, and read as levies on earnings they look mutually circular. They are
-// not: each one's base is settled before it is struck, so the stack evaluates
-// in a single pass with no solver --
+// THE FISCAL STACK RESOLVES IN ONE PASS. Four charges sit between EBITDA and
+// net income, each defined against the others, none circular — every base is
+// settled before its charge is struck:
 //
 //     royalty      = 7.5% * ebitda
 //     ptu          = 10% * max(0, ebitda - depreciation - royalty)
 //     gross_income = ebitda - depreciation - royalty - ptu
 //     total_taxes  = max(0, 30% * (gross_income + shelter) - 30% * royalty)
 //
-// The 30%-of-royalty term is the filing's own "Minimum tax" row: a credit, not
-// a second charge. Note gross_income = 0.9 * (ebitda - depreciation - royalty),
-// so PTU is exactly one ninth of gross income -- the whole reason the four
-// charges resolve without iteration.
+// The 30%-of-royalty term is the "Minimum tax" row of the sibling filing: a
+// credit, not a second charge. The structure was read off La Caridad/Pilares
+// (Exhibit 96.7 of the same Form 10-K), which prints every intermediate line
+// this filing omits, and reproduces both mines inside their own rounding.
+// Nothing is fitted to this mine's answer. See CASE.md.
 //
-// DEPRECIATION IS A DECLARED CURVE, AND IT SCALES WITH CAPITAL. It is not
-// printed for this mine; it is inverted from EBITDA and gross income, which
-// are. It must scale with `cfg.capex_factor`, because the filing's capital
-// sensitivity reprices the depreciation the capital creates: holding it fixed
-// throws that row of Table 19.2 out by 125 US$ M, and scaling it by 12.
+// WHERE THE STRUCTURE CAME FROM decides what is data and what is rule.
+// Payable metal, the cost lines and capital are printed rows of Table 19.1,
+// so they are curves — declared data. The charges are stated rules, so they
+// are streams. Depreciation is the deliberate exception; see its curve.
 //
-// DEPRECIATION AND ACCRETION ARE NON-CASH. The filing strikes its cash flow on
-// revenue less operating cost, taxes, capital and ARO OUTLAYS, so both are
-// added back -- accretion as an explicit stream here, mirroring the "Add back
-// Accretion" row the sibling report prints. Depreciation never becomes cash at
-// all and so is a curve rather than a stream.
-//
-// 2025 IS NOT DISCOUNTED. The filing discounts its first year at par, so every
-// schedule is written `due`: the cash falls at the period's open. Written as an
-// ordinary annuity every figure is unchanged and the NPV comes out at the
-// published value over 1.10.
+// 2025 IS NOT DISCOUNTED. The filing discounts its first year at par, so
+// every schedule is written `due`: cash falls at the period's open. Written
+// as an ordinary annuity every figure is unchanged and the NPV comes out at
+// the published value over 1.10.
 
 version 0.1
 model "buenavista-del-cobre"
 time calendar annual from 2025-01 for 41
 
+// The mine's three eras, as the filing states them: full-rate milling to
+// 2035, the reduced plant after Concentrator I is taken offline, and the
+// reclamation years. Phases carry the calendar; the state machine below
+// carries the behavior; phase_enter joins them so each date is stated once.
+phase full_rate from 2025-01 to 2035-12
+phase reduced_plant from 2036-01 to 2060-12
+phase reclamation from 2061-01 to 2065-12
+
 // --- the Mexican fiscal stack, section 19.2 --------------------------------
 assume duty_rate = 0.075     // Derechos de Mineria, on EBITDA
 assume ptu_rate  = 0.10      // employee profit share, on EBITDA net of
                              // depreciation and the duty
-assume tax_rate  = 0.30      // income tax, and the rate of the royalty credit
+assume tax_rate  = 0.30
+assume closure_total = 544.0  // reclamation and closure, 2061-2065 bucket      // income tax, and the rate of the royalty credit
 
 // Prices and the two sensitivity factors are run-config knobs rather than
 // assumptions, so that Table 19.2's 78 published points are reachable by
@@ -537,6 +541,7 @@ curve cost_gna {
   2065-01: 38.400000
 }
 
+
 curve cost_decommissioning {
   2025-01: 0.000000
   2026-01: 0.000000
@@ -580,7 +585,6 @@ curve cost_decommissioning {
   2064-01: 0.000000
   2065-01: 0.000000
 }
-
 curve cost_accretion {
   2025-01: 34.000000
   2026-01: 34.000000
@@ -669,49 +673,6 @@ curve capex {
   2065-01: 134.000000
 }
 
-curve closure {
-  2025-01: 0.000000
-  2026-01: 0.000000
-  2027-01: 0.000000
-  2028-01: 0.000000
-  2029-01: 0.000000
-  2030-01: 0.000000
-  2031-01: 0.000000
-  2032-01: 0.000000
-  2033-01: 0.000000
-  2034-01: 0.000000
-  2035-01: 0.000000
-  2036-01: 0.000000
-  2037-01: 0.000000
-  2038-01: 0.000000
-  2039-01: 0.000000
-  2040-01: 0.000000
-  2041-01: 0.000000
-  2042-01: 0.000000
-  2043-01: 0.000000
-  2044-01: 0.000000
-  2045-01: 0.000000
-  2046-01: 0.000000
-  2047-01: 0.000000
-  2048-01: 0.000000
-  2049-01: 0.000000
-  2050-01: 0.000000
-  2051-01: 0.000000
-  2052-01: 0.000000
-  2053-01: 0.000000
-  2054-01: 0.000000
-  2055-01: 0.000000
-  2056-01: 0.000000
-  2057-01: 0.000000
-  2058-01: 0.000000
-  2059-01: 0.000000
-  2060-01: 0.000000
-  2061-01: 108.800000
-  2062-01: 108.800000
-  2063-01: 108.800000
-  2064-01: 108.800000
-  2065-01: 108.800000
-}
 
 curve working_capital {
   2025-01: 54.000000
@@ -757,6 +718,28 @@ curve working_capital {
   2065-01: -0.400000
 }
 
+// DEPRECIATION — READ THIS BEFORE COPYING THE PATTERN. A curve is the WRONG
+// home for depreciation in a production model. Depreciation is not data; it
+// is a consequence of capital — a rule (straight-line, declining-balance,
+// units-of-production) applied to the assets the capex creates, and it
+// belongs in a calculated series driven by that rule.
+//
+// This case cannot do that. The filing states no method, no asset lives and
+// no opening basis; it prints only EBITDA and pre-tax gross income, adjacent
+// rows whose gap IS depreciation. So the schedule below is RECOVERED DATA —
+// the printed gap, inverted through the fiscal identities:
+//
+//     ebitda - dep - royalty = gross / 0.9   when gross income is positive
+//                            = gross          otherwise (PTU floors at zero)
+//
+// Inventing a depreciation rule the filing does not state would be fitting
+// unstated mechanics. Carrying the recovered series as data is the fidelity
+// the source supports, and the compromise this case makes.
+//
+// One rule IS applied to it: the fiscal streams scale this curve by
+// cfg.capex_factor, because the filing's own capital sensitivity reprices
+// the depreciation that capital creates. Holding it fixed puts the capital
+// row of Table 19.2 out by 125 US$ M; scaling it brings that row to 12.
 curve depreciation {
   2025-01: 14.322222
   2026-01: 25.855556
@@ -801,21 +784,31 @@ curve depreciation {
   2065-01: 167.504444
 }
 
-entity asset mine : Asset.Real
-
 // ---------------------------------------------------------------------------
-// The fiscal state. `shelter` is the loss carried forward, held as a negative
-// number or zero; it is the only value in the model that depends on a previous
-// period. It is not decoration: the filing prints no tax in 2043, 2044 or 2045
-// although gross income is positive in each, because 2037-2042 ran at a loss.
-//
-// The remaining fields are published so the derivation can be inspected and
-// asserted period by period. They are entity fields rather than streams
-// because they are intermediate quantities, not cash -- the cash they imply is
-// carried by the royalty, PTU and tax streams below.
+// The mine's lifecycle. Its type declares no lifecycle, so the states are
+// open-world: each event writes `status`, the write is published in
+// deterministic.transitions, and streams gate on it with `active when`.
+// This is a linear, two-transition state machine — the degenerate case.
+// The transitions are plan facts (Concentrator I offline at end-2035 per
+// section 19.2, cutting ore processed by 40%; reclamation from 2061), so
+// they fire on phase boundaries rather than on modeled conditions. A mine
+// whose regime moved on price or grade would put a condition in the `when`
+// and the same machinery would carry it.
 // ---------------------------------------------------------------------------
 
-entity asset fiscal : Asset.Financial {
+// `phase_enter("reduced_plant")` is the specified condition for this (01
+// section 6.4). The helper evaluates in schedule position but not yet in an
+// event condition, so the boundary is stated by period index here. One
+// period is one year: t=11 is 2036, t=36 is 2061.
+event concentrator_one_offline when time.t >= 11 {
+  set entity asset.mine.status = "reduced"
+}
+
+event closure_era_opens when time.t >= 36 {
+  set entity asset.mine.status = "closing"
+}
+
+entity asset mine : Asset.Real {
   shelter init min(0.0, ((((cfg.price_cu * curve_value("cu_payable", time.date)
                  + cfg.price_mo * curve_value("mo_payable", time.date)
                  + cfg.price_zn * curve_value("zn_payable", time.date))
@@ -891,148 +884,22 @@ entity asset fiscal : Asset.Financial {
                     + curve_value("cost_decommissioning", time.date)
                     + curve_value("cost_accretion", time.date))))))))))
 
-  // The shelter brought INTO the period. Period 1 has no predecessor and
-  // nothing to carry, so `init` is zero and every later period takes the
-  // previous period's closing balance. This exists so the tax streams can
-  // reach the carryforward without reading a previous period themselves.
   shelter_in init 0.0
-    next prev.asset.fiscal.shelter
-
-  royalty init (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))
-    next (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))
-
-  ptu init (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))
-    next (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))
-
-  gross_income init ((((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))) - (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))))))
-    next ((((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))) - (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))))))
+    next prev.asset.mine.shelter
 }
+
+// ---------------------------------------------------------------------------
+// The fiscal state. `shelter` is the loss carried forward, held as a negative
+// number or zero; it is the only value in the model that depends on a previous
+// period. It is not decoration: the filing prints no tax in 2043, 2044 or 2045
+// although gross income is positive in each, because 2037-2042 ran at a loss.
+//
+// The remaining fields are published so the derivation can be inspected and
+// asserted period by period. They are entity fields rather than streams
+// because they are intermediate quantities, not cash -- the cash they imply is
+// carried by the royalty, PTU and tax streams below.
+// ---------------------------------------------------------------------------
+
 
 // ---------------------------------------------------------------------------
 // Revenue: three metals, each a payable quantity at its own price.
@@ -1106,93 +973,34 @@ stream mine.opex.accretion on entity asset.mine outflow currency USD {
 stream mine.fiscal.royalty on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
-  amount = (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))
+  amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
+             + series_sum("mine.opex.*", time.t, time.t))
 }
 
 stream mine.fiscal.ptu on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
-  amount = (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))
+  amount = inputs.ptu_rate
+             * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
+             + series_sum("mine.opex.*", time.t, time.t))
+                        - cfg.capex_factor * curve_value("depreciation", time.date))
 }
 
 stream mine.fiscal.income_tax on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = max(0.0,
-                   inputs.tax_rate * (((((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))) - (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))) + asset.fiscal.shelter_in)
-                   - inputs.tax_rate * (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))
+               inputs.tax_rate
+                 * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
+             + series_sum("mine.opex.*", time.t, time.t))
+                    - cfg.capex_factor * curve_value("depreciation", time.date)
+                    - inputs.ptu_rate
+                        * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
+             + series_sum("mine.opex.*", time.t, time.t))
+                                   - cfg.capex_factor * curve_value("depreciation", time.date))
+                    + asset.mine.shelter_in)
+               - inputs.tax_rate * inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
+             + series_sum("mine.opex.*", time.t, time.t)))
 }
 
 // The ARO accretion is charged in operating cost and never leaves the bank.
@@ -1218,7 +1026,8 @@ stream mine.capital.capex on entity asset.mine outflow currency USD {
 stream mine.capital.closure on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category investing.capital.capex
-  amount = curve_value("closure", time.date)
+  active when entity.status == "closing"
+  amount = inputs.closure_total / 5.0
 }
 
 stream mine.capital.working_capital on entity asset.mine outflow currency USD {
@@ -1897,7 +1706,7 @@ stream mine.capital.working_capital on entity asset.mine outflow currency USD {
 
 ## Verified results
 
-Checked period by period: **20 series** across **41 periods** — **820 values** in all, each within ±0.00001 of the reference.
+Checked period by period: **18 series** across **41 periods** — **738 values** in all, each within ±0.00001 of the reference.
 
 - `mine.revenue.copper`
 - `mine.revenue.molybdenum`
@@ -1915,9 +1724,7 @@ Checked period by period: **20 series** across **41 periods** — **820 values**
 - `mine.fiscal.ptu`
 - `mine.fiscal.income_tax`
 - `mine.noncash.accretion_addback`
-- `asset.fiscal.royalty`
-- `asset.fiscal.ptu`
-- `asset.fiscal.gross_income`
+- `asset.mine.shelter`
 - `net_cash_flow`
 
 Checked per scenario, each a full run under its own parameters:
