@@ -122,7 +122,7 @@ def run(d, price=None, opex_factor=1.0, capex_factor=1.0):
     price = {**PRICE, **(price or {})}
     out = {k: [] for k in (
         "revenue.total", "opex.total", "ebitda", "depreciation", "royalty", "ptu",
-        "gross_income", "minimum_tax", "income_tax", "total_taxes", "niat",
+        "gross_income", "minimum_tax", "income_tax", "total_taxes", "niat", "shelter",
         "accretion_addback", "pre_tax_cash_flow", "after_tax_cash_flow")}
     for key, _ in METALS:
         out[f"revenue.{key}"] = []
@@ -153,6 +153,7 @@ def run(d, price=None, opex_factor=1.0, capex_factor=1.0):
         # although gross income is positive, because 2037-2042 ran at a loss.
         available = gross + shelter
         shelter = min(0.0, available)
+        out["shelter"].append(shelter)
         minimum_tax = TAX_RATE * royalty
         income_tax = TAX_RATE * available
         total_taxes = max(0.0, income_tax - minimum_tax)
@@ -247,13 +248,13 @@ def main() -> int:
                + [("mine.capital.capex", "capex", -1),
                   ("mine.capital.closure", "closure", -1),
                   ("mine.capital.working_capital", "working_capital", -1)])
-    # The fiscal charges are asserted as cash streams; royalty, PTU and gross
-    # income are also published as fields so the derivation can be inspected.
+    # The fiscal charges are asserted as the cash streams themselves; the one
+    # genuine state, the loss carryforward, is asserted as the mine's field.
     columns += [("mine.fiscal.royalty", "royalty", -1),
                 ("mine.fiscal.ptu", "ptu", -1),
                 ("mine.fiscal.income_tax", "total_taxes", -1),
                 ("mine.noncash.accretion_addback", "accretion_addback", 1)]
-    fields = ["asset.fiscal.royalty", "asset.fiscal.ptu", "asset.fiscal.gross_income"]
+    fields = ["asset.mine.shelter"]
     with open(HERE / "expected.csv", "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["year"] + [c for c, _, _ in columns] + fields + ["net_cash_flow"])
@@ -263,7 +264,7 @@ def main() -> int:
                 src = ref[key] if key in ref else d[key]
                 row.append(f"{sign * src[t]:.6f}")
             for f in fields:
-                row.append(f"{ref[f.split('.')[-1]][t]:.6f}")
+                row.append(f"{ref['shelter'][t]:.6f}")
             row.append(f"{ref['after_tax_cash_flow'][t]:.6f}")
             w.writerow(row)
 

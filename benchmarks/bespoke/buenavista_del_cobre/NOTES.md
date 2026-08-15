@@ -74,6 +74,35 @@ cash bridge wants something nearer 8.5%, which is consistent with the report
 deducting the old rate while the cash charges carry more — but no single rate
 closes both lines, so nothing was fitted.
 
+## The architecture revision, and the three shapes tested
+
+The case first shipped with the fiscal charges recomputing EBITDA inline from
+the curves, held in a pseudo-entity of computed fields. Review found that
+wrong on the language's own terms, and three architectures were then run
+against the same expectations:
+
+1. **Fields-as-computation** (as shipped): works, but misuses fields — only
+   the carryforward is memory — and repeats the EBITDA expression eight
+   times.
+2. **A fiscal waterfall** (`from series_sum(...)`): reproduces every charge
+   exactly, and changes what net cash flow means — waterfall steps allocate
+   cash inside the model rather than paying it out, so `model.net_cash_flow`
+   became pre-tax and the after-tax NPV and all 72 scenario assertions would
+   be lost. Taxes are expenses leaving the model, not an allocation among
+   claimants, so the construct is wrong here even though the numbers land.
+3. **Second-tier streams reading the period's series** (adopted): each charge
+   is a stream whose amount reads EBITDA as the realized result of the base
+   streams. Cross-stream reads are one hop deep (docs/10: phase-2 streams
+   cannot reference each other), so each charge derives from EBITDA in
+   closed form rather than chaining.
+
+Two constraints shaped the remainder. A field rule has no series access
+(docs/03 section 3.1), so the shelter restates gross income from the curves —
+the one duplication no architecture removes. And `phase_enter` evaluates in
+schedule position but not in an event condition, so the lifecycle events
+state their boundaries by period index; `docs/13` section 7.36 records both,
+with the state-machine enhancement they point at.
+
 ## Tolerance
 
 `period_tolerance` is 1e-5, not a rounding allowance. `expected.csv` holds the

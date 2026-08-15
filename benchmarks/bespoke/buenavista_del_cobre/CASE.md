@@ -46,8 +46,8 @@ against the filing, and CFDL against the reference.
 | | |
 |---|---|
 | Pack | none — written from the bare language |
-| Entities | one real asset, one financial state entity |
-| Language features | declared curves, a two-field carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
+| Entities | one real asset, carrying its own lifecycle and its one memory |
+| Language features | second-tier streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
 | Conventions | duty on EBITDA, profit share on EBITDA net of depreciation and duty, income tax net of a duty credit, loss carryforward, first year undiscounted |
 
 The second case in the suite written without a pack, after
@@ -80,10 +80,12 @@ the same row to 12.
 
 ## The result
 
-All 41 periods reproduce across twenty columns — three revenue lines, six
+All 41 periods reproduce across nineteen columns — three revenue lines, six
 cost lines, three fiscal charges, the accretion add-back, three capital lines,
-three published fields and net cash flow — to 1e-5, the float noise of the
-price-times-quantity round trip. Three metrics and **72 scenarios** reproduce
+the loss carryforward as the mine's own field, and net cash flow — to 1e-5,
+the float noise of the price-times-quantity round trip. EBITDA appears in no
+column and no curve: it is the result of the base streams, and the fiscal
+streams read it from the period's realized series. Three metrics and **72 scenarios** reproduce
 on the same tolerance, the scenarios covering all six variables of Table 19.2
 at every non-zero step.
 

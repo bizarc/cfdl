@@ -1989,3 +1989,54 @@ reload path. Stamping `data-theme` on a live page produces mixed-token states
 that are unreachable in production and read as catastrophic contrast bugs; two
 false findings died that way during the assessment.
 
+
+### 7.36 States and events stop short of a state machine
+
+An entity's status, events writing it, and `active when` guards reading it are
+the pieces of a finite state machine, and the language stops one construct
+short of letting a model declare one. What exists: open-world status (an event
+brings the value into being, the write is published in
+`deterministic.transitions`), latched events (`01` section 13.1 — at most one
+fire per run, verified: a condition true at t=1, t=3 and t=5 produces exactly
+one transition, at t=1), and checked lifecycles that only a pack's
+`types.toml` can declare. A linear progression — a mine moving from full-rate
+milling to a reduced plant to reclamation — is expressible today as a chain of
+one-way events, and is the degenerate case.
+
+What is not expressible is a machine with a return edge. A covenant that
+breaches and cures, a plant that curtails on price and restarts, a facility
+drawn and repaid — each needs a state that can be re-entered, which needs an
+event that can fire again. The latch is the right default for a turning
+point; it forecloses the cycle.
+
+The enhancement, scoped as the machine rather than the trigger: let a model
+declare a lifecycle — states, initial state, and transitions, each transition
+a condition and a target state — with the existing once-per-period,
+declaration-order, period-open evaluation unchanged. Repeating or
+level-triggered events are the mechanism this reduces to; declaring the
+machine keeps the states and edges reviewable in one place instead of
+scattered across event declarations, and makes an undeclared transition a
+diagnostic rather than a silent absence. Truly linear items keep a choice:
+calendar-fixed eras are phases, condition-driven regimes are states.
+
+Three adjacent findings from the same investigation, recorded because an
+implementation must decide each:
+
+- A `set` action accepts an expression and publishes the transition, but a
+  field that carries its own `next` rule silently discards the event's write
+  — the transition is logged and the series never shows the value. Either the
+  write should suspend the rule for that period, or targeting a rule-bearing
+  field should be a diagnostic.
+- `phase_enter("name")` evaluates in schedule position but not in an event
+  condition ("unknown function; using false" at run time), so an event
+  cannot yet fire on the boundary of a declared phase — the natural join
+  between calendar phases and a state machine.
+- A date literal does not compare against `time.t` ("cannot compare date and
+  number; using false"), so a mistyped condition produces a dead event that
+  compiles. All three degrade with a warning rather than failing; a dead
+  transition is legible only to a harness that checks warnings.
+
+Provenance: found modeling the Buenavista del Cobre lifecycle
+(`benchmarks/bespoke/buenavista_del_cobre`), August 2026 — the mine's one-way
+transitions fit the latch exactly, and asking what a recurring condition
+would look like had no answer.
