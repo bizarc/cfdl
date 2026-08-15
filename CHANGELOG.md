@@ -8,6 +8,45 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a writing standard, and the documentation held to it — backlog 7.28–7.35
+
+The documentation estate — cfdl.dev, learn.cfdl.dev, and every source that
+feeds them — now has what the numbers have had all along: a standard, a
+measurement, a remediation, and a gate. The audit is `docs/21`, the standard is
+`docs/22` (CFDL-CE, derived from ASD-STE100 and tiered by content type), the
+terminology register is `docs/terminology.toml`, and the accessibility
+assessment is `docs/23`.
+
+**Measured first.** 70,438 words of published prose, sentence by sentence. The
+findings were concrete: the same words published in two spellings (41
+conflicting forms once the generating sources were read, not the 7 the rendered
+pages showed), one object under three names, 143 RFC 2119 keywords across the
+three specifications with no definition anywhere, no glossary, and not one page
+with a meta description.
+
+**Then fixed.** US spelling throughout — 537 replacements, identifiers renamed
+with their dependents and four goldens re-blessed label-for-label with every
+numeric token verified unchanged. The specs define their normative keywords by
+BCP 14. Every page states what it is (generated pages derive their description
+from sources that already exist, so there is no second wording to go stale).
+`/docs/glossary` publishes 47 terms generated from the register. All 22
+exercise prompts are numbered imperative steps — mean sentence length
+19.8 → 11.4 words — and the chapters' procedures instruct instead of asking.
+
+**Then gated.** `check-site-voice.py` enforces the mechanical subset — retired
+spellings and synonyms load from the register at run time, so the standard, the
+glossary, and the enforcement cannot drift apart. Judgment rules (sentence
+length, voice) stay in review, deliberately: a gate that flags judgment gets
+disabled. The specifications are now read by a prose gate for the first time.
+
+**And assessed for accessibility.** WCAG 2.2 AA, on production builds and the
+deployed sites, both themes: the muted-text token failed contrast in both
+themes and was split per theme, the playground splitter could not report its
+value to a screen reader, and tables, code blocks, and the results panel were
+unreachable by keyboard. All fixed; axe reports zero violations on every swept
+page. Conformance is **not** claimed until the human assistive-technology pass
+runs — that is backlog 7.35, the one item the program leaves open.
+
 ### Fixed: streams are line items — backlog 1.3, 1.5, and the reporting half of 7.14
 
 A stream is the atom a statement reports, so a stream that is secretly an
