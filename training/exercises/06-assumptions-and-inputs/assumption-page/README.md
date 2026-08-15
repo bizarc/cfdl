@@ -1,5 +1,10 @@
 # Build the assumption page
 
-A refactor with an invariant: hoist the four buried numbers into `assume` statements and read them back through `inputs.*` — and prove the totals did not move.
+A refactor with an invariant: the totals must not move.
 
-Run the starter first and note the NPV. Then refactor and run again: same NPV, to the penny. A refactor that changes no numbers is the only kind you can do to a reviewed model without triggering a re-review — and now the next change *will* be one visible line on the assumption page.
+1. Run the starter. Note the NPV.
+2. Hoist the four buried numbers into `assume` statements.
+3. Read each one back through `inputs.*`.
+4. Run again. Confirm the NPV matches to the penny.
+
+A refactor that changes no numbers is the only kind you can make to a reviewed model without a re-review. The next change will be one visible line on the assumption page.

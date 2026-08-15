@@ -1,7 +1,10 @@
 # The invariant migration
 
-Run the packless starter and note the total. Then migrate: declare the pack, retype the entity, and restate both streams as contracts — `cre.lease` with its `base_rent`, `cre.ops_expense` with its `amount` — over the same term.
+1. Run the packless starter. Note the total.
+2. Declare the pack.
+3. Retype the entity.
+4. Restate both streams as contracts over the same term: `cre.lease` with its `base_rent`, and `cre.ops_expense` with its `amount`.
+5. Run again. Compare results, not source: stream names change, because the pack's lowering names what it generates — the cash must not.
+6. If the totals differ, the migration changed a claim. Find the claim before you trust either version.
 
-The comparison surface is the results, not the source: stream names change (the pack's lowering names what it generates), the cash must not. If your totals differ, the migration changed a claim — find which before trusting either version.
-
-Then break it on purpose, once: delete the `base_rent` line and read the pack's refusal. That message — the domain's checklist speaking — is most of what the migration bought you.
+Then break the model on purpose, once. Delete the `base_rent` line and read the pack's refusal. That message — the domain's checklist speaking — is most of what the migration bought you.
