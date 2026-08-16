@@ -1,130 +1,99 @@
 # Maintainer's notes
 
-Not published. Working notes on how this case was built and what it cost to
-establish.
+Not published. How this case was built and what it cost to establish.
 
-## Reading the table out of the filing
+## The case was rebuilt, and why
 
-Table 19.1 sits on report page 19-3, **PDF page 296**, a rotated landscape
-page. `pdftotext -layout` returns that page as an empty string and
-`pdfimages -list` reports only a 37x98 logo, so every text-based check says the
-page is blank. It is not — the table is vector text. Render it:
+The first version consumed Table 19.1 directly: payable metal was the published
+revenue divided by the published price, and the cost lines were the published
+cost rows. Every input was a function of an output, so agreement to 1e-5 was
+guaranteed and proved nothing about the asset. Review caught it — the curve
+`cu_payable` held 883.939394 for 2025, which is exactly 2917 / 3.30.
+
+This version consumes only inputs. The distinction that made it work: sort every
+input by WHERE THE DOCUMENT PUTS IT, which is visible without seeing any answer.
+Section 18 is the cost-input section and section 19.1 states the economic
+assumptions, so those are inputs. Section 12's cut-off parameters and section
+14's historical operating results are published for other purposes, and using
+them is a substitution to declare. Nothing published is a recovery for the cash
+flow, so those four numbers are ours.
+
+## Reading the tables out of the filing
+
+Table 19.1 sits on report page 19-3, PDF page 296, a rotated landscape page.
+`pdftotext -layout` returns it as an empty string and `pdfimages -list` shows
+only a logo, so every text-based check says the page is blank. Render it:
 
 ```
 pdftoppm -f 296 -l 296 -r 300 -png scco-20241231xex96d6.pdf out
 ```
 
 then rotate -90 and slice into bands with the label column pasted alongside
-each, so no cell is read by row position alone. The document's producer is
-"Microsoft: Print To PDF", which is where the broken text layer comes from.
-La Caridad (Exhibit 96.7) has the identical defect on its PDF page 336.
+each. The sibling report for La Caridad has the same defect on its page 336.
+This cost a wrong conclusion once: the case was declared unusable on the
+strength of the empty extraction.
 
-**This cost a wrong conclusion.** The case was first declared unusable on the
-strength of the empty extraction. Never conclude a page is blank from
-`pdftotext` alone.
+## What the metallurgy work established, and what it did not
 
-## Transcription checks
+Several derivations were tried and are worth recording because they are sound
+even though the case does not use all of them:
 
-`published_grid.csv` was validated two ways before anything was built on
-it: every row summed against its own printed Total/Avg column (worst deviation
-7, on a whole-Mt tonnage row; exact on Total Material, EBITDA, Total Taxes,
-Total Capex and Pre Tax Cash Flow), and the four internal identities — revenue,
-operating cost, EBITDA and pre-tax cash flow — confirmed in all 21 annual
-columns.
+- **Mill recovery from a constant tailings grade.** A flotation circuit's tail
+  is set by the circuit, not the feed, so recovery is `(g - t)/g`. The tail
+  inferred from Table 14.1's three operating years is 0.0678, 0.0713 and 0.0718
+  percent Cu — a spread of 5.8%, which is what constant looks like in a real
+  plant. That gives 85.9% at 0.50% feed falling to 82.4% at 0.40%, which is the
+  grade dependence section 12.2.4 asserts and never quantifies.
+- **Leach recovery from the routing rule.** The stated rule rearranges to
+  `0.65 x SI + 0.30 x oxide_fraction`, a function of the solubility index. The
+  index is bounded below at 0.30 by the routing threshold and per zone by the
+  Table 11.7 regressions.
+- **Mining escalation from depletion.** Haul distance rises as the pit deepens,
+  so unit cost scales with cumulative material moved, with the scale solved to
+  satisfy the published life-of-mine average of $2.71/t. This reproduced the
+  published mining line to +0.4% over 41 years and is the only curve in the
+  investigation with a rule that holds across the whole life.
 
-## How the fiscal structure was found, and three wrong turns
+What none of it established is the leach number the operator actually used.
+Section 11 states that no primary sulfide reaches a leach pad, so the feed is
+mixed and secondary ore, whose chemistry implies 36% to 57%. The operator's own
+revenue implies about 22%, below even the mixed-zone floor. There is one
+equation and two unknowns — total copper revenue does not separate mill from
+leach — and putting leach at its chemistry floor requires a mill recovery of
+96.4%, which is impossible. So the model carries 26% as a declared assumption
+and the case reports the contradiction rather than resolving it.
 
-The bridge between EBITDA and net income took four attempts.
+## Two hazards this case hit
 
-1. **Fitted the tax rule to the printed line.** 30% x (gross income − the whole
-   duty) reproduced the tax 11 times out of 11, and was adopted on that basis
-   while the prose seemed to say 30% of the duty. That was curve-fitting, and
-   it happened to be right for the wrong reason — see 4.
-2. **Missed the accretion add-back.** The bridge went negative in 2036-2043,
-   which made no sense as a charge. ARO accretion sits in operating cost and is
-   non-cash; restoring it made all six loss years fit to within 0.6.
-3. **Chased an 11.1% residual.** With accretion restored, a residual of a
-   constant 11.1% of (duty + PTU) remained. Numerology on it — grossing up by
-   1/0.9, a second 10% layer — fit but named nothing, so it was not
-   implemented.
-4. **Read a different mine.** La Caridad/Pilares prints every intermediate
-   line. Its rows give the structure directly, and it resolves all three
-   earlier problems at once: the residual was PTU (gross income is 0.9 x
-   (ebitda − dep − royalty), so PTU is gross income over 9), and the filing's
-   "Minimum tax" row is the 30%-of-royalty credit, which makes the prose in
-   1 literally correct as written.
+**A guard on a status no event writes is false forever, silently.** While
+splitting the curves into `inputs.cfdl`, a regex removed the two lifecycle
+events along with them. The model compiled, ran with zero warnings, and simply
+never paid the closure outlay. Only the harness caught it. This is the failure
+mode recorded at `docs/13` section 7.36.
 
-The lesson worth keeping: when a filing omits an intermediate, look for a
-sibling filing by the same author under the same regime before inferring it.
-The whole of Section 19 is boilerplate shared across Southern Copper's mines.
-
-## The 10-K
-
-The parent FY2024 Form 10-K (same accession) confirms the duty base in the
-issuer's own words — "a mining royalty of 7.5% on taxable earnings before
-taxes, depreciation, and interest" — and discloses two things the technical
-report does not: a 0.5% additional royalty on gold, silver and platinum
-receipts, and that the Ley Federal de Derechos was amended on 19 December 2024,
-effective 1 January 2025, raising the duty to 8.5% and the additional royalty
-to 1%. The report applies 7.5% across a forecast starting on that date.
-
-Neither is modeled, deliberately: the case reproduces what the filing
-computed. Empirically the printed tax line wants 7.5% (max error 0.31) and the
-cash bridge wants something nearer 8.5%, which is consistent with the report
-deducting the old rate while the cash charges carry more — but no single rate
-closes both lines, so nothing was fitted.
-
-## The architecture revision, and the three shapes tested
-
-The case first shipped with the fiscal charges recomputing EBITDA inline from
-the curves, held in a pseudo-entity of computed fields. Review found that
-wrong on the language's own terms, and three architectures were then run
-against the same expectations:
-
-1. **Fields-as-computation** (as shipped): works, but misuses fields — only
-   the carryforward is memory — and repeats the EBITDA expression eight
-   times.
-2. **A fiscal waterfall** (`from series_sum(...)`): reproduces every charge
-   exactly, and changes what net cash flow means — waterfall steps allocate
-   cash inside the model rather than paying it out, so `model.net_cash_flow`
-   became pre-tax and the after-tax NPV and all 72 scenario assertions would
-   be lost. Taxes are expenses leaving the model, not an allocation among
-   claimants, so the construct is wrong here even though the numbers land.
-3. **Second-tier streams reading the period's series** (adopted): each charge
-   is a stream whose amount reads EBITDA as the realized result of the base
-   streams. Cross-stream reads are one hop deep (docs/10: phase-2 streams
-   cannot reference each other), so each charge derives from EBITDA in
-   closed form rather than chaining.
-
-Two constraints shaped the remainder. A field rule has no series access
-(docs/03 section 3.1), so the shelter restates gross income from the curves —
-the one duplication no architecture removes. And `phase_enter` evaluates in
-schedule position but not in an event condition, so the lifecycle events
-state their boundaries by period index; `docs/13` section 7.36 records both,
-with the state-machine enhancement they point at.
+**A field rule cannot read a series.** The shelter first read EBITDA through
+`series_sum` and evaluated to zero with 41 warnings. State sees only settled
+things, which is what keeps recurrences free of cycles, so the rule restates
+EBITDA from the curves. That is the only place in the model where a definition
+appears twice.
 
 ## Tolerance
 
-`period_tolerance` is 1e-5, not a rounding allowance. `expected.csv` holds the
-reference's output rather than the filing's printed cells, so CFDL and the
-reference compute the same rules from the same drivers and any daylight is a
-defect. 1e-5 is the float noise of carrying payable metal as revenue over
-price and multiplying it back. The filing's whole-million rounding is absorbed
-one level up, inside `reference_gen.py`, which fails outside 2.5.
+`period_tolerance` is 1e-5. `expected.csv` holds the reference implementation's
+output, so CFDL and the reference compute the same claims over the same inputs
+and any daylight is a defect rather than rounding. Curves in `inputs.cfdl` are
+serialised to nine decimals; at three decimals the capital line failed by
+1.2e-4.
 
 ## Not done
 
-- Mutation testing. The case was checked by hand for discrimination while it
-  was built — perturbing each fiscal rate, the schedule placement, the PTU
-  floor and one scenario expectation, each of which the suite caught. None of
-  that is recorded here, because `docs/20` §3.3 is a backlog item rather than
-  an adopted practice and no other case records it. Adopting it belongs in its
-  own change, across the suite.
-- The 78 sensitivity points are asserted against the reference, not against the
-  filing's published grid. `reference_gen.py` diffs the two and prints the
-  result (worst 53.6, 1.57% of base), but nothing fails if that drifts. Making
-  the published grid a first-class assertion needs a per-scenario tolerance
-  wide enough for the bucket effect, which would be a different kind of claim.
-- The intra-bucket profile for 2046-2065 is unrecoverable from this document.
-  If Southern Copper files an updated TRS with those years annualized, both NPV
-  residuals and most of the sensitivity error should close.
+- The comparison against the operator's Table 19.1 is printed by
+  `reference_gen.py` and reported in `CASE.md`, but nothing fails if it drifts.
+  Asserting it would require a tolerance wide enough to be meaningless, and
+  would turn a finding into a target.
+- Table 19.2's 78 published sensitivity points are transcribed in
+  `published_sensitivities.csv` and unused. They are after-tax NPVs under the
+  operator's own model, so they are a comparison for our Figure 19-1 rather
+  than an input.
+- The market price curves are transcribed in the source notes and unused, for
+  the reason `CASE.md` gives: they cover 10 and 5 years of a 41-year life.

@@ -2,13 +2,13 @@
 id: benchmark-bespoke-buenavista-del-cobre
 title: "Bespoke: open-pit copper mine"
 slug: "/docs/examples/bespoke-buenavista-del-cobre"
-description: "A 41-year open-pit copper mine from Southern Copper's SEC technical report, carrying three payable metals, six cost lines and a four-layer Mexican fiscal stack that resolves in one pass without a solver."
+description: "A 41-year open-pit copper mine, modeled from the operator's published production schedule, unit costs and fiscal rates, and compared against the discounted cash flow the operator published."
 source: benchmarks/bespoke/buenavista_del_cobre
 ---
 
 # Bespoke: open-pit copper mine
 
-A 41-year open-pit copper mine from Southern Copper's SEC technical report, carrying three payable metals, six cost lines and a four-layer Mexican fiscal stack that resolves in one pass without a solver.
+A 41-year open-pit copper mine, modeled from the operator's published production schedule, unit costs and fiscal rates, and compared against the discounted cash flow the operator published.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -17,44 +17,38 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 ## The case
 
 Buenavista del Cobre is an open-pit copper mine in Sonora, Mexico. It has
-operated since 1899 and is among the largest copper mines in the world. The
-reserve supports 41 more years of production, through 2065: 2.1 billion tonnes
-of mill ore, 2.1 billion tonnes of leach ore, 296 million tonnes of zinc ore,
-and 3.8 billion tonnes of waste. The products are copper, molybdenum and zinc.
+operated since 1899 and is among the largest copper mines in the world. Its
+operator publishes a 41-year plan: what rock is moved each year, at what grade,
+what it costs to move and treat, and what the resulting cash is worth.
 
-The modeling problem is the Mexican fiscal stack. Four charges sit between
-EBITDA and net income, and each base is defined in terms of the others. The
-Derechos de Mineria takes 7.5% of earnings. An employee profit share takes 10%
-of what remains after depreciation and the duty. Income tax takes 30% of what
-remains after that. The duty is then credited against the tax at 30%. Read as
-levies on earnings, the four look mutually circular. They are not, and the
-case shows that they resolve in one pass with no solver.
+This case does not reproduce that cash flow. It takes the operator's inputs,
+states our own claims about how the asset behaves, and produces our own
+statement. The operator's answer is then a comparison, and the difference is
+the finding.
+
+The claims are ordinary. A mine produces metal, which varies by year and splits
+between three products. Each sells at its own price. Some costs scale with rock
+moved, some with rock milled, some with metal sold, and some are fixed. What is
+left is EBITDA. Depreciation, a mining duty, an employee profit share and
+income tax take EBITDA to net income.
 
 ## The reference
 
-The reference is Table 19.1, "Discounted Cash Flow", of the S-K 1300 Technical
-Report Summary for the mine. WSP USA prepared the report for Southern Copper
-Corporation, dated 11 February 2025 and filed as Exhibit 96.6 to the FY2024
-Form 10-K. The table prints the whole life of the mine: material movement,
-revenue by metal, six cost lines, EBITDA, gross income, tax, capital, closure,
-working capital, and a pre-tax and an after-tax NPV at a stated 10%. Table
-19.2 adds a sensitivity matrix of 78 published after-tax NPVs: six variables
-at thirteen steps each. Both tables are transcribed here. The PDF is a public
-filing and is cited rather than vendored.
+The inputs come from the S-K 1300 Technical Report Summary for the mine,
+prepared by WSP USA for Southern Copper Corporation, dated 11 February 2025 and
+filed as Exhibit 96.6 to the FY2024 Form 10-K. The 41-year production schedule
+is Table 13.3, transcribed as `published_production_schedule.csv`. Unit costs
+are section 18, prices and the discount rate are section 19.1, and the fiscal
+rates are section 19.2.
 
-The fiscal structure was not taken from this deal. Buenavista prints EBITDA
-and gross income but not the charges between them, so a structure fitted here
-would be fitted to the answer. The structure was read from a different mine:
-La Caridad/Pilares, Exhibit 96.7 of the same Form 10-K, by the same author on
-the same template. That table prints all ten intermediate lines, including the
-rows Buenavista omits: Depreciation, Royalty, PTU, Minimum tax, Income tax,
-and both add-backs. The recovered structure reproduces all ten of La Caridad's
-printed lines to within 0.77 US$ M. Applied unchanged to Buenavista, it
-reproduces the printed tax, net income and after-tax cash flow to within 1.44.
+The comparison target is Table 19.1, the operator's own discounted cash flow,
+transcribed as `published_grid.csv`. No part of the model consults it.
 
-An independent implementation of these conventions produces the expectations
-this case asserts. The case is therefore checked twice: the reference against
-the filing, and CFDL against the reference.
+An independent implementation of the same claims over the same inputs produces
+the expectations this case asserts, so the check is between two implementations
+rather than against the operator's answer. The comparison to that answer is
+reported below and is deliberately not asserted: it moves whenever the recovery
+assumptions move, and pinning it would turn a finding into a target.
 
 ## What it exercises
 
@@ -62,743 +56,180 @@ the filing, and CFDL against the reference.
 |---|---|
 | Pack | none — written from the bare language |
 | Entities | one real asset, carrying its own lifecycle and its one memory |
-| Language features | second-tier streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
+| Language features | streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, run-config knobs driving scenarios, a two-file model |
 | Conventions | duty on EBITDA, profit share on EBITDA net of depreciation and duty, income tax net of a duty credit, loss carryforward, first year undiscounted |
 
-This is the second case in the suite written without a pack, after
-`ppiaf_toll_highway`. A mine fits none of the four packs. It has no generation
-and no offtaker, no rent roll, and no pool of obligors. Its revenue is
-contained metal at a price, not a margin on sales.
+The second case in the suite written without a pack, after
+`ppiaf_toll_highway`. A mine fits none of the four: no generation and no
+offtaker, no rent roll, and no pool of obligors. Its revenue is contained metal
+at a price, not a margin on sales.
 
-**The stack resolves in one pass.** Each charge's base is settled before the
-charge applies:
+**The model separates data from claims.** `inputs.cfdl` holds the published
+physical drivers and nothing else — eleven curves of tonnes, grades and
+capital, with a header stating that nothing in the file is a modeling choice.
+`model.cfdl` holds the claims: the rates, the streams, the lifecycle and the
+fiscal stack.
 
-    royalty      = 7.5% × ebitda
-    ptu          = 10% × max(0, ebitda − depreciation − royalty)
-    gross_income = ebitda − depreciation − royalty − ptu
-    total_taxes  = max(0, 30% × (gross_income + shelter) − 30% × royalty)
+**EBITDA is a result, not an input.** The fiscal charges read it from the
+period's realized streams through `series_sum`. Cross-stream reads are one hop
+deep, so each charge derives from EBITDA in closed form rather than chaining
+off another charge.
 
-Gross income is exactly 0.9 × (ebitda − depreciation − royalty), so the profit
-share is one ninth of gross income. This identity is why the stack evaluates
-without iteration. It is also what recovers depreciation, which this mine does
-not publish, from the two lines it does.
-
-**The carryforward is necessary, not decorative.** The filing prints no tax in
-2043, 2044 or 2045, although gross income is positive in each. The cause is
-the losses of 2037 through 2042. Without the shelter, those three years are
-wrong by 46 US$ M while every other column still passes.
-
-**Depreciation must scale with capital.** The filing's capital sensitivity
-reprices the depreciation that capital creates. Held fixed, the capital row of
-Table 19.2 is out by 125 US$ M. Scaled with `cfg.capex_factor`, the same row
-is within 12.
+**Four recovery numbers are ours.** The report states no recovery for its cash
+flow. They are run-config knobs rather than constants, so the case's declared
+uncertainty is explorable rather than buried, and scenarios walk each to its
+alternative published basis.
 
 ## The result
 
-All 41 periods reproduce across nineteen columns to 1e-5, which is the float
-noise of the price-times-quantity round trip. The columns are three revenue
-lines, six cost lines, three fiscal charges, the accretion add-back, three
-capital lines, the loss carryforward as the mine's own field, and net cash
-flow. EBITDA appears in no column and no curve. It is the result of the base
-streams, and the fiscal streams read it from the period's realized series.
-Three metrics and 72 scenarios reproduce on the same tolerance. The scenarios
-cover all six variables of Table 19.2 at every non-zero step.
+All 41 periods reproduce across sixteen columns, and three metrics reproduce,
+to 1e-5 against the reference.
 
-Against the filing itself, the reference reproduces all eight derived lines
-over the 21 printed annual columns:
+Against the operator's own statement, life of mine, in US$ M:
 
-| line | max abs. difference | mean |
-|---|---:|---:|
-| Total revenue | 1.00 | 0.29 |
-| Total operating cost | 1.00 | 0.19 |
-| EBITDA | 2.00 | 0.52 |
-| Pre-tax gross income | 1.85 | 0.45 |
-| Total taxes | 0.69 | 0.12 |
-| Net income after taxes | 1.32 | 0.39 |
-| Pre-tax cash flow | 2.00 | 0.67 |
-| After-tax cash flow | 1.44 | 0.53 |
+| line | ours | theirs | difference |
+|---|---:|---:|---:|
+| Total revenue | 79,937 | 76,951 | +3.9% |
+| Total operating cost | 56,398 | 57,887 | −2.6% |
+| EBITDA | 23,539 | 19,062 | +23.5% |
+| Income tax | 3,105 | 2,415 | +28.6% |
+| Capital | 8,317 | 8,317 | 0.0% |
+| **After-tax NPV at 10%** | **3,689** | **3,405** | **+8.3%** |
 
-The units are US$ M, against cells the filing rounds to US$ 1 M. Both
-published NPVs are within 0.10%: pre-tax 5,820.2 against 5,826, and after-tax
-3,402.8 against 3,405. All 78 sensitivity points are within 1.57% of the base
-NPV, and four of the six rows are within 0.5%.
+Revenue lands within 4% and operating cost within 3% of a statement built by
+the operator's own consultants from the same physical plan. Capital matches
+exactly, because it is a published total apportioned by material moved.
 
 ## The delta
 
-**The per-column residuals are rounding, not error.** The filing rounds every
-cell to the nearest million and states the rounding in a table note. A derived
-line is a sum or difference of rounded cells. Its bound is therefore the
-number of cells it touches times a half million, plus a half for the printed
-figure it is compared against: 2.00 for EBITDA, which touches nine. No line
-exceeds its bound, and most sit at a third of it. The filing is not internally
-exact either: its printed revenue cells sum to 76,951 against its own printed
-total of 76,952.
+**The cost side reconstructs; the revenue side does not.** Mining, processing
+and general costs all fall within a few percent of the published lines, using
+nothing but published unit rates and published tonnages. That is evidence the
+report discloses enough to rebuild what it costs to run this mine.
 
-**Both NPV residuals have one cause, and it is an assumption rather than
-rounding.** The filing publishes 2046 through 2065 only as four five-year
-buckets. The model divides each bucket evenly across its five years. The true
-profile inside a bucket is not in the document and cannot be recovered from
-it. Nothing else in the model is approximate.
+**Copper is the whole difference, and its levers are not equal.** Moving each
+input across its full published range moves our after-tax NPV by:
 
-**The same assumption causes most of the sensitivity error.** The two price
-rows drift furthest at ±30%, where a large price move changes which years the
-loss shelter covers. An averaged driver is safe for a linear line and unsafe
-for a line with a threshold. The shelter is a threshold: flat bucket income
-never trips it where lumpy income would. Read any case that smooths an input
-with this in mind.
+| lever | move |
+|---|---:|
+| copper price, US$3.30 to the market study's US$3.87 | +2,589 |
+| leach recovery, 26% to the secondary-zone chemistry of 57% | +2,592 |
+| leach recovery, 26% to the mixed-zone floor of 36% | +838 |
+| mill recovery, 83.6% to 78.3% | −666 |
+| payability, 96.7% to 95% | −226 |
+| molybdenum and zinc recovery, across their whole published ranges | under 50 |
 
-**What the case does not claim.** The parent 10-K confirms a 0.5% additional
-royalty on gold, silver and platinum receipts. It is not modeled, because this
-mine's published revenue carries only copper, molybdenum and zinc, so the levy
-cannot be sized from Table 19.1. The report also applies a 7.5% duty across a
-forecast that begins on 1 January 2025, although the 10-K records the Ley
-Federal de Derechos raising the rate to 8.5% from that date. The case
-reproduces what the filing computed. It does not assert that the filing is
-right.
+Molybdenum and zinc do not matter. Mill recovery matters modestly. **Price and
+leach recovery each move the valuation by roughly US$2.6 bn**, and both are
+choices rather than measurements.
+
+**Two unstated judgments carry the case.** The price deck of US$3.30 per pound
+was, in the report's own words, "provided by SCC" — the operator — while the
+Wood Mackenzie market study the same report contains averages US$3.87 over its
+published years. And the leach circuit treats 35% of the contained copper at a
+recovery the report never states; the soluble-species chemistry in Table 11.7
+implies 36% to 57%, while the operator's economics imply materially less.
+
+Our model is 8.3% above the operator's valuation. Set leach recovery to what
+the published chemistry supports and the difference grows rather than closes.
+Take the market study's own price and it grows further. So the difference is
+not arithmetic. The operator's valuation rests on a price below its own market
+study and a leach recovery below its own ore chemistry, and the report explains
+neither.
+
+## What the case does not claim
+
+The 0.5% additional royalty on precious-metal receipts, confirmed in the parent
+Form 10-K, is not modeled: this mine's published revenue carries only copper,
+molybdenum and zinc. The market price curves are not used, because Table 16.2
+runs to 2034 and Table 16.4 to 2029 against a mine that runs to 2065, and
+extending them would mean inventing three decades. Working capital is not
+modeled, since the stated day-counts net to zero over the life. The annual
+capital programme is published only as life-of-mine totals, so it is
+apportioned by material moved.
 
 ## The model
 
-```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"scenarios":{"opex_m30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.7,"cfg.capex_factor":1}},"opex_m25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.75,"cfg.capex_factor":1}},"opex_m20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.8,"cfg.capex_factor":1}},"opex_m15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.85,"cfg.capex_factor":1}},"opex_m10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.9,"cfg.capex_factor":1}},"opex_m5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":0.95,"cfg.capex_factor":1}},"opex_p5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.05,"cfg.capex_factor":1}},"opex_p10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.1,"cfg.capex_factor":1}},"opex_p15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.15,"cfg.capex_factor":1}},"opex_p20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.2,"cfg.capex_factor":1}},"opex_p25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.25,"cfg.capex_factor":1}},"opex_p30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1.3,"cfg.capex_factor":1}},"capex_m30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.7}},"capex_m25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.75}},"capex_m20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.8}},"capex_m15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.85}},"capex_m10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.9}},"capex_m5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":0.95}},"capex_p5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.05}},"capex_p10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.1}},"capex_p15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.15}},"capex_p20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.2}},"capex_p25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.25}},"capex_p30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1.3}},"commodity_m30":{"parameters":{"cfg.price_cu":2.31,"cfg.price_mo":7,"cfg.price_zn":0.805,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_m25":{"parameters":{"cfg.price_cu":2.475,"cfg.price_mo":7.5,"cfg.price_zn":0.8625,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_m20":{"parameters":{"cfg.price_cu":2.64,"cfg.price_mo":8,"cfg.price_zn":0.92,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_m15":{"parameters":{"cfg.price_cu":2.805,"cfg.price_mo":8.5,"cfg.price_zn":0.9775,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_m10":{"parameters":{"cfg.price_cu":2.97,"cfg.price_mo":9,"cfg.price_zn":1.035,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_m5":{"parameters":{"cfg.price_cu":3.135,"cfg.price_mo":9.5,"cfg.price_zn":1.0925,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p5":{"parameters":{"cfg.price_cu":3.465,"cfg.price_mo":10.5,"cfg.price_zn":1.2075,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p10":{"parameters":{"cfg.price_cu":3.63,"cfg.price_mo":11,"cfg.price_zn":1.265,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p15":{"parameters":{"cfg.price_cu":3.795,"cfg.price_mo":11.5,"cfg.price_zn":1.3225,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p20":{"parameters":{"cfg.price_cu":3.96,"cfg.price_mo":12,"cfg.price_zn":1.38,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p25":{"parameters":{"cfg.price_cu":4.125,"cfg.price_mo":12.5,"cfg.price_zn":1.4375,"cfg.opex_factor":1,"cfg.capex_factor":1}},"commodity_p30":{"parameters":{"cfg.price_cu":4.29,"cfg.price_mo":13,"cfg.price_zn":1.495,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m30":{"parameters":{"cfg.price_cu":2.31,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m25":{"parameters":{"cfg.price_cu":2.475,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m20":{"parameters":{"cfg.price_cu":2.64,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m15":{"parameters":{"cfg.price_cu":2.805,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m10":{"parameters":{"cfg.price_cu":2.97,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_m5":{"parameters":{"cfg.price_cu":3.135,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p5":{"parameters":{"cfg.price_cu":3.465,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p10":{"parameters":{"cfg.price_cu":3.63,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p15":{"parameters":{"cfg.price_cu":3.795,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p20":{"parameters":{"cfg.price_cu":3.96,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p25":{"parameters":{"cfg.price_cu":4.125,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"copper_p30":{"parameters":{"cfg.price_cu":4.29,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":7,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":7.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":8,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":8.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":9,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_m5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":9.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":11,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":11.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":12,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":12.5,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"molybdenum_p30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":13,"cfg.price_zn":1.15,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":0.805,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":0.8625,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":0.92,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":0.9775,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.035,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_m5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.0925,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.2075,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p10":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.265,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p15":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.3225,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p20":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.38,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p25":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.4375,"cfg.opex_factor":1,"cfg.capex_factor":1}},"zinc_p30":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.495,"cfg.opex_factor":1,"cfg.capex_factor":1}}}}
-// Buenavista del Cobre, a 41-year open-pit copper mine in Sonora, Mexico,
-// built against the discounted cash flow its operator filed with the SEC.
+```cfdl run={"deterministic":{"annual_discount_rate":0.1,"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.836,"cfg.rec_cu_leach":0.26,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"scenarios":{"lever_0":{"parameters":{"cfg.price_cu":3.87,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.836,"cfg.rec_cu_leach":0.26,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_1":{"parameters":{"cfg.price_cu":2.8,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.836,"cfg.rec_cu_leach":0.26,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_2":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.783,"cfg.rec_cu_leach":0.26,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_3":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.838,"cfg.rec_cu_leach":0.26,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_4":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.836,"cfg.rec_cu_leach":0.36,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_5":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.836,"cfg.rec_cu_leach":0.57,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}},"lever_6":{"parameters":{"cfg.price_cu":3.3,"cfg.price_mo":10,"cfg.price_zn":1.15,"cfg.rec_cu_mill":0.8209519999999999,"cfg.rec_cu_leach":0.25532,"cfg.rec_mo":0.66,"cfg.rec_zn":0.629}}}}
+// Buenavista del Cobre — a 41-year copper mine, modeled from the operator's
+// published inputs rather than from its published answer.
 //
-// WHY THIS CASE IS PACK-FREE. Like the toll road, a mine is none of the four
-// packs: no generation and no offtaker, no rent roll, no pool of obligors, and
-// revenue is contained metal at a price rather than a margin on sales.
+// THE CLAIM. A mine produces metal, which varies by year and splits between
+// three products. Each sells at its own price. Some costs scale with rock
+// moved, some with rock milled, some with metal sold, and some are fixed.
+// What is left is EBITDA. Depreciation, a mining duty, an employee profit
+// share and income tax take EBITDA to net income. That is the whole model.
 //
-// THE ARCHITECTURE, IN ONE PARAGRAPH. Base streams state the period's cash:
-// three metals sold and six cost lines. EBITDA is nobody's input — it is the
-// RESULT of those streams, and everything after it reads that result through
-// series_sum over the period. The fiscal charges are second-tier streams, each
-// a claim on the period's EBITDA; cross-stream reads are one hop deep by
-// design (docs/10: phase-2 streams cannot reference each other), so each
-// charge derives from EBITDA in closed form rather than chaining off another
-// charge. The mine's one genuine memory is the loss carryforward, a field.
-// The mine's regime changes are events writing its status.
+// WHAT IS AN INPUT AND WHAT IS OURS. The published physical drivers live in
+// `inputs.cfdl` and nothing there is a modeling choice: tonnes and grades from
+// Table 13.3 of the S-K 1300 technical report, and the capital programme from
+// Table 18.1. Every rate below is a published unit cost or a stated fiscal
+// rate. The four RECOVERY numbers are ours -- the report states no recovery
+// for its cash flow -- so they are run-config knobs, declared with their basis
+// and varied by scenario rather than buried as constants.
 //
-// THE FISCAL STACK RESOLVES IN ONE PASS. Four charges sit between EBITDA and
-// net income, each defined against the others, none circular — every base is
-// settled before its charge is struck:
-//
-//     royalty      = 7.5% * ebitda
-//     ptu          = 10% * max(0, ebitda - depreciation - royalty)
-//     gross_income = ebitda - depreciation - royalty - ptu
-//     total_taxes  = max(0, 30% * (gross_income + shelter) - 30% * royalty)
-//
-// The 30%-of-royalty term is the "Minimum tax" row of the sibling filing: a
-// credit, not a second charge. The structure was read off La Caridad/Pilares
-// (Exhibit 96.7 of the same Form 10-K), which prints every intermediate line
-// this filing omits, and reproduces both mines inside their own rounding.
-// Nothing is fitted to this mine's answer. See CASE.md.
-//
-// WHERE THE STRUCTURE CAME FROM decides what is data and what is rule.
-// Payable metal, the cost lines and capital are printed rows of Table 19.1,
-// so they are curves — declared data. The charges are stated rules, so they
-// are streams. Depreciation is the deliberate exception; see its curve.
-//
-// 2025 IS NOT DISCOUNTED. The filing discounts its first year at par, so
-// every schedule is written `due`: cash falls at the period's open. Written
-// as an ordinary annuity every figure is unchanged and the NPV comes out at
-// the published value over 1.10.
+// EBITDA IS A RESULT. The fiscal charges read it from the period's realized
+// streams through series_sum; it is never authored. Cross-stream reads are one
+// hop deep, so each charge derives from EBITDA in closed form.
 
 version 0.1
 model "buenavista-del-cobre"
 time calendar annual from 2025-01 for 41
 
-// The mine's three eras, as the filing states them: full-rate milling to
-// 2035, the reduced plant after Concentrator I is taken offline, and the
-// reclamation years. Phases carry the calendar; the state machine below
-// carries the behavior; phase_enter joins them so each date is stated once.
+import "inputs.cfdl"
+
 phase full_rate from 2025-01 to 2035-12
 phase reduced_plant from 2036-01 to 2060-12
 phase reclamation from 2061-01 to 2065-12
 
+// --- prices, section 19.1 (the owner's deck) -------------------------------
+// Prices and recoveries are run-config knobs; base values are in run.json.
+// Prices: section 19.1, the owner's deck of US$3.30 / 10.00 / 1.15 per lb.
+
+// --- RECOVERY TO PAYABLE — the four numbers the report does not state ------
+// Mill copper: the flotation circuit's tailings grade is near-constant across
+// the three published operating years (0.0678, 0.0713, 0.0718 % Cu), giving
+// recovery (g - 0.0703)/g at the plan's grades, times 96.7% payability.
+assume rec_cu_mill  = 0.836
+// Leach copper: the stated rule recovers 95% of acid-soluble and 65% of
+// cyanide-soluble copper. Mixed and secondary zone chemistry (Table 11.7)
+// implies 36-61%; the operation's own economics imply materially less. Held
+// at the low end pending disclosure.
+assume rec_cu_leach = 0.260
+// Molybdenum: Table 14.1 basic design parameter, 66.0%, at 100% payability.
+assume rec_mo       = 0.660
+// Zinc: 74% from the resource statement, times 85% payability.
+assume rec_zn       = 0.629
+
+// --- unit costs, section 18 ------------------------------------------------
+assume cost_mining     = 2.71    // US$/t moved, life-of-mine average, T18.7
+assume cost_mill       = 5.83    // US$/t milled, T18.8
+assume cost_zinc_plant = 10.63   // US$/t milled, T18.9
+assume cost_crush      = 0.84    // US$/t crushed, T18.8
+assume cost_leach      = 0.40    // US$/t leached, T18.8
+assume cost_gna        = 0.76    // US$/t milled, 18.3.1
+assume accretion       = 34.0    // US$ M/yr, 18.3.3
+assume closure_total   = 544.0   // US$ M, final year, 18.3.3
+assume sell_cu = 0.54            // US$/lb payable, T12.4 (transport-inclusive)
+assume sell_mo = 1.84
+assume sell_zn = 0.40
+
 // --- the Mexican fiscal stack, section 19.2 --------------------------------
-assume duty_rate = 0.075     // Derechos de Mineria, on EBITDA
-assume ptu_rate  = 0.10      // employee profit share, on EBITDA net of
-                             // depreciation and the duty
+assume duty_rate = 0.075
+assume ptu_rate  = 0.10
 assume tax_rate  = 0.30
-assume closure_total = 544.0  // reclamation and closure, 2061-2065 bucket      // income tax, and the rate of the royalty credit
 
-// Prices and the two sensitivity factors are run-config knobs rather than
-// assumptions, so that Table 19.2's 78 published points are reachable by
-// overriding a parameter instead of editing a curve. Base values are in
-// run.json: US$3.30/lb copper, US$10.00/lb molybdenum, US$1.15/lb zinc.
-
-// ---------------------------------------------------------------------------
-// Declared drivers. Every one is a printed row of Table 19.1 except
-// depreciation, which is inverted from two that are. The annual columns run
-// 2025-2045; the four five-year buckets that follow are divided evenly, which
-// is the model's only assumption the filing does not state.
-// ---------------------------------------------------------------------------
-
-curve cu_payable {
-  2025-01: 883.939394
-  2026-01: 870.303030
-  2027-01: 773.333333
-  2028-01: 769.393939
-  2029-01: 750.000000
-  2030-01: 901.515152
-  2031-01: 785.151515
-  2032-01: 806.060606
-  2033-01: 764.242424
-  2034-01: 798.181818
-  2035-01: 802.424242
-  2036-01: 477.575758
-  2037-01: 357.878788
-  2038-01: 409.696970
-  2039-01: 426.969697
-  2040-01: 428.787879
-  2041-01: 397.878788
-  2042-01: 429.696970
-  2043-01: 487.878788
-  2044-01: 486.666667
-  2045-01: 478.181818
-  2046-01: 405.393939
-  2047-01: 405.393939
-  2048-01: 405.393939
-  2049-01: 405.393939
-  2050-01: 405.393939
-  2051-01: 392.181818
-  2052-01: 392.181818
-  2053-01: 392.181818
-  2054-01: 392.181818
-  2055-01: 392.181818
-  2056-01: 463.454545
-  2057-01: 463.454545
-  2058-01: 463.454545
-  2059-01: 463.454545
-  2060-01: 463.454545
-  2061-01: 411.636364
-  2062-01: 411.636364
-  2063-01: 411.636364
-  2064-01: 411.636364
-  2065-01: 411.636364
-}
-
-curve mo_payable {
-  2025-01: 13.400000
-  2026-01: 13.600000
-  2027-01: 6.200000
-  2028-01: 5.700000
-  2029-01: 6.800000
-  2030-01: 9.100000
-  2031-01: 9.800000
-  2032-01: 10.400000
-  2033-01: 11.800000
-  2034-01: 11.900000
-  2035-01: 10.400000
-  2036-01: 10.500000
-  2037-01: 12.300000
-  2038-01: 5.200000
-  2039-01: 6.000000
-  2040-01: 5.100000
-  2041-01: 6.400000
-  2042-01: 6.400000
-  2043-01: 6.300000
-  2044-01: 6.600000
-  2045-01: 6.600000
-  2046-01: 5.480000
-  2047-01: 5.480000
-  2048-01: 5.480000
-  2049-01: 5.480000
-  2050-01: 5.480000
-  2051-01: 4.980000
-  2052-01: 4.980000
-  2053-01: 4.980000
-  2054-01: 4.980000
-  2055-01: 4.980000
-  2056-01: 3.280000
-  2057-01: 3.280000
-  2058-01: 3.280000
-  2059-01: 3.280000
-  2060-01: 3.280000
-  2061-01: 6.080000
-  2062-01: 6.080000
-  2063-01: 6.080000
-  2064-01: 6.080000
-  2065-01: 6.080000
-}
-
-curve zn_payable {
-  2025-01: 146.956522
-  2026-01: 120.869565
-  2027-01: 124.347826
-  2028-01: 128.695652
-  2029-01: 108.695652
-  2030-01: 107.826087
-  2031-01: 119.130435
-  2032-01: 128.695652
-  2033-01: 128.695652
-  2034-01: 119.130435
-  2035-01: 119.130435
-  2036-01: 36.521739
-  2037-01: 32.173913
-  2038-01: 12.173913
-  2039-01: 8.695652
-  2040-01: 7.826087
-  2041-01: 3.478261
-  2042-01: 4.347826
-  2043-01: 6.086957
-  2044-01: 5.217391
-  2045-01: 6.086957
-  2046-01: 17.043478
-  2047-01: 17.043478
-  2048-01: 17.043478
-  2049-01: 17.043478
-  2050-01: 17.043478
-  2051-01: 71.130435
-  2052-01: 71.130435
-  2053-01: 71.130435
-  2054-01: 71.130435
-  2055-01: 71.130435
-  2056-01: 53.217391
-  2057-01: 53.217391
-  2058-01: 53.217391
-  2059-01: 53.217391
-  2060-01: 53.217391
-  2061-01: 36.173913
-  2062-01: 36.173913
-  2063-01: 36.173913
-  2064-01: 36.173913
-  2065-01: 36.173913
-}
-
-curve cost_mining {
-  2025-01: 585.000000
-  2026-01: 593.000000
-  2027-01: 605.000000
-  2028-01: 744.000000
-  2029-01: 726.000000
-  2030-01: 708.000000
-  2031-01: 679.000000
-  2032-01: 660.000000
-  2033-01: 629.000000
-  2034-01: 621.000000
-  2035-01: 618.000000
-  2036-01: 624.000000
-  2037-01: 556.000000
-  2038-01: 571.000000
-  2039-01: 557.000000
-  2040-01: 598.000000
-  2041-01: 547.000000
-  2042-01: 569.000000
-  2043-01: 605.000000
-  2044-01: 526.000000
-  2045-01: 520.000000
-  2046-01: 490.800000
-  2047-01: 490.800000
-  2048-01: 490.800000
-  2049-01: 490.800000
-  2050-01: 490.800000
-  2051-01: 501.400000
-  2052-01: 501.400000
-  2053-01: 501.400000
-  2054-01: 501.400000
-  2055-01: 501.400000
-  2056-01: 466.200000
-  2057-01: 466.200000
-  2058-01: 466.200000
-  2059-01: 466.200000
-  2060-01: 466.200000
-  2061-01: 441.200000
-  2062-01: 441.200000
-  2063-01: 441.200000
-  2064-01: 441.200000
-  2065-01: 441.200000
-}
-
-curve cost_concentrator {
-  2025-01: 509.000000
-  2026-01: 509.000000
-  2027-01: 506.000000
-  2028-01: 506.000000
-  2029-01: 506.000000
-  2030-01: 508.000000
-  2031-01: 509.000000
-  2032-01: 509.000000
-  2033-01: 509.000000
-  2034-01: 509.000000
-  2035-01: 509.000000
-  2036-01: 327.000000
-  2037-01: 330.000000
-  2038-01: 330.000000
-  2039-01: 330.000000
-  2040-01: 328.000000
-  2041-01: 330.000000
-  2042-01: 330.000000
-  2043-01: 330.000000
-  2044-01: 330.000000
-  2045-01: 330.000000
-  2046-01: 329.000000
-  2047-01: 329.000000
-  2048-01: 329.000000
-  2049-01: 329.000000
-  2050-01: 329.000000
-  2051-01: 329.000000
-  2052-01: 329.000000
-  2053-01: 329.000000
-  2054-01: 329.000000
-  2055-01: 329.000000
-  2056-01: 330.000000
-  2057-01: 330.000000
-  2058-01: 330.000000
-  2059-01: 330.000000
-  2060-01: 330.000000
-  2061-01: 330.000000
-  2062-01: 330.000000
-  2063-01: 330.000000
-  2064-01: 330.000000
-  2065-01: 330.000000
-}
-
-curve cost_smelting {
-  2025-01: 698.000000
-  2026-01: 672.000000
-  2027-01: 644.000000
-  2028-01: 636.000000
-  2029-01: 586.000000
-  2030-01: 682.000000
-  2031-01: 605.000000
-  2032-01: 616.000000
-  2033-01: 581.000000
-  2034-01: 600.000000
-  2035-01: 604.000000
-  2036-01: 377.000000
-  2037-01: 281.000000
-  2038-01: 344.000000
-  2039-01: 306.000000
-  2040-01: 340.000000
-  2041-01: 277.000000
-  2042-01: 307.000000
-  2043-01: 369.000000
-  2044-01: 372.000000
-  2045-01: 368.000000
-  2046-01: 310.800000
-  2047-01: 310.800000
-  2048-01: 310.800000
-  2049-01: 310.800000
-  2050-01: 310.800000
-  2051-01: 331.400000
-  2052-01: 331.400000
-  2053-01: 331.400000
-  2054-01: 331.400000
-  2055-01: 331.400000
-  2056-01: 347.600000
-  2057-01: 347.600000
-  2058-01: 347.600000
-  2059-01: 347.600000
-  2060-01: 347.600000
-  2061-01: 321.800000
-  2062-01: 321.800000
-  2063-01: 321.800000
-  2064-01: 321.800000
-  2065-01: 321.800000
-}
-
-curve cost_gna {
-  2025-01: 62.000000
-  2026-01: 62.000000
-  2027-01: 61.000000
-  2028-01: 61.000000
-  2029-01: 61.000000
-  2030-01: 62.000000
-  2031-01: 62.000000
-  2032-01: 62.000000
-  2033-01: 62.000000
-  2034-01: 62.000000
-  2035-01: 62.000000
-  2036-01: 38.000000
-  2037-01: 38.000000
-  2038-01: 38.000000
-  2039-01: 38.000000
-  2040-01: 38.000000
-  2041-01: 38.000000
-  2042-01: 38.000000
-  2043-01: 38.000000
-  2044-01: 38.000000
-  2045-01: 38.000000
-  2046-01: 38.200000
-  2047-01: 38.200000
-  2048-01: 38.200000
-  2049-01: 38.200000
-  2050-01: 38.200000
-  2051-01: 38.200000
-  2052-01: 38.200000
-  2053-01: 38.200000
-  2054-01: 38.200000
-  2055-01: 38.200000
-  2056-01: 38.400000
-  2057-01: 38.400000
-  2058-01: 38.400000
-  2059-01: 38.400000
-  2060-01: 38.400000
-  2061-01: 38.400000
-  2062-01: 38.400000
-  2063-01: 38.400000
-  2064-01: 38.400000
-  2065-01: 38.400000
-}
-
-
-curve cost_decommissioning {
-  2025-01: 0.000000
-  2026-01: 0.000000
-  2027-01: 0.000000
-  2028-01: 0.000000
-  2029-01: 0.000000
-  2030-01: 0.000000
-  2031-01: 0.000000
-  2032-01: 0.000000
-  2033-01: 0.000000
-  2034-01: 0.000000
-  2035-01: 0.000000
-  2036-01: 5.000000
-  2037-01: 5.000000
-  2038-01: 5.000000
-  2039-01: 5.000000
-  2040-01: 5.000000
-  2041-01: 0.000000
-  2042-01: 0.000000
-  2043-01: 0.000000
-  2044-01: 0.000000
-  2045-01: 0.000000
-  2046-01: 0.000000
-  2047-01: 0.000000
-  2048-01: 0.000000
-  2049-01: 0.000000
-  2050-01: 0.000000
-  2051-01: 0.000000
-  2052-01: 0.000000
-  2053-01: 0.000000
-  2054-01: 0.000000
-  2055-01: 0.000000
-  2056-01: 0.000000
-  2057-01: 0.000000
-  2058-01: 0.000000
-  2059-01: 0.000000
-  2060-01: 0.000000
-  2061-01: 0.000000
-  2062-01: 0.000000
-  2063-01: 0.000000
-  2064-01: 0.000000
-  2065-01: 0.000000
-}
-curve cost_accretion {
-  2025-01: 34.000000
-  2026-01: 34.000000
-  2027-01: 34.000000
-  2028-01: 34.000000
-  2029-01: 34.000000
-  2030-01: 34.000000
-  2031-01: 34.000000
-  2032-01: 34.000000
-  2033-01: 34.000000
-  2034-01: 34.000000
-  2035-01: 34.000000
-  2036-01: 34.000000
-  2037-01: 34.000000
-  2038-01: 34.000000
-  2039-01: 34.000000
-  2040-01: 34.000000
-  2041-01: 34.000000
-  2042-01: 34.000000
-  2043-01: 34.000000
-  2044-01: 34.000000
-  2045-01: 34.000000
-  2046-01: 34.200000
-  2047-01: 34.200000
-  2048-01: 34.200000
-  2049-01: 34.200000
-  2050-01: 34.200000
-  2051-01: 34.200000
-  2052-01: 34.200000
-  2053-01: 34.200000
-  2054-01: 34.200000
-  2055-01: 34.200000
-  2056-01: 34.200000
-  2057-01: 34.200000
-  2058-01: 34.200000
-  2059-01: 34.200000
-  2060-01: 34.200000
-  2061-01: 34.200000
-  2062-01: 34.200000
-  2063-01: 34.200000
-  2064-01: 34.200000
-  2065-01: 34.200000
-}
-
-curve capex {
-  2025-01: 168.000000
-  2026-01: 138.000000
-  2027-01: 245.000000
-  2028-01: 357.000000
-  2029-01: 187.000000
-  2030-01: 138.000000
-  2031-01: 147.000000
-  2032-01: 271.000000
-  2033-01: 294.000000
-  2034-01: 325.000000
-  2035-01: 401.000000
-  2036-01: 215.000000
-  2037-01: 218.000000
-  2038-01: 197.000000
-  2039-01: 498.000000
-  2040-01: 386.000000
-  2041-01: 151.000000
-  2042-01: 154.000000
-  2043-01: 160.000000
-  2044-01: 138.000000
-  2045-01: 136.000000
-  2046-01: 192.000000
-  2047-01: 192.000000
-  2048-01: 192.000000
-  2049-01: 192.000000
-  2050-01: 192.000000
-  2051-01: 182.400000
-  2052-01: 182.400000
-  2053-01: 182.400000
-  2054-01: 182.400000
-  2055-01: 182.400000
-  2056-01: 170.200000
-  2057-01: 170.200000
-  2058-01: 170.200000
-  2059-01: 170.200000
-  2060-01: 170.200000
-  2061-01: 134.000000
-  2062-01: 134.000000
-  2063-01: 134.000000
-  2064-01: 134.000000
-  2065-01: 134.000000
-}
-
-
-curve working_capital {
-  2025-01: 54.000000
-  2026-01: -4.000000
-  2027-01: -30.000000
-  2028-01: -14.000000
-  2029-01: 0.000000
-  2030-01: 35.000000
-  2031-01: -20.000000
-  2032-01: 8.000000
-  2033-01: -4.000000
-  2034-01: 7.000000
-  2035-01: 0.000000
-  2036-01: -55.000000
-  2037-01: -16.000000
-  2038-01: -1.000000
-  2039-01: 10.000000
-  2040-01: -7.000000
-  2041-01: 4.000000
-  2042-01: 4.000000
-  2043-01: 7.000000
-  2044-01: 7.000000
-  2045-01: -1.000000
-  2046-01: -2.000000
-  2047-01: -2.000000
-  2048-01: -2.000000
-  2049-01: -2.000000
-  2050-01: -2.000000
-  2051-01: 2.400000
-  2052-01: 2.400000
-  2053-01: 2.400000
-  2054-01: 2.400000
-  2055-01: 2.400000
-  2056-01: -1.000000
-  2057-01: -1.000000
-  2058-01: -1.000000
-  2059-01: -1.000000
-  2060-01: -1.000000
-  2061-01: -0.400000
-  2062-01: -0.400000
-  2063-01: -0.400000
-  2064-01: -0.400000
-  2065-01: -0.400000
-}
-
-// DEPRECIATION — READ THIS BEFORE COPYING THE PATTERN. A curve is the WRONG
-// home for depreciation in a production model. Depreciation is not data; it
-// is a consequence of capital — a rule (straight-line, declining-balance,
-// units-of-production) applied to the assets the capex creates, and it
-// belongs in a calculated series driven by that rule.
-//
-// This case cannot do that. The filing states no method, no asset lives and
-// no opening basis; it prints only EBITDA and pre-tax gross income, adjacent
-// rows whose gap IS depreciation. So the schedule below is RECOVERED DATA —
-// the printed gap, inverted through the fiscal identities:
-//
-//     ebitda - dep - royalty = gross / 0.9   when gross income is positive
-//                            = gross          otherwise (PTU floors at zero)
-//
-// Inventing a depreciation rule the filing does not state would be fitting
-// unstated mechanics. Carrying the recovered series as data is the fidelity
-// the source supports, and the compromise this case makes.
-//
-// One rule IS applied to it: the fiscal streams scale this curve by
-// cfg.capex_factor, because the filing's own capital sensitivity reprices
-// the depreciation that capital creates. Holding it fixed puts the capital
-// row of Table 19.2 out by 125 US$ M; scaling it brings that row to 12.
-curve depreciation {
-  2025-01: 14.322222
-  2026-01: 25.855556
-  2027-01: 46.013889
-  2028-01: 74.850000
-  2029-01: 90.783333
-  2030-01: 102.966667
-  2031-01: 115.613889
-  2032-01: 138.119444
-  2033-01: 162.247222
-  2034-01: 187.719444
-  2035-01: 218.091667
-  2036-01: 234.150000
-  2037-01: 237.725000
-  2038-01: 240.800000
-  2039-01: 253.475000
-  2040-01: 250.100000
-  2041-01: 245.375000
-  2042-01: 247.400000
-  2043-01: 248.977778
-  2044-01: 237.241667
-  2045-01: 223.925000
-  2046-01: 216.125000
-  2047-01: 216.125000
-  2048-01: 216.125000
-  2049-01: 216.125000
-  2050-01: 216.125000
-  2051-01: 208.030000
-  2052-01: 208.030000
-  2053-01: 208.030000
-  2054-01: 208.030000
-  2055-01: 208.030000
-  2056-01: 207.104444
-  2057-01: 207.104444
-  2058-01: 207.104444
-  2059-01: 207.104444
-  2060-01: 207.104444
-  2061-01: 167.504444
-  2062-01: 167.504444
-  2063-01: 167.504444
-  2064-01: 167.504444
-  2065-01: 167.504444
-}
 
 // ---------------------------------------------------------------------------
 // The mine's lifecycle. Its type declares no lifecycle, so the states are
 // open-world: each event writes `status`, the write is published in
 // deterministic.transitions, and streams gate on it with `active when`.
-// This is a linear, two-transition state machine — the degenerate case.
-// The transitions are plan facts (Concentrator I offline at end-2035 per
-// section 19.2, cutting ore processed by 40%; reclamation from 2061), so
-// they fire on phase boundaries rather than on modeled conditions. A mine
-// whose regime moved on price or grade would put a condition in the `when`
-// and the same machinery would carry it.
+// The eras are the ones the report states -- Concentrator I is taken offline
+// at the end of 2035, cutting ore processed by 40%, and the reclamation
+// outlay falls in the last five years. One period is one year, so t=11 is
+// 2036 and t=36 is 2061.
 // ---------------------------------------------------------------------------
 
-// The grammar declares `phase_enter` for schedule position only, so an
-// event states its boundary by period index. One period is one year: t=11
-// is 2036, t=36 is 2061. The phase declarations above name the same eras;
-// the dates appear in both places by necessity, not by choice.
 event concentrator_one_offline when time.t >= 11 {
   set entity asset.mine.status = "reduced"
 }
@@ -808,181 +239,210 @@ event closure_era_opens when time.t >= 36 {
 }
 
 entity asset mine : Asset.Real {
-  shelter init min(0.0, ((((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))) - (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))))
-    next min(0.0, prev + ((((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))))) - (inputs.ptu_rate * max(0.0, (((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date)))) - (cfg.capex_factor * curve_value("depreciation", time.date)) - (inputs.duty_rate * ((cfg.price_cu * curve_value("cu_payable", time.date)
-                 + cfg.price_mo * curve_value("mo_payable", time.date)
-                 + cfg.price_zn * curve_value("zn_payable", time.date))
-                 - (cfg.opex_factor
-                 * (curve_value("cost_mining", time.date)
-                    + curve_value("cost_concentrator", time.date)
-                    + curve_value("cost_smelting", time.date)
-                    + curve_value("cost_gna", time.date)
-                    + curve_value("cost_decommissioning", time.date)
-                    + curve_value("cost_accretion", time.date))))))))))
+  // Loss carried forward, held as a negative number or zero.
+  //
+  // A field rule may not read a series (03 section 3.1): state sees only
+  // settled things, which is what keeps recurrences free of cycles. So while
+  // every stream above reads EBITDA as the period's realized result, this rule
+  // cannot, and restates it from the same curves and rates instead. That
+  // duplication is the price of the backward-only discipline, and it is the
+  // only place in the model where a definition appears twice.
+  shelter init min(0.0, (((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date)
+                 - inputs.duty_rate * ((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))))
+                 - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * ((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date))))
+    next min(0.0, prev + (((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date)
+                 - inputs.duty_rate * ((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))))
+                 - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * ((cfg.price_cu * 2204.6 / 1000.0
+                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
+                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
+                 - (inputs.cost_mining * curve_value("material_moved", time.date)
+                  + inputs.cost_mill * curve_value("ore_milled", time.date)
+                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
+                  + inputs.cost_leach * curve_value("ore_leached", time.date)
+                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+                  + inputs.accretion
+                  + 2204.6 / 1000.0
+                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date))))
 
   shelter_in init 0.0
     next prev.asset.mine.shelter
 }
 
 // ---------------------------------------------------------------------------
-// The fiscal state. `shelter` is the loss carried forward, held as a negative
-// number or zero; it is the only value in the model that depends on a previous
-// period. It is not decoration: the filing prints no tax in 2043, 2044 or 2045
-// although gross income is positive in each, because 2037-2042 ran at a loss.
-//
-// The remaining fields are published so the derivation can be inspected and
-// asserted period by period. They are entity fields rather than streams
-// because they are intermediate quantities, not cash -- the cash they imply is
-// carried by the royalty, PTU and tax streams below.
-// ---------------------------------------------------------------------------
-
-
-// ---------------------------------------------------------------------------
-// Revenue: three metals, each a payable quantity at its own price.
+// Revenue: payable metal at its price. Contained metal is published in
+// kilotonnes, so x 2204.6 converts to millions of pounds.
 // ---------------------------------------------------------------------------
 
 stream mine.revenue.copper on entity asset.mine inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_cu * curve_value("cu_payable", time.date)
+  amount = cfg.price_cu * 2204.6 / 1000.0
+           * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+              + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
 }
 
 stream mine.revenue.molybdenum on entity asset.mine inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_mo * curve_value("mo_payable", time.date)
+  amount = cfg.price_mo * 2204.6 / 1000.0
+           * cfg.rec_mo * curve_value("mo_contained", time.date)
 }
 
 stream mine.revenue.zinc on entity asset.mine inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_zn * curve_value("zn_payable", time.date)
+  amount = cfg.price_zn * 2204.6 / 1000.0
+           * cfg.rec_zn * curve_value("zn_contained", time.date)
 }
 
 // ---------------------------------------------------------------------------
-// Operating cost: the six lines the filing prints, kept separate so a break
-// localises to one of them rather than to their sum.
+// Cost: variable with rock moved, rock milled, rock leached, and metal sold;
+// then the fixed lines.
 // ---------------------------------------------------------------------------
 
 stream mine.opex.mining on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_mining", time.date)
+  amount = inputs.cost_mining * curve_value("material_moved", time.date)
 }
 
-stream mine.opex.concentrator on entity asset.mine outflow currency USD {
+stream mine.opex.processing on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_concentrator", time.date)
+  amount = inputs.cost_mill * curve_value("ore_milled", time.date)
+           + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
+           + inputs.cost_crush * curve_value("ore_crushed", time.date)
+           + inputs.cost_leach * curve_value("ore_leached", time.date)
 }
 
-stream mine.opex.smelting on entity asset.mine outflow currency USD {
+stream mine.opex.selling on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_smelting", time.date)
+  amount = 2204.6 / 1000.0
+           * (inputs.sell_cu
+                * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
+                   + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+              + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
+              + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))
 }
 
 stream mine.opex.gna on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_gna", time.date)
-}
-
-stream mine.opex.decommissioning on entity asset.mine outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
-  category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_decommissioning", time.date)
+  amount = inputs.cost_gna
+           * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
 }
 
 stream mine.opex.accretion on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_accretion", time.date)
+  amount = inputs.accretion
 }
 
 // ---------------------------------------------------------------------------
-// The fiscal charges, as cash. Each repeats its definition rather than reading
-// the field of the same name: a stream may reach a previous period through
-// `prev`, not the current one, and these all settle in the period they arise.
+// The charges that take EBITDA to net income. Each reads the period's EBITDA
+// as the realized result of the streams above.
 // ---------------------------------------------------------------------------
 
-stream mine.fiscal.royalty on entity asset.mine outflow currency USD {
+stream mine.fiscal.duty on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
-             + series_sum("mine.opex.*", time.t, time.t))
+                + series_sum("mine.opex.*", time.t, time.t))
 }
 
-stream mine.fiscal.ptu on entity asset.mine outflow currency USD {
+stream mine.fiscal.profit_share on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-             + series_sum("mine.opex.*", time.t, time.t))
-                        - cfg.capex_factor * curve_value("depreciation", time.date))
+                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date))
 }
 
 stream mine.fiscal.income_tax on entity asset.mine outflow currency USD {
@@ -991,35 +451,30 @@ stream mine.fiscal.income_tax on entity asset.mine outflow currency USD {
   amount = max(0.0,
                inputs.tax_rate
                  * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-             + series_sum("mine.opex.*", time.t, time.t))
-                    - cfg.capex_factor * curve_value("depreciation", time.date)
-                    - inputs.ptu_rate
-                        * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-             + series_sum("mine.opex.*", time.t, time.t))
-                                   - cfg.capex_factor * curve_value("depreciation", time.date))
+                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date)
+                    - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
+                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date))
                     + asset.mine.shelter_in)
                - inputs.tax_rate * inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
-             + series_sum("mine.opex.*", time.t, time.t)))
+                + series_sum("mine.opex.*", time.t, time.t)))
 }
 
-// The ARO accretion is charged in operating cost and never leaves the bank.
-// The filing's sibling report prints this as its own "Add back Accretion" row.
+// Accretion is charged above but never leaves the bank; the filing strikes its
+// cash flow on ARO OUTLAYS, so it is added back.
 stream mine.noncash.accretion_addback on entity asset.mine inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = cfg.opex_factor * curve_value("cost_accretion", time.date)
+  amount = inputs.accretion
 }
 
 // ---------------------------------------------------------------------------
-// Capital, closure and working capital. Working capital carries the filing's
-// sign -- a positive number is a use of cash -- and nets to nothing over the
-// life of the mine.
+// Capital and closure.
 // ---------------------------------------------------------------------------
 
-stream mine.capital.capex on entity asset.mine outflow currency USD {
+stream mine.capital.sustaining on entity asset.mine outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category investing.capital.capex
-  amount = cfg.capex_factor * curve_value("capex", time.date)
+  amount = curve_value("capital", time.date)
 }
 
 stream mine.capital.closure on entity asset.mine outflow currency USD {
@@ -1027,12 +482,6 @@ stream mine.capital.closure on entity asset.mine outflow currency USD {
   category investing.capital.capex
   active when entity.status == "closing"
   amount = inputs.closure_total / 5.0
-}
-
-stream mine.capital.working_capital on entity asset.mine outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
-  category operating.working_capital
-  amount = curve_value("working_capital", time.date)
 }
 ```
 
@@ -1046,657 +495,88 @@ stream mine.capital.working_capital on entity asset.mine outflow currency USD {
       "cfg.price_cu": 3.3,
       "cfg.price_mo": 10.0,
       "cfg.price_zn": 1.15,
-      "cfg.opex_factor": 1.0,
-      "cfg.capex_factor": 1.0
+      "cfg.rec_cu_mill": 0.836,
+      "cfg.rec_cu_leach": 0.26,
+      "cfg.rec_mo": 0.66,
+      "cfg.rec_zn": 0.629
     }
   },
   "scenarios": {
-    "opex_m30": {
+    "lever_0": {
+      "parameters": {
+        "cfg.price_cu": 3.87,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.rec_cu_mill": 0.836,
+        "cfg.rec_cu_leach": 0.26,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
+      }
+    },
+    "lever_1": {
+      "parameters": {
+        "cfg.price_cu": 2.8,
+        "cfg.price_mo": 10.0,
+        "cfg.price_zn": 1.15,
+        "cfg.rec_cu_mill": 0.836,
+        "cfg.rec_cu_leach": 0.26,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
+      }
+    },
+    "lever_2": {
       "parameters": {
         "cfg.price_cu": 3.3,
         "cfg.price_mo": 10.0,
         "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.7,
-        "cfg.capex_factor": 1.0
+        "cfg.rec_cu_mill": 0.783,
+        "cfg.rec_cu_leach": 0.26,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
       }
     },
-    "opex_m25": {
+    "lever_3": {
       "parameters": {
         "cfg.price_cu": 3.3,
         "cfg.price_mo": 10.0,
         "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.75,
-        "cfg.capex_factor": 1.0
+        "cfg.rec_cu_mill": 0.838,
+        "cfg.rec_cu_leach": 0.26,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
       }
     },
-    "opex_m20": {
+    "lever_4": {
       "parameters": {
         "cfg.price_cu": 3.3,
         "cfg.price_mo": 10.0,
         "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.8,
-        "cfg.capex_factor": 1.0
+        "cfg.rec_cu_mill": 0.836,
+        "cfg.rec_cu_leach": 0.36,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
       }
     },
-    "opex_m15": {
+    "lever_5": {
       "parameters": {
         "cfg.price_cu": 3.3,
         "cfg.price_mo": 10.0,
         "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.85,
-        "cfg.capex_factor": 1.0
+        "cfg.rec_cu_mill": 0.836,
+        "cfg.rec_cu_leach": 0.57,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
       }
     },
-    "opex_m10": {
+    "lever_6": {
       "parameters": {
         "cfg.price_cu": 3.3,
         "cfg.price_mo": 10.0,
         "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.9,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 0.95,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.05,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.1,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.15,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.2,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.25,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "opex_p30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.3,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "capex_m30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.7
-      }
-    },
-    "capex_m25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.75
-      }
-    },
-    "capex_m20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.8
-      }
-    },
-    "capex_m15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.85
-      }
-    },
-    "capex_m10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.9
-      }
-    },
-    "capex_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 0.95
-      }
-    },
-    "capex_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.05
-      }
-    },
-    "capex_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.1
-      }
-    },
-    "capex_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.15
-      }
-    },
-    "capex_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.2
-      }
-    },
-    "capex_p25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.25
-      }
-    },
-    "capex_p30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.3
-      }
-    },
-    "commodity_m30": {
-      "parameters": {
-        "cfg.price_cu": 2.31,
-        "cfg.price_mo": 7.0,
-        "cfg.price_zn": 0.805,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_m25": {
-      "parameters": {
-        "cfg.price_cu": 2.475,
-        "cfg.price_mo": 7.5,
-        "cfg.price_zn": 0.8625,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_m20": {
-      "parameters": {
-        "cfg.price_cu": 2.64,
-        "cfg.price_mo": 8.0,
-        "cfg.price_zn": 0.92,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_m15": {
-      "parameters": {
-        "cfg.price_cu": 2.805,
-        "cfg.price_mo": 8.5,
-        "cfg.price_zn": 0.9775,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_m10": {
-      "parameters": {
-        "cfg.price_cu": 2.97,
-        "cfg.price_mo": 9.0,
-        "cfg.price_zn": 1.035,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.135,
-        "cfg.price_mo": 9.5,
-        "cfg.price_zn": 1.0925,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.465,
-        "cfg.price_mo": 10.5,
-        "cfg.price_zn": 1.2075,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.63,
-        "cfg.price_mo": 11.0,
-        "cfg.price_zn": 1.265,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.795,
-        "cfg.price_mo": 11.5,
-        "cfg.price_zn": 1.3225,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.96,
-        "cfg.price_mo": 12.0,
-        "cfg.price_zn": 1.38,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p25": {
-      "parameters": {
-        "cfg.price_cu": 4.125,
-        "cfg.price_mo": 12.5,
-        "cfg.price_zn": 1.4375,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "commodity_p30": {
-      "parameters": {
-        "cfg.price_cu": 4.29,
-        "cfg.price_mo": 13.0,
-        "cfg.price_zn": 1.495,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m30": {
-      "parameters": {
-        "cfg.price_cu": 2.31,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m25": {
-      "parameters": {
-        "cfg.price_cu": 2.475,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m20": {
-      "parameters": {
-        "cfg.price_cu": 2.64,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m15": {
-      "parameters": {
-        "cfg.price_cu": 2.805,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m10": {
-      "parameters": {
-        "cfg.price_cu": 2.97,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.135,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.465,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.63,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.795,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.96,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p25": {
-      "parameters": {
-        "cfg.price_cu": 4.125,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "copper_p30": {
-      "parameters": {
-        "cfg.price_cu": 4.29,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 7.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 7.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 8.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 8.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 9.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 9.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 11.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 11.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 12.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 12.5,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "molybdenum_p30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 13.0,
-        "cfg.price_zn": 1.15,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 0.805,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 0.8625,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 0.92,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 0.9775,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.035,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_m5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.0925,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p5": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.2075,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p10": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.265,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p15": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.3225,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p20": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.38,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p25": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.4375,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
-      }
-    },
-    "zinc_p30": {
-      "parameters": {
-        "cfg.price_cu": 3.3,
-        "cfg.price_mo": 10.0,
-        "cfg.price_zn": 1.495,
-        "cfg.opex_factor": 1.0,
-        "cfg.capex_factor": 1.0
+        "cfg.rec_cu_mill": 0.8209519999999999,
+        "cfg.rec_cu_leach": 0.25532,
+        "cfg.rec_mo": 0.66,
+        "cfg.rec_zn": 0.629
       }
     }
   }
@@ -1705,108 +585,29 @@ stream mine.capital.working_capital on entity asset.mine outflow currency USD {
 
 ## Verified results
 
-Checked period by period: **18 series** across **41 periods** — **738 values** in all, each within ±0.00001 of the reference.
+Checked period by period: **16 series** across **41 periods** — **656 values** in all, each within ±0.00001 of the reference.
 
 - `mine.revenue.copper`
 - `mine.revenue.molybdenum`
 - `mine.revenue.zinc`
 - `mine.opex.mining`
-- `mine.opex.concentrator`
-- `mine.opex.smelting`
+- `mine.opex.processing`
+- `mine.opex.selling`
 - `mine.opex.gna`
-- `mine.opex.decommissioning`
 - `mine.opex.accretion`
-- `mine.capital.capex`
-- `mine.capital.closure`
-- `mine.capital.working_capital`
-- `mine.fiscal.royalty`
-- `mine.fiscal.ptu`
+- `mine.fiscal.duty`
+- `mine.fiscal.profit_share`
 - `mine.fiscal.income_tax`
 - `mine.noncash.accretion_addback`
+- `mine.capital.sustaining`
+- `mine.capital.closure`
 - `asset.mine.shelter`
 - `net_cash_flow`
-
-Checked per scenario, each a full run under its own parameters:
-
-| Scenario | `model.npv` |
-|---|---:|
-| `opex_m30` | 6,652.44 |
-| `opex_m25` | 6,121.9 |
-| `opex_m20` | 5,591.35 |
-| `opex_m15` | 5,060.81 |
-| `opex_m10` | 4,520.02 |
-| `opex_m5` | 3,974.07 |
-| `opex_p5` | 2,811.35 |
-| `opex_p10` | 2,210.3 |
-| `opex_p15` | 1,606.95 |
-| `opex_p20` | 1,002.39 |
-| `opex_p25` | 397.821038 |
-| `opex_p30` | -206.750667 |
-| `capex_m30` | 4,013.07 |
-| `capex_m25` | 3,914.95 |
-| `capex_m20` | 3,816.35 |
-| `capex_m15` | 3,712.87 |
-| `capex_m10` | 3,610.31 |
-| `capex_m5` | 3,506.72 |
-| `capex_p5` | 3,298.18 |
-| `capex_p10` | 3,192.92 |
-| `capex_p15` | 3,086 |
-| `capex_p20` | 2,978.01 |
-| `capex_p25` | 2,870.01 |
-| `capex_p30` | 2,761.65 |
-| `commodity_m30` | -1,973.01 |
-| `commodity_m25` | -1,012.75 |
-| `commodity_m20` | -123.178745 |
-| `commodity_m15` | 762.785831 |
-| `commodity_m10` | 1,648.33 |
-| `commodity_m5` | 2,531.09 |
-| `commodity_p5` | 4,244.74 |
-| `commodity_p10` | 5,061.1 |
-| `commodity_p15` | 5,865.89 |
-| `commodity_p20` | 6,664.79 |
-| `commodity_p25` | 7,463.7 |
-| `commodity_p30` | 8,262.6 |
-| `copper_m30` | -1,501.83 |
-| `copper_m25` | -668.787862 |
-| `copper_m20` | 149.105622 |
-| `copper_m15` | 966.999107 |
-| `copper_m10` | 1,784.29 |
-| `copper_m5` | 2,598.89 |
-| `copper_p5` | 4,180.23 |
-| `copper_p10` | 4,932.59 |
-| `copper_p15` | 5,677.4 |
-| `copper_p20` | 6,414.27 |
-| `copper_p25` | 7,150.54 |
-| `copper_p30` | 7,886.82 |
-| `molybdenum_m30` | 3,214.83 |
-| `molybdenum_m25` | 3,246.26 |
-| `molybdenum_m20` | 3,277.64 |
-| `molybdenum_m15` | 3,308.88 |
-| `molybdenum_m10` | 3,340.23 |
-| `molybdenum_m5` | 3,371.59 |
-| `molybdenum_p5` | 3,433.86 |
-| `molybdenum_p10` | 3,465.27 |
-| `molybdenum_p15` | 3,496.3 |
-| `molybdenum_p20` | 3,527.33 |
-| `molybdenum_p25` | 3,558.7 |
-| `molybdenum_p30` | 3,589.67 |
-| `zinc_m30` | 3,194.13 |
-| `zinc_m25` | 3,228.97 |
-| `zinc_m20` | 3,263.71 |
-| `zinc_m15` | 3,298.53 |
-| `zinc_m10` | 3,333.2 |
-| `zinc_m5` | 3,368.15 |
-| `zinc_p5` | 3,437.4 |
-| `zinc_p10` | 3,472.07 |
-| `zinc_p15` | 3,506.98 |
-| `zinc_p20` | 3,541.56 |
-| `zinc_p25` | 3,576.15 |
-| `zinc_p30` | 3,610.74 |
 
 Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.npv` | 3,402.77 | ±0.0001 |
-| `stream.mine.revenue.copper.total` | 71,442 | ±0.0001 |
-| `stream.mine.capital.capex.total` | -8,317 | ±0.0001 |
+| `model.npv` | 3,689.28 | ±0.0001 |
+| `stream.mine.revenue.copper.total` | 74,688.94 | ±0.0001 |
+| `stream.mine.capital.sustaining.total` | -8,317 | ±0.0001 |
