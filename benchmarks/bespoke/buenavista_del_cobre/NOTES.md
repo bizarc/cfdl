@@ -2,98 +2,70 @@
 
 Not published. How this case was built and what it cost to establish.
 
-## The case was rebuilt, and why
-
-The first version consumed Table 19.1 directly: payable metal was the published
-revenue divided by the published price, and the cost lines were the published
-cost rows. Every input was a function of an output, so agreement to 1e-5 was
-guaranteed and proved nothing about the asset. Review caught it — the curve
-`cu_payable` held 883.939394 for 2025, which is exactly 2917 / 3.30.
-
-This version consumes only inputs. The distinction that made it work: sort every
-input by WHERE THE DOCUMENT PUTS IT, which is visible without seeing any answer.
-Section 18 is the cost-input section and section 19.1 states the economic
-assumptions, so those are inputs. Section 12's cut-off parameters and section
-14's historical operating results are published for other purposes, and using
-them is a substitution to declare. Nothing published is a recovery for the cash
-flow, so those four numbers are ours.
-
 ## Reading the tables out of the filing
 
-Table 19.1 sits on report page 19-3, PDF page 296, a rotated landscape page.
-`pdftotext -layout` returns it as an empty string and `pdfimages -list` shows
-only a logo, so every text-based check says the page is blank. Render it:
+Two of the tables this case depends on sit on rotated landscape pages that
+`pdftotext -layout` returns as empty strings, with `pdfimages -list` showing
+only a logo. Every text-based check reports the page as blank. Render them:
 
 ```
 pdftoppm -f 296 -l 296 -r 300 -png scco-20241231xex96d6.pdf out
 ```
 
 then rotate -90 and slice into bands with the label column pasted alongside
-each. The sibling report for La Caridad has the same defect on its page 336.
-This cost a wrong conclusion once: the case was declared unusable on the
-strength of the empty extraction.
+each, so no cell is read by row position alone. The producer is "Microsoft:
+Print To PDF", which is where the broken text layer comes from.
 
-## What the metallurgy work established, and what it did not
+## The depletion arithmetic, and its off-by-one
 
-Several derivations were tried and are worth recording because they are sound
-even though the case does not use all of them:
+A field's `next` computes period t from period t-1, so anything it reads must
+be evaluated at t-1. Three expressions in the stock rules got this wrong at
+first: the capacity switch, the grade policy lookup, and the tonnage draw. The
+symptom was subtle -- the model ran with no warnings, drew 96% of contained
+metal instead of 97.4%, and lost one year of full-capacity milling at the
+Concentrator I step.
 
-- **Mill recovery from a constant tailings grade.** A flotation circuit's tail
-  is set by the circuit, not the feed, so recovery is `(g - t)/g`. The tail
-  inferred from Table 14.1's three operating years is 0.0678, 0.0713 and 0.0718
-  percent Cu — a spread of 5.8%, which is what constant looks like in a real
-  plant. That gives 85.9% at 0.50% feed falling to 82.4% at 0.40%, which is the
-  grade dependence section 12.2.4 asserts and never quantifies.
-- **Leach recovery from the routing rule.** The stated rule rearranges to
-  `0.65 x SI + 0.30 x oxide_fraction`, a function of the solubility index. The
-  index is bounded below at 0.30 by the routing threshold and per zone by the
-  Table 11.7 regressions.
-- **Mining escalation from depletion.** Haul distance rises as the pit deepens,
-  so unit cost scales with cumulative material moved, with the scale solved to
-  satisfy the published life-of-mine average of $2.71/t. This reproduced the
-  published mining line to +0.4% over 41 years and is the only curve in the
-  investigation with a rule that holds across the whole life.
+The grade policy needs a second curve on lagged dates, because a rule that must
+know period t-1's grade cannot shift a date. The streams read the unlagged
+curve; only the field reads the lagged one. A regex fix once changed both, and
+the model then ran a period behind with no warning at all.
 
-What none of it established is the leach number the operator actually used.
-Section 11 states that no primary sulfide reaches a leach pad, so the feed is
-mixed and secondary ore, whose chemistry implies 36% to 57%. The operator's own
-revenue implies about 22%, below even the mixed-zone floor. There is one
-equation and two unknowns — total copper revenue does not separate mill from
-leach — and putting leach at its chemistry floor requires a mill recovery of
-96.4%, which is impossible. So the model carries 26% as a declared assumption
-and the case reports the contradiction rather than resolving it.
+## Two implementations, and what they caught
 
-## Two hazards this case hit
+The reference and the model disagreed twice, and both times the reference was
+right about one thing and the model about another:
 
-**A guard on a status no event writes is false forever, silently.** While
-splitting the curves into `inputs.cfdl`, a regex removed the two lifecycle
-events along with them. The model compiled, ran with zero warnings, and simply
-never paid the closure outlay. Only the harness caught it. This is the failure
-mode recorded at `docs/13` section 7.36.
+- The model's `assume rate_crushed_leach = 26.3` was rounded where the
+  reference computed 1077/41. Every line differed in the sixth figure.
+- The deterministic run of a stochastic assumption takes the distribution
+  MEAN, not its mode. The reference used 0.83, the published life-of-mine
+  strip ratio, and had to be moved to the triangular mean of 1.0733 to be
+  comparable.
 
-**A field rule cannot read a series.** The shelter first read EBITDA through
-`series_sum` and evaluated to zero with 41 warnings. State sees only settled
-things, which is what keeps recurrences free of cycles, so the rule restates
-EBITDA from the curves. That is the only place in the model where a definition
-appears twice.
+## The harness gained monte carlo support for this case
 
-## Tolerance
+`tools/benchmark-runner.py` had no monte carlo handling and no case used it.
+This case adds `expected_monte_carlo.json`, asserting the aggregates the engine
+already publishes -- mean, p50, stdev, min, max -- with tolerances, mirroring
+how `expected_metrics.json` treats the deterministic run.
 
-`period_tolerance` is 1e-5. `expected.csv` holds the reference implementation's
-output, so CFDL and the reference compute the same claims over the same inputs
-and any daylight is a defect rather than rounding. Curves in `inputs.cfdl` are
-serialised to nine decimals; at three decimals the capital line failed by
-1.2e-4.
+Section 12.4 of the language spec makes the seed mandatory, so the draws are
+reproducible and the tolerances can be as tight as any other metric. What is
+being checked is this engine on this seed, not a statistical claim.
+
+## Cost
+
+500 trials takes about 15 seconds on a release build and about 70 on the debug
+build the suite uses, against a suite that otherwise runs in 81 seconds. That
+is a real cost and it buys the only distributional assertion in the suite.
 
 ## Not done
 
-- The comparison against the operator's Table 19.1 is printed by
-  `reference_gen.py` and reported in `CASE.md`, but nothing fails if it drifts.
-  Asserting it would require a tolerance wide enough to be meaningless, and
-  would turn a finding into a target.
-- Table 19.2's 78 published sensitivity points are transcribed in
-  `published_sensitivities.csv` and unused. They are after-tax NPVs under the
-  operator's own model, so they are a comparison for our Figure 19-1 rather
-  than an input.
-- The market price curves are transcribed in the source notes and unused, for
-  the reason `CASE.md` gives: they cover 10 and 5 years of a 41-year life.
+- The leach and waste phasing is smooth where the operator's is lumpy. The
+  totals match; the shape does not. The pit sequence that produces the swing is
+  not described anywhere in the report.
+- The published sensitivity matrix is transcribed and unused. It is an
+  after-tax NPV under the operator's own model, so it is a comparison for our
+  own distribution rather than an input.
+- The market price curves are unused: they cover ten and five years of a
+  41-year life.

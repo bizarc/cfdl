@@ -69,6 +69,16 @@ The form that does, in all 21 annual columns, is 30% of gross income less the
 **whole** duty rather than 30% of it. That reading is what `reference_gen.py`
 implements; see `NOTES.md`.
 
+## The tables this case uses
+
+`published_production_schedule.csv` is Table 13.3, the operator's 41-year
+production plan, and `published_grid.csv` is Table 19.1, its discounted cash
+flow. Both are comparisons rather than inputs. The model reads neither.
+
+The inputs are Table 12.8 (the reserve), Table 12.5 (the head-grade policy),
+Table 12.7 (pit optimisation), section 18 (unit costs) and section 19 (prices,
+discount rate and fiscal rates).
+
 ## License
 
 A public filing on EDGAR: freely accessible and citable. The underlying report

@@ -1,332 +1,310 @@
-// Buenavista del Cobre — a 41-year copper mine, modeled from the operator's
-// published inputs rather than from its published answer.
+// Buenavista del Cobre — the mine plan derived from the reserve, not imported.
 //
-// THE CLAIM. A mine produces metal, which varies by year and splits between
-// three products. Each sells at its own price. Some costs scale with rock
-// moved, some with rock milled, some with metal sold, and some are fixed.
-// What is left is EBITDA. Depreciation, a mining duty, an employee profit
-// share and income tax take EBITDA to net income. That is the whole model.
+// THE CLAIM. A mine is four depleting stocks of rock, each with its own
+// contained metal and its own processing capacity. Each period draws what
+// capacity allows, or the remainder if less, and carries the balance forward.
+// Mine life is therefore an OUTPUT: the mill runs until its stock is gone.
 //
-// WHAT IS AN INPUT AND WHAT IS OURS. The published physical drivers live in
-// `inputs.cfdl` and nothing there is a modeling choice: tonnes and grades from
-// Table 13.3 of the S-K 1300 technical report, and the capital programme from
-// Table 18.1. Every rate below is a published unit cost or a stated fiscal
-// rate. The four RECOVERY numbers are ours -- the report states no recovery
-// for its cash flow -- so they are run-config knobs, declared with their basis
-// and varied by scenario rather than buried as constants.
+// Grade is not assumed. Contained metal is a stock alongside tonnage, so the
+// grade of any period is the remaining metal over the remaining rock. The one
+// exception is the mine's own published head-grade policy for its first three
+// years, after which the balance carries the rest of the life.
 //
-// EBITDA IS A RESULT. The fiscal charges read it from the period's realized
-// streams through series_sum; it is never authored. Cross-stream reads are one
-// hop deep, so each charge derives from EBITDA in closed form.
+// WHAT IS IMPORTED. Nothing but the reserve statement: four tonnages, their
+// contained metal, two mill capacities, the strip ratio, and the head-grade
+// policy. About twenty numbers, all from Tables 12.5, 12.7 and 12.8. The
+// operator's 41-year production schedule is NOT an input to this model; it is
+// a comparison, alongside the cash flow.
 
 version 0.1
 model "buenavista-del-cobre"
 time calendar annual from 2025-01 for 41
 
-import "inputs.cfdl"
+// --- the reserve, Table 12.8 (effective 31 December 2024) ------------------
+assume reserve_cu_mill_t   = 2117.0    // Mt sulfide mill feed, copper plant
+assume reserve_cu_mill_cu  = 8774.0    // kt contained copper
+assume reserve_cu_mill_mo  = 181.0     // kt contained molybdenum
+assume reserve_zn_mill_t   = 296.0     // Mt sulfide mill feed, zinc plant
+assume reserve_zn_mill_cu  = 1798.0
+assume reserve_zn_mill_zn  = 1705.0
+assume reserve_crushed_t   = 1077.0    // Mt crushed leach
+assume reserve_crushed_cu  = 2543.0
+assume reserve_rom_t       = 1041.0    // Mt ROM leach
+assume reserve_rom_cu      = 3076.0
 
-phase full_rate from 2025-01 to 2035-12
-phase reduced_plant from 2036-01 to 2060-12
-phase reclamation from 2061-01 to 2065-12
+// --- capacity, section 14 and Table 13.3 headline -------------------------
+assume cap_cu_mill_full    = 74.0      // Mt/yr, both concentrators
+assume cap_cu_mill_reduced = 43.0      // Mt/yr, after Concentrator I closes
+assume cap_zn_mill         = 7.0       // Mt/yr
+// Leach is pit-driven rather than capacity-driven; the reserve total spread
+// across the analysis window is the base claim, and its phasing is the
+// uncertainty the case measures.
+assume rate_crushed_leach  = 26.268292682926827   // 1077 / 41
+assume rate_rom_leach      = 25.390243902439025   // 1041 / 41
 
-// --- prices, section 19.1 (the owner's deck) -------------------------------
-// Prices and recoveries are run-config knobs; base values are in run.json.
-// Prices: section 19.1, the owner's deck of US$3.30 / 10.00 / 1.15 per lb.
+// --- the pit, Table 12.8 --------------------------------------------------
+// Waste per tonne of ore. The reserve statement pins the life-of-mine ratio
+// at 0.83; the year-to-year ratio observed in an operating pit varies far more,
+// because overburden is stripped before ore is reached and the ratio climbs as
+// the pit deepens. Triangular on the observed bounds, with the published
+// aggregate as the mode.
+assume strip_ratio ~ Triangular(min=0.31, mode=0.83, max=2.08)
 
-// --- RECOVERY TO PAYABLE — the four numbers the report does not state ------
-// Mill copper: the flotation circuit's tailings grade is near-constant across
-// the three published operating years (0.0678, 0.0713, 0.0718 % Cu), giving
-// recovery (g - 0.0703)/g at the plan's grades, times 96.7% payability.
+// --- prices, section 19.1 -------------------------------------------------
+assume price_cu = 3.30
+assume price_mo = 10.00
+assume price_zn = 1.15
+
+// --- recovery to payable, ours; the report states none for its cash flow --
 assume rec_cu_mill  = 0.836
-// Leach copper: the stated rule recovers 95% of acid-soluble and 65% of
-// cyanide-soluble copper. Mixed and secondary zone chemistry (Table 11.7)
-// implies 36-61%; the operation's own economics imply materially less. Held
-// at the low end pending disclosure.
 assume rec_cu_leach = 0.260
-// Molybdenum: Table 14.1 basic design parameter, 66.0%, at 100% payability.
 assume rec_mo       = 0.660
-// Zinc: 74% from the resource statement, times 85% payability.
 assume rec_zn       = 0.629
 
-// --- unit costs, section 18 ------------------------------------------------
-assume cost_mining     = 2.71    // US$/t moved, life-of-mine average, T18.7
-assume cost_mill       = 5.83    // US$/t milled, T18.8
-assume cost_zinc_plant = 10.63   // US$/t milled, T18.9
-assume cost_crush      = 0.84    // US$/t crushed, T18.8
-assume cost_leach      = 0.40    // US$/t leached, T18.8
-assume cost_gna        = 0.76    // US$/t milled, 18.3.1
-assume accretion       = 34.0    // US$ M/yr, 18.3.3
-assume closure_total   = 544.0   // US$ M, final year, 18.3.3
-assume sell_cu = 0.54            // US$/lb payable, T12.4 (transport-inclusive)
+// --- unit costs, section 18 -----------------------------------------------
+assume cost_mining     = 2.71
+assume cost_mill       = 5.83
+assume cost_zinc_plant = 10.63
+assume cost_crush      = 0.84
+assume cost_leach      = 0.40
+assume cost_gna        = 0.76
+assume accretion       = 34.0
+assume closure_total   = 544.0
+assume capital_lom     = 8317.0
+// total ore in the reserve, the denominator capital is spread over
+assume reserve_ore_total = 4531.0   // 2117 + 296 + 1077 + 1041
+assume sell_cu = 0.54
 assume sell_mo = 1.84
 assume sell_zn = 0.40
 
-// --- the Mexican fiscal stack, section 19.2 --------------------------------
+// --- the Mexican fiscal stack, section 19.2 -------------------------------
 assume duty_rate = 0.075
 assume ptu_rate  = 0.10
 assume tax_rate  = 0.30
 
-
-// ---------------------------------------------------------------------------
-// The mine's lifecycle. Its type declares no lifecycle, so the states are
-// open-world: each event writes `status`, the write is published in
-// deterministic.transitions, and streams gate on it with `active when`.
-// The eras are the ones the report states -- Concentrator I is taken offline
-// at the end of 2035, cutting ore processed by 40%, and the reclamation
-// outlay falls in the last five years. One period is one year, so t=11 is
-// 2036 and t=36 is 2061.
-// ---------------------------------------------------------------------------
-
-event concentrator_one_offline when time.t >= 11 {
-  set entity asset.mine.status = "reduced"
+// The mine's own head-grade instruction, Table 12.5. After 2027 the balance
+// of the reserve carries the grade, which is what conserves contained metal.
+curve grade_policy_cu {
+  2025-01: 0.50
+  2026-01: 0.48
+  2027-01: 0.43
+  2028-01: 0.0
 }
 
-event closure_era_opens when time.t >= 36 {
-  set entity asset.mine.status = "closing"
-}
-
-entity asset mine : Asset.Real {
-  // Loss carried forward, held as a negative number or zero.
-  //
-  // A field rule may not read a series (03 section 3.1): state sees only
-  // settled things, which is what keeps recurrences free of cycles. So while
-  // every stream above reads EBITDA as the period's realized result, this rule
-  // cannot, and restates it from the same curves and rates instead. That
-  // duplication is the price of the backward-only discipline, and it is the
-  // only place in the model where a definition appears twice.
-  shelter init min(0.0, (((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date)
-                 - inputs.duty_rate * ((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))))
-                 - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * ((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date))))
-    next min(0.0, prev + (((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date)
-                 - inputs.duty_rate * ((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))))
-                 - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * ((cfg.price_cu * 2204.6 / 1000.0
-                    * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                       + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                  + cfg.price_mo * 2204.6 / 1000.0 * cfg.rec_mo * curve_value("mo_contained", time.date)
-                  + cfg.price_zn * 2204.6 / 1000.0 * cfg.rec_zn * curve_value("zn_contained", time.date))
-                 - (inputs.cost_mining * curve_value("material_moved", time.date)
-                  + inputs.cost_mill * curve_value("ore_milled", time.date)
-                  + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-                  + inputs.cost_crush * curve_value("ore_crushed", time.date)
-                  + inputs.cost_leach * curve_value("ore_leached", time.date)
-                  + inputs.cost_gna * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
-                  + inputs.accretion
-                  + 2204.6 / 1000.0
-                    * (inputs.sell_cu * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                                         + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-                       + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-                       + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date)))) - curve_value("depreciation", time.date))))
-
-  shelter_in init 0.0
-    next prev.asset.mine.shelter
+// The same policy on lagged dates. A field's `next` computes period t from
+// t-1, so a rule that must know period t-1's grade reads it here.
+curve grade_policy_lagged {
+  2025-01: 0.50
+  2026-01: 0.50
+  2027-01: 0.48
+  2028-01: 0.43
+  2029-01: 0.0
 }
 
 // ---------------------------------------------------------------------------
-// Revenue: payable metal at its price. Contained metal is published in
-// kilotonnes, so x 2204.6 converts to millions of pounds.
+// The four stocks.
 // ---------------------------------------------------------------------------
 
-stream mine.revenue.copper on entity asset.mine inflow currency USD {
+entity asset cu_mill : Asset.Real {
+  // tonnage available at the period's open
+  tonnes init inputs.reserve_cu_mill_t
+    next max(0.0, prev - min(if(time.t - 1 <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), prev))
+
+  // contained cu, drawn with the tonnage at the period's grade
+  cu init inputs.reserve_cu_mill_cu
+    next max(0.0, prev
+                  - min(if(time.t - 1 <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), prev.asset.cu_mill.tonnes)
+                    * (if(time.t - 1 <= 2, curve_value("grade_policy_lagged", time.date),
+                       if(prev.asset.cu_mill.tonnes > 0.0,
+                          prev / prev.asset.cu_mill.tonnes / 10.0, 0.0)))
+                    * 10.0)
+
+  // contained mo, drawn with the tonnage at the period's grade
+  mo init inputs.reserve_cu_mill_mo
+    next max(0.0, prev
+                  - min(if(time.t - 1 <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), prev.asset.cu_mill.tonnes)
+                    * (if(prev.asset.cu_mill.tonnes > 0.0,
+                       prev / prev.asset.cu_mill.tonnes / 10.0, 0.0))
+                    * 10.0)
+
+}
+
+entity asset zn_mill : Asset.Real {
+  // tonnage available at the period's open
+  tonnes init inputs.reserve_zn_mill_t
+    next max(0.0, prev - min(inputs.cap_zn_mill, prev))
+
+  // contained cu, drawn with the tonnage at the period's grade
+  cu init inputs.reserve_zn_mill_cu
+    next max(0.0, prev
+                  - min(inputs.cap_zn_mill, prev.asset.zn_mill.tonnes)
+                    * (if(prev.asset.zn_mill.tonnes > 0.0,
+                       prev / prev.asset.zn_mill.tonnes / 10.0, 0.0))
+                    * 10.0)
+
+  // contained zn, drawn with the tonnage at the period's grade
+  zn init inputs.reserve_zn_mill_zn
+    next max(0.0, prev
+                  - min(inputs.cap_zn_mill, prev.asset.zn_mill.tonnes)
+                    * (if(prev.asset.zn_mill.tonnes > 0.0,
+                       prev / prev.asset.zn_mill.tonnes / 10.0, 0.0))
+                    * 10.0)
+
+}
+
+entity asset crushed : Asset.Real {
+  // tonnage available at the period's open
+  tonnes init inputs.reserve_crushed_t
+    next max(0.0, prev - min(inputs.rate_crushed_leach, prev))
+
+  // contained cu, drawn with the tonnage at the period's grade
+  cu init inputs.reserve_crushed_cu
+    next max(0.0, prev
+                  - min(inputs.rate_crushed_leach, prev.asset.crushed.tonnes)
+                    * (if(prev.asset.crushed.tonnes > 0.0,
+                       prev / prev.asset.crushed.tonnes / 10.0, 0.0))
+                    * 10.0)
+
+}
+
+entity asset rom : Asset.Real {
+  // tonnage available at the period's open
+  tonnes init inputs.reserve_rom_t
+    next max(0.0, prev - min(inputs.rate_rom_leach, prev))
+
+  // contained cu, drawn with the tonnage at the period's grade
+  cu init inputs.reserve_rom_cu
+    next max(0.0, prev
+                  - min(inputs.rate_rom_leach, prev.asset.rom.tonnes)
+                    * (if(prev.asset.rom.tonnes > 0.0,
+                       prev / prev.asset.rom.tonnes / 10.0, 0.0))
+                    * 10.0)
+
+}
+
+// ---------------------------------------------------------------------------
+// The pit. Waste is what must move to reach the ore, at the published strip
+// ratio; it carries no metal and no revenue, only cost.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Revenue: payable metal at its price. Contained metal is drawn in kilotonnes,
+// so x 2204.6 / 1000 converts to millions of pounds.
+// ---------------------------------------------------------------------------
+
+stream mine.revenue.copper on entity asset.cu_mill inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_cu * 2204.6 / 1000.0
-           * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-              + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
+  amount = inputs.price_cu * 2204.6 / 1000.0
+           * (inputs.rec_cu_mill * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(time.t <= 2, curve_value("grade_policy_cu", time.date),
+                if(asset.cu_mill.tonnes > 0.0, asset.cu_mill.cu / asset.cu_mill.tonnes / 10.0, 0.0))) * 10.0 + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) * (if(asset.zn_mill.tonnes > 0.0, asset.zn_mill.cu / asset.zn_mill.tonnes / 10.0, 0.0)) * 10.0)
+              + inputs.rec_cu_leach * (min(inputs.rate_crushed_leach, asset.crushed.tonnes) * (if(asset.crushed.tonnes > 0.0, asset.crushed.cu / asset.crushed.tonnes / 10.0, 0.0)) * 10.0 + min(inputs.rate_rom_leach, asset.rom.tonnes) * (if(asset.rom.tonnes > 0.0, asset.rom.cu / asset.rom.tonnes / 10.0, 0.0)) * 10.0))
 }
 
-stream mine.revenue.molybdenum on entity asset.mine inflow currency USD {
+stream mine.revenue.molybdenum on entity asset.cu_mill inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_mo * 2204.6 / 1000.0
-           * cfg.rec_mo * curve_value("mo_contained", time.date)
+  amount = inputs.price_mo * 2204.6 / 1000.0 * inputs.rec_mo * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(asset.cu_mill.tonnes > 0.0, asset.cu_mill.mo / asset.cu_mill.tonnes / 10.0, 0.0)) * 10.0)
 }
 
-stream mine.revenue.zinc on entity asset.mine inflow currency USD {
+stream mine.revenue.zinc on entity asset.zn_mill inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.revenue.recurring
-  amount = cfg.price_zn * 2204.6 / 1000.0
-           * cfg.rec_zn * curve_value("zn_contained", time.date)
+  amount = inputs.price_zn * 2204.6 / 1000.0 * inputs.rec_zn * (min(inputs.cap_zn_mill, asset.zn_mill.tonnes) * (if(asset.zn_mill.tonnes > 0.0, asset.zn_mill.zn / asset.zn_mill.tonnes / 10.0, 0.0)) * 10.0)
 }
 
 // ---------------------------------------------------------------------------
-// Cost: variable with rock moved, rock milled, rock leached, and metal sold;
-// then the fixed lines.
+// Cost.
 // ---------------------------------------------------------------------------
 
-stream mine.opex.mining on entity asset.mine outflow currency USD {
+stream mine.opex.mining on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = inputs.cost_mining * curve_value("material_moved", time.date)
+  amount = inputs.cost_mining * (1.0 + inputs.strip_ratio) * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes))
 }
 
-stream mine.opex.processing on entity asset.mine outflow currency USD {
+stream mine.opex.processing on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = inputs.cost_mill * curve_value("ore_milled", time.date)
-           + inputs.cost_zinc_plant * curve_value("ore_zinc_mill", time.date)
-           + inputs.cost_crush * curve_value("ore_crushed", time.date)
-           + inputs.cost_leach * curve_value("ore_leached", time.date)
+  amount = inputs.cost_mill * min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes)
+           + inputs.cost_zinc_plant * min(inputs.cap_zn_mill, asset.zn_mill.tonnes)
+           + inputs.cost_crush * min(inputs.rate_crushed_leach, asset.crushed.tonnes)
+           + inputs.cost_leach * (min(inputs.rate_crushed_leach, asset.crushed.tonnes)
+                                  + min(inputs.rate_rom_leach, asset.rom.tonnes))
 }
 
-stream mine.opex.selling on entity asset.mine outflow currency USD {
+stream mine.opex.selling on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
   amount = 2204.6 / 1000.0
-           * (inputs.sell_cu
-                * (cfg.rec_cu_mill * curve_value("cu_mill_contained", time.date)
-                   + cfg.rec_cu_leach * curve_value("cu_leach_contained", time.date))
-              + inputs.sell_mo * cfg.rec_mo * curve_value("mo_contained", time.date)
-              + inputs.sell_zn * cfg.rec_zn * curve_value("zn_contained", time.date))
+           * (inputs.sell_cu * (inputs.rec_cu_mill * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(time.t <= 2, curve_value("grade_policy_cu", time.date),
+                if(asset.cu_mill.tonnes > 0.0, asset.cu_mill.cu / asset.cu_mill.tonnes / 10.0, 0.0))) * 10.0 + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) * (if(asset.zn_mill.tonnes > 0.0, asset.zn_mill.cu / asset.zn_mill.tonnes / 10.0, 0.0)) * 10.0)
+                                + inputs.rec_cu_leach * (min(inputs.rate_crushed_leach, asset.crushed.tonnes) * (if(asset.crushed.tonnes > 0.0, asset.crushed.cu / asset.crushed.tonnes / 10.0, 0.0)) * 10.0 + min(inputs.rate_rom_leach, asset.rom.tonnes) * (if(asset.rom.tonnes > 0.0, asset.rom.cu / asset.rom.tonnes / 10.0, 0.0)) * 10.0))
+              + inputs.sell_mo * inputs.rec_mo * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(asset.cu_mill.tonnes > 0.0, asset.cu_mill.mo / asset.cu_mill.tonnes / 10.0, 0.0)) * 10.0)
+              + inputs.sell_zn * inputs.rec_zn * (min(inputs.cap_zn_mill, asset.zn_mill.tonnes) * (if(asset.zn_mill.tonnes > 0.0, asset.zn_mill.zn / asset.zn_mill.tonnes / 10.0, 0.0)) * 10.0))
 }
 
-stream mine.opex.gna on entity asset.mine outflow currency USD {
+stream mine.opex.gna on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
-  amount = inputs.cost_gna
-           * (curve_value("ore_milled", time.date) + curve_value("ore_zinc_mill", time.date))
+  amount = inputs.cost_gna * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes)
+                              + min(inputs.cap_zn_mill, asset.zn_mill.tonnes))
 }
 
-stream mine.opex.accretion on entity asset.mine outflow currency USD {
+stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.accretion
 }
 
 // ---------------------------------------------------------------------------
-// The charges that take EBITDA to net income. Each reads the period's EBITDA
-// as the realized result of the streams above.
+// EBITDA to net income. Each charge reads the period's realized EBITDA.
 // ---------------------------------------------------------------------------
 
-stream mine.fiscal.duty on entity asset.mine outflow currency USD {
+stream mine.fiscal.duty on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
 }
 
-stream mine.fiscal.profit_share on entity asset.mine outflow currency USD {
+stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date))
+                + series_sum("mine.opex.*", time.t, time.t))
+                        - inputs.capital_lom * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes)) / inputs.reserve_ore_total)
 }
 
-stream mine.fiscal.income_tax on entity asset.mine outflow currency USD {
+stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.tax
   amount = max(0.0,
                inputs.tax_rate
                  * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date)
+                + series_sum("mine.opex.*", time.t, time.t)) - inputs.capital_lom * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes)) / inputs.reserve_ore_total
                     - inputs.ptu_rate * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
-                + series_sum("mine.opex.*", time.t, time.t)) - curve_value("depreciation", time.date))
-                    + asset.mine.shelter_in)
+                + series_sum("mine.opex.*", time.t, time.t))
+                                                 - inputs.capital_lom * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes)) / inputs.reserve_ore_total))
                - inputs.tax_rate * inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t)))
 }
 
-// Accretion is charged above but never leaves the bank; the filing strikes its
-// cash flow on ARO OUTLAYS, so it is added back.
-stream mine.noncash.accretion_addback on entity asset.mine inflow currency USD {
+stream mine.noncash.accretion_addback on entity asset.cu_mill inflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.accretion
 }
 
-// ---------------------------------------------------------------------------
-// Capital and closure.
-// ---------------------------------------------------------------------------
-
-stream mine.capital.sustaining on entity asset.mine outflow currency USD {
+stream mine.capital.sustaining on entity asset.cu_mill outflow currency USD {
   schedule every year due from 2025-01 to 2065-01
   category investing.capital.capex
-  amount = curve_value("capital", time.date)
+  amount = inputs.capital_lom * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes)) / inputs.reserve_ore_total
 }
 
-stream mine.capital.closure on entity asset.mine outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+stream mine.capital.closure on entity asset.cu_mill outflow currency USD {
+  schedule every year due from 2061-01 to 2065-01
   category investing.capital.capex
-  active when entity.status == "closing"
   amount = inputs.closure_total / 5.0
 }

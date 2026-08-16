@@ -8,6 +8,7 @@ Each case directory (benchmarks/<group>/<case>/) contains:
   expected.csv          per-period expectations from an independent reference
   expected_metrics.json  metric -> {value, tolerance}
   expected_scenarios.json  scenario -> metric -> {value, tolerance}   (optional)
+  expected_monte_carlo.json  metric -> aggregate -> {value, tolerance}  (optional)
 
 The harness compiles and runs each case with the cfdl CLI and fails if any
 period-level value or summary metric drifts outside its tolerance.
@@ -219,6 +220,37 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
                 if abs(got - spec["value"]) > spec["tolerance"]:
                     failures.append(
                         f"scenario {name} metric {key}: {got} vs expected "
+                        f"{spec['value']} (tolerance {spec['tolerance']})"
+                    )
+
+    # Monte Carlo aggregates, when the case declares them. A stochastic case
+    # asserts the SHAPE of its distribution -- mean, median, spread, bounds --
+    # rather than a single number, because the number it would assert does not
+    # exist. Section 12.4 of the language spec makes the seed mandatory, so the
+    # draws are reproducible and these may be asserted as tightly as any other
+    # metric; what is being checked is this engine on this seed, not a
+    # statistical claim about the world.
+    expected_mc_path = case_dir / "expected_monte_carlo.json"
+    if expected_mc_path.exists():
+        mc = results.get("monte_carlo") or {}
+        if mc.get("status") != "ok":
+            failures.append(f"monte carlo: run status {mc.get('status')!r}")
+        mc_metrics = mc.get("metrics") or {}
+        expected_mc = json.loads(expected_mc_path.read_text(encoding="utf-8"))
+        for key, wanted in expected_mc.items():
+            if key not in mc_metrics:
+                failures.append(f"monte carlo metric {key}: missing from results")
+                continue
+            for agg, spec in wanted.items():
+                if agg not in mc_metrics[key]:
+                    failures.append(
+                        f"monte carlo {key}: aggregate {agg!r} missing from results"
+                    )
+                    continue
+                got = scalar(mc_metrics[key][agg])
+                if abs(got - spec["value"]) > spec["tolerance"]:
+                    failures.append(
+                        f"monte carlo {key} {agg}: {got} vs expected "
                         f"{spec['value']} (tolerance {spec['tolerance']})"
                     )
 

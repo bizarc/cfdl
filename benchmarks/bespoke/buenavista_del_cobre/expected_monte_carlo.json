@@ -1,0 +1,24 @@
+{
+  "model.npv": {
+    "mean": {
+      "value": 3131.892828,
+      "tolerance": 0.0001
+    },
+    "p50": {
+      "value": 3236.340779,
+      "tolerance": 0.0001
+    },
+    "stdev": {
+      "value": 820.050278,
+      "tolerance": 0.0001
+    },
+    "min": {
+      "value": 1109.532904,
+      "tolerance": 0.0001
+    },
+    "max": {
+      "value": 4632.108824,
+      "tolerance": 0.0001
+    }
+  }
+}

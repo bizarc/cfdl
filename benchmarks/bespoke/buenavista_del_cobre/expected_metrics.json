@@ -1,17 +1,12 @@
 {
   "model.npv": {
-    "value": 3689.27691,
+    "value": 3119.747946,
     "tolerance": 0.0001,
     "source": "our after-tax NPV at the filing's stated 10%"
   },
-  "stream.mine.revenue.copper.total": {
-    "value": 74688.944718,
-    "tolerance": 0.0001,
-    "source": "our life-of-mine copper revenue"
-  },
   "stream.mine.capital.sustaining.total": {
-    "value": -8317.0,
+    "value": -8276.617303,
     "tolerance": 0.0001,
-    "source": "capital, Table 18.1"
+    "source": "capital drawn with the ore, Table 18.1 over the reserve"
   }
 }

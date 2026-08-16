@@ -1,29 +1,29 @@
 # Benchmark case: the Buenavista del Cobre copper mine, Sonora, Mexico,
 # 2025-2065.
 #
-# THIS CASE DOES NOT REPRODUCE A FILING. It models the mine from the operator's
-# published INPUTS -- the production schedule, unit costs, prices and fiscal
-# rates -- and compares the statement it produces against the operator's
-# published ANSWER. The filing's Table 19.1 is a comparison at the end, never a
-# driver. An earlier version of this case consumed that table's revenue and cost
-# rows and re-derived the arithmetic between them, which made its inputs a
-# function of its outputs and its agreement guaranteed.
+# The case derives the mine's production plan from its reserve statement and
+# then values it. Four depleting stocks draw at capacity until they are gone,
+# so mine life is a result rather than an input, and grade falls out of mass
+# balance rather than being declared.
 #
 # NO PACK. Written from the bare language, after ppiaf_toll_highway.
 #
-# WHAT THE HARNESS CHECKS. expected.csv holds the reference implementation's
-# output, so CFDL and the reference are two implementations of the same claims
-# over the same inputs; any daylight is a defect. The comparison to the filing
-# is printed by reference_gen.py and reported in CASE.md, and is deliberately
-# NOT an assertion: it is a finding about the asset, and it moves whenever the
-# recovery assumptions move.
+# TWO COMPARISONS, NEITHER ASSERTED. The operator's production schedule and its
+# discounted cash flow are both transcribed here and both are printed by
+# reference_gen.py. Asserting either would turn a finding into a target, and
+# both move whenever the recovery assumptions move.
 #
-# THE FOUR RECOVERY NUMBERS are run-config knobs rather than constants, because
-# the report states no recovery for its cash flow and they are the case's
-# declared uncertainty. Scenarios in run.json walk each to its alternative
-# published basis.
+# FIRST MONTE CARLO CASE IN THE SUITE. The strip ratio is stochastic, because
+# the report pins its life-of-mine value and says nothing about its year-to-
+# year path. `expected_monte_carlo.json` asserts the aggregates; the seed is
+# declared, so what is checked is this engine on this seed rather than a
+# statistical claim. The harness gained monte carlo support for this case.
 #
-# Status: verified. 41 periods x 16 columns and 3 metrics reproduce at 1e-5.
-# Our after-tax NPV is 3,689 against the filing's 3,405, +8.3%.
-summary = "A 41-year open-pit copper mine, modeled from the operator's published production schedule, unit costs and fiscal rates, and compared against the discounted cash flow the operator published."
+# TRIAL COUNT. 500 trials runs in about 15 seconds on a release build and
+# about 70 on a debug build, which is what the suite uses. That is the cost of
+# asserting a distribution and it is deliberate.
+#
+# Status: verified. 41 periods x 15 columns, 2 metrics and 5 Monte Carlo
+# aggregates reproduce at 1e-5.
+summary = "A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range."
 period_tolerance = 0.00001
