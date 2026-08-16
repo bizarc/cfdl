@@ -2,132 +2,131 @@
 
 Buenavista del Cobre is an open-pit copper mine in Sonora, Mexico. It has
 operated since 1899 and is among the largest copper mines in the world. Its
-operator publishes a 41-year plan: what rock is moved each year, at what grade,
-what it costs to move and treat, and what the resulting cash is worth.
+operator publishes a reserve: how much rock remains, at what grade, and where
+each class of rock is processed.
 
-This case does not reproduce that cash flow. It takes the operator's inputs,
-states our own claims about how the asset behaves, and produces our own
-statement. The operator's answer is then a comparison, and the difference is
-the finding.
+A mine is a set of depleting stocks. Each period draws what its processing
+capacity allows, or the remainder if less, and carries the balance forward.
+Mine life is therefore a result rather than an input: the mill runs until its
+stock is gone.
 
-The claims are ordinary. A mine produces metal, which varies by year and splits
-between three products. Each sells at its own price. Some costs scale with rock
-moved, some with rock milled, some with metal sold, and some are fixed. What is
-left is EBITDA. Depreciation, a mining duty, an employee profit share and
-income tax take EBITDA to net income.
+This case derives the mine's 41-year production plan from the reserve, values
+it, and compares both against what the operator published. The comparisons are
+reported. Neither drives the model.
 
 ## The reference
 
 The inputs come from the S-K 1300 Technical Report Summary for the mine,
 prepared by WSP USA for Southern Copper Corporation, dated 11 February 2025 and
-filed as Exhibit 96.6 to the FY2024 Form 10-K. The 41-year production schedule
-is Table 13.3, transcribed as `published_production_schedule.csv`. Unit costs
-are section 18, prices and the discount rate are section 19.1, and the fiscal
-rates are section 19.2.
+filed as Exhibit 96.6 to the FY2024 Form 10-K.
 
-The comparison target is Table 19.1, the operator's own discounted cash flow,
-transcribed as `published_grid.csv`. No part of the model consults it.
+About twenty numbers: four reserve tonnages and their contained metal (Table
+12.8), two mill capacities, the strip ratio, the head-grade policy (Table
+12.5), unit costs (section 18), and prices, the discount rate and the fiscal
+rates (section 19).
+
+Two published tables are comparisons rather than inputs. The operator's
+production schedule is `published_production_schedule.csv` and its discounted
+cash flow is `published_grid.csv`. The model reads neither.
 
 An independent implementation of the same claims over the same inputs produces
-the expectations this case asserts, so the check is between two implementations
-rather than against the operator's answer. The comparison to that answer is
-reported below and is deliberately not asserted: it moves whenever the recovery
-assumptions move, and pinning it would turn a finding into a target.
+the expectations this case asserts.
 
 ## What it exercises
 
 | | |
 |---|---|
 | Pack | none — written from the bare language |
-| Entities | one real asset, carrying its own lifecycle and its one memory |
-| Language features | streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, run-config knobs driving scenarios, a two-file model |
+| Entities | four depleting stocks, each with tonnage and contained metal |
+| Language features | stock recurrences, capacity limits, streams reading the period's result through `series_sum`, a stochastic assumption, a seeded Monte Carlo, run-config knobs |
 | Conventions | duty on EBITDA, profit share on EBITDA net of depreciation and duty, income tax net of a duty credit, loss carryforward, first year undiscounted |
 
-The second case in the suite written without a pack, after
-`ppiaf_toll_highway`. A mine fits none of the four: no generation and no
-offtaker, no rent roll, and no pool of obligors. Its revenue is contained metal
-at a price, not a margin on sales.
+The second case in the suite written without a pack, and the first to assert a
+Monte Carlo result.
 
-**The model separates data from claims.** `inputs.cfdl` holds the published
-physical drivers and nothing else — eleven curves of tonnes, grades and
-capital, with a header stating that nothing in the file is a modeling choice.
-`model.cfdl` holds the claims: the rates, the streams, the lifecycle and the
-fiscal stack.
+**The stocks are the model.** Each of the four reserve classes is an entity
+carrying two balances: tonnage and contained metal. A period draws
+`min(capacity, remaining)`, and both balances fall together. The copper
+concentrator steps from 74 to 43 million tonnes a year when Concentrator I is
+taken offline, which is a property of that stock's processing route.
 
-**EBITDA is a result, not an input.** The fiscal charges read it from the
-period's realized streams through `series_sum`. Cross-stream reads are one hop
-deep, so each charge derives from EBITDA in closed form rather than chaining
-off another charge.
+**Grade is a consequence.** Because contained metal is a stock alongside
+tonnage, the grade of any period is the remaining metal over the remaining
+rock. The exception is the mine's own published head-grade policy, which sets
+the first three years; the balance of the reserve carries the rest of the life.
+Nothing about grade is fitted.
 
-**Four recovery numbers are ours.** The report states no recovery for its cash
-flow. They are run-config knobs rather than constants, so the case's declared
-uncertainty is explorable rather than buried, and scenarios walk each to its
-alternative published basis.
+**The strip ratio is a distribution.** Waste is what must move to reach ore.
+The reserve statement pins the life-of-mine ratio at 0.83. An operating pit
+strips overburden before it reaches ore and the ratio climbs as the pit
+deepens, so the ratio is drawn from a triangular distribution across the range
+an operating pit exhibits, with the published figure as its mode. The seed is
+declared, so the draws are reproducible.
 
 ## The result
 
-All 41 periods reproduce across sixteen columns, and three metrics reproduce,
-to 1e-5 against the reference.
+All 41 periods reproduce across fifteen columns, two metrics reproduce, and
+five Monte Carlo aggregates reproduce, to 1e-5 against the reference.
 
-Against the operator's own statement, life of mine, in US$ M:
+**The derived plan against the operator's**, over the life of the mine:
+
+| line | ours Mt | theirs Mt | difference |
+|---|---:|---:|---:|
+| copper mill feed | 2,104 | 2,104 | 0.0% |
+| zinc mill feed | 287 | 287 | 0.0% |
+| crushed leach | 1,077 | 1,080 | −0.3% |
+| ROM leach | 1,041 | 1,039 | +0.2% |
+| waste | 3,742 | 3,769 | −0.7% |
+| contained copper, kt | 16,083 | 16,192 | −0.7% |
+
+Capacity against a depleting stock reproduces both mill schedules exactly, year
+for year. Mass balance holds contained copper to within a percent.
+
+**The valuation against the operator's**, in US$ M:
 
 | line | ours | theirs | difference |
 |---|---:|---:|---:|
-| Total revenue | 79,937 | 76,951 | +3.9% |
-| Total operating cost | 56,398 | 57,887 | −2.6% |
-| EBITDA | 23,539 | 19,062 | +23.5% |
-| Income tax | 3,105 | 2,415 | +28.6% |
-| Capital | 8,317 | 8,317 | 0.0% |
-| **After-tax NPV at 10%** | **3,689** | **3,405** | **+8.3%** |
+| total revenue | 79,527 | 76,951 | +3.3% |
+| total operating cost | 59,167 | 57,887 | +2.2% |
+| capital | 8,277 | 8,317 | −0.5% |
+| after-tax NPV at 10% | 3,120 | 3,405 | −8.4% |
 
-Revenue lands within 4% and operating cost within 3% of a statement built by
-the operator's own consultants from the same physical plan. Capital matches
-exactly, because it is a published total apportioned by material moved.
+Over 500 trials on the strip ratio, the after-tax NPV has a mean of 3,132, a
+median of 3,236, and a standard deviation of 820, ranging from 1,110 to 4,632.
+The operator's 3,405 sits inside that range.
 
 ## The delta
 
-**The cost side reconstructs; the revenue side does not.** Mining, processing
-and general costs all fall within a few percent of the published lines, using
-nothing but published unit rates and published tonnages. That is evidence the
-report discloses enough to rebuild what it costs to run this mine.
+**The plan derives; the pit sequence does not.** Both mill schedules are exact
+because they are capacity against a stock, and both capacities are published.
+The leach and waste lines match in total and not in shape: ours are smooth,
+while the operator's leach tonnage swings between 8 and 154 million tonnes a
+year. Nothing in the report describes the pit sequence that produces that
+swing.
 
-**Copper is the whole difference, and its levers are not equal.** Moving each
-input across its full published range moves our after-tax NPV by:
+**That swing is worth a quarter of the valuation.** The strip ratio observed
+across an operating pit spans 0.31 to 2.08. Drawn across that range, the
+after-tax NPV has a standard deviation of 820 against a mean of 3,132. How much
+waste moves in which year is the largest single uncertainty in this asset, and
+it is larger than any question about metallurgy or price.
 
-| lever | move |
-|---|---:|
-| copper price, US$3.30 to the market study's US$3.87 | +2,589 |
-| leach recovery, 26% to the secondary-zone chemistry of 57% | +2,592 |
-| leach recovery, 26% to the mixed-zone floor of 36% | +838 |
-| mill recovery, 83.6% to 78.3% | −666 |
-| payability, 96.7% to 95% | −226 |
-| molybdenum and zinc recovery, across their whole published ranges | under 50 |
+**Four recovery numbers are ours.** The report states no recovery for its cash
+flow. Mill copper, leach copper, molybdenum and zinc recovery are declared with
+their basis and are run-config knobs, so they can be moved without editing the
+model. Across their full published ranges, molybdenum and zinc together move
+the valuation by less than 50; leach copper moves it by up to 2,592.
 
-Molybdenum and zinc do not matter. Mill recovery matters modestly. **Price and
-leach recovery each move the valuation by roughly US$2.6 bn**, and both are
-choices rather than measurements.
-
-**Two unstated judgments carry the case.** The price deck of US$3.30 per pound
-was, in the report's own words, "provided by SCC" — the operator — while the
-Wood Mackenzie market study the same report contains averages US$3.87 over its
-published years. And the leach circuit treats 35% of the contained copper at a
-recovery the report never states; the soluble-species chemistry in Table 11.7
-implies 36% to 57%, while the operator's economics imply materially less.
-
-Our model is 8.3% above the operator's valuation. Set leach recovery to what
-the published chemistry supports and the difference grows rather than closes.
-Take the market study's own price and it grows further. So the difference is
-not arithmetic. The operator's valuation rests on a price below its own market
-study and a leach recovery below its own ore chemistry, and the report explains
-neither.
+**The price is the operator's.** Section 19.1 records that the deck of
+US$3.30 per pound of copper was provided by the operator. The Wood Mackenzie
+market study the same report contains averages US$3.87 per pound over its
+published years. Moving to that study's own base case raises the valuation by
+about 2,589.
 
 ## What the case does not claim
 
-The 0.5% additional royalty on precious-metal receipts, confirmed in the parent
-Form 10-K, is not modeled: this mine's published revenue carries only copper,
-molybdenum and zinc. The market price curves are not used, because Table 16.2
-runs to 2034 and Table 16.4 to 2029 against a mine that runs to 2065, and
-extending them would mean inventing three decades. Working capital is not
-modeled, since the stated day-counts net to zero over the life. The annual
-capital programme is published only as life-of-mine totals, so it is
-apportioned by material moved.
+The additional royalty on precious-metal receipts is not modeled: this mine's
+published revenue carries only copper, molybdenum and zinc. The market price
+curves are not used, because they cover ten and five years of a 41-year life.
+Working capital is not modeled, because the stated day counts net to zero over
+the life. The pit sequence is not modeled, because the report does not describe
+it; its effect is measured instead.
