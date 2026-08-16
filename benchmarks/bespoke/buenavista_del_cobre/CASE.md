@@ -1,44 +1,38 @@
 ## The case
 
 Buenavista del Cobre is an open-pit copper mine in Sonora, Mexico. It has
-operated since 1899 and is among the largest copper mines in the world. The
-reserve supports 41 more years of production, through 2065: 2.1 billion tonnes
-of mill ore, 2.1 billion tonnes of leach ore, 296 million tonnes of zinc ore,
-and 3.8 billion tonnes of waste. The products are copper, molybdenum and zinc.
+operated since 1899 and is among the largest copper mines in the world. Its
+operator publishes a 41-year plan: what rock is moved each year, at what grade,
+what it costs to move and treat, and what the resulting cash is worth.
 
-The modeling problem is the Mexican fiscal stack. Four charges sit between
-EBITDA and net income, and each base is defined in terms of the others. The
-Derechos de Mineria takes 7.5% of earnings. An employee profit share takes 10%
-of what remains after depreciation and the duty. Income tax takes 30% of what
-remains after that. The duty is then credited against the tax at 30%. Read as
-levies on earnings, the four look mutually circular. They are not, and the
-case shows that they resolve in one pass with no solver.
+This case does not reproduce that cash flow. It takes the operator's inputs,
+states our own claims about how the asset behaves, and produces our own
+statement. The operator's answer is then a comparison, and the difference is
+the finding.
+
+The claims are ordinary. A mine produces metal, which varies by year and splits
+between three products. Each sells at its own price. Some costs scale with rock
+moved, some with rock milled, some with metal sold, and some are fixed. What is
+left is EBITDA. Depreciation, a mining duty, an employee profit share and
+income tax take EBITDA to net income.
 
 ## The reference
 
-The reference is Table 19.1, "Discounted Cash Flow", of the S-K 1300 Technical
-Report Summary for the mine. WSP USA prepared the report for Southern Copper
-Corporation, dated 11 February 2025 and filed as Exhibit 96.6 to the FY2024
-Form 10-K. The table prints the whole life of the mine: material movement,
-revenue by metal, six cost lines, EBITDA, gross income, tax, capital, closure,
-working capital, and a pre-tax and an after-tax NPV at a stated 10%. Table
-19.2 adds a sensitivity matrix of 78 published after-tax NPVs: six variables
-at thirteen steps each. Both tables are transcribed here. The PDF is a public
-filing and is cited rather than vendored.
+The inputs come from the S-K 1300 Technical Report Summary for the mine,
+prepared by WSP USA for Southern Copper Corporation, dated 11 February 2025 and
+filed as Exhibit 96.6 to the FY2024 Form 10-K. The 41-year production schedule
+is Table 13.3, transcribed as `published_production_schedule.csv`. Unit costs
+are section 18, prices and the discount rate are section 19.1, and the fiscal
+rates are section 19.2.
 
-The fiscal structure was not taken from this deal. Buenavista prints EBITDA
-and gross income but not the charges between them, so a structure fitted here
-would be fitted to the answer. The structure was read from a different mine:
-La Caridad/Pilares, Exhibit 96.7 of the same Form 10-K, by the same author on
-the same template. That table prints all ten intermediate lines, including the
-rows Buenavista omits: Depreciation, Royalty, PTU, Minimum tax, Income tax,
-and both add-backs. The recovered structure reproduces all ten of La Caridad's
-printed lines to within 0.77 US$ M. Applied unchanged to Buenavista, it
-reproduces the printed tax, net income and after-tax cash flow to within 1.44.
+The comparison target is Table 19.1, the operator's own discounted cash flow,
+transcribed as `published_grid.csv`. No part of the model consults it.
 
-An independent implementation of these conventions produces the expectations
-this case asserts. The case is therefore checked twice: the reference against
-the filing, and CFDL against the reference.
+An independent implementation of the same claims over the same inputs produces
+the expectations this case asserts, so the check is between two implementations
+rather than against the operator's answer. The comparison to that answer is
+reported below and is deliberately not asserted: it moves whenever the recovery
+assumptions move, and pinning it would turn a finding into a target.
 
 ## What it exercises
 
@@ -46,96 +40,94 @@ the filing, and CFDL against the reference.
 |---|---|
 | Pack | none — written from the bare language |
 | Entities | one real asset, carrying its own lifecycle and its one memory |
-| Language features | second-tier streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, annuity-due placement, run-config parameters driving 72 scenarios |
+| Language features | streams reading the period's result through `series_sum`, open-world lifecycle events with published transitions, declared phases, a carryforward recurrence, run-config knobs driving scenarios, a two-file model |
 | Conventions | duty on EBITDA, profit share on EBITDA net of depreciation and duty, income tax net of a duty credit, loss carryforward, first year undiscounted |
 
-This is the second case in the suite written without a pack, after
-`ppiaf_toll_highway`. A mine fits none of the four packs. It has no generation
-and no offtaker, no rent roll, and no pool of obligors. Its revenue is
-contained metal at a price, not a margin on sales.
+The second case in the suite written without a pack, after
+`ppiaf_toll_highway`. A mine fits none of the four: no generation and no
+offtaker, no rent roll, and no pool of obligors. Its revenue is contained metal
+at a price, not a margin on sales.
 
-**The stack resolves in one pass.** Each charge's base is settled before the
-charge applies:
+**The model separates data from claims.** `inputs.cfdl` holds the published
+physical drivers and nothing else — eleven curves of tonnes, grades and
+capital, with a header stating that nothing in the file is a modeling choice.
+`model.cfdl` holds the claims: the rates, the streams, the lifecycle and the
+fiscal stack.
 
-    royalty      = 7.5% × ebitda
-    ptu          = 10% × max(0, ebitda − depreciation − royalty)
-    gross_income = ebitda − depreciation − royalty − ptu
-    total_taxes  = max(0, 30% × (gross_income + shelter) − 30% × royalty)
+**EBITDA is a result, not an input.** The fiscal charges read it from the
+period's realized streams through `series_sum`. Cross-stream reads are one hop
+deep, so each charge derives from EBITDA in closed form rather than chaining
+off another charge.
 
-Gross income is exactly 0.9 × (ebitda − depreciation − royalty), so the profit
-share is one ninth of gross income. This identity is why the stack evaluates
-without iteration. It is also what recovers depreciation, which this mine does
-not publish, from the two lines it does.
-
-**The carryforward is necessary, not decorative.** The filing prints no tax in
-2043, 2044 or 2045, although gross income is positive in each. The cause is
-the losses of 2037 through 2042. Without the shelter, those three years are
-wrong by 46 US$ M while every other column still passes.
-
-**Depreciation must scale with capital.** The filing's capital sensitivity
-reprices the depreciation that capital creates. Held fixed, the capital row of
-Table 19.2 is out by 125 US$ M. Scaled with `cfg.capex_factor`, the same row
-is within 12.
+**Four recovery numbers are ours.** The report states no recovery for its cash
+flow. They are run-config knobs rather than constants, so the case's declared
+uncertainty is explorable rather than buried, and scenarios walk each to its
+alternative published basis.
 
 ## The result
 
-All 41 periods reproduce across nineteen columns to 1e-5, which is the float
-noise of the price-times-quantity round trip. The columns are three revenue
-lines, six cost lines, three fiscal charges, the accretion add-back, three
-capital lines, the loss carryforward as the mine's own field, and net cash
-flow. EBITDA appears in no column and no curve. It is the result of the base
-streams, and the fiscal streams read it from the period's realized series.
-Three metrics and 72 scenarios reproduce on the same tolerance. The scenarios
-cover all six variables of Table 19.2 at every non-zero step.
+All 41 periods reproduce across sixteen columns, and three metrics reproduce,
+to 1e-5 against the reference.
 
-Against the filing itself, the reference reproduces all eight derived lines
-over the 21 printed annual columns:
+Against the operator's own statement, life of mine, in US$ M:
 
-| line | max abs. difference | mean |
-|---|---:|---:|
-| Total revenue | 1.00 | 0.29 |
-| Total operating cost | 1.00 | 0.19 |
-| EBITDA | 2.00 | 0.52 |
-| Pre-tax gross income | 1.85 | 0.45 |
-| Total taxes | 0.69 | 0.12 |
-| Net income after taxes | 1.32 | 0.39 |
-| Pre-tax cash flow | 2.00 | 0.67 |
-| After-tax cash flow | 1.44 | 0.53 |
+| line | ours | theirs | difference |
+|---|---:|---:|---:|
+| Total revenue | 79,937 | 76,951 | +3.9% |
+| Total operating cost | 56,398 | 57,887 | −2.6% |
+| EBITDA | 23,539 | 19,062 | +23.5% |
+| Income tax | 3,105 | 2,415 | +28.6% |
+| Capital | 8,317 | 8,317 | 0.0% |
+| **After-tax NPV at 10%** | **3,689** | **3,405** | **+8.3%** |
 
-The units are US$ M, against cells the filing rounds to US$ 1 M. Both
-published NPVs are within 0.10%: pre-tax 5,820.2 against 5,826, and after-tax
-3,402.8 against 3,405. All 78 sensitivity points are within 1.57% of the base
-NPV, and four of the six rows are within 0.5%.
+Revenue lands within 4% and operating cost within 3% of a statement built by
+the operator's own consultants from the same physical plan. Capital matches
+exactly, because it is a published total apportioned by material moved.
 
 ## The delta
 
-**The per-column residuals are rounding, not error.** The filing rounds every
-cell to the nearest million and states the rounding in a table note. A derived
-line is a sum or difference of rounded cells. Its bound is therefore the
-number of cells it touches times a half million, plus a half for the printed
-figure it is compared against: 2.00 for EBITDA, which touches nine. No line
-exceeds its bound, and most sit at a third of it. The filing is not internally
-exact either: its printed revenue cells sum to 76,951 against its own printed
-total of 76,952.
+**The cost side reconstructs; the revenue side does not.** Mining, processing
+and general costs all fall within a few percent of the published lines, using
+nothing but published unit rates and published tonnages. That is evidence the
+report discloses enough to rebuild what it costs to run this mine.
 
-**Both NPV residuals have one cause, and it is an assumption rather than
-rounding.** The filing publishes 2046 through 2065 only as four five-year
-buckets. The model divides each bucket evenly across its five years. The true
-profile inside a bucket is not in the document and cannot be recovered from
-it. Nothing else in the model is approximate.
+**Copper is the whole difference, and its levers are not equal.** Moving each
+input across its full published range moves our after-tax NPV by:
 
-**The same assumption causes most of the sensitivity error.** The two price
-rows drift furthest at ±30%, where a large price move changes which years the
-loss shelter covers. An averaged driver is safe for a linear line and unsafe
-for a line with a threshold. The shelter is a threshold: flat bucket income
-never trips it where lumpy income would. Read any case that smooths an input
-with this in mind.
+| lever | move |
+|---|---:|
+| copper price, US$3.30 to the market study's US$3.87 | +2,589 |
+| leach recovery, 26% to the secondary-zone chemistry of 57% | +2,592 |
+| leach recovery, 26% to the mixed-zone floor of 36% | +838 |
+| mill recovery, 83.6% to 78.3% | −666 |
+| payability, 96.7% to 95% | −226 |
+| molybdenum and zinc recovery, across their whole published ranges | under 50 |
 
-**What the case does not claim.** The parent 10-K confirms a 0.5% additional
-royalty on gold, silver and platinum receipts. It is not modeled, because this
-mine's published revenue carries only copper, molybdenum and zinc, so the levy
-cannot be sized from Table 19.1. The report also applies a 7.5% duty across a
-forecast that begins on 1 January 2025, although the 10-K records the Ley
-Federal de Derechos raising the rate to 8.5% from that date. The case
-reproduces what the filing computed. It does not assert that the filing is
-right.
+Molybdenum and zinc do not matter. Mill recovery matters modestly. **Price and
+leach recovery each move the valuation by roughly US$2.6 bn**, and both are
+choices rather than measurements.
+
+**Two unstated judgments carry the case.** The price deck of US$3.30 per pound
+was, in the report's own words, "provided by SCC" — the operator — while the
+Wood Mackenzie market study the same report contains averages US$3.87 over its
+published years. And the leach circuit treats 35% of the contained copper at a
+recovery the report never states; the soluble-species chemistry in Table 11.7
+implies 36% to 57%, while the operator's economics imply materially less.
+
+Our model is 8.3% above the operator's valuation. Set leach recovery to what
+the published chemistry supports and the difference grows rather than closes.
+Take the market study's own price and it grows further. So the difference is
+not arithmetic. The operator's valuation rests on a price below its own market
+study and a leach recovery below its own ore chemistry, and the report explains
+neither.
+
+## What the case does not claim
+
+The 0.5% additional royalty on precious-metal receipts, confirmed in the parent
+Form 10-K, is not modeled: this mine's published revenue carries only copper,
+molybdenum and zinc. The market price curves are not used, because Table 16.2
+runs to 2034 and Table 16.4 to 2029 against a mine that runs to 2065, and
+extending them would mean inventing three decades. Working capital is not
+modeled, since the stated day-counts net to zero over the life. The annual
+capital programme is published only as life-of-mine totals, so it is
+apportioned by material moved.

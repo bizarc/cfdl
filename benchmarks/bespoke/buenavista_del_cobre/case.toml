@@ -1,43 +1,29 @@
 # Benchmark case: the Buenavista del Cobre copper mine, Sonora, Mexico,
 # 2025-2065.
 #
-# 41-year open-pit life, three payable metals at stated prices, six operating
-# cost lines, and the full Mexican fiscal stack -- the Derechos de Mineria at
-# 7.5% of EBITDA, an employee profit share at 10% of EBITDA net of depreciation
-# and the duty, income tax at 30% of what remains less a credit of 30% of the
-# duty, and a loss carryforward that shelters 2043-2045 entirely.
+# THIS CASE DOES NOT REPRODUCE A FILING. It models the mine from the operator's
+# published INPUTS -- the production schedule, unit costs, prices and fiscal
+# rates -- and compares the statement it produces against the operator's
+# published ANSWER. The filing's Table 19.1 is a comparison at the end, never a
+# driver. An earlier version of this case consumed that table's revenue and cost
+# rows and re-derived the arithmetic between them, which made its inputs a
+# function of its outputs and its agreement guaranteed.
 #
-# NO PACK. The second case in the suite written from the bare language, after
-# ppiaf_toll_highway: none of energy/cre/credit/opco describes a mine.
+# NO PACK. Written from the bare language, after ppiaf_toll_highway.
 #
-# Reference: EXTERNAL, and cross-validated. Table 19.1 of the S-K 1300
-# Technical Report Summary for Buenavista del Cobre (WSP USA for Southern
-# Copper, 11 February 2025, Exhibit 96.6 to the FY2024 Form 10-K) is
-# transcribed as published_grid.csv, and its sensitivity matrix as
-# published_sensitivities.csv. reference_gen.py is the independent implementation.
+# WHAT THE HARNESS CHECKS. expected.csv holds the reference implementation's
+# output, so CFDL and the reference are two implementations of the same claims
+# over the same inputs; any daylight is a defect. The comparison to the filing
+# is printed by reference_gen.py and reported in CASE.md, and is deliberately
+# NOT an assertion: it is a finding about the asset, and it moves whenever the
+# recovery assumptions move.
 #
-# WHY THE FISCAL STRUCTURE IS NOT FITTED TO THIS DEAL. Buenavista prints EBITDA
-# and gross income but not the charges between them, so the structure was taken
-# from a DIFFERENT mine -- La Caridad/Pilares, Exhibit 96.7 of the same filing,
-# same author and template -- whose Table 19.1 prints all ten intermediate
-# lines. It reproduces La Caridad to within 0.77 US$ M and Buenavista to within
-# 1.44. Fitting on one deal and validating on another is the whole reason this
-# case is evidence rather than arithmetic.
+# THE FOUR RECOVERY NUMBERS are run-config knobs rather than constants, because
+# the report states no recovery for its cash flow and they are the case's
+# declared uncertainty. Scenarios in run.json walk each to its alternative
+# published basis.
 #
-# THE TOLERANCE IS TIGHT BECAUSE THE COMPARISON IS TWO-STAGE. expected.csv
-# holds the reference's output, not the filing's printed cells, so any daylight
-# between CFDL and the reference is a real defect. The filing's whole-million
-# rounding is absorbed one level up, inside reference_gen.py, which diffs all
-# eight derived lines against the printed figures and fails outside 2.5.
-#
-# Status: verified. 41 periods x 19 columns, 3 metrics and 72 scenarios
-# reproduce; the reference in turn reproduces the filing's 21 printed annual
-# columns inside its rounding, both published NPVs to within 0.10%, and all 78
-# points of the sensitivity matrix to within 1.57% of the base NPV.
-#
-# The four five-year buckets covering 2046-2065 are divided evenly, which is
-# the only assumption the filing does not state. It is the whole of both NPV
-# residuals and most of the error on the two price rows at the extreme steps,
-# where a large price move changes which years the loss shelter covers.
-summary = "A 41-year open-pit copper mine from Southern Copper's SEC technical report, carrying three payable metals, six cost lines and a four-layer Mexican fiscal stack that resolves in one pass without a solver."
+# Status: verified. 41 periods x 16 columns and 3 metrics reproduce at 1e-5.
+# Our after-tax NPV is 3,689 against the filing's 3,405, +8.3%.
+summary = "A 41-year open-pit copper mine, modeled from the operator's published production schedule, unit costs and fiscal rates, and compared against the discounted cash flow the operator published."
 period_tolerance = 0.00001

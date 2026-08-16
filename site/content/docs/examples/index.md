@@ -86,5 +86,5 @@ Complete models for every pack, each checked period by period against an indepen
 
 ### Without a pack
 
-- [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) — A 41-year open-pit copper mine from Southern Copper's SEC technical report, carrying three payable metals, six cost lines and a four-layer Mexican fiscal stack that resolves in one pass without a solver.
+- [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) — A 41-year open-pit copper mine, modeled from the operator's published production schedule, unit costs and fiscal rates, and compared against the discounted cash flow the operator published.
 - [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) — A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x.
