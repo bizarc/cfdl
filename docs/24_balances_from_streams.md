@@ -15,6 +15,10 @@ either. So:
 
 > **A stream cannot update a field, and a subtotal cannot be read.**
 
+The reason is the pass order rather than the expression scope: fields are
+computed in one complete pass before any stream is evaluated, so at the moment
+a recurrence runs there is no cash to read (§5.1a).
+
 Both halves are the same gap seen from two sides: the model produces cash, and
 cannot feed it back into its own state.
 
@@ -224,26 +228,50 @@ Three packs, three domains, one missing edge.
 
 Two changes, both small, neither of them syntax.
 
-**5.1 Implement `docs/14` §3.1.** Put completed stream series into the
-environment a field's `next` is evaluated in, bounded at `t-1`. The bound is
-what keeps the guarantee: every edge still points backward, so no cycle can
-close, and the property stays enforced by absence rather than by a detector.
-`compute_states` already receives what it needs to do this; it builds the
-environment without a series map.
+**5.1 One scalar, not a series.** A recurrence does not need a window over a
+stream's history. Every case in §4 wants the same thing:
 
-Then a balance is what it should have been all along:
-
-```cfdl
-entity asset note_a1 : Credit.Asset.Tranche {
-  balance init 182000000
-          next max(prev - series_sum("notes.distribution.a1_principal",
-                                     time.t - 1.0, time.t - 1.0), 0.0)
-}
+```
+balance(t) = balance(t-1) - paid(t-1)
 ```
 
-and the same shape serves a mortgage (`- series_sum("loan.principal", ...)`), a
-preferred return (`prev * (1 + rate) - series_sum("w.msgw_preference", ...)`),
-and a construction facility that draws and repays.
+which is one number — the previous period's value — and never a range. So the
+capability to add is a *value*, `prev.<stream>` and `prev.<waterfall>.<step>`,
+alongside the `prev.<family>.<entity>.<field>` a recurrence already reads. The
+same keyword, the same meaning: the completed previous column.
+
+```cfdl
+balance init 182000000  next max(prev - prev.notes.distribution.a1_principal, 0.0)
+```
+
+A scalar is not merely sufficient, it is *better* than the series access
+`docs/14` §3.1 describes. A window has to be clamped at `t-1`, and a clamp is a
+check that can be wrong; a scalar cannot reach period `t` because there is
+nothing to address it with. `docs/14`'s own argument for the design was that
+the guarantee is enforced by absence rather than by analysis, and a window
+weakens exactly that. Nor does a window buy anything: a cumulative-to-date
+quantity is itself a recurrence, so anything a window could sum can be
+accumulated one period at a time by a second field.
+
+**5.1a What actually blocks it: the pass order.** Neither form works today, and
+the reason is not the environment's contents. `compute_states` runs as one
+complete pass over every period and returns a whole series per field, and it is
+called *before* any stream is evaluated. A field at period `t` cannot read a
+stream at `t-1` because at that moment no stream has been evaluated at any
+period at all.
+
+`docs/14` §3.2 specifies the interleaving that would fix it:
+
+```
+for t in 0..n:
+    for each state:  value[t] = (t == 0) ? init : next(prev = value[t-1], ...)
+    for each stream: evaluate at t, with state values at t available
+```
+
+The engine runs field-major, then stream-major, then waterfalls. So the work is
+evaluation order, not expression scope — and it is the same restructuring
+whether the exposed quantity is a scalar or a series, which is another reason
+to take the scalar.
 
 **5.2 Widen where waterfall steps are visible.** They already are visible —
 to another waterfall's `from`, under the bare name. They are not visible to a
