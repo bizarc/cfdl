@@ -2207,10 +2207,24 @@ had no way to.
 domain's conventions and cost nothing the language already offered. Today it
 costs the ability to stop the cash, which is not a small thing to lose.
 
-Compare what each construct may declare. `StreamStmt` carries `direction`,
-`currency`, `category`, `schedule`, `amount`, **`active_when`** and **`active in
-state`**. `ContractStmt` carries `subject_entity`, `term_start`, `term_end`,
-`payment_net` and `terms`. There is no gate on a contract, at any grain.
+**The guard already exists where it matters.** A contract lowers into ordinary
+streams, and an IR stream is required to carry `active_when` —
+`docs/05_ir_schema.md` lists it among a stream's required properties, noting
+"If omitted in source, compiler should emit true". So a contract-lowered stream
+structurally *has* the field. Nothing can fill it:
+
+| layer | can it set the guard? |
+|---|---|
+| IR stream | **yes** — `active_when` is a required property |
+| pack lowering rule | **no** — `docs/07` §6.4 defines what a rule may emit (`amount_expr`, `schedule_kind`, `direction`, `category`, `field_name`, …) and `active_when` is not among them. Zero occurrences across all four packs. |
+| `contract` in a model | **no** — `ContractStmt` carries `subject_entity`, `term_start`, `term_end`, `payment_net` and `terms`, and no `active` clause at any grain |
+
+By contrast `StreamStmt` carries `direction`, `currency`, `category`,
+`schedule`, `amount`, **`active_when`** and **`active in state`** — a
+hand-written stream can be gated three ways.
+
+So this is not a capability to build. It is a capability that exists at the
+bottom of the stack and is unreachable from the top.
 
 The consequence, probed in one model with one event and one loan:
 
@@ -2249,15 +2263,18 @@ streams that no model can stop. A loan repaid early, a lease terminated, a
 tenant defaulting, a facility cancelled, a PPA bought out: each is a contract
 whose cash should stop and does not.
 
-Shape, in preference order:
+Shape. The IR needs no change; the two layers above it do.
 
-1. A contract takes `active when <expr>` and `active in state <s>`, and the
-   lowering propagates the guard to **every** stream the contract emits. This
-   is the one that keeps a pack additive: the same clause, on either construct,
-   meaning the same thing.
-2. `deactivate stream` resolves lowered stream names as well as declared ones.
-   Weaker — it names an artifact of lowering rather than the contract — but it
-   would unblock the event route.
+1. **`docs/07` §6.4 gains `active_when` and `active_in_state` as lowering-rule
+   keys**, so a pack can gate the streams it emits. Several rules arguably
+   should already: a lease's TI/LC has no business paying while a unit is dark,
+   and a pool's servicing fee has none once the pool is sold.
+2. **`ContractStmt` gains `active when <expr>` and `active in state <s>`**,
+   propagated to every stream the contract emits. This is the one that restores
+   additivity — the same clause, on either construct, meaning the same thing.
+3. Optionally, `deactivate stream` resolves lowered names as well as declared
+   ones. Weaker, since it names an artifact of lowering rather than the
+   contract, but it would unblock the event route for models that already exist.
 
 The test to keep: for any capability the language gives a stream, a contract
 that lowers to streams should give it too. Anything else makes a pack a
