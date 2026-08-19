@@ -2131,8 +2131,6 @@ it carried in. And it is not a missing waterfall feature — `paid.<step>`,
 `owed.<step>` and `remaining` all work within a period, and `paid.` reaching
 into another waterfall is a compile error.
 
-See `docs/24_balances_from_streams.md` for the design.
-
 Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026;
 narrowed from "a waterfall cannot tell a balance what it paid" to the layer
 order after probing each boundary with no pack active.
@@ -2200,4 +2198,76 @@ backward-only discipline `docs/14` gives a recurrence.
 Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026,
 when the case's cash assertions had to stop at the call date because the model
 had no way to.
+
+---
+
+### 7.40 A pack contract loses capabilities the language gives a stream
+
+**A pack must be additive.** Reaching for a contract should give a modeller the
+domain's conventions and cost nothing the language already offered. Today it
+costs the ability to stop the cash, which is not a small thing to lose.
+
+Compare what each construct may declare. `StreamStmt` carries `direction`,
+`currency`, `category`, `schedule`, `amount`, **`active_when`** and **`active in
+state`**. `ContractStmt` carries `subject_entity`, `term_start`, `term_end`,
+`payment_net` and `terms`. There is no gate on a contract, at any grain.
+
+The consequence, probed in one model with one event and one loan:
+
+```
+loan balance      [1000000, 600000, 200000, 0, 0, 0]
+model-declared    [ -72649,  -72649,  -72649, 0, 0, 0]   stops when paid off
+pack contract     [ -72649,  -72649,  -72649, -72649, -72649, -72649]
+```
+
+A loan that has been repaid keeps taking debt service, because the payments came
+from `cre.permanent_debt` rather than from a stream the model wrote. The same
+model expresses it correctly the moment the pack is dropped:
+
+```cfdl
+stream loan.debt_service on entity asset.bldg outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 72649.0
+  active when asset.bldg.balance > 0.0
+}
+```
+
+**Both routes are closed, not one.** A contract takes no `active` clause, and an
+event cannot reach the streams a contract lowered either:
+
+```
+ERROR[E1302_UNRESOLVED_STREAM_REF] Event 'paid_off' references unknown stream
+'loan.permanent_debt_service'.
+```
+
+`deactivate stream` resolves only against model-declared streams. So a pack's
+cash cannot be gated by a guard, by a lifecycle state, or by an event.
+
+**Every pack is affected**, because the gap is in the contract surface rather
+than in any one pack's rules — `cre`, `credit`, `energy` and `opco` all lower to
+streams that no model can stop. A loan repaid early, a lease terminated, a
+tenant defaulting, a facility cancelled, a PPA bought out: each is a contract
+whose cash should stop and does not.
+
+Shape, in preference order:
+
+1. A contract takes `active when <expr>` and `active in state <s>`, and the
+   lowering propagates the guard to **every** stream the contract emits. This
+   is the one that keeps a pack additive: the same clause, on either construct,
+   meaning the same thing.
+2. `deactivate stream` resolves lowered stream names as well as declared ones.
+   Weaker — it names an artifact of lowering rather than the contract — but it
+   would unblock the event route.
+
+The test to keep: for any capability the language gives a stream, a contract
+that lowers to streams should give it too. Anything else makes a pack a
+trade rather than an addition.
+
+Related: §7.39 wants a contract that ends on a condition rather than a date.
+A guard is the smaller half of that and is worth having on its own — a gated
+contract stops paying, though it does not yet settle what it is worth to stop.
+
+Provenance: found while rebuilding `benchmarks/credit/americredit_2017_1`
+without a pack, August 2026. The pack-free model expressed a payoff correctly on
+the first attempt; the packed one could not express it at all.
 
