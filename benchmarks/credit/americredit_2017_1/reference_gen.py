@@ -90,7 +90,12 @@ def balance_factor(age: float, term: float, rate: float) -> float:
 
 
 def pool_flows(bal0, apr, cutoff, rem, seas, speed, n):
-    """Monthly (opening balance, principal, interest) for one assumed pool.
+    """Monthly (opening balance, principal, interest, fee base) for one pool.
+
+    The fee base is the sum of the balances the servicing fee accrues on within
+    the period — one accrual a month. It is not the opening balance: a
+    January-cutoff pool sits in the first collection period for two months and
+    pays two months of fee, the same fact that gives it two payments.
 
     ABS runs from ORIGINATION: the contracts prepaying each month are a
     constant percentage of the pool's ORIGINAL contract count, so a pool
@@ -108,28 +113,37 @@ def pool_flows(bal0, apr, cutoff, rem, seas, speed, n):
     i = apr / 12.0
     units = lambda age: max(0.0, 1 - age * speed)
     if units(seas) <= 0:
-        return [(bal0, bal0, bal0 * i)] + [(0.0, 0.0, 0.0)] * (n - 1)
+        return [(bal0, bal0, bal0 * i, bal0)] + [(0.0, 0.0, 0.0, 0.0)] * (n - 1)
     n0 = bal0 / (units(seas) * balance_factor(seas, rem + seas, i))
     out, age = [], seas
     for m in range(n):
         payments = (2 if cutoff == 1 else 1) if m == 0 else 1
         opening = n0 * units(age) * balance_factor(age, rem + seas, i)
-        principal = interest = 0.0
+        principal = interest = fee_base = 0.0
         for _ in range(payments):
             b0 = balance_factor(age, rem + seas, i)
             b1 = balance_factor(age + 1, rem + seas, i)
             live = n0 * units(age)
             interest += live * b0 * i
+            fee_base += live * b0
             principal += live * (b0 - b1) + min(n0 * speed, live) * b1
             age += 1
-        out.append((opening, principal, interest))
+        out.append((opening, principal, interest, fee_base))
     return out
 
 
-def run(speed: float, call: bool = True, n: int = DATES):
-    """The deal at one ABS speed. Returns (percent outstanding, WAL by class)."""
+def run(speed: float, call: bool = True, n: int = DATES, lines: list | None = None):
+    """The deal at one ABS speed. Returns (percent outstanding, WAL by class).
+
+    Pass `lines` to collect the distribution itself — every clause of the
+    waterfall, per period — which is what `expected.csv` asserts alongside the
+    balances. Without it the model's twenty-two steps would go unchecked: the
+    balances come from the recurrence, not from the waterfall, so the cash
+    could be wrong while the grid stayed right.
+    """
     flows = [pool_flows(*pool, speed, n) for pool in POOLS]
     balance = dict(ORIG)
+    retired = False
     outstanding = [{c: 1.0 for c in CLASSES}]
     wal = {c: 0.0 for c in CLASSES}
 
@@ -149,19 +163,40 @@ def run(speed: float, call: bool = True, n: int = DATES):
                 amount -= take
             return amount
 
-        # Clauses 1-2: the servicer, then the trustees and the reviewer.
+        # Clauses 1-2: the servicer, then the trustees and the reviewer. The
+        # servicing fee accrues monthly, so the first collection period carries
+        # two accruals on the January-cutoff pools. Charging one month on the
+        # opening pool instead leaves 11 published cells outside the rounding
+        # floor and misses two of the published lives.
         available = principal + interest
-        available -= opening_pool * SERVICING / 12.0 + OTHER_FEES
+        available -= sum(f[m][3] for f in flows) * SERVICING / 12.0 + OTHER_FEES
         # Clauses 3-17: interest by seniority. With no losses assumed the
         # parity steps in between never pay, since the pool always covers the
         # notes.
+        line = {
+            "servicing": sum(f[m][3] for f in flows) * SERVICING / 12.0,
+            "trustee_fees": OTHER_FEES,
+        }
         for c in CLASSES:
+            line[f"{c}_interest"] = balance[c] * RATE[c] / 12.0
             available -= balance[c] * RATE[c] / 12.0
 
-        if call and pool <= CALL * POOL0:
+        called = call and pool <= CALL * POOL0
+        redemption = pool if (called and not retired) else 0.0
+        if called:
+            # The collections for the month still arrive and are still
+            # distributed under clause 18; the redemption price pays off
+            # whatever is left under clause 20. Booking the whole payoff as
+            # accelerated principal would misattribute a month of collections.
+            before = dict(balance)
+            pay_down(principal)
             for c in CLASSES:
+                line[f"{c}_principal"] = before[c] - balance[c]
+            for c in CLASSES:
+                line[f"{c}_accelerated"] = balance[c]
                 paid[c] += balance[c]
                 balance[c] = 0.0
+            retired = True
         else:
             # Clause 18: the Principal Distributable Amount, which is the
             # principal collected LESS the Step-Down Amount. The step-down is
@@ -178,7 +213,10 @@ def run(speed: float, call: bool = True, n: int = DATES):
             # up to 6 points; with it, the worst miss is under 1.
             room = pool - (notes - principal) - OC_FLOOR * POOL0
             step_down = min(step_down, max(0.0, room))
+            before = dict(balance)
             available -= principal - step_down - pay_down(principal - step_down)
+            for c in CLASSES:
+                line[f"{c}_principal"] = before[c] - balance[c]
 
             # Clause 19 pays nothing: the reserve is funded at closing and no
             # losses are assumed, so it is never drawn. Clause 20 is the turbo
@@ -186,10 +224,14 @@ def run(speed: float, call: bool = True, n: int = DATES):
             accelerated = min(
                 max(available, 0.0), max(sum(balance.values()) - required, 0.0)
             )
+            before = dict(balance)
             pay_down(accelerated)
+            for c in CLASSES:
+                line[f"{c}_accelerated"] = before[c] - balance[c]
 
             for c in CLASSES:
                 if m + 1 >= FINAL[c]:
+                    line[f"{c}_accelerated"] += balance[c]
                     paid[c] += balance[c]
                     balance[c] = 0.0
 
@@ -200,6 +242,18 @@ def run(speed: float, call: bool = True, n: int = DATES):
         for c in CLASSES:
             wal[c] += paid[c] * (30 * (m + 1) - 5) / 360.0
         outstanding.append({c: balance[c] / ORIG[c] for c in CLASSES})
+        if lines is not None:
+            # Clause 22: the certificateholder takes the step-down release and
+            # whatever the turbo did not need. Recorded before the deal can end,
+            # so the distribution that exercises the clean-up call is in the
+            # record rather than lost with the loop that pays it.
+            line["residual"] = (
+                principal + interest + redemption
+                - line["servicing"] - line["trustee_fees"]
+                - sum(line[f"{c}_interest"] for c in CLASSES)
+                - sum(line[f"{c}_principal"] + line[f"{c}_accelerated"] for c in CLASSES)
+            )
+            lines.append(line)
         if all(v == 0.0 for v in balance.values()):
             outstanding += [{c: 0.0 for c in CLASSES}] * (n - m - 1)
             break

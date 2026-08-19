@@ -20,6 +20,10 @@ summary = "The note classes of a sub-prime auto ABS that builds its own overcoll
 pack = "credit"
 period_tolerance = 1.00
 
+# The balances come from the recurrence and the cash from the waterfall, and
+# nothing in the language keeps the two in step (backlog 7.37). So every clause
+# is asserted as well as every balance: if the waterfall and the fields drift
+# apart, a cash column breaks even though the grid still matches.
 [tolerance]
 "asset.trust.bal_a1" = 1.00
 "asset.trust.bal_a2" = 1.00

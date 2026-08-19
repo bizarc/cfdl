@@ -60,16 +60,16 @@ because the deal has them.
 
 ## The result
 
-The model agrees with the reference to **4.4 cents** on a $305m class, across
-all seven classes and all 63 periods. Against the published grid, the reference
-reproduces:
+The model agrees with the reference to **5 cents**, across all seven classes,
+every clause of the waterfall and all 63 periods — 32 asserted series, not the
+balances alone. Against the published grid, the reference reproduces:
 
 | | |
 |---|---:|
-| Informative cells inside the whole-percent floor | **184 of 195** |
-| Mean error inside it (0.25 predicted for a correct model) | **0.2479** |
-| Maximum error inside it (0.4973 predicted) | **0.4990** |
-| Published weighted average lives reproduced exactly | **46 of 48** |
+| Informative cells inside the whole-percent floor | **192 of 195** |
+| Mean error inside it (0.25 predicted for a correct model) | **0.2470** |
+| Maximum error inside it (0.4974 predicted) | **0.4990** |
+| Published weighted average lives reproduced exactly | **48 of 48** |
 
 The published grid rounds to whole percentages, so a model that is exactly right
 has errors uniform on [0, 0.5]. The mean and the maximum both sit where that
@@ -77,32 +77,57 @@ distribution puts them, which is stronger evidence than either cell count: a
 model that is subtly wrong shows a biased distribution even when every
 individual cell passes.
 
-Four conventions had to be recovered, none of them stated in the document: a
-January-cutoff pool pays twice before the first distribution; ABS runs from
-origination, which retires four seasoned pools outright at 2.00%; the step-down
-floor is 0.50% of the initial pool; and weighted average life runs 30E/360 from
-closing to the 18th, with a 25-day stub. `NOTES.md` records each, with the
-readings tested and rejected against it.
+Five conventions had to be recovered, none of them stated in the document: a
+January-cutoff pool pays twice before the first distribution, and pays two
+months of servicing fee with it; ABS runs from origination, which retires four
+seasoned pools outright at 2.00%; the step-down floor is 0.50% of the initial
+pool; and weighted average life runs 30E/360 from closing to the 18th, with a
+25-day stub. `NOTES.md` records each, with the readings tested and rejected
+against it.
 
 ## The delta
 
-**Eleven cells sit outside the floor**, by 0.50 to 0.98 of a point. Every one is
-Class A-1 or A-2, in the first six distribution dates, and every one is in the
-same direction: the model retires A-1 slightly slower than the prospectus does.
-The single missed life is A-1 at 1.00% ABS — 0.224 years against a published
-0.23, a rounding-boundary miss rather than a mechanism.
+**Three cells sit outside the floor**, by 0.60 to 0.68 of a point: Class A-1 at
+its second or third distribution date, at three of the four speeds. That is
+about $1.1m of principal in one month on a $182m class, and it is left open
+rather than fitted. The stub first interest period — 25 days on a 30/360 basis
+or 23 actual days from closing to the first payment — was tested and is worse,
+which is the arithmetic consequence of the assumption that every month has 30
+days.
 
-It is a first-period convention worth about $1.5m of principal in month one, and
-it is left open rather than fitted. Three candidate readings were tested and are
-all worse: a stub first interest period on either day count (13 and 16 misses
-against 11 — the arithmetic consequence of the assumption that every month has
-30 days), the servicing fee on the closing rather than the opening pool balance
-(worth $60,000), and a third scheduled payment in the first collection period
-(195 misses).
+Every published weighted average life is reproduced, to call and to maturity.
 
-Mutation testing has not been run. This case has the hole `docs/20` §3.2 warns
-about: the certificateholder's step-down release absorbs whatever the notes are
-not paid, so a residual assertion here would be one-sided by construction.
+## What the case does not assert
+
+- **One speed.** The model runs at 1.50% ABS. The other three published speeds
+  are the same model with `abs_speed` changed, and `docs/20` §2.3 is the reason
+  they are not four directories.
+- **The weighted average lives.** All 48 are reproduced by the reference and
+  none is asserted by the case: `docs/20` §3.1 — a published life still has no
+  series or metric to check it against.
+- **Anything after the clean-up call.** The call retires the notes at period 47
+  and there is no trust left to distribute from, so the cash columns end there.
+  The model's contracts keep amortizing past it, because a contract runs for
+  its declared term and nothing can end it early; the certificateholder absorbs
+  what they produce and `model.total` includes it.
+- **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
+  hole `docs/20` §3.2 warns about is present by construction here: the
+  certificateholder's step-down release absorbs whatever the notes are not
+  paid, so a residual assertion is one-sided.
+
+## What the expectations are, and are not
+
+`expected.csv` is the reference implementation's, not the prospectus's. It
+holds every class balance and every clause of the distribution, so the
+waterfall is pinned as well as the grid — without the cash columns the model's
+twenty-two steps would be unchecked, since the balances come from the
+recurrence rather than from the waterfall.
+
+The two implementations are independent in their arithmetic and **not** in
+their inputs: the model was generated from the same twelve-pool table and the
+same class terms the reference carries, so a transcription error would appear
+in both. What guards the inputs is the published grid itself — 195 informative
+cells at four speeds is not something a mistyped balance or coupon survives.
 
 `model.total` is a regression anchor from this model, not an external figure.
 Every external assertion is the independent reference against the published

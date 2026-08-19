@@ -76,16 +76,16 @@ because the deal has them.
 
 ## The result
 
-The model agrees with the reference to **4.4 cents** on a $305m class, across
-all seven classes and all 63 periods. Against the published grid, the reference
-reproduces:
+The model agrees with the reference to **5 cents**, across all seven classes,
+every clause of the waterfall and all 63 periods — 32 asserted series, not the
+balances alone. Against the published grid, the reference reproduces:
 
 | | |
 |---|---:|
-| Informative cells inside the whole-percent floor | **184 of 195** |
-| Mean error inside it (0.25 predicted for a correct model) | **0.2479** |
-| Maximum error inside it (0.4973 predicted) | **0.4990** |
-| Published weighted average lives reproduced exactly | **46 of 48** |
+| Informative cells inside the whole-percent floor | **192 of 195** |
+| Mean error inside it (0.25 predicted for a correct model) | **0.2470** |
+| Maximum error inside it (0.4974 predicted) | **0.4990** |
+| Published weighted average lives reproduced exactly | **48 of 48** |
 
 The published grid rounds to whole percentages, so a model that is exactly right
 has errors uniform on [0, 0.5]. The mean and the maximum both sit where that
@@ -93,32 +93,57 @@ distribution puts them, which is stronger evidence than either cell count: a
 model that is subtly wrong shows a biased distribution even when every
 individual cell passes.
 
-Four conventions had to be recovered, none of them stated in the document: a
-January-cutoff pool pays twice before the first distribution; ABS runs from
-origination, which retires four seasoned pools outright at 2.00%; the step-down
-floor is 0.50% of the initial pool; and weighted average life runs 30E/360 from
-closing to the 18th, with a 25-day stub. `NOTES.md` records each, with the
-readings tested and rejected against it.
+Five conventions had to be recovered, none of them stated in the document: a
+January-cutoff pool pays twice before the first distribution, and pays two
+months of servicing fee with it; ABS runs from origination, which retires four
+seasoned pools outright at 2.00%; the step-down floor is 0.50% of the initial
+pool; and weighted average life runs 30E/360 from closing to the 18th, with a
+25-day stub. `NOTES.md` records each, with the readings tested and rejected
+against it.
 
 ## The delta
 
-**Eleven cells sit outside the floor**, by 0.50 to 0.98 of a point. Every one is
-Class A-1 or A-2, in the first six distribution dates, and every one is in the
-same direction: the model retires A-1 slightly slower than the prospectus does.
-The single missed life is A-1 at 1.00% ABS — 0.224 years against a published
-0.23, a rounding-boundary miss rather than a mechanism.
+**Three cells sit outside the floor**, by 0.60 to 0.68 of a point: Class A-1 at
+its second or third distribution date, at three of the four speeds. That is
+about $1.1m of principal in one month on a $182m class, and it is left open
+rather than fitted. The stub first interest period — 25 days on a 30/360 basis
+or 23 actual days from closing to the first payment — was tested and is worse,
+which is the arithmetic consequence of the assumption that every month has 30
+days.
 
-It is a first-period convention worth about $1.5m of principal in month one, and
-it is left open rather than fitted. Three candidate readings were tested and are
-all worse: a stub first interest period on either day count (13 and 16 misses
-against 11 — the arithmetic consequence of the assumption that every month has
-30 days), the servicing fee on the closing rather than the opening pool balance
-(worth $60,000), and a third scheduled payment in the first collection period
-(195 misses).
+Every published weighted average life is reproduced, to call and to maturity.
 
-Mutation testing has not been run. This case has the hole `docs/20` §3.2 warns
-about: the certificateholder's step-down release absorbs whatever the notes are
-not paid, so a residual assertion here would be one-sided by construction.
+## What the case does not assert
+
+- **One speed.** The model runs at 1.50% ABS. The other three published speeds
+  are the same model with `abs_speed` changed, and `docs/20` §2.3 is the reason
+  they are not four directories.
+- **The weighted average lives.** All 48 are reproduced by the reference and
+  none is asserted by the case: `docs/20` §3.1 — a published life still has no
+  series or metric to check it against.
+- **Anything after the clean-up call.** The call retires the notes at period 47
+  and there is no trust left to distribute from, so the cash columns end there.
+  The model's contracts keep amortizing past it, because a contract runs for
+  its declared term and nothing can end it early; the certificateholder absorbs
+  what they produce and `model.total` includes it.
+- **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
+  hole `docs/20` §3.2 warns about is present by construction here: the
+  certificateholder's step-down release absorbs whatever the notes are not
+  paid, so a residual assertion is one-sided.
+
+## What the expectations are, and are not
+
+`expected.csv` is the reference implementation's, not the prospectus's. It
+holds every class balance and every clause of the distribution, so the
+waterfall is pinned as well as the grid — without the cash columns the model's
+twenty-two steps would be unchecked, since the balances come from the
+recurrence rather than from the waterfall.
+
+The two implementations are independent in their arithmetic and **not** in
+their inputs: the model was generated from the same twelve-pool table and the
+same class terms the reference carries, so a transcription error would appear
+in both. What guards the inputs is the published grid itself — 195 informative
+cells at four speeds is not something a mistyped balance or coupon survives.
 
 `model.total` is a regression anchor from this model, not an external figure.
 Every external assertion is the independent reference against the published
@@ -225,6 +250,26 @@ entity asset trust : Credit.Asset.LoanPool {
            + (582028732.70 * (max(1.0 - 0.015 * (3.0 + ((time.t) - 1.0)), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (3.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)) * 0.0104741667 + if((time.t) == 1.0, 582028732.70 * (max(1.0 - 0.015 * (2.0), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (2.0), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)) * 0.0104741667, 0.0))
 
 
+  // What the servicing fee accrues on. One accrual a month, so a
+  // January pool carries two of them into the first distribution —
+  // the same fact that gives it two payments. This is NOT the
+  // opening pool balance, and reading it as one costs eleven
+  // published cells and two of the published lives.
+  pool_fee init 0.0
+          next 999357.60 * (max(1.0 - 0.015 * (53.0 + ((time.t) - 1.0)), 0.0) / 0.2050000000) * (pv(0.0131575000, max(61.0 - (53.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0131575000, 8.0, -1.0))
+           + 18401017.06 * (max(1.0 - 0.015 * (53.0 + ((time.t) - 1.0)), 0.0) / 0.2050000000) * (pv(0.0111400000, max(72.0 - (53.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0111400000, 19.0, -1.0))
+           + 3063342.92 * (max(1.0 - 0.015 * (38.0 + ((time.t) - 1.0)), 0.0) / 0.4300000000) * (pv(0.0115650000, max(65.0 - (38.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0115650000, 27.0, -1.0))
+           + 2629247.98 * (max(1.0 - 0.015 * (2.0 + ((time.t) - 1.0)), 0.0) / 0.9700000000) * (pv(0.0102091667, max(48.0 - (2.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0102091667, 46.0, -1.0))
+           + 21301021.93 * (max(1.0 - 0.015 * (3.0 + ((time.t) - 1.0)), 0.0) / 0.9550000000) * (pv(0.0107941667, max(61.0 - (3.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0107941667, 58.0, -1.0))
+           + 285432214.08 * (max(1.0 - 0.015 * (2.0 + ((time.t) - 1.0)), 0.0) / 0.9700000000) * (pv(0.0105358333, max(72.0 - (2.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0105358333, 70.0, -1.0))
+           + (2076350.36 * (max(1.0 - 0.015 * (54.0 + ((time.t) - 1.0)), 0.0) / 0.2050000000) * (pv(0.0129500000, max(61.0 - (54.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0129500000, 8.0, -1.0)) + if((time.t) == 1.0, 2076350.36 * (max(1.0 - 0.015 * (53.0), 0.0) / 0.2050000000) * (pv(0.0129500000, max(61.0 - (53.0), 0.0), -1.0) / pv(0.0129500000, 8.0, -1.0)), 0.0))
+           + (37654758.33 * (max(1.0 - 0.015 * (54.0 + ((time.t) - 1.0)), 0.0) / 0.2050000000) * (pv(0.0114466667, max(72.0 - (54.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0114466667, 19.0, -1.0)) + if((time.t) == 1.0, 37654758.33 * (max(1.0 - 0.015 * (53.0), 0.0) / 0.2050000000) * (pv(0.0114466667, max(72.0 - (53.0), 0.0), -1.0) / pv(0.0114466667, 19.0, -1.0)), 0.0))
+           + (9848795.79 * (max(1.0 - 0.015 * (41.0 + ((time.t) - 1.0)), 0.0) / 0.4000000000) * (pv(0.0115608333, max(67.0 - (41.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0115608333, 27.0, -1.0)) + if((time.t) == 1.0, 9848795.79 * (max(1.0 - 0.015 * (40.0), 0.0) / 0.4000000000) * (pv(0.0115608333, max(67.0 - (40.0), 0.0), -1.0) / pv(0.0115608333, 27.0, -1.0)), 0.0))
+           + (4675311.33 * (max(1.0 - 0.015 * (4.0 + ((time.t) - 1.0)), 0.0) / 0.9550000000) * (pv(0.0106325000, max(49.0 - (4.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0106325000, 46.0, -1.0)) + if((time.t) == 1.0, 4675311.33 * (max(1.0 - 0.015 * (3.0), 0.0) / 0.9550000000) * (pv(0.0106325000, max(49.0 - (3.0), 0.0), -1.0) / pv(0.0106325000, 46.0, -1.0)), 0.0))
+           + (43859779.20 * (max(1.0 - 0.015 * (4.0 + ((time.t) - 1.0)), 0.0) / 0.9550000000) * (pv(0.0109775000, max(61.0 - (4.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0109775000, 58.0, -1.0)) + if((time.t) == 1.0, 43859779.20 * (max(1.0 - 0.015 * (3.0), 0.0) / 0.9550000000) * (pv(0.0109775000, max(61.0 - (3.0), 0.0), -1.0) / pv(0.0109775000, 58.0, -1.0)), 0.0))
+           + (582028732.70 * (max(1.0 - 0.015 * (3.0 + ((time.t) - 1.0)), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (3.0 + ((time.t) - 1.0)), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)) + if((time.t) == 1.0, 582028732.70 * (max(1.0 - 0.015 * (2.0), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (2.0), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)), 0.0))
+
+
   // Class A-1, the balance it carries into the distribution date. It is what
   // it carried in last period less what it was paid then, and the payment is
   // computed here because the waterfall cannot tell it.
@@ -234,7 +279,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -255,7 +300,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -276,7 +321,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -297,7 +342,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -318,7 +363,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -339,7 +384,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -360,7 +405,7 @@ entity asset trust : Credit.Asset.LoanPool {
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
           max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_prior) * 0.0018750000
+           - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (prev.asset.trust.bal_a1 * 0.0007916667
            + prev.asset.trust.bal_a2 * 0.0011331000
@@ -627,8 +672,18 @@ waterfall notes.distribution on entity asset.trust {
   //  3. interest on the Class A-3 Notes
   pay a3_interest to party.a3_holders = asset.trust.bal_a3 * 0.0015916667
 
-  //  4. principal to reduce the Class A balance to the pool balance
-  pay a3_parity to party.a3_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3) - asset.trust.pool_bal, 0.0)
+  //  4. principal to reduce the Class A balance to the pool
+  //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
+  //     classes carry these balances into the distribution, so the
+  //     pool they are compared against is the one it carried in too.
+  //     Against the pool after this period's collections the step
+  //     fires every month once principal collected exceeds
+  //     overcollateralization, and what it would be curing is not
+  //     undercollateralization but the pay-down about to happen at
+  //     clause 18. The prospectus says what these clauses are for —
+  //     'principal payments made to cure this undercollateralization,
+  //     if any then exists' — and with no losses assumed, none does.
+  pay a3_parity to party.a3_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3) - asset.trust.pool_prior, 0.0)
 
   //  5. the remaining Class A balance on its final scheduled date
   pay a3_final to party.a3_holders = if(time.t >= 12.0, asset.trust.bal_a1, 0.0) + if(time.t >= 39.0, asset.trust.bal_a2, 0.0) + if(time.t >= 54.0, asset.trust.bal_a3, 0.0)
@@ -636,8 +691,18 @@ waterfall notes.distribution on entity asset.trust {
   //  6. interest on the Class B Notes
   pay b_interest to party.b_holders = asset.trust.bal_b * 0.0019583333
 
-  //  7. principal to reduce the Class B balance and everything senior to the pool balance
-  pay b_parity to party.b_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b) - asset.trust.pool_bal, 0.0)
+  //  7. principal to reduce the Class B balance and everything senior to the pool
+  //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
+  //     classes carry these balances into the distribution, so the
+  //     pool they are compared against is the one it carried in too.
+  //     Against the pool after this period's collections the step
+  //     fires every month once principal collected exceeds
+  //     overcollateralization, and what it would be curing is not
+  //     undercollateralization but the pay-down about to happen at
+  //     clause 18. The prospectus says what these clauses are for —
+  //     'principal payments made to cure this undercollateralization,
+  //     if any then exists' — and with no losses assumed, none does.
+  pay b_parity to party.b_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b) - asset.trust.pool_prior, 0.0)
 
   //  8. the remaining Class B balance on its final scheduled date
   pay b_final to party.b_holders = if(time.t >= 60.0, asset.trust.bal_b, 0.0)
@@ -645,8 +710,18 @@ waterfall notes.distribution on entity asset.trust {
   //  9. interest on the Class C Notes
   pay c_interest to party.c_holders = asset.trust.bal_c * 0.0024000000
 
-  //  10. principal to reduce the Class C balance and everything senior to the pool balance
-  pay c_parity to party.c_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c) - asset.trust.pool_bal, 0.0)
+  //  10. principal to reduce the Class C balance and everything senior to the pool
+  //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
+  //     classes carry these balances into the distribution, so the
+  //     pool they are compared against is the one it carried in too.
+  //     Against the pool after this period's collections the step
+  //     fires every month once principal collected exceeds
+  //     overcollateralization, and what it would be curing is not
+  //     undercollateralization but the pay-down about to happen at
+  //     clause 18. The prospectus says what these clauses are for —
+  //     'principal payments made to cure this undercollateralization,
+  //     if any then exists' — and with no losses assumed, none does.
+  pay c_parity to party.c_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c) - asset.trust.pool_prior, 0.0)
 
   //  11. the remaining Class C balance on its final scheduled date
   pay c_final to party.c_holders = if(time.t >= 66.0, asset.trust.bal_c, 0.0)
@@ -654,8 +729,18 @@ waterfall notes.distribution on entity asset.trust {
   //  12. interest on the Class D Notes
   pay d_interest to party.d_holders = asset.trust.bal_d * 0.0026916667
 
-  //  13. principal to reduce the Class D balance and everything senior to the pool balance
-  pay d_parity to party.d_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d) - asset.trust.pool_bal, 0.0)
+  //  13. principal to reduce the Class D balance and everything senior to the pool
+  //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
+  //     classes carry these balances into the distribution, so the
+  //     pool they are compared against is the one it carried in too.
+  //     Against the pool after this period's collections the step
+  //     fires every month once principal collected exceeds
+  //     overcollateralization, and what it would be curing is not
+  //     undercollateralization but the pay-down about to happen at
+  //     clause 18. The prospectus says what these clauses are for —
+  //     'principal payments made to cure this undercollateralization,
+  //     if any then exists' — and with no losses assumed, none does.
+  pay d_parity to party.d_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d) - asset.trust.pool_prior, 0.0)
 
   //  14. the remaining Class D balance on its final scheduled date
   pay d_final to party.d_holders = if(time.t >= 71.0, asset.trust.bal_d, 0.0)
@@ -663,8 +748,18 @@ waterfall notes.distribution on entity asset.trust {
   //  15. interest on the Class E Notes
   pay e_interest to party.e_holders = asset.trust.bal_e * 0.0000000000
 
-  //  16. principal to reduce the Class E balance and everything senior to the pool balance
-  pay e_parity to party.e_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - asset.trust.pool_bal, 0.0)
+  //  16. principal to reduce the Class E balance and everything senior to the pool
+  //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
+  //     classes carry these balances into the distribution, so the
+  //     pool they are compared against is the one it carried in too.
+  //     Against the pool after this period's collections the step
+  //     fires every month once principal collected exceeds
+  //     overcollateralization, and what it would be curing is not
+  //     undercollateralization but the pay-down about to happen at
+  //     clause 18. The prospectus says what these clauses are for —
+  //     'principal payments made to cure this undercollateralization,
+  //     if any then exists' — and with no losses assumed, none does.
+  pay e_parity to party.e_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - asset.trust.pool_prior, 0.0)
 
   //  17. the remaining Class E balance on its final scheduled date
   pay e_final to party.e_holders = if(time.t >= 90.0, asset.trust.bal_e, 0.0)
@@ -678,7 +773,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -694,7 +789,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -710,7 +805,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -726,7 +821,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -742,7 +837,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -758,7 +853,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -774,7 +869,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -798,7 +893,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -812,7 +907,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -828,7 +923,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -842,7 +937,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -858,7 +953,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -872,7 +967,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -888,7 +983,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -902,7 +997,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -918,7 +1013,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -932,7 +1027,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -948,7 +1043,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -962,7 +1057,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -978,7 +1073,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -992,7 +1087,7 @@ waterfall notes.distribution on entity asset.trust {
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
           max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_prior) * 0.0018750000
+           - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
            - (asset.trust.bal_a1 * 0.0007916667
            + asset.trust.bal_a2 * 0.0011331000
@@ -1020,7 +1115,7 @@ waterfall notes.distribution on entity asset.trust {
 
 ## Verified results
 
-Checked period by period: **7 series** across **64 periods** — **448 values** in all, each within ±1.00 of the reference.
+Checked period by period: **31 series** across **64 periods** — **1576 values** in all, each within ±1.00 of the reference.
 
 - `asset.trust.bal_a1`
 - `asset.trust.bal_a2`
@@ -1029,6 +1124,30 @@ Checked period by period: **7 series** across **64 periods** — **448 values** 
 - `asset.trust.bal_c`
 - `asset.trust.bal_d`
 - `asset.trust.bal_e`
+- `notes.distribution.servicing`
+- `notes.distribution.trustee_fees`
+- `notes.distribution.a1_interest`
+- `notes.distribution.a2_interest`
+- `notes.distribution.a3_interest`
+- `notes.distribution.b_interest`
+- `notes.distribution.c_interest`
+- `notes.distribution.d_interest`
+- `notes.distribution.e_interest`
+- `notes.distribution.a1_principal`
+- `notes.distribution.a2_principal`
+- `notes.distribution.a3_principal`
+- `notes.distribution.b_principal`
+- `notes.distribution.c_principal`
+- `notes.distribution.d_principal`
+- `notes.distribution.e_principal`
+- `notes.distribution.a1_accelerated`
+- `notes.distribution.a2_accelerated`
+- `notes.distribution.a3_accelerated`
+- `notes.distribution.b_accelerated`
+- `notes.distribution.c_accelerated`
+- `notes.distribution.d_accelerated`
+- `notes.distribution.e_accelerated`
+- `notes.distribution.residual`
 
 Summary metrics for the base run:
 
