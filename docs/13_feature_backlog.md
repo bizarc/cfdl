@@ -2201,11 +2201,17 @@ had no way to.
 
 ---
 
-### 7.40 A pack contract loses capabilities the language gives a stream
+### 7.40 Capabilities are reachable from one layer and not another
 
 **A pack must be additive.** Reaching for a contract should give a modeller the
-domain's conventions and cost nothing the language already offered. Today it
-costs the ability to stop the cash, which is not a small thing to lose.
+domain's conventions and cost nothing the language already offered. Two things
+break that today, in the same shape: a capability exists at one layer of the
+stack and no layer that needs it can reach it. Neither is a capability to build.
+
+#### Instance 1 — a contract cannot be gated, though a stream can
+
+Reaching for a contract costs the ability to stop the cash, which is not a
+small thing to lose.
 
 **The guard already exists where it matters.** A contract lowers into ordinary
 streams, and an IR stream is required to carry `active_when` —
@@ -2283,6 +2289,48 @@ trade rather than an addition.
 Related: §7.39 wants a contract that ends on a condition rather than a date.
 A guard is the smaller half of that and is worth having on its own — a gated
 contract stops paying, though it does not yet settle what it is worth to stop.
+
+#### Instance 2 — the calendar's grain is reachable from a pack and not from a model
+
+A model declares its grain on line 4: `time calendar monthly from 2017-01 for
+71`. The compiler therefore knows how many periods make a year, and the pack
+interface hands it to a lowering rule as `{{model.periods_per_year}}` — used
+throughout all four packs, with `{{model.accrual_divisor}}` beside it for day
+counts. `docs/03` §3 discusses the convention.
+
+An expression cannot read it. Probed under five spellings — `model.periods_per_year`,
+`time.periods_per_year`, `model.grain`, `time.grain`, `time.periods_in_year` —
+every one is an unknown variable, warned, zero.
+
+**It is not a runtime feature the language withholds.** `{{...}}` is a
+compile-time substitution in the pack interface, so the lowered IR carries a
+literal:
+
+```
+amount src: … pv(0.15789 / 12.0, 8.0 - months_between(…), -1.0) …
+```
+
+By the time the IR exists, a pack's arithmetic is exactly what a modeller would
+have typed. The value is the compiler's, the packs are handed it, and models are
+not.
+
+The consequence is that cadence-neutrality is a pack privilege.
+`credit.pool_level_pay` is correct on a quarterly book because the compiler
+substitutes 4; the same pool written by hand needs `assume year_months = 12.0`,
+a constant restating what line 4 already said, silently wrong the moment the
+calendar changes. Every hand-written model that converts an annual rate carries
+that restatement somewhere.
+
+Shape: expose the calendar-derived quantities in the expression environment —
+`model.periods_per_year` at minimum, and `model.accrual_divisor` beside it,
+since a day count and a period count are different questions and a model needs
+both. `docs/03` §3's namespace table is where they belong. Nothing needs
+building; the compiler computes both already.
+
+(One diagnostic to fix while in there: `assume months = 12.0` fails with
+`E0004_EXPECTED_TOKEN` — "Expected identifier after 'assume'" — because
+`months` is a schedule keyword. The message names neither the word nor the
+reason, and a reader who has just written an identifier has nothing to go on.)
 
 Provenance: found while rebuilding `benchmarks/credit/americredit_2017_1`
 without a pack, August 2026. The pack-free model expressed a payoff correctly on
