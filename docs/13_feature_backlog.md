@@ -2321,11 +2321,49 @@ a constant restating what line 4 already said, silently wrong the moment the
 calendar changes. Every hand-written model that converts an annual rate carries
 that restatement somewhere.
 
-Shape: expose the calendar-derived quantities in the expression environment —
-`model.periods_per_year` at minimum, and `model.accrual_divisor` beside it,
-since a day count and a period count are different questions and a model needs
-both. `docs/03` §3's namespace table is where they belong. Nothing needs
-building; the compiler computes both already.
+**And the engine does not merely know it — it publishes it.**
+`crates/cfdl-engine/src/lib.rs:1681` inserts `run.periods_per_year` as a metric,
+"for downstream metric evaluation (e.g. `cfdl-metrics` `wal_years`, which needs
+to convert period indices to years)." So the cadence work is real and has three
+consumers, every one of them outside the model: pack lowering by substitution,
+metric evaluation by this metric, and `make cadence-parity` as a gate. The
+expression environment — the one place a modeller writes arithmetic — is the
+only consumer left out.
+
+**What else a model cannot reach.** Probed the same way, one path per model,
+reading the value directly:
+
+| path | from an expression |
+|---|---|
+| `time.t`, `time.date` | readable |
+| `model.id`, `model.base_currency` | resolve, but are text — usable in a comparison, not in arithmetic |
+| `entity.<x>.net_cash_flow` | resolves to `Optional(None)`: bound and always empty |
+| `run.periods_per_year` | unknown variable |
+| `run.annual_discount_rate` | unknown variable |
+| `run.as_of` | unknown variable |
+| `model.net_cash_flow`, `model.total`, `model.npv`, `model.irr` | unknown variable |
+| `domain.*` subtotals | unknown variable |
+| `time.year`, `time.month`, `year(time.date)`, `month(time.date)` | unknown variable / unknown function |
+
+Three groups, and they want different answers.
+
+**Should be readable, plainly.** `run.periods_per_year` and the day-count
+divisor beside it; `run.annual_discount_rate`, which a hurdle or a
+solve-to-target needs and which every model currently restates as an assumption;
+and the calendar year and month of the current period, which today take
+`months_between(parse_date("…"), time.date)` arithmetic to recover from
+`time.date`.
+
+**Should stay unreadable, and the emptiness should say so.** `model.total`,
+`model.npv`, `model.irr` and the `domain.*` subtotals are results — reading them
+from a model is the circularity the layering exists to prevent.
+`entity.<x>.net_cash_flow` is the same, and it is the one that misleads: it
+resolves rather than erroring, so a model that reads it gets a silent zero and a
+warning about a non-numeric value rather than "this is a result".
+
+**Shape.** Expose the first group in `docs/03` §3's namespace table — nothing
+needs building, the compiler computes all of it. Make the second group a
+diagnostic that names the layer rather than a null that reads as zero.
 
 (One diagnostic to fix while in there: `assume months = 12.0` fails with
 `E0004_EXPECTED_TOKEN` — "Expected identifier after 'assume'" — because
