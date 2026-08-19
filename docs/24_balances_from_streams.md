@@ -18,11 +18,16 @@ either. So:
 Both halves are the same gap seen from two sides: the model produces cash, and
 cannot feed it back into its own state.
 
-`docs/14` §3.1 already specifies the fix, in the environment it gives a
-recurrence: `prev`, `time.*`, `inputs.*`, curves, and *"stream series up to and
-including `t-1`"*. The engine builds that environment from `prev_states` and
-`prev_self` and no series map at all. The specification is right and the
-implementation is missing.
+This is a stated limit of v0.1, not an oversight. `docs/03` §3.1 — the
+authoritative expression environment — says it outright: *"`next` has no series
+access in v0.1. It sees `prev`, `prev.<family>.<entity>.<field>`, `time.*`,
+`inputs.*`, `cfg`, `obs` and curves. Reading a stream's history from a
+recurrence is not expressible."* The engine matches that exactly.
+
+`docs/14` §3.1, the design document, says the opposite — that the environment
+contains *"stream series up to and including `t-1`"*. Two specifications
+disagree and the engine follows the governing one. Whatever is decided about
+the capability, that contradiction is a defect on its own.
 
 ---
 
@@ -64,18 +69,42 @@ only: a stream can read a field, and a field cannot read a stream.
 | a stream reads a field at `t` | works — every waterfall step in the suite does it |
 | a field reads its own previous value | works — `prev` |
 | a field reads another field's previous value | works — `prev.<path>` |
-| a field reads a stream's value at `t-1` | **specified in `docs/14` §3.1, absent from the engine** |
+| a field reads a stream's value at `t-1` | **absent — `docs/03` §3.1 states this; `docs/14` §3.1 contradicts it** |
+| a waterfall's `from` reads another waterfall's step | works, under the name `<waterfall>.<step>` |
 
-Measured, against `target/debug/cfdl`:
+Measured against `target/debug/cfdl`, **with no pack active** — every result
+below is the language's own behavior, not a pack's:
 
 | reader | reads | result |
 |---|---|---|
-| a field's `next` | any series at all | zero, with a warning |
+| a field's `next` | its own `prev`, another field's `prev`, `inputs`, curves | works |
+| a field's `next` | any series at all | fails — and see below |
 | a stream | another stream's series, `0..t-1` | works |
-| a stream | a waterfall step's series | zero, and silently |
+| a stream | a waterfall step's series | fails, warned |
 | a stream that reads a series | another stream that also reads a series | refused: *"A cross-stream read can only see streams that read none"* |
 | a waterfall step | `paid.<step>`, `owed.<step>`, `remaining` of an earlier step | works |
 | a waterfall step | `paid.<step>` of a different waterfall | refused: `E1341_WATERFALL_FORWARD_REF` |
+| a waterfall's `from` | another waterfall's step, as `w1.resid` | **works** |
+| a waterfall's `from` | the same, as `stream.w1.resid` — the documented name | zero, silently |
+
+**A failed `next` does not lose a term, it loses the balance.** The warning
+reads "next evaluation failed ... using 0", and the zero replaces the whole
+expression rather than the unreadable part of it. A running balance written as
+`prev - series_sum(...)` does not hold at `prev`; it goes to zero in the second
+period and stays there:
+
+```
+asset.a.running_control        [1000.0, 990.0, 980.0, 970.0, 960.0]
+asset.a.running_from_waterfall [1000.0,   0.0,   0.0,   0.0,   0.0]
+```
+
+**The documented series name is wrong, and the wrong one fails silently.**
+`docs/03` §3.2 says steps publish as `stream.<waterfall>.<step>` and that
+`series_sum` therefore reaches an earlier waterfall's output from a later
+one's `from`. The capability is real and the name is not: `w1.resid` works and
+`stream.w1.resid` returns zero without a diagnostic, because a name that does
+not exist is not an error. A reader following the specification gets an empty
+pot and no indication of why.
 
 Two facts to take from the second table. First, the missing capability is
 exactly the one `docs/14` §3.1 describes. Second, waterfall step series are
@@ -216,9 +245,13 @@ and the same shape serves a mortgage (`- series_sum("loan.principal", ...)`), a
 preferred return (`prev * (1 + rate) - series_sum("w.msgw_preference", ...)`),
 and a construction facility that draws and repays.
 
-**5.2 Publish waterfall step series into the series map.** A waterfall step is a
-stream and appears in results as one; it is not in the map streams and fields
-read. Without this, §3.1 reaches a mortgage and not a note class.
+**5.2 Widen where waterfall steps are visible.** They already are visible —
+to another waterfall's `from`, under the bare name. They are not visible to a
+stream or to a field. Without widening it, 5.1 reaches a mortgage's principal
+component and not a note class's principal allocation.
+
+Correct `docs/03` §3.2's name in the same change, and decide which of `docs/03`
+§3.1 and `docs/14` §3.1 is the specification.
 
 Neither change adds a keyword. No existing model changes meaning, because
 nothing today can read what these two changes expose.
