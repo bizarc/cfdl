@@ -1347,11 +1347,21 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             ),
         );
     }
-    // States, published for inspection. The `state.` prefix keeps them out of
-    // reach of every cash consumer by construction: the WAL and payback
-    // weightings look up `stream.<name>` keys, the annual rollup iterates
-    // `stream_series`, and `model_series` was summed above from streams alone.
-    // A state never enters model.total, model.npv or any domain metric.
+    // States and fields, published for inspection and never counted as cash.
+    //
+    // WHAT KEEPS THEM OUT IS THE COLLECTION THEY ARE NOT IN, not the name they
+    // publish under. Every cash consumer reads a stream collection: the WAL and
+    // payback weightings look up `stream.<name>` keys, the annual rollup
+    // iterates `stream_series`, and `model_series` and `valued_streams` were
+    // summed above from streams alone, before this map is written. A value that
+    // never entered those cannot reach model.total, model.npv, the IRR or any
+    // domain metric.
+    //
+    // This comment used to say the `state.` prefix was the guard, which stopped
+    // being true when a field started publishing under its owning entity —
+    // `asset.pool.balance` carries no prefix and is out anyway. Preserving the
+    // prefix while breaking the collection boundary would keep the sentence
+    // true and the invariant lost, so the boundary is what this names.
     for (name, values) in &state_values {
         // A FIELD PUBLISHES UNDER THE THING THAT OWNS IT. `state.` names a
         // model-level state, and a field is not one — it is `asset.pool.balance`
