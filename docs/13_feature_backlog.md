@@ -2288,3 +2288,57 @@ Provenance: found while rebuilding `benchmarks/credit/americredit_2017_1`
 without a pack, August 2026. The pack-free model expressed a payoff correctly on
 the first attempt; the packed one could not express it at all.
 
+---
+
+### 7.41 Invariants the gates do not check
+
+`make ci` runs fifteen gates and every one of them checks an *output*: goldens
+match, benchmark cases reconcile, examples compile, prose conforms. None checks
+an *invariant* — a property the engine must hold whatever a model says. Each of
+the following is mechanical, and each corresponds to something that went wrong
+this month and was found by hand.
+
+**1. Cash purity.** No field, subtotal, entity rollup or waterfall step may
+enter `model_series` or `valued_streams`. The engine holds this by construction
+today, and `crates/cfdl-engine/src/lib.rs:1350` explains why — but the
+explanation was stale for a year, naming a `state.` prefix that stopped being
+the guard when fields began publishing under their owning entity. A gate:
+build a model carrying a field, a cumulative subtotal and a waterfall, and
+assert `model.net_cash_flow` equals the sum of the stream series to the cent.
+Would catch anyone "fixing" the comment's mechanism and losing the real one.
+
+**2. Pack additivity.** For every clause `StreamStmt` accepts, `ContractStmt`
+should accept it too or waive it explicitly. §7.40 is what the absence costs: a
+contract cannot be gated, so a repaid loan keeps paying. A gate comparing the
+two surfaces would have caught it the day the second clause was added to
+streams, rather than in a benchmark three packs later.
+
+**3. A series read that cannot resolve.** `W5022` warns when a name matches
+nothing, and stays silent when a name exists but is invisible from where it is
+read — which is the case that actually bites. A waterfall step reading its own
+waterfall's prior payments returns zero with no diagnostic, and a preferred
+return written from `docs/17` §10 is then paid in full six times. A gate: for
+every series reference in every fixture, assert it resolves in the context it
+appears in.
+
+**4. One path, one value.** An entity field that a recurrence computes and an
+event writes publishes the recurrence's answer while every stream and waterfall
+reads the event's: `1000, 1010, 1020, 1030…` published against
+`1000, 1010, 500, 500…` read, diverging permanently after the write. A gate
+asserting a single value per path per period would have caught it; a benchmark
+asserting that field would bless a number no stream ever saw.
+
+**5. A distribution's pot.** `docs/17` §4 says the pot a waterfall allocates is
+this period's cash. 29 of 31 waterfalls in the repository build their own out of
+assumptions, literals, pack-internal stream ids or hand-maintained fields
+(`docs/25`). Until cash-available is bindable there is nothing to assert
+against, but the weaker check is available now: flag a `from` expression that
+names a stream a pack lowered, since a model reaching into another layer's
+internals is the shape that breaks when the pack changes.
+
+The first four are cheap and would each have turned a week of hand-probing into
+a failing gate. The fifth waits on the capability.
+
+Provenance: every item is a defect found by hand in August 2026 while writing
+`benchmarks/credit/americredit_2017_1` and auditing what it exposed.
+
