@@ -87,6 +87,7 @@ checked, and a write-up of the reference and the residual.
 | [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalizing interest through the build, then stabilizing and refinancing. |
 | [CRE: office development, through the pack contract](/docs/examples/cre-one-lincoln-street-contract) | The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance. |
 | [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip center with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
+| [Credit: auto ABS with a step-down and a turbo](/docs/examples/credit-americredit-2017-1) | The note classes of a sub-prime auto ABS that builds its own overcollateralization: a 22-step waterfall where excess cash accelerates principal toward a target and principal beyond it is retained rather than paid. |
 | [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortizing to schedule with prepayments taken as a constant share of the original balance. |
 | [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) | The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens. |
 | [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) | The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date. |
@@ -115,7 +116,7 @@ checked, and a write-up of the reference and the residual.
 | [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) | A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*39 cases.*
+*40 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

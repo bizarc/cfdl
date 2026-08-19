@@ -1,0 +1,30 @@
+# Benchmark case: the NOTE CLASSES of a sub-prime auto ABS that has to build
+# its own credit enhancement, against the issuer's published percent-outstanding
+# grid.
+#
+# `auto_abs_tranches` takes the sequential-pay axis of a deal whose exhibit
+# assumes no losses and whose notes therefore never had to build anything. This
+# one turbos: excess cash accelerates principal until overcollateralization
+# reaches 14.75% of the pool net of the reserve, and principal that would take
+# the notes BELOW that target is retained rather than paid — the Step-Down
+# Amount — subject to a floor of 0.50% of the initial pool.
+#
+# The expectations are the reference implementation's, not the prospectus's:
+# the published grid is whole percentages, and `reference_gen.py` is what
+# checks against it — 184 of 195 informative cells inside the grid's own
+# rounding floor, 46 of the 48 published lives exact. The tolerances here are
+# therefore tight rather than rounding-derived, because both sides are ours and
+# a dollar of drift between them is a defect rather than a rounding artefact.
+# Worst observed disagreement is 4.4 cents on a $305m class.
+summary = "The note classes of a sub-prime auto ABS that builds its own overcollateralization: a 22-step waterfall where excess cash accelerates principal toward a target and principal beyond it is retained rather than paid."
+pack = "credit"
+period_tolerance = 1.00
+
+[tolerance]
+"asset.trust.bal_a1" = 1.00
+"asset.trust.bal_a2" = 1.00
+"asset.trust.bal_a3" = 1.00
+"asset.trust.bal_b" = 1.00
+"asset.trust.bal_c" = 1.00
+"asset.trust.bal_d" = 1.00
+"asset.trust.bal_e" = 1.00

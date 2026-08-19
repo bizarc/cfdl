@@ -2047,3 +2047,55 @@ Provenance: found modeling the Buenavista del Cobre lifecycle
 (`benchmarks/bespoke/buenavista_del_cobre`), August 2026 — the mine's one-way
 transitions fit the latch exactly, and asking what a recurring condition
 would look like had no answer.
+
+---
+
+### 7.37 A waterfall cannot tell a balance what it paid
+
+A note class's balance is the deal's central state: it sets the interest due,
+it sets what principal the class can absorb, and it is the quantity every
+published decrement table states. It is also, in this language, the one thing a
+waterfall cannot maintain.
+
+A field's recurrence reads `prev` and other fields' previous values.
+`docs/14` §3.1 also puts **stream series up to and including `t-1`** in that
+environment — "It does not contain any stream value at period `t`" — but
+`compute_states` (`crates/cfdl-engine/src/lib.rs`) builds the environment with
+`env.prev_states` and `env.prev_self` and never a series map. Probed directly:
+a field whose `next` is `series_sum("w.step_a", time.t - 1, time.t - 1)`
+evaluates to zero for every period, and so does `series_sum("*", ...)` and a
+read of the pack's own `credit.pool.sched_principal.*`. A recurrence sees no
+series at all — not a waterfall's, not a contract's.
+
+The consequence, in a deal whose principal payment depends on cash rather than
+on collateral alone:
+
+```cfdl
+// what the deal says, and what cannot be written
+bal_a1 init 182000000 next prev - paid.a1_principal
+```
+
+`benchmarks/credit/americredit_2017_1` needs exactly that. Its principal
+payment is the sum of a step-down-adjusted distributable amount and whatever
+excess cash the turbo needs, so it is not a closed form of the pool — the
+trick `auto_abs_tranches` uses, where a class's pay-down is cumulative pool
+principal clamped between two constants, does not reach it. The case therefore
+states the distribution **twice**: once lagged, inside seven balance fields, and
+once at the current period, inside the waterfall that pays the cash. The two
+must agree and nothing enforces it.
+
+Two things this is not. It is not the recurrence being backward-only — reading
+`t-1` is exactly right here, since a class's balance at a distribution date is
+what it carried in. And it is not a missing waterfall feature: the twenty-two
+clauses express cleanly, and `paid.<step>` already lets a later step read an
+earlier one **within** a period.
+
+The smallest fix is the one `docs/14` already describes: put completed series
+in the recurrence environment, bounded at `t-1`, which keeps every edge
+pointing backward and cannot close a cycle. Either implement it or correct
+§3.1, because the specification currently promises a capability the engine does
+not have.
+
+Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026,
+after two probes established that neither a field nor a waterfall step can read
+a waterfall's output.

@@ -621,6 +621,7 @@ const benchmarkTitles = {
   "cre/one_lincoln_street_contract":
     "CRE: office development, through the pack contract",
   "cre/retail_strip": "CRE: retail strip with expense stops",
+  "credit/americredit_2017_1": "Credit: auto ABS with a step-down and a turbo",
   "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
   "credit/auto_abs_speed_150": "Credit: auto ABS at 1.5x prepayment speed",
   "credit/auto_abs_tranches": "Credit: auto ABS note classes",

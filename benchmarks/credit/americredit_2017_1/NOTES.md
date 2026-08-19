@@ -4,8 +4,8 @@ What the reference implementation had to recover, and what it has not.
 
 Status: the reference reproduces **184 of 195 informative cells** inside the
 grid's own whole-percent rounding floor, and **46 of the 48 published weighted
-average lives** exactly. The CFDL model is not written yet; this file records
-the conventions it will have to carry.
+average lives** exactly. The CFDL model agrees with it to **4.4 cents** on a
+$305m class, across seven classes and all 63 periods.
 
 ## The error distribution
 
@@ -129,3 +129,55 @@ Mutation testing has not been done yet. `docs/20` §3.3 asks for it, and this
 case has an obvious hole to check: a residual assertion would be one-sided
 here, because the certificateholder's step-down release absorbs anything the
 notes are not paid.
+
+
+## The model, and the arithmetic it has to state twice
+
+A class balance is a field. A field cannot read what the waterfall paid it —
+see `docs/13` §7.37 — so `model.cfdl` states the distribution twice: once
+lagged, inside the seven balance fields, and once at the current period, inside
+the twenty-two clauses that pay the cash. Nothing enforces that they agree.
+That is the case's structural weakness and it is worth knowing before reading
+the file.
+
+Three fields carry the collateral as closed forms of the twelve assumed pools —
+`pool_bal`, `pool_prior` and `pool_int` — for the same reason: a recurrence
+cannot read the pack's own series either. The pack contracts produce the cash
+the waterfall allocates, so the pool is stated twice as well, independently,
+and both are pinned to the published grid through `expected.csv`.
+
+## The distribution, in four lines instead of forty
+
+The first model wrote the deal the way the prospectus does — a Step-Down Amount
+subtracted from the Principal Distributable Amount, then an Accelerated
+Principal Amount capped by both available cash and the distance to target — and
+the expression ran past forty lines per class, most of it the same
+subexpressions repeated at different depths.
+
+The same arithmetic collapses to a statement about where the notes END the
+period:
+
+```
+ending = min(pool - floor, max(required, notes - principal - max(excess, 0)))
+```
+
+The notes finish at the required balance; cash may stop them getting there; and
+overcollateralization may not fall below the floor. Clause 18 is then
+`min(total, principal)` and clause 20 is `max(total - principal, 0)`, which is
+what those clauses mean — collections first, excess cash after.
+
+Checked rather than assumed: the two formulations agree to **$0.0000** at all
+four published speeds, on every class and every period. The prospectus's form
+is the one that explains *why*; this one is the one that fits on a page.
+
+## What the model does not carry
+
+- **The final scheduled distribution dates are written but inert.** With no
+  losses assumed every class retires years early, so clauses 5, 8, 11, 14 and
+  17 pay nothing at every period and every speed. They are in the model because
+  the deal has them.
+- **The parity clauses are inert for the same reason.** The pool always exceeds
+  the notes, so clauses 4, 7, 10, 13 and 16 pay nothing.
+- **One speed.** The case runs at 1.50% ABS. The other three published speeds
+  are this model with `abs_speed` changed, and `docs/20` §2.3 is the reason
+  they are not four directories.

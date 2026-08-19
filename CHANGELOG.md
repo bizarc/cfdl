@@ -8,6 +8,38 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: AmeriCredit 2017-1 — an auto ABS that builds its own enhancement
+
+`benchmarks/credit/americredit_2017_1` reproduces the percent-outstanding grid
+a sub-prime auto ABS publishes for six note classes at four ABS speeds, plus a
+weighted average life to call and to maturity for each. It is the first case in
+the suite whose notes have to build credit enhancement rather than simply
+receive collections: excess cash accelerates principal toward 14.75%
+overcollateralization net of the reserve, and principal beyond the target is
+retained as a Step-Down Amount rather than paid, subject to a floor of 0.50% of
+the initial pool.
+
+The reference implementation reproduces **184 of 195 informative cells** inside
+the grid's own whole-percent rounding floor — mean error 0.2479 against the
+0.25 a correct model predicts, maximum 0.4990 against 0.4973 — and **46 of the
+48 published lives** exactly. The CFDL model agrees with it to 4.4 cents on a
+$305m class across every class and period.
+
+Four conventions the prospectus does not state had to be recovered, each by
+testing candidate readings against all four published speeds: a January-cutoff
+pool pays twice before the first distribution; ABS runs from origination, which
+retires four seasoned pools outright at 2.00%; the step-down floor is 0.50% of
+the initial pool; and weighted average life runs 30E/360 from closing to the
+18th with a 25-day stub. Eleven cells remain outside the floor, all Class A-1
+or A-2 in the first six months; three candidate explanations were tested and
+rejected rather than fitted.
+
+**Found by building it:** a waterfall cannot tell a balance what it paid.
+`docs/14` §3.1 puts completed stream series in a recurrence's environment;
+`compute_states` supplies none, so a class balance can only be maintained by
+restating the distribution in field-land. The case states its waterfall twice
+as a result. Recorded as backlog 7.37.
+
 ### Added: a writing standard, and the documentation held to it — backlog 7.28–7.35
 
 The documentation estate — cfdl.dev, learn.cfdl.dev, and every source that

@@ -230,7 +230,7 @@ def check() -> int:
                 if error > 0.5:
                     misses.append((s, c, date, error))
             rows.append(row)
-    with open(HERE / "reference_grid.csv", "w", newline="") as f:
+    with open(HERE / "reference_grid.csv", "w", newline="\n") as f:
         csv.writer(f).writerows(rows)
 
     wal_published = {
