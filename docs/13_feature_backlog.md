@@ -2428,3 +2428,85 @@ a failing gate. The fifth waits on the capability.
 Provenance: every item is a defect found by hand in August 2026 while writing
 `benchmarks/credit/americredit_2017_1` and auditing what it exposed.
 
+---
+
+### 7.42 The discount rate is a run-config item and the specification implies otherwise
+
+Discounting belongs to the run, not the deal: the same cash flows are valued at
+different rates by different readers, and a scenario should be able to move the
+rate without editing the model. The engine implements that — `config.discount_rate`
+drives `npv_at_grain` and `npv_with_offsets`, and is republished as
+`run.annual_discount_rate`.
+
+The specification says something else. `docs/01` §12.1 introduces deterministic
+assumptions with exactly this example:
+
+```cfdl
+assume discount_rate = 0.10
+```
+
+which does nothing. Measured, with `assume discount_rate = 0.25` in the model:
+
+| run config | `model.npv` |
+|---|---:|
+| 0.03 | 2,828.61 |
+| 0.10 | 2,486.85 |
+
+The model's figure is ignored at both. A reader following the specification's
+own illustration sets the deal's discount rate, sees a plausible NPV, and is
+looking at the run's default.
+
+To do:
+
+1. **Change the example.** §12.1 should illustrate a deterministic assumption
+   with something a model can actually drive — a growth rate, a fee, a speed.
+2. **Say where the rate lives.** The specification should state that discounting
+   is a run-configuration concern and name `annual_discount_rate`, so the
+   question "where do I set this" has an answer in the document that defines
+   assumptions.
+3. **Consider a diagnostic.** An `assume` whose name matches a run-config knob
+   is more likely a misunderstanding than a coincidence, and a warning naming
+   the config field would close the trap for good.
+
+Provenance: found while writing a model without a pack, August 2026 — the
+assumption was declared, the NPV moved with the config, and nothing said so.
+
+---
+
+### 7.43 A model has no statement, and the language already knows how to build one
+
+Without a pack, a model's only structured view of its own cash is the entity
+rollup: `entity.<symbol>.net_cash_flow`, one series per entity, aggregated
+through `part of`. That axis is language-level and correct — twelve pools rolled
+into a trust to within 2e-06 in the pack-free AmeriCredit model, identical to
+the packed one.
+
+What is missing is any presentation of it. A pack supplies subtotals and a
+statement — `packs/credit/statements.toml` folds stream *categories* into
+`gross_collections`, `principal_collections`, `servicing_fee`,
+`net_collections`, shaped like a servicer remittance report — and a model
+without a pack gets **zero** `domain.*` series. Both models compute the same
+cash: `net_collections` and `entity.asset.trust.net_cash_flow` agree exactly at
+40,000,924.84. Only one can say what it is made of.
+
+**The language should ship a default statement organized by the axis it already
+has.** No declarations, no categories, no pack: the entity tree, each node's
+cash, and its children beneath it. That is derivable today from `part of` and
+the per-entity fold, and it would give every model — including one written in an
+afternoon with no pack — a readable cash flow rather than a flat list of series
+keyed by symbol.
+
+One thing that has to change to make it useful. The engine computes
+`entity_own` (an entity's own streams) and then publishes only `entity_rollup`
+(its own plus its children's). A parent's own cash is therefore invisible in
+results: a trust with twelve pools and a fee of its own shows one number, and no
+reader can separate the fee from the pools. A statement by hierarchy needs both,
+so `entity_own` should be published alongside the rollup.
+
+A declarable statement structure — the pack's fold, available to a model that
+wants to name its own lines — is worth having too, and is the larger job. The
+default by hierarchy needs nothing new.
+
+Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
+pack-free model, August 2026.
+
