@@ -2047,3 +2047,157 @@ Provenance: found modeling the Buenavista del Cobre lifecycle
 (`benchmarks/bespoke/buenavista_del_cobre`), August 2026 — the mine's one-way
 transitions fit the latch exactly, and asking what a recurring condition
 would look like had no answer.
+
+---
+
+### 7.37 A recurrence cannot read cash, because cash does not exist yet
+
+A note class's balance is the deal's central state: it sets the interest due, it
+sets what principal the class can absorb, and it is the quantity every published
+decrement table states. It is `prev` minus what was paid, and that one
+subtraction cannot be written.
+
+**One number, not a series.** The shape every case wants is
+
+```
+balance(t) = balance(t-1) - paid(t-1)
+```
+
+so what is missing is a *value*, not a window: `prev.<stream>` and
+`prev.<waterfall>.<step>`, beside the `prev.<family>.<entity>.<field>` a
+recurrence already reads. Same keyword, same meaning — the completed previous
+column.
+
+```cfdl
+balance init 182000000  next max(prev - prev.notes.distribution.a1_principal, 0.0)
+```
+
+A scalar is better than the series access `docs/14` §3.1 describes, not merely
+smaller. A window must be clamped at `t-1`, and a clamp is a check that can be
+wrong; a scalar has no way to name period `t` at all. That is `docs/14`'s own
+argument — the guarantee enforced by absence rather than by analysis. Nor does a
+window buy anything: a cumulative-to-date quantity is itself a recurrence, so
+whatever a window could sum, a second field can accumulate.
+
+**Why neither form works: the layers.** The engine evaluates in complete
+layers, each finishing before the next begins.
+
+| | layer | sees |
+|---|---|---|
+| 1 | fields | `prev`, other fields' `prev`, inputs, curves |
+| 2 | events | fields; writes become visible to later layers |
+| 3 | streams | fields, event writes, phase-1 streams |
+| 4 | subtotals | stream categories — folded for statements |
+| 5 | waterfalls | fields, event writes, streams, earlier waterfalls |
+
+`compute_states` runs as one pass over every period and returns a whole series
+per field, before any stream is evaluated. So a field at `t` cannot read cash at
+`t-1` because at that moment no cash exists at any period. `docs/14` §3.2
+already specifies the interleaving that would fix it — `for t: for each state;
+for each stream` — and the engine runs layer-major instead. **The work is
+evaluation order, not expression scope**, and it is the same restructuring for a
+scalar or a series, which is one more reason to take the scalar.
+
+**Pinned as a test.** `fixtures/valid/evaluation_order` reads the boundaries
+rather than asserting them:
+
+- an event fires on a **field** crossing a threshold, and the waterfall sees the
+  write — `20000, 20000, 50000, 50000`;
+- an event guarding on **cash** never fires, and warns that the series is not
+  available. Interest is under the trigger in every period; the guard cannot see
+  it;
+- `domain.credit.*` carries the pool's collections and none of the waterfall's
+  payments, because subtotals are folded at layer 4 and the waterfall runs at
+  layer 5. **A distribution never reaches a statement.**
+
+The last of these is worth its own line: it means the collections statement
+describes what the assets produced and can say nothing about who was paid.
+
+**What the ordering costs, in three packs.** A mortgage has no readable
+outstanding balance, so no loan-to-value covenant, no debt yield, no cash sweep
+— `cre.permanent_debt` stays closed-form because the alternative cannot be
+written. A JV preference accretes and never learns what was distributed, so
+`fixtures/valid/waterfall_cre_jv_promote` compounds on the full balance whether
+or not the pot could pay it. And `benchmarks/credit/americredit_2017_1` carries
+seven balances that each recompute the whole distribution a period lagged,
+because the waterfall cannot tell them what it paid. That case shipped its first
+model with the servicing fee right in the waterfall and wrong in the
+recurrence — eleven published cells and two published weighted average lives —
+and nothing in the language could have caught it.
+
+Two things this is not. It is not the recurrence being backward-only: reading
+`t-1` is exactly right, since a class's balance at a distribution date is what
+it carried in. And it is not a missing waterfall feature — `paid.<step>`,
+`owed.<step>` and `remaining` all work within a period, and `paid.` reaching
+into another waterfall is a compile error.
+
+See `docs/24_balances_from_streams.md` for the design.
+
+Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026;
+narrowed from "a waterfall cannot tell a balance what it paid" to the layer
+order after probing each boundary with no pack active.
+
+---
+
+### 7.38 A misspelled series reads as zero, in silence
+
+`series_sum("no.such.series", 0, time.t)` in a stream returns 0.0 for every
+period and emits nothing — no diagnostic at compile time, no warning at run
+time. The same read inside a field's `next` does warn: *"series `w.step_a` is
+not available in this context; using 0"*. One of the two is wrong, and it is
+not the field.
+
+A stream that reads a series which does not exist has almost certainly been
+mistyped, or names something the model no longer produces. Reading it as zero
+is the worst available answer: a benchmark case can go green while asserting a
+line it never computed, and `expected.csv` will agree with it, because zero is
+a number.
+
+Cheapest fix: resolve series names at compile time against what the model
+lowers to, and refuse the unknown ones. If a late-bound name is genuinely
+needed, the run-time path should at minimum warn as the recurrence already
+does.
+
+Provenance: found probing 7.37, August 2026, when a waterfall step's series
+read as zero and the only reason that was visible at all was a field warning
+about a different read.
+
+---
+
+### 7.39 A clean-up call cannot end a deal
+
+Every amortizing securitization has a clean-up call: once the pool falls to
+some fraction of its original size — 10% in `benchmarks/credit/americredit_2017_1`
+— the servicer buys the remaining receivables, the notes are redeemed in full,
+and the trust is over. The redemption is expressible; the *ending* is not.
+
+A `contract` runs for its declared term. Nothing can stop it early, so the pack
+keeps amortizing the twelve pools for the eleven periods after the call, the
+waterfall keeps collecting the cash they produce, and the certificateholder
+takes it. The case handles it by asserting nothing after the call and saying so,
+which is honest and is not a model of the deal: the receivables were sold.
+
+It reaches further than a clean-up call. An asset sale, a prepayment in full, a
+maturity acceleration, a lease termination and a default are the same shape — a
+declared term ended by a condition rather than by a date — and the CRE and
+opco packs will want it as much as this one does.
+
+Shape: a contract-level termination condition, evaluated per period, that stops
+the contract's series and optionally emits a terminal amount.
+
+```cfdl
+contract credit.pool_level_pay.p01 on entity asset.p01 {
+  term 2017-01..2022-10
+  ends when domain.credit.balance_outstanding <= 0.10 * inputs.cutoff_balance
+  terminal_amount = domain.credit.balance_outstanding
+}
+```
+
+The evaluation order is the question worth thinking about, not the syntax: the
+condition reads a quantity the contract itself produces, so it wants the same
+backward-only discipline `docs/14` gives a recurrence.
+
+Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026,
+when the case's cash assertions had to stop at the call date because the model
+had no way to.
+

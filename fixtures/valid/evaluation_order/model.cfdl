@@ -1,0 +1,74 @@
+version 0.1
+model "evaluation-order"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2017-01 for 4
+
+// WHAT EACH LAYER CAN SEE, pinned as a test rather than asserted in a document.
+//
+// The engine evaluates in layers, each complete before the next begins:
+//
+//   1. fields      — every field, every period
+//   2. events      — every period, reading fields; writes are visible later
+//   3. streams     — phase 1, then phase 2 (which may read phase 1)
+//   4. subtotals   — folds of stream categories, for statements
+//   5. waterfalls  — read fields, event writes, streams, earlier waterfalls
+//
+// A layer sees what finished before it and nothing after, and this fixture is
+// four readings that show where the boundaries fall:
+//
+//   `reads_fee_rate`  — an event fires on a FIELD crossing a threshold, and
+//                       the waterfall sees the write: 20000 for two periods,
+//                       then 50000.
+//   `reads_cash_flag` — an event guard reading CASH never fires, because no
+//                       stream exists when events are simulated. Zero
+//                       throughout, with a warning naming the series.
+//   `domain.credit.*` — subtotals carry the pool's collections and none of the
+//                       waterfall's payments: subtotals are folded before the
+//                       waterfall runs, so a distribution never reaches a
+//                       statement.
+//   `dist.from`       — a waterfall CAN read a stream, which is the one
+//                       direction across the boundary that works.
+//
+// See `docs/03_expression_environment.md` §3.1 and §3.2 for the rules, and
+// `docs/13_feature_backlog.md` §7.37 for what the ordering costs.
+
+entity asset pool : Credit.Asset.LoanPool {
+  collateral_type = "auto"
+  trigger_level = 700000.0
+  cash_trigger = 200000.0
+
+  // A field moves on its own values, which is the one recurrence that works.
+  running init 1000000.0 next max(0.0, prev - 150000.0)
+  fee_rate init 0.02
+  cash_flag init 0.0
+}
+
+entity party investor : Credit.Party.Investor { name = "Investor" }
+
+contract credit.pool_level_pay.one on entity asset.pool {
+  term 2017-01..2017-04
+  terms { balance = 1000000 rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
+}
+
+// Fires at period 2, when the field reaches the level.
+event field_threshold when asset.pool.running <= asset.pool.trigger_level {
+  set entity asset.pool.fee_rate = 0.05
+}
+
+// Never fires. Interest is below the trigger in every period, and the guard
+// cannot see it: events are simulated before any stream is evaluated.
+event cash_threshold when series_sum("credit.pool.interest.*", time.t, time.t)
+                         < asset.pool.cash_trigger {
+  set entity asset.pool.cash_flag = 1.0
+}
+
+waterfall dist on entity asset.pool {
+  schedule every month from 2017-01 to 2017-04
+  // A waterfall reads streams. This is the boundary crossing that works.
+  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
+       + series_sum("credit.pool.interest.*", time.t, time.t)
+
+  pay reads_fee_rate  to party.investor = asset.pool.fee_rate * 1000000.0
+  pay reads_cash_flag to party.investor = asset.pool.cash_flag * 111.0
+  pay residual        to party.investor = remaining
+}

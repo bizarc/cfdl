@@ -55,6 +55,7 @@ Complete models for every pack, each checked period by period against an indepen
 
 ### Credit
 
+- [Credit: auto ABS with a step-down and a turbo](/docs/examples/credit-americredit-2017-1) — The note classes of a sub-prime auto ABS that builds its own overcollateralization: a 22-step waterfall where excess cash accelerates principal toward a target and principal beyond it is retained rather than paid.
 - [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) — An auto loan pool prepaying at 0.5 ABS, amortizing to schedule with prepayments taken as a constant share of the original balance.
 - [Credit: auto ABS at 1.5x prepayment speed](/docs/examples/credit-auto-abs-speed-150) — The same auto loan pool at 1.5 ABS, three times the prepayment speed, showing how the collection profile shortens.
 - [Credit: auto ABS note classes](/docs/examples/credit-auto-abs-tranches) — The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date.

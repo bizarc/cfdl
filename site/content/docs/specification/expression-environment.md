@@ -222,9 +222,25 @@ A step also sees everything a stream sees, including entity fields at the
 current period — a waterfall runs after fields are evaluated, so the balances
 it tests are period-close values.
 
-Steps publish as series `stream.<waterfall>.<step>`, so `series_sum` reaches an
-earlier waterfall's output from a later one's `from` expression. That is how one
-waterfall's payment becomes another's pot.
+Steps publish as series `<waterfall>.<step>`, so `series_sum` reaches an earlier
+waterfall's output from a later one's `from` expression. That is how one
+waterfall's payment becomes another's pot:
+
+```
+from series_sum("senior.residual", time.t, time.t)
+```
+
+Results publish the same series one namespace down, as
+`stream.<waterfall>.<step>`, because in results every stream carries that
+prefix. **The results name is not the name an expression reads.** This section
+gave the results name until August 2026, and a model that followed it got an
+empty pot rather than a diagnostic — a name nothing matches is not an error,
+because a selector that matches nothing must be able to sum to zero. That
+asymmetry is now the difference between a `.*` selector and a literal name; see
+`E5022_UNKNOWN_SERIES_REFERENCE`.
+
+A step's series is visible to a later waterfall's `from` and to nothing else.
+Neither a stream nor a field's `next` can read it.
 
 ## 4. Builtin functions
 

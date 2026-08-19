@@ -153,7 +153,10 @@ is the whole published artefact cannot be checked per scenario. Recorded as a
 capability gap at `13` §7.23.
 
 Provenance: Ginnie Mae 2026-100 (58 tables) and Fannie Mae 2019-2 (7 speeds on
-one table), August 2026.
+one table), August 2026. Confirmed again by AmeriCredit 2017-1, which publishes
+four speeds across six classes and ships as a single case at 1.50% ABS —
+`benchmarks/credit/americredit_2017_1`, whose reference reproduces all four
+speeds while the model asserts one.
 
 ### 2.4 Class types nothing exercises
 
@@ -230,6 +233,9 @@ declared list of mutations.
 
 Provenance: applied by hand to `gnma_remic_group16` (5 mutations) and
 `fnma_remic_2019_2_g3` (8 mutations, one of which found §3.2), August 2026.
+`americredit_2017_1` shipped without it and has the shape §3.2 warns about: the
+certificateholder's step-down release absorbs whatever the notes are not paid,
+so a residual assertion there would be one-sided by construction.
 
 ---
 
@@ -239,12 +245,15 @@ Not backlog items. Findings that cost real effort to establish and would cost it
 again.
 
 **Weighted average life conventions differ by issuer, and the difference is
-visible.** Ginnie Mae 2026-100's published lives reproduce exactly under
+visible — three issuers now, three conventions, none of them stated.** Ginnie Mae 2026-100's published lives reproduce exactly under
 **30E/360 from the closing date** to the 20th of each month — 709 of 709. A
 plain `(t+1)/12` gets 76% of them and is wrong by up to 0.078 years. Fannie Mae
-2019-2 uses 30/360 from its 30 January settlement to the 25th. Neither document
-states the day count for this purpose; both were recovered by trying conventions
-against the published figures.
+2019-2 uses 30/360 from its 30 January settlement to the 25th. AmeriCredit
+2017-1 uses 30E/360 from its 23 February closing to the 18th, which makes the
+first period a 25-day stub — measuring from period zero instead overstates every
+life by 0.014 years and misses 20 of its 48 published figures. No document
+states the day count for this purpose; all three were recovered by trying
+conventions against the published figures.
 
 **A whole-percent decrement table has a 0.5pp floor, and the error distribution
 is the real test.** If a model is exactly right, its errors against a
