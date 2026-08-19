@@ -1,0 +1,1059 @@
+{
+  "results_version": "0.3",
+  "model_hash": "3608ba1c1fa80c6fbac9e4f661749cee0ea2b6a9e7324434c3b731deea9aa726",
+  "ledger_hash": "29acf491a9d4ab7e4d9a56880789c95c0f5a837c81a988eb782e65129a275d8f",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [
+    "Event 'cash_threshold' when evaluation failed [EXPR_EVAL]: series_sum: series `credit.pool.interest.*` is not available in this context; using false.",
+    "Event 'cash_threshold' when evaluation failed [EXPR_EVAL]: series_sum: series `credit.pool.interest.*` is not available in this context; using false.",
+    "Event 'cash_threshold' when evaluation failed [EXPR_EVAL]: series_sum: series `credit.pool.interest.*` is not available in this context; using false.",
+    "Event 'cash_threshold' when evaluation failed [EXPR_EVAL]: series_sum: series `credit.pool.interest.*` is not available in this context; using false."
+  ],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.interest.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "prepay_penalty_rate",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.penalty.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.prepay.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "severity"
+        ],
+        "stream": "credit.pool.recoveries.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0",
+          "severity": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.pool.sched_principal.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.pool_level_pay.one",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.pool.servicing.one",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "balance": "1000000",
+          "cdr": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "0",
+          "rate": "0.12",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.pool.total": {
+        "amount": 1025124.375647,
+        "currency": "USD"
+      },
+      "entity.party.investor.total": {
+        "amount": 1025124.375648,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1018834.834994,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1025124.375647,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.208333,
+      "run.annual_discount_rate": 0.03,
+      "run.periods_per_year": 12.0,
+      "stream.credit.pool.interest.one.total": {
+        "amount": 25124.375647,
+        "currency": "USD"
+      },
+      "stream.credit.pool.penalty.one.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.prepay.one.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.recoveries.one.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.sched_principal.one.total": {
+        "amount": 1000000.0,
+        "currency": "USD"
+      },
+      "stream.credit.pool.servicing.one.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.pool.cash_flag": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "asset.pool.credit_level_pay_survival_lag_one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.pool.credit_level_pay_survival_one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "asset.pool.fee_rate": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ]
+      },
+      "asset.pool.running": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          1000000.0,
+          850000.0,
+          700000.0,
+          550000.0
+        ]
+      },
+      "domain.credit.balance_outstanding": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -246281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": -495024.998763,
+            "currency": "USD"
+          },
+          {
+            "amount": -746256.342662,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.gross_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.net_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.original_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.pool_factor": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.credit.principal_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 246281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 248743.904851,
+            "currency": "USD"
+          },
+          {
+            "amount": 251231.343899,
+            "currency": "USD"
+          },
+          {
+            "amount": 253743.657338,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_negated": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": -246281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": -495024.998763,
+            "currency": "USD"
+          },
+          {
+            "amount": -746256.342662,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_to_date": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 246281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 495024.998763,
+            "currency": "USD"
+          },
+          {
+            "amount": 746256.342662,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.servicing_fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.total_investment_income": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7537.189061,
+            "currency": "USD"
+          },
+          {
+            "amount": 5049.750012,
+            "currency": "USD"
+          },
+          {
+            "amount": 2537.436573,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.pool.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.investor.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 256281.093912,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.interest.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 10000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 7537.189061,
+            "currency": "USD"
+          },
+          {
+            "amount": 5049.750012,
+            "currency": "USD"
+          },
+          {
+            "amount": 2537.436573,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.penalty.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.prepay.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.recoveries.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.sched_principal.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 246281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 248743.904851,
+            "currency": "USD"
+          },
+          {
+            "amount": 251231.343899,
+            "currency": "USD"
+          },
+          {
+            "amount": 253743.657338,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.pool.servicing.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.reads_cash_flag": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.reads_fee_rate": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 20000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.residual": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 236281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 236281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 206281.093912,
+            "currency": "USD"
+          },
+          {
+            "amount": 206281.093912,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "entity": "asset.pool",
+        "field": "fee_rate",
+        "to": "0.05",
+        "event": "field_threshold"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "domain.credit.balance_outstanding": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -2487562.435337,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.gross_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1025124.375648,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.net_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1025124.375648,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.original_balance": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.pool_factor": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            null
+          ]
+        },
+        "domain.credit.principal_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1000000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_negated": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -2487562.435337,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_to_date": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 2487562.435337,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.servicing_fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.total_investment_income": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 25124.375646,
+              "currency": "USD"
+            }
+          ]
+        },
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1025124.375647,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.interest.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 25124.375647,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.penalty.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.prepay.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.recoveries.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.sched_principal.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1000000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.pool.servicing.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

@@ -148,8 +148,11 @@ named streams for the ratios that need particular ones.
 So the honest form of this document's thesis is narrower than "a balance cannot
 be driven by cash". It is this:
 
-> Cash aggregates in the results layer, and the results layer is **terminal**.
+> Cash aggregates in a layer of its own, and that layer is **terminal**.
 > Nothing in the model can read what it produces.
+
+(Subtotals are folded at layer 4, before waterfalls run at layer 5 — so they
+carry stream cash and never a distribution.)
 
 Measured:
 
@@ -253,12 +256,20 @@ weakens exactly that. Nor does a window buy anything: a cumulative-to-date
 quantity is itself a recurrence, so anything a window could sum can be
 accumulated one period at a time by a second field.
 
-**5.1a What actually blocks it: the pass order.** Neither form works today, and
-the reason is not the environment's contents. `compute_states` runs as one
-complete pass over every period and returns a whole series per field, and it is
-called *before* any stream is evaluated. A field at period `t` cannot read a
-stream at `t-1` because at that moment no stream has been evaluated at any
-period at all.
+**5.1a What actually blocks it: the layer order.** Neither form works today,
+and the reason is not the environment's contents. The engine evaluates in
+complete layers — fields, then events, then streams, then subtotals, then
+waterfalls — each finishing before the next begins. `compute_states` runs as one
+pass over every period and returns a whole series per field, before any stream
+is evaluated. A field at period `t` cannot read a stream at `t-1` because at
+that moment no stream has been evaluated at any period at all.
+
+`fixtures/valid/evaluation_order` pins the boundaries. Two of them are worth
+stating on their own: an event guard can fire on a **field** crossing a
+threshold but never on **cash**, since events are simulated before any stream
+exists; and subtotals are folded *before* waterfalls run, so a waterfall's
+payments never appear in a subtotal or a statement — the collections statement
+describes what the assets produced and says nothing about who was paid.
 
 `docs/14` §3.2 specifies the interleaving that would fix it:
 

@@ -2050,77 +2050,92 @@ would look like had no answer.
 
 ---
 
-### 7.37 A waterfall cannot tell a balance what it paid
+### 7.37 A recurrence cannot read cash, because cash does not exist yet
 
-A note class's balance is the deal's central state: it sets the interest due,
-it sets what principal the class can absorb, and it is the quantity every
-published decrement table states. It is also, in this language, the one thing a
-waterfall cannot maintain.
+A note class's balance is the deal's central state: it sets the interest due, it
+sets what principal the class can absorb, and it is the quantity every published
+decrement table states. It is `prev` minus what was paid, and that one
+subtraction cannot be written.
 
-A field's recurrence reads `prev` and other fields' previous values.
-`docs/14` §3.1 also puts **stream series up to and including `t-1`** in that
-environment — "It does not contain any stream value at period `t`" — but
-`compute_states` (`crates/cfdl-engine/src/lib.rs`) builds the environment with
-`env.prev_states` and `env.prev_self` and never a series map. Probed directly:
-a field whose `next` is `series_sum("w.step_a", time.t - 1, time.t - 1)`
-evaluates to zero for every period, and so does `series_sum("*", ...)` and a
-read of the pack's own `credit.pool.sched_principal.*`. A recurrence sees no
-series at all — not a waterfall's, not a contract's.
+**One number, not a series.** The shape every case wants is
 
-The consequence, in a deal whose principal payment depends on cash rather than
-on collateral alone:
-
-```cfdl
-// what the deal says, and what cannot be written
-bal_a1 init 182000000 next prev - paid.a1_principal
+```
+balance(t) = balance(t-1) - paid(t-1)
 ```
 
-`benchmarks/credit/americredit_2017_1` needs exactly that. Its principal
-payment is the sum of a step-down-adjusted distributable amount and whatever
-excess cash the turbo needs, so it is not a closed form of the pool — the
-trick `auto_abs_tranches` uses, where a class's pay-down is cumulative pool
-principal clamped between two constants, does not reach it. The case therefore
-states the distribution **twice**: once lagged, inside seven balance fields, and
-once at the current period, inside the waterfall that pays the cash. The two
-must agree and nothing enforces it.
+so what is missing is a *value*, not a window: `prev.<stream>` and
+`prev.<waterfall>.<step>`, beside the `prev.<family>.<entity>.<field>` a
+recurrence already reads. Same keyword, same meaning — the completed previous
+column.
 
-Two things this is not. It is not the recurrence being backward-only — reading
-`t-1` is exactly right here, since a class's balance at a distribution date is
-what it carried in. And it is not a missing waterfall feature. Distribution
-*within* a period is tracked and works: a later step reads `paid.<step>` and
-`owed.<step>` of an earlier one, `remaining` is the pot after everything above
-it, and a cap taken at clause 2 is released at clause 21 as
-`owed.trustee_fees - paid.trustee_fees`. All three are probed and correct. The
-scoping is deliberate too — `paid.` reaching into another waterfall is a
-compile error, `E1341_WATERFALL_FORWARD_REF`.
+```cfdl
+balance init 182000000  next max(prev - prev.notes.distribution.a1_principal, 0.0)
+```
 
-What is missing is one edge, and only one: **out of a waterfall, into the next
-period.** The boundary is sharper than "recurrences cannot read series", and
-worth stating exactly, because two of the three cases work:
+A scalar is better than the series access `docs/14` §3.1 describes, not merely
+smaller. A window must be clamped at `t-1`, and a clamp is a check that can be
+wrong; a scalar has no way to name period `t` at all. That is `docs/14`'s own
+argument — the guarantee enforced by absence rather than by analysis. Nor does a
+window buy anything: a cumulative-to-date quantity is itself a recurrence, so
+whatever a window could sum, a second field can accumulate.
 
-| reader | reads | result |
+**Why neither form works: the layers.** The engine evaluates in complete
+layers, each finishing before the next begins.
+
+| | layer | sees |
 |---|---|---|
-| a stream | another stream's series, `0..t-1` | **works** — probed `[0, 7, 14, 21]` on a constant 7 |
-| a stream | a waterfall step's series | zero, silently |
-| a field's `next` | any series at all | zero, with a warning |
+| 1 | fields | `prev`, other fields' `prev`, inputs, curves |
+| 2 | events | fields; writes become visible to later layers |
+| 3 | streams | fields, event writes, phase-1 streams |
+| 4 | subtotals | stream categories — folded for statements |
+| 5 | waterfalls | fields, event writes, streams, earlier waterfalls |
 
-So the series map streams read does not carry waterfall steps, and the
-recurrence environment carries no series map. A waterfall's payments are
-visible to a reader of results and to nothing inside the model.
+`compute_states` runs as one pass over every period and returns a whole series
+per field, before any stream is evaluated. So a field at `t` cannot read cash at
+`t-1` because at that moment no cash exists at any period. `docs/14` §3.2
+already specifies the interleaving that would fix it — `for t: for each state;
+for each stream` — and the engine runs layer-major instead. **The work is
+evaluation order, not expression scope**, and it is the same restructuring for a
+scalar or a series, which is one more reason to take the scalar.
 
-The smallest fix is the one `docs/14` already describes: put completed series
-in the recurrence environment, bounded at `t-1`, which keeps every edge
-pointing backward and cannot close a cycle. Either implement it or correct
-§3.1, because the specification currently promises a capability the engine does
-not have.
+**Pinned as a test.** `fixtures/valid/evaluation_order` reads the boundaries
+rather than asserting them:
 
-Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026.
-The hazard is not hypothetical: that case shipped its first model with the
-servicing fee right in the waterfall — where the pack's own series charges the
-January pools two months — and wrong in the balance recurrence, which carried
-its own copy and charged one. Eleven published cells and two published
-weighted average lives missed, and nothing in the language could have caught
-it.
+- an event fires on a **field** crossing a threshold, and the waterfall sees the
+  write — `20000, 20000, 50000, 50000`;
+- an event guarding on **cash** never fires, and warns that the series is not
+  available. Interest is under the trigger in every period; the guard cannot see
+  it;
+- `domain.credit.*` carries the pool's collections and none of the waterfall's
+  payments, because subtotals are folded at layer 4 and the waterfall runs at
+  layer 5. **A distribution never reaches a statement.**
+
+The last of these is worth its own line: it means the collections statement
+describes what the assets produced and can say nothing about who was paid.
+
+**What the ordering costs, in three packs.** A mortgage has no readable
+outstanding balance, so no loan-to-value covenant, no debt yield, no cash sweep
+— `cre.permanent_debt` stays closed-form because the alternative cannot be
+written. A JV preference accretes and never learns what was distributed, so
+`fixtures/valid/waterfall_cre_jv_promote` compounds on the full balance whether
+or not the pot could pay it. And `benchmarks/credit/americredit_2017_1` carries
+seven balances that each recompute the whole distribution a period lagged,
+because the waterfall cannot tell them what it paid. That case shipped its first
+model with the servicing fee right in the waterfall and wrong in the
+recurrence — eleven published cells and two published weighted average lives —
+and nothing in the language could have caught it.
+
+Two things this is not. It is not the recurrence being backward-only: reading
+`t-1` is exactly right, since a class's balance at a distribution date is what
+it carried in. And it is not a missing waterfall feature — `paid.<step>`,
+`owed.<step>` and `remaining` all work within a period, and `paid.` reaching
+into another waterfall is a compile error.
+
+See `docs/24_balances_from_streams.md` for the design.
+
+Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026;
+narrowed from "a waterfall cannot tell a balance what it paid" to the layer
+order after probing each boundary with no pack active.
 
 ---
 
