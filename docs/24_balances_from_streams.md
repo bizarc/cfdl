@@ -7,11 +7,16 @@ fields, and `docs/18` settles where such a value lives: a quantity that changes
 over time is a field of the entity it describes. Nothing about a balance needs a
 new construct, a new keyword, or a new kind of object.
 
-What a field cannot do is read a stream. So a balance can be driven by time —
-a rate, a schedule, a declared curve — and cannot be driven by cash. That is
-the whole gap, and it is one sentence long:
+What a field cannot do is read a stream. A balance can therefore be driven by
+anything a field can see — an input, a curve, another field — and not by the
+cash the model computed. Cash does aggregate, in the pack-declared subtotals
+the engine folds after streams (§3), but nothing in a model can read those
+either. So:
 
-> **A stream cannot update a field.**
+> **A stream cannot update a field, and a subtotal cannot be read.**
+
+Both halves are the same gap seen from two sides: the model produces cash, and
+cannot feed it back into its own state.
 
 `docs/14` §3.1 already specifies the fix, in the environment it gives a
 recurrence: `prev`, `time.*`, `inputs.*`, curves, and *"stream series up to and
@@ -80,7 +85,70 @@ and the second is smaller than it sounds.
 
 ---
 
-## 3. What it costs today, in three packs
+## 3. Cash already aggregates — in a layer the model cannot read
+
+A field is not the only thing that can accumulate. The packs declare
+**subtotals** and **metrics**, folded by the engine after streams are
+evaluated, and the ops available to them include cumulative ones.
+`packs/credit/statements.toml` already builds a running pool balance this way,
+with no field anywhere near it:
+
+```toml
+[[subtotals]]
+id = "domain.credit.principal_paid_negated"
+op = "negated_cumulative"
+subtotals = ["domain.credit.principal_collections"]
+
+[[subtotals]]
+id = "domain.credit.balance_outstanding"
+op = "sum"
+subtotals = ["domain.credit.original_balance",
+             "domain.credit.principal_paid_negated"]
+```
+
+That is a balance driven by cash — original advanced, less principal collected
+to date — and it runs today. It is also how a statement is assembled at all:
+`statements.toml` folds stream **categories** rather than stream names, which
+is what keeps a statement correct as a pack grows, while `metrics.toml` folds
+named streams for the ratios that need particular ones.
+
+So the honest form of this document's thesis is narrower than "a balance cannot
+be driven by cash". It is this:
+
+> Cash aggregates in the results layer, and the results layer is **terminal**.
+> Nothing in the model can read what it produces.
+
+Measured:
+
+| reader | reads `domain.credit.balance_outstanding` | result |
+|---|---|---|
+| a field's `next` | | *unknown variable*, warned, zero |
+| a stream | | *unknown variable*, warned, zero |
+| a waterfall step | | *unknown variable*, warned, zero |
+
+Three consequences follow, and they are the reason the gap survives the
+discovery of the subtotal layer.
+
+**A subtotal can be reported and not used.** `cre.permanent_debt` could publish
+an outstanding balance tomorrow as a subtotal — original principal less
+cumulative amortization — and a case could assert it. No covenant test, no debt
+yield, no cash sweep and no waterfall step could read it.
+
+**A subtotal cannot do arithmetic that is not a fold.** The ops are `sum`,
+`cumulative`, `negated_cumulative`, `ratio`. A balance floored at zero, a
+payment capped at what remains, a preference that compounds only while
+outstanding — none of those is a fold over categories, and all of them are
+ordinary field expressions.
+
+**A subtotal cannot close a loop, and should not.** An ABS note balance
+determines the interest that determines the excess cash that determines the
+principal that determines the balance. Nothing in a layer computed *after*
+streams can participate in that, which is correct: the loop only opens when the
+read is bounded at `t-1`, and that bound belongs to the recurrence.
+
+---
+
+## 4. What it costs today, in three packs
 
 Not a hypothetical. Each of these is in the repository now.
 
@@ -123,11 +191,11 @@ Three packs, three domains, one missing edge.
 
 ---
 
-## 4. What changes
+## 5. What changes
 
 Two changes, both small, neither of them syntax.
 
-**4.1 Implement `docs/14` §3.1.** Put completed stream series into the
+**5.1 Implement `docs/14` §3.1.** Put completed stream series into the
 environment a field's `next` is evaluated in, bounded at `t-1`. The bound is
 what keeps the guarantee: every edge still points backward, so no cycle can
 close, and the property stays enforced by absence rather than by a detector.
@@ -148,14 +216,14 @@ and the same shape serves a mortgage (`- series_sum("loan.principal", ...)`), a
 preferred return (`prev * (1 + rate) - series_sum("w.msgw_preference", ...)`),
 and a construction facility that draws and repays.
 
-**4.2 Publish waterfall step series into the series map.** A waterfall step is a
+**5.2 Publish waterfall step series into the series map.** A waterfall step is a
 stream and appears in results as one; it is not in the map streams and fields
 read. Without this, §3.1 reaches a mortgage and not a note class.
 
 Neither change adds a keyword. No existing model changes meaning, because
 nothing today can read what these two changes expose.
 
-### 4.3 Worth doing at the same time
+### 5.3 Worth doing at the same time
 
 `series_sum` on an unknown series returns zero in a stream, silently — no
 diagnostic, no warning. The same read in a field's `next` warns. Once field
@@ -165,7 +233,7 @@ rather than after it.
 
 ---
 
-## 5. What packs do with it
+## 6. What packs do with it
 
 Nothing is required of a pack. The changes above are additive and every
 existing contract keeps working.
@@ -173,8 +241,9 @@ existing contract keeps working.
 What becomes *available* is the choice each pack author already had, with the
 awkward option removed:
 
-- `cre.permanent_debt` could carry an outstanding balance, which is what a
-  covenant test, a refinancing and a cash sweep all need.
+- `cre.permanent_debt` could carry an outstanding balance a model can *read* —
+  which a subtotal cannot give it — and that is what a covenant test, a
+  refinancing and a cash sweep all need.
 - The credit pack could offer a note stack whose classes carry balances,
   instead of every case hand-rolling one — three cases have now done so three
   different ways. That is `docs/13` §2.4, and it stays a pack question rather
@@ -188,7 +257,7 @@ cannot express is a quantity that depends on cash, and after this it can.
 
 ---
 
-## 6. What this does not solve
+## 7. What this does not solve
 
 - **Termination.** A clean-up call redeems every class and ends the deal; a
   contract still runs its declared term (`docs/13` §7.39).
