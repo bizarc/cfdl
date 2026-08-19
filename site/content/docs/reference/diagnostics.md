@@ -138,6 +138,7 @@ register, so it cannot fall behind the language.
 | `E5009_LOWERED_EXPR_INVALID` | Lowering/emission | a pack lowering rule expanded to an amount expression the parser rejects. Without this the engine evaluates the failed expression as zero and continues with only a warning. |
 | `E5020_LOWERED_FIELD_INVALID` | Lowering/emission | a pack lowering rule expanded to a field `init` or `next` the parser rejects. Same reasoning as `E5009`: the engine's fallback for a failed rule is zero, which would flatten every stream reading the field rather than fail loudly. |
 | `E5021_DUPLICATE_LOWERED_FIELD` | Lowering/emission | two contracts lower to one field name with *different* recurrences, so one would silently win. Give the rule's `field_name` a per-contract discriminator (`{{contract.suffix_ident}}`). Identical definitions collapse instead, which is what several contracts sharing one curve should do. |
+| `W5022_UNKNOWN_SERIES_REFERENCE` | Lowering/emission | a `series_sum`/`series_avg` names a series no stream, contract or waterfall step produces, so it aggregates to zero and whatever reads it is reading nothing. A warning rather than an error because a literal name matching nothing is also a pack idiom: `cre.exit` sums NOI components by name whether or not the property declared each one. Selectors ending in `.*` are exempt, and are how a model states that matching nothing is intended. |
 | `W3500_STATEMENT_UNCLASSIFIED_STREAM` | Lowering/emission | cash that no row of the statement claims, usually a hand-written stream carrying no `category`. It is collected into a visible `residual` row rather than dropped, so the bottom line still reconciles and the omission is on the page instead of in the difference. The pack loader checks the same property for declared CATEGORIES statically; this is the half that needs a run, because a stream with no category at all is invisible until one happens. |
 | `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` | Lowering/emission | a stream claimed by more than one row. Worse than an omission: the bottom line is then wrong in a direction that looks entirely plausible. |
 | `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` | Lowering/emission | the statement's rows do not sum to `model.total` within half a cent. Asserted, never corrected. |
@@ -209,7 +210,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*157 codes.*
+*158 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

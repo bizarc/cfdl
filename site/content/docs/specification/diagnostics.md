@@ -302,6 +302,13 @@ Statement completeness. These are warnings rather
 than errors: the statement still renders, and the point is that the reader can
 see what is wrong with it.
 
+- `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
+  no stream, contract or waterfall step produces, so it aggregates to zero and
+  whatever reads it is reading nothing. A warning rather than an error because a
+  literal name matching nothing is also a pack idiom: `cre.exit` sums NOI
+  components by name whether or not the property declared each one. Selectors
+  ending in `.*` are exempt, and are how a model states that matching nothing is
+  intended.
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement
   claims, usually a hand-written stream carrying no `category`. It is collected
   into a visible `residual` row rather than dropped, so the bottom line still

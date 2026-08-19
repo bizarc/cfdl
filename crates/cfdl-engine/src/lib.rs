@@ -1079,6 +1079,12 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         full_series.insert(stream.name.clone(), values);
     }
 
+    // A NAME THAT PRODUCES NOTHING READS AS ZERO, and said nothing at all until
+    // now. Same reasoning as the phase check below — a read that can never
+    // resolve reported a plausible number — with a softer verdict, because a
+    // literal name matching nothing is a pack idiom as well as a typo.
+    check_series_names(ir, &mut warnings);
+
     // A PHASE-2 STREAM CANNOT READ ANOTHER PHASE-2 STREAM, and saying so is
     // the difference between a wrong number and a diagnostic.
     //
@@ -2256,6 +2262,97 @@ fn build_base_env(
 /// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
 /// cross-stream read is. A computed name is not addressed here and is left to
 /// the runtime, where it still returns 0 for an unmatched name.
+/// Every literal series name a model reads must name something the model
+/// produces.
+///
+/// `series_aggregate` returns 0 for a name that matches nothing, deliberately:
+/// a selector like `credit.pool.prepay.*` must contribute nothing when no
+/// contract lowered a prepayment stream. That default is right for a selector
+/// and wrong for a spelled-out name, which can only be a name that no longer
+/// exists or never did — and zero is the one answer a reader will not question.
+///
+/// Selectors are therefore left alone and literals are checked. The universe is
+/// every stream in the IR (a pack's lowered streams are already among them) and
+/// every waterfall step, which publishes as `<waterfall>.<step>`.
+///
+/// WHY THIS WARNS RATHER THAN FAILS. A literal name matching nothing is a pack
+/// idiom, not only a typo. `cre.exit` sums nine NOI components by name —
+/// `cre.unit.base_rent.*` and `cre.rollover.rent.*` as selectors, but
+/// `cre.lease.base_rent` and `cre.ops.revenue` as literals, because a single
+/// lease lowers to an unsuffixed stream — and a property with no such contract
+/// must contribute nothing rather than fail. Refusing literals outright broke
+/// four goldens on exactly that. The visible warning is the fix that survives
+/// the idiom; refusing it would need the convention settled first.
+fn check_series_names(ir: &Ir, warnings: &mut Vec<String>) {
+    let mut known: BTreeSet<String> = ir.streams.iter().map(|s| s.name.clone()).collect();
+    for waterfall in &ir.waterfalls {
+        for step in &waterfall.steps {
+            known.insert(format!("{}.{}", waterfall.name, step.name));
+        }
+    }
+
+    let mut sources: Vec<(String, &str)> = Vec::new();
+    for stream in &ir.streams {
+        // A PACK'S OWN EXPRESSION IS NOT THE MODELLER'S TO FIX. `cre.exit`
+        // names nine NOI components and a given property declares some of
+        // them; the unmatched ones are the idiom working, and warning about
+        // them on every CRE model would teach a reader to ignore the warning
+        // that matters.
+        if stream
+            .provenance
+            .as_ref()
+            .is_some_and(|p| p.generated_by.is_some())
+        {
+            continue;
+        }
+        sources.push((
+            format!("stream '{}'", stream.name),
+            stream.amount.src.as_str(),
+        ));
+        if let Some(guard) = &stream.active_when {
+            sources.push((format!("stream '{}'", stream.name), guard.src.as_str()));
+        }
+    }
+    for waterfall in &ir.waterfalls {
+        sources.push((
+            format!("waterfall '{}'", waterfall.name),
+            waterfall.source.src.as_str(),
+        ));
+        for step in &waterfall.steps {
+            sources.push((
+                format!("waterfall '{}' step '{}'", waterfall.name, step.name),
+                step.amount.src.as_str(),
+            ));
+        }
+    }
+    for entity in &ir.entities {
+        for (field, rule) in &entity.rules {
+            for src in [rule.init.src.as_str(), rule.next.src.as_str()] {
+                sources.push((format!("field '{}.{field}'", entity.symbol), src));
+            }
+        }
+    }
+
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for (where_, src) in sources {
+        for referenced in series_references(src) {
+            if referenced.ends_with(".*") || known.contains(&referenced) {
+                continue;
+            }
+            if !seen.insert(format!("{where_}|{referenced}")) {
+                continue;
+            }
+            warnings.push(format!(
+                "W5022_UNKNOWN_SERIES_REFERENCE: in {where_}, `series_sum`/`series_avg` names \
+                 series '{referenced}', which no stream, contract or waterfall step in this \
+                 model produces. It aggregates to zero, so anything reading it is reading \
+                 nothing. Check the spelling; a selector ending in `.*` states that matching \
+                 nothing is intended."
+            ));
+        }
+    }
+}
+
 fn series_references(src: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = src.as_bytes();
@@ -3726,6 +3823,13 @@ struct IrOption {
     owner: Option<IrEntityRef>,
 }
 
+/// Only the part the engine needs: whether a pack generated this stream.
+#[derive(Debug, Deserialize)]
+struct IrProvenance {
+    #[serde(default)]
+    generated_by: Option<serde_json::Value>,
+}
+
 #[derive(Debug, Deserialize)]
 struct IrWaterfall {
     name: String,
@@ -3862,6 +3966,9 @@ struct IrStream {
     amount: IrExpr,
     #[serde(default)]
     active_when: Option<IrExpr>,
+    /// Read for one purpose: telling a pack's expression from a modeller's.
+    #[serde(default)]
+    provenance: Option<IrProvenance>,
 }
 
 #[derive(Debug, Deserialize)]
