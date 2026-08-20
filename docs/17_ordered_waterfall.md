@@ -282,8 +282,10 @@ case.
 **An end-of-hold waterfall is where the cumulative targets live.** A preferred
 return, a catch-up and a carry split are evaluated against cash flows *since
 inception*, not against this period's. That is why the root-finding targets in
-§9 cluster on the once-at-exit shape, and it means the primitive needs access to
-a cumulative series, not just the current period.
+§9 cluster on the once-at-exit shape. The cumulative quantity is a BALANCE the
+distribution moves — accrued and reduced as state, not re-derived from the
+waterfall's own payment history, which would be the account reconstructing its
+own postings. Carrying it awaits §7.37 (a distribution posting to a field).
 
 ## 11. Revised sequence
 

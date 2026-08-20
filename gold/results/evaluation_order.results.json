@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
   "model_hash": "9dbea71793c1183877f53efbeb00f7cceba95d5e34603eb9a21d16d5d4fa25ff",
-  "ledger_hash": "29acf491a9d4ab7e4d9a56880789c95c0f5a837c81a988eb782e65129a275d8f",
+  "ledger_hash": "ed583ffa0460a4917caa034aedab5574f7045bd02bdbe7073ad9b3723dfe0f16",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -250,8 +250,8 @@
         "values": [
           0.02,
           0.02,
-          0.02,
-          0.02
+          0.05,
+          0.05
         ]
       },
       "asset.pool.running": {
@@ -818,6 +818,7 @@
         "date": "2017-03-01",
         "entity": "asset.pool",
         "field": "fee_rate",
+        "from": "0.02",
         "to": "0.05",
         "event": "field_threshold"
       }

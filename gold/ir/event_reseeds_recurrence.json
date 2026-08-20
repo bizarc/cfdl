@@ -1,42 +1,30 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "event-guard-reads-field",
+    "name": "event-reseeds-recurrence",
     "currency": "USD"
   },
   "time": {
     "calendar": "annual",
     "start": "2026-01-01",
-    "periods": 5
+    "periods": 6
   },
   "phases": [],
   "entities": [
     {
-      "id": "a3e43afc90e34948d56b6d13a155c8fa",
-      "symbol": "asset.pool",
+      "id": "9ffb8630a7775dd1bab66e6b45ee1f8f",
+      "symbol": "asset.loan",
       "type": "Asset.Financial",
-      "fields": {
-        "trigger_level": "60.0"
-      },
+      "fields": {},
       "rules": {
         "balance": {
           "init": {
             "lang": "cfdl",
-            "src": "100.0"
+            "src": "1000.0"
           },
           "next": {
             "lang": "cfdl",
-            "src": "max(0.0, prev - 10.0)"
-          }
-        },
-        "fee_rate": {
-          "init": {
-            "lang": "cfdl",
-            "src": "0.02"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "prev"
+            "src": "max(prev - 100.0, 0.0)"
           }
         }
       },
@@ -59,22 +47,22 @@
   "contracts": [],
   "streams": [
     {
-      "id": "65afa881ee9f927025293112519ded1a",
-      "name": "credit.amortization",
+      "id": "dcd80e9e441506f2af8f371eee7a55f9",
+      "name": "loan.balance_report",
       "owner": {
-        "symbol": "asset.pool"
+        "symbol": "asset.loan"
       },
-      "direction": "outflow",
+      "direction": "inflow",
       "currency": "USD",
       "schedule": {
         "kind": "Every",
         "every": "annual",
-        "from": "2027-01-01",
-        "to": "2030-01-01"
+        "from": "2026-01-01",
+        "to": "2031-01-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "asset.pool.balance * 0.02"
+        "src": "asset.loan.balance"
       },
       "active_when": {
         "lang": "cfdl",
@@ -83,9 +71,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 39,
+          "start_line": 30,
           "start_col": 1,
-          "end_line": 42,
+          "end_line": 33,
           "end_col": 1
         }
       }
@@ -96,30 +84,30 @@
       "actions": [
         {
           "entity": {
-            "symbol": "asset.pool"
+            "symbol": "asset.loan"
           },
-          "field": "fee_rate",
+          "field": "balance",
           "kind": "SetEntityField",
           "value": {
             "lang": "cfdl",
-            "src": "0.05"
+            "src": "asset.loan.balance - 250.0"
           }
         }
       ],
-      "id": "1452c249d456322f0e1536e31e3ab589",
-      "name": "covenant_breach",
+      "id": "68cacf2e9eecdb2d5837a0af76b74cb2",
+      "name": "partial_liquidation",
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 36,
+          "end_line": 26,
           "start_col": 1,
-          "start_line": 34
+          "start_line": 24
         }
       },
       "when": {
         "lang": "cfdl",
-        "src": "asset.pool.balance <= asset.pool.trigger_level"
+        "src": "time.t == 2.0"
       }
     }
   ],

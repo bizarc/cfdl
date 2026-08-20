@@ -1,0 +1,33 @@
+version 0.1
+model "event-reseeds-recurrence"
+time calendar annual from 2026-01 for 6
+
+// ONE VALUE PER PATH, and the law of motion resumes from an intervention.
+//
+// A loan amortizes 100 a year. In year 2 an unscheduled principal payment of
+// 250 arrives — a partial liquidation. Standard finance: the next period
+// amortizes FROM THE REDUCED BALANCE, not the contractual schedule.
+//
+//   contractual   1000, 900, 800, 700, 600, 500
+//   settled       1000, 900, 550, 450, 350, 250
+//                             ^ event overwrites; recurrence resumes
+//
+// The published series, every reader, and next period's `prev` all see the
+// settled value. There is no second store to go stale.
+
+entity asset loan : Asset.Financial {
+  balance init 1000.0 next max(prev - 100.0, 0.0)
+}
+entity party lender : Party { name = "Lender" }
+
+// The guard reads the period's candidate; the write settles the column.
+event partial_liquidation when time.t == 2.0 {
+  set entity asset.loan.balance = asset.loan.balance - 250.0
+}
+
+// A stream reading the balance sees the settled value in the write period and
+// the resumed amortization after it.
+stream loan.balance_report on entity asset.loan inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = asset.loan.balance
+}
