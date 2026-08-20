@@ -61,13 +61,12 @@ pub struct TransitionRecord {
 ///
 /// The window includes the projection tail so a stream reading forward finds
 /// states populated.
-
-/// Fields and events over the master timeline, interleaved per period.
 ///
-/// Within a period: every field's candidate is computed from the settled
-/// previous column; every guard then reads the SAME frozen pre-state plus
-/// this period's candidates (the synchronous rule — declaration order is not
-/// semantics); writes settle the column. `prev` at t+1 reads what settled.
+/// Fields and events run as ONE interleaved walk per period. Within a period:
+/// every field's candidate is computed from the settled previous column; every
+/// guard then reads the SAME frozen pre-state plus this period's candidates
+/// (the synchronous rule — declaration order is not semantics); writes settle
+/// the column. `prev` at t+1 reads what settled.
 pub(crate) fn simulate_state(
     ir: &Ir,
     config: &RunConfig,
