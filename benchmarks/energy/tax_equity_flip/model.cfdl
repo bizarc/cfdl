@@ -172,6 +172,10 @@ event flip when asset.partnership.return_position >= 0.0 {
 // residual, which is what "the sponsor gets the rest" means.
 // ---------------------------------------------------------------------------
 
+// NOT `from available`: the pot is the PROJECT's cash — a sibling the
+// partnership holds an interest in, not a child — and the project carries it
+// as a field the deal itself tracks. Rehoming it as streams would move the
+// case's asserted figures, so it stays until the case is rebuilt.
 waterfall partnership.distribution on entity asset.partnership {
   schedule every year from 2027-01 to 2051-01
   from asset.project.cash

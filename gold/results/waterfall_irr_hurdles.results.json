@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "fafd857ffa39dd140d5e63e8b0f9dcc6a790185f6f853508f0919ed6bdb4ae7c",
-  "ledger_hash": "c8e2b09392f06aa7ed9d3dc821467ba6ced547d4a77f41a8ce9abd9ccfddf2a5",
+  "model_hash": "3ac330d3bac128b344024e7a52f153e8cda630071a75fb8936f5522369f84641",
+  "ledger_hash": "c5c9aaafe4ea1f9431289c56e6586911652cc6dd9d3c58a9a198ddf980bb0bd3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -18,7 +18,7 @@
     "status": "ok",
     "metrics": {
       "entity.asset.deal.total": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
       "entity.party.lp.total": {
@@ -33,17 +33,21 @@
         "amount": 4800000.0,
         "currency": "USD"
       },
-      "model.irr": 4.50005,
       "model.npv": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
+      "model.wal_years": 5.0,
       "run.annual_discount_rate": 0.0,
-      "run.periods_per_year": 1.0
+      "run.periods_per_year": 1.0,
+      "stream.deal.sale_proceeds.total": {
+        "amount": 30000000.0,
+        "currency": "USD"
+      }
     },
     "series": {
       "asset.deal.deal_irr": {
@@ -89,7 +93,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           }
         ]
@@ -221,7 +225,41 @@
             "currency": "USD"
           },
           {
+            "amount": 30000000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.sale_proceeds": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "offset": 0.0,
+        "values": [
+          {
             "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30000000.0,
             "currency": "USD"
           }
         ]

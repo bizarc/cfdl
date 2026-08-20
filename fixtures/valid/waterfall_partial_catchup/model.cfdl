@@ -47,9 +47,14 @@ assume proceeds       = 30000000.0
 
 // Capital plus the compounding preferred, measured from inception.
 
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2025-01
+  amount = cfg.proceeds
+}
+
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
-  from cfg.proceeds
+  from available
 
   // 1. Return of capital and the cumulative preferred, to the LPs.
   pay lp_preference to party.lp = asset.fund.lp_preference

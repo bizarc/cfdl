@@ -127,6 +127,10 @@ contract credit.pool_level_pay.g3 on entity asset.pool {
 // That is the entire priority of payments for this group. IO receives no
 // principal, and the residual classes are entitled to nothing until AB is gone.
 // ---------------------------------------------------------------------------
+// NARROWER THAN `available`, deliberately: the supplement distributes
+// principal as its own amount, so this waterfall draws that slice rather than
+// the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
+// for exactly this.
 waterfall g3.principal on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
@@ -146,6 +150,10 @@ waterfall g3.principal on entity asset.trust {
 // The residual step is the test. If the two coupons are right it takes nothing,
 // and `expected.csv` asserts that it takes nothing.
 // ---------------------------------------------------------------------------
+// NARROWER THAN `available`, deliberately: the supplement distributes
+// interest as its own amount, so this waterfall draws that slice rather than
+// the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
+// for exactly this.
 waterfall g3.interest on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 

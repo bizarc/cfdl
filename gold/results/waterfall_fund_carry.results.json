@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "7d7f667d4cb44d2a3cc9d0801bc687cb8bd71e69abdf99455808e0c95f7e4912",
-  "ledger_hash": "10b9a3424f6aa8574f4c28d8a3c10de868bf460a535d63156ce7c44eee702173",
+  "model_hash": "dae0ed2f69344dd9e01fee1a3c885a34bcbb0d3b980b151598eac1df280198b7",
+  "ledger_hash": "6156f9fcc8c219e88c3f42a0f98c465309d033b6cccbcdb12cfceb3f448784eb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -20,7 +20,7 @@
     "status": "ok",
     "metrics": {
       "entity.asset.fund.total": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
       "entity.party.gp.total": {
@@ -31,17 +31,21 @@
         "amount": 26000000.0,
         "currency": "USD"
       },
-      "model.irr": 4.50005,
       "model.npv": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 0.0,
+        "amount": 30000000.0,
         "currency": "USD"
       },
+      "model.wal_years": 5.0,
       "run.annual_discount_rate": 0.0,
-      "run.periods_per_year": 1.0
+      "run.periods_per_year": 1.0,
+      "stream.fund.sale_proceeds.total": {
+        "amount": 30000000.0,
+        "currency": "USD"
+      }
     },
     "series": {
       "asset.fund.lp_preference": {
@@ -87,7 +91,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           }
         ]
@@ -186,7 +190,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           }
         ]
@@ -322,6 +326,40 @@
             "currency": "USD"
           }
         ]
+      },
+      "stream.fund.sale_proceeds": {
+        "index": {
+          "calendar": "annual",
+          "start": "2020-01-01",
+          "periods": 6
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30000000.0,
+            "currency": "USD"
+          }
+        ]
       }
     }
   },
@@ -332,7 +370,7 @@
         "name": "catchup_on_all",
         "metrics": {
           "entity.asset.fund.total": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
           "entity.party.gp.total": {
@@ -343,24 +381,28 @@
             "amount": 24000000.0,
             "currency": "USD"
           },
-          "model.irr": 4.50005,
           "model.npv": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
           "model.total": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
+          "model.wal_years": 5.0,
           "run.annual_discount_rate": 0.0,
-          "run.periods_per_year": 1.0
+          "run.periods_per_year": 1.0,
+          "stream.fund.sale_proceeds.total": {
+            "amount": 30000000.0,
+            "currency": "USD"
+          }
         }
       },
       {
         "name": "no_catchup",
         "metrics": {
           "entity.asset.fund.total": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
           "entity.party.gp.total": {
@@ -371,17 +413,21 @@
             "amount": 26938656.1536,
             "currency": "USD"
           },
-          "model.irr": 4.50005,
           "model.npv": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
           "model.total": {
-            "amount": 0.0,
+            "amount": 30000000.0,
             "currency": "USD"
           },
+          "model.wal_years": 5.0,
           "run.annual_discount_rate": 0.0,
-          "run.periods_per_year": 1.0
+          "run.periods_per_year": 1.0,
+          "stream.fund.sale_proceeds.total": {
+            "amount": 30000000.0,
+            "currency": "USD"
+          }
         }
       }
     ]

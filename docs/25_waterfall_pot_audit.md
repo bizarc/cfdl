@@ -1,6 +1,27 @@
 # Every waterfall in the repository builds its own pot — audit
 
-Status: **findings.** No model has been changed.
+Status: **migrated**, August 2026, with the exceptions stated below.
+
+Nine models now read `from available`: `waterfall_smoke`,
+`waterfall_abs_22_step` (its invented decaying field replaced by a collections
+stream), `evaluation_order`, `flip_monthly_grain` (its pot's revenue formula
+moved into an `operating_cash` stream), and the five proceeds fixtures, each of
+which now receives its sale as a stream. The two composition reads in
+`waterfall_nested_split` stay, as §10 and §12 provide.
+
+Three exceptions stay put, each with the reason written at its `from` line:
+
+- the credit benchmarks (`auto_abs_tranches`, the seven Fannie Mae variants,
+  `waterfall_after_contract`) draw a **slice** — the principal or interest
+  amount their exhibit tabulates — which `docs/03` §3.2 provides for;
+- `americredit_2017_1`'s first distribution draws two periods of collections
+  and its clean-up call adds a redemption price that is not stream cash, and
+  `available` is one period of streams;
+- `tax_equity_flip`'s pot is a sibling project's tracked cash, and rehoming it
+  as streams would move the case's asserted figures.
+
+`entity_property_bare_path` keeps its literal pot: the fixture demonstrates
+path spelling, not distribution.
 
 ## Scope
 

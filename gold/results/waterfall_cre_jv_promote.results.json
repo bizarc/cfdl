@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "fb091485faf0297984c3bb42a6254c508f43a1a8c4da6da4be44e56ac75dc45c",
-  "ledger_hash": "d97021b81000347eeade08b3833851442ec9a572d2de2dde7547e49315b2f88c",
+  "model_hash": "e95ee57d5c0b052534c8380f28e2a2e35358121563d3f09d531a35ea1203c09c",
+  "ledger_hash": "c7d0959bce19a86870ad2f432f4e6cdd57f107fc3d5046a2e05fab224dbb3842",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -19,7 +19,7 @@
     "status": "ok",
     "metrics": {
       "entity.asset.jv.total": {
-        "amount": -175000000.0,
+        "amount": 125000000.0,
         "currency": "USD"
       },
       "entity.party.cpa.total": {
@@ -34,14 +34,19 @@
         "amount": 246340815.75,
         "currency": "USD"
       },
+      "model.irr": 0.309307,
+      "model.moic": 1.714286,
       "model.npv": {
-        "amount": -159090909.090909,
+        "amount": 66303531.179564,
         "currency": "USD"
       },
+      "model.payback_periods": 3.0,
+      "model.payback_years": 3.0,
       "model.total": {
-        "amount": -175000000.0,
+        "amount": 125000000.0,
         "currency": "USD"
       },
+      "model.wal_years": 3.0,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.jv.equity_msgw.total": {
@@ -50,6 +55,10 @@
       },
       "stream.jv.equity_strs.total": {
         "amount": -157500000.0,
+        "currency": "USD"
+      },
+      "stream.jv.sale_proceeds.total": {
+        "amount": 300000000.0,
         "currency": "USD"
       }
     },
@@ -100,7 +109,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 300000000.0,
             "currency": "USD"
           }
         ]
@@ -200,7 +209,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 300000000.0,
             "currency": "USD"
           }
         ]
@@ -381,6 +390,32 @@
             "currency": "USD"
           }
         ]
+      },
+      "stream.jv.sale_proceeds": {
+        "index": {
+          "calendar": "annual",
+          "start": "2000-01-01",
+          "periods": 4
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300000000.0,
+            "currency": "USD"
+          }
+        ]
       }
     }
   },
@@ -391,7 +426,7 @@
         "name": "shortfall",
         "metrics": {
           "entity.asset.jv.total": {
-            "amount": -175000000.0,
+            "amount": 25000000.0,
             "currency": "USD"
           },
           "entity.party.cpa.total": {
@@ -406,14 +441,19 @@
             "amount": 180000000.0,
             "currency": "USD"
           },
+          "model.irr": 0.069045,
+          "model.moic": 1.142857,
           "model.npv": {
-            "amount": -159090909.090909,
+            "amount": -8827948.910594,
             "currency": "USD"
           },
+          "model.payback_periods": 3.0,
+          "model.payback_years": 3.0,
           "model.total": {
-            "amount": -175000000.0,
+            "amount": 25000000.0,
             "currency": "USD"
           },
+          "model.wal_years": 3.0,
           "run.annual_discount_rate": 0.1,
           "run.periods_per_year": 1.0,
           "stream.jv.equity_msgw.total": {
@@ -422,6 +462,10 @@
           },
           "stream.jv.equity_strs.total": {
             "amount": -157500000.0,
+            "currency": "USD"
+          },
+          "stream.jv.sale_proceeds.total": {
+            "amount": 200000000.0,
             "currency": "USD"
           }
         }

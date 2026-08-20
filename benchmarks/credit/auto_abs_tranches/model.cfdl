@@ -725,6 +725,9 @@ waterfall notes.principal on entity asset.trust {
   // THE POT IS THE POOL'S PRINCIPAL. The exhibit tabulates principal
   // outstanding, so interest is beside the point: it is collected and paid,
   // but it never retires a note.
+  // NARROWER THAN `available`, deliberately: this waterfall allocates the
+  // principal collections the exhibit tabulates, not the deal's whole cash. `docs/03` §3.2
+  // keeps the `from` expression free for exactly this.
   from series_sum("credit.pool.sched_principal.*", time.t, time.t)
         + series_sum("credit.pool.prepay.*", time.t, time.t)
 

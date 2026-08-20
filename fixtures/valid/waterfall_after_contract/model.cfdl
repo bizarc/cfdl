@@ -39,6 +39,9 @@ assume note_balance = 500000.0
 
 waterfall notes.principal on entity asset.trust {
   schedule every month from 2018-10 to 2019-03
+  // NARROWER THAN `available`, deliberately: this waterfall allocates the
+  // principal collections the exhibit tabulates, not the deal's whole cash. `docs/03` §3.2
+  // keeps the `from` expression free for exactly this.
   from series_sum("credit.pool.sched_principal.pool", time.t, time.t)
 
   pay note_principal to party.holders =

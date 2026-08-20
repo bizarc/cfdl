@@ -112,7 +112,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "series_sum(\"credit.pool.sched_principal.*\", time.t, time.t)        + series_sum(\"credit.pool.interest.*\", time.t, time.t)"
+        "src": "available"
       },
       "steps": [
         {

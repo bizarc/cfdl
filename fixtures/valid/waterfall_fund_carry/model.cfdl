@@ -52,9 +52,16 @@ assume proceeds       = 30000000.0
 // Capital plus the compounding preferred, measured from inception — the tier
 // one hurdle in money rather than in rate.
 
+// The exit: the fund receives the proceeds, and the waterfall allocates the
+// fund's available cash rather than re-reading the assumption.
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2025-01
+  amount = inputs.proceeds
+}
+
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
-  from inputs.proceeds
+  from available
 
   // 1. Return of capital and the 8% cumulative preferred, to the LPs.
   pay lp_preference to party.lp = asset.fund.lp_preference

@@ -104,7 +104,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "cfg.proceeds"
+        "src": "available"
       },
       "steps": [
         {
@@ -151,7 +151,38 @@
     }
   ],
   "contracts": [],
-  "streams": [],
+  "streams": [
+    {
+      "id": "d7e9eaa8e4fae50451aa9c8c9e29c353",
+      "name": "fund.sale_proceeds",
+      "owner": {
+        "symbol": "asset.fund"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2025-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "cfg.proceeds"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 53,
+          "end_col": 1
+        }
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [

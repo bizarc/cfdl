@@ -110,16 +110,6 @@
         "original_balance": "984243280"
       },
       "rules": {
-        "available_funds": {
-          "init": {
-            "lang": "cfdl",
-            "src": "12500000.0"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "prev * 0.97"
-          }
-        },
         "pool_balance": {
           "init": {
             "lang": "cfdl",
@@ -245,7 +235,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "asset.trust.available_funds"
+        "src": "available"
       },
       "steps": [
         {
@@ -530,7 +520,40 @@
     }
   ],
   "contracts": [],
-  "streams": [],
+  "streams": [
+    {
+      "id": "60bb65efb726491d9282f17c6e35c62a",
+      "name": "trust.collections",
+      "owner": {
+        "symbol": "asset.trust"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-02-01",
+        "to": "2017-07-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "12500000.0 * pow(0.97, time.t)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 74,
+          "start_col": 1,
+          "end_line": 77,
+          "end_col": 1
+        }
+      }
+    }
+  ],
   "events": [],
   "options": [],
   "runs": [
