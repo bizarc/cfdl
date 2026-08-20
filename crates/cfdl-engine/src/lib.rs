@@ -3325,6 +3325,7 @@ fn stream_cash_by_entity(
     rollup
 }
 
+#[allow(clippy::too_many_arguments)] // same shape as evaluate_stream: one call site, stage inputs
 fn run_waterfalls(
     ir: &Ir,
     timeline: &[Date],
