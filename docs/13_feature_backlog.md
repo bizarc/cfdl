@@ -2529,7 +2529,11 @@ comment at line 1350 described the boundary that keeps state out of cash, named
 the wrong mechanism, and stayed wrong for a year — because nothing about the
 file's shape says where one stage ends.
 
-Shape: crates or modules per stage, orchestrated in order.
+Shape: crates or modules per stage, orchestrated in order. **Modules shipped,
+August 2026**: `config`, `timeline`, `ir`, `env`, `fields`, `events`,
+`streams`, `distributions`, `results`, `stochastic`, with `run_deterministic`
+in `lib.rs` as the orchestrator — 149 goldens byte-identical across the move.
+Crates remain open as the second step if the boundaries earn it.
 
 1. timeline
 2. fields and events — mutually dependent, so one module
