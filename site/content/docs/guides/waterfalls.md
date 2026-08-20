@@ -20,13 +20,18 @@ before carry, and how a project pays lenders before equity.
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from asset.trust.available_funds
+  from available
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0
   pay residual  to party.certificate = remaining
 }
 ```
+
+`available` is the trust's own netted cash for the period — its streams' signed
+values, with its children rolled up by `part of` — handed to the waterfall by
+the engine the way `remaining` is. Write a narrower `from` expression only when
+the deal distributes a narrower amount, such as a principal-only distribution.
 
 Three parts:
 
@@ -121,9 +126,14 @@ else.
 Because steps publish as series, a later waterfall can draw on an earlier one:
 
 ```cfdl
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2025-01
+  amount = inputs.proceeds
+}
+
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
-  from inputs.proceeds
+  from available
   pay carry    to party.gp = remaining * 0.20
   pay lp_share to party.lp = remaining
 }
