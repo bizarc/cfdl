@@ -16,24 +16,22 @@ model "waterfall-first"
 time calendar quarterly from 2026-01 for 8
 
 // The trust collects; the parties are paid from what it collects.
-entity asset trust : Asset.Financial {
-  available_funds init 100000
-                  next 100000
-}
+entity asset trust : Asset.Financial
 
 entity party servicer : Party
 entity party lender : Party
 entity party investor : Party
 
-// The cash that funds the pot, visible in results beside its allocation.
+// The cash. The waterfall's pot is this, netted — the engine hands it over
+// as `available`, so nothing restates it.
 stream trust.collections on entity asset.trust inflow currency USD {
   schedule every quarter from 2026-01 to 2027-10
-  amount = asset.trust.available_funds
+  amount = 100000
 }
 
 waterfall trust.distribution on entity asset.trust {
   schedule every quarter from 2026-01 to 2027-10
-  from asset.trust.available_funds
+  from available
 
   // Each step: pay <name> to <payee> = <amount it is owed>.
   pay servicing_fee to party.servicer = 4500
@@ -42,7 +40,7 @@ waterfall trust.distribution on entity asset.trust {
 }
 ```
 
-A waterfall has a schedule (it distributes on dates, like any claim), a **pot** — the `from` expression, here a field of the trust stating what arrived this period — and ordered **steps**. Each step names itself, names its payee (an entity reference — this is where chapter 2's parties earn their place in the cast), and states what the step is *owed* as an ordinary expression.
+A waterfall has a schedule (it distributes on dates, like any claim), a **pot** — the `from` expression, and `available` is the trust's own netted cash for the period, handed over by the engine the way `remaining` is — and ordered **steps**. Each step names itself, names its payee (an entity reference — this is where chapter 2's parties earn their place in the cast), and states what the step is *owed* as an ordinary expression.
 
 The engine applies one rule at every step: the step receives `min(max(0, owed), remaining)`. That single rule is the construct's guarantee — **the pot cannot go negative, and no step can be paid more than what survives the steps above it** — however any individual step is written. The seniority logic that a spreadsheet re-implements per cell, correctly or not, is here the meaning of the construct itself, proved once in the engine rather than per model. What is left after a step is `remaining`, and a final `= remaining` step sweeps the residual — the equity's position in one word.
 
