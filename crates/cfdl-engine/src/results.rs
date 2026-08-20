@@ -1,0 +1,798 @@
+// Extracted from lib.rs — one stage of the engine. See docs/13 §7.44.
+use super::*;
+
+/// Aggregate per-period series values by calendar year.
+///
+/// Each distinct calendar year present in `timeline` becomes one entry in the
+/// output `Series`.  Values for all periods that fall within a given year
+/// are summed.  The resulting index uses `calendar = "annual"` and `start =
+/// "{first_year}-01-01"`.
+/// A bucketing of the model grid into report periods.
+///
+/// "Grain" rather than a coined term: it is what analytics tooling already
+/// calls this — Superset and Looker both offer a Time Grain of
+/// day/week/month/quarter/year, meaning exactly "what one row represents".
+/// Not to be confused with `pack.cadences`, which is a different thing wearing
+/// a similar word: the list of model calendars a pack's rules lower correctly
+/// on, rather than a frequency to aggregate at.
+///
+/// The model grain and the annual rollup were always two bucketings of one
+/// mechanism; only one of them was written down. Making it a type means a
+/// quarterly statement, an annual rollup and a valuation at a different
+/// convention are the same operation with a different partition, rather than
+/// three pieces of code that must be kept agreeing.
+///
+/// `buckets[i]` holds the model-period indices that fall in report period `i`.
+/// The identity bucketing — one model period per bucket — is what everything
+/// defaults to, which is why nothing moves until something opts in.
+#[derive(Debug, Clone)]
+pub struct Grain {
+    pub calendar: String,
+    pub start: String,
+    pub buckets: Vec<Vec<usize>>,
+    /// One label per bucket, built HERE because this is the last place the
+    /// dates exist. A statement is a post-pass with only a `SeriesIndex`, and a
+    /// coarse grain's buckets are opaque indices — nothing downstream can say
+    /// which year bucket 3 is without rebuilding the timeline again.
+    pub labels: Vec<String>,
+}
+
+/// Format one bucket's opening date for the calendar it is bucketed at.
+pub(crate) fn bucket_label(date: &Date, calendar: &str) -> String {
+    match calendar {
+        "annual" => format!("{:04}", date.year),
+        "quarterly" => format!("{:04}-Q{}", date.year, (date.month - 1) / 3 + 1),
+        "daily" => format!("{:04}-{:02}-{:02}", date.year, date.month, date.day),
+        // monthly, and anything unrecognized: a year-month is never wrong,
+        // only less precise than it could be.
+        _ => format!("{:04}-{:02}", date.year, date.month),
+    }
+}
+
+impl Grain {
+    /// One bucket per model period: the grid reporting on itself.
+    pub fn identity(timeline: &[Date], calendar: &str, start: &str) -> Self {
+        Self {
+            calendar: calendar.to_string(),
+            start: start.to_string(),
+            buckets: (0..timeline.len()).map(|i| vec![i]).collect(),
+            labels: timeline.iter().map(|d| bucket_label(d, calendar)).collect(),
+        }
+    }
+
+    /// One bucket per distinct CALENDAR year — not per model year. A mid-year
+    /// start therefore produces a short first bucket, which is what the annual
+    /// rollup has always done and what a fiscal reader expects.
+    pub fn calendar_year(timeline: &[Date]) -> Self {
+        let mut years: Vec<i32> = Vec::new();
+        let mut seen = std::collections::BTreeSet::new();
+        for d in timeline {
+            if seen.insert(d.year) {
+                years.push(d.year);
+            }
+        }
+        let buckets = years
+            .iter()
+            .map(|&yr| {
+                timeline
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, d)| (d.year == yr).then_some(i))
+                    .collect()
+            })
+            .collect();
+        Self {
+            calendar: "annual".to_string(),
+            start: years
+                .first()
+                .map(|y| format!("{y:04}-01-01"))
+                .unwrap_or_default(),
+            buckets,
+            labels: years.iter().map(|y| format!("{y:04}")).collect(),
+        }
+    }
+
+    /// Build a grain from what a results document already carries.
+    ///
+    /// A statement is a post-pass and has no timeline — only a `SeriesIndex`.
+    /// Reconstructing the dates from `(calendar, start, periods)` is exact,
+    /// because that triple is what generated them in the first place.
+    ///
+    /// `name` is the grain a declaration asked for. `None` or `"period"` gives
+    /// the identity bucketing, which is what everything defaults to.
+    pub fn from_index(index: &SeriesIndex, name: Option<&str>) -> Self {
+        let timeline = timeline_dates(&index.start, &index.calendar, index.periods as usize)
+            .unwrap_or_default();
+        match name {
+            Some("annual") if !timeline.is_empty() => Grain::calendar_year(&timeline),
+            _ => Grain::identity(&timeline, &index.calendar, &index.start),
+        }
+    }
+
+    pub fn is_identity(&self) -> bool {
+        self.buckets.iter().all(|b| b.len() <= 1)
+    }
+
+    /// Sum a per-period series into this grain's buckets.
+    ///
+    /// Money buckets by summation. A RATIO does not, and must never be routed
+    /// through here: the mean of twelve monthly coverage ratios is not the
+    /// annual coverage ratio. A ratio is recomputed from its re-bucketed
+    /// numerator and denominator — see `rebucket_subtotals`, whose signature
+    /// takes the SPECS rather than the values so that computing the wrong
+    /// thing is not the path of least resistance.
+    pub fn sum(&self, values: &[f64]) -> Vec<f64> {
+        self.buckets
+            .iter()
+            .map(|b| b.iter().filter_map(|&i| values.get(i)).sum())
+            .collect()
+    }
+}
+
+pub(crate) fn build_annual_rollup(
+    timeline: &[Date],
+    stream_series: &BTreeMap<String, Vec<f64>>,
+    model_series: &[f64],
+    currency: &str,
+    subtotal_money: &BTreeMap<String, Vec<f64>>,
+    subtotal_specs: &[IrSubtotal],
+) -> AnnualRollupSection {
+    // One caller of Grain rather than its own bucketing. The rollup and a
+    // coarser statement ask the same question of the same partition; keeping
+    // two implementations of that meant keeping them agreeing.
+    //
+    // The grain is constructed HERE rather than passed, and the function stays
+    // `build_annual_rollup` rather than becoming a general `build_rollup`. It
+    // returns `AnnualRollupSection`, and the published schema pins
+    // `deterministic.annual_rollup` to `calendar: "annual"` — so a version that
+    // accepted any grain could emit quarterly data under a field called
+    // `annual_rollup`, which is a worse trade than one saved constructor call.
+    //
+    // Generality belongs where the grain genuinely varies per output: the
+    // statement and valuation paths. If the rollup ever becomes "at whatever
+    // grain you asked for", the field name and the schema move with it, and
+    // that is a deliberate contract change rather than a rename.
+    let grain = Grain::calendar_year(timeline);
+    let n_years = grain.buckets.len() as u32;
+    let start = grain.start.clone();
+    let aggregate = |values: &[f64]| -> Vec<f64> { grain.sum(values) };
+
+    let mut rollup = BTreeMap::new();
+
+    rollup.insert(
+        "model.net_cash_flow".to_string(),
+        Series::from_values(
+            "annual",
+            &start,
+            n_years,
+            currency,
+            None,
+            &aggregate(model_series),
+        ),
+    );
+
+    for (name, values) in stream_series {
+        rollup.insert(
+            format!("stream.{name}"),
+            Series::from_values(
+                "annual",
+                &start,
+                n_years,
+                currency,
+                None,
+                &aggregate(values),
+            ),
+        );
+    }
+
+    // Subtotals roll up BY KIND, and that distinction is the whole reason this
+    // takes the specs rather than the two value maps.
+    //
+    // Money folds. A ratio does not: the mean of twelve monthly coverage ratios
+    // is not the annual coverage ratio, and the annual ratio is not recoverable
+    // from the monthly column at all. So it is recomputed from its numerator and
+    // denominator AFTER those have been rolled up — which is only possible
+    // because the declaration says what they are.
+    //
+    // Deliberately keyed off `subtotal_money` for the inputs rather than off the
+    // published ratio series, for the same reason cfdl-statement takes specs:
+    // given a column of ratios and a grain, averaging them is the obvious thing
+    // to write, and it is wrong.
+    for (id, values) in subtotal_money {
+        rollup.insert(
+            id.clone(),
+            Series::from_values(
+                "annual",
+                &start,
+                n_years,
+                currency,
+                None,
+                &aggregate(values),
+            ),
+        );
+    }
+    for spec in subtotal_specs {
+        if spec.op != "ratio" {
+            continue;
+        }
+        let (Some(num_id), Some(den_id)) = (&spec.numerator, &spec.denominator) else {
+            continue;
+        };
+        let (Some(num), Some(den)) = (subtotal_money.get(num_id), subtotal_money.get(den_id))
+        else {
+            continue;
+        };
+        let (num, den) = (aggregate(num), aggregate(den));
+        let values: Vec<Option<f64>> = num
+            .iter()
+            .zip(den.iter())
+            .map(|(n, d)| (d.abs() > f64::EPSILON).then(|| round_amount(n / d)))
+            .collect();
+        rollup.insert(
+            spec.id.clone(),
+            Series::from_optional("annual", &start, n_years, &values),
+        );
+    }
+
+    AnnualRollupSection { series: rollup }
+}
+
+/// Present value of streams that each carry their own position in period.
+///
+/// `v / (1+r)^(t + offset)` factorizes to `[v / (1+r)^offset] / (1+r)^t`, so a
+/// stream's offset is a constant scale on its whole series.
+pub(crate) fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
+    let mut total = 0.0_f64;
+    for (values, offset) in streams {
+        let scale = (1.0 + rate).powf(-offset);
+        for (i, value) in values.iter().enumerate() {
+            total += value * scale / (1.0 + rate).powi(i as i32);
+        }
+    }
+    total
+}
+
+/// Present value at a stated GRAIN: sum the cash into the grain's buckets
+/// first, then discount each bucket once.
+///
+/// This is the order practitioners use — sum NOI by year, then discount the
+/// year — and the order matters. `npv_with_offsets` above discounts each
+/// stream-period individually and accumulates, which is the same answer only
+/// when the grain IS the model grid.
+///
+/// Grouping is by `(bucket, offset)`, not by bucket alone. A discount factor
+/// depends only on position and offset, so summing within a `(bucket, offset)`
+/// group and discounting once is MATHEMATICALLY equal to the per-stream
+/// accumulation at model grain, including for models whose streams settle at
+/// different points in a period. Collapsing the offset dimension would change
+/// every mixed-offset model, which is why it is not collapsed.
+///
+/// Mathematically equal is not bit-equal: float addition is not associative,
+/// and regrouping the sum moves the last bit — measured at 1 ULP on a mixed-
+/// offset probe. So the identity grain does NOT route through here. The default
+/// path stays `npv_with_offsets` exactly as it was, and this function serves
+/// callers that ask for a different grain. That keeps the promise that nothing
+/// moves until something opts in, rather than re-blessing every NPV in the
+/// golden suite for a change of summation order.
+///
+/// At a coarser grain the sub-bucket offsets do collapse, which is exactly what
+/// an annual convention asserts: MIT OCW 11.431J's own footnote says "assumes
+/// first cash flow occurs 1 year from present".
+pub(crate) fn npv_at_grain(
+    streams: &[(Vec<f64>, f64)],
+    rate_per_bucket: f64,
+    grain: &Grain,
+) -> f64 {
+    // (bucket index, quantised offset) -> summed cash. The quantisation mirrors
+    // `by_offset` used for WAL and payback, so one convention describes both.
+    let mut grouped: BTreeMap<(usize, i64), f64> = BTreeMap::new();
+    for (values, offset) in streams {
+        let key_offset = (offset * 1e9).round() as i64;
+        for (bucket_idx, members) in grain.buckets.iter().enumerate() {
+            let mut sum = 0.0_f64;
+            for &i in members {
+                if let Some(v) = values.get(i) {
+                    sum += *v;
+                }
+            }
+            if sum != 0.0 {
+                *grouped.entry((bucket_idx, key_offset)).or_insert(0.0) += sum;
+            }
+        }
+    }
+    let mut total = 0.0_f64;
+    for ((bucket_idx, key_offset), sum) in grouped {
+        let offset = key_offset as f64 / 1e9;
+        total += sum / (1.0 + rate_per_bucket).powf(bucket_idx as f64 + offset);
+    }
+    total
+}
+
+/// IRR over offset-carrying streams: the rate at which their present value is
+/// zero. Bisection, because the basis is rebuilt for each candidate rate.
+pub(crate) fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
+    let f = |r: f64| npv_with_offsets(streams, r);
+    let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
+    let (mut f_lo, f_hi) = (f(lo), f(hi));
+    if f_lo.is_nan() || f_hi.is_nan() || f_lo * f_hi > 0.0 {
+        return None;
+    }
+    for _ in 0..200 {
+        let mid = (lo + hi) / 2.0;
+        let f_mid = f(mid);
+        if f_mid.abs() < 1e-10 {
+            return Some(mid);
+        }
+        if f_lo * f_mid < 0.0 {
+            hi = mid;
+        } else {
+            lo = mid;
+            f_lo = f_mid;
+        }
+    }
+    Some((lo + hi) / 2.0)
+}
+
+/// Advance a date by one interval.
+pub(crate) fn step_once(d: &Date, interval: &str) -> Date {
+    match interval {
+        "daily" => d.add_days(1),
+        "weekly" => d.add_days(7),
+        "quarterly" => d.add_months(3),
+        "annual" => d.add_months(12),
+        _ => d.add_months(1),
+    }
+}
+
+pub(crate) fn round_amount(value: f64) -> f64 {
+    // Single global rounding policy for deterministic numeric outputs.
+    (value * 1_000_000.0).round() / 1_000_000.0
+}
+
+pub(crate) fn canonical_hash(value: &Value) -> String {
+    let canonical = canonical_json(value);
+    let digest = Sha256::digest(canonical.as_bytes());
+    let mut out = String::with_capacity(64);
+    for b in digest {
+        out.push_str(&format!("{b:02x}"));
+    }
+    out
+}
+
+pub(crate) fn canonical_json(value: &Value) -> String {
+    match value {
+        Value::Null => "null".to_string(),
+        Value::Bool(v) => {
+            if *v {
+                "true".to_string()
+            } else {
+                "false".to_string()
+            }
+        }
+        Value::Number(v) => v.to_string(),
+        Value::String(v) => serde_json::to_string(v).unwrap_or_else(|_| "\"\"".to_string()),
+        Value::Array(values) => {
+            let inner = values
+                .iter()
+                .map(canonical_json)
+                .collect::<Vec<_>>()
+                .join(",");
+            format!("[{inner}]")
+        }
+        Value::Object(map) => {
+            let mut keys = map.keys().cloned().collect::<Vec<_>>();
+            keys.sort();
+            let mut parts = Vec::with_capacity(keys.len());
+            for key in keys {
+                let key_json = serde_json::to_string(&key).unwrap_or_else(|_| "\"\"".to_string());
+                let value_json = canonical_json(&map[&key]);
+                parts.push(format!("{key_json}:{value_json}"));
+            }
+            format!("{{{}}}", parts.join(","))
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DomainMetrics {
+    pub pack: String,
+    pub metrics: BTreeMap<String, Scalar>,
+    pub lineage: BTreeMap<String, MetricLineage>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MetricLineage {
+    pub numerator_streams: Vec<String>,
+    pub denominator_streams: Vec<String>,
+    pub formula: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Results {
+    pub results_version: String,
+    pub model_hash: String,
+    /// Content hash of the deterministic ledger — the per-stream, per-period
+    /// series this run produced.
+    ///
+    /// Together with `model_hash`, `engine` and the run config in
+    /// `deterministic.metrics`, this closes the chain: identical inputs on an
+    /// identical engine must reproduce an identical `ledger_hash`. If they do
+    /// not, something is nondeterministic, and the golden suite would otherwise
+    /// report that as a flapping test rather than as the defect it is.
+    ///
+    /// It hashes the LEDGER, not the inputs, deliberately. "Did the inputs
+    /// change" is already answerable from `model_hash`; what nothing answered
+    /// before is "did the output change", which is the question a reviewer
+    /// staring at a re-blessed golden actually has.
+    pub ledger_hash: String,
+    pub engine: EngineInfo,
+    pub warnings: Vec<String>,
+    /// Resolved assumptions and the contract terms each lowered stream
+    /// consumed. Absent when the model declares neither.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inputs: Option<InputsSection>,
+    pub deterministic: DeterministicSection,
+    pub scenarios: ScenarioSection,
+    pub monte_carlo: MonteCarloSection,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain_metrics: Option<DomainMetrics>,
+    /// Rendered statements. Present only when the active pack declares one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub statements: Option<StatementsSection>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementsSection {
+    pub pack: String,
+    pub statements: Vec<Statement>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Statement {
+    pub id: String,
+    pub label: String,
+    pub default: bool,
+    /// The grain this statement reports at, and the period labels that go with
+    /// it. Published because a consumer CANNOT derive it: an annual statement
+    /// over a monthly model has ten values where the model has 120, and nothing
+    /// else in the document says which ten periods those are. The playground
+    /// needs it to label a column; so does anyone rendering the JSON.
+    pub grain: StatementGrain,
+    pub rows: Vec<StatementRow>,
+    pub reconciliation: StatementReconciliation,
+    /// Completeness findings. Empty is the healthy case.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub diagnostics: Vec<StatementDiagnostic>,
+}
+
+/// How a statement's columns are bucketed, and what to call them.
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementGrain {
+    /// `monthly` | `quarterly` | `annual` | whatever the model grid is.
+    pub calendar: String,
+    /// First bucket's start date.
+    pub start: String,
+    /// One label per column, ready to render.
+    pub labels: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementRow {
+    /// `line` | `subtotal` | `ratio` | `spacer` | `residual`.
+    pub kind: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub label: String,
+    pub depth: u32,
+    /// How to RENDER the sign: +1 shows the value as stored, -1 flips it for
+    /// display only. `values` is always the signed arithmetic quantity, so a
+    /// consumer that ignores this still adds up correctly.
+    pub display_sign: f64,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub values: Vec<SeriesValue>,
+    /// Lifetime total of the row. Absent for a ratio, where summing means
+    /// nothing, and for a spacer.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total: Option<f64>,
+    /// The streams this row drew from. Present on `line` and `residual` rows;
+    /// it is what makes a published figure traceable without the ledger.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<String>,
+}
+
+/// Does the statement add up to the model's cash?
+///
+/// Published always and asserted rather than corrected. A statement whose
+/// bottom line quietly differs from `model.total` is the failure this exists to
+/// make visible.
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementReconciliation {
+    pub bottom_line: f64,
+    pub model_total: f64,
+    pub residual: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StatementDiagnostic {
+    pub code: String,
+    pub message: String,
+}
+
+/// The top of the audit chain: what went in, above the line items.
+#[derive(Debug, Clone, Serialize)]
+pub struct InputsSection {
+    /// Evaluated `assume` values, as `inputs.<name>` resolves them.
+    ///
+    /// In a deterministic run a random assumption resolves to its clipped
+    /// central value, not to a draw — publishing it here is what stops that
+    /// being invisible.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub resolved: BTreeMap<String, f64>,
+    /// Per-stream record of the contract terms a pack rule consumed. Passed
+    /// through from the IR verbatim, so `IrStream` and the per-period
+    /// evaluation path are untouched by it.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EngineInfo {
+    pub name: String,
+    pub version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DeterministicSection {
+    pub status: String,
+    pub metrics: BTreeMap<String, Scalar>,
+    pub series: BTreeMap<String, Series>,
+    /// Every state change an event made, in the order it happened. Omitted when
+    /// the model has none, so a model without events is unchanged.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub transitions: Vec<TransitionRecord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annual_rollup: Option<AnnualRollupSection>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<RuntimeError>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonteCarloSection {
+    pub status: String,
+    pub trials: u32,
+    pub seed: u64,
+    pub metrics: BTreeMap<String, MetricSummary>,
+    pub trial_summaries: Vec<MonteCarloTrialSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aggregates: Option<MonteCarloAggregates>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<RuntimeError>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ScenarioSection {
+    pub status: String,
+    pub summaries: Vec<ScenarioSummary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub errors: Option<Vec<RuntimeError>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ScenarioSummary {
+    pub name: String,
+    pub metrics: BTreeMap<String, Scalar>,
+}
+
+/// Calendar-year aggregates of all per-period series.
+/// Omitted when the model frequency is already "annual".
+#[derive(Debug, Clone, Serialize)]
+pub struct AnnualRollupSection {
+    pub series: BTreeMap<String, Series>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonteCarloTrialSummary {
+    pub trial: u32,
+    pub metrics: BTreeMap<String, Scalar>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonteCarloAggregates {
+    pub npv: NpvAggregate,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NpvAggregate {
+    pub mean: f64,
+    pub median: f64,
+    pub stddev: f64,
+    pub p_negative: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum Scalar {
+    Number(f64),
+    Money(Money),
+    String(String),
+}
+
+/// One period's value on a published series.
+///
+/// Cash carries a currency; a declared `state` does not — it is an index, a
+/// factor, a count. Publishing a state as `Money` would assert a denomination
+/// it does not have, and would make it look summable alongside cash. The
+/// results schema has always permitted a bare number here.
+#[derive(Debug, Clone, Serialize)]
+#[serde(untagged)]
+pub enum SeriesValue {
+    Money(Money),
+    Number(f64),
+    /// A period where the value is genuinely undefined — a coverage ratio in a
+    /// period with no debt service. Published as JSON `null`, which the results
+    /// schema has always permitted.
+    ///
+    /// Not zero: a coverage ratio of "no debt" is not a coverage ratio of zero,
+    /// and a consumer that averaged the series would be badly misled. Not an
+    /// omission either, because a shortened series breaks index alignment.
+    Null,
+}
+
+impl SeriesValue {
+    /// The cash amount, or `None` for a series that is not money. Callers that
+    /// weight or sum cash use this, so a state cannot silently contribute.
+    pub fn money_amount(&self) -> Option<f64> {
+        match self {
+            SeriesValue::Money(m) => Some(m.amount),
+            SeriesValue::Number(_) | SeriesValue::Null => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Series {
+    pub index: SeriesIndex,
+    /// Where in each period this series' cash falls, per
+    /// docs/12_payment_timing.md — the same offset used to discount it, and
+    /// the axis `model.wal_years` is measured on. Absent on aggregates
+    /// (`model.net_cash_flow`, the annual rollup), which sum streams whose
+    /// placements differ and so have no single position.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<f64>,
+    pub values: Vec<SeriesValue>,
+}
+
+impl Series {
+    pub(crate) fn from_values(
+        calendar: &str,
+        start: &str,
+        periods: u32,
+        currency: &str,
+        offset: Option<f64>,
+        values: &[f64],
+    ) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset,
+            values: values
+                .iter()
+                .map(|amount| {
+                    SeriesValue::Money(Money {
+                        amount: round_amount(*amount),
+                        currency: currency.to_string(),
+                    })
+                })
+                .collect(),
+        }
+    }
+
+    /// A dimensionless series: a declared `state`, published so a recurrence
+    /// can be inspected rather than only its effect on cash. No currency and
+    /// no offset — a state is not paid, so it does not sit anywhere in its
+    /// period.
+    /// A plain-number series where some periods are genuinely undefined.
+    /// `None` publishes as JSON `null`, which the results schema permits.
+    ///
+    /// Rounded like every other published number. That is not cosmetic: a
+    /// ratio's numerator is a fold of signed cash, so a period whose flows
+    /// cancel leaves a residue rather than an exact zero — around 2e-12 in
+    /// practice — and dividing that by a real denominator publishes something
+    /// like 2.655e-17. Whose last bits differ by platform: this shipped, and
+    /// the Windows runner disagreed with Linux and macOS on one golden while
+    /// both of those agreed with each other.
+    ///
+    /// `round_amount` is described at its definition as the single global
+    /// rounding policy for deterministic numeric outputs. Skipping it here was
+    /// the defect; nothing else published bypasses it.
+    pub(crate) fn from_optional(
+        calendar: &str,
+        start: &str,
+        periods: u32,
+        values: &[Option<f64>],
+    ) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset: None,
+            values: values
+                .iter()
+                .map(|v| match v {
+                    Some(x) => SeriesValue::Number(round_amount(*x)),
+                    None => SeriesValue::Null,
+                })
+                .collect(),
+        }
+    }
+
+    pub(crate) fn from_plain(calendar: &str, start: &str, periods: u32, values: &[f64]) -> Self {
+        Self {
+            index: SeriesIndex {
+                calendar: calendar.to_string(),
+                start: start.to_string(),
+                periods,
+            },
+            offset: None,
+            values: values.iter().map(|v| SeriesValue::Number(*v)).collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SeriesIndex {
+    pub calendar: String,
+    pub start: String,
+    pub periods: u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Money {
+    pub amount: f64,
+    pub currency: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RuntimeError {
+    pub code: String,
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hint: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MetricSummary {
+    pub r#type: String,
+    pub mean: Scalar,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stdev: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p01: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p05: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p10: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p25: Option<Scalar>,
+    pub p50: Scalar,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p75: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p90: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p95: Option<Scalar>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p99: Option<Scalar>,
+}
