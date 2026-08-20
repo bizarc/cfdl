@@ -74,9 +74,16 @@ stream jv.equity_strs on entity asset.jv outflow currency USD {
   amount = inputs.strs_capital
 }
 
+// The sale. The venture receives the proceeds in the exit year; the equity
+// went out in year zero, so `available` at the distribution is the proceeds.
+stream jv.sale_proceeds on entity asset.jv inflow currency USD {
+  schedule on 2003-01
+  amount = inputs.net_sale_proceeds
+}
+
 waterfall jv.distribution on entity asset.jv {
   schedule on 2003-01
-  from inputs.net_sale_proceeds
+  from available
 
   // 1-2. Capital and accrued preference, PARI PASSU between the two funders.
   pay msgw_preference to party.msgw = min(asset.jv.msgw_preference,

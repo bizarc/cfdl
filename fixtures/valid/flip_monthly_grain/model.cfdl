@@ -112,16 +112,23 @@ event flip when asset.interest.investor_npv_closed >= 0.0 {
   set entity asset.interest.status = "post_flip"
 }
 
+// Operating cash is ACTIVITY, so it is a stream; the waterfall allocates the
+// interest's available cash rather than recomputing revenue inside the pot.
+stream interest.operating_cash on entity asset.interest inflow currency USD {
+  schedule every month from 2026-02 to 2051-12
+  amount = ( inputs.energy_year_one * inputs.ppa_price
+              * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)
+              * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)
+             - inputs.capacity_kw * inputs.om_per_kw
+              * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)
+             - if(asset.interest.operating_year <= inputs.debt_term,
+                  0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
+                  0.0) ) / 12.0
+}
+
 waterfall interest.distribution on entity asset.interest {
   schedule every month from 2026-02 to 2051-12
-  from ( inputs.energy_year_one * inputs.ppa_price
-          * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)
-          * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)
-         - inputs.capacity_kw * inputs.om_per_kw
-          * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)
-         - if(asset.interest.operating_year <= inputs.debt_term,
-              0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),
-              0.0) ) / 12.0
+  from available
 
   pay investor to party.tax_investor =
         remaining * if(asset.interest.status == "post_flip",

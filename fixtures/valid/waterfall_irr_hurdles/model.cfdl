@@ -54,9 +54,14 @@ assume hold_years     = 5.0
 // Written descending, so "the largest tier the deal reached" falls out of a
 // plain if-chain: eight ordered comparisons, no iteration.
 
+stream deal.sale_proceeds on entity asset.deal inflow currency USD {
+  schedule on 2025-01
+  amount = inputs.proceeds
+}
+
 waterfall fund.distribution on entity asset.deal {
   schedule on 2025-01
-  from inputs.proceeds
+  from available
 
   pay mgmt_proceeds    to party.mgmt    = inputs.proceeds *
      if(asset.deal.deal_irr >= 0.28148859901472223,

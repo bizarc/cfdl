@@ -45,6 +45,10 @@ use pack "opco" version "0.1.0"
 // waterfall, not a cash flow schedule, and the schedule is the other case.
 time calendar annual from 2021-01 for 1
 
+// Cash the option pool returns at exit — strike proceeds on exercised options,
+// stated by the source's option-pool schedule (the 44.500 column).
+assume option_pool_proceeds = 44.500
+
 entity asset target : OpCo.Asset.Enterprise {
   // Both quantities describe the enterprise AT EXIT, so they hang on it rather
   // than floating as model variables. `value_per_share` is what every option's
@@ -55,8 +59,8 @@ entity asset target : OpCo.Asset.Enterprise {
           (575.6158451632398 + 103.875) / 32.203133120640006,
           if(22.50 < (575.6158451632398 + 72.625) / 30.953133120640006,
           (575.6158451632398 + 72.625) / 30.953133120640006,
-          if(20.00 < (575.6158451632398 + 44.500) / 29.703133120640006,
-          (575.6158451632398 + 44.500) / 29.703133120640006,
+          if(20.00 < (575.6158451632398 + inputs.option_pool_proceeds) / 29.703133120640006,
+          (575.6158451632398 + inputs.option_pool_proceeds) / 29.703133120640006,
           if(17.50 < (575.6158451632398 + 29.500) / 28.953133120640006,
           (575.6158451632398 + 29.500) / 28.953133120640006,
           if(15.00 < (575.6158451632398 + 20.750) / 28.453133120640006,
@@ -196,7 +200,7 @@ entity party mgmt    : OpCo.Party.Management { name = "Management" }
 
 waterfall opco.exit on entity asset.target {
   schedule on 2021-01
-  from asset.target.exit_equity + 44.500
+  from asset.target.exit_equity + inputs.option_pool_proceeds
 
   pay sponsor_proceeds    to party.sponsor = 23.353133120640006 * asset.target.value_per_share
   pay management_proceeds to party.mgmt    = remaining

@@ -643,6 +643,11 @@ entity party e_holders : Credit.Party.Investor { name = "Class E noteholders" }
 // final scheduled date, so each of them pays nothing. They are written out
 // because the deal has them.
 // ---------------------------------------------------------------------------
+// NOT `from available`, for two reasons the binding cannot yet carry: the
+// first distribution draws TWO periods of collections (the January pools pay
+// in period 0 and distribute in period 1, and `available` is one period), and
+// the clean-up call adds a redemption price that is not stream cash. Both are
+// stated in the windowed pot below.
 waterfall notes.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2022-11
 

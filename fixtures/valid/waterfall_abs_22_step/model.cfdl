@@ -31,8 +31,6 @@ time calendar monthly from 2017-02 for 6
 // the pool and collection figures below are not, and are marked where they
 // appear.
 entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280
-  available_funds init 12500000.0
-                  next prev * 0.97
   pool_balance init 960000000.0
                next prev * 0.96
   reserve_balance init 18000000.0
@@ -69,9 +67,18 @@ assume specified_reserve   = 19684866.0
 assume principal_distributable = 2500000.0
 assume oc_target       = 940000000.0
 
+// COLLECTIONS, ILLUSTRATIVE. The prospectus publishes no period-by-period
+// schedule, so the amounts are stated here as a stream — the trust's cash,
+// which `available` hands the waterfall. The decay stands in for a pool
+// amortizing; the capital structure above is the transaction's own.
+stream trust.collections on entity asset.trust inflow currency USD {
+  schedule every month from 2017-02 to 2017-07
+  amount = 12500000.0 * pow(0.97, time.t)
+}
+
 waterfall abs.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2017-07
-  from asset.trust.available_funds
+  from available
 
   //  1. the servicer, and amounts the sponsor is entitled to retain
   pay servicing_fee     to party.servicer  = inputs.servicing_fee

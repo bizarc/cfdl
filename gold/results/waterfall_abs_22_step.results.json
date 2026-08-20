@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "6cf983bb5c4eb665ceb010e1799078c2d8687803870fcca96b1da9891bf59abb",
-  "ledger_hash": "04e9ba91fb80afd70708aa4a2820983f5641af508c4d1585bf8701dadcfeb835",
+  "model_hash": "6253b896d1cb9300c4876d31f473b1e7ff925af6ca2491208b5dbb881471452e",
+  "ledger_hash": "e892b80d7c14f2078dee7e05fa69e2dfa88a193f24d7183bf896dd96acdba3ff",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -57,7 +57,7 @@
         "currency": "USD"
       },
       "entity.asset.trust.total": {
-        "amount": 0.0,
+        "amount": 69594997.94625,
         "currency": "USD"
       },
       "entity.party.certificate.total": {
@@ -76,34 +76,23 @@
         "amount": 450000.0,
         "currency": "USD"
       },
-      "model.irr": 766301455.993396,
       "model.npv": {
-        "amount": 0.0,
+        "amount": 69594997.94625,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 0.0,
+        "amount": 69594997.94625,
         "currency": "USD"
       },
+      "model.wal_years": 0.284268,
       "run.annual_discount_rate": 0.0,
-      "run.periods_per_year": 12.0
+      "run.periods_per_year": 12.0,
+      "stream.trust.collections.total": {
+        "amount": 69594997.94625,
+        "currency": "USD"
+      }
     },
     "series": {
-      "asset.trust.available_funds": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 6
-        },
-        "values": [
-          12500000.0,
-          12125000.0,
-          11761250.0,
-          11408412.5,
-          11066160.125,
-          10734175.32125
-        ]
-      },
       "asset.trust.pool_balance": {
         "index": {
           "calendar": "monthly",
@@ -751,27 +740,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 12125000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11761250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11408412.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11066160.125,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 10734175.32125,
             "currency": "USD"
           }
         ]
@@ -916,27 +905,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 12125000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11761250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11408412.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11066160.125,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 10734175.32125,
             "currency": "USD"
           }
         ]
@@ -1699,6 +1688,40 @@
             "currency": "USD"
           }
         ]
+      },
+      "stream.trust.collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 12500000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 12125000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11761250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11408412.5,
+            "currency": "USD"
+          },
+          {
+            "amount": 11066160.125,
+            "currency": "USD"
+          },
+          {
+            "amount": 10734175.32125,
+            "currency": "USD"
+          }
+        ]
       }
     },
     "annual_rollup": {
@@ -1838,7 +1861,20 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 69594997.94625,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.trust.collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 69594997.94625,
               "currency": "USD"
             }
           ]

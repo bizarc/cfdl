@@ -49,9 +49,14 @@ assume stakes_pct     = 0.20
 
 // 1. THE FUND. Capital and preferred to the LPs, catch-up and promote to the
 //    general partner, residual to the LPs.
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2025-01
+  amount = inputs.proceeds
+}
+
 waterfall fund.distribution on entity asset.fund {
   schedule on 2025-01
-  from inputs.proceeds
+  from available
 
   pay lp_preference to party.lp = asset.fund.lp_preference
   pay gp_catchup    to party.gp = 4693280.768

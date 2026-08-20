@@ -137,6 +137,10 @@ contract credit.pool_level_pay.g3 on entity asset.pool {
   }
 }
 
+// NARROWER THAN `available`, deliberately: the supplement distributes
+// principal as its own amount, so this waterfall draws that slice rather than
+// the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
+// for exactly this.
 waterfall g3.principal on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
@@ -150,6 +154,10 @@ waterfall g3.principal on entity asset.trust {
 // distribution date: AB at 3.25%, IO at 5.00% of its notional. The pool
 // passes through at 5.00% under every column's assumptions, so the residual
 // step should take nothing, and expected.csv asserts that it takes nothing.
+// NARROWER THAN `available`, deliberately: the supplement distributes
+// interest as its own amount, so this waterfall draws that slice rather than
+// the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
+// for exactly this.
 waterfall g3.interest on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 

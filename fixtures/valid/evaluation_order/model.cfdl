@@ -64,9 +64,9 @@ event cash_threshold when series_sum("credit.pool.interest.*", time.t, time.t)
 
 waterfall dist on entity asset.pool {
   schedule every month from 2017-01 to 2017-04
-  // A waterfall reads streams. This is the boundary crossing that works.
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-       + series_sum("credit.pool.interest.*", time.t, time.t)
+  // The pot is the entity's available cash, bound by the engine — the
+  // boundary crossing the language provides for.
+  from available
 
   pay reads_fee_rate  to party.investor = asset.pool.fee_rate * 1000000.0
   pay reads_cash_flag to party.investor = asset.pool.cash_flag * 111.0

@@ -225,7 +225,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "( inputs.energy_year_one * inputs.ppa_price           * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)           * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)          - inputs.capacity_kw * inputs.om_per_kw           * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)          - if(asset.interest.operating_year <= inputs.debt_term,               0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),               0.0) ) / 12.0"
+        "src": "available"
       },
       "steps": [
         {
@@ -304,7 +304,40 @@
     }
   ],
   "contracts": [],
-  "streams": [],
+  "streams": [
+    {
+      "id": "66739f3a9013c6e07cd888f59f0b0e84",
+      "name": "interest.operating_cash",
+      "owner": {
+        "symbol": "asset.interest"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-02-01",
+        "to": "2051-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "( inputs.energy_year_one * inputs.ppa_price               * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)               * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)              - inputs.capacity_kw * inputs.om_per_kw               * pow(1.0 + inputs.om_escalation, asset.interest.operating_year - 1.0)              - if(asset.interest.operating_year <= inputs.debt_term,                   0.0 - pmt(inputs.debt_rate, inputs.debt_term, inputs.debt_amount),                   0.0) ) / 12.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 117,
+          "start_col": 1,
+          "end_line": 127,
+          "end_col": 1
+        }
+      }
+    }
+  ],
   "events": [
     {
       "actions": [

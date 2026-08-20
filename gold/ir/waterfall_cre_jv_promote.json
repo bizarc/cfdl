@@ -115,7 +115,7 @@
       },
       "source": {
         "lang": "cfdl",
-        "src": "inputs.net_sale_proceeds"
+        "src": "available"
       },
       "steps": [
         {
@@ -223,6 +223,36 @@
           "start_line": 72,
           "start_col": 1,
           "end_line": 75,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "aa7387fab26e726cea0512034647d764",
+      "name": "jv.sale_proceeds",
+      "owner": {
+        "symbol": "asset.jv"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2003-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.net_sale_proceeds"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 79,
+          "start_col": 1,
+          "end_line": 82,
           "end_col": 1
         }
       }

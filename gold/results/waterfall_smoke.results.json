@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "a665cba05fe2400a3e4d76254c3423b0f9eac6eb2ca8c3759bbf18dcb8b83795",
-  "ledger_hash": "5cd003bb31f38207d878a85d56801d4a75a7fc1e9cd3d018bce65462830d1439",
+  "model_hash": "bf2fd4c7804b19a50ce107b135641463dd0a4aecb569acd1a1ace1755cfad135",
+  "ledger_hash": "f01562c2831b2dbe86a0333adfc8ce42d694142c170a8ba71ec1117a7c222be3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -15,7 +15,7 @@
         "currency": "USD"
       },
       "entity.asset.trust.total": {
-        "amount": 0.0,
+        "amount": 4000.0,
         "currency": "USD"
       },
       "entity.party.certificate.total": {
@@ -30,32 +30,23 @@
         "amount": 12.0,
         "currency": "USD"
       },
-      "model.irr": 766301455.993396,
       "model.npv": {
-        "amount": 0.0,
+        "amount": 4000.0,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 0.0,
+        "amount": 4000.0,
         "currency": "USD"
       },
+      "model.wal_years": 0.208333,
       "run.annual_discount_rate": 0.0,
-      "run.periods_per_year": 12.0
+      "run.periods_per_year": 12.0,
+      "stream.trust.collections.total": {
+        "amount": 4000.0,
+        "currency": "USD"
+      }
     },
     "series": {
-      "asset.trust.available_funds": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-02-01",
-          "periods": 4
-        },
-        "values": [
-          1000.0,
-          1000.0,
-          1000.0,
-          1000.0
-        ]
-      },
       "asset.trust.pool_balance": {
         "index": {
           "calendar": "monthly",
@@ -340,19 +331,19 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           }
         ]
@@ -440,19 +431,19 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           }
         ]
@@ -606,6 +597,32 @@
             "currency": "USD"
           }
         ]
+      },
+      "stream.trust.collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-02-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
       }
     },
     "annual_rollup": {
@@ -745,7 +762,20 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 4000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.trust.collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 4000.0,
               "currency": "USD"
             }
           ]
@@ -1080,13 +1110,47 @@
               }
             ],
             "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 4000.0,
+            "streams": [
+              "trust.collections"
+            ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 0.0,
-          "model_total": 0.0,
+          "bottom_line": 4000.0,
+          "model_total": 4000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'collections', so the bottom line is short by 4000.00: trust.collections. Classify them, or give the statement a row that claims them."
+          }
+        ]
       },
       {
         "id": "collections_annual",
@@ -1221,13 +1285,35 @@
               }
             ],
             "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 4000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 4000.0,
+            "streams": [
+              "trust.collections"
+            ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 0.0,
-          "model_total": 0.0,
+          "bottom_line": 4000.0,
+          "model_total": 4000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'collections_annual', so the bottom line is short by 4000.00: trust.collections. Classify them, or give the statement a row that claims them."
+          }
+        ]
       },
       {
         "id": "mbs",
@@ -1498,13 +1584,47 @@
               }
             ],
             "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 4000.0,
+            "streams": [
+              "trust.collections"
+            ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 0.0,
-          "model_total": 0.0,
+          "bottom_line": 4000.0,
+          "model_total": 4000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'mbs', so the bottom line is short by 4000.00: trust.collections. Classify them, or give the statement a row that claims them."
+          }
+        ]
       },
       {
         "id": "investment_income",
@@ -1775,13 +1895,47 @@
               }
             ],
             "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 4000.0,
+            "streams": [
+              "trust.collections"
+            ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 0.0,
-          "model_total": 0.0,
+          "bottom_line": 4000.0,
+          "model_total": 4000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'investment_income', so the bottom line is short by 4000.00: trust.collections. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   }
