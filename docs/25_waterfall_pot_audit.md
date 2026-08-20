@@ -191,7 +191,12 @@ waterfall's payment becoming another's pot.
   the construct, and its pot is a decaying invented balance. Every model written
   from it will build its own pot too.
 
-## What would close it
+## What would close it — SHIPPED
+
+`available` is bound (engine `stream_cash_by_entity` → `run_waterfalls`), the
+fixture `fixtures/valid/waterfall_available` pins it, and `docs/03` §3.2
+documents it. The categories below remain in the models until each migrates to
+`from available`.
 
 A waterfall is a module with one input and one kind of output. The input is the
 available cash. The outputs are amounts to payees. Nothing else crosses the

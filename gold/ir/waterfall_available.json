@@ -1,0 +1,203 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "waterfall-available",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2017-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "81576cd2e0b1117cc73406c48d91ecd3",
+      "symbol": "asset.pool_a",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "asset.trust"
+    },
+    {
+      "id": "8d44414a6dfcb590a234a9cac52c154b",
+      "symbol": "asset.pool_b",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "asset.trust"
+    },
+    {
+      "id": "4cec4e7a67e65f566e33b513845c4c64",
+      "symbol": "asset.trust",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "c62b463fc549d83d21a94871cb24f765",
+      "symbol": "party.investor",
+      "type": "Party",
+      "fields": {
+        "name": "Investor"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "waterfalls": [
+    {
+      "name": "dist",
+      "entity": "asset.trust",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-01-01",
+        "to": "2017-03-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "available"
+      },
+      "steps": [
+        {
+          "name": "senior",
+          "payee": "party.investor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "250.0"
+          }
+        },
+        {
+          "name": "residual",
+          "payee": "party.investor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "25fe11f0adfe97ec522a47b8a038062a",
+      "name": "a.collections",
+      "owner": {
+        "symbol": "asset.pool_a"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-01-01",
+        "to": "2017-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "300.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "d11c32236f1991ec405ed6b2d67cbd67",
+      "name": "b.collections",
+      "owner": {
+        "symbol": "asset.pool_b"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-01-01",
+        "to": "2017-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "150.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9a297c68a219e08be74db86562769907",
+      "name": "b.fee",
+      "owner": {
+        "symbol": "asset.pool_b"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2017-01-01",
+        "to": "2017-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "50.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

@@ -85,6 +85,14 @@ pub struct ExprEnv {
     /// `None` everywhere outside a waterfall, which makes reading it there an
     /// unresolved name rather than a silent zero.
     pub remaining: Option<Value>,
+    /// The cash the waterfall's entity produced this period — bare `available`.
+    ///
+    /// Streams only, netted, with the entity's children rolled up by the
+    /// `part of` relation: the quantity `docs/17` §4 names as the pot. Bound
+    /// by the engine before the waterfall runs, so no model declares a field
+    /// for it. `None` everywhere outside a waterfall, so reading it there is
+    /// an unresolved name rather than a silent zero.
+    pub available: Option<Value>,
     /// What each earlier step in this waterfall actually paid — `paid.<step>`.
     pub paid: BTreeMap<String, Value>,
     /// What each earlier step would have paid unbounded — `owed.<step>`. The
@@ -117,6 +125,7 @@ impl ExprEnv {
             prev_states: BTreeMap::new(),
             prev_self: None,
             remaining: None,
+            available: None,
             paid: BTreeMap::new(),
             owed: BTreeMap::new(),
             series: Arc::default(),
@@ -290,6 +299,9 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         }
         if root == "remaining" && parts.next().is_none() {
             return self.env.remaining.as_ref().and_then(domain_to_calc);
+        }
+        if root == "available" && parts.next().is_none() {
+            return self.env.available.as_ref().and_then(domain_to_calc);
         }
         // `asset.tlb.balance` IS `entity.asset.tlb.balance`.
         //

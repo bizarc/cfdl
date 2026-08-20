@@ -1,0 +1,336 @@
+{
+  "results_version": "0.3",
+  "model_hash": "247cd2f84e115ebb8f504a31c78bde16ad816b0896c1f69f050c064bf8ec42f8",
+  "ledger_hash": "64a7fb31f451b33823b32abdb0898e5b9b1b340571ceb59035fe892ad7bcceaa",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.pool_a.total": {
+        "amount": 900.0,
+        "currency": "USD"
+      },
+      "entity.asset.pool_b.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.asset.trust.total": {
+        "amount": 1200.0,
+        "currency": "USD"
+      },
+      "entity.party.investor.total": {
+        "amount": 1200.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1194.105193,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1200.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.166667,
+      "run.annual_discount_rate": 0.03,
+      "run.periods_per_year": 12.0,
+      "stream.a.collections.total": {
+        "amount": 900.0,
+        "currency": "USD"
+      },
+      "stream.b.collections.total": {
+        "amount": 450.0,
+        "currency": "USD"
+      },
+      "stream.b.fee.total": {
+        "amount": -150.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.pool_a.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.pool_b.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.trust.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.investor.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.a.collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.b.collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.b.fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -50.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.residual": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.senior": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1200.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.a.collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 900.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.b.collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 450.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.b.fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -150.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

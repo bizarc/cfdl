@@ -272,6 +272,7 @@ cargo build -p cfdl-cli
 {
   "deterministic": {
     "annual_discount_rate": 0.1,
+    "valuation_grain": "annual",
     "as_of": "2026-01-01",
     "parameters": {
       "stream.cre.lease.base_rent:amount": 1000.0
@@ -295,6 +296,12 @@ cargo build -p cfdl-cli
   }
 }
 ```
+
+`valuation_grain` is optional. Omitted, each cash flow discounts at the annual
+rate raised to its fractional year — for an annual model that IS annual
+discounting. `"annual"` first groups a finer model's cash by calendar year and
+discounts the buckets at the annual rate, the convention a hand-built annual
+spreadsheet applies to monthly data. Any other value is an error.
 
 Parameter key conventions:
 - Stream overrides: `stream.<dotted_stream_name>:amount`

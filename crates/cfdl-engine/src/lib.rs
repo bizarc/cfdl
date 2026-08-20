@@ -139,6 +139,13 @@ struct DeterministicConfigFile {
     #[serde(rename = "annual_discount_rate")]
     discount_rate: Option<f64>,
     as_of: Option<String>,
+    /// How NPV groups cash before discounting. Omitted, the model's own grain:
+    /// each cash flow discounts at the annual rate raised to its fractional
+    /// year, which for an annual model IS annual discounting. `"annual"`
+    /// buckets a finer model's cash by calendar year first and discounts the
+    /// buckets at the annual rate — the convention a hand-built annual
+    /// spreadsheet uses on monthly data.
+    valuation_grain: Option<String>,
     #[serde(default)]
     parameters: BTreeMap<String, f64>,
 }
@@ -237,7 +244,16 @@ fn run_config_from_value(
         parameter_overrides: config_file.deterministic.parameters,
         scenarios: BTreeMap::new(),
         monte_carlo: None,
-        valuation_grain: None,
+        valuation_grain: match config_file.deterministic.valuation_grain.as_deref() {
+            None | Some("period") => None,
+            Some("annual") => Some("annual".to_string()),
+            Some(other) => {
+                return Err(EngineError::InvalidRunConfig(format!(
+                    "valuation_grain '{other}' is not a grain this engine knows; \
+                     use \"annual\", or omit it for the model's own grain"
+                )))
+            }
+        },
     };
 
     if let Some(as_of) = config_file.deterministic.as_of {
@@ -1305,6 +1321,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 
     // Waterfalls run last: a priority of payments allocates cash that this
     // period's streams and states have already produced.
+    // Computed from streams alone, before any distribution: the quantity a
+    // waterfall's `available` binding reads.
+    let available_by_entity = stream_cash_by_entity(ir, &stream_series, cash_periods);
     let waterfall_series = run_waterfalls(
         ir,
         &timeline,
@@ -1313,6 +1332,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         &event_sim.entity_state,
         &ir_curve_defs(ir),
         &stream_series,
+        &available_by_entity,
         config,
         &mut warnings,
     );
@@ -3251,6 +3271,60 @@ fn beyond_timeline(timeline: &[Date], date: &Date) -> bool {
 /// adds no new kind of output and statements, metrics and the results schema
 /// are untouched.
 #[allow(clippy::too_many_arguments)]
+/// Each entity's netted stream cash per period, rolled up by `part of`.
+///
+/// STREAMS ONLY: this is the cash the collateral produced, before any
+/// distribution, which is what `docs/17` §4 names as a waterfall's pot. The
+/// results layer builds the same fold again with waterfall payments attributed
+/// to payees; that one is a report of what happened, this one is the input to
+/// what happens next, and the two must stay distinct or a waterfall could read
+/// its own output.
+fn stream_cash_by_entity(
+    ir: &Ir,
+    stream_series: &BTreeMap<String, Vec<f64>>,
+    periods: usize,
+) -> BTreeMap<String, Vec<f64>> {
+    let mut own: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for stream in &ir.streams {
+        if let Some(values) = stream_series.get(&stream.name) {
+            let slot = own
+                .entry(stream.owner.symbol.clone())
+                .or_insert_with(|| vec![0.0; periods]);
+            for (idx, value) in values.iter().enumerate().take(periods) {
+                slot[idx] += value;
+            }
+        }
+    }
+    let parent_of: BTreeMap<&str, &str> = ir
+        .entities
+        .iter()
+        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+        .collect();
+    let mut rollup: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for entity in &ir.entities {
+        rollup
+            .entry(entity.symbol.clone())
+            .or_insert_with(|| vec![0.0; periods]);
+    }
+    for (symbol, values) in &own {
+        let mut visited: BTreeSet<&str> = BTreeSet::new();
+        let mut cursor: Option<&str> = Some(symbol.as_str());
+        while let Some(current) = cursor {
+            if !visited.insert(current) {
+                break;
+            }
+            let slot = rollup
+                .entry(current.to_string())
+                .or_insert_with(|| vec![0.0; periods]);
+            for (idx, value) in values.iter().enumerate().take(periods) {
+                slot[idx] += value;
+            }
+            cursor = parent_of.get(current).copied();
+        }
+    }
+    rollup
+}
+
 fn run_waterfalls(
     ir: &Ir,
     timeline: &[Date],
@@ -3259,6 +3333,7 @@ fn run_waterfalls(
     entity_state: &[BTreeMap<String, BTreeMap<String, ExprValue>>],
     curves: &BTreeMap<String, cfdl_expr::CurveDef>,
     stream_series: &BTreeMap<String, Vec<f64>>,
+    available_by_entity: &BTreeMap<String, Vec<f64>>,
     config: &RunConfig,
     warnings: &mut Vec<String>,
 ) -> BTreeMap<String, Vec<f64>> {
@@ -3306,6 +3381,16 @@ fn run_waterfalls(
             let mut env = build_base_env(ir, config, t, date, base_inputs);
             env.curves = curves.clone();
             env.series = Arc::clone(&shared);
+            // The pot, by name. `available` is the netted stream cash of the
+            // entity this waterfall hangs on, children rolled up — supplied
+            // the way `remaining` is, so no model declares a field for it.
+            env.available = Some(ExprValue::Decimal(
+                available_by_entity
+                    .get(&waterfall.entity)
+                    .and_then(|v| v.get(t))
+                    .copied()
+                    .unwrap_or(0.0),
+            ));
             bind_states(&mut env, state_values, t);
             if let Some(state) = entity_state.get(t) {
                 // Every entity by path — `entity.asset.class_a.balance` —
