@@ -2384,7 +2384,9 @@ an *invariant* — a property the engine must hold whatever a model says. Each o
 the following is mechanical, and each corresponds to something that went wrong
 this month and was found by hand.
 
-**1. Cash purity.** No field, subtotal, entity rollup or waterfall step may
+**1. Cash purity.** — **shipped**, `tools/invariant-checks.py`, in `make ci`,
+and mutation-tested: a waterfall step counted as cash is caught in period 0.
+Originally: no field, subtotal, entity rollup or waterfall step may
 enter `model_series` or `valued_streams`. The engine holds this by construction
 today, and `crates/cfdl-engine/src/lib.rs:1350` explains why — but the
 explanation was stale for a year, naming a `state.` prefix that stopped being
@@ -2393,7 +2395,9 @@ build a model carrying a field, a cumulative subtotal and a waterfall, and
 assert `model.net_cash_flow` equals the sum of the stream series to the cent.
 Would catch anyone "fixing" the comment's mechanism and losing the real one.
 
-**2. Pack additivity.** For every clause `StreamStmt` accepts, `ContractStmt`
+**2. Pack additivity.** — **shipped** as a two-way ratchet in the same gate:
+a new stream clause fails until accepted, waived or recorded; a known gap that
+closes fails until the record is removed. Originally: For every clause `StreamStmt` accepts, `ContractStmt`
 should accept it too or waive it explicitly. §7.40 is what the absence costs: a
 contract cannot be gated, so a repaid loan keeps paying. A gate comparing the
 two surfaces would have caught it the day the second clause was added to
