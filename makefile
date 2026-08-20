@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -89,7 +89,7 @@ bench:
 # there. A release build of the whole engine used to be required just to satisfy
 # a freshness stamp on a 2 MB artifact only the website consumes, which was the
 # single largest cost in this loop.
-ci: fmt-check lint test gold bench analytic cadence-parity ir-schema results-schema pack-validations site-voice glossary-check rule-fragments doc-examples training-examples shipped-examples benchmark-cases
+ci: fmt-check lint test gold bench analytic invariants cadence-parity ir-schema results-schema pack-validations site-voice glossary-check rule-fragments doc-examples training-examples shipped-examples benchmark-cases
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
@@ -198,6 +198,13 @@ rule-fragments:
 analytic:
 	cargo build -p cfdl-cli
 	$(PYGATE) tools/analytic-checks.py
+
+# Properties the engine must hold whatever a model says: streams are the only
+# cash, and a contract accounts for every clause a stream has. Each exists
+# because its violation was found by hand first (docs/13 7.41).
+invariants:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/invariant-checks.py
 
 # Documentation examples must compile, run, and exercise what they claim.
 benchmark-cases:
