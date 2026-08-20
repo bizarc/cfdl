@@ -140,8 +140,10 @@ cash — proved by `benchmarks/credit/mbs_pool_by_loan`.
 misspelling fails at compile time. A model-level `state` name is checked against
 nothing.
 
-**It is what the waterfall needs.** `from asset.trust.available_funds` says where
-the pot comes from. `from state.available_funds` says a variable exists.
+**It is what a waterfall step tests.** `asset.class_a.balance` names the thing
+the step measures. (The pot itself needs no property at all: `from available`
+binds the entity's netted stream cash directly, so `available_funds` fields
+exist only in models older than that binding.)
 
 ## 4. Sequence
 

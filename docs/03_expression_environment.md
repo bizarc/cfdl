@@ -190,7 +190,15 @@ follows.
 
 ### 3.2 Waterfall steps: `remaining`, `paid` and `owed`
 
-A waterfall step is an expression like any other, with three extra names.
+A waterfall step is an expression like any other, with four extra names.
+
+`available` is the cash the waterfall's entity produced this period: its
+streams' signed values, netted, with its children rolled up by `part of`.
+Streams only — no distribution feeds it, so a waterfall can never read its own
+output through it. The engine supplies it before the waterfall runs; no model
+declares a field for it. `from available` is therefore the ordinary spelling of
+a pot, and the `from` expression remains free for the deals that draw on
+something narrower.
 
 `remaining` is what survives the steps above it. A step pays
 `min(max(0, expr), remaining)`, so `= remaining` means exactly what it says,

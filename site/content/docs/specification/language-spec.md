@@ -431,7 +431,7 @@ Syntax:
 ```cfdl
 waterfall deal.distribution on entity asset.trust {
   schedule every month from 2026-01 to 2030-12
-  from asset.trust.available_funds
+  from available
 
   pay servicing to party.servicer    = 12500.0
   pay senior    to asset.class_a     = 6250.0

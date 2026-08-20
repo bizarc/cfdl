@@ -191,20 +191,61 @@ waterfall's payment becoming another's pot.
   the construct, and its pot is a decaying invented balance. Every model written
   from it will build its own pot too.
 
-## What would close it
+## What would close it — SHIPPED
 
-Bind the per-entity, per-period netted cash into a waterfall's environment, and
-compute it before `run_waterfalls` rather than after. The fold depends only on
-stream values and `part of` relations, both complete by line 1308. Then §4's
-sentence becomes something a model can write:
+`available` is bound (engine `stream_cash_by_entity` → `run_waterfalls`), the
+fixture `fixtures/valid/waterfall_available` pins it, and `docs/03` §3.2
+documents it. The categories below remain in the models until each migrates to
+`from available`.
+
+A waterfall is a module with one input and one kind of output. The input is the
+available cash. The outputs are amounts to payees. Nothing else crosses the
+boundary.
+
+The input has a name already, and it is not a field. `remaining` is a
+waterfall-scoped binding the engine supplies. **`available` is its sibling**:
+the netted cash of the entity the waterfall is attached to, for this period,
+supplied by the result layer.
 
 ```cfdl
 waterfall notes.distribution on entity asset.trust {
   schedule every month from 2017-02 to 2022-11
-  from asset.trust.cash_available
+  from available
+
+  pay servicing to party.servicer = …
+  pay residual  to party.certificate = remaining
+}
 ```
 
-and categories A through E collapse into it.
+Cash stays where it belongs. It does not become a property of the asset, and no
+model declares a field to hold it. Categories A through E above collapse into
+one line.
+
+The engine change is contained. `entity_own` folds signed stream values by
+owner and reads only stream values and the `part of` relations, both complete at
+line 1122. It runs at 1431 because the results assemble last. The stream-derived
+half moves above `run_waterfalls`; the payee attribution in the same fold stays
+below it, because a waterfall's payments are what it attributes.
+
+## The specifications teach the workaround
+
+Three documents illustrate the pot with a field the modeller declares and
+fills:
+
+| document | example |
+|---|---|
+| `docs/01` §10.1, the waterfall's syntax | `from asset.trust.available_funds` |
+| `docs/17` §3, the proposed surface | `from state.available_funds` |
+| `docs/18` §3, arguing for the field spelling | "`from asset.trust.available_funds` says where the pot comes from" |
+
+`docs/17` §3 is doubly stale: a model-level `state` no longer exists, having
+been removed for overloading the lifecycle concept, so that example names a
+construct the language dropped.
+
+All three should read `from available` once the binding exists. Until then they
+teach every reader to invent a field, which is what
+`fixtures/valid/waterfall_abs_22_step` does — `available_funds init 12500000.0
+next prev * 0.97`, a balance that decays by an invented factor.
 
 Provenance: found while writing `benchmarks/credit/americredit_2017_1`, whose
 pot is the worst case in category A, August 2026.

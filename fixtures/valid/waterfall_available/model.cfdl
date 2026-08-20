@@ -1,0 +1,36 @@
+version 0.1
+model "waterfall-available"
+time calendar monthly from 2017-01 for 3
+
+// A WATERFALL'S POT, BY NAME. `available` is the netted stream cash of the
+// entity the waterfall hangs on, children rolled up by `part of` — the
+// quantity the documentation calls "this period's cash". The engine supplies
+// it the way it supplies `remaining`; no model declares a field for it.
+//
+// The trust here produces 300 + 150 - 50 = 400 a period, across two children,
+// and the waterfall allocates exactly that: 250 senior, 150 residual.
+
+entity asset trust : Asset.Financial { }
+entity asset pool_a : Asset.Financial { part of asset.trust }
+entity asset pool_b : Asset.Financial { part of asset.trust }
+entity party investor : Party { name = "Investor" }
+
+stream a.collections on entity asset.pool_a inflow currency USD {
+  schedule every month from 2017-01 to 2017-03
+  amount = 300.0
+}
+stream b.collections on entity asset.pool_b inflow currency USD {
+  schedule every month from 2017-01 to 2017-03
+  amount = 150.0
+}
+stream b.fee on entity asset.pool_b outflow currency USD {
+  schedule every month from 2017-01 to 2017-03
+  amount = 50.0
+}
+
+waterfall dist on entity asset.trust {
+  schedule every month from 2017-01 to 2017-03
+  from available
+  pay senior   to party.investor = 250.0
+  pay residual to party.investor = remaining
+}

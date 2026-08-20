@@ -2510,3 +2510,37 @@ default by hierarchy needs nothing new.
 Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
 pack-free model, August 2026.
 
+---
+
+### 7.44 The engine is one file, and the stages it runs are invisible in it
+
+`crates/cfdl-engine/src/lib.rs` is 5,341 lines. It holds the timeline, the
+fields, the events, both stream phases, the subtotals, the waterfalls, the
+entity rollups, the metrics and the results assembly.
+
+Those stages are real. Each completes before the next begins, each sees only
+what finished earlier, and the boundaries between them are the language's own
+semantics: a field reads no cash, a subtotal folds cash and is never counted as
+cash, a waterfall allocates cash and never feeds it back.
+`fixtures/valid/evaluation_order` pins them.
+
+None of that is visible in the file layout, and the cost is not hypothetical. A
+comment at line 1350 described the boundary that keeps state out of cash, named
+the wrong mechanism, and stayed wrong for a year — because nothing about the
+file's shape says where one stage ends.
+
+Shape: crates or modules per stage, orchestrated in order.
+
+1. timeline
+2. fields and events — mutually dependent, so one module
+3. streams, in their two phases
+4. results — the netted cash, the rollups, the metrics
+5. distributions — waterfalls, which consume a result and emit payee amounts
+
+The repository already runs sixteen crates, so the pattern is established. The
+split is mechanical: the call order in `run_deterministic` already names the
+stages, one call each.
+
+Provenance: raised August 2026, after a session in which every finding was a
+boundary between two stages that the code does not separate.
+

@@ -70,7 +70,7 @@ compile error rather than a quiet zero.
 
 ```cfdl
 waterfall abs.distribution on entity asset.trust {
-  from state.available_funds
+  from available
 
   pay servicing        to party.servicer     amount state.servicing_fee
   pay trustee_fees     to party.trustee      amount state.trustee_fees
