@@ -2369,43 +2369,62 @@ assumption was declared, the NPV moved with the config, and nothing said so.
 
 ---
 
-### 7.43 A model has no statement, and the language already knows how to build one
+### 7.43 Results do not say which entity owns a stream
 
-Without a pack, a model's only structured view of its own cash is the entity
-rollup: `entity.<symbol>.net_cash_flow`, one series per entity, aggregated
-through `part of`. That axis is language-level and correct — twelve pools rolled
-into a trust to within 2e-06 in the pack-free AmeriCredit model, identical to
-the packed one.
+This is a request rather than a defect, and the part of it that is a defect is
+smaller and different from the part first written down.
 
-What is missing is any presentation of it. A pack supplies subtotals and a
-statement — `packs/credit/statements.toml` folds stream *categories* into
-`gross_collections`, `principal_collections`, `servicing_fee`,
-`net_collections`, shaped like a servicer remittance report — and a model
-without a pack gets **zero** `domain.*` series. Both models compute the same
-cash: `net_collections` and `entity.asset.trust.net_cash_flow` agree exactly at
-40,000,924.84. Only one can say what it is made of.
+**The axis exists and is correct.** Without a pack, a model's structured view of
+its own cash is `entity.<symbol>.net_cash_flow`, one series per entity,
+aggregated through `part of` — twelve pools rolled into a trust to within 2e-06
+in the pack-free AmeriCredit model, identical to the packed one.
 
-**The language should ship a default statement organized by the axis it already
-has.** No declarations, no categories, no pack: the entity tree, each node's
-cash, and its children beneath it. That is derivable today from `part of` and
-the per-entity fold, and it would give every model — including one written in an
-afternoon with no pack — a readable cash flow rather than a flat list of series
-keyed by symbol.
+**A model without a pack publishes no `domain.*` series, and that is by
+design.** `docs/01` §15.2 states that CFDL models do not declare output metrics
+and points at the pack interface for how a pack defines output categories,
+aggregations and metrics. A statement is a pack's job. The request below is for
+a DEFAULT presentation, not for a model-declared one, and it should not be read
+as a gap in the language.
 
-One thing that has to change to make it useful. The engine computes
-`entity_own` (an entity's own streams) and then publishes only `entity_rollup`
-(its own plus its children's). A parent's own cash is therefore invisible in
-results: a trust with twelve pools and a fee of its own shows one number, and no
-reader can separate the fee from the pools. A statement by hierarchy needs both,
-so `entity_own` should be published alongside the rollup.
+**The original claim about a parent's own cash was wrong.** A trust with pools
+and a fee of its own does not show one number: the fee is published in its own
+right, and the arithmetic closes.
 
-A declarable statement structure — the pack's fold, available to a model that
-wants to name its own lines — is worth having too, and is the larger job. The
-default by hierarchy needs nothing new.
+```
+entity.asset.trust.net_cash_flow   550        rollup
+entity.asset.pool1.net_cash_flow   300
+entity.asset.pool2.net_cash_flow   200
+stream.trust.fee                    50        the parent's own cash
+                                              550 - 300 - 200 = 50
+```
+
+**What is actually missing is the ownership.** A series entry in results carries
+`index`, `offset` and `values`, and nothing else; `docs/06` never names an
+owner. So the derivation above needs the parent-child tree, which lives in the
+IR rather than in results, and a consumer holding `results.json` alone cannot
+attribute a stream to an entity at all. Name inspection is not a substitute: a
+pack-lowered `cre.unit.base_rent.anchor` does not contain the symbol of the
+entity that owns it.
+
+Publishing stream ownership is the smaller change and the more useful one. It is
+a structural fact the engine already holds, it lets any consumer build a
+hierarchy view without the engine shipping one, and it makes an entity's own
+cash derivable from results alone. Publishing `entity_own` beside the rollup is
+the narrower version of the same idea and would serve the default statement
+directly.
+
+**The presentation request stands on its own merits.** A default statement
+organized by the entity tree — each node's cash with its children beneath it,
+no declarations and no pack — would give every model a readable cash flow rather
+than a flat list of series keyed by symbol. Nothing in the language prevents it
+and nothing forces it; it is a product decision about what a pack-free run
+should look like. A declarable statement structure, the pack's fold available to
+a model that wants to name its own lines, is the larger job and a separate one.
 
 Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
-pack-free model, August 2026.
-
+pack-free model, August 2026. Rewritten August 2026 after probing the own-cash
+claim, which does not hold — the parent's streams are published individually and
+the rollup arithmetic closes — and finding the ownership gap underneath it.
 ---
 
 ### 7.44 The engine is one file, and the stages it runs are invisible in it
