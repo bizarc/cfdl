@@ -226,6 +226,12 @@ pub(crate) fn bind_literal_fields(env: &mut ExprEnv, ir: &Ir) {
     }
 }
 
+/// Bind `state.<name>` to each declared state's value AT period `idx`.
+///
+/// Extracted so a stream and an option bind the SAME period by construction
+/// rather than by two copies agreeing. `prev_states`/`prev_self` are left
+/// empty, so `prev` is not merely rejected outside a recurrence — it is not
+/// there to be found. See docs/14_state_and_recurrence.md.
 pub(crate) fn bind_states(env: &mut ExprEnv, states: &BTreeMap<String, Vec<f64>>, idx: usize) {
     env.states = states
         .iter()
@@ -346,6 +352,8 @@ pub(crate) fn bind_all_entity_state(
     }
 }
 
+/// Expose an entity's event-driven state to expressions, both as
+/// `entity.state.<field>` and directly as `entity.<field>` (spec §12.3).
 pub(crate) fn apply_entity_state(
     env: &mut ExprEnv,
     state_by_entity: &BTreeMap<String, BTreeMap<String, ExprValue>>,
