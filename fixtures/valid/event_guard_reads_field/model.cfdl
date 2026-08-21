@@ -10,16 +10,15 @@ time calendar annual from 2026-01 for 5
 // that was not there. Under the open-world entity root that is null, the guard
 // compared null to a number, and the event never fired.
 //
-// TWO THINGS DELIBERATELY NOT PROVEN HERE, both recorded rather than blessed:
+// ONE THING DELIBERATELY NOT PROVEN HERE, recorded rather than blessed:
 //
 //   * A RULE READING A LITERAL FIELD. The validator now allows it — a constant
 //     is readable at any period — but the engine's rule environment does not
 //     bind literals, so it resolves to nothing.
 //
-//   * A STREAM READING AN EVENT-WRITTEN FIELD. A waterfall sees the write; a
-//     stream does not, because a stream's environment binds field values and
-//     not event-written state. Until those agree, a stream reading a field an
-//     event writes would bless the wrong number.
+// A STREAM READING AN EVENT-WRITTEN FIELD is now the same read as anyone
+// else's: the write settles the field store itself, so the published series,
+// every reader, and next period's `prev` agree. One value per path.
 
 entity asset pool : Asset.Financial {
   // Stated facts. Constants, so a rule may read them.

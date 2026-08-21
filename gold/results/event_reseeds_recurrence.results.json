@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "bc4056ab153c551ddc65f73c3cd76595de866b256566bef8775cc64f3045e9fd",
-  "ledger_hash": "194dbf2a5a1dad25d3c1b71199e2c2a9430036c67cbf83a9e048ab1f203b978d",
+  "model_hash": "54e35ab965afbbe88df1e51fc69f003d29928bb6af573128d6e3d8930586d9f8",
+  "ledger_hash": "0c9faceeb8c8739ee90cdcb52c0373e18a3cac13c7e072b32bbdf4bcd690543c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,8 +10,8 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.asset.pool.total": {
-        "amount": -6.0,
+      "entity.asset.loan.total": {
+        "amount": 3500.0,
         "currency": "USD"
       },
       "entity.party.lender.total": {
@@ -19,74 +19,66 @@
         "currency": "USD"
       },
       "model.npv": {
-        "amount": -6.0,
+        "amount": 3233.641328,
         "currency": "USD"
       },
       "model.total": {
-        "amount": -6.0,
+        "amount": 3500.0,
         "currency": "USD"
       },
-      "run.annual_discount_rate": 0.0,
+      "model.wal_years": 2.714286,
+      "run.annual_discount_rate": 0.03,
       "run.periods_per_year": 1.0,
-      "stream.credit.amortization.total": {
-        "amount": -6.0,
+      "stream.loan.balance_report.total": {
+        "amount": 3500.0,
         "currency": "USD"
       }
     },
     "series": {
-      "asset.pool.balance": {
+      "asset.loan.balance": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 5
+          "periods": 6
         },
         "values": [
-          100.0,
-          90.0,
-          80.0,
-          70.0,
-          60.0
+          1000.0,
+          900.0,
+          550.0,
+          450.0,
+          350.0,
+          250.0
         ]
       },
-      "asset.pool.fee_rate": {
+      "entity.asset.loan.net_cash_flow": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 5
-        },
-        "values": [
-          0.02,
-          0.02,
-          0.02,
-          0.02,
-          0.05
-        ]
-      },
-      "entity.asset.pool.net_cash_flow": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 5
+          "periods": 6
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": -1.8,
+            "amount": 900.0,
             "currency": "USD"
           },
           {
-            "amount": -1.6,
+            "amount": 550.0,
             "currency": "USD"
           },
           {
-            "amount": -1.4,
+            "amount": 450.0,
             "currency": "USD"
           },
           {
-            "amount": -1.2,
+            "amount": 350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
             "currency": "USD"
           }
         ]
@@ -95,9 +87,13 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 5
+          "periods": 6
         },
         "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
           {
             "amount": 0.0,
             "currency": "USD"
@@ -124,57 +120,65 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 5
+          "periods": 6
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": -1.8,
+            "amount": 900.0,
             "currency": "USD"
           },
           {
-            "amount": -1.6,
+            "amount": 550.0,
             "currency": "USD"
           },
           {
-            "amount": -1.4,
+            "amount": 450.0,
             "currency": "USD"
           },
           {
-            "amount": -1.2,
+            "amount": 350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.credit.amortization": {
+      "stream.loan.balance_report": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 5
+          "periods": 6
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": 0.0,
+            "amount": 1000.0,
             "currency": "USD"
           },
           {
-            "amount": -1.8,
+            "amount": 900.0,
             "currency": "USD"
           },
           {
-            "amount": -1.6,
+            "amount": 550.0,
             "currency": "USD"
           },
           {
-            "amount": -1.4,
+            "amount": 450.0,
             "currency": "USD"
           },
           {
-            "amount": -1.2,
+            "amount": 350.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 250.0,
             "currency": "USD"
           }
         ]
@@ -182,13 +186,13 @@
     },
     "transitions": [
       {
-        "period": 4,
-        "date": "2030-01-01",
-        "entity": "asset.pool",
-        "field": "fee_rate",
-        "from": "0.02",
-        "to": "0.05",
-        "event": "covenant_breach"
+        "period": 2,
+        "date": "2028-01-01",
+        "entity": "asset.loan",
+        "field": "balance",
+        "from": "800",
+        "to": "550",
+        "event": "partial_liquidation"
       }
     ]
   },

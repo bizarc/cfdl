@@ -14,8 +14,9 @@ use std::sync::Arc;
 //   timeline       the grid: dates, schedules, period arithmetic
 //   ir             what the compiler hands us
 //   env            the expression environment each stage evaluates in
-//   fields         stage 1 — every field, every period
-//   events         stage 2 — state changes, reading fields
+//   state          stages 1+2, one interleaved walk — fields compute each
+//                  period's candidates, events overwrite, the column settles;
+//                  `prev` reads what settled (one value per path)
 //   streams        stage 3 — activity, in two phases
 //   distributions  stage 4 — waterfalls, allocating `available`
 //   results        stage 5 — netting, rollups, metrics, statements
@@ -31,10 +32,8 @@ mod distributions;
 use distributions::*;
 mod streams;
 use streams::*;
-mod events;
-pub use events::*;
-mod fields;
-use fields::*;
+mod state;
+pub use state::*;
 mod env;
 use env::*;
 mod ir;
@@ -431,15 +430,8 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // state's `next` reads only `prev`, curves, inputs and time — never a
     // stream, never an event, never an option — so nothing an event or option
     // does can reach back into a state.
-    let state_values = compute_states(ir, config, &timeline, &base_inputs, &mut warnings);
-    let event_sim = simulate_events(
-        ir,
-        config,
-        &timeline,
-        &base_inputs,
-        &state_values,
-        &mut warnings,
-    );
+    let (state_values, event_sim) =
+        simulate_state(ir, config, &timeline, &base_inputs, &mut warnings);
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     // Each stream's placement in its period, published on the series so a
     // consumer holding results.json can recompute the time-weighted metrics

@@ -2403,20 +2403,33 @@ contract cannot be gated, so a repaid loan keeps paying. A gate comparing the
 two surfaces would have caught it the day the second clause was added to
 streams, rather than in a benchmark three packs later.
 
-**3. A series read that cannot resolve.** `W5022` warns when a name matches
-nothing, and stays silent when a name exists but is invisible from where it is
-read — which is the case that actually bites. A waterfall step reading its own
-waterfall's prior payments returns zero with no diagnostic, and a preferred
-return written from `docs/17` §10 is then paid in full six times. A gate: for
-every series reference in every fixture, assert it resolves in the context it
-appears in.
+**3. A series read that cannot resolve from its context must FAIL, not warn.**
+Re-scoped from a survey gate after review: a waterfall step is a pure function
+of its inputs — accept the pot, allocate, move forward — so a step reading its
+own waterfall's prior payments is not a missing capability, it is the account
+reconstructing its own postings, and the cumulative quantity it wants is a
+BALANCE the distribution moves (§7.37). The engine already fails loudly on the
+two sibling cases (`E1341` for cross-waterfall `paid.`, the phase-reference
+load error for stream-reads-stream); the remaining case — `series_sum` naming
+a series that exists but is invisible from this context — returns a silent
+zero, which paid a preferred return in full six times. Promote it to the same
+loud failure, with a message that names the right model: carry the quantity as
+a balance. `docs/17` §10's "needs access to a cumulative series" should be
+corrected at the same time.
 
-**4. One path, one value.** An entity field that a recurrence computes and an
-event writes publishes the recurrence's answer while every stream and waterfall
-reads the event's: `1000, 1010, 1020, 1030…` published against
-`1000, 1010, 500, 500…` read, diverging permanently after the write. A gate
-asserting a single value per path per period would have caught it; a benchmark
-asserting that field would bless a number no stream ever saw.
+**4. One path, one value.** — **shipped**, with the semantics decided in
+review: an event's write OVERWRITES the field's value at that period, in the
+field store itself, and the recurrence resumes from it — a partial liquidation
+reduces the balance and the next period amortizes from the reduced balance,
+standard finance. Fields and events are now one interleaved walk per period
+(`crates/cfdl-engine/src/state.rs`): the recurrence computes the candidate,
+guards read the frozen pre-state plus the candidates, writes settle the
+column, and `prev` at t+1 reads what settled. A write to a rule-bearing field
+never enters the entity-state record, so there is no second copy to go stale.
+`fixtures/valid/event_reseeds_recurrence` pins the semantics —
+`1000, 900, 550, 450, 350, 250` published, read, and resumed identically.
+Originally: the two stores diverged permanently after a write, and a benchmark
+asserting the field would have blessed a number no stream ever saw.
 
 **5. A distribution's pot.** `docs/17` §4 says the pot a waterfall allocates is
 this period's cash. 29 of 31 waterfalls in the repository build their own out of
