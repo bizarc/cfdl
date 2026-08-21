@@ -286,6 +286,9 @@ inception*, not against this period's. That is why the root-finding targets in
 distribution moves — accrued and reduced as state, not re-derived from the
 waterfall's own payment history, which would be the account reconstructing its
 own postings. Carrying it awaits §7.37 (a distribution posting to a field).
+Re-deriving it is now refused rather than answered with a zero:
+`E1342_WATERFALL_SERIES_NOT_VISIBLE` catches a `series_sum` naming a step of
+the waterfall it is written in.
 
 ## 11. Revised sequence
 
@@ -447,6 +450,7 @@ to remember.
 | `E1344_WATERFALL_NO_REMAINDER` | nothing reads `remaining`, so whatever survives the last step is lost in silence |
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | a step says nothing about what it pays |
 | `E1340_WATERFALL_NO_SOURCE` | no `from` — no pot to allocate |
+| `E1342_WATERFALL_SERIES_NOT_VISIBLE` | `series_sum`/`series_avg` names a step of this waterfall or of a later one. Steps publish when their waterfall finishes, so the read aggregates to zero and says nothing — the same failure `E1341` catches for `paid.`, one spelling over |
 
 ### The 22-step fixture
 

@@ -107,7 +107,7 @@
           "payee": "party.holders",
           "amount": {
             "lang": "cfdl",
-            "src": "min(remaining,             inputs.note_balance               - series_sum(\"notes.principal.note_principal\", 0.0, time.t - 1.0))"
+            "src": "min(remaining, inputs.note_balance)"
           }
         }
       ]

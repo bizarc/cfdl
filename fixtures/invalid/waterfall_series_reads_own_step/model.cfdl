@@ -1,0 +1,42 @@
+version 0.1
+model "waterfall-series-reads-own-step"
+time calendar annual from 2020-01 for 6
+
+// A STEP MAY NOT READ ITS OWN WATERFALL'S PAYMENTS.
+//
+// The shortfall spelling below is the one an author reaches for: pay the
+// preferred return, less whatever this step has already paid. It reads as
+// arithmetic and it is not — a waterfall's steps publish when the waterfall
+// finishes, so at the moment this step runs there is nothing under that name
+// to read. `series_sum` answers zero for a name it cannot see, the subtraction
+// takes nothing away, and the step pays the full preferred every period it
+// runs. Six periods, six full payments, no diagnostic.
+//
+// A step is a pure function of the pot: accept it, allocate, move on. What the
+// shortfall spelling actually wants is a BALANCE — a quantity the distribution
+// draws down and a field carries forward — not the account reconstructing its
+// own postings.
+//
+// Reading an EARLIER waterfall is the documented composition and still
+// compiles; `fixtures/valid/waterfall_nested_split` pins that.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume called_capital = 10000000.0
+assume pref_rate      = 0.08
+assume proceeds       = 3000000.0
+
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2020-01
+  amount = inputs.proceeds
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay preferred to party.lp = inputs.called_capital * inputs.pref_rate
+                                - series_sum("fund.distribution.preferred", 0, time.t)
+  pay residual  to party.gp = remaining
+}

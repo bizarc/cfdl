@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1342_WATERFALL_SERIES_NOT_VISIBLE",
+    "severity": "error",
+    "message": "Waterfall 'fund.distribution' step 'preferred' reads series 'fund.distribution.preferred', which this waterfall has not finished paying.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 39,
+      "start_col": 3,
+      "end_line": 39,
+      "end_col": 29
+    },
+    "path": null,
+    "hint": "A step is a pure function of the pot: accept, allocate, move on. Read an earlier step's payment this period with `paid.<step>`; for a running total, carry the quantity as a balance a field advances and the distribution moves.",
+    "notes": []
+  }
+]

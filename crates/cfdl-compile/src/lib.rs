@@ -1178,11 +1178,36 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         })
         .collect();
 
+    // WHICH WATERFALL PUBLISHED A STEP, AND WHEN. A step publishes as
+    // `<waterfall>.<step>`, and a waterfall's steps become readable only once
+    // that waterfall has finished — composition is declaration order, which is
+    // what keeps an ordered allocation from becoming a dependency graph
+    // (docs/17 §"Composition"). Naming a step of THIS waterfall, or of a later
+    // one, therefore reads a series that exists in the model but cannot be seen
+    // from here, and `series_aggregate` answers a plausible zero.
+    let step_owner: BTreeMap<String, usize> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Waterfall(w) => Some(w),
+            _ => None,
+        })
+        .enumerate()
+        .flat_map(|(order, w)| {
+            w.steps
+                .iter()
+                .map(move |step| (format!("{}.{}", w.name, step.name), order))
+        })
+        .collect();
+
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let mut waterfall_order = 0usize;
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
             continue;
         };
+        let order = waterfall_order;
+        waterfall_order += 1;
         let file = source_stmt.file.clone();
         let diag = |code: &str, message: String, span, hint: Option<String>| Diagnostic {
             code: code.to_string(),
@@ -1216,6 +1241,62 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                 ),
                 waterfall.span,
                 Some("Add `from <expr>` — the cash this waterfall distributes.".to_string()),
+            ));
+        }
+
+        // A `series_sum` naming a step that is not yet published aggregates to
+        // zero and says nothing, which is how a preferred return came to be paid
+        // in full six times. The two sibling reads already fail loudly —
+        // `E1341` for `paid.` naming a later step, the engine's phase check for
+        // a stream reading a stream that itself reads one — so this one does too.
+        let series_visibility = |src: &str, where_: String, span| {
+            let mut out: Vec<Diagnostic> = Vec::new();
+            for referenced in cfdl_expr::series_references(src) {
+                // A selector states that matching nothing is intended.
+                if referenced.ends_with(".*") {
+                    continue;
+                }
+                let Some(&owner) = step_owner.get(&referenced) else {
+                    continue;
+                };
+                // An EARLIER waterfall has finished and published: the
+                // documented composition, and the reason this is an order.
+                if owner < order {
+                    continue;
+                }
+                let (why, hint) = if owner == order {
+                    (
+                        "which this waterfall has not finished paying".to_string(),
+                        "A step is a pure function of the pot: accept, allocate, move on. \
+                         Read an earlier step's payment this period with `paid.<step>`; \
+                         for a running total, carry the quantity as a balance a field \
+                         advances and the distribution moves."
+                            .to_string(),
+                    )
+                } else {
+                    (
+                        "which a later waterfall publishes".to_string(),
+                        "Waterfalls compose in declaration order, so a waterfall may read \
+                         only ones declared before it. Declare them in the order the cash \
+                         moves."
+                            .to_string(),
+                    )
+                };
+                out.push(diag(
+                    "E1342_WATERFALL_SERIES_NOT_VISIBLE",
+                    format!("{where_} reads series '{referenced}', {why}."),
+                    span,
+                    Some(hint),
+                ));
+            }
+            out
+        };
+
+        if let Some(source) = &waterfall.source {
+            diagnostics.extend(series_visibility(
+                &source.src,
+                format!("Waterfall '{}'", waterfall.name),
+                waterfall.span,
             ));
         }
 
@@ -1280,6 +1361,11 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                     ));
                 }
             }
+            diagnostics.extend(series_visibility(
+                &amount.src,
+                format!("Waterfall '{}' step '{}'", waterfall.name, step.name),
+                step.span,
+            ));
             let _ = index;
         }
 

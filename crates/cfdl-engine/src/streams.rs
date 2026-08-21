@@ -182,19 +182,6 @@ pub(crate) fn record_stream(
     stream_series.insert(stream.name.clone(), cash.to_vec());
 }
 
-/// Expose an entity's event-driven state to expressions, both as
-/// `entity.state.<field>` and directly as `entity.<field>` (spec §12.3).
-/// Bind `state.<name>` to each declared state's value AT period `idx`.
-///
-/// Extracted so a stream and an option bind the SAME period by construction
-/// rather than by two copies agreeing. `prev_states`/`prev_self` are left
-/// empty, so `prev` is not merely rejected outside a recurrence — it is not
-/// there to be found. See docs/14_state_and_recurrence.md.
-/// The series names an expression reads, as written.
-///
-/// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
-/// cross-stream read is. A computed name is not addressed here and is left to
-/// the runtime, where it still returns 0 for an unmatched name.
 /// Every literal series name a model reads must name something the model
 /// produces.
 ///
@@ -286,37 +273,4 @@ pub(crate) fn check_series_names(ir: &Ir, warnings: &mut Vec<String>) {
     }
 }
 
-pub(crate) fn series_references(src: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let bytes = src.as_bytes();
-    for func in ["series_sum", "series_avg"] {
-        let mut from = 0usize;
-        while let Some(rel) = src[from..].find(func) {
-            let after = from + rel + func.len();
-            from = after;
-            let mut i = after;
-            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
-                i += 1;
-            }
-            if i >= bytes.len() || bytes[i] != b'(' {
-                continue;
-            }
-            i += 1;
-            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
-                i += 1;
-            }
-            if i >= bytes.len() || bytes[i] != b'"' {
-                continue;
-            }
-            i += 1;
-            let start = i;
-            while i < bytes.len() && bytes[i] != b'"' {
-                i += 1;
-            }
-            if i <= bytes.len() {
-                out.push(src[start..i].to_string());
-            }
-        }
-    }
-    out
-}
+pub(crate) use cfdl_expr::series_references;

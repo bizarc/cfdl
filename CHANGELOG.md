@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a waterfall step cannot read its own payments — backlog 7.41 item 3
+
+A step that reads its own waterfall through `series_sum` was answered with a
+silent zero. Steps publish when their waterfall finishes, so the read sees
+nothing; the arithmetic around it then quietly does nothing.
+
+`fixtures/valid/waterfall_after_contract` was doing exactly that. It capped a
+note at its balance by subtracting what it had already paid, the subtraction
+took nothing away, and a $500,000 note paid out $1,200,000 across six periods
+with a golden that agreed. That is the failure `docs/13` §7.41 predicted as a
+preferred return paid in full six times, found in the repository rather than in
+a report.
+
+`E1342_WATERFALL_SERIES_NOT_VISIBLE` now refuses the spelling at compile time,
+beside `E1341_WATERFALL_FORWARD_REF` — the same failure one spelling over, so
+the two answer the same reference the same way. Reading an EARLIER waterfall is
+the documented composition and still compiles;
+`fixtures/valid/waterfall_nested_split` pins that. The message names the model
+that works: `paid.<step>` for this period's payment, and for a running total a
+balance the distribution moves, which awaits §7.37.
+
+The fixture now states the per-period cap it was computing all along. Its
+`ledger_hash` is unchanged and the other 148 goldens are byte-identical, so
+every published number was already this one — only the expression became
+honest.
+
+`series_references` moved to `cfdl-expr` so the compiler and the engine read
+series names with one scanner rather than two that could drift.
+
 ### Added: AmeriCredit 2017-1 — an auto ABS that builds its own enhancement
 
 `benchmarks/credit/americredit_2017_1` reproduces the percent-outstanding grid

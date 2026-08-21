@@ -44,8 +44,19 @@ waterfall notes.principal on entity asset.trust {
   // keeps the `from` expression free for exactly this.
   from series_sum("credit.pool.sched_principal.pool", time.t, time.t)
 
-  pay note_principal to party.holders =
-        min(remaining,
-            inputs.note_balance
-              - series_sum("notes.principal.note_principal", 0, time.t - 1))
+  // THE CAP IS PER-PERIOD, NOT CUMULATIVE, AND THAT IS THE HONEST SPELLING.
+  //
+  // This step used to subtract what it had already paid —
+  // `inputs.note_balance - series_sum("notes.principal.note_principal", ...)` —
+  // to cap the note at its balance over the whole deal. A step publishes when
+  // its waterfall finishes, so that read saw nothing, subtracted nothing, and
+  // the cap never bound: a $500,000 note paid out $1,200,000 across six
+  // periods and the golden agreed with it. `E1342_WATERFALL_SERIES_NOT_VISIBLE`
+  // now refuses the spelling.
+  //
+  // A running total is a BALANCE the distribution draws down, which needs a
+  // distribution that can post to a field — `docs/13` §7.37. Until then the
+  // cumulative cap is not expressible, and stating a per-period one is better
+  // than stating a cumulative one that does nothing.
+  pay note_principal to party.holders = min(remaining, inputs.note_balance)
 }

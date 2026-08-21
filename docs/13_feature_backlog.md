@@ -2160,6 +2160,17 @@ Provenance: found probing 7.37, August 2026, when a waterfall step's series
 read as zero and the only reason that was visible at all was a field warning
 about a different read.
 
+**Half of this is now closed, and it is worth being exact about which half.**
+A name the model does not produce ANYWHERE warns — `W5022_UNKNOWN_SERIES_REFERENCE`
+— rather than failing, because a literal naming nothing is a pack idiom as well
+as a typo (`cre.exit` names nine NOI components and a given property declares
+some of them), and refusing it outright broke four goldens. A name the model
+DOES produce but which cannot be seen from where it is read now fails:
+`E1342_WATERFALL_SERIES_NOT_VISIBLE`, §7.41 item 3. What remains here is the
+first case, and it stays open until the convention is settled — the question is
+whether a pack's own expression should be able to name a component the model
+lacks, not whether a typo should be caught.
+
 ---
 
 ### 7.39 A clean-up call cannot end a deal
@@ -2404,18 +2415,29 @@ two surfaces would have caught it the day the second clause was added to
 streams, rather than in a benchmark three packs later.
 
 **3. A series read that cannot resolve from its context must FAIL, not warn.**
+— **shipped**. `E1342_WATERFALL_SERIES_NOT_VISIBLE` refuses a `series_sum` /
+`series_avg` naming a step of the waterfall it is written in, or of a later
+one; an EARLIER waterfall is the documented composition and still compiles.
+Checked in the compiler beside `E1341`, its sibling one spelling over, so the
+two answer the same reference the same way. The message names the right model:
+`paid.<step>` for this period, a balance the distribution moves for a running
+total (§7.37).
+
 Re-scoped from a survey gate after review: a waterfall step is a pure function
 of its inputs — accept the pot, allocate, move forward — so a step reading its
 own waterfall's prior payments is not a missing capability, it is the account
 reconstructing its own postings, and the cumulative quantity it wants is a
-BALANCE the distribution moves (§7.37). The engine already fails loudly on the
-two sibling cases (`E1341` for cross-waterfall `paid.`, the phase-reference
-load error for stream-reads-stream); the remaining case — `series_sum` naming
-a series that exists but is invisible from this context — returns a silent
-zero, which paid a preferred return in full six times. Promote it to the same
-loud failure, with a message that names the right model: carry the quantity as
-a balance. `docs/17` §10's "needs access to a cumulative series" should be
-corrected at the same time.
+BALANCE the distribution moves (§7.37).
+
+**It had already shipped a wrong number.**
+`fixtures/valid/waterfall_after_contract` capped a note at its balance by
+subtracting what it had paid so far. The read saw nothing, the cap never bound,
+and a $500,000 note paid out $1,200,000 over six periods with a golden agreeing
+— the preferred return paid in full six times, found in the repository rather
+than in a report. The fixture now states a per-period cap, which is what it was
+computing all along: `ledger_hash` is unchanged, so every published number was
+identical and only the expression became honest. `docs/17` §10 was corrected
+before this landed and now names the diagnostic.
 
 **4. One path, one value.** — **shipped**, with the semantics decided in
 review: an event's write OVERWRITES the field's value at that period, in the

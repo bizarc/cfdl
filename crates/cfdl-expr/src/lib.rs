@@ -200,6 +200,52 @@ pub fn uses_series(compiled: &CompiledExpr) -> bool {
     cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
 }
 
+/// The series names an expression reads, as written.
+///
+/// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
+/// cross-stream read is. A computed name is not addressed here and is left to
+/// the runtime, where it still returns 0 for an unmatched name.
+///
+/// Scans the source rather than the compiled tree because both callers hold the
+/// source and one of them (the compiler's waterfall check) runs before anything
+/// is compiled. It lives here rather than in either caller so the compiler and
+/// the engine read the same names: they refuse and explain the same reference,
+/// and two scanners cannot drift into disagreeing about what a model says.
+pub fn series_references(src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = src.as_bytes();
+    for func in ["series_sum", "series_avg"] {
+        let mut from = 0usize;
+        while let Some(rel) = src[from..].find(func) {
+            let after = from + rel + func.len();
+            from = after;
+            let mut i = after;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'(' {
+                continue;
+            }
+            i += 1;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'"' {
+                continue;
+            }
+            i += 1;
+            let start = i;
+            while i < bytes.len() && bytes[i] != b'"' {
+                i += 1;
+            }
+            if i <= bytes.len() {
+                out.push(src[start..i].to_string());
+            }
+        }
+    }
+    out
+}
+
 /// Does `name` match `pattern`? The one selector dialect.
 ///
 /// `<prefix>.*` matches `<prefix>` ITSELF and every name beneath `<prefix>.`;
