@@ -1990,64 +1990,63 @@ that are unreachable in production and read as catastrophic contrast bugs; two
 false findings died that way during the assessment.
 
 
-### 7.36 States and events stop short of a state machine
+### 7.36 A repeatable regime cannot use the checked lifecycle vocabulary
 
-An entity's status, events writing it, and `active when` guards reading it are
-the pieces of a finite state machine, and the language stops one construct
-short of letting a model declare one. What exists: open-world status (an event
-brings the value into being, the write is published in
-`deterministic.transitions`), latched events (`01` section 13.1 — at most one
-fire per run, verified: a condition true at t=1, t=3 and t=5 produces exactly
-one transition, at t=1), and checked lifecycles that only a pack's
-`types.toml` can declare. A linear progression — a mine moving from full-rate
-milling to a reduced plant to reclamation — is expressible today as a chain of
-one-way events, and is the degenerate case.
+The item claimed that a machine with a return edge is not expressible — that a
+covenant which breaches and cures, a plant that curtails and restarts, a
+facility drawn and repaid each need a state that can be re-entered, and that
+the latch forecloses it. Probed with no pack active, the behavior and a
+published indicator both work today.
 
-What is not expressible is a machine with a return edge. A covenant that
-breaches and cures, a plant that curtails on price and restarts, a facility
-drawn and repaid — each needs a state that can be re-entered, which needs an
-event that can fire again. The latch is the right default for a turning
-point; it forecloses the cycle.
+`active when` is level-triggered, re-evaluated every period, so a plant curtails
+and restarts with no event at all. A field tracks the regime and flips both
+ways, because a `next` may read curves and time, and it publishes as a series:
 
-The enhancement, scoped as the machine rather than the trigger: let a model
-declare a lifecycle — states, initial state, and transitions, each transition
-a condition and a target state — with the existing once-per-period,
-declaration-order, period-open evaluation unchanged. Repeating or
-level-triggered events are the mechanism this reduces to; declaring the
-machine keeps the states and edges reviewable in one place instead of
-scattered across event declarations, and makes an undeclared transition a
-diagnostic rather than a silent absence. Truly linear items keep a choice:
-calendar-fixed eras are phases, condition-driven regimes are states.
+```
+price             100   10  100   10  100   10
+active when >=50  100    0  100    0  100    0     curtails and restarts
+field curtailed     0    1    0    1    0    1     published, flips both ways
+```
 
-Three adjacent findings from the same investigation, recorded because an
-implementation must decide each:
+**What is actually missing is the vocabulary, not the machine.** `active in
+state` and the lifecycle a pack declares in `types.toml` are checked — a state
+name is verified against the lifecycle and a typo is `E1332` — but a lifecycle
+state is entered by an event, and an event latches, so a regime that returns
+cannot use them. It must be a bare field: unchecked, and absent from
+`deterministic.transitions`, so the audit trail is silent about when the regime
+changed even though the field's series shows it.
 
-- A `set` action accepts an expression and publishes the transition, but a
-  field that carries its own `next` rule silently discards the event's write
-  — the transition is logged and the series never shows the value. Either the
-  write should suspend the rule for that period, or targeting a rule-bearing
-  field should be a diagnostic.
-- An event cannot fire on the boundary of a declared phase — the natural
-  join between calendar phases and a state machine — and the defect is in
-  the spec, not the engine. The grammar declares `phase_enter` for schedule
-  position only, and the engine implements the grammar completely; but `01`
-  section 6.4 describes the phase helpers as "schedule helpers (see §11)
-  and event helpers (see §13)", and section 13 defines no phase helper of
-  any kind. The cross-reference dangles. Either define the event-position
-  form section 6.4 alludes to, or correct section 6.4 to stop promising it.
-  (Written in event position anyway, the call parses as an unknown function
-  and degrades at run time — "unknown function; using false" — which is how
-  the dangling promise was found.)
-- A date literal does not compare against `time.t` ("cannot compare date and
-  number; using false"), so a mistyped condition produces a dead event that
-  compiles. All three degrade with a warning rather than failing; a dead
-  transition is legible only to a harness that checks warnings.
+That is a type-checking and audit gap. Shape, if it earns its place: a way to
+declare states and transitions a model can re-enter, keeping the existing
+once-per-period, declaration-order, period-open evaluation, so the states and
+edges are reviewable in one place and an undeclared transition is a diagnostic
+rather than a silent absence. Truly linear items keep the choice they have
+today: calendar-fixed eras are phases, condition-driven regimes are states.
+
+**The three adjacent findings are closed.**
+
+A `set` on a rule-bearing field is no longer discarded. An event's write
+overwrites the field at that period and the recurrence resumes from it;
+`fixtures/valid/event_reseeds_recurrence` pins `1000, 900, 550, 450, 350, 250`.
+
+An event CAN fire on the boundary of a declared phase.
+`when time.phase == "operations"` fires once, at the first period of that phase,
+which is what the latch is for — verified firing at 2026-10-01 for a phase
+beginning that month. The obstacle was never the event surface: `time.phase` was
+null in every model. §6.4 no longer promises event-position helpers that §13
+does not define, and says what an expression actually reads.
+
+A date literal does compare, written the way the expression language spells one.
+`docs/03` §2 states that expression literals are numbers, booleans and strings,
+and §4 provides `date(y, m, d)` and `parse_date(text)`. Both work:
+`time.date == date(2022, 1, 1)` fires in that period. A bare `2022-01-01` in an
+expression is subtraction because the operator table says it is, which is worth
+a lint suggesting the constructor, not a defect in comparison.
 
 Provenance: found modeling the Buenavista del Cobre lifecycle
-(`benchmarks/bespoke/buenavista_del_cobre`), August 2026 — the mine's one-way
-transitions fit the latch exactly, and asking what a recurring condition
-would look like had no answer.
-
+(`benchmarks/bespoke/buenavista_del_cobre`), August 2026. Narrowed August 2026
+by probing each claim: the return edge works, two adjacent findings were stale
+or wrong, and the third was a symptom of `time.phase` rather than of events.
 ---
 
 ### 7.37 A recurrence cannot read cash — NOT A GAP, closed August 2026

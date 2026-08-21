@@ -201,10 +201,16 @@ Rules:
 - Phases are named ranges used for organization, scoping, and schedule helpers.
 
 ### 6.4 Phase boundary helpers
-The language provides schedule helpers (see §11) and event helpers (see §13):
+Three helpers resolve in SCHEDULE position (see §11):
 - `phase_start("name")`
 - `phase_end("name")`
 - `phase_enter("name")` (an instant)
+
+They are not expression functions. An expression reads the phase it is in as
+`time.phase`, the name of the phase covering the current period, so a guard
+gates on a phase with `active when time.phase == "operations"` and an event
+fires on entering one with `when time.phase == "operations"` — once, because an
+event latches (§13.1).
 
 ---
 
