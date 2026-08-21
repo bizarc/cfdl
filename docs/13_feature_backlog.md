@@ -2105,7 +2105,7 @@ statement.
 Provenance: raised writing `benchmarks/credit/americredit_2017_1`, August 2026;
 closed August 2026 after probing each claim. The duplication that prompted it —
 that case states its distribution twice — is a consequence of restating an
-allocation the model can state once as a field, and is a modelling matter rather
+allocation the model can state once as a field, and is a modeling matter rather
 than a missing capability.
 
 ---
@@ -2185,179 +2185,62 @@ had no way to.
 
 ---
 
-### 7.40 Capabilities are reachable from one layer and not another
+### 7.40 Capabilities reachable from one layer and not another — NOT A GAP, closed August 2026
 
-**A pack must be additive.** Reaching for a contract should give a modeller the
-domain's conventions and cost nothing the language already offered. Two things
-break that today, in the same shape: a capability exists at one layer of the
-stack and no layer that needs it can reach it. Neither is a capability to build.
+The item recorded two instances of a capability the language gives one layer and
+withholds from another. Each claim was walked against the specification, then
+the implementation, then a probe. None survived.
 
-#### Instance 1 — a contract cannot be gated, though a stream can
+**Instance 1, a contract cannot be gated though a stream can.** A contract's
+`term <start>..<end>` states when its obligations run, and that is complete. The
+cases the item lists — a loan repaid early, a lease terminated, a tenant
+defaulting, a facility cancelled, a PPA bought out — are decisions and events,
+not terms of the agreements, and each has a construct already: an `option` with
+its `payoff` (§14), an `event`, or the entity state those write. Putting a guard
+on a contract would move a modeling decision into the record of what was
+agreed. The item's three proposed fixes all did that.
 
-Reaching for a contract costs the ability to stop the cash, which is not a
-small thing to lose.
+**Instance 2, the calendar's grain is a pack privilege.** It is not.
+`time.ppy` and `time.days_in_period` are documented in `docs/03` §3 and work:
+`inputs.rent_year / time.ppy` pays 3000 a quarter on a quarterly book, and
+`time.days_in_period` reports 90, 91, 92, 92. The item probed five spellings —
+`model.periods_per_year`, `time.periods_per_year`, `model.grain`, `time.grain`,
+`time.periods_in_year` — and none of them was the documented one.
 
-**The guard already exists where it matters.** A contract lowers into ordinary
-streams, and an IR stream is required to carry `active_when` —
-`docs/05_ir_schema.md` lists it among a stream's required properties, noting
-"If omitted in source, compiler should emit true". So a contract-lowered stream
-structurally *has* the field. Nothing can fill it:
+**The paths in its table, each for its own reason.**
 
-| layer | can it set the guard? |
-|---|---|
-| IR stream | **yes** — `active_when` is a required property |
-| pack lowering rule | **no** — `docs/07` §6.4 defines what a rule may emit (`amount_expr`, `schedule_kind`, `direction`, `category`, `field_name`, …) and `active_when` is not among them. Zero occurrences across all four packs. |
-| `contract` in a model | **no** — `ContractStmt` carries `subject_entity`, `term_start`, `term_end`, `payment_net` and `terms`, and no `active` clause at any grain |
+`run.*` is run configuration. It lives in run.json and is the run's business, not
+the model's; `cfg.<name>` exists so a run passes values in deliberately. There is
+no `run` root in `docs/03` §3 and there should not be.
 
-By contrast `StreamStmt` carries `direction`, `currency`, `category`,
-`schedule`, `amount`, **`active_when`** and **`active in state`** — a
-hand-written stream can be gated three ways.
+`model.npv`, `model.irr` and `domain.*` are settled by §15.2 — "CFDL models do
+not declare output metrics" — and an expression reading a fold of the cash it
+contributes to would be circular. A hurdle is a post-results item and does not
+belong in a model either.
 
-So this is not a capability to build. It is a capability that exists at the
-bottom of the stack and is unreachable from the top.
+`entity.<symbol>.net_cash_flow` is a RESULTS series key (`docs/06`), not an
+expression path; the `entity.` prefix there is an output namespace that shares a
+spelling with the expression root. Its null is the open-world `entity` root
+behaving as documented, and narrowing that is `docs/18` §4a.
 
-The consequence, probed in one model with one event and one loan:
+`time.year` and `time.month` have no component helper in the documentation or in
+`cfdl-calc`, and need none. A value that varies by date is a curve — seasonality
+and a calendar-year rate step both work that way — and periodicity is
+`months_between(anchor, time.date) % 12`.
 
-```
-loan balance      [1000000, 600000, 200000, 0, 0, 0]
-model-declared    [ -72649,  -72649,  -72649, 0, 0, 0]   stops when paid off
-pack contract     [ -72649,  -72649,  -72649, -72649, -72649, -72649]
-```
+**What the walk did find**, which the item never mentions: `docs/01` §13.4
+contradicted §9.3 normatively. §9.3 says a stream MAY carry a guard and is
+active for every scheduled occurrence without one; §13.4 said contracts and
+streams SHOULD use entity state as "the primary activation mechanism". A SHOULD
+against a MAY, an optional mechanism promoted over the effective dates that
+actually make a stream active, and contracts named for a guard they do not take.
+§13.4 is corrected.
 
-A loan that has been repaid keeps taking debt service, because the payments came
-from `cre.permanent_debt` rather than from a stream the model wrote. The same
-model expresses it correctly the moment the pack is dropped:
-
-```cfdl
-stream loan.debt_service on entity asset.bldg outflow currency USD {
-  schedule every year from 2026-01 to 2031-01
-  amount = 72649.0
-  active when asset.bldg.balance > 0.0
-}
-```
-
-**Both routes are closed, not one.** A contract takes no `active` clause, and an
-event cannot reach the streams a contract lowered either:
-
-```
-ERROR[E1302_UNRESOLVED_STREAM_REF] Event 'paid_off' references unknown stream
-'loan.permanent_debt_service'.
-```
-
-`deactivate stream` resolves only against model-declared streams. So a pack's
-cash cannot be gated by a guard, by a lifecycle state, or by an event.
-
-**Every pack is affected**, because the gap is in the contract surface rather
-than in any one pack's rules — `cre`, `credit`, `energy` and `opco` all lower to
-streams that no model can stop. A loan repaid early, a lease terminated, a
-tenant defaulting, a facility cancelled, a PPA bought out: each is a contract
-whose cash should stop and does not.
-
-Shape. The IR needs no change; the two layers above it do.
-
-1. **`docs/07` §6.4 gains `active_when` and `active_in_state` as lowering-rule
-   keys**, so a pack can gate the streams it emits. Several rules arguably
-   should already: a lease's TI/LC has no business paying while a unit is dark,
-   and a pool's servicing fee has none once the pool is sold.
-2. **`ContractStmt` gains `active when <expr>` and `active in state <s>`**,
-   propagated to every stream the contract emits. This is the one that restores
-   additivity — the same clause, on either construct, meaning the same thing.
-3. Optionally, `deactivate stream` resolves lowered names as well as declared
-   ones. Weaker, since it names an artifact of lowering rather than the
-   contract, but it would unblock the event route for models that already exist.
-
-The test to keep: for any capability the language gives a stream, a contract
-that lowers to streams should give it too. Anything else makes a pack a
-trade rather than an addition.
-
-Related: §7.39 wants a contract that ends on a condition rather than a date.
-A guard is the smaller half of that and is worth having on its own — a gated
-contract stops paying, though it does not yet settle what it is worth to stop.
-
-#### Instance 2 — the calendar's grain is reachable from a pack and not from a model
-
-A model declares its grain on line 4: `time calendar monthly from 2017-01 for
-71`. The compiler therefore knows how many periods make a year, and the pack
-interface hands it to a lowering rule as `{{model.periods_per_year}}` — used
-throughout all four packs, with `{{model.accrual_divisor}}` beside it for day
-counts. `docs/03` §3 discusses the convention.
-
-An expression cannot read it. Probed under five spellings — `model.periods_per_year`,
-`time.periods_per_year`, `model.grain`, `time.grain`, `time.periods_in_year` —
-every one is an unknown variable, warned, zero.
-
-**It is not a runtime feature the language withholds.** `{{...}}` is a
-compile-time substitution in the pack interface, so the lowered IR carries a
-literal:
-
-```
-amount src: … pv(0.15789 / 12.0, 8.0 - months_between(…), -1.0) …
-```
-
-By the time the IR exists, a pack's arithmetic is exactly what a modeller would
-have typed. The value is the compiler's, the packs are handed it, and models are
-not.
-
-The consequence is that cadence-neutrality is a pack privilege.
-`credit.pool_level_pay` is correct on a quarterly book because the compiler
-substitutes 4; the same pool written by hand needs `assume year_months = 12.0`,
-a constant restating what line 4 already said, silently wrong the moment the
-calendar changes. Every hand-written model that converts an annual rate carries
-that restatement somewhere.
-
-**And the engine does not merely know it — it publishes it.**
-`crates/cfdl-engine/src/lib.rs:1681` inserts `run.periods_per_year` as a metric,
-"for downstream metric evaluation (e.g. `cfdl-metrics` `wal_years`, which needs
-to convert period indices to years)." So the cadence work is real and has three
-consumers, every one of them outside the model: pack lowering by substitution,
-metric evaluation by this metric, and `make cadence-parity` as a gate. The
-expression environment — the one place a modeller writes arithmetic — is the
-only consumer left out.
-
-**What else a model cannot reach.** Probed the same way, one path per model,
-reading the value directly:
-
-| path | from an expression |
-|---|---|
-| `time.t`, `time.date` | readable |
-| `model.id`, `model.base_currency` | resolve, but are text — usable in a comparison, not in arithmetic |
-| `entity.<x>.net_cash_flow` | resolves to `Optional(None)`: bound and always empty |
-| `run.periods_per_year` | unknown variable |
-| `run.annual_discount_rate` | unknown variable |
-| `run.as_of` | unknown variable |
-| `model.net_cash_flow`, `model.total`, `model.npv`, `model.irr` | unknown variable |
-| `domain.*` subtotals | unknown variable |
-| `time.year`, `time.month`, `year(time.date)`, `month(time.date)` | unknown variable / unknown function |
-
-Three groups, and they want different answers.
-
-**Should be readable, plainly.** `run.periods_per_year` and the day-count
-divisor beside it; `run.annual_discount_rate`, which a hurdle or a
-solve-to-target needs and which every model currently restates as an assumption;
-and the calendar year and month of the current period, which today take
-`months_between(parse_date("…"), time.date)` arithmetic to recover from
-`time.date`.
-
-**Should stay unreadable, and the emptiness should say so.** `model.total`,
-`model.npv`, `model.irr` and the `domain.*` subtotals are results — reading them
-from a model is the circularity the layering exists to prevent.
-`entity.<x>.net_cash_flow` is the same, and it is the one that misleads: it
-resolves rather than erroring, so a model that reads it gets a silent zero and a
-warning about a non-numeric value rather than "this is a result".
-
-**Shape.** Expose the first group in `docs/03` §3's namespace table — nothing
-needs building, the compiler computes all of it. Make the second group a
-diagnostic that names the layer rather than a null that reads as zero.
-
-(One diagnostic to fix while in there: `assume months = 12.0` fails with
-`E0004_EXPECTED_TOKEN` — "Expected identifier after 'assume'" — because
-`months` is a schedule keyword. The message names neither the word nor the
-reason, and a reader who has just written an identifier has nothing to go on.)
-
-Provenance: found while rebuilding `benchmarks/credit/americredit_2017_1`
-without a pack, August 2026. The pack-free model expressed a payoff correctly on
-the first attempt; the packed one could not express it at all.
-
+Provenance: raised August 2026; closed August 2026 after walking each claim
+against the specification first, the implementation second, and a probe last.
+The instance-2 error is worth remembering: five undocumented spellings were
+probed and the documented one was not, which is how a working capability was
+recorded as missing.
 ---
 
 ### 7.41 Invariants the gates do not check

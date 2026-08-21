@@ -729,12 +729,23 @@ condition that becomes true partway through a period takes effect at that
 period's boundary, not when it became true. Where an event determines an
 allocation, the calendar is a term of the model and not a presentation choice.
 
-### 13.4 Entity-state-driven activation
-Contracts and streams SHOULD use entity state as the primary activation mechanism:
+### 13.4 Entity state in an activation guard
+A stream is active on its effective dates: its schedule is what brings it into
+being, and §9.3 is normative on that — a guard is optional and its absence means
+active for every scheduled occurrence.
+
+Where a stream's activity depends on something the model tracks rather than on
+the calendar, entity state is what a guard reads:
 
 ```cfdl
 active when entity.status != "refinanced"
 ```
+
+This is allowable, not required, and not a substitute for the effective dates.
+A contract takes no such guard. A contract records what was agreed and its
+`term` states when its obligations run; whether a right or an obligation is
+exercised is a modeling decision, carried by an event, an option, or the entity
+state those write — never by the record of the agreement.
 
 ---
 
