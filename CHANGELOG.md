@@ -8,6 +8,43 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: `time.phase` answers with the phase name
+
+The specification requires the expression environment to support `time.phase`
+(`docs/01` §16.2), the expression guide lists it in the `time` namespace, and
+the course introduces it in chapter 5 as "the current phase's name" and repeats
+it in the quick reference. It was never computed. `crates/cfdl-engine/src/env.rs`
+inserted `ExprValue::Optional(None)` under `phase` at both env-building sites, so
+it was null in every period of every model.
+
+Null fails quietly in both directions, and one of them reads as success: a null
+equals no string, so an inclusion test never fired, and a null differs from every
+string, so `active when time.phase != "construction"` — the natural way to write
+"not during construction" — was true during construction too and the guard did
+nothing at all. Neither form warned. The value also reached results as the Rust
+debug form of the empty optional.
+
+It now answers with the name of the phase covering the period. The membership
+test is the one `state.rs` already applied to an option's `exercisable_in_phase`,
+lifted into `phase_at` and called from both sites, so a phase means the same
+thing to a guard as it does to an option rather than being written twice. Where
+no declared phase covers the date the answer is still null. Where two phases
+cover it — overlapping phases compile today — the FIRST DECLARED wins, so the
+answer is a stated order rather than map iteration.
+
+Running the course's chapter 9 model with phases added and `time.phase`
+published:
+
+```
+period  0 (2026-01)  construction
+period 11 (2026-12)  operations
+period 35 (2028-12)  operations
+```
+
+No model in `packs/`, `fixtures/`, `benchmarks/`, `examples/` or `training/`
+read `time.phase`, so nothing depended on the old null; 151 goldens are
+unchanged.
+
 ### Fixed: a waterfall step cannot read its own payments — backlog 7.41 item 3
 
 A step that reads its own waterfall through `series_sum` was answered with a

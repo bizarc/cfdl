@@ -285,7 +285,8 @@ inception*, not against this period's. That is why the root-finding targets in
 §9 cluster on the once-at-exit shape. The cumulative quantity is a BALANCE the
 distribution moves — accrued and reduced as state, not re-derived from the
 waterfall's own payment history, which would be the account reconstructing its
-own postings. Carrying it awaits §7.37 (a distribution posting to a field).
+own postings. Carrying it is a field the waterfall reads: state the amount once,
+let the step pay it and the balance draw it down.
 Re-deriving it is now refused rather than answered with a zero:
 `E1342_WATERFALL_SERIES_NOT_VISIBLE` catches a `series_sum` naming a step of
 the waterfall it is written in.

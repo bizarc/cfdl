@@ -2050,90 +2050,63 @@ would look like had no answer.
 
 ---
 
-### 7.37 A recurrence cannot read cash, because cash does not exist yet
+### 7.37 A recurrence cannot read cash — NOT A GAP, closed August 2026
 
-A note class's balance is the deal's central state: it sets the interest due, it
-sets what principal the class can absorb, and it is the quantity every published
-decrement table states. It is `prev` minus what was paid, and that one
-subtraction cannot be written.
+The item claimed that a note class's balance, `prev` minus what was paid, could
+not be written; that `prev.<stream>` and `prev.<waterfall>.<step>` were needed;
+and that the engine had to be restructured from layer-major to period-major to
+support them. Every claim was probed with no pack active. None survived.
 
-**One number, not a series.** The shape every case wants is
+**A balance drawn down by a payment works today.** State the amount ONCE as a
+field. The step pays that field and the balance subtracts it — a waterfall step
+reads a rule-bearing entity field at the current period:
 
 ```
-balance(t) = balance(t-1) - paid(t-1)
+field  pay_amt        0   250   250   250   250
+field  bal         1000  1000   750   500   250
+step   principal      0   250   250   250   250     <- reads the field
 ```
 
-so what is missing is a *value*, not a window: `prev.<stream>` and
-`prev.<waterfall>.<step>`, beside the `prev.<family>.<entity>.<field>` a
-recurrence already reads. Same keyword, same meaning — the completed previous
-column.
+No new spelling is needed, and the field/stream boundary `docs/14` draws is
+untouched: a field reads no cash, and does not need to.
 
-```cfdl
-balance init 182000000  next max(prev - prev.notes.distribution.a1_principal, 0.0)
+**There is ONE pot.** Within a run, `remaining` draws it down — that is what it
+is for. Across periods, the model states the window the pot draws on, and the
+`from` expression is deliberately free (`docs/03` §3.2) so it can. Both shapes
+distribute the cash exactly once:
+
+```
+end of hold, one waterfall, from series_sum(fcf, 0, time.t):
+  cash 600 -> preferred 400, gp split 40, lp split 160        total 600
+
+every period, from available:
+  cash 300/period -> distributed 300/period                   total 100%
 ```
 
-A scalar is better than the series access `docs/14` §3.1 describes, not merely
-smaller. A window must be clamped at `t-1`, and a clamp is a check that can be
-wrong; a scalar has no way to name period `t` at all. That is `docs/14`'s own
-argument — the guarantee enforced by absence rather than by analysis. Nor does a
-window buy anything: a cumulative-to-date quantity is itself a recurrence, so
-whatever a window could sum, a second field can accumulate.
+An end-of-hold distribution — a preferred return and then a split — is the
+normal shape, and hand-authoring the pot window is a sound fallback where a deal
+needs something else.
 
-**Why neither form works: the layers.** The engine evaluates in complete
-layers, each finishing before the next begins.
+**Where the wrong answers came from.** Two modelling errors, each of which looks
+like an engine defect until the model is read. Declaring two waterfalls on one
+entity, each drawing the same pot, double-counts the cash — there is only one
+pot, and two claims on it is not something the engine should reconcile. And a
+model that asks for cash which cannot exist, then assumes it was received, will
+disagree with the cash: that is the model over-specifying an amortization the
+collateral cannot support, not the language losing a payment.
 
-| | layer | sees |
-|---|---|---|
-| 1 | fields | `prev`, other fields' `prev`, inputs, curves |
-| 2 | events | fields; writes become visible to later layers |
-| 3 | streams | fields, event writes, phase-1 streams |
-| 4 | subtotals | stream categories — folded for statements |
-| 5 | waterfalls | fields, event writes, streams, earlier waterfalls |
+**What is true and must stay true.** A distribution is not an operating,
+investing or financing flow, so it must never reach a cash flow statement;
+subtotals folding before waterfalls run is the correct order. Distribution is
+downstream of the cash flow modelling and of the valuation, both struck before
+it. A separate WATERFALL statement may be added later and is a different
+statement.
 
-`compute_states` runs as one pass over every period and returns a whole series
-per field, before any stream is evaluated. So a field at `t` cannot read cash at
-`t-1` because at that moment no cash exists at any period. `docs/14` §3.2
-already specifies the interleaving that would fix it — `for t: for each state;
-for each stream` — and the engine runs layer-major instead. **The work is
-evaluation order, not expression scope**, and it is the same restructuring for a
-scalar or a series, which is one more reason to take the scalar.
-
-**Pinned as a test.** `fixtures/valid/evaluation_order` reads the boundaries
-rather than asserting them:
-
-- an event fires on a **field** crossing a threshold, and the waterfall sees the
-  write — `20000, 20000, 50000, 50000`;
-- an event guarding on **cash** never fires, and warns that the series is not
-  available. Interest is under the trigger in every period; the guard cannot see
-  it;
-- `domain.credit.*` carries the pool's collections and none of the waterfall's
-  payments, because subtotals are folded at layer 4 and the waterfall runs at
-  layer 5. **A distribution never reaches a statement.**
-
-The last of these is worth its own line: it means the collections statement
-describes what the assets produced and can say nothing about who was paid.
-
-**What the ordering costs, in three packs.** A mortgage has no readable
-outstanding balance, so no loan-to-value covenant, no debt yield, no cash sweep
-— `cre.permanent_debt` stays closed-form because the alternative cannot be
-written. A JV preference accretes and never learns what was distributed, so
-`fixtures/valid/waterfall_cre_jv_promote` compounds on the full balance whether
-or not the pot could pay it. And `benchmarks/credit/americredit_2017_1` carries
-seven balances that each recompute the whole distribution a period lagged,
-because the waterfall cannot tell them what it paid. That case shipped its first
-model with the servicing fee right in the waterfall and wrong in the
-recurrence — eleven published cells and two published weighted average lives —
-and nothing in the language could have caught it.
-
-Two things this is not. It is not the recurrence being backward-only: reading
-`t-1` is exactly right, since a class's balance at a distribution date is what
-it carried in. And it is not a missing waterfall feature — `paid.<step>`,
-`owed.<step>` and `remaining` all work within a period, and `paid.` reaching
-into another waterfall is a compile error.
-
-Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026;
-narrowed from "a waterfall cannot tell a balance what it paid" to the layer
-order after probing each boundary with no pack active.
+Provenance: raised writing `benchmarks/credit/americredit_2017_1`, August 2026;
+closed August 2026 after probing each claim. The duplication that prompted it —
+that case states its distribution twice — is a consequence of restating an
+allocation the model can state once as a field, and is a modelling matter rather
+than a missing capability.
 
 ---
 
@@ -2586,4 +2559,38 @@ stages, one call each.
 
 Provenance: raised August 2026, after a session in which every finding was a
 boundary between two stages that the code does not separate.
+
+---
+
+### 7.45 A waterfall with no schedule distributes once, at the model start
+
+`lower_schedule` answers a missing schedule with `OnDate(time_start)`
+(`crates/cfdl-compile/src/lib.rs`), so a waterfall that says nothing about when
+it runs distributes exactly once, in the first period — before the deal has
+produced anything to distribute. Probed with no pack active: a constant pot of
+500 across five periods paid `500, 0, 0, 0, 0`.
+
+Nothing says so. `docs/17` and `docs/01` state no default, and no diagnostic
+fires. The engine believes something different — `run_waterfalls` reads a
+missing schedule as *every period* — but that branch is unreachable, because the
+compiler never emits `None`. Two components disagree about the default and the
+one that loses is the one whose comment explains the intent.
+
+The first period is the least defensible of the three candidate defaults. A
+waterfall accumulates over a holding period and then distributes — a preferred
+return and then a split — so the useful default is at the END of the hold, not
+its start. Distributing at the start answers with whatever the first period
+happened to produce.
+
+Shape, in the order they should be considered: require the schedule and reject
+the omission, which makes the author say what a distribution date is; or default
+to the end of the hold, which is the shape a deal actually has. Defaulting to
+every period matches the engine's dead branch but is not the normal case.
+Whichever is chosen, the engine's unreachable branch should go, so one component
+states the rule.
+
+Provenance: found August 2026 while probing 7.37, when a waterfall drawing
+`from available` appeared to pay only the first period's cash. The pot was
+correct; the waterfall had run once. Two earlier readings of this repository's
+behaviour were wrong because of it.
 
