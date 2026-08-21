@@ -2479,3 +2479,51 @@ Provenance: found August 2026 while probing 7.37, when a waterfall drawing
 correct; the waterfall had run once. Two earlier readings of this repository's
 behaviour were wrong because of it.
 
+
+---
+
+### 7.46 A run with no discount rate still publishes an NPV
+
+A run that states no rate discounts at zero and reports the result as
+`model.npv`:
+
+```
+cfdl run <ir> --out results.json          (no --config, no --rate)
+
+  model.npv                = 3750.0
+  run.annual_discount_rate = 0.0
+```
+
+3,750 is the undiscounted total. The rate is published beside it, so the run is
+not lying, but a metric named `model.npv` is being reported for a valuation
+whose rate nobody stated, and a reader scanning results for a present value sees
+a figure that reads as valued and is not.
+
+**No rate, no NPV.** A discounted metric with no discount rate is a missing
+term, not a shortcut, and the repository already applies that standard where it
+matters most: `cre.permanent_debt` deliberately defaults neither `principal` nor
+`rate`, because "a mortgage with an unstated balance or an unstated rate is not
+a modeling shortcut, it is a missing term, and E5006 should say so rather than
+the pack inventing a zero." A valuation with an unstated discount rate is the
+same shape. Omit `model.npv` and the metrics derived from it when no rate is
+supplied, and say why.
+
+The zero default is what makes the current behavior defensible-looking: it is a
+real arithmetic answer to a question nobody asked. Removing it costs nothing a
+model wanted, because a model that means zero can state zero.
+
+**Scope to settle when implementing.** Which metrics travel with the rate —
+`model.npv` certainly; whether `model.irr`, `model.payback_years` and
+`model.wal_years` do is a separate question, since a time-weighted life needs an
+axis rather than a rate. And whether omission or an explicit null is the better
+shape in `results.json`, which `docs/06` should state either way.
+
+**Not the same as letting a model set the rate.** Discounting belongs to the
+run: one set of cash flows is valued at several rates by different readers, and
+neither rate is a fact about the asset (§7.42). A model default with a run
+override, or a run that falls back to `inputs`, would put the resolution order
+out of sight and let one model value differently depending on which channel won.
+The fix here is to require the rate, not to relocate it.
+
+Provenance: found August 2026 while correcting §7.42, when a probe run without a
+config produced an NPV equal to its own total.

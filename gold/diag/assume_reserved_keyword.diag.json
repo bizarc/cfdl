@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Expected identifier after 'assume', found the reserved word 'term'. Reserved words are listed in section 18 of the language specification; choose another name.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 8,
+      "end_line": 21,
+      "end_col": 11
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]
