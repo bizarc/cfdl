@@ -1,0 +1,26 @@
+version 0.1
+model "assume-reserved-keyword"
+time calendar annual from 2026-01 for 2
+
+// A RESERVED WORD LOOKS LIKE A NAME.
+//
+// `term` is an ordinary English word for a quantity a model might well want to
+// assume, and section 18 of the language specification reserves it. Rejecting
+// the declaration is right; the question is whether the author can tell why.
+//
+// The message used to be "Expected identifier after 'assume'", said against a
+// word that reads as a perfectly good identifier, which left the reader to
+// guess. It now names the word and says where the list is.
+//
+// The same shape reaches an ontology field named after a keyword — `docs/13`
+// §7.19, where `Credit.Asset.Loan` declares a field `term` that no model can
+// write.
+
+entity asset a : Asset.Real
+
+assume term = 5.0
+
+stream a.s on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 10.0
+}

@@ -201,10 +201,16 @@ Rules:
 - Phases are named ranges used for organization, scoping, and schedule helpers.
 
 ### 6.4 Phase boundary helpers
-The language provides schedule helpers (see §11) and event helpers (see §13):
+Three helpers resolve in SCHEDULE position (see §11):
 - `phase_start("name")`
 - `phase_end("name")`
 - `phase_enter("name")` (an instant)
+
+They are not expression functions. An expression reads the phase it is in as
+`time.phase`, the name of the phase covering the current period, so a guard
+gates on a phase with `active when time.phase == "operations"` and an event
+fires on entering one with `when time.phase == "operations"` — once, because an
+event latches (§13.1).
 
 ---
 
@@ -625,8 +631,18 @@ Recommended v0.1 rule (normative):
 
 ### 12.1 Deterministic assumption
 ```cfdl
-assume discount_rate = 0.10
+assume base_rent = 4000
 ```
+
+A deterministic assumption is a named value the model owns. Terms and
+expressions read it as `inputs.<name>`, and a scenario overrides it by the same
+name, which makes `assume` the model's single channel for variation.
+
+Discounting is not an assumption. The valuation rate belongs to the run, so one
+set of cash flows can be valued at several rates without editing the model. It
+is `annual_discount_rate` in the run configuration; see
+`docs/09_user_guide.md`. An `assume` of that name is an ordinary assumption and
+does not move `model.npv`.
 
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl
@@ -729,12 +745,23 @@ condition that becomes true partway through a period takes effect at that
 period's boundary, not when it became true. Where an event determines an
 allocation, the calendar is a term of the model and not a presentation choice.
 
-### 13.4 Entity-state-driven activation
-Contracts and streams SHOULD use entity state as the primary activation mechanism:
+### 13.4 Entity state in an activation guard
+A stream is active on its effective dates: its schedule is what brings it into
+being, and §9.3 is normative on that — a guard is optional and its absence means
+active for every scheduled occurrence.
+
+Where a stream's activity depends on something the model tracks rather than on
+the calendar, entity state is what a guard reads:
 
 ```cfdl
 active when entity.status != "refinanced"
 ```
+
+This is allowable, not required, and not a substitute for the effective dates.
+A contract takes no such guard. A contract records what was agreed and its
+`term` states when its obligations run; whether a right or an obligation is
+exercised is a modeling decision, carried by an event, an option, or the entity
+state those write — never by the record of the agreement.
 
 ---
 

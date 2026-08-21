@@ -1990,150 +1990,122 @@ that are unreachable in production and read as catastrophic contrast bugs; two
 false findings died that way during the assessment.
 
 
-### 7.36 States and events stop short of a state machine
+### 7.36 A repeatable regime cannot use the checked lifecycle vocabulary
 
-An entity's status, events writing it, and `active when` guards reading it are
-the pieces of a finite state machine, and the language stops one construct
-short of letting a model declare one. What exists: open-world status (an event
-brings the value into being, the write is published in
-`deterministic.transitions`), latched events (`01` section 13.1 — at most one
-fire per run, verified: a condition true at t=1, t=3 and t=5 produces exactly
-one transition, at t=1), and checked lifecycles that only a pack's
-`types.toml` can declare. A linear progression — a mine moving from full-rate
-milling to a reduced plant to reclamation — is expressible today as a chain of
-one-way events, and is the degenerate case.
+The item claimed that a machine with a return edge is not expressible — that a
+covenant which breaches and cures, a plant that curtails and restarts, a
+facility drawn and repaid each need a state that can be re-entered, and that
+the latch forecloses it. Probed with no pack active, the behavior and a
+published indicator both work today.
 
-What is not expressible is a machine with a return edge. A covenant that
-breaches and cures, a plant that curtails on price and restarts, a facility
-drawn and repaid — each needs a state that can be re-entered, which needs an
-event that can fire again. The latch is the right default for a turning
-point; it forecloses the cycle.
+`active when` is level-triggered, re-evaluated every period, so a plant curtails
+and restarts with no event at all. A field tracks the regime and flips both
+ways, because a `next` may read curves and time, and it publishes as a series:
 
-The enhancement, scoped as the machine rather than the trigger: let a model
-declare a lifecycle — states, initial state, and transitions, each transition
-a condition and a target state — with the existing once-per-period,
-declaration-order, period-open evaluation unchanged. Repeating or
-level-triggered events are the mechanism this reduces to; declaring the
-machine keeps the states and edges reviewable in one place instead of
-scattered across event declarations, and makes an undeclared transition a
-diagnostic rather than a silent absence. Truly linear items keep a choice:
-calendar-fixed eras are phases, condition-driven regimes are states.
+```
+price             100   10  100   10  100   10
+active when >=50  100    0  100    0  100    0     curtails and restarts
+field curtailed     0    1    0    1    0    1     published, flips both ways
+```
 
-Three adjacent findings from the same investigation, recorded because an
-implementation must decide each:
+**What is actually missing is the vocabulary, not the machine.** `active in
+state` and the lifecycle a pack declares in `types.toml` are checked — a state
+name is verified against the lifecycle and a typo is `E1332` — but a lifecycle
+state is entered by an event, and an event latches, so a regime that returns
+cannot use them. It must be a bare field: unchecked, and absent from
+`deterministic.transitions`, so the audit trail is silent about when the regime
+changed even though the field's series shows it.
 
-- A `set` action accepts an expression and publishes the transition, but a
-  field that carries its own `next` rule silently discards the event's write
-  — the transition is logged and the series never shows the value. Either the
-  write should suspend the rule for that period, or targeting a rule-bearing
-  field should be a diagnostic.
-- An event cannot fire on the boundary of a declared phase — the natural
-  join between calendar phases and a state machine — and the defect is in
-  the spec, not the engine. The grammar declares `phase_enter` for schedule
-  position only, and the engine implements the grammar completely; but `01`
-  section 6.4 describes the phase helpers as "schedule helpers (see §11)
-  and event helpers (see §13)", and section 13 defines no phase helper of
-  any kind. The cross-reference dangles. Either define the event-position
-  form section 6.4 alludes to, or correct section 6.4 to stop promising it.
-  (Written in event position anyway, the call parses as an unknown function
-  and degrades at run time — "unknown function; using false" — which is how
-  the dangling promise was found.)
-- A date literal does not compare against `time.t` ("cannot compare date and
-  number; using false"), so a mistyped condition produces a dead event that
-  compiles. All three degrade with a warning rather than failing; a dead
-  transition is legible only to a harness that checks warnings.
+That is a type-checking and audit gap. Shape, if it earns its place: a way to
+declare states and transitions a model can re-enter, keeping the existing
+once-per-period, declaration-order, period-open evaluation, so the states and
+edges are reviewable in one place and an undeclared transition is a diagnostic
+rather than a silent absence. Truly linear items keep the choice they have
+today: calendar-fixed eras are phases, condition-driven regimes are states.
+
+**The three adjacent findings are closed.**
+
+A `set` on a rule-bearing field is no longer discarded. An event's write
+overwrites the field at that period and the recurrence resumes from it;
+`fixtures/valid/event_reseeds_recurrence` pins `1000, 900, 550, 450, 350, 250`.
+
+An event CAN fire on the boundary of a declared phase.
+`when time.phase == "operations"` fires once, at the first period of that phase,
+which is what the latch is for — verified firing at 2026-10-01 for a phase
+beginning that month. The obstacle was never the event surface: `time.phase` was
+null in every model. §6.4 no longer promises event-position helpers that §13
+does not define, and says what an expression actually reads.
+
+A date literal does compare, written the way the expression language spells one.
+`docs/03` §2 states that expression literals are numbers, booleans and strings,
+and §4 provides `date(y, m, d)` and `parse_date(text)`. Both work:
+`time.date == date(2022, 1, 1)` fires in that period. A bare `2022-01-01` in an
+expression is subtraction because the operator table says it is, which is worth
+a lint suggesting the constructor, not a defect in comparison.
 
 Provenance: found modeling the Buenavista del Cobre lifecycle
-(`benchmarks/bespoke/buenavista_del_cobre`), August 2026 — the mine's one-way
-transitions fit the latch exactly, and asking what a recurring condition
-would look like had no answer.
-
+(`benchmarks/bespoke/buenavista_del_cobre`), August 2026. Narrowed August 2026
+by probing each claim: the return edge works, two adjacent findings were stale
+or wrong, and the third was a symptom of `time.phase` rather than of events.
 ---
 
-### 7.37 A recurrence cannot read cash, because cash does not exist yet
+### 7.37 A recurrence cannot read cash — NOT A GAP, closed August 2026
 
-A note class's balance is the deal's central state: it sets the interest due, it
-sets what principal the class can absorb, and it is the quantity every published
-decrement table states. It is `prev` minus what was paid, and that one
-subtraction cannot be written.
+The item claimed that a note class's balance, `prev` minus what was paid, could
+not be written; that `prev.<stream>` and `prev.<waterfall>.<step>` were needed;
+and that the engine had to be restructured from layer-major to period-major to
+support them. Every claim was probed with no pack active. None survived.
 
-**One number, not a series.** The shape every case wants is
+**A balance drawn down by a payment works today.** State the amount ONCE as a
+field. The step pays that field and the balance subtracts it — a waterfall step
+reads a rule-bearing entity field at the current period:
 
 ```
-balance(t) = balance(t-1) - paid(t-1)
+field  pay_amt        0   250   250   250   250
+field  bal         1000  1000   750   500   250
+step   principal      0   250   250   250   250     <- reads the field
 ```
 
-so what is missing is a *value*, not a window: `prev.<stream>` and
-`prev.<waterfall>.<step>`, beside the `prev.<family>.<entity>.<field>` a
-recurrence already reads. Same keyword, same meaning — the completed previous
-column.
+No new spelling is needed, and the field/stream boundary `docs/14` draws is
+untouched: a field reads no cash, and does not need to.
 
-```cfdl
-balance init 182000000  next max(prev - prev.notes.distribution.a1_principal, 0.0)
+**There is ONE pot.** Within a run, `remaining` draws it down — that is what it
+is for. Across periods, the model states the window the pot draws on, and the
+`from` expression is deliberately free (`docs/03` §3.2) so it can. Both shapes
+distribute the cash exactly once:
+
+```
+end of hold, one waterfall, from series_sum(fcf, 0, time.t):
+  cash 600 -> preferred 400, gp split 40, lp split 160        total 600
+
+every period, from available:
+  cash 300/period -> distributed 300/period                   total 100%
 ```
 
-A scalar is better than the series access `docs/14` §3.1 describes, not merely
-smaller. A window must be clamped at `t-1`, and a clamp is a check that can be
-wrong; a scalar has no way to name period `t` at all. That is `docs/14`'s own
-argument — the guarantee enforced by absence rather than by analysis. Nor does a
-window buy anything: a cumulative-to-date quantity is itself a recurrence, so
-whatever a window could sum, a second field can accumulate.
+An end-of-hold distribution — a preferred return and then a split — is the
+normal shape, and hand-authoring the pot window is a sound fallback where a deal
+needs something else.
 
-**Why neither form works: the layers.** The engine evaluates in complete
-layers, each finishing before the next begins.
+**Where the wrong answers came from.** Two modelling errors, each of which looks
+like an engine defect until the model is read. Declaring two waterfalls on one
+entity, each drawing the same pot, double-counts the cash — there is only one
+pot, and two claims on it is not something the engine should reconcile. And a
+model that asks for cash which cannot exist, then assumes it was received, will
+disagree with the cash: that is the model over-specifying an amortization the
+collateral cannot support, not the language losing a payment.
 
-| | layer | sees |
-|---|---|---|
-| 1 | fields | `prev`, other fields' `prev`, inputs, curves |
-| 2 | events | fields; writes become visible to later layers |
-| 3 | streams | fields, event writes, phase-1 streams |
-| 4 | subtotals | stream categories — folded for statements |
-| 5 | waterfalls | fields, event writes, streams, earlier waterfalls |
+**What is true and must stay true.** A distribution is not an operating,
+investing or financing flow, so it must never reach a cash flow statement;
+subtotals folding before waterfalls run is the correct order. Distribution is
+downstream of the cash flow modelling and of the valuation, both struck before
+it. A separate WATERFALL statement may be added later and is a different
+statement.
 
-`compute_states` runs as one pass over every period and returns a whole series
-per field, before any stream is evaluated. So a field at `t` cannot read cash at
-`t-1` because at that moment no cash exists at any period. `docs/14` §3.2
-already specifies the interleaving that would fix it — `for t: for each state;
-for each stream` — and the engine runs layer-major instead. **The work is
-evaluation order, not expression scope**, and it is the same restructuring for a
-scalar or a series, which is one more reason to take the scalar.
-
-**Pinned as a test.** `fixtures/valid/evaluation_order` reads the boundaries
-rather than asserting them:
-
-- an event fires on a **field** crossing a threshold, and the waterfall sees the
-  write — `20000, 20000, 50000, 50000`;
-- an event guarding on **cash** never fires, and warns that the series is not
-  available. Interest is under the trigger in every period; the guard cannot see
-  it;
-- `domain.credit.*` carries the pool's collections and none of the waterfall's
-  payments, because subtotals are folded at layer 4 and the waterfall runs at
-  layer 5. **A distribution never reaches a statement.**
-
-The last of these is worth its own line: it means the collections statement
-describes what the assets produced and can say nothing about who was paid.
-
-**What the ordering costs, in three packs.** A mortgage has no readable
-outstanding balance, so no loan-to-value covenant, no debt yield, no cash sweep
-— `cre.permanent_debt` stays closed-form because the alternative cannot be
-written. A JV preference accretes and never learns what was distributed, so
-`fixtures/valid/waterfall_cre_jv_promote` compounds on the full balance whether
-or not the pot could pay it. And `benchmarks/credit/americredit_2017_1` carries
-seven balances that each recompute the whole distribution a period lagged,
-because the waterfall cannot tell them what it paid. That case shipped its first
-model with the servicing fee right in the waterfall and wrong in the
-recurrence — eleven published cells and two published weighted average lives —
-and nothing in the language could have caught it.
-
-Two things this is not. It is not the recurrence being backward-only: reading
-`t-1` is exactly right, since a class's balance at a distribution date is what
-it carried in. And it is not a missing waterfall feature — `paid.<step>`,
-`owed.<step>` and `remaining` all work within a period, and `paid.` reaching
-into another waterfall is a compile error.
-
-Provenance: found writing `benchmarks/credit/americredit_2017_1`, August 2026;
-narrowed from "a waterfall cannot tell a balance what it paid" to the layer
-order after probing each boundary with no pack active.
+Provenance: raised writing `benchmarks/credit/americredit_2017_1`, August 2026;
+closed August 2026 after probing each claim. The duplication that prompted it —
+that case states its distribution twice — is a consequence of restating an
+allocation the model can state once as a field, and is a modeling matter rather
+than a missing capability.
 
 ---
 
@@ -2212,179 +2184,62 @@ had no way to.
 
 ---
 
-### 7.40 Capabilities are reachable from one layer and not another
+### 7.40 Capabilities reachable from one layer and not another — NOT A GAP, closed August 2026
 
-**A pack must be additive.** Reaching for a contract should give a modeller the
-domain's conventions and cost nothing the language already offered. Two things
-break that today, in the same shape: a capability exists at one layer of the
-stack and no layer that needs it can reach it. Neither is a capability to build.
+The item recorded two instances of a capability the language gives one layer and
+withholds from another. Each claim was walked against the specification, then
+the implementation, then a probe. None survived.
 
-#### Instance 1 — a contract cannot be gated, though a stream can
+**Instance 1, a contract cannot be gated though a stream can.** A contract's
+`term <start>..<end>` states when its obligations run, and that is complete. The
+cases the item lists — a loan repaid early, a lease terminated, a tenant
+defaulting, a facility cancelled, a PPA bought out — are decisions and events,
+not terms of the agreements, and each has a construct already: an `option` with
+its `payoff` (§14), an `event`, or the entity state those write. Putting a guard
+on a contract would move a modeling decision into the record of what was
+agreed. The item's three proposed fixes all did that.
 
-Reaching for a contract costs the ability to stop the cash, which is not a
-small thing to lose.
+**Instance 2, the calendar's grain is a pack privilege.** It is not.
+`time.ppy` and `time.days_in_period` are documented in `docs/03` §3 and work:
+`inputs.rent_year / time.ppy` pays 3000 a quarter on a quarterly book, and
+`time.days_in_period` reports 90, 91, 92, 92. The item probed five spellings —
+`model.periods_per_year`, `time.periods_per_year`, `model.grain`, `time.grain`,
+`time.periods_in_year` — and none of them was the documented one.
 
-**The guard already exists where it matters.** A contract lowers into ordinary
-streams, and an IR stream is required to carry `active_when` —
-`docs/05_ir_schema.md` lists it among a stream's required properties, noting
-"If omitted in source, compiler should emit true". So a contract-lowered stream
-structurally *has* the field. Nothing can fill it:
+**The paths in its table, each for its own reason.**
 
-| layer | can it set the guard? |
-|---|---|
-| IR stream | **yes** — `active_when` is a required property |
-| pack lowering rule | **no** — `docs/07` §6.4 defines what a rule may emit (`amount_expr`, `schedule_kind`, `direction`, `category`, `field_name`, …) and `active_when` is not among them. Zero occurrences across all four packs. |
-| `contract` in a model | **no** — `ContractStmt` carries `subject_entity`, `term_start`, `term_end`, `payment_net` and `terms`, and no `active` clause at any grain |
+`run.*` is run configuration. It lives in run.json and is the run's business, not
+the model's; `cfg.<name>` exists so a run passes values in deliberately. There is
+no `run` root in `docs/03` §3 and there should not be.
 
-By contrast `StreamStmt` carries `direction`, `currency`, `category`,
-`schedule`, `amount`, **`active_when`** and **`active in state`** — a
-hand-written stream can be gated three ways.
+`model.npv`, `model.irr` and `domain.*` are settled by §15.2 — "CFDL models do
+not declare output metrics" — and an expression reading a fold of the cash it
+contributes to would be circular. A hurdle is a post-results item and does not
+belong in a model either.
 
-So this is not a capability to build. It is a capability that exists at the
-bottom of the stack and is unreachable from the top.
+`entity.<symbol>.net_cash_flow` is a RESULTS series key (`docs/06`), not an
+expression path; the `entity.` prefix there is an output namespace that shares a
+spelling with the expression root. Its null is the open-world `entity` root
+behaving as documented, and narrowing that is `docs/18` §4a.
 
-The consequence, probed in one model with one event and one loan:
+`time.year` and `time.month` have no component helper in the documentation or in
+`cfdl-calc`, and need none. A value that varies by date is a curve — seasonality
+and a calendar-year rate step both work that way — and periodicity is
+`months_between(anchor, time.date) % 12`.
 
-```
-loan balance      [1000000, 600000, 200000, 0, 0, 0]
-model-declared    [ -72649,  -72649,  -72649, 0, 0, 0]   stops when paid off
-pack contract     [ -72649,  -72649,  -72649, -72649, -72649, -72649]
-```
+**What the walk did find**, which the item never mentions: `docs/01` §13.4
+contradicted §9.3 normatively. §9.3 says a stream MAY carry a guard and is
+active for every scheduled occurrence without one; §13.4 said contracts and
+streams SHOULD use entity state as "the primary activation mechanism". A SHOULD
+against a MAY, an optional mechanism promoted over the effective dates that
+actually make a stream active, and contracts named for a guard they do not take.
+§13.4 is corrected.
 
-A loan that has been repaid keeps taking debt service, because the payments came
-from `cre.permanent_debt` rather than from a stream the model wrote. The same
-model expresses it correctly the moment the pack is dropped:
-
-```cfdl
-stream loan.debt_service on entity asset.bldg outflow currency USD {
-  schedule every year from 2026-01 to 2031-01
-  amount = 72649.0
-  active when asset.bldg.balance > 0.0
-}
-```
-
-**Both routes are closed, not one.** A contract takes no `active` clause, and an
-event cannot reach the streams a contract lowered either:
-
-```
-ERROR[E1302_UNRESOLVED_STREAM_REF] Event 'paid_off' references unknown stream
-'loan.permanent_debt_service'.
-```
-
-`deactivate stream` resolves only against model-declared streams. So a pack's
-cash cannot be gated by a guard, by a lifecycle state, or by an event.
-
-**Every pack is affected**, because the gap is in the contract surface rather
-than in any one pack's rules — `cre`, `credit`, `energy` and `opco` all lower to
-streams that no model can stop. A loan repaid early, a lease terminated, a
-tenant defaulting, a facility cancelled, a PPA bought out: each is a contract
-whose cash should stop and does not.
-
-Shape. The IR needs no change; the two layers above it do.
-
-1. **`docs/07` §6.4 gains `active_when` and `active_in_state` as lowering-rule
-   keys**, so a pack can gate the streams it emits. Several rules arguably
-   should already: a lease's TI/LC has no business paying while a unit is dark,
-   and a pool's servicing fee has none once the pool is sold.
-2. **`ContractStmt` gains `active when <expr>` and `active in state <s>`**,
-   propagated to every stream the contract emits. This is the one that restores
-   additivity — the same clause, on either construct, meaning the same thing.
-3. Optionally, `deactivate stream` resolves lowered names as well as declared
-   ones. Weaker, since it names an artifact of lowering rather than the
-   contract, but it would unblock the event route for models that already exist.
-
-The test to keep: for any capability the language gives a stream, a contract
-that lowers to streams should give it too. Anything else makes a pack a
-trade rather than an addition.
-
-Related: §7.39 wants a contract that ends on a condition rather than a date.
-A guard is the smaller half of that and is worth having on its own — a gated
-contract stops paying, though it does not yet settle what it is worth to stop.
-
-#### Instance 2 — the calendar's grain is reachable from a pack and not from a model
-
-A model declares its grain on line 4: `time calendar monthly from 2017-01 for
-71`. The compiler therefore knows how many periods make a year, and the pack
-interface hands it to a lowering rule as `{{model.periods_per_year}}` — used
-throughout all four packs, with `{{model.accrual_divisor}}` beside it for day
-counts. `docs/03` §3 discusses the convention.
-
-An expression cannot read it. Probed under five spellings — `model.periods_per_year`,
-`time.periods_per_year`, `model.grain`, `time.grain`, `time.periods_in_year` —
-every one is an unknown variable, warned, zero.
-
-**It is not a runtime feature the language withholds.** `{{...}}` is a
-compile-time substitution in the pack interface, so the lowered IR carries a
-literal:
-
-```
-amount src: … pv(0.15789 / 12.0, 8.0 - months_between(…), -1.0) …
-```
-
-By the time the IR exists, a pack's arithmetic is exactly what a modeller would
-have typed. The value is the compiler's, the packs are handed it, and models are
-not.
-
-The consequence is that cadence-neutrality is a pack privilege.
-`credit.pool_level_pay` is correct on a quarterly book because the compiler
-substitutes 4; the same pool written by hand needs `assume year_months = 12.0`,
-a constant restating what line 4 already said, silently wrong the moment the
-calendar changes. Every hand-written model that converts an annual rate carries
-that restatement somewhere.
-
-**And the engine does not merely know it — it publishes it.**
-`crates/cfdl-engine/src/lib.rs:1681` inserts `run.periods_per_year` as a metric,
-"for downstream metric evaluation (e.g. `cfdl-metrics` `wal_years`, which needs
-to convert period indices to years)." So the cadence work is real and has three
-consumers, every one of them outside the model: pack lowering by substitution,
-metric evaluation by this metric, and `make cadence-parity` as a gate. The
-expression environment — the one place a modeller writes arithmetic — is the
-only consumer left out.
-
-**What else a model cannot reach.** Probed the same way, one path per model,
-reading the value directly:
-
-| path | from an expression |
-|---|---|
-| `time.t`, `time.date` | readable |
-| `model.id`, `model.base_currency` | resolve, but are text — usable in a comparison, not in arithmetic |
-| `entity.<x>.net_cash_flow` | resolves to `Optional(None)`: bound and always empty |
-| `run.periods_per_year` | unknown variable |
-| `run.annual_discount_rate` | unknown variable |
-| `run.as_of` | unknown variable |
-| `model.net_cash_flow`, `model.total`, `model.npv`, `model.irr` | unknown variable |
-| `domain.*` subtotals | unknown variable |
-| `time.year`, `time.month`, `year(time.date)`, `month(time.date)` | unknown variable / unknown function |
-
-Three groups, and they want different answers.
-
-**Should be readable, plainly.** `run.periods_per_year` and the day-count
-divisor beside it; `run.annual_discount_rate`, which a hurdle or a
-solve-to-target needs and which every model currently restates as an assumption;
-and the calendar year and month of the current period, which today take
-`months_between(parse_date("…"), time.date)` arithmetic to recover from
-`time.date`.
-
-**Should stay unreadable, and the emptiness should say so.** `model.total`,
-`model.npv`, `model.irr` and the `domain.*` subtotals are results — reading them
-from a model is the circularity the layering exists to prevent.
-`entity.<x>.net_cash_flow` is the same, and it is the one that misleads: it
-resolves rather than erroring, so a model that reads it gets a silent zero and a
-warning about a non-numeric value rather than "this is a result".
-
-**Shape.** Expose the first group in `docs/03` §3's namespace table — nothing
-needs building, the compiler computes all of it. Make the second group a
-diagnostic that names the layer rather than a null that reads as zero.
-
-(One diagnostic to fix while in there: `assume months = 12.0` fails with
-`E0004_EXPECTED_TOKEN` — "Expected identifier after 'assume'" — because
-`months` is a schedule keyword. The message names neither the word nor the
-reason, and a reader who has just written an identifier has nothing to go on.)
-
-Provenance: found while rebuilding `benchmarks/credit/americredit_2017_1`
-without a pack, August 2026. The pack-free model expressed a payoff correctly on
-the first attempt; the packed one could not express it at all.
-
+Provenance: raised August 2026; closed August 2026 after walking each claim
+against the specification first, the implementation second, and a probe last.
+The instance-2 error is worth remembering: five undocumented spellings were
+probed and the documented one was not, which is how a working capability was
+recorded as missing.
 ---
 
 ### 7.41 Invariants the gates do not check
@@ -2495,60 +2350,81 @@ The model's figure is ignored at both. A reader following the specification's
 own illustration sets the deal's discount rate, sees a plausible NPV, and is
 looking at the run's default.
 
-To do:
+**Items 1 and 2 are done.** §12.1 now illustrates the construct with
+`assume base_rent = 4000`, states that a deterministic assumption is a value the
+model owns and is read as `inputs.<name>`, and says that discounting belongs to
+the run as `annual_discount_rate`, pointing at `docs/09_user_guide.md` where the
+run configuration is documented. The specification no longer teaches the trap.
 
-1. **Change the example.** §12.1 should illustrate a deterministic assumption
-   with something a model can actually drive — a growth rate, a fee, a speed.
-2. **Say where the rate lives.** The specification should state that discounting
-   is a run-configuration concern and name `annual_discount_rate`, so the
-   question "where do I set this" has an answer in the document that defines
-   assumptions.
-3. **Consider a diagnostic.** An `assume` whose name matches a run-config knob
-   is more likely a misunderstanding than a coincidence, and a warning naming
-   the config field would close the trap for good.
+**Item 3, a diagnostic, is open and is not obviously right.** Warning on the
+NAME alone would fire on a model that declares `assume discount_rate` and uses
+it for something of its own, which is legal. The safer shape is a check that
+does not guess at intent: an assumption declared and never read as
+`inputs.<name>` is dead weight whatever it is called, and this case is one
+instance of it. That is a larger check than this item, and worth deciding on its
+own merits rather than as a name heuristic.
 
 Provenance: found while writing a model without a pack, August 2026 — the
 assumption was declared, the NPV moved with the config, and nothing said so.
 
 ---
 
-### 7.43 A model has no statement, and the language already knows how to build one
+### 7.43 Results do not say which entity owns a stream
 
-Without a pack, a model's only structured view of its own cash is the entity
-rollup: `entity.<symbol>.net_cash_flow`, one series per entity, aggregated
-through `part of`. That axis is language-level and correct — twelve pools rolled
-into a trust to within 2e-06 in the pack-free AmeriCredit model, identical to
-the packed one.
+This is a request rather than a defect, and the part of it that is a defect is
+smaller and different from the part first written down.
 
-What is missing is any presentation of it. A pack supplies subtotals and a
-statement — `packs/credit/statements.toml` folds stream *categories* into
-`gross_collections`, `principal_collections`, `servicing_fee`,
-`net_collections`, shaped like a servicer remittance report — and a model
-without a pack gets **zero** `domain.*` series. Both models compute the same
-cash: `net_collections` and `entity.asset.trust.net_cash_flow` agree exactly at
-40,000,924.84. Only one can say what it is made of.
+**The axis exists and is correct.** Without a pack, a model's structured view of
+its own cash is `entity.<symbol>.net_cash_flow`, one series per entity,
+aggregated through `part of` — twelve pools rolled into a trust to within 2e-06
+in the pack-free AmeriCredit model, identical to the packed one.
 
-**The language should ship a default statement organized by the axis it already
-has.** No declarations, no categories, no pack: the entity tree, each node's
-cash, and its children beneath it. That is derivable today from `part of` and
-the per-entity fold, and it would give every model — including one written in an
-afternoon with no pack — a readable cash flow rather than a flat list of series
-keyed by symbol.
+**A model without a pack publishes no `domain.*` series, and that is by
+design.** `docs/01` §15.2 states that CFDL models do not declare output metrics
+and points at the pack interface for how a pack defines output categories,
+aggregations and metrics. A statement is a pack's job. The request below is for
+a DEFAULT presentation, not for a model-declared one, and it should not be read
+as a gap in the language.
 
-One thing that has to change to make it useful. The engine computes
-`entity_own` (an entity's own streams) and then publishes only `entity_rollup`
-(its own plus its children's). A parent's own cash is therefore invisible in
-results: a trust with twelve pools and a fee of its own shows one number, and no
-reader can separate the fee from the pools. A statement by hierarchy needs both,
-so `entity_own` should be published alongside the rollup.
+**The original claim about a parent's own cash was wrong.** A trust with pools
+and a fee of its own does not show one number: the fee is published in its own
+right, and the arithmetic closes.
 
-A declarable statement structure — the pack's fold, available to a model that
-wants to name its own lines — is worth having too, and is the larger job. The
-default by hierarchy needs nothing new.
+```
+entity.asset.trust.net_cash_flow   550        rollup
+entity.asset.pool1.net_cash_flow   300
+entity.asset.pool2.net_cash_flow   200
+stream.trust.fee                    50        the parent's own cash
+                                              550 - 300 - 200 = 50
+```
+
+**What is actually missing is the ownership.** A series entry in results carries
+`index`, `offset` and `values`, and nothing else; `docs/06` never names an
+owner. So the derivation above needs the parent-child tree, which lives in the
+IR rather than in results, and a consumer holding `results.json` alone cannot
+attribute a stream to an entity at all. Name inspection is not a substitute: a
+pack-lowered `cre.unit.base_rent.anchor` does not contain the symbol of the
+entity that owns it.
+
+Publishing stream ownership is the smaller change and the more useful one. It is
+a structural fact the engine already holds, it lets any consumer build a
+hierarchy view without the engine shipping one, and it makes an entity's own
+cash derivable from results alone. Publishing `entity_own` beside the rollup is
+the narrower version of the same idea and would serve the default statement
+directly.
+
+**The presentation request stands on its own merits.** A default statement
+organized by the entity tree — each node's cash with its children beneath it,
+no declarations and no pack — would give every model a readable cash flow rather
+than a flat list of series keyed by symbol. Nothing in the language prevents it
+and nothing forces it; it is a product decision about what a pack-free run
+should look like. A declarable statement structure, the pack's fold available to
+a model that wants to name its own lines, is the larger job and a separate one.
 
 Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
-pack-free model, August 2026.
-
+pack-free model, August 2026. Rewritten August 2026 after probing the own-cash
+claim, which does not hold — the parent's streams are published individually and
+the rollup arithmetic closes — and finding the ownership gap underneath it.
 ---
 
 ### 7.44 The engine is one file, and the stages it runs are invisible in it
@@ -2587,3 +2463,85 @@ stages, one call each.
 Provenance: raised August 2026, after a session in which every finding was a
 boundary between two stages that the code does not separate.
 
+---
+
+### 7.45 A waterfall with no schedule distributes once, at the model start
+
+`lower_schedule` answers a missing schedule with `OnDate(time_start)`
+(`crates/cfdl-compile/src/lib.rs`), so a waterfall that says nothing about when
+it runs distributes exactly once, in the first period — before the deal has
+produced anything to distribute. Probed with no pack active: a constant pot of
+500 across five periods paid `500, 0, 0, 0, 0`.
+
+Nothing says so. `docs/17` and `docs/01` state no default, and no diagnostic
+fires. The engine believes something different — `run_waterfalls` reads a
+missing schedule as *every period* — but that branch is unreachable, because the
+compiler never emits `None`. Two components disagree about the default and the
+one that loses is the one whose comment explains the intent.
+
+The first period is the least defensible of the three candidate defaults. A
+waterfall accumulates over a holding period and then distributes — a preferred
+return and then a split — so the useful default is at the END of the hold, not
+its start. Distributing at the start answers with whatever the first period
+happened to produce.
+
+Shape, in the order they should be considered: require the schedule and reject
+the omission, which makes the author say what a distribution date is; or default
+to the end of the hold, which is the shape a deal actually has. Defaulting to
+every period matches the engine's dead branch but is not the normal case.
+Whichever is chosen, the engine's unreachable branch should go, so one component
+states the rule.
+
+Provenance: found August 2026 while probing 7.37, when a waterfall drawing
+`from available` appeared to pay only the first period's cash. The pot was
+correct; the waterfall had run once. Two earlier readings of this repository's
+behaviour were wrong because of it.
+
+
+---
+
+### 7.46 A run with no discount rate still publishes an NPV
+
+A run that states no rate discounts at zero and reports the result as
+`model.npv`:
+
+```
+cfdl run <ir> --out results.json          (no --config, no --rate)
+
+  model.npv                = 3750.0
+  run.annual_discount_rate = 0.0
+```
+
+3,750 is the undiscounted total. The rate is published beside it, so the run is
+not lying, but a metric named `model.npv` is being reported for a valuation
+whose rate nobody stated, and a reader scanning results for a present value sees
+a figure that reads as valued and is not.
+
+**No rate, no NPV.** A discounted metric with no discount rate is a missing
+term, not a shortcut, and the repository already applies that standard where it
+matters most: `cre.permanent_debt` deliberately defaults neither `principal` nor
+`rate`, because "a mortgage with an unstated balance or an unstated rate is not
+a modeling shortcut, it is a missing term, and E5006 should say so rather than
+the pack inventing a zero." A valuation with an unstated discount rate is the
+same shape. Omit `model.npv` and the metrics derived from it when no rate is
+supplied, and say why.
+
+The zero default is what makes the current behavior defensible-looking: it is a
+real arithmetic answer to a question nobody asked. Removing it costs nothing a
+model wanted, because a model that means zero can state zero.
+
+**Scope to settle when implementing.** Which metrics travel with the rate —
+`model.npv` certainly; whether `model.irr`, `model.payback_years` and
+`model.wal_years` do is a separate question, since a time-weighted life needs an
+axis rather than a rate. And whether omission or an explicit null is the better
+shape in `results.json`, which `docs/06` should state either way.
+
+**Not the same as letting a model set the rate.** Discounting belongs to the
+run: one set of cash flows is valued at several rates by different readers, and
+neither rate is a fact about the asset (§7.42). A model default with a run
+override, or a run that falls back to `inputs`, would put the resolution order
+out of sight and let one model value differently depending on which channel won.
+The fix here is to require the rate, not to relocate it.
+
+Provenance: found August 2026 while correcting §7.42, when a probe run without a
+config produced an NPV equal to its own total.

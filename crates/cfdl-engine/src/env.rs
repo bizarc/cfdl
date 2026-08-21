@@ -105,6 +105,33 @@ pub(crate) fn ir_curve_defs(ir: &Ir) -> BTreeMap<String, cfdl_expr::CurveDef> {
     out
 }
 
+/// The name of the phase covering this period, for `time.phase`.
+///
+/// `docs/01` §16.2 requires the expression environment to support it and the
+/// course calls it "the current phase's name", so it answers with the name and
+/// with null only where no declared phase covers the date. The membership test
+/// is the one `state.rs` already applies to an option's `exercisable_in_phase`;
+/// written once here so a phase means the same thing to a guard and to an
+/// option.
+///
+/// DECLARATION ORDER BREAKS A TIE. Overlapping phases compile today, so two can
+/// cover one period; the first declared wins, which makes the answer a stated
+/// order rather than a map iteration.
+pub(crate) fn phase_at(ir: &Ir, date: &Date) -> ExprValue {
+    ir.phases
+        .iter()
+        .find(|phase| {
+            Date::parse(&phase.range.start)
+                .map(|start| *date >= start)
+                .unwrap_or(false)
+                && Date::parse(&phase.range.end)
+                    .map(|end| *date <= end)
+                    .unwrap_or(false)
+        })
+        .map(|phase| ExprValue::String(phase.name.clone()))
+        .unwrap_or(ExprValue::Optional(None))
+}
+
 /// Entity-independent environment (model/time/cfg/obs/inputs) used for event
 /// and option evaluation.
 pub(crate) fn build_base_env(
@@ -132,8 +159,7 @@ pub(crate) fn build_base_env(
             day: date.day,
         }),
     );
-    env.time
-        .insert("phase".to_string(), ExprValue::Optional(None));
+    env.time.insert("phase".to_string(), phase_at(ir, date));
     // Periods per year for the model's calendar, so a hand-written model can
     // spread an annual figure without hardcoding a divisor:
     //   amount = inputs.rent_year / time.ppy
@@ -399,8 +425,7 @@ pub(crate) fn build_expr_env(
             day: date.day,
         }),
     );
-    env.time
-        .insert("phase".to_string(), ExprValue::Optional(None));
+    env.time.insert("phase".to_string(), phase_at(ir, date));
     // Periods per year for the model's calendar, so a hand-written model can
     // spread an annual figure without hardcoding a divisor:
     //   amount = inputs.rent_year / time.ppy

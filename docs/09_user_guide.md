@@ -101,8 +101,12 @@ Notes:
 ### Fixed assumption
 
 ```cfdl
-assume discount_rate = 0.10
+assume base_rent = 4000
 ```
+
+Discounting is not an assumption. The valuation rate belongs to the run —
+`annual_discount_rate` in the run configuration below — so one set of cash flows
+can be valued at several rates without editing the model.
 
 ### Stochastic assumption
 

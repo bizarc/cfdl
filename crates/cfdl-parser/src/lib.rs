@@ -2672,6 +2672,22 @@ impl<'a> Parser<'a> {
         let name_tok = self.bump();
         let name = match name_tok.kind {
             TokenKind::Ident(ref s) => s.clone(),
+            // A RESERVED WORD LOOKS LIKE A NAME, so say which one it is.
+            //
+            // `assume term = 5.0` reported "Expected identifier" against a word
+            // that reads as a perfectly good identifier, leaving the author to
+            // guess that §18 reserves it. The same shape reaches an ontology
+            // field named after a keyword (docs/13 §7.19).
+            TokenKind::Keyword(_) => {
+                let word = self.slice_source(name_tok.span);
+                self.push_expected(
+                    name_tok.span,
+                    format!(
+                        "Expected identifier after 'assume', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
+                    ),
+                );
+                return None;
+            }
             _ => {
                 self.push_expected(
                     name_tok.span,
