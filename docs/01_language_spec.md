@@ -625,8 +625,18 @@ Recommended v0.1 rule (normative):
 
 ### 12.1 Deterministic assumption
 ```cfdl
-assume discount_rate = 0.10
+assume base_rent = 4000
 ```
+
+A deterministic assumption is a named value the model owns. Terms and
+expressions read it as `inputs.<name>`, and a scenario overrides it by the same
+name, which makes `assume` the model's single channel for variation.
+
+Discounting is not an assumption. The valuation rate belongs to the run, so one
+set of cash flows can be valued at several rates without editing the model. It
+is `annual_discount_rate` in the run configuration; see
+`docs/09_user_guide.md`. An `assume` of that name is an ordinary assumption and
+does not move `model.npv`.
 
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl

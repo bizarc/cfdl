@@ -2351,17 +2351,19 @@ The model's figure is ignored at both. A reader following the specification's
 own illustration sets the deal's discount rate, sees a plausible NPV, and is
 looking at the run's default.
 
-To do:
+**Items 1 and 2 are done.** §12.1 now illustrates the construct with
+`assume base_rent = 4000`, states that a deterministic assumption is a value the
+model owns and is read as `inputs.<name>`, and says that discounting belongs to
+the run as `annual_discount_rate`, pointing at `docs/09_user_guide.md` where the
+run configuration is documented. The specification no longer teaches the trap.
 
-1. **Change the example.** §12.1 should illustrate a deterministic assumption
-   with something a model can actually drive — a growth rate, a fee, a speed.
-2. **Say where the rate lives.** The specification should state that discounting
-   is a run-configuration concern and name `annual_discount_rate`, so the
-   question "where do I set this" has an answer in the document that defines
-   assumptions.
-3. **Consider a diagnostic.** An `assume` whose name matches a run-config knob
-   is more likely a misunderstanding than a coincidence, and a warning naming
-   the config field would close the trap for good.
+**Item 3, a diagnostic, is open and is not obviously right.** Warning on the
+NAME alone would fire on a model that declares `assume discount_rate` and uses
+it for something of its own, which is legal. The safer shape is a check that
+does not guess at intent: an assumption declared and never read as
+`inputs.<name>` is dead weight whatever it is called, and this case is one
+instance of it. That is a larger check than this item, and worth deciding on its
+own merits rather than as a name heuristic.
 
 Provenance: found while writing a model without a pack, August 2026 — the
 assumption was declared, the NPV moved with the config, and nothing said so.
