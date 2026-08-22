@@ -1663,61 +1663,45 @@ the same event, in the same form, against two targets.
 
 ---
 
-### 7.51 Nothing validates a run configuration against its schema
+### 7.51 Nothing validates a run configuration against its schema — SHIPPED (first half)
 
-*Belongs with the tooling.*
+`tools/check-run-schema.py` validates every `run.json` in `benchmarks/`,
+`fixtures/`, `training/` and `examples/` against
+`docs/schemas/run.schema.json`, and `make ci` runs it. 123 configs pass. It
+follows `check-ir-schema.py`, including its rule that a gate which can pass
+without running is not a gate: `CFDL_REQUIRE_SCHEMA_GATE=1` turns a missing
+`jsonschema` into a failure rather than a skip.
 
-`docs/schemas/run.schema.json` is the canonical description of `run.json`, and
-nothing reads it. No gate, no CLI path, no test — `grep -rl run.schema.json
-tools/ crates/ makefile .github` returns nothing. The engine parses run configs
-with serde and applies its own rules; the schema is a document.
+It catches what the schema's own description says the design prevents:
 
-**It has already drifted.** `valuation_grain` has been accepted by the engine
-and documented in `docs/09` since it shipped, and the schema never listed it —
-found while adding `arithmetic`, and fixed at the same time. Since
-`DeterministicCase` sets `additionalProperties: false`, a run stating its own
-grain would have been rejected by the schema it is supposed to conform to. That
-went unnoticed for as long as it existed because nothing checks.
-
-**The schema states an intent it cannot enforce.** Its own top-level
-description reads: *"Unknown properties are rejected — a misspelled key would
-otherwise produce a clean run with wrong numbers."* Two things undercut it.
-Nothing validates, so nothing is rejected. And `Parameters` says the opposite of
-its own document: *"Four key shapes are recognized and anything else is
-ignored."*
-
-Probed with four keys that match nothing — an assumption that does not exist, a
-`cfg` path no expression reads, an `obs` path no expression reads, and a stream
-that does not exist:
-
-```json
-"parameters": {
-  "inputs.no_such_assumption": 99.0,
-  "cfg.never_read": 99.0,
-  "obs.never_read": 99.0,
-  "stream.no.such.stream:amount": 99.0
-}
+```
+deterministic: Additional properties are not allowed ('anual_discount_rate' was unexpected)
+deterministic/arithmetic: 'float' is not one of ['decimal', 'excel_compat']
 ```
 
-All four accepted, all four discarded, no warnings, cash unchanged. That is
-precisely the clean run with wrong numbers the description says the design
-prevents.
+The drift that prompted it is closed too. `valuation_grain` had been accepted by
+the engine and documented for as long as it existed while the schema never
+listed it, and `DeterministicCase` sets `additionalProperties: false` — so a run
+stating its own grain would have been rejected by the schema it conforms to. It
+is in the schema now, and a config using it passes.
 
-**Two of the four could be checked, and two could not.** `inputs.<name>` names
-an `assume` statement and `stream.<name>:amount` names a stream — both declared,
-both verifiable against the IR. `cfg.<path>` and `obs.<path>` name nothing
-declared: they are channels a model opts into by writing the path in an
-expression, so the only available signal is that no expression reads it, which
-may be legitimate in a run that drives several models.
+**The second half is open, and is a decision rather than a gate.** An override
+key that resolves to nothing is still accepted in silence. Probed with four
+that match nothing — an assumption that does not exist, a `cfg` path no
+expression reads, an `obs` path no expression reads, and a stream that does not
+exist — all four were accepted, discarded, and unreported, with the cash
+unchanged.
 
-To investigate, and the two halves are separable: wire the schema into a gate so
-the document and the parser cannot drift again, and decide whether an override
-that resolves to nothing should warn — at least for the two shapes that name
-something declared.
+Two of the four could be checked and two could not. `inputs.<name>` names an
+`assume` statement and `stream.<name>:amount` names a stream: both are declared,
+so both are verifiable against the IR. `cfg.<path>` and `obs.<path>` name
+nothing declared — they are channels a model opts into by writing the path in an
+expression — so the only available signal is that no expression reads it, which
+may be legitimate in a run driving several models.
 
-Found August 2026, reading the schema while adding the `arithmetic` key.
-
----
+`Parameters` also says the opposite of the document it lives in: *"Four key
+shapes are recognized and anything else is ignored"* against the schema's
+*"Unknown properties are rejected."* Whichever is intended, they should agree.
 
 ### 7.52 A per-period coverage ratio cannot be reduced over its own series
 
