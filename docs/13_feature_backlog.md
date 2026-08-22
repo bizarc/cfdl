@@ -12,6 +12,11 @@ Ordered within each section by how much it unblocks, not by effort.
 
 ---
 
+**Closed items are removed, not archived.** A capability that ships is
+described in the language documentation; reasoning that turned out to be wrong,
+and shapes the language already supports, are recorded in
+`docs/26_lessons_learned.md`. This file holds work to do.
+
 ## 1. CRE pack
 
 ### 1.1 Occupancy-varying operating expenses
@@ -47,31 +52,6 @@ which is the underlying cause.
 
 Shape: a term that names a period rather than an amount, resolved after the
 opex stream exists. Depends on 5.1.
-
-### 1.3 Abatements as a first-class NOI line — RESOLVED
-
-**Resolved.** `cre.lease_unit` now emits `cre.unit.abatement.<id>` as its own
-deduction and publishes base rent GROSS; `domain.cre.noi` carries the abatement
-family in its denominator, so the two still net to the rent collected. Verified
-as an exact decomposition: gross + abatement equals the previous net to 0.00e+00
-on `cre_office_two_tenant`, and NPV, NOI and DSCR are unchanged.
-
-A stream may also declare `category operating.deduction.abatement` directly,
-which is how `benchmarks/cre/mit_rentleg_plaza` has its hand-written abatement
-counted — the pack has no contract for that shape and a name-based selector
-could never have reached it.
-
-
-`domain.cre.noi` sums base rent, recoveries, percentage rent, ops revenue, and
-subtracts ops expense, vacancy and property opex. Free rent has no line.
-
-The pack's own `cre.lease_unit` folds free rent into base rent, so it never
-surfaces. Institutional pro formas report Abatements as its own deduction from
-potential gross revenue — MIT's does. Today you can report it as a line **or**
-have it counted in NOI, not both.
-
-Shape: add an abatement stream family to the metric's denominator, and have
-`cre.lease_unit` emit the deduction separately rather than netting it.
 
 ### 1.4 Coverage ratios are lifetime aggregates, not per-period tests — RESOLVED
 
@@ -116,28 +96,6 @@ The same applies to `domain.energy.dscr` and `domain.opco.fcf_to_debt_service`.
 Note this is a metrics-layer change, not an engine one — the series it needs are
 all already computed.
 
-### 1.5 A property may have only one operating expense line — RESOLVED
-
-**Resolved.** `cre_property_opex` takes `{{contract.dot_suffix}}` and
-`domain.cre.noi` selects `cre.property.opex.*`. `benchmarks/cre/hud_home_multifamily`
-now carries its four published sub-lines as four streams, and
-**asserts all four independently** against the Sample workbook's Operating Pro
-Forma rows 18–21 — where it previously asserted only their total. The states
-were already per-sub-line for the rounding reason, so the split moved nothing.
-
-
-`cre.property_opex` emits `cre.property.opex` with no `{{contract.dot_suffix}}`,
-so a model may declare exactly one. Every real pro forma splits management,
-maintenance, utilities and taxes/insurance, and reports them separately because
-that is how they are underwritten and covenanted.
-
-Found building `benchmarks/cre/hud_home_multifamily`, whose source publishes all
-four lines and which therefore has to carry them as one aggregate native stream.
-
-Shape: add the suffix to the rule, and widen `domain.cre.noi`'s exact-name
-selector to the `.*` prefix match it already uses for the rent families. Small,
-and it is the difference between a toy pro forma and a real one.
-
 ### 1.6 Vacancy cannot track a growing rent roll
 
 `cre.vacancy_loss` takes a constant `potential_gross_year` and multiplies it by
@@ -170,82 +128,6 @@ pack rule should settle once rather than leaving to each modeller.
 ---
 
 ## 2. Credit pack
-
-### 2.1 Age-varying prepayment and default curves — RESOLVED
-
-`cpr` and `cdr` are single constants per contract. A hazard that varies with
-loan age cannot be expressed, so the standard prepayment model — 0.2% CPR in
-month 1 rising 0.2%/month to 6.0% at month 30, times a speed — is out of reach,
-and so is its default counterpart.
-
-The hazard itself is not the problem: `min(speed / 100 * 0.2 * max(1,
-min(month, 30)), 100)` is closed-form and is already asserted in
-`tools/analytic-checks.py`. The balance is. Every pool factor in the pack is
-`pow(k, p)`, which is only valid for constant `k`; under a ramp the survival
-factor is a cumulative product with no elementary closed form, and the
-expression language has no `exp`/`ln` to sum logs instead.
-
-**RESOLVED.** Declared state variables made the balance a running product, and
-three contract terms select the published curves:
-
-| term | curve |
-|---|---|
-| `psa_speed` | CPR rises 0.2%/month to 6.0% at month 30, flat after |
-| `sda_speed` | CDR rises 0.02%/month to 0.60% at 30, flat to 60, to 0.03% at 120 |
-| `abs_speed` | a constant fraction of ORIGINAL balance each month |
-
-All default to `0`, which selects the flat `cpr`/`cdr` path, so no existing
-model moved. The proposed calc builtin was not needed — the hazard shapes are
-one-liners; only the balance was ever the problem.
-
-Three external cases, all previously blocked on this:
-
-| case | result |
-|---|---|
-| `benchmarks/credit/auto_abs_speed_050` | 0.0048 pp |
-| `benchmarks/credit/auto_abs_speed_150` | 0.0036 pp |
-| `benchmarks/credit/mbs_pool_ramped` | within 0.51, the source's rounding floor |
-
-**Correction to what this item said while unblocked:** it claimed the remaining
-work was "a pack change, not a language one". That was wrong twice.
-
-1. A state advanced once per MODEL period while `{{time.elapsed_periods}}`
-   counts a rule's PAYMENT periods. On a daily book paying monthly that is 365
-   steps a year against 12. Fixed by giving states their own `schedule`
-   (`docs/14_state_and_recurrence.md` §8) — a language change.
-2. Two convention defects were found only by the external references, after
-   every identity already passed:
-   - all three ramps are indexed from loan ORIGINATION, not from the deal's
-     closing, so a seasoned pool starts part-way up the curve. `age_months`
-     carries it. Worth 20 percentage points of note balance at 1.50% ABS.
-   - the lagged pool factor the recoveries rules read was consuming the hazard
-     one lag too late. Invisible under a flat hazard; 7.6% on recoveries by
-     month 60 under a ramp.
-
-Both are the same shape: the ramp's form and the running product were correct,
-and where each read lands on the curve was not. No in-house reference would have
-caught either.
-
-The original proposal follows, kept for provenance.
-
-**Original note.** This is not item 5.2 (per-period state) and should not be
-bundled with it. A PSA ramp is deterministic in loan age — nothing accumulates —
-so the natural fix is a calc builtin holding the schedule, exactly the
-`macrs_rate` pattern: a published table behind a function. Substituting one call
-for `pow(k, p)` would make every existing pool rule work under a ramp.
-
-**The Absolute Prepayment Model is the same item.** ABS speed is a constant
-number of ORIGINAL units prepaying each month, so with the denominator fixed at
-the original count and the pool shrinking, the implied SMM *rises* over the
-life. Different convention, identical blocker: `k` is not constant, so
-`pow(k, p)` is not the balance. One builtin holding a per-period survival
-schedule would serve PSA, SDA and ABS alike.
-
-Found building `benchmarks/credit/mbs_pool_conventions`. The constant-hazard
-case (1% SMM / 1% MDR) reproduces to the reference figure; the ramped variant on
-the same pool (150% PSA, 100% SDA) needs this. Confirmed again by
-`benchmarks/credit/auto_abs_wal`, which can take only the zero-speed column of a
-published seven-speed grid for exactly this reason.
 
 ### 2.2 Actual-day-count amortisation on a pool
 
@@ -419,65 +301,6 @@ Found the same way. Documented in `packs/energy/README.md` in the meantime.
 
 ## 5. Language and engine
 
-### 5.1 A stream may not read another period's value — RESOLVED
-
-**Declared state variables shipped.** `docs/14_state_and_recurrence.md` is the
-design; the construct is language-level and needs no pack:
-
-```cfdl
-state opex_index { init 1.0  next round_to(prev * 1.025, 1) }
-```
-
-`init` is mandatory, `next` sees only `prev`, `prev.<name>`, `time.*`,
-`inputs.*` and curves — never a same-period value — so "cycles are impossible by
-construction" survives rather than being traded for cycle detection. States are
-published as `state.<name>` in results and never enter cash.
-
-Two independent published sources confirm it, which is why this is marked
-resolved rather than merely built:
-
-| case | before | after |
-|---|---|---|
-| `benchmarks/opco/damodaran_fcff` | revenue −2.4% at year 10, years 6–10 unasserted | **all ten years exact** |
-| `benchmarks/cre/hud_home_multifamily` | 12.26 residual, `period_tolerance = 13` | **exact, tolerance 0.5** |
-
-Pack rules may declare a state too (`state_name`/`state_init`/`state_next`), so
-the three opco growth rules compound through a running product without any model
-being edited. Blast radius across 110 goldens: one 1.4e-13 relative shift and a
-signed zero.
-
-What it does NOT solve is unchanged and is 5.2: same-period cross-stream
-dependency — a cash sweep needs cash remaining *after* this period's debt
-service, and no backward-only construct reaches that.
-
-The original statement of the problem follows, kept for provenance.
-
-**Original design note.** It proposes a
-declared state variable — named, mandatorily seeded, updated once per period,
-readable by streams — whose update expression evaluates in an environment that
-*excludes* same-period values. That keeps "cycles are impossible by
-construction" intact rather than trading it for cycle detection, and it is the
-design Lustre/SCADE, HDL registers, Analytica and Anaplan all converge on.
-
-The entry below is the original statement of the problem, kept for provenance.
-
-
-Phase-1 streams cannot look at each other at all; phase-2 streams can read
-phase-1 through `series_sum`/`series_avg` but not each other, which is what
-makes cycles impossible by construction. The cost is that any rule needing
-"the value of X in period k" must either duplicate X's formula or become
-phase-2 and give up reading other derived streams.
-
-Found twice: the base-year expense stop above (1.2), and
-`benchmarks/cre/mit_rentleg_plaza`, which carried a duplicated opex formula
-until the projection-tail fix removed the need.
-
-Shape: a bounded backward reference — a stream may read a *strictly earlier*
-period of another stream — which is acyclic by construction and would cover
-both cases. Note this is close to the per-period persistent state the pack
-roadmap identifies as the gate on roughly two thirds of its candidate packs, so
-it is worth designing the two together rather than separately.
-
 ### 5.2 Per-period persistent state
 
 **Scope boundary now settled** (`docs/14_state_and_recurrence.md` §5): the
@@ -541,38 +364,6 @@ a `year_frac` call over the period's bounds rather than to a number, which makes
 act/act fall out and turns the placeholder into sugar for a native capability.
 That needs the period's start and end readable in an expression; today there is
 `time.date` and `time.days_in_period`.
-
-### 6.2 excel_compat cannot be selected for a model run — SHIPPED
-
-A run selects the arithmetic:
-
-```json
-{ "deterministic": { "arithmetic": "excel_compat" } }
-```
-
-`"decimal"` is the default and is what every published number uses.
-`"excel_compat"` evaluates in float64 to reproduce a spreadsheet's
-representation artifacts, for reconciling a model against a workbook rather than
-for producing an answer. An unrecognized value is rejected rather than ignored.
-
-```
-(0.1 + 0.2) * 1e15    decimal       300000000000000.0
-                      excel_compat  300000000000000.06
-```
-
-It belongs to the run because it describes the comparison being made, not the
-deal, and it is run-wide: scenarios and Monte Carlo trials inherit it, since a
-scenario varies the deal's drivers and the rate it is valued at rather than the
-arithmetic every scenario shares.
-
-Carried on `ExprEnv` rather than threaded through each evaluation site, so
-selecting it changed no signatures. 152 goldens are byte-identical, which is the
-check that the default moved nothing.
-
-`docs/schemas/run.schema.json` gained the key — and `valuation_grain` with it,
-which the engine has always accepted and the schema had never listed. The schema
-sets `additionalProperties: false`, so a run stating its grain would have failed
-validation had anything validated against it; nothing does.
 
 ### 6.3 An acquisition or disposal in a period other than the term's
 
@@ -684,30 +475,6 @@ order of cost:
 True hourly dispatch optimisation is out of scope and should stay there — that
 is an optimiser, not a declarative cash-flow model.
 
-### 7.2 `round_to` is half of the recurrence problem — RESOLVED
-
-*Belongs with the energy pack (section 4), and closes the first half of 4.1.*
-
-`round_to(x, step)` now exists and the production tax credit's statutory
-staircase is expressed and asserted, so **4.1 is done for the ramp case**.
-
-**RESOLVED.** The other half was 5.1, and it has landed. The HUD multifamily
-workbook escalates expenses as a **recurrence** — each year is last year's
-already-rounded figure times the trend — which is now written directly:
-
-```cfdl
-state opex_management { init inputs.opex_management  next round_to(prev * (1 + inputs.opex_trend), 1) }
-```
-
-Both expense lines in `benchmarks/cre/hud_home_multifamily` reproduce the
-published figures exactly over 29 years, and the case's `period_tolerance` drops
-13 → 0.5. So 4.1 is now closed for both the ramp case and the general one.
-
-One thing that surfaced only by building it: the total expense line needs **four
-states, one per published sub-line**. The workbook rounds each sub-line before
-summing, and rounding the sum is different arithmetic — modelling the total as a
-single rounded line still left 11.00 of the original 12.26.
-
 ### 7.3 The external cases route around the packs they should be validating
 
 *Belongs with no single pack — it is about the validation programme.*
@@ -818,35 +585,6 @@ own homework.
 **Elsewhere.** `energy.storage_dispatch`, a curve-integrated storage rule so
 arbitrage is priced against a duration curve rather than a scalar spread (7.1).
 Credit's three uncovered contract types need a source, not a new contract.
-
-### 7.6 Diagnostic codes are not unique — RESOLVED
-
-*Belongs with the language and engine (section 5).*
-
-`packs/opco/validations.toml` uses `E7010` for **two** different checks
-(`OPCO_LINE_AMBIGUOUS_AMOUNT` and `OPCO_WC_MISSING_AMOUNT_OR_RULE`) and `E7011`
-for two more (`OPCO_TAXES_AMBIGUOUS_DA` and `OPCO_WC_INVALID_SCHEDULE`).
-`docs/08_diagnostics.md` documents both meanings of both codes, in different
-sections.
-
-The numeric prefix is the stable identifier — it is what a user greps for, what
-a support conversation quotes, and what a downstream tool would match on. Three
-unrelated failures answering to one code makes all three unsearchable.
-
-Found while adding a check and colliding with `E7010` a third time. The new one
-was moved to `E7012`; the existing pair was left alone deliberately, because
-renumbering a shipped diagnostic is a breaking change for anyone matching on it
-and should be a decision rather than a side effect.
-
-**Resolved.** All three renumbered — working capital to `E7013`/`E7014`, the
-lease-unit escalation check to `E6033` — and `tools/check-pack-validations.py`
-now fails CI when a code names two checks.
-
-Worth recording how it went, because it justifies the gate more than the
-original defect did: the first replacement code chosen was **also already
-taken** (`E6031` belonged to `CRE_UNIT_INVALID_FREE_RENT`), creating a fourth
-collision in the act of fixing the first three. Picking a free number by reading
-the file is not reliable.
 
 ### 7.7 Two thirds of pack validations never run — RESOLVED
 
@@ -1032,53 +770,6 @@ gate only fires for codes someone remembered to document. Extracting from Rust
 needs to exclude the deliberately corrupted codes inside parser tests
 (`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.
 
-### 7.12 A pool's amortisation state is not exposed — RESOLVED
-
-**Not resolved.** An earlier plan recorded this as closed by the fold layer; it
-was not, and the correction is worth keeping. The fold layer shipped for CRE
-only, and `benchmarks/credit/auto_abs_speed_050` still asserts one column,
-`net_cash_flow`, with the percent-outstanding reconciliation still in prose.
-
-**What now exists.** `packs/credit/statements.toml` publishes
-`domain.credit.principal_collections` per period — scheduled principal and
-prepayments folded together. That is the input this item was missing, and
-`tools/benchmark-runner.py` accepts a verbatim series key, so it is assertable.
-
-**Resolved with a `cumulative` op.** Percent-outstanding is a STOCK derived from
-a FLOW, which every other subtotal op structurally cannot express — they all
-answer "what happened this period" and this asks "how much so far".
-
-`packs/credit/statements.toml` now publishes the chain: principal paid to date,
-the original balance from the pool purchase, the balance still outstanding, and
-`domain.credit.pool_factor` as the ratio of the last two. Verified on
-`benchmarks/credit/level_pay_pool`, which amortises 0.9871, 0.9742, 0.9615 down
-to 0.0716 against a 24,750,000 pool.
-
-Subtraction is expressed as a sum of a negated cumulative rather than as a new
-op — adding a negative is the same arithmetic with one fewer concept in the
-language.
-
-A model with no purchase stream reports a null pool factor rather than a
-misleading 1.0: `benchmarks/credit/auto_abs_speed_050` models the pool without
-its acquisition, so the original balance is genuinely unknown there.
-
-#### Original entry: 7.12 A pool's amortisation state is not exposed
-
-Found building `benchmarks/credit/auto_abs_speed_050` and `_150`. The published
-figure in an ABS exhibit is *percent of a note class outstanding*, which is
-derived from cumulative pool principal. There is no single stream carrying that,
-and `tools/benchmark-runner.py` checks per-stream series and scalar metrics only,
-so the reconciliation lives in `NOTES.md` and is not machine-checked. Both new
-cases fall back to a `net_cash_flow` regression guard plus
-`domain.credit.principal`.
-
-The same limitation applies to `benchmarks/credit/auto_abs_wal`, and it is why
-that case's external evidence has always been prose.
-
-Shape: either a `domain.credit.pool_factor` per-period metric, or letting a
-benchmark case assert a named expression over streams. The second is more
-general and would serve the CRE debt-service-coverage case too.
-
 ### 7.13 District energy has no usable reference model
 
 Scoped, not built. `research/CFDL_pack_roadmap_and_model_catalogue.xlsx` ranks
@@ -1223,81 +914,6 @@ reason: it publishes the lines, not the leases.
 Every direct-download CRE candidate in the catalogue has now been checked. The
 remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
 registration, which is the actual blocker on CRE coverage — not the pack.
-
-### 7.16 Occurrences inside one model period cannot be told apart — ANSWERED
-
-**Answered by the grain rule, not built.** `docs/01_language_spec.md` now states
-it beside the `E2108` definition: model at the finest grain at which anything
-varies; report at any coarser grain by folding. The case this item describes
-becomes unconstructable rather than merely diagnosed, and `E2108` is the
-enforcement.
-
-`docs/15_streams_and_the_grid.md`, which proposed the opposite trade — retire
-`E2108`, add a sub-period occurrence layer — is retired as **rejected**, with
-the reasoning recorded in the document.
-
-#### Original entry: 7.16 Occurrences inside one model period cannot be told apart
-
-The real limitation behind `E2108_SCHEDULE_FINER_THAN_CALENDAR`, measured after
-the check's own message turned out to be wrong.
-
-**What the message said.** "Several payments would fall in one period and
-collapse into one." That is false for the current engine, and
-`docs/01_language_spec.md` always had it right — *"cannot be distinguished once
-they land in the same bucket"*. The message and two doc pages had drifted; all
-three are now corrected.
-
-**What actually happens.** Measured on an annual model:
-
-```
-100 per month   -> [1200, 1200, 100]   twelve accruals SUMMED per year
-time.t per month -> [   0,   12,   2]   twelve x time.t, not a sum over months
-```
-
-Three different things are being conflated, and only the third is a defect:
-
-1. **Many contributions per period — supported.** `schedule_accruals` returns
-   `Vec<Vec<usize>>`: a payment period holds many accruals and
-   `values[pay_idx] += amount` accumulates them. This is already load-bearing —
-   under net-30, February and March both settle in March.
-2. **Many *reported* values per period — impossible, and correctly so.** A
-   series is one number per model period (`vec![0.0; timeline.len()]`). The
-   period is the reporting grain by definition; wanting twelve separately
-   reported payments means wanting twelve periods.
-3. **Many *distinct* values per period — not possible today.** This is the gap.
-
-**Why.** The accrual list stores a model **period index**, not an occurrence.
-At `crates/cfdl-engine/src/lib.rs:2133` the occurrence's date becomes
-`period_index(timeline, start)` and both the date and the loop ordinal `k` are
-discarded; `out[settled].push(accrual_idx)` pushes an integer. So twelve
-monthly occurrences inside one annual period become twelve copies of the same
-integer, and `build_expr_env(ir, …, idx, &timeline[idx], …)` builds twelve
-identical environments. A constant amount is therefore exact, and anything
-varying with `time.*` or `{{time.elapsed_periods}}` is computed once and
-multiplied.
-
-It has never been fixed because it has never been reachable: `E2108` enforces
-schedule granularity at or coarser than the calendar, which makes the case
-impossible to construct.
-
-**Shape.** Carry the occurrence rather than its period — `Vec<Vec<Accrual>>`
-with `{ period_idx, date, ordinal }` — and build the environment from the
-occurrence's own date and ordinal. Reporting stays one summed value per period,
-which is right. `apply_schedule_indices` already computes both fields and throws
-them away, so the change is bounded.
-
-Two things that must move with it, or the fix is worse than the gap:
-
-- **`{{time.elapsed_periods}}` must count occurrences, not model periods**, or
-  an amortisation schedule would still read the same month twelve times.
-- **Last-period tests break.** `{{time.periods_to_term_end}} == 0` is the
-  balloon idiom in `cre.permanent_debt` and `opco.term_debt`, and it is true for
-  every occurrence in the final period. It needs to become a last-*occurrence*
-  test.
-
-Worth against: HUD's mortgage (7.14), and any instrument whose payment rhythm is
-finer than the book it is carried on — which is most lending on a quarterly or
-annual reporting grid.
 
 ### 7.17 Reporting is a language capability, and it is missing — LARGELY RESOLVED
 
@@ -1524,56 +1140,6 @@ possible repairs — widen the grammar, or refuse the collision at pack load. It
 is neither: the grammar already admits the name, and refusing it at pack load
 would constrain a pack's vocabulary by the core's keyword set, which is the
 opposite of what `docs/07` §6.2 says a pack is for.
-
-### 7.20 `E1129` never sees a pack-lowered stream — RESOLVED
-
-*Belongs with the language and engine (section 5).*
-
-`check_prev_first_period` walks `resolve_output.source_statements` for
-`Stmt::Stream`. A stream a PACK emitted is not a source statement — it exists
-only after lowering — so the check runs on hand-written streams and on nothing
-else.
-
-The diagnostic it skips is real. A stream reading `prev.<entity>.<field>` in
-the model's FIRST period is reading a close that does not exist: `prev_states`
-is empty at `t = 0`, so the read warns and substitutes zero for that period
-while every later period is correct. One wrong period in an otherwise right
-series is the hardest shape to notice, and `status: ok`.
-
-It is bounded — one period, and a warning is emitted — where the defect that
-found it was every period. But it is the same class, and it is live for exactly
-the contract that found it: a construction facility whose draw begins at model
-period 0 and whose interest accrues on the average of opening and closing
-balance.
-
-The fix is placement rather than logic. The check needs the lowered streams, so
-it belongs after lowering rather than beside the other resolve-stage checks; the
-predicate (`reads_prev_field`, plus the schedule-starts-at-model-start test) is
-unchanged, and already recognises the `prev.entity.` spelling a lowering rule
-produces. What needs deciding is the message: a model author cannot "start the
-stream one period later" when the pack owns the schedule, so a lowered stream
-wants a wording that names the CONTRACT and its term instead.
-
-Found fixing `prev.field.<name>` (`fixtures/valid/pack_rule_reads_prev_field`),
-which is the accessor whose absence hid this: no shipped rule read `prev`, so
-no lowered stream could have tripped the check even if it had run.
-
-**Resolved.** `check_lowered_prev_first_period` runs on `lowered.streams`
-immediately after lowering, with the same predicate and the same code. The
-message names the contract, read from the stream-inputs provenance:
-
-```
-ERROR[E1129_PREV_IN_FIRST_PERIOD] Stream 'testpack.avg_balance_interest',
-lowered from contract 'test.avg_balance_contract', reads a field's previous
-period but runs from the model's first period, where there is none. Start the
-contract's term one period after the model, or have the rule carry the opening
-value as a field of its own.
-```
-
-`fixtures/invalid/pack_rule_prev_first_period` is the same contract as the
-valid fixture with its term moved onto period 0, so the pair reads as one
-statement: this term start compiles, that one does not. No existing golden
-moved.
 
 ### 7.21 Two build-freshness guards hash packs into a binary that does not contain them
 
@@ -1854,70 +1420,6 @@ being a tolerance line item anywhere.
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.27 A pack rule read a curve as a per-period total — RESOLVED, and the first filing was wrong
-
-*Belongs with the CRE pack (section 1).*
-
-**What this entry originally said, and why it was wrong.** It claimed the
-language had a gap: that `curve` means "level", that there is no way to state a
-per-period flow, and that every schedule is therefore a level pressed into
-service. It proposed a `flow` interpolation mode and, failing that, a compile
-check.
-
-None of that was needed. A sparse curve carrying an ANNUALISED figure, divided
-by the rule's periods-per-year, is correct on every calendar — which is the
-convention `rent_year`, `opex_year` and opco's `growth_curve` have followed all
-along. Two points, two calendars, one answer:
-
-```cfdl
-curve draw_rate_year step { 2026-01: 4000  2026-07: 8000 }
-amount = curve_value("draw_rate_year", time.date) / time.ppy
-```
-
-| grid | total drawn |
-|---|---:|
-| quarterly | 6,000.00 |
-| monthly | 6,000.00 |
-
-Sparse is not a workaround, it is the intended usage: declare a point where the
-value CHANGES and flat-forward holds it in between. That is what a level is for,
-and it is why `step` is the default.
-
-**The defect was `cre.construction_loan` reading its curve as a per-period
-total.** Under that reading a schedule stated quarterly and run monthly repeats
-each quarter's figure three times and funds three times the money, silently:
-
-| model grid | curve points | funded |
-|---|---|---:|
-| quarterly | quarterly | 4,000.00 |
-| monthly | monthly | 4,000.00 |
-| monthly | **quarterly** | **12,000.00** |
-
-**Resolved** by dividing every curve read in the contract by
-`{{model.periods_per_year}}` and stating the term as an annualised rate. One
-sparse point now funds the same amount on a quarterly and a monthly model, and
-`benchmarks/cre/one_lincoln_street_contract` still reproduces the
-primitive-built case in all 48 cells with zero difference — the curve is stated
-x4 and divides straight back.
-
-**The general rule, which the pack interface should carry:** a lowering rule
-reading a curve divides by periods-per-year for the same reason it does for
-`rent_year`. A curve is a level; a rule that wants a flow annualises it.
-
-Two smaller things this leaves behind, neither worth an entry of its own:
-
-- Nothing rejects a curve read at a grain it was not stated at. With the
-  annualised convention there is nothing to reject — any grain is meaningful —
-  so the check the first filing proposed has no subject.
-- Re-graining now SPREADS: a quarter's funding becomes three equal months. That
-  is an assumption, not a fact, and it is the only defensible one when nothing
-  finer was stated. Worth knowing before reading a monthly draw report off a
-  quarterly schedule.
-
-Found reviewing the contract against an external question about running one deal
-at monthly and daily granularity, and corrected after the first diagnosis was
-challenged — the language behaved exactly as specified throughout.
-
 ### 7.28 The three specifications use RFC 2119 keywords and define none of them
 
 `docs/01_language_spec.md`, `docs/04_compiler_spec.md` and
@@ -2118,66 +1620,6 @@ by probing each claim: the return edge works, two adjacent findings were stale
 or wrong, and the third was a symptom of `time.phase` rather than of events.
 ---
 
-### 7.37 A recurrence cannot read cash — NOT A GAP, closed August 2026
-
-The item claimed that a note class's balance, `prev` minus what was paid, could
-not be written; that `prev.<stream>` and `prev.<waterfall>.<step>` were needed;
-and that the engine had to be restructured from layer-major to period-major to
-support them. Every claim was probed with no pack active. None survived.
-
-**A balance drawn down by a payment works today.** State the amount ONCE as a
-field. The step pays that field and the balance subtracts it — a waterfall step
-reads a rule-bearing entity field at the current period:
-
-```
-field  pay_amt        0   250   250   250   250
-field  bal         1000  1000   750   500   250
-step   principal      0   250   250   250   250     <- reads the field
-```
-
-No new spelling is needed, and the field/stream boundary `docs/14` draws is
-untouched: a field reads no cash, and does not need to.
-
-**There is ONE pot.** Within a run, `remaining` draws it down — that is what it
-is for. Across periods, the model states the window the pot draws on, and the
-`from` expression is deliberately free (`docs/03` §3.2) so it can. Both shapes
-distribute the cash exactly once:
-
-```
-end of hold, one waterfall, from series_sum(fcf, 0, time.t):
-  cash 600 -> preferred 400, gp split 40, lp split 160        total 600
-
-every period, from available:
-  cash 300/period -> distributed 300/period                   total 100%
-```
-
-An end-of-hold distribution — a preferred return and then a split — is the
-normal shape, and hand-authoring the pot window is a sound fallback where a deal
-needs something else.
-
-**Where the wrong answers came from.** Two modelling errors, each of which looks
-like an engine defect until the model is read. Declaring two waterfalls on one
-entity, each drawing the same pot, double-counts the cash — there is only one
-pot, and two claims on it is not something the engine should reconcile. And a
-model that asks for cash which cannot exist, then assumes it was received, will
-disagree with the cash: that is the model over-specifying an amortization the
-collateral cannot support, not the language losing a payment.
-
-**What is true and must stay true.** A distribution is not an operating,
-investing or financing flow, so it must never reach a cash flow statement;
-subtotals folding before waterfalls run is the correct order. Distribution is
-downstream of the cash flow modelling and of the valuation, both struck before
-it. A separate WATERFALL statement may be added later and is a different
-statement.
-
-Provenance: raised writing `benchmarks/credit/americredit_2017_1`, August 2026;
-closed August 2026 after probing each claim. The duplication that prompted it —
-that case states its distribution twice — is a consequence of restating an
-allocation the model can state once as a field, and is a modeling matter rather
-than a missing capability.
-
----
-
 ### 7.38 A misspelled series reads as zero, in silence
 
 `series_sum("no.such.series", 0, time.t)` in a stream returns 0.0 for every
@@ -2212,112 +1654,6 @@ first case, and it stays open until the convention is settled — the question i
 whether a pack's own expression should be able to name a component the model
 lacks, not whether a typo should be caught.
 
----
-
-### 7.39 A clean-up call cannot end a deal — NOT A GAP, closed August 2026
-
-A clean-up call is a termination right on a threshold: once a deal has paid down
-far enough that administering it costs more than the remainder is worth, the
-servicer may buy the assets that are left, redeem the notes in full and wind the
-deal up. An asset sale, a prepayment in full, a lease termination and an
-acceleration are the same shape. The right belongs to the agreement; exercising
-it is a decision.
-
-The language already splits it that way, and every piece exists.
-
-The RIGHT and its threshold are an `option` (§14): `exercise when` carries the
-condition, `payoff` carries the buy-out price. The DECISION is an event writing
-entity state. The CASH stops because a stream's amount reads that state — the
-expression environment binds `entity.*` to the stream's owning entity, so no
-name is needed and a pack's `amount_expr` can do it as readily as a model can.
-
-Probed with no pack active, an event setting `status = "called"` at t=2:
-
-```
-by guard   active when entity.status != "called"        100  100  0  0  0
-by amount  100.0 * if(entity.status == "called", 0, 1)  100  100  0  0  0
-```
-
-The item's proposed `ends when` clause on a contract would put the decision
-inside the record of what was agreed, which is the error §7.40 made. A contract
-records the agreement and its `term` states when the obligations run.
-
-**What is true is narrower: no lowering rule uses this.** No rule in any of the
-four packs reads entity state in an amount expression, so the streams a contract
-lowers to cannot today respond to a decision the model makes. That is rule
-authoring, not a missing capability.
-
-**One residue, recorded in §7.40.** A lowering rule can make its stream's amount
-zero but cannot make the stream inactive, having no `active_when` key. §9.3
-gives every stream an activation predicate and §6.4 of the pack interface
-provides no way to set one, so a lowered stream reaches the guard's economics
-through its amount and never its statement: a guard says the claim does not
-occur, a conditional amount says it occurs and is zero, and the second still
-publishes a series.
-
-Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026.
-Closed August 2026 after probing each piece. The case asserts nothing after the
-call date, which remains honest reporting of a model that does not yet express
-the wind-up — expressible now, and worth revisiting when the credit pack reads
-state.
----
-
-### 7.40 Capabilities reachable from one layer and not another — NOT A GAP, closed August 2026
-
-The item recorded two instances of a capability the language gives one layer and
-withholds from another. Each claim was walked against the specification, then
-the implementation, then a probe. None survived.
-
-**Instance 1, a contract cannot be gated though a stream can.** A contract's
-`term <start>..<end>` states when its obligations run, and that is complete. The
-cases the item lists — a loan repaid early, a lease terminated, a tenant
-defaulting, a facility cancelled, a PPA bought out — are decisions and events,
-not terms of the agreements, and each has a construct already: an `option` with
-its `payoff` (§14), an `event`, or the entity state those write. Putting a guard
-on a contract would move a modeling decision into the record of what was
-agreed. The item's three proposed fixes all did that.
-
-**Instance 2, the calendar's grain is a pack privilege.** It is not.
-`time.ppy` and `time.days_in_period` are documented in `docs/03` §3 and work:
-`inputs.rent_year / time.ppy` pays 3000 a quarter on a quarterly book, and
-`time.days_in_period` reports 90, 91, 92, 92. The item probed five spellings —
-`model.periods_per_year`, `time.periods_per_year`, `model.grain`, `time.grain`,
-`time.periods_in_year` — and none of them was the documented one.
-
-**The paths in its table, each for its own reason.**
-
-`run.*` is run configuration. It lives in run.json and is the run's business, not
-the model's; `cfg.<name>` exists so a run passes values in deliberately. There is
-no `run` root in `docs/03` §3 and there should not be.
-
-`model.npv`, `model.irr` and `domain.*` are settled by §15.2 — "CFDL models do
-not declare output metrics" — and an expression reading a fold of the cash it
-contributes to would be circular. A hurdle is a post-results item and does not
-belong in a model either.
-
-`entity.<symbol>.net_cash_flow` is a RESULTS series key (`docs/06`), not an
-expression path; the `entity.` prefix there is an output namespace that shares a
-spelling with the expression root. Its null is the open-world `entity` root
-behaving as documented, and narrowing that is `docs/18` §4a.
-
-`time.year` and `time.month` have no component helper in the documentation or in
-`cfdl-calc`, and need none. A value that varies by date is a curve — seasonality
-and a calendar-year rate step both work that way — and periodicity is
-`months_between(anchor, time.date) % 12`.
-
-**What the walk did find**, which the item never mentions: `docs/01` §13.4
-contradicted §9.3 normatively. §9.3 says a stream MAY carry a guard and is
-active for every scheduled occurrence without one; §13.4 said contracts and
-streams SHOULD use entity state as "the primary activation mechanism". A SHOULD
-against a MAY, an optional mechanism promoted over the effective dates that
-actually make a stream active, and contracts named for a guard they do not take.
-§13.4 is corrected.
-
-Provenance: raised August 2026; closed August 2026 after walking each claim
-against the specification first, the implementation second, and a probe last.
-The instance-2 error is worth remembering: five undocumented spellings were
-probed and the documented one was not, which is how a working capability was
-recorded as missing.
 ---
 
 ### 7.41 Invariants the gates do not check
@@ -2826,3 +2162,59 @@ yet exist, and each removes a capability the specification grants.
 
 Found August 2026, walking §7.39 with a working model supplied by the author:
 the same event, in the same form, against two targets.
+
+---
+
+### 7.51 Nothing validates a run configuration against its schema
+
+*Belongs with the tooling.*
+
+`docs/schemas/run.schema.json` is the canonical description of `run.json`, and
+nothing reads it. No gate, no CLI path, no test — `grep -rl run.schema.json
+tools/ crates/ makefile .github` returns nothing. The engine parses run configs
+with serde and applies its own rules; the schema is a document.
+
+**It has already drifted.** `valuation_grain` has been accepted by the engine
+and documented in `docs/09` since it shipped, and the schema never listed it —
+found while adding `arithmetic`, and fixed at the same time. Since
+`DeterministicCase` sets `additionalProperties: false`, a run stating its own
+grain would have been rejected by the schema it is supposed to conform to. That
+went unnoticed for as long as it existed because nothing checks.
+
+**The schema states an intent it cannot enforce.** Its own top-level
+description reads: *"Unknown properties are rejected — a misspelled key would
+otherwise produce a clean run with wrong numbers."* Two things undercut it.
+Nothing validates, so nothing is rejected. And `Parameters` says the opposite of
+its own document: *"Four key shapes are recognized and anything else is
+ignored."*
+
+Probed with four keys that match nothing — an assumption that does not exist, a
+`cfg` path no expression reads, an `obs` path no expression reads, and a stream
+that does not exist:
+
+```json
+"parameters": {
+  "inputs.no_such_assumption": 99.0,
+  "cfg.never_read": 99.0,
+  "obs.never_read": 99.0,
+  "stream.no.such.stream:amount": 99.0
+}
+```
+
+All four accepted, all four discarded, no warnings, cash unchanged. That is
+precisely the clean run with wrong numbers the description says the design
+prevents.
+
+**Two of the four could be checked, and two could not.** `inputs.<name>` names
+an `assume` statement and `stream.<name>:amount` names a stream — both declared,
+both verifiable against the IR. `cfg.<path>` and `obs.<path>` name nothing
+declared: they are channels a model opts into by writing the path in an
+expression, so the only available signal is that no expression reads it, which
+may be legitimate in a run that drives several models.
+
+To investigate, and the two halves are separable: wire the schema into a gate so
+the document and the parser cannot drift again, and decide whether an override
+that resolves to nothing should warn — at least for the two shapes that name
+something declared.
+
+Found August 2026, reading the schema while adding `arithmetic` for §6.2.
