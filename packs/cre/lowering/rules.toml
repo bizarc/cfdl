@@ -539,11 +539,27 @@ stream_name = "cre.construction.equity_draw{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "financing.equity"
+# CAPITALIZE OR PAY. `capitalize_interest = 1` rolls each period's accrued
+# interest into the balance it accrues on, which is the ordinary construction
+# structure: the asset has no income during the build, so the lender funds its
+# own interest out of the facility. Left at its default of 0 the facility PAYS,
+# and every model written before this term existed is unaffected.
+#
+# The accrual is written against the field's own `prev` rather than against
+# `field.<name>`, because a field's rule may not read a field at the current
+# period. F(t) = prev + draw, so F - draw is prev and F - E is prev + draw - E:
+# the same quantity the interest stream computes, one period back.
+#
+# It is added to the SHARED funding field rather than a second accumulator on
+# purpose. Interest cannot accrue until the commitment is exhausted, so nothing
+# reaches the balance while the equity/debt split is still being decided, and
+# after that point every draw is debt and the split is settled.
+#
 # The residual: what the commitment still covers after the loan takes its share.
 amount_expr = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -561,7 +577,7 @@ category = "financing.debt_proceeds"
 amount_expr = "min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -585,7 +601,7 @@ category = "financing.debt_service"
 amount_expr = "(max(0, field.cre_construction_funded{{contract.suffix_ident}} - (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}})"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -594,3 +610,4 @@ schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
 draw_accrual_fraction = "0.5"
+capitalize_interest = "0"

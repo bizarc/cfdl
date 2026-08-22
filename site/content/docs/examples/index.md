@@ -46,6 +46,7 @@ Complete models for every pack, each checked period by period against an indepen
 
 ### Commercial real estate
 
+- [CRE: retail development](/docs/examples/cre-acre-retail-development) — A ground-up retail development on a twelve-suite rent roll, reconciled against A.CRE's own workbook: an S-curve construction draw, NNN recoveries whose management fee closes a circular loop in closed form, and a merchant-build exit.
 - [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) — A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends.
 - [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) — A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) — An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years.
