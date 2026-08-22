@@ -1,0 +1,33 @@
+version 0.1
+model "stream-elapsed"
+time calendar monthly from 2026-01 for 30
+
+entity asset suite : Asset.Financial
+
+// A stream can read how far it is into ITS OWN schedule.
+//
+// A pack lowering rule has always had this, as {{time.elapsed_periods}} and
+// {{time.elapsed_years}} anchored on the contract's term start. A hand-written
+// stream had neither, so a lease that steps on its own anniversary had to
+// restate its commencement month as a literal and subtract — putting the same
+// month in the schedule and in the amount with nothing keeping them agreed.
+//
+// Both count from the schedule's `from` date, on the schedule's own interval.
+
+// Steps on its own anniversary: 1,000 for a year, then 1,030.
+stream suite.rent_annual_step on entity asset.suite inflow currency USD {
+  schedule every month from 2026-04 to 2028-03
+  amount = 1000 * pow(1.03, time.elapsed_years)
+}
+
+// Counts periods rather than years — 0 in its first month, 1 in its second.
+stream suite.periods_elapsed on entity asset.suite inflow currency USD {
+  schedule every month from 2026-04 to 2026-09
+  amount = time.elapsed_periods
+}
+
+// A stream starting at the model's own origin: elapsed and time.t agree.
+stream suite.from_origin on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = time.elapsed_periods - time.t
+}

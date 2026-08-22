@@ -456,6 +456,28 @@ pub(crate) fn build_expr_env(
         ExprValue::String(stream.map_or_else(String::new, |s| s.owner.symbol.clone())),
     );
     // No `entity.state` map — see apply_entity_state.
+    // Periods and whole years since THIS STREAM's schedule began.
+    //
+    // A pack lowering rule has had `{{time.elapsed_periods}}` and
+    // `{{time.elapsed_years}}` since packs existed, anchored on the contract's
+    // term start; a hand-written stream had neither and had to restate its own
+    // start month as a literal and subtract — `round_down((time.t - 22) / 60, 0)`
+    // for a five-year step on a lease starting in period 22. That put the same
+    // month in two places, the schedule and the amount, with nothing keeping
+    // them agreed.
+    //
+    // The semantics are the pack's, deliberately: whole elapsed periods on the
+    // stream's own interval, and whole elapsed years, both measured from the
+    // schedule's `from` date. A stream with no start (`schedule on <date>`) is
+    // a one-shot, where elapsed is zero by construction.
+    if let Some(elapsed) = stream.and_then(|s| elapsed_since_schedule_start(s, date)) {
+        env.time.insert(
+            "elapsed_periods".to_string(),
+            ExprValue::Int(elapsed.periods),
+        );
+        env.time
+            .insert("elapsed_years".to_string(), ExprValue::Int(elapsed.years));
+    }
     env.curves = ir_curve_defs(ir);
 
     for (name, value) in base_inputs {
@@ -645,4 +667,42 @@ pub(crate) fn insert_cfg_into_value(slot: &mut ExprValue, path: &[&str], value: 
         .entry(head.to_string())
         .or_insert_with(|| ExprValue::Map(BTreeMap::new()));
     insert_cfg_into_value(entry, tail, value);
+}
+
+/// Whole periods and whole years elapsed since a stream's schedule started.
+///
+/// Mirrors `elapsed_periods_expr` / `elapsed_years_expr` in cfdl-compile, which
+/// is what a pack lowering rule expands to, so a hand-written stream and a
+/// pack-emitted one count the same way. Years are cadence-independent — whole
+/// months over twelve — because every calendar coarser than daily steps in
+/// whole months.
+pub(crate) struct Elapsed {
+    pub(crate) periods: i64,
+    pub(crate) years: i64,
+}
+
+/// Whole months from `from` to `to`, ignoring the day — the same reading
+/// `months_between` has in the expression language, which is what the pack
+/// placeholders expand to.
+fn months_between(from: &Date, to: &Date) -> i32 {
+    (to.year - from.year) * 12 + (to.month as i32 - from.month as i32)
+}
+
+pub(crate) fn elapsed_since_schedule_start(stream: &IrStream, date: &Date) -> Option<Elapsed> {
+    let from = Date::parse(stream.schedule.from.as_deref()?).ok()?;
+    let months = i64::from(months_between(&from, date));
+    let days = i64::from(days_between(&from, date));
+    let periods = match stream.schedule.every.as_deref() {
+        Some("daily") => days,
+        Some("weekly") => days.div_euclid(7),
+        Some("quarterly") => months.div_euclid(3),
+        Some("annual") => months.div_euclid(12),
+        // Monthly, and the fallback: a schedule with no stated interval is
+        // one-shot, where every reading is its own first period.
+        _ => months,
+    };
+    Some(Elapsed {
+        periods: periods.max(0),
+        years: months.div_euclid(12).max(0),
+    })
 }

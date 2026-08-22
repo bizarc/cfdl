@@ -24,7 +24,7 @@ loops, so the same inputs always produce the same number.
 
 | Binding | Holds |
 |---|---|
-| `time.*` | where you are — `time.t` is the period index, `time.date` its date |
+| `time.*` | where you are — `time.t` is the period index, `time.date` its date; inside a stream, `time.elapsed_periods` and `time.elapsed_years` count from that stream's own schedule start |
 | `inputs.*` | values declared with `assume`, including sampled ones |
 | `model.*` | model-level facts such as the currency |
 | `entity.*` | fields of the entity the stream belongs to |
