@@ -53,49 +53,6 @@ which is the underlying cause.
 Shape: a term that names a period rather than an amount, resolved after the
 opex stream exists. Depends on 5.1.
 
-### 1.4 Coverage ratios are lifetime aggregates, not per-period tests — RESOLVED
-
-**Resolved.** `domain.cre.dscr` is a per-period series, declared in
-`packs/cre/statements.toml` as a `ratio` subtotal over `domain.cre.noi` and
-`domain.cre.debt_service`. `benchmarks/cre/hud_home_multifamily` asserts the
-four published values this item is about, at every anchor year, as a column in
-`expected.csv` — converting `NOTES.md`'s "we reproduce all four by hand, and
-cannot assert any of them" into four machine-checked assertions against a public
-HUD workbook.
-
-The same shape now exists in the other packs: `domain.energy.dscr_periodic`
-against CFADS, which is the covenant a project lender tests, and
-`domain.opco.debt_service_coverage`.
-
-**A ratio is recomputed at whatever grain it is reported at**, never averaged
-from finer ratios. That is the trap this item implies and it is guarded by an
-analytic check with a probe where the two answers differ by more than a factor
-of two — verified by mutation to fail if the implementation ever averages.
-
-Still open, and deliberately: the reduction over the series — "never below x" as
-a covenant test — is not built. The series is what makes it expressible;
-`min`/`mean` over a subtotal is a metrics-layer addition with no external user
-yet.
-
-#### Original entry: 1.4 Coverage ratios are lifetime aggregates
-
-`domain.cre.dscr` divides total NOI by total debt service over the whole hold.
-That is not what a debt service coverage ratio is. A lender tests coverage
-**every year**, and a covenant breaches in a single year — a lifetime ratio of
-1.4 can contain a year at 0.9 and report nothing.
-
-`benchmarks/cre/hud_home_multifamily` is exactly that shape: coverage declines
-from 1.576 to 1.289 across the hold as 2.5% expense growth outruns 2.0% rent
-growth, and the source publishes the ratio at four separate years to sixteen
-significant figures precisely because the path matters. We reproduce all four by
-hand, and cannot assert any of them.
-
-Shape: a per-period metric kind, so `dscr` yields a series and the aggregate
-becomes one reduction of it (min, mean, or the covenant test "never below x").
-The same applies to `domain.energy.dscr` and `domain.opco.fcf_to_debt_service`.
-Note this is a metrics-layer change, not an engine one — the series it needs are
-all already computed.
-
 ### 1.6 Vacancy cannot track a growing rent roll
 
 `cre.vacancy_loss` takes a constant `potential_gross_year` and multiplies it by
@@ -334,37 +291,6 @@ Not discovered by this work — it was a known absence — but recorded here bec
 
 ## 6. Cross-pack
 
-### 6.1 Day count beyond the four supported bases — SHIPPED
-
-`act/act` (ISDA) is implemented in `year_frac`, with aliases `actual/actual`
-and `act/act isda`. The span is split at calendar-year boundaries and each part
-measured against its own year's length, returned over the common denominator
-365*366 so the result stays one exact integer ratio like every other basis.
-
-```
-2024-07-01 -> 2025-07-01   act/act  0.998622651   = 184/366 + 181/365
-                           act/365  1.000000000   = 365/365
-2024-01-01 -> 2025-01-01   act/act  1.000000000   a leap year is still one year
-                           act/365  1.002739726   = 366/365
-```
-
-The original item said the blocker was that the expression environment does not
-expose the days in the year a period falls in. That is true of the pack's
-`{{model.accrual_divisor}}`, which resolves to a single number per period and
-therefore cannot express a denominator that changes with the year. It was not
-true of `year_frac`, which receives both endpoints and derives everything it
-needs from them — so the two paths had different difficulty and the item
-treated them as one.
-
-**What remains is the divisor.** `{{model.accrual_divisor}}` still expands to
-`<ppy>` or `(360 / time.days_in_period)`, so a pack rule cannot accrue on
-act/act. The shape worth considering is the one the table already implies: a
-divisor is the reciprocal of a year fraction, so the placeholder could expand to
-a `year_frac` call over the period's bounds rather than to a number, which makes
-act/act fall out and turns the placeholder into sugar for a native capability.
-That needs the period's start and end readable in an expression; today there is
-`time.date` and `time.days_in_period`.
-
 ### 6.3 An acquisition or disposal in a period other than the term's
 
 `schedule_kind = "on_date"` places a one-shot flow in the period containing its
@@ -586,64 +512,6 @@ own homework.
 arbitrage is priced against a duration curve rather than a scalar spread (7.1).
 Credit's three uncovered contract types need a source, not a new contract.
 
-### 7.7 Two thirds of pack validations never run — RESOLVED
-
-*Belongs with the language and engine (section 5). Highest-severity item on this
-list — everything else here is a missing capability; this is a safety net with a
-hole in it.*
-
-A pack validation matches a contract by exact name unless it declares
-`match = "instance"`. Contracts are routinely written in the suffixed form —
-`credit.pool_level_pay.auto_a`, `cre.lease_unit.anchor`, `opco.revenue_line.core`
-— and for those, a validation without that flag is **silently skipped**.
-
-Measured across the shipped packs:
-
-| pack | validations | declare `match = "instance"` | skipped on suffixed contracts |
-|---|---|---|---|
-| credit | 10 | 10 | 0 |
-| cre | 14 | 5 | **9** |
-| energy | 9 | 0 | **9** |
-| opco | 15 | 1 | **14** |
-
-**33 of 48.** Credit was done correctly and the other three packs were not, which
-is why this has never been noticed: the pack with the most validation coverage is
-also the only one where the validations fire.
-
-Demonstrated, not inferred. `opco.revenue_line` stating no amount at all is
-rejected with `E7001_OPCO_LINE_MISSING_AMOUNT`; `opco.revenue_line.core` stating
-no amount compiles clean. Same model, same defect, one character of difference.
-The same holds for the CRE and energy checks without the flag — including
-`E5019` day-count validation and the CRE lease and exit-cap bounds.
-
-Found while adding `E7012_OPCO_TAXES_MISSING_RATE` and testing that it actually
-fires, which it did not until the flag was added. Writing a validation and never
-confirming it rejects anything is how thirty-three of these got here.
-
-**Not fixed in that change, deliberately.** Adding the flag everywhere is a
-one-line edit per validation, but it turns thirty-three dormant checks live at
-once, and any existing model that violates one would start failing. That needs
-to be a change of its own where each newly-firing check is reviewed. A first
-attempt at the blanket edit broke TOML parsing in nine places (the flag has to
-follow the *close* of a multi-line `contracts` array), which is a fair warning
-about doing it quickly.
-
-**Resolved.** All 48 validations across all four packs now declare
-`match = "instance"`, and `tools/check-pack-validations.py` requires every
-validation to state its match mode explicitly — `exact` remains available, it
-just has to be written. Defaulting was the trap.
-
-Blast radius was measured before the change: only 8 of the 33 had any suffixed
-usage in shipped models to trip on, all bounds or ambiguity checks. Prediction
-was that no golden would move. **None did** — 108/108 still pass, so eight
-previously-dormant checks are now live and every shipped model already satisfied
-them.
-
-Still open, as a deliberate follow-on: whether `Instance` should be the *default*
-in `crates/cfdl-pack/src/lib.rs:119-124`, which would make all 48 declarations
-redundant. Left alone for now because the explicit-declaration gate achieves the
-same safety and makes the choice visible at each call site.
-
 ### 7.8 A stream cannot be non-cash, which blocks the log-sum technique
 
 *Belongs with the language and engine (section 5). Small surface, and it is the
@@ -809,76 +677,6 @@ Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
 
-### 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service — RESOLVED
-
-**Resolved for the reporting half.** `benchmarks/cre/hud_home_multifamily` now
-carries the two legs as separate lines, both grounded in the workbook's own
-First Mortgage Sizing tab: mortgage insurance is the stated 0.450% of original
-principal on the stated $150,000 loan (675.00 exactly, flat), and debt service
-is the residual of the published "Calculated Monthly P+I+MIP Payment" of
-1,165.7819. That reconstructs the 13,314.3827 this item recorded, and both
-figures are now asserted rather than reconciled in prose.
-
-`domain.cre.debt_service` carries `loan.mortgage_insurance` because coverage
-here is measured against the whole published line — which is what this item
-said, and what the DSCR the workbook publishes is computed from.
-
-No expectation moved. The two legs sum to the pro forma's own 13,989, because
-that cell is `=ROUND(...,0)` and so is computed rather than merely displayed;
-the published DSCR is that rounded line divided into a rounded NOI. The model
-applies the same round via `round_to` rather than restating the result, so the
-0.38 the workbook discards sits on the P&I leg — the leg it rounded.
-
-Still open: converting the case onto `cre.permanent_debt`. That contract
-computes P&I from principal and rate, and reaching HUD's payment needs a
-monthly schedule on an annual grid — which `E2108` forbids and which the grain
-rule in `docs/01_language_spec.md` deliberately keeps forbidden. A pack
-`cre.mortgage_insurance` contract is the remaining shape, and it is not added
-here because nothing would use it yet (see 7.15 on shipping contracts with no
-external user).
-
-#### Original entry: 7.14 HUD's mortgage is P+I+MIP, and MIP is not debt service
-
-Found converting the CRE benchmarks onto `cre.permanent_debt`.
-`benchmarks/cre/office_two_tenant` converted cleanly.
-`benchmarks/cre/hud_home_multifamily` did not.
-
-**Corrected.** This item originally gave two reasons, and the first was wrong.
-It claimed the payments could not be modelled because they are MONTHLY on an
-ANNUAL calendar. Measured with `E2108` bypassed, `cre.permanent_debt` at
-`payment_frequency = "month"` on HUD's annual model returns **13,314.3827** —
-the workbook's published annual P&I, to the cent. The engine sums the twelve
-monthly accruals into the year; it was the CHECK that blocked it, not the
-arithmetic. That gap is now its own item, 7.16.
-
-What actually remains is the second reason.
-
-**The published line is not debt service.** It is P+I+MIP — the workbook says so
-where it defines coverage. The residual is exact:
-
-```
-published line     13,989.38
-P&I                13,314.38
-mortgage insurance    675.00   = 0.450% of the original principal, flat
-```
-
-Mortgage insurance is not a payment on the debt, and `cre.permanent_debt` does
-not invent one. Modelling it would mean either a `mip_rate` term on a debt
-contract that has no business carrying it, or fitting principal and rate
-backwards until the total landed on 13,989.38 — the number without the loan.
-
-An FHA/HUD-insured multifamily loan is common enough that a
-`cre.mortgage_insurance` contract, or an insurance line separate from the debt,
-would be the honest shape. It affects `domain.cre.dscr`, since coverage there is
-measured against P+I+MIP.
-
-**Note the interaction with 7.16.** Even once occurrences are distinguishable,
-this case would need care: the contract's balloon fires on
-`{{time.periods_to_term_end}} == 0`, which is true for *every* occurrence in the
-final period — twelve times on an annual model. HUD needs no balloon, so its
-conversion is safe, but the contract is not generally safe at a sub-calendar
-cadence.
-
 ### 7.15 Adding a contract and a source did not move CRE's coverage
 
 Measured after shipping `cre.permanent_debt` and
@@ -914,103 +712,6 @@ reason: it publishes the lines, not the leases.
 Every direct-download CRE candidate in the catalogue has now been checked. The
 remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
 registration, which is the actual blocker on CRE coverage — not the pack.
-
-### 7.17 Reporting is a language capability, and it is missing — LARGELY RESOLVED
-
-**Built.** Classification, per-period subtotals, ratios, statements, reporting
-grain and the completeness check all ship, in all four packs. `docs/07` §6.10 is
-the authoring reference; §6.10 is superseded and says why.
-
-What this item asked for, and where it landed:
-
-- **counts of line items per period** — a statement row per period, at any
-  declared grain, with drill-down to the contributing streams
-- **classification** — `category` on the emitting lowering rule, roots closed by
-  the language to `operating` / `investing` / `financing`
-- **subtotals and ratios** — `[[subtotals]]`, per period, published as
-  `domain.<pack>.<name>`
-- **presentation** — `[[statements]]` with order, depth, labels and a display
-  sign that never changes the arithmetic
-
-**The half that remains is the one this item's title is about.** Reporting is a
-LANGUAGE capability in its design — the category roots are the language's, and a
-pack-less model can now classify its streams — but the DECLARATIONS still live
-only in pack TOML. A model with no pack cannot declare a subtotal or a statement
-of its own. That needs a surface in the language, and the syntax is undecided;
-`docs/16` records the question.
-
-#### Original entry: 7.17 Reporting is a language capability, and it is missing
-
-*Belongs with the language and engine (section 5), and applies to every pack.*
-
-A stated aim is parity with the tools practitioners already use — Argus in CRE,
-and its equivalents elsewhere. Those tools are not valued for their discounting;
-they are valued for the **statement** they produce: every line item, per period,
-grouped, subtotalled, and traceable to the transactions behind it.
-
-**Reporting is distinct from the DCF engine and should be built as such.** NPV
-and IRR consume a netted cash flow; a statement consumes the line items and their
-structure. Conflating them is why the capability has never been built — every
-reporting need to date has been filed as a metric, and metrics answer a different
-question.
-
-#### What exists
-
-Per-stream, per-period values. `benchmarks/cre/office_two_tenant` publishes
-thirteen independent series — base rent per tenant, recoveries per tenant, opex,
-vacancy, TI/LC, debt — each a full array over the grid, aggregating to
-`model.net_cash_flow`. The line items are all there.
-
-#### What is missing
-
-1. **Per-period subtotals.** `domain.cre.noi` is `4,718,933.90` — one number for
-   a ten-year hold, not a series. A statement's middle rows (EGI, NOI,
-   before-tax cash flow) do not exist at any period. This is 1.4, which reports
-   it from the coverage-ratio angle: `hud_home_multifamily` reproduces four
-   published DSCR values by hand and can assert none of them.
-2. **Statement structure.** `metrics.toml` declares flat named scalars. Nothing
-   declares order, grouping, hierarchy, labels, or which lines roll into which
-   subtotal. An Argus report is exactly that declaration.
-3. **Drill-down.** A period total cannot be traced to the payments behind it,
-   because the occurrences are never materialised. See
-   `docs/15_streams_and_the_grid.md`.
-4. **Reporting grain.** The grid, plus an annual rollup, and nothing else. A
-   monthly model cannot publish a quarterly statement. Note the annual rollup
-   does not close (1) either — it carries the line items and the bottom line and
-   no intermediate subtotals, so it has the top and bottom of a statement and
-   none of the middle.
-5. **Counts.** Metric ops are `sum`, `negated_sum`, `ratio`, `wal_years`.
-   Nothing counts occurrences, so "how many payments fell in this period" is
-   unanswerable.
-
-#### Existing items that are really reporting items
-
-Filed separately, each from a case that hit it:
-
-| item | why it is reporting |
-|---|---|
-| **1.3** abatements as a first-class NOI line | *"you can report it as a line OR have it counted in NOI, not both"* — a line's presentation and its arithmetic role are the same thing today |
-| **1.4** coverage ratios are lifetime aggregates | per-period subtotals |
-| **7.12** a pool's amortisation state is not exposed | percent-outstanding is a derived per-period series; the harness can only check streams and scalars |
-
-#### Per-pack standards
-
-This is not one report. CRE wants an Argus-shaped operating statement; credit
-wants a distribution/waterfall report and factor history; opco wants a P&L and a
-cash flow statement in the accounting sense; energy wants generation and revenue
-by source. The structure belongs in the pack, beside `metrics.toml`, and the
-*mechanism* belongs in the language.
-
-#### Sequencing
-
-Independent of the ledger and of each other:
-
-- Per-period metrics (1) can land on their own and immediately let
-  `hud_home_multifamily` assert four published ratios — an external validation
-  win from a self-contained change.
-- Statement structure (2) needs (1) underneath it.
-- Drill-down (3) and counts (5) need the ledger.
-- Grain (4) is additive once flows are dated.
 
 ### 7.18 Monte Carlo carries no transition log
 
@@ -1214,7 +915,7 @@ REMIC Trust 2019-2 publishes seven. In both cases the model reproduces them —
 709 of 709 exactly for the first, all seven for the second — and in both cases
 the only place to say so was `CASE.md`, in prose.
 
-This is §7.12 one level up. That item was about a pool's amortisation state not
+This is the pool-factor problem one level up. That defect was a pool's amortisation state not
 being exposed, which left `auto_abs_speed_050` reconciling its percent-outstanding
 column in words; the fix was a cumulative subtotal, and the case now asserts it.
 The same argument applies here: a figure the issuer publishes, that the model
@@ -1260,90 +961,6 @@ reachable from the harness.
 Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
 across five to seven speeds per class, of which a single case can assert the
 0%-, 100%- or 259%-PSA column but not all three.
-
-### 7.24 A validated contract term cannot be parameterised — WRONG, see the correction
-
-Belongs with section 5 (language and engine).
-
-A contract term bound to a run-config parameter fails at compile time:
-`psa_speed = cfg.psa` is `E9016_CREDIT_INVALID_PSA_SPEED`, because pack
-validations evaluate terms when the model compiles and a parameter has no
-value yet. So every input a pack validates — speed, rate, term, severity —
-is a literal, and everything downstream of that inherits the restriction:
-
-- a scenario cannot vary a pack deal's prepayment assumption, which is why
-  the FNMA 2019-2 decrement table ships as seven case directories differing
-  in one number (§7.23 is the harness half of that story; this is the
-  compiler half);
-- a Monte Carlo distribution cannot attach to one. Distributions reach
-  `cfg.*` and `stream.<name>:amount`, and each trial is a full rerun — the
-  machinery works — but the inputs a structured-credit practitioner most
-  wants to simulate (CPR, CDR, severity, speed) are contract terms, and no
-  distribution can touch them.
-
-Shape: when a term is an expression over `cfg.*`, defer that term's pack
-validation to run start and validate the RESOLVED value — per run, per
-scenario, per trial — failing the run with the same diagnostic the compiler
-would have raised. Terms that are literals keep compile-time validation;
-nothing changes for existing models.
-
-Found modelling FNMA 2019-2 at seven speeds, where the attempt to carry the
-speed as `cfg.psa` was the first thing tried and the first thing refused.
-
-#### Correction — `inputs.<name>` was never refused
-
-Appended rather than edited in, because what was believed and what was
-measured are both worth seeing.
-
-The restriction is `cfg.*`, not parameterisation. A term deferred to
-`inputs.<name>` compiles, lowers carrying the reference, and responds to a
-run-config override — on the very term this entry names. Probed against the
-credit pack, `psa_speed = inputs.psa`:
-
-| run | prepayments |
-|---|---:|
-| deterministic, 198% PSA | 25,572.80 |
-| scenario `psa000` | 0.00 |
-| scenario `psa700` | 91,348.34 |
-
-`E9016_CREDIT_INVALID_PSA_SPEED` does not fire, and it is not an oversight
-that it does not: `docs/01_language_spec.md` §8.2.1 states it as policy — *"a
-term whose value is an input reference is not range-checked at compile time,
-since its value is not yet known; pack bounds still apply to literal terms."*
-The channel was documented and open the whole time.
-
-So both consequences this entry draws are false as written:
-
-- **A scenario CAN vary a pack deal's prepayment assumption.** The three runs
-  above are one model and one `run.json`.
-- **A Monte Carlo distribution CAN attach to a validated contract term.**
-  `assume psa ~ Normal(mean=1.98, stdev=0.4, clip=[0.5, 4.0])` over 200 seeded
-  trials moves `model.npv` across 72,663.72 - 97,375.47, mean 86,696.38. The
-  distribution reaches the term because a draw writes `inputs.<name>`, which is
-  the same channel a scenario writes.
-
-**What remains, and it is smaller.** Two real questions survive:
-
-1. Should `cfg.*` work in a term as well? It is the run-config's other half,
-   and a reader who reaches for it gets a diagnostic that says the value is
-   invalid rather than that the channel is wrong. If the answer is no, the
-   diagnostic should say so — `E9016` naming a bound is actively misleading
-   when the term is `cfg.psa`.
-2. A term deferred to `inputs.` is **never** bounds-checked, at compile time or
-   at run start. §8.2.1 accepts that deliberately, but it means a scenario may
-   push `psa_speed` to 40 and the run will price it. The original "Shape" above
-   — validate the RESOLVED value per run, per scenario, per trial — is still
-   the right fix, and it now applies to `inputs.` rather than to `cfg.`.
-
-**The FNMA seven directories are still justified — by §7.23, not by this.**
-The harness asserts metrics per scenario and not the per-period column, and
-the decrement table IS a per-period column. That is the whole reason the case
-ships seven ways, and this entry claimed the compiler half of a story that
-turned out to have only a harness half.
-
-Found while answering an external question about whether pack-validated terms
-could carry scenario and Monte Carlo values, which is the same question this
-entry answers "no" to.
 
 ### 7.25 A model cannot declare a metric
 
@@ -1678,8 +1295,8 @@ Would catch anyone "fixing" the comment's mechanism and losing the real one.
 **2. Pack additivity.** — **shipped** as a two-way ratchet in the same gate:
 a new stream clause fails until accepted, waived or recorded; a known gap that
 closes fails until the record is removed. Originally: For every clause `StreamStmt` accepts, `ContractStmt`
-should accept it too or waive it explicitly. §7.40 is what the absence costs: a
-contract cannot be gated, so a repaid loan keeps paying. A gate comparing the
+should accept it too or waive it explicitly. The absence costs what §7.50 records: a
+contract's streams cannot be gated from the model. A gate comparing the
 two surfaces would have caught it the day the second clause was added to
 streams, rather than in a benchmark three packs later.
 
@@ -1690,13 +1307,13 @@ one; an EARLIER waterfall is the documented composition and still compiles.
 Checked in the compiler beside `E1341`, its sibling one spelling over, so the
 two answer the same reference the same way. The message names the right model:
 `paid.<step>` for this period, a balance the distribution moves for a running
-total (§7.37).
+total.
 
 Re-scoped from a survey gate after review: a waterfall step is a pure function
 of its inputs — accept the pot, allocate, move forward — so a step reading its
 own waterfall's prior payments is not a missing capability, it is the account
 reconstructing its own postings, and the cumulative quantity it wants is a
-BALANCE the distribution moves (§7.37).
+BALANCE the distribution moves — see `docs/26_lessons_learned.md`.
 
 **It had already shipped a wrong number.**
 `fixtures/valid/waterfall_after_contract` capped a note at its balance by
@@ -2148,8 +1765,8 @@ Typo detection survives either way, because a misspelling still matches nothing
 once every stream is built.
 
 **Where the fix does NOT belong.** Not in the contract: a contract records what
-was agreed, and a termination or a switch-off is a modelling decision (§7.39,
-§7.40). Not in the lowering rule either — a rule emitting
+was agreed, and a termination or a switch-off is a modeling decision — see
+`docs/26_lessons_learned.md`. Not in the lowering rule either — a rule emitting
 `active when entity.status != "refinanced"` would bake the model's own
 vocabulary into the pack, requiring the rule author to guess which status
 strings a modeller will use. The decision is the modeller's, so it is expressed
@@ -2160,7 +1777,8 @@ wrote but no entity declared, and `E1342` for a waterfall step reading its own
 waterfall. Each check is right about typos, each runs where its subject does not
 yet exist, and each removes a capability the specification grants.
 
-Found August 2026, walking §7.39 with a working model supplied by the author:
+Found August 2026, walking the clean-up call with a working model supplied by
+the author:
 the same event, in the same form, against two targets.
 
 ---
@@ -2217,4 +1835,137 @@ the document and the parser cannot drift again, and decide whether an override
 that resolves to nothing should warn — at least for the two shapes that name
 something declared.
 
-Found August 2026, reading the schema while adding `arithmetic` for §6.2.
+Found August 2026, reading the schema while adding the `arithmetic` key.
+
+---
+
+### 7.52 A per-period coverage ratio cannot be reduced over its own series
+
+*Belongs with the language and engine (section 5). Split from the closed 1.4.*
+
+`domain.cre.dscr` is a per-period series now, which is what a debt service
+coverage ratio is: a lender tests coverage every year, and a covenant breaches
+in a single year — a lifetime ratio of 1.4 can contain a year at 0.9 and report
+nothing.
+
+What is not built is the REDUCTION over that series. "Never below 1.20" is the
+covenant as written, and stating it needs `min` or `mean` over a subtotal,
+which is a metrics-layer addition. The series is what made the test expressible;
+the reduction is what makes it assertable.
+
+No external case needs it yet, which is why it was deliberately left when the
+per-period half shipped.
+
+---
+
+### 7.53 Should `Instance` be the default match mode for a pack validation?
+
+*Belongs with the packs (section 5). Split from the closed 7.7.*
+
+All 48 pack validations now declare `match = "instance"` explicitly, and a gate
+requires the declaration. That closed the defect — two thirds of validations
+previously never ran — and it left one question deliberately unanswered.
+
+If `Instance` became the default in `crates/cfdl-pack/src/lib.rs`, all 48
+declarations would be redundant. It was left alone because the explicit-
+declaration gate achieves the same safety and makes the choice visible at each
+call site, which is the argument against changing it. The argument for is that a
+default nobody has to state cannot be forgotten by the next pack author.
+
+Worth deciding once rather than rediscovering per pack.
+
+---
+
+### 7.54 The HUD case cannot move onto `cre.permanent_debt`
+
+*Belongs with the CRE pack (section 1). Split from the closed 7.14.*
+
+The reporting half is done: `benchmarks/cre/hud_home_multifamily` states P+I+MIP
+the way its source publishes it, and mortgage insurance is no longer counted as
+debt service.
+
+The case still hand-writes its mortgage rather than using `cre.permanent_debt`,
+because HUD's instrument carries mortgage insurance the contract does not model.
+A `cre.mortgage_insurance` contract is the shape that would close it, and it is
+not added on one case's evidence — the pack candidate list (§7.5) is where it
+belongs if a second source wants it.
+
+This is the coverage question §7.3 and §7.15 measure, in one instance: a case
+that reconciles externally while routing around the pack it should validate.
+
+---
+
+### 7.55 A model cannot declare a subtotal or a statement
+
+*Belongs with the language and engine (section 5). Split from the closed 7.17.*
+
+Reporting is a language capability in its design — the category roots are the
+language's, a stream states its own `category`, and a pack-less model classifies
+its streams correctly. The DECLARATIONS still live only in pack TOML, so a model
+with no pack cannot declare a subtotal or a statement of its own.
+
+That needs a surface in the language and the syntax is undecided; `docs/16`
+records the question. It is the half this item's original title was about, and
+the larger of the two — the pack-side fold, the classification, the grain
+folding and the display sign all shipped.
+
+Related: §7.43, where the same absence shows up as results carrying no statement
+for a pack-less model, and §7.25, where a model cannot declare a metric either.
+The three are one surface question asked from three directions.
+
+---
+
+### 7.56 A term deferred to `inputs.` is never bounds-checked
+
+*Belongs with the language and engine (section 5). Split from the closed 7.24.*
+
+Two questions survived the correction to 7.24, and they are separable.
+
+**A term referencing `inputs.` escapes its pack's bounds.** `docs/01` §8.2.1
+accepts this deliberately — the value is not known at compile time — but it
+means a scenario may drive a term past a bound the pack states, at compile time
+and at run start alike. Either the bound is checked when the value arrives, or
+the pack's bound means less than it appears to.
+
+**Should `cfg.*` work in a term as well?** It is the run configuration's other
+half. A reader who reaches for it today gets a diagnostic saying the value is
+invalid rather than that the channel is wrong: `E9016` naming a bound is
+actively misleading when the term is `cfg.psa`. If the answer is no, the
+diagnostic should say so.
+
+Both are about a term's relationship to the run rather than about bounds as
+such, which is why they belong together.
+
+---
+
+### 7.57 A pack rule cannot accrue on act/act, because a divisor is not a fraction
+
+*Belongs with the packs (section 5). Split from the closed 6.1.*
+
+`year_frac` accepts `act/act` (ISDA), so a hand-written model can accrue on it.
+A pack rule cannot: `{{model.accrual_divisor}}` expands to `<ppy>` or
+`(360 / time.days_in_period)` — one number per period — and act/act needs a
+denominator that changes with the year the period falls in.
+
+The shape is the one the expansion table already implies. A divisor is the
+reciprocal of a year fraction:
+
+```
+30/360   rate / 12                  ==  rate * year_frac(s, e, "30/360")
+act/360  rate * days/360            ==  rate * year_frac(s, e, "act/360")
+act/365  rate * days/365            ==  rate * year_frac(s, e, "act/365")
+```
+
+So the placeholder could expand to a `year_frac` call over the period's bounds
+rather than to a number. act/act then falls out with no special case, and the
+pack placeholder becomes sugar over a capability a model already has natively —
+which is the property worth having whether or not act/act is the reason.
+
+Note that two of the three expansions are already run-time text, not compile-time
+constants: `(360 / time.days_in_period)` reads the environment. So the argument
+that the divisor must resolve at compile time holds only for the fixed case.
+
+**What it needs first.** `year_frac` takes two dates, and an expression can read
+`time.date` and `time.days_in_period`. Whether those reconstruct the period's
+start and end — and which end `time.date` denotes — is the fact to establish
+before scoping this.

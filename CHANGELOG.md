@@ -111,7 +111,8 @@ the two answer the same reference the same way. Reading an EARLIER waterfall is
 the documented composition and still compiles;
 `fixtures/valid/waterfall_nested_split` pins that. The message names the model
 that works: `paid.<step>` for this period's payment, and for a running total a
-balance the distribution moves, which awaits §7.37.
+balance the distribution moves — a field the step pays and the balance
+subtracts, which works today (`docs/26_lessons_learned.md`).
 
 The fixture now states the per-period cap it was computing all along. Its
 `ledger_hash` is unchanged and the other 148 goldens are byte-identical, so
@@ -147,11 +148,13 @@ the initial pool; and weighted average life runs 30E/360 from closing to the
 or A-2 in the first six months; three candidate explanations were tested and
 rejected rather than fitted.
 
-**Found by building it:** a waterfall cannot tell a balance what it paid.
-`docs/14` §3.1 puts completed stream series in a recurrence's environment;
-`compute_states` supplies none, so a class balance can only be maintained by
-restating the distribution in field-land. The case states its waterfall twice
-as a result. Recorded as backlog 7.37.
+**Found by building it:** the case states its distribution twice, once in the
+waterfall and once across seven balance recurrences, and the two can disagree —
+which is how a servicing fee came to be right in one and wrong in the other.
+The duplication is avoidable: state the amount once as a field, and let the step
+pay it while the balance subtracts it. Recorded in `docs/26_lessons_learned.md`,
+where the first reading — that a waterfall cannot tell a balance what it paid,
+and that the engine needed restructuring — is corrected.
 
 ### Added: a writing standard, and the documentation held to it — backlog 7.28–7.35
 
