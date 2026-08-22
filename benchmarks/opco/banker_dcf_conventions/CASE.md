@@ -12,7 +12,7 @@ terminal value is not.
 Banker's discussion materials filed as an exhibit to a merger document. It
 gives the unlevered free cash flow build-up line by line, the discount rate
 range, the terminal method and multiple, the discounting convention, the
-dilution assumption, and a 3×3 grid of implied enterprise values — more than
+dilution assumption, and a 3x3 grid of implied enterprise values — more than
 most fairness opinions, which disclose a value range and little else.
 
 **Not redistributable.** The filer retains copyright, so figures are asserted

@@ -287,7 +287,7 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 // MIT fn 11 — the reversion, as a CRE pack contract.
 //
 // This is the acceptance test for annual-calendar lowering, and it depends on
-// three behaviours at once:
+// three behaviors at once:
 //
 //   the CRE pack lowers on any calendar it declares, not monthly alone;
 //   a native stream is measured against the projection horizon, so the
