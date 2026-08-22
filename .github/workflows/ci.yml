@@ -8,9 +8,88 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
+
+env:
+  # The makefile lets a missing `jsonschema` skip the three schema gates so a
+  # local loop is not blocked by a Python dependency. In CI a skip is a failure:
+  # the whole point of the gate is that the published schemas are a contract.
+  CFDL_REQUIRE_SCHEMA_GATE: "1"
 
 jobs:
+  # Does this change touch anything the three-platform end-to-end can actually
+  # test? Prose cannot break a golden fixture on Windows. Every GATE still runs
+  # on every change (see the `gates` job) — this only decides whether the heavy
+  # matrix is informative or is just latency.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Classify changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # Anything not explicitly excluded counts as code. The default is to
+          # run everything; a path earns its way out of the matrix by being
+          # unable to affect a build, a test, a golden or a notebook.
+          #
+          # Excluded prose is NOT unchecked: site-voice, glossary-check,
+          # doc-examples, training-examples and rule-fragments all read these
+          # files and all run in `gates` below.
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!research/**'
+              - '!**/*.md'
+              - '!**/*.mdx'
+              - '!LICENSE'
+              - '!NOTICE'
+              - '!.github/**/*.md'
+
+  # EVERY gate, on every change, always. This job has no `if:`.
+  #
+  # It calls one make target rather than restating tool invocations, because
+  # the restated list is what drifted: seven gates ran only on someone's laptop,
+  # `check-run-schema` among them, and a 23% weighted-average-life error once
+  # reached main because `analytic-checks` lived in the makefile and not here.
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust (rust-toolchain.toml)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      # pyo3 (cfdl-py) resolves the interpreter from PATH, and runner-default
+      # Python can be newer than pyo3 supports.
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python gate tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: All gates
+        run: make ci-gates
+
+  # The end-to-end: compile on three platforms, run the tests, the goldens, the
+  # wasm target, the Python SDK and the notebooks. Skipped when nothing outside
+  # prose changed — that is the only thing this change makes conditional.
   build-test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +126,11 @@ jobs:
       - name: Tests
         run: cargo test --all --all-features
 
+      # Reference-implementation reconciliation. Engine behaviour, so it lives
+      # with the matrix rather than in `gates`: prose cannot move a cash flow.
+      - name: Benchmark suite
+        run: make bench
+
       - name: Golden suite
         shell: bash
         run: |
@@ -63,58 +147,25 @@ jobs:
           rustup target add wasm32-unknown-unknown
           cargo build -p cfdl-wasm --release --target wasm32-unknown-unknown
 
-      # Guards the examples a reader meets first: they must compile, run, and
-      # actually exercise the features their prose advertises.
-      - name: Documentation examples
-        run: |
-          cargo build -p cfdl-cli
-          python3 tools/check-doc-examples.py
-
-      # `make ci` ran five gates that this workflow did not, so every one of
-      # them only fired when someone remembered to run it locally. That is how
-      # a 23% error in weighted average life survived: the identity that
-      # catches it is in analytic-checks, which CI never executed.
-      - name: Benchmarks, identities, cadence parity and the published schemas
+      # The gates already ran once, on Linux, in `gates`. They run again here on
+      # macOS and Windows because several are Python reading repository text,
+      # and text I/O is where the platforms differ: Windows decodes as cp1252,
+      # so a gate crashes there and nowhere else the moment a file it reads
+      # grows a curly quote. PYTHONWARNDEFAULTENCODING (set by the makefile's
+      # PYGATE) turns that class of bug into a failure rather than a surprise.
+      - name: All gates (non-Linux platforms)
+        if: runner.os != 'Linux'
         shell: bash
         run: |
           python -m pip install --upgrade pip
           python -m pip install jsonschema
-          cargo build -p cfdl-cli
-
-          # PEP 597: make any text I/O that relies on the platform default
-          # encoding a hard error. Windows decodes as cp1252, so a `read_text()`
-          # with no encoding crashes there and nowhere else the moment the file
-          # it reads grows a curly quote — which is exactly how this step broke
-          # on windows-latest alone. Enforced on Linux so a regression surfaces
-          # in the fast job rather than three platforms later.
-          #
-          # Exported here rather than as a step `env:` so it covers our own
-          # gates and nothing else. The runner enables UTF-8 Mode, and pip
-          # calls locale.getpreferredencoding() during config load, which is
-          # itself an EncodingWarning under that mode — a step-level env fails
-          # on `pip install` before reaching a single gate.
-          if [ "$RUNNER_OS" = "Linux" ]; then
-            export PYTHONWARNDEFAULTENCODING=1 PYTHONWARNINGS=error::EncodingWarning
-          fi
-
-          python3 tools/benchmark-runner.py
-          python3 tools/analytic-checks.py
-          python3 tools/cadence-parity.py
-          CFDL_REQUIRE_SCHEMA_GATE=1 python3 tools/check-ir-schema.py
-          CFDL_REQUIRE_SCHEMA_GATE=1 python3 tools/check-results-schema.py
-          python3 tools/check-pack-validations.py
-
-      - name: Install Python test tooling
-        run: python -m pip install --upgrade pip
+          make ci-gates
 
       - name: Install Python package (with dev + viz extras)
-        run: python -m pip install -e "python/[dev,viz]"
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "python/[dev,viz]"
 
-      # `make verify-python`, not an inlined pytest. The makefile is the single
-      # definition of what the gates are; a workflow that restates them is a
-      # second list that drifts, which is how a 23% WAL error once survived (see
-      # below) and how four gates later fired only after a push.
-      #
       # py-check is skipped: it compares the committed native extension against
       # the engine sources, and CI has just built the extension from those
       # sources, so it can only ever pass here. It is a local-drift gate.

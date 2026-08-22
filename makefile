@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -89,7 +89,18 @@ bench:
 # there. A release build of the whole engine used to be required just to satisfy
 # a freshness stamp on a 2 MB artifact only the website consumes, which was the
 # single largest cost in this loop.
-ci: fmt-check lint test gold bench analytic invariants cadence-parity ir-schema results-schema run-schema pack-validations site-voice glossary-check rule-fragments doc-examples training-examples shipped-examples benchmark-cases
+# WHAT CI RUNS BEYOND THE PLATFORM MATRIX. Named so `.github/workflows/ci.yml`
+# calls one target instead of restating tool invocations — which is how seven
+# gates came to run locally and never in CI, `check-run-schema` among them, and
+# how a 23% weighted-average-life error once survived because `analytic-checks`
+# was in this file and not in the workflow.
+ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
+          pack-validations site-voice glossary-check rule-fragments doc-examples \
+          training-examples shipped-examples benchmark-cases
+	@echo
+	@echo "make ci-gates: OK — every gate that is not the platform matrix."
+
+ci: fmt-check lint test gold bench ci-gates
 	@echo
 	@echo "make ci: OK — but this is the FAST SUBSET, not the whole suite."
 	@echo "  Not run here: py-test, notebooks-check, and the site gates"
