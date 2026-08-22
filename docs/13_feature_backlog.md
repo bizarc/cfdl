@@ -3044,43 +3044,50 @@ lacks, not whether a typo should be caught.
 
 ---
 
-### 7.39 A clean-up call cannot end a deal
+### 7.39 A clean-up call cannot end a deal — NOT A GAP, closed August 2026
 
-Every amortizing securitization has a clean-up call: once the pool falls to
-some fraction of its original size — 10% in `benchmarks/credit/americredit_2017_1`
-— the servicer buys the remaining receivables, the notes are redeemed in full,
-and the trust is over. The redemption is expressible; the *ending* is not.
+A clean-up call is a termination right on a threshold: once a deal has paid down
+far enough that administering it costs more than the remainder is worth, the
+servicer may buy the assets that are left, redeem the notes in full and wind the
+deal up. An asset sale, a prepayment in full, a lease termination and an
+acceleration are the same shape. The right belongs to the agreement; exercising
+it is a decision.
 
-A `contract` runs for its declared term. Nothing can stop it early, so the pack
-keeps amortizing the twelve pools for the eleven periods after the call, the
-waterfall keeps collecting the cash they produce, and the certificateholder
-takes it. The case handles it by asserting nothing after the call and saying so,
-which is honest and is not a model of the deal: the receivables were sold.
+The language already splits it that way, and every piece exists.
 
-It reaches further than a clean-up call. An asset sale, a prepayment in full, a
-maturity acceleration, a lease termination and a default are the same shape — a
-declared term ended by a condition rather than by a date — and the CRE and
-opco packs will want it as much as this one does.
+The RIGHT and its threshold are an `option` (§14): `exercise when` carries the
+condition, `payoff` carries the buy-out price. The DECISION is an event writing
+entity state. The CASH stops because a stream's amount reads that state — the
+expression environment binds `entity.*` to the stream's owning entity, so no
+name is needed and a pack's `amount_expr` can do it as readily as a model can.
 
-Shape: a contract-level termination condition, evaluated per period, that stops
-the contract's series and optionally emits a terminal amount.
+Probed with no pack active, an event setting `status = "called"` at t=2:
 
-```cfdl
-contract credit.pool_level_pay.p01 on entity asset.p01 {
-  term 2017-01..2022-10
-  ends when domain.credit.balance_outstanding <= 0.10 * inputs.cutoff_balance
-  terminal_amount = domain.credit.balance_outstanding
-}
+```
+by guard   active when entity.status != "called"        100  100  0  0  0
+by amount  100.0 * if(entity.status == "called", 0, 1)  100  100  0  0  0
 ```
 
-The evaluation order is the question worth thinking about, not the syntax: the
-condition reads a quantity the contract itself produces, so it wants the same
-backward-only discipline `docs/14` gives a recurrence.
+The item's proposed `ends when` clause on a contract would put the decision
+inside the record of what was agreed, which is the error §7.40 made. A contract
+records the agreement and its `term` states when the obligations run.
 
-Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026,
-when the case's cash assertions had to stop at the call date because the model
-had no way to.
+**What is true is narrower: no pack uses this.** No lowering rule in any of the
+four packs reads entity state in an amount expression, so a pack's cash cannot
+today respond to a decision the model makes. That is pack authoring, not a
+missing capability.
 
+**One residue, recorded in §7.40.** A pack can zero its cash but cannot
+deactivate it, because a lowering rule has no `active_when` key. The course
+draws the distinction: a guard states that a claim conditionally EXISTS, where
+an `if` states that it is sometimes zero. A zeroed stream still occurs and still
+publishes a series of zeros.
+
+Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026.
+Closed August 2026 after probing each piece. The case asserts nothing after the
+call date, which remains honest reporting of a model that does not yet express
+the wind-up — expressible now, and worth revisiting when the credit pack reads
+state.
 ---
 
 ### 7.40 Capabilities reachable from one layer and not another — NOT A GAP, closed August 2026
@@ -3444,3 +3451,105 @@ The fix here is to require the rate, not to relocate it.
 
 Provenance: found August 2026 while correcting §7.42, when a probe run without a
 config produced an NPV equal to its own total.
+
+---
+
+### 7.47 Fourteen reserved words are consumed by no production
+
+*Belongs with language and packs (section 5). Investigate.*
+
+Fourteen of the 95 words the lexer reserves are read by no parse rule. They
+appear in `crates/cfdl-parser/src/lib.rs` only inside `keyword_text`, which
+renders a keyword back to text for an error message:
+
+```
+Mon Tue Wed Thu Fri Sat Sun          weekday names
+short_front short_back
+long_front long_back                 stub policies
+direction owner tags
+```
+
+Eleven belong to features `docs/10` records as REJECTED — `schedule ... on
+<weekday list>` and `schedule ... stub <policy>` are both struck there. The
+other three are vestigial: a stream states its direction with the bare words
+`inflow` and `outflow`, `owner` appears in no rule, and `tags` is one of the
+blocks `docs/01` §8.1 describes as tolerated by the parser and absent from IR.
+
+They are not free. A reserved word is unavailable everywhere a name is expected
+(§7.19), so each one costs a word a model or a pack might want. `owner` and
+`direction` are the ones to regret: an asset has an owner, a flow has a
+direction, and both are natural field names.
+
+To investigate: whether each is genuinely dead, whether removing it changes any
+diagnostic text, and whether the weekday names should go with the rejected
+feature or be kept against its return.
+
+Found August 2026, auditing every keyword against the production that consumes
+it.
+
+---
+
+### 7.48 The lexer reserves 38 words the specification does not list
+
+*Belongs with language and packs (section 5). Investigate.*
+
+`docs/01` §18 documents 57 reserved words. The lexer reserves 95. Nothing goes
+the other way — everything §18 lists is genuinely reserved — so the drift is
+one-directional: the implementation grew and the list did not.
+
+```
+LogNormal Normal Triangular Uniform clip
+active in state parties tags
+annual daily monthly quarterly year quarter month months day days due mid net
+none following preceding modified_following modified_preceding
+short_front short_back long_front long_back
+phase_start phase_end phase_enter
+curve true false
+```
+
+Several are plainly load-bearing and simply went undocumented — `curve` opens a
+statement, `active`, `in` and `state` appear in stream and entity blocks,
+`true` and `false` are literals, and the calendar and interval words drive
+`time` and `schedule`. For those the fix is to publish them.
+
+The rest are the reason this is worth investigating rather than just editing.
+`year`, `month`, `net`, `state`, `active`, `in`, `none`, `mid`, `due` and
+`clip` are ordinary words a financial model wants for a field, taken silently
+for constructs where a bare word in a naming position could not be confused
+with them. Eleven of the 38 overlap §7.47 and are reserved for nothing at all.
+
+To investigate: which of the 38 must be reserved, which are local enough to be
+contextual, and which should simply be released — then reconcile §18 with
+whatever survives, so the published list is the enforced one.
+
+Found August 2026, diffing §18 against the lexer's table.
+
+---
+
+### 7.49 The EBNF does not describe the entity block the parser accepts
+
+*Belongs with language and packs (section 5). Investigate.*
+
+The canonical grammar says an entity block contains fields and nothing else:
+
+```ebnf
+entity_block    = "{" { kv_stmt } "}" ;
+kv_stmt         = IDENT literal_or_expr ;
+```
+
+The parser also accepts `part of <entity_ref>` and `state <name>`, and the
+grammar file's own comment beside `entity_field` describes the second —
+"`state <name>` inside an entity block is unrelated: it names the lifecycle
+state the entity opens in" — so the omission is in the productions rather than
+in the intent. `docs/01` §7.1 shows both clauses in its examples.
+
+This is the mirror of §7.19. There the implementation is NARROWER than the
+grammar; here it is WIDER. Both are conformance gaps, and both were found by
+reading the EBNF rather than the prose.
+
+To investigate: what else the parser accepts that the EBNF does not state. The
+grammar is published for tooling — railroad diagrams and parser generators —
+so anything it omits is missing from every consumer of it, and a generated
+parser would reject models the reference implementation compiles.
+
+Found August 2026, reading the canonical grammar while walking §7.19.
