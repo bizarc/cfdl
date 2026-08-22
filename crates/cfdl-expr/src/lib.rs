@@ -64,6 +64,15 @@ pub struct ExprEnv {
     /// stream's full series into each one made this the hot spot of a run.
     /// `Arc` makes handing it over a refcount bump. Nothing mutates it.
     pub series: Arc<BTreeMap<String, Vec<f64>>>,
+    /// Which arithmetic the expressions in this run evaluate under.
+    ///
+    /// Decimal is the default and is what every published number uses. A run
+    /// may select `ExcelCompat` to reproduce a spreadsheet's float artifacts
+    /// when reconciling against one; it belongs to the RUN rather than the
+    /// model, because it is a property of the comparison being made and not of
+    /// the deal. Carried on the environment so selecting it does not thread a
+    /// parameter through every evaluation site.
+    pub mode: Mode,
     /// Named date-indexed value curves (`curve` statements) available to
     /// `curve_value(name, date)`. Populated by the engine from IR; empty
     /// elsewhere.
@@ -115,6 +124,7 @@ pub struct CurveDef {
 impl ExprEnv {
     pub fn empty() -> Self {
         Self {
+            mode: Mode::default(),
             model: BTreeMap::new(),
             time: BTreeMap::new(),
             entity: BTreeMap::new(),
@@ -291,7 +301,7 @@ pub fn selector_matches_any(patterns: &[String], name: &str) -> bool {
 }
 
 pub fn eval(compiled: &CompiledExpr, env: &ExprEnv) -> Result<Value, ExprError> {
-    eval_with_mode(compiled, env, Mode::Decimal)
+    eval_with_mode(compiled, env, env.mode)
 }
 
 pub fn eval_with_mode(

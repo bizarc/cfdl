@@ -511,63 +511,68 @@ Not discovered by this work — it was a known absence — but recorded here bec
 
 ## 6. Cross-pack
 
-### 6.1 Day count beyond the four supported bases
+### 6.1 Day count beyond the four supported bases — SHIPPED
 
-`{{model.accrual_divisor}}` handles `30/360`, `30e/360`, `act/360` and
-`act/365`. `act/act` is not supported: it needs the days in the *year* the
-period falls in, which the expression environment does not expose
-(`time.days_in_period` is the period, not the year).
+`act/act` (ISDA) is implemented in `year_frac`, with aliases `actual/actual`
+and `act/act isda`. The span is split at calendar-year boundaries and each part
+measured against its own year's length, returned over the common denominator
+365*366 so the result stays one exact integer ratio like every other basis.
 
-Low urgency — the four cover most instruments — but `act/act` is the government
-bond convention and will be wanted if a sovereign or municipal pack appears.
+```
+2024-07-01 -> 2025-07-01   act/act  0.998622651   = 184/366 + 181/365
+                           act/365  1.000000000   = 365/365
+2024-01-01 -> 2025-01-01   act/act  1.000000000   a leap year is still one year
+                           act/365  1.002739726   = 366/365
+```
 
-### 6.2 excel_compat cannot be selected for a model run
+The original item said the blocker was that the expression environment does not
+expose the days in the year a period falls in. That is true of the pack's
+`{{model.accrual_divisor}}`, which resolves to a single number per period and
+therefore cannot express a denominator that changes with the year. It was not
+true of `year_frac`, which receives both endpoints and derives everything it
+needs from them — so the two paths had different difficulty and the item
+treated them as one.
 
-`cfdl_expr::eval_with_mode` takes a `Mode`, and `Mode::ExcelCompat` evaluates
-in IEEE-754 float64 to reproduce Excel's representation artifacts. But the
-engine always calls the plain `eval`, which hardcodes `Mode::Decimal`, and
-there is no CLI flag or run-config key. Nothing in the repo calls
-`eval_with_mode` at all, so the capability is real at the library boundary and
-unreachable above it.
+**What remains is the divisor.** `{{model.accrual_divisor}}` still expands to
+`<ppy>` or `(360 / time.days_in_period)`, so a pack rule cannot accrue on
+act/act. The shape worth considering is the one the table already implies: a
+divisor is the reciprocal of a year fraction, so the placeholder could expand to
+a `year_frac` call over the period's bounds rather than to a number, which makes
+act/act fall out and turns the placeholder into sugar for a native capability.
+That needs the period's start and end readable in an expression; today there is
+`time.date` and `time.days_in_period`.
 
-Whether it would change anything is now measured rather than guessed:
-`excel_compat_stability` in `crates/cfdl-calc/src/lib.rs` pins the credit
-pack's arithmetic below 1e-12 relative across both modes. So this is not
-urgent — it matters for a model that accumulates long sums or compares for
-equality, which the packs do not.
+### 6.2 excel_compat cannot be selected for a model run — SHIPPED
 
-Worth having when the first Excel-parity benchmark lands: the catalogue's
-A.CRE and Finamodel workbooks are Excel, and "our decimal answer differs from
-the spreadsheet in the fifteenth digit" is a question best answered by running
-both ways rather than by argument.
+A run selects the arithmetic:
 
-**Now measured against a float64 reference.** Reconciling
-`benchmarks/energy/utility_pv_singleowner` left a residual, and decomposing it
-says what the mode is worth. Against the same reference, on the streams that are
-a plain geometric series or a single `pmt`:
+```json
+{ "deterministic": { "arithmetic": "excel_compat" } }
+```
 
-| stream | decimal (shipped) | float64 |
-|---|---|---|
-| `energy.om.expense` | 4.68e-7 | 4.66e-10 (1 ulp) |
-| `energy.debt.service` | 2.54e-7 | 9.31e-10 (1 ulp) |
-| `energy.ppa.revenue` | 9.15e-7 | 5.57e-7 |
+`"decimal"` is the default and is what every published number uses.
+`"excel_compat"` evaluates in float64 to reproduce a spreadsheet's
+representation artifacts, for reconciling a model against a workbook rather than
+for producing an answer. An unrecognized value is rejected rather than ignored.
 
-So float64 lands on the reference to the last representable bit where the
-reference's own arithmetic is short, and gains almost nothing on PPA revenue,
-where the residual is accumulated error inside the reference's longer chain
-rather than decimal-versus-float64 at all.
+```
+(0.1 + 0.2) * 1e15    decimal       300000000000000.0
+                      excel_compat  300000000000000.06
+```
 
-Two things follow. The mode would make a parity claim exact rather than merely
-tight — worth having. And **closer is not more correct**: the decimal answer is
-the exact one, and float64 agrees better precisely because it reproduces the
-reference's rounding as well as its arithmetic. At 5e-7 on 2e6 that is 2e-13
-relative, below any tolerance a case would declare. The caveat: this was
-measured with an independent float64 reimplementation, so it indicates what the
-mode would do rather than proving it — `pow` can differ by under an ulp between
-libm implementations.
+It belongs to the run because it describes the comparison being made, not the
+deal, and it is run-wide: scenarios and Monte Carlo trials inherit it, since a
+scenario varies the deal's drivers and the rate it is valued at rather than the
+arithmetic every scenario shares.
 
-Found while validating the credit pack against an external reference and asking
-whether Excel mode would move the numbers. It cannot be turned on to find out.
+Carried on `ExprEnv` rather than threaded through each evaluation site, so
+selecting it changed no signatures. 152 goldens are byte-identical, which is the
+check that the default moved nothing.
+
+`docs/schemas/run.schema.json` gained the key — and `valuation_grain` with it,
+which the engine has always accepted and the schema had never listed. The schema
+sets `additionalProperties: false`, so a run stating its grain would have failed
+validation had anything validated against it; nothing does.
 
 ### 6.3 An acquisition or disposal in a period other than the term's
 

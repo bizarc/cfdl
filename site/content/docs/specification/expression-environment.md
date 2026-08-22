@@ -315,8 +315,14 @@ Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `d + n` / `d - n` shift by days.
 
 Day-count bases for `year_frac`: `"30/360"` (aliases `"30/360 us"`, `"bond"`),
-`"30e/360"` (alias `"eurobond"`), `"act/360"`, `"act/365"`, per the standard market conventions
+`"30e/360"` (alias `"eurobond"`), `"act/360"`, `"act/365"`, `"act/act"` (ISDA;
+aliases `"actual/actual"`, `"act/act isda"`), per the standard market conventions
 definitions.
+
+`act/act` splits the span at calendar-year boundaries and measures each part
+against its own year's length, so a period crossing a leap year is not charged
+365 days for a 366-day year: 2024-07-01 to 2025-07-01 is 184/366 + 181/365,
+not 365/365.
 
 Business days: `is_business_day(d, calendar)`, `roll(d, convention, calendar)`,
 `add_business_days(d, n, calendar)`.

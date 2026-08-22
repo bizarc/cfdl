@@ -29,6 +29,15 @@ pub struct RunConfig {
     /// records that as a 1.3% gap it attributed to the rebuild rather than to
     /// the coupling.
     pub valuation_grain: Option<String>,
+    /// Which arithmetic expressions evaluate under.
+    ///
+    /// Decimal is the default and is what every published number uses.
+    /// `"excel_compat"` reproduces a spreadsheet's float64 artifacts, for
+    /// reconciling against a workbook rather than for producing an answer. It
+    /// is a property of the RUN because it describes the comparison being made,
+    /// not the deal: the same model reconciles against a spreadsheet under one
+    /// mode and states its own numbers under the other.
+    pub arithmetic: cfdl_expr::Mode,
 }
 
 #[derive(Debug, Clone)]
@@ -87,6 +96,8 @@ pub(crate) struct DeterministicConfigFile {
     /// buckets at the annual rate — the convention a hand-built annual
     /// spreadsheet uses on monthly data.
     pub(crate) valuation_grain: Option<String>,
+    #[serde(default)]
+    pub(crate) arithmetic: Option<String>,
     #[serde(default)]
     pub(crate) parameters: BTreeMap<String, f64>,
 }
@@ -187,6 +198,16 @@ pub(crate) fn run_config_from_value(
                 return Err(EngineError::InvalidRunConfig(format!(
                     "valuation_grain '{other}' is not a grain this engine knows; \
                      use \"annual\", or omit it for the model's own grain"
+                )))
+            }
+        },
+        arithmetic: match config_file.deterministic.arithmetic.as_deref() {
+            None | Some("decimal") => cfdl_expr::Mode::Decimal,
+            Some("excel_compat") => cfdl_expr::Mode::ExcelCompat,
+            Some(other) => {
+                return Err(EngineError::InvalidRunConfig(format!(
+                    "arithmetic '{other}' is not an arithmetic this engine knows; \
+                     use \"excel_compat\", or omit it for decimal"
                 )))
             }
         },

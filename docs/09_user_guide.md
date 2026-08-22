@@ -301,6 +301,13 @@ cargo build -p cfdl-cli
 }
 ```
 
+`arithmetic` is optional. Omitted, expressions evaluate in decimal, which is
+what every published number uses. `"excel_compat"` evaluates in float64 to
+reproduce a spreadsheet's representation artifacts, for reconciling a model
+against a workbook rather than for producing an answer. It belongs to the run
+because it describes the comparison being made, not the deal. Any other value
+is an error.
+
 `valuation_grain` is optional. Omitted, each cash flow discounts at the annual
 rate raised to its fractional year — for an annual model that IS annual
 discounting. `"annual"` first groups a finer model's cash by calendar year and

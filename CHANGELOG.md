@@ -8,6 +8,53 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a run selects its arithmetic, and `act/act` joins the day counts
+
+Two items from `docs/13` §6, both of which had a capability sitting one step out
+of reach.
+
+**A run may state `"arithmetic": "excel_compat"`.** `Mode::ExcelCompat` existed
+in `cfdl-calc` and was exercised only by that crate's own tests: the engine
+always called plain `eval`, and there was no run-config key and no flag.
+
+```json
+{ "deterministic": { "arithmetic": "excel_compat" } }
+```
+
+```
+(0.1 + 0.2) * 1e15    decimal       300000000000000.0
+                      excel_compat  300000000000000.06
+```
+
+Decimal stays the default and is what every published number uses. The mode is
+carried on `ExprEnv` rather than threaded through each evaluation site, so no
+signature changed; 152 goldens are byte-identical, which is the check that the
+default moved nothing. It is run-wide — scenarios and Monte Carlo trials inherit
+it, because a scenario varies the deal's drivers and the rate it is valued at,
+not the arithmetic every scenario shares. An unrecognized value is refused.
+
+**`year_frac` accepts `act/act` (ISDA).** The span is split at calendar-year
+boundaries and each part measured against its own year's length, returned over
+the common denominator 365*366 so the result stays one exact integer ratio like
+every other basis:
+
+```
+2024-07-01 -> 2025-07-01   act/act  0.998622651   = 184/366 + 181/365
+                           act/365  1.000000000   = 365/365
+2024-01-01 -> 2025-01-01   act/act  1.000000000   a leap year is still one year
+```
+
+The item had recorded the blocker as the expression environment not exposing the
+days in a period's year. That holds for the pack's `{{model.accrual_divisor}}`,
+which resolves to one number per period and so cannot carry a denominator that
+changes with the year — but not for `year_frac`, which receives both endpoints.
+Two paths of different difficulty, recorded as one. The divisor remains open.
+
+`docs/schemas/run.schema.json` gained `arithmetic`, and `valuation_grain` with
+it: the engine has always accepted that key and the schema had never listed it.
+The schema sets `additionalProperties: false`, so a run stating its grain would
+have failed validation had anything validated against the schema. Nothing does.
+
 ### Fixed: `time.phase` answers with the phase name
 
 The specification requires the expression environment to support `time.phase`

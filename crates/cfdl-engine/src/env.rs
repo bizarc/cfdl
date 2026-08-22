@@ -142,6 +142,7 @@ pub(crate) fn build_base_env(
     base_inputs: &BTreeMap<String, f64>,
 ) -> ExprEnv {
     let mut env = ExprEnv::empty();
+    env.mode = config.arithmetic;
     env.model.insert(
         "id".to_string(),
         ExprValue::String(ir.model.name.clone().unwrap_or_else(|| "model".to_string())),
@@ -407,6 +408,7 @@ pub(crate) fn build_expr_env(
     base_inputs: &BTreeMap<String, f64>,
 ) -> ExprEnv {
     let mut env = ExprEnv::empty();
+    env.mode = config.arithmetic;
     env.model.insert(
         "id".to_string(),
         ExprValue::String(ir.model.name.clone().unwrap_or_else(|| "model".to_string())),
