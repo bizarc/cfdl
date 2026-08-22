@@ -10,6 +10,7 @@ entity asset harbor : CRE.Asset.RealProperty
 
 // Land closes at the start of month one.
 stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  category investing.capital.construction
   schedule every month due from 2026-01 to 2026-01
   amount = 5500000
 }
@@ -92,22 +93,26 @@ entity asset cloan : Asset.Financial {
 }
 
 stream cloan.advances on entity asset.cloan inflow currency USD {
+  category financing.debt_proceeds
   schedule every month from 2026-02 to 2027-06
   amount = 455000
 }
 
 stream cloan.interest on entity asset.cloan outflow currency USD {
+  category financing.debt_service
   schedule every month from 2026-03 to 2028-06
   amount = prev.asset.cloan.balance * 0.075 / 12
 }
 
 stream cloan.payoff on entity asset.cloan outflow currency USD {
+  category financing.debt_proceeds
   schedule every month from 2028-07 to 2028-07
   amount = prev.asset.cloan.balance
 }
 
 // The permanent loan closes as operations begin: interest-only to maturity.
 stream harbor.perm_proceeds on entity asset.harbor inflow currency USD {
+  category financing.debt_proceeds
   schedule every month due from 2028-07 to 2028-07
   amount = 9500000
 }
