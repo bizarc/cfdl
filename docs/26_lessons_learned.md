@@ -87,6 +87,44 @@ statement may be added one day; it is a different statement.
 
 ---
 
+### A covenant does not need a metrics reduction
+
+**Claimed:** `domain.cre.dscr` is a per-period series but nothing reduces it, so
+"never below 1.20" cannot be stated and the covenant cannot be asserted. Fixing
+it needs a `min` reduction at the metrics layer.
+
+**Actually:** the reduction is genuinely absent — `subtotal_total` sums and there
+is no `min` — but the conclusion does not follow, and the reduction is not what
+makes a covenant assertable.
+
+A benchmark asserts subtotal COLUMNS, not just scalars.
+`benchmarks/cre/office_two_tenant/expected.csv` carries `domain.cre.dscr` as a
+per-period column, checked every period against a tolerance. Every year is
+already tested, which is strictly stronger than testing the worst one.
+
+The covenant's EFFECT is an ordering, not a construct. A cash trap is the
+lender's step placed above the equity step; if the step above takes the cash,
+there is nothing left to distribute. Conditional steps are ordinary — five ship
+in `fixtures/valid/waterfall_abs_22_step`, e.g.
+`pay class_b_final to asset.class_b = if(time.t >= 5, …, 0.0)`.
+
+Note that `when` as a step modifier does not exist and is not missing.
+`docs/17` §3 proposed six payment forms plus `when`; §13 records what was built
+— ONE form, an arbitrary expression per step — because `if`, `min`, `max` and
+`clamp` already cover all seven. The canonical grammar is
+`waterfall_step = "pay" IDENT "to" entity_ref "=" expr ;`.
+
+What was left over is a minimum-coverage scalar for a credit memo. That is an
+underwriting summary statistic, and this language is not the loan-approval
+surface: read it off the published series with the Python SDK.
+
+**Do not add language surface for a structure with no terms.** A sweep that
+amortises the loan — a turbo, as opposed to a cash trap, which leaves the
+balance alone — is a contract with conditions and rules, and cash applied to
+financing resolves at a period boundary: after that period's results, or at the
+next period's open from prior activity. Until those terms are written down, the
+requirement is phantom and the language should not move to meet it.
+
 ## How to achieve a behavior
 
 ### A regime that turns on and off repeatedly

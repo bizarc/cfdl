@@ -1703,25 +1703,6 @@ may be legitimate in a run driving several models.
 shapes are recognized and anything else is ignored"* against the schema's
 *"Unknown properties are rejected."* Whichever is intended, they should agree.
 
-### 7.52 A per-period coverage ratio cannot be reduced over its own series
-
-*Belongs with the language and engine (section 5). Split from the closed 1.4.*
-
-`domain.cre.dscr` is a per-period series now, which is what a debt service
-coverage ratio is: a lender tests coverage every year, and a covenant breaches
-in a single year — a lifetime ratio of 1.4 can contain a year at 0.9 and report
-nothing.
-
-What is not built is the REDUCTION over that series. "Never below 1.20" is the
-covenant as written, and stating it needs `min` or `mean` over a subtotal,
-which is a metrics-layer addition. The series is what made the test expressible;
-the reduction is what makes it assertable.
-
-No external case needs it yet, which is why it was deliberately left when the
-per-period half shipped.
-
----
-
 ### 7.53 Should `Instance` be the default match mode for a pack validation?
 
 *Belongs with the packs (section 5). Split from the closed 7.7.*
