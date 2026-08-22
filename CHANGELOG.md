@@ -8,6 +8,39 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: the run configuration schema is a gate
+
+`docs/schemas/run.schema.json` describes what a `run.json` may contain, and
+nothing read it. Not the engine, which parses run configs with serde and applies
+its own rules; not the CLI; not a test.
+
+It drifted, in the direction silence always allows. `valuation_grain` had been
+accepted by the engine and documented in the user guide for as long as it
+existed, and the schema never listed it — and because `DeterministicCase` sets
+`additionalProperties: false`, a run stating its own grain would have been
+rejected by the schema it is supposed to conform to. Nobody noticed, because
+nothing checked.
+
+`tools/check-run-schema.py` validates every run config in `benchmarks/`,
+`fixtures/`, `training/` and `examples/` — 123 of them — and `make ci` runs it.
+It follows `check-ir-schema.py`, including the rule that a gate which can pass
+without running is not a gate: `CFDL_REQUIRE_SCHEMA_GATE=1` turns a missing
+`jsonschema` into a failure rather than a skip.
+
+It catches what the schema's own description says the design prevents — *"a
+misspelled key would otherwise produce a clean run with wrong numbers"*:
+
+```
+deterministic: Additional properties are not allowed ('anual_discount_rate' was unexpected)
+deterministic/arithmetic: 'float' is not one of ['decimal', 'excel_compat']
+```
+
+What it does not yet catch is an override key that resolves to nothing. Two of
+the four key shapes could be checked — `inputs.<name>` names an assumption and
+`stream.<name>:amount` names a stream, both declared — and two could not, since
+`cfg.<path>` and `obs.<path>` name nothing the model declares. Recorded as the
+open half of `docs/13` §7.51.
+
 ### Added: a run selects its arithmetic, and `act/act` joins the day counts
 
 Two items from `docs/13` §6, both of which had a capability sitting one step out
