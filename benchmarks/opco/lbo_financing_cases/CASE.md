@@ -92,6 +92,6 @@ The source stopped iterating while its own equation still had a residual of
 3.7e-5, so that is what its convergence supports and the column is asserted to
 1e-4. The closed form is the more accurate of the two.
 
-One thing the case does **not** cover: the reference publishes a full 5×5 grid
+One thing the case does **not** cover: the reference publishes a full 5x5 grid
 of entry and exit multiples for each structure — 150 figures. This asserts the
 8.0x / 8.0x corner of each; the rest needs one scenario per grid point.

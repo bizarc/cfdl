@@ -28,7 +28,7 @@ flow turns on the convention.
 Banker's discussion materials filed as an exhibit to a going-private
 transaction. It discloses the cash flow build-up line by line, the
 stock-compensation line, the post-compensation series, the discount rate range,
-the terminal method, the discounting convention, the valuation date, and a 3×4
+the terminal method, the discounting convention, the valuation date, and a 3x4
 grid of implied enterprise values.
 
 **Not redistributable.** The filer retains copyright, so figures are asserted
