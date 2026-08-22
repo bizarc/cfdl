@@ -124,6 +124,10 @@ pub enum DayCount {
     Thirty360E,
     Act360,
     Act365Fixed,
+    /// ACT/ACT (ISDA). The period is split at calendar-year boundaries and each
+    /// part measured against its own year's length, so a span crossing a leap
+    /// year is not charged 365 days for a 366-day year.
+    ActActIsda,
 }
 
 impl DayCount {
@@ -133,6 +137,7 @@ impl DayCount {
             "30e/360" | "eurobond" => Some(Self::Thirty360E),
             "act/360" | "actual/360" => Some(Self::Act360),
             "act/365" | "act/365f" | "actual/365" => Some(Self::Act365Fixed),
+            "act/act" | "actual/actual" | "act/act isda" => Some(Self::ActActIsda),
             _ => None,
         }
     }
@@ -166,6 +171,72 @@ impl DayCount {
             }
             DayCount::Act360 => (start.days_between(end), 360),
             DayCount::Act365Fixed => (start.days_between(end), 365),
+            // ISDA: sum each calendar year's days over that year's own length.
+            // Returned over the common denominator 365*366 so the result stays
+            // one exact integer ratio, as every other basis here does:
+            //   leap/366 + ordinary/365 == (leap*365 + ordinary*366) / 133590
+            DayCount::ActActIsda => {
+                let (mut leap_days, mut ordinary_days) = (0_i64, 0_i64);
+                for year in start.year..=end.year {
+                    let year_open = CalcDate::new(year, 1, 1).expect("January 1 is a date");
+                    let next_open = CalcDate::new(year + 1, 1, 1).expect("January 1 is a date");
+                    let from = start.to_epoch_days().max(year_open.to_epoch_days());
+                    let to = end.to_epoch_days().min(next_open.to_epoch_days());
+                    let days = to - from;
+                    if days <= 0 {
+                        continue;
+                    }
+                    if is_leap(year) {
+                        leap_days += days;
+                    } else {
+                        ordinary_days += days;
+                    }
+                }
+                (leap_days * 365 + ordinary_days * 366, 365 * 366)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod act_act_tests {
+    use super::*;
+
+    fn frac(y1: i32, m1: u32, d1: u32, y2: i32, m2: u32, d2: u32, basis: &str) -> f64 {
+        let (n, d) = DayCount::parse(basis).expect("basis parses").year_frac(
+            &CalcDate::new(y1, m1, d1).unwrap(),
+            &CalcDate::new(y2, m2, d2).unwrap(),
+        );
+        n as f64 / d as f64
+    }
+
+    /// The case the convention exists for: a span crossing a leap boundary is
+    /// measured against each year's own length, not one nominal 365.
+    #[test]
+    fn a_span_crossing_a_leap_year_uses_both_year_lengths() {
+        let expected = 184.0 / 366.0 + 181.0 / 365.0;
+        assert!((frac(2024, 7, 1, 2025, 7, 1, "act/act") - expected).abs() < 1e-12);
+        // act/365 charges the same span a single fixed denominator.
+        assert!((frac(2024, 7, 1, 2025, 7, 1, "act/365") - 365.0 / 365.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_whole_year_is_one_whichever_length_it_has() {
+        assert!((frac(2024, 1, 1, 2025, 1, 1, "act/act") - 1.0).abs() < 1e-12); // leap
+        assert!((frac(2026, 1, 1, 2027, 1, 1, "act/act") - 1.0).abs() < 1e-12); // ordinary
+                                                                                // Against a fixed 365 the leap year overstates by a day.
+        assert!((frac(2024, 1, 1, 2025, 1, 1, "act/365") - 366.0 / 365.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_part_year_inside_a_leap_year_uses_366() {
+        assert!((frac(2024, 1, 1, 2024, 7, 1, "act/act") - 182.0 / 366.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn aliases_parse() {
+        for name in ["act/act", "actual/actual", "act/act isda", "ACT/ACT"] {
+            assert!(DayCount::parse(name).is_some(), "{name}");
         }
     }
 }

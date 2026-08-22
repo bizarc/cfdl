@@ -289,7 +289,7 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
             let convention = match &basis.0 {
                 Value::Text(s) => DayCount::parse(s).ok_or_else(|| {
                     CalcError::new(
-                        format!("unknown day-count basis `{s}` (use \"30/360\", \"act/360\", \"act/365\")"),
+                        format!("unknown day-count basis `{s}` (use \"30/360\", \"30e/360\", \"act/360\", \"act/365\" or \"act/act\")"),
                         Some(basis.1),
                     )
                 })?,

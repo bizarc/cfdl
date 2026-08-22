@@ -23,6 +23,14 @@
           "description": "Annual rate, converted to the model's period frequency.",
           "type": "number"
         },
+        "valuation_grain": {
+          "description": "The grain to value at. Omitted, each flow discounts at its own fractional year on the model grid; \"annual\" sums cash into calendar years and discounts each once, the convention published sources use.",
+          "enum": ["annual", "period"]
+        },
+        "arithmetic": {
+          "description": "Which arithmetic expressions evaluate under. Omitted, decimal — what every published number uses. \"excel_compat\" reproduces a spreadsheet's float64 artifacts, for reconciling against a workbook rather than for producing an answer; it describes the comparison being made, not the deal.",
+          "enum": ["decimal", "excel_compat"]
+        },
         "as_of": { "$ref": "#/$defs/Date" },
         "parameters": { "$ref": "#/$defs/Parameters" }
       }

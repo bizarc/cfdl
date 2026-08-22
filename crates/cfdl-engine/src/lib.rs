@@ -86,6 +86,7 @@ impl From<serde_json::Error> for EngineError {
 impl Default for RunConfig {
     fn default() -> Self {
         Self {
+            arithmetic: cfdl_expr::Mode::Decimal,
             discount_rate: 0.0,
             as_of: None,
             parameter_overrides: BTreeMap::new(),
@@ -150,6 +151,9 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         let scenario_run = run_deterministic(
             ir,
             &RunConfig {
+                // Run-wide: a scenario varies the deal's drivers and the rate it
+                // is valued at, not the arithmetic every scenario shares.
+                arithmetic: config.arithmetic,
                 discount_rate: scenario.discount_rate.unwrap_or(config.discount_rate),
                 as_of: scenario.as_of.clone().or_else(|| config.as_of.clone()),
                 parameter_overrides: merged_overrides,
@@ -237,6 +241,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
             let trial_run = run_deterministic(
                 ir,
                 &RunConfig {
+                    arithmetic: config.arithmetic,
                     discount_rate: config.discount_rate,
                     as_of: config.as_of.clone(),
                     parameter_overrides: trial_overrides,
@@ -1464,6 +1469,7 @@ mod tests {
         let first = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
                 as_of: None,
                 parameter_overrides: overrides.clone(),
@@ -1476,6 +1482,7 @@ mod tests {
         let second = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
                 as_of: None,
                 parameter_overrides: overrides,
@@ -1513,6 +1520,7 @@ mod tests {
         let results = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 as_of: None,
                 parameter_overrides: overrides,
@@ -1595,6 +1603,7 @@ mod tests {
         let results = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 as_of: None,
                 parameter_overrides: BTreeMap::new(),
@@ -1674,6 +1683,7 @@ mod tests {
         let results = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 as_of: None,
                 parameter_overrides: overrides,
@@ -1702,6 +1712,7 @@ mod tests {
         let legacy_results = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 as_of: None,
                 parameter_overrides: legacy,
@@ -1731,6 +1742,7 @@ mod tests {
         let bracket_results = run_from_json_str(
             ir,
             RunConfig {
+                arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 as_of: None,
                 parameter_overrides: bracket,
