@@ -15,6 +15,7 @@ assume monthly_draw ~ Triangular(min=680000, mode=700000, max=780000)
 assume exit_cap ~ Normal(mean=0.0625, stdev=0.005, clip=[0.05, 0.08])
 // Land closes at the start of month one.
 stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  category investing.capital.construction
   schedule every month due from 2026-01 to 2026-01
   amount = 5500000
 }
@@ -98,22 +99,26 @@ entity asset cloan : Asset.Financial {
 }
 
 stream cloan.advances on entity asset.cloan inflow currency USD {
+  category financing.debt_proceeds
   schedule every month from 2026-02 to 2027-06
   amount = 455000
 }
 
 stream cloan.interest on entity asset.cloan outflow currency USD {
+  category financing.debt_service
   schedule every month from 2026-03 to 2028-06
   amount = prev.asset.cloan.balance * 0.075 / 12
 }
 
 stream cloan.payoff on entity asset.cloan outflow currency USD {
+  category financing.debt_proceeds
   schedule every month from 2028-07 to 2028-07
   amount = prev.asset.cloan.balance
 }
 
 // The permanent loan closes as operations begin: interest-only to maturity.
 stream harbor.perm_proceeds on entity asset.harbor inflow currency USD {
+  category financing.debt_proceeds
   schedule every month due from 2028-07 to 2028-07
   amount = 9500000
 }
@@ -145,6 +150,7 @@ contract cre.exit {
 // The permanent loan is repaid against the sale — the reversion carries the
 // payoff, not the debt service line (which is why the balloon is off).
 stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
+  category financing.debt_proceeds
   schedule on 2030-12
   amount = 9500000
 }

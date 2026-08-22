@@ -40,6 +40,7 @@ The first two claims go in today — the land closing and the construction progr
 ```cfdl
 // Land closes at the start of month one.
 stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
+  category investing.capital.construction
   schedule every month due from 2026-01 to 2026-01
   amount = 5500000
 }
@@ -53,6 +54,8 @@ contract cre.construction_stub {
   }
 }
 ```
+
+A hand-written stream carries one thing a contract's does not have to: its `category`, the pack's word for what this cash *is*. The pack's own lowering rules attach one to every stream they emit, and the statements aggregate by category rather than by name — so a bespoke stream without one lands in no row, and the operating statement reports it as unclassified rather than silently dropping it. Land is capital put into the building, so it reports where the draws report.
 
 The land uses chapter 4's payment-in-advance idiom — closings happen at the start of a month, and the `due` stride says so. The construction program is the pack's `construction_stub`: level draws over the term, the standard treatment, stated by one term. (A draw *schedule* from a contractor's S-curve would be the bespoke alternative — a hand stream reading a curve — and upgrading the stub to one is an end-of-part exercise.)
 

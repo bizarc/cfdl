@@ -26,6 +26,7 @@ contract cre.exit {
 // The permanent loan is repaid against the sale — the reversion carries the
 // payoff, not the debt service line (which is why the balloon is off).
 stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
+  category financing.debt_proceeds
   schedule on 2030-12
   amount = 9500000
 }
