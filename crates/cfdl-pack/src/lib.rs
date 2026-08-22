@@ -458,9 +458,6 @@ pub struct PackValidation {
     pub contract: Option<String>,
     #[serde(default)]
     pub contracts: Vec<String>,
-    /// How a contract name is matched: exact, or `base.instance` suffixes.
-    #[serde(default, rename = "match")]
-    pub match_kind: ContractMatch,
     pub code: String,
     pub message: String,
     #[serde(default)]
@@ -498,13 +495,28 @@ pub struct PackValidation {
     pub op: Option<CompareOp>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ContractMatch {
-    #[default]
-    Exact,
-    /// Matches `<contract>` and `<contract>.<instance>` suffixed forms.
-    Instance,
+/// Does a pack rule declared for `declared` apply to a contract the model calls
+/// `contract_name`?
+///
+/// A model must suffix a contract whenever the deal has more than one of
+/// something — two tenants are `cre.lease_unit.tenant_a` and `.tenant_b` — so a
+/// rule naming the type has to reach its instances. The next character must be
+/// `.`, which is what stops `cre.debt` from claiming `cre.debt_service`.
+///
+/// THIS IS NOT A CHOICE, and it used to be one. `PackValidation` carried a
+/// `match` field defaulting to exact matching, so a validation that did not
+/// declare `match = "instance"` was silently skipped on the form models
+/// actually use — it never fired and nothing said so. Two thirds of them were
+/// dead that way. Lowering never had the option: `rule_matches_contract` in
+/// `cfdl-compile` has always matched instances unconditionally, for the case
+/// that decides what cash a contract produces. Validations were the outlier
+/// and no reason was ever recorded, so the field is gone and both callers
+/// share this.
+pub fn matches_contract_name(declared: &str, contract_name: &str) -> bool {
+    contract_name == declared
+        || contract_name
+            .strip_prefix(declared)
+            .is_some_and(|rest| rest.starts_with('.'))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
@@ -638,15 +650,7 @@ impl PackValidation {
     pub fn applies_to(&self, contract_name: &str) -> bool {
         self.contract_names()
             .into_iter()
-            .any(|declared| match self.match_kind {
-                ContractMatch::Exact => declared == contract_name,
-                ContractMatch::Instance => {
-                    contract_name == declared
-                        || contract_name
-                            .strip_prefix(declared)
-                            .is_some_and(|rest| rest.starts_with('.'))
-                }
-            })
+            .any(|declared| matches_contract_name(declared, contract_name))
     }
 }
 
@@ -2742,7 +2746,6 @@ term = "t"
         let raw = r#"
 [[validations]]
 contract = "cre.lease_unit"
-match = "instance"
 code = "X1"
 message = "m"
 check = "term_present"
@@ -2752,19 +2755,43 @@ term = "rent_year"
         let v = &parsed[0];
         assert!(v.applies_to("cre.lease_unit"));
         assert!(v.applies_to("cre.lease_unit.tenant_a"));
+        // The separator must be a dot, or `cre.debt` would claim
+        // `cre.debt_service`.
         assert!(!v.applies_to("cre.lease_unit_other"));
         assert!(!v.applies_to("cre.lease"));
     }
 
     #[test]
-    fn exact_matching_is_the_default() {
+    fn instance_matching_is_unconditional() {
+        // This asserted the OPPOSITE until the `match` field was removed:
+        // matching defaulted to exact, so a validation reached `cre.lease` and
+        // silently skipped `cre.lease.primary` — the form a model must use the
+        // moment a deal has two leases.
         let parsed = parse_validations(VALID, "test").expect("parses");
         let lease = parsed
             .iter()
             .find(|v| v.code.starts_with("E6001"))
             .expect("lease rule");
         assert!(lease.applies_to("cre.lease"));
-        assert!(!lease.applies_to("cre.lease.primary"));
+        assert!(lease.applies_to("cre.lease.primary"));
+    }
+
+    #[test]
+    fn a_leftover_match_declaration_is_rejected_loudly() {
+        // A pack written against the old surface must fail to load, not load
+        // with the key ignored. Silence is what the field cost us the first
+        // time.
+        let raw = r#"
+[[validations]]
+contract = "cre.lease_unit"
+match = "instance"
+code = "X1"
+message = "m"
+check = "term_present"
+term = "rent_year"
+"#;
+        let err = parse_validations(raw, "test").expect_err("`match` is gone");
+        assert!(err.message.contains("match"), "{}", err.message);
     }
 }
 

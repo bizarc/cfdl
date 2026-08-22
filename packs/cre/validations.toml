@@ -13,7 +13,6 @@ code_prefix = "E6"
 
 [[validations]]
 contract = "cre.lease"
-match = "instance"
 code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
 message = "CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual)."
 check = "any_term_present"
@@ -21,7 +20,6 @@ terms = ["base_rent", "base_rent_year"]
 
 [[validations]]
 contract = "cre.lease"
-match = "instance"
 code = "E6002_CRE_LEASE_INVALID_TERM_RANGE"
 message = "CRE lease term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -30,7 +28,6 @@ check = "term_range_within_timeline"
 # silently truncated. Only checked when the term is present.
 [[validations]]
 contract = "cre.lease"
-match = "instance"
 code = "E6003_CRE_LEASE_UP_MISSING_MONTHS"
 message = "CRE lease_up requires term 'lease_up_months' > 0."
 check = "term_number"
@@ -47,7 +44,6 @@ exclusive_min = 0.0
 # when the value could not be parsed at all, so only one fires.
 [[validations]]
 contract = "cre.exit_cap"
-match = "instance"
 code = "E6010_CRE_EXIT_MISSING_EXIT_CAP"
 message = "CRE exit contract is missing required term 'exit_cap'."
 check = "term_number"
@@ -57,7 +53,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "cre.exit_cap"
-match = "instance"
 code = "E6011_CRE_EXIT_INVALID_EXIT_CAP"
 message = "CRE exit 'exit_cap' must be greater than 0."
 check = "term_number"
@@ -68,7 +63,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "cre.exit_cap"
-match = "instance"
 code = "E6012_CRE_EXIT_MISSING_NOI_VALUE"
 message = "CRE exit requires either 'noi_ref' or 'noi_value'."
 check = "any_term_present"
@@ -78,7 +72,6 @@ terms = ["noi_ref", "noi_value", "noi"]
 
 [[validations]]
 contracts = ["cre.ops_revenue", "cre.ops_expense"]
-match = "instance"
 code = "E6020_CRE_OPS_MISSING_AMOUNT"
 message = "CRE ops contract is missing required term 'amount'."
 check = "term_present"
@@ -86,7 +79,6 @@ term = "amount"
 
 [[validations]]
 contracts = ["cre.ops_revenue", "cre.ops_expense"]
-match = "instance"
 code = "E6021_CRE_OPS_INVALID_SCHEDULE"
 message = "CRE ops term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -99,7 +91,6 @@ check = "term_range_within_timeline"
 
 [[validations]]
 contract = "cre.lease_unit"
-match = "instance"
 code = "E6033_CRE_UNIT_INVALID_ESCALATION"
 message = "CRE lease unit 'escalation' must be greater than or equal to -1."
 check = "term_number"
@@ -110,7 +101,6 @@ min = -1.0
 
 [[validations]]
 contract = "cre.lease_unit"
-match = "instance"
 code = "E6031_CRE_UNIT_INVALID_FREE_RENT"
 message = "CRE lease unit 'free_rent_months' must be a whole number of months, 0 or more."
 check = "term_number"
@@ -122,7 +112,6 @@ min = 0.0
 
 [[validations]]
 contract = "cre.lease_unit"
-match = "instance"
 code = "E6032_CRE_UNIT_INVALID_PRO_RATA"
 message = "CRE lease unit 'pro_rata_share' must be a fraction between 0 and 1."
 check = "term_number"
@@ -134,7 +123,6 @@ max = 1.0
 
 [[validations]]
 contract = "cre.rollover"
-match = "instance"
 code = "E6040_CRE_ROLLOVER_INVALID_PROBABILITY"
 message = "CRE rollover 'renewal_probability' must be a probability between 0 and 1."
 check = "term_number"
@@ -146,7 +134,6 @@ max = 1.0
 
 [[validations]]
 contract = "cre.rollover"
-match = "instance"
 code = "E6041_CRE_ROLLOVER_INVALID_DOWNTIME"
 message = "CRE rollover 'downtime_months' must be a whole number of months, 0 or more."
 check = "term_number"
@@ -159,7 +146,6 @@ min = 0.0
 # Class C pair: per-period rent versus annual rent. Summed if both are given.
 [[validations]]
 contract = "cre.lease"
-match = "instance"
 code = "E6030_CRE_LEASE_AMBIGUOUS_RENT"
 message = "CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"
@@ -172,7 +158,6 @@ terms = ["base_rent", "base_rent_year"]
 # `on_invalid = "skip"` keeps the second quiet when nothing could be parsed.
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6050_CRE_DEBT_MISSING_PRINCIPAL"
 message = "CRE permanent debt is missing required term 'principal'."
 check = "term_number"
@@ -182,7 +167,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6051_CRE_DEBT_INVALID_PRINCIPAL"
 message = "CRE permanent debt 'principal' must be greater than 0."
 check = "term_number"
@@ -193,7 +177,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6052_CRE_DEBT_MISSING_RATE"
 message = "CRE permanent debt is missing required term 'rate'."
 check = "term_number"
@@ -203,7 +186,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6053_CRE_DEBT_INVALID_RATE"
 message = "CRE permanent debt 'rate' is a nominal annual rate and must be 0 or more."
 check = "term_number"
@@ -214,7 +196,6 @@ min = 0.0
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6054_CRE_DEBT_INVALID_AMORT"
 message = "CRE permanent debt 'amort_months' must be a whole number of months greater than 0. It strikes the payment and is normally longer than the loan's term."
 check = "term_number"
@@ -226,7 +207,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6055_CRE_DEBT_INVALID_IO_MONTHS"
 message = "CRE permanent debt 'io_months' must be a whole number of months, 0 or more."
 check = "term_number"
@@ -238,7 +218,6 @@ min = 0.0
 
 [[validations]]
 contract = "cre.permanent_debt"
-match = "instance"
 code = "E6056_CRE_DEBT_INVALID_BALLOON_FLAG"
 message = "CRE permanent debt 'balloon_at_maturity' is a flag: 0 (the payoff sits in the reversion, the default) or 1 (it is paid as debt service at maturity)."
 check = "term_number"
@@ -255,7 +234,6 @@ max = 1.0
 # the bound is non-negative rather than positive.
 [[validations]]
 contract = "cre.construction_loan"
-match = "instance"
 code = "E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT"
 message = "CRE construction loan 'equity_commitment' must be zero or greater."
 check = "term_number"
@@ -269,7 +247,6 @@ min = 0.0
 # 0.08 was meant — without ruling out a distressed mezzanine coupon.
 [[validations]]
 contract = "cre.construction_loan"
-match = "instance"
 code = "E6058_CRE_CONSTRUCTION_INVALID_RATE"
 message = "CRE construction loan 'rate' must be a nominal annual rate between 0 and 1 (0.08 for 8%)."
 check = "term_number"
@@ -284,7 +261,6 @@ max = 1.0
 # figure in the build.
 [[validations]]
 contract = "cre.construction_loan"
-match = "instance"
 code = "E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION"
 message = "CRE construction loan 'draw_accrual_fraction' is where in the period a draw lands and must be between 0 and 1 (0.5 = drawn ratably)."
 check = "term_number"
@@ -297,7 +273,6 @@ max = 1.0
 # The build has to sit inside the model, or the schedule silently loses draws.
 [[validations]]
 contract = "cre.construction_loan"
-match = "instance"
 code = "E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE"
 message = "CRE construction loan term must fall within the model timeline."
 check = "term_range_within_timeline"

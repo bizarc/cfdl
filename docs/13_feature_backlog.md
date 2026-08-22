@@ -1703,24 +1703,6 @@ may be legitimate in a run driving several models.
 shapes are recognized and anything else is ignored"* against the schema's
 *"Unknown properties are rejected."* Whichever is intended, they should agree.
 
-### 7.53 Should `Instance` be the default match mode for a pack validation?
-
-*Belongs with the packs (section 5). Split from the closed 7.7.*
-
-All 48 pack validations now declare `match = "instance"` explicitly, and a gate
-requires the declaration. That closed the defect — two thirds of validations
-previously never ran — and it left one question deliberately unanswered.
-
-If `Instance` became the default in `crates/cfdl-pack/src/lib.rs`, all 48
-declarations would be redundant. It was left alone because the explicit-
-declaration gate achieves the same safety and makes the choice visible at each
-call site, which is the argument against changing it. The argument for is that a
-default nobody has to state cannot be forgotten by the next pack author.
-
-Worth deciding once rather than rediscovering per pack.
-
----
-
 ### 7.54 The HUD case cannot move onto `cre.permanent_debt`
 
 *Belongs with the CRE pack (section 1). Split from the closed 7.14.*
@@ -1814,3 +1796,51 @@ that the divisor must resolve at compile time holds only for the fixed case.
 `time.date` and `time.days_in_period`. Whether those reconstruct the period's
 start and end — and which end `time.date` denotes — is the fact to establish
 before scoping this.
+
+---
+
+### 7.58 A contract's type is recovered by string prefix, not carried
+
+*Belongs with the packs and the compiler (section 5). Replaces the closed 7.53.*
+
+A pack declares its contract types in `ontology/types.toml` with an identity:
+
+```toml
+[[contracts]]
+type_id = "CRE.Contract.UnitLease"
+contract_name = "cre.lease_unit"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+```
+
+A model must suffix a contract whenever the deal has more than one of
+something — two tenants are `cre.lease_unit.tenant_a` and `.tenant_b`. Nothing
+carries the fact that both are a `CRE.Contract.UnitLease`. Every consumer
+recovers it by string surgery instead: strip the declared name off the front and
+check the next character is a dot.
+
+7.53 closed by deleting `ContractMatch` and sharing ONE predicate between
+lowering and validations, so the two can no longer disagree. This item is the
+next step, and it is a different claim: the predicate should not need to exist.
+
+**What carrying the type would buy.**
+
+*Resolution becomes decidable.* The predicate takes the first declared name that
+fits. Across four packs there are 39 contract types and none is a dotted prefix
+of another, so today there is exactly one answer — but that is accidental, not
+enforced. A pack adding `cre.lease_unit.retail` as a TYPE makes
+`cre.lease_unit.retail.suite_3` match two declarations, and the predicate picks
+one silently. Resolving once can require a unique type and say so when it cannot
+find one.
+
+*A misspelling gets a diagnostic.* `cre.lease_unitt.tenant_a` names no type.
+Today it matches no lowering rule and no validation; whether anything reports
+that is the first thing to establish here.
+
+*Matching becomes equality.* Lowering and validations both compare `type_id`,
+and the prefix logic exists in one place — resolution — instead of at every
+call site.
+
+**Scope.** Resolve at contract declaration, carry type and instance name on the
+contract, migrate both match sites, and decide whether the type surfaces in the
+IR schema. Larger than 7.53 was; nothing is broken while it waits.

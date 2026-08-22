@@ -20,7 +20,6 @@ contracts = [
   "energy.storage_arbitrage",
   "energy.ptc",
 ]
-match = "instance"
 code = "E8001_ENERGY_INVALID_DEGRADATION"
 message = "Energy 'degradation' must be a fraction between 0 and 1."
 check = "term_number"
@@ -33,7 +32,6 @@ max = 1.0
 # Availability is the fraction of the period the asset can produce.
 [[validations]]
 contracts = ["energy.ppa", "energy.merchant", "energy.ptc"]
-match = "instance"
 code = "E8002_ENERGY_INVALID_AVAILABILITY"
 message = "Energy 'availability' must be a fraction between 0 and 1."
 check = "term_number"
@@ -46,7 +44,6 @@ max = 1.0
 # Escalation may be negative (de-escalating contracts) but not below -100%.
 [[validations]]
 contracts = ["energy.ppa", "energy.om", "energy.ptc"]
-match = "instance"
 code = "E8003_ENERGY_INVALID_ESCALATION"
 message = "Energy 'escalation' must be greater than or equal to -1."
 check = "term_number"
@@ -57,7 +54,6 @@ min = -1.0
 
 [[validations]]
 contract = "energy.merchant"
-match = "instance"
 code = "E8004_ENERGY_INVALID_PRICE_ESCALATION"
 message = "Energy 'price_escalation' must be greater than or equal to -1."
 check = "term_number"
@@ -71,7 +67,6 @@ min = -1.0
 # MACRS class life selects an entire depreciation table (IRS Pub 946 GDS).
 [[validations]]
 contract = "energy.macrs_shield"
-match = "instance"
 code = "E8010_ENERGY_INVALID_MACRS_LIFE"
 message = "Energy MACRS 'life' must be one of 5, 7, 15, or 20."
 check = "term_enum"
@@ -81,7 +76,6 @@ when = "present"
 
 [[validations]]
 contract = "energy.macrs_shield"
-match = "instance"
 code = "E8011_ENERGY_INVALID_TAX_RATE"
 message = "Energy 'tax_rate' must be a fraction between 0 and 1."
 check = "term_number"
@@ -95,7 +89,6 @@ max = 1.0
 
 [[validations]]
 contract = "energy.debt_service"
-match = "instance"
 code = "E8020_ENERGY_DEBT_INVALID_RATE"
 message = "Energy debt 'rate' must be non-negative."
 check = "term_number"
@@ -106,7 +99,6 @@ min = 0.0
 
 [[validations]]
 contract = "energy.debt_service"
-match = "instance"
 code = "E8021_ENERGY_DEBT_INVALID_TERM_MONTHS"
 message = "Energy debt 'term_months' must be a whole number greater than 0."
 check = "term_number"
@@ -118,7 +110,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "energy.debt_service"
-match = "instance"
 code = "E8022_ENERGY_DEBT_INVALID_PRINCIPAL"
 message = "Energy debt 'principal' must be greater than 0."
 check = "term_number"
