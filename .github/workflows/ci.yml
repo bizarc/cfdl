@@ -24,32 +24,29 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.filter.outputs.code }}
+      code: ${{ steps.classify.outputs.code }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # The file list comes from the API rather than from git, so this needs no
+      # fetch depth and no merge-base. A push to main is always `code=true`:
+      # it is post-merge, and a full run there is the safe default.
       - name: Classify changed paths
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          # Anything not explicitly excluded counts as code. The default is to
-          # run everything; a path earns its way out of the matrix by being
-          # unable to affect a build, a test, a golden or a notebook.
-          #
-          # Excluded prose is NOT unchecked: site-voice, glossary-check,
-          # doc-examples, training-examples and rule-fragments all read these
-          # files and all run in `gates` below.
-          filters: |
-            code:
-              - '**'
-              - '!docs/**'
-              - '!research/**'
-              - '!**/*.md'
-              - '!**/*.mdx'
-              - '!LICENSE'
-              - '!NOTICE'
-              - '!.github/**/*.md'
+        id: classify
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 tools/ci-classify-paths.py --selftest
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "not a pull request; running the full matrix"
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh api --paginate \
+            "repos/${{ github.repository }}/pulls/${{ github.event.number }}/files" \
+            --jq '.[].filename' \
+            | python3 tools/ci-classify-paths.py >> "$GITHUB_OUTPUT"
 
   # EVERY gate, on every change, always. This job has no `if:`.
   #
