@@ -1,0 +1,420 @@
+// A.CRE Retail Development Model v2.2 — the shipped default case.
+//
+// A 4-building, 12-suite neighborhood center on 7.43 acres, 91,500 SF NRA.
+// The analysis opens 2024-05 (A.CRE's "month 0", the closing) and the merchant
+// build sells at month 43, 2027-12. Source workbook:
+// research/Retail-Development-Model-v2.2-0ahk71.xlsm.
+//
+// WHAT THIS CASE ASSERTS, AND WHAT IT LEAVES OUT. Every figure here is DERIVED
+// from the workbook's declared drivers — budget amounts with a start month, an
+// end month and a spread method; a twelve-suite rent roll; four expense lines
+// with a fixed/variable split; a tax phase-in vector. No monthly number is
+// copied in. What is deliberately absent is the financing stack: capitalized
+// construction interest sized to a 70% loan-to-cost test is a SOLVE, the
+// workbook resolves it with a VBA iteration macro, and CFDL has no construct
+// for one (docs/14_state_and_recurrence.md §5). The property-level operating
+// model below stands on its own and is what this case reconciles.
+//
+// THE MANAGEMENT FEE IS NOT ACTUALLY CIRCULAR. The workbook iterates it too:
+// the fee is 3% of effective gross revenue, EGR includes recovery income,
+// recoveries reimburse a pro-rata share of total opex, and total opex includes
+// the fee. But that fixed point is LINEAR, so it has a closed form. Writing
+//   R = base rent    O = other income    C = CAM + insurance + property tax
+//   s = share of expenses recovered this period        v = vacancy rate
+//   f = management fee rate
+// then EGR = (1-v)(R + O + sC) + (1-v)s(f * EGR), so
+//   EGR = (1-v)(R + O + sC) / (1 - f*s*(1-v))
+// which is what the streams below evaluate. Excel iterates because it is wired
+// cell to cell and cannot see the algebra; the language states it directly and
+// lands on the same number, to 5e-7 of a dollar.
+
+version 0.1
+model "acre-retail-development"
+use pack "cre" version "0.1.0"
+
+// Month 0 is the closing; month 43 is the sale. The twelve-month projection
+// tail carries A.CRE's reversion pro forma window (its months 43-54), computed
+// for valuation and excluded from cash results.
+time calendar monthly from 2024-05 for 44 project 12
+
+phase construction from 2024-06 to 2025-11
+phase lease_up from 2025-12 to 2026-11
+phase operations from 2026-12 to 2027-12
+
+entity asset center : CRE.Asset.RealProperty {
+  rentable_area = 91500
+}
+
+// ---------------------------------------------------------------------------
+// Drivers — every one of these is a blue input cell in the workbook.
+// ---------------------------------------------------------------------------
+
+assume arch_engineering = 841852.50
+assume cam_fixed_share = 0.25
+assume cam_year = 457500
+assume capex_reserve_year = 91500
+assume const_period_tax = 225000
+assume construction_costs = 13725000
+assume construction_mgmt = 280617.50
+assume development_fee = 647792.075
+assume expense_growth = 0.02
+assume financing_fees = 130000
+assume insurance_year = 183000
+assume land_closing = 30000
+assume land_diligence = 25000
+assume land_purchase = 3000000
+assume leasing_reserve_year = 180553.75
+assume marketing_leasing = 75000
+assume mgmt_fee_rate = 0.03
+assume offsite_improvements = 100000
+assume other_hard_costs = 205875
+assume other_income_growth = 0.02
+assume other_income_year = 15000
+assume parking_income_year = 50000
+assume pct_rent_year = 25000
+assume property_tax_year = 366000
+assume soft_cost_months = 18
+assume vacancy_rate = 0.05
+
+// ---------------------------------------------------------------------------
+// Curves.
+//
+// A.CRE's S-curve is a NORMAL CDF DIFFERENCE, not a sampled bell: for an
+// n-month window at steepness k, month m takes
+//     PHI(m; n/2, n/k) - PHI(m-1; n/2, n/k),
+// normalized to sum to one. Steepness is 6 on the Data tab, so n=18 gives
+// mu=9, sigma=3. These eighteen weights are that formula evaluated, and they
+// reproduce the workbook's construction draw to 5e-7 of a dollar on 13,725,000.
+// They are a curve rather than an expression because CFDL has no erf() and no
+// normal CDF — the single place in this model where a shape had to be
+// tabulated instead of stated. The formula above is the specification.
+//
+// A DISTRIBUTION CANNOT DO THIS. `assume x ~ Normal(...)` supplies a scalar
+// DRAW — the mean in a deterministic run, one sample per Monte Carlo trial. It
+// is not a density that can be evaluated at a point, so it cannot supply a
+// shape across eighteen months.
+// ---------------------------------------------------------------------------
+
+curve scurve_18 step {
+  2024-06: 0.0024871974618758
+  2024-07: 0.0060011499420441
+  2024-08: 0.0129698191863143
+  2024-09: 0.0251080068226115
+  2024-10: 0.0435384122871466
+  2024-11: 0.0676266122671597
+  2024-12: 0.0940913109664
+  2025-01: 0.1172653952873943
+  2025-02: 0.1309120957790538
+  2025-03: 0.1309120957790538
+  2025-04: 0.1172653952873943
+  2025-05: 0.0940913109663999
+  2025-06: 0.0676266122671597
+  2025-07: 0.0435384122871466
+  2025-08: 0.0251080068226115
+  2025-09: 0.0129698191863143
+  2025-10: 0.0060011499420441
+  2025-11: 0.0024871974618758
+}
+
+// Occupancy by LEASE START, as a share of the 91,500 SF. Every point is the
+// running total of the rent roll's SF column at the month its lease starts:
+// 72,000 at month 19 (the anchor plus the two outparcels), then 77,000,
+// 81,000, 84,000 and full at month 31. It drives the variable half of CAM and
+// the parking line.
+curve occupancy step {
+  2024-05: 0.0
+  2025-12: 0.7868852459016393
+  2026-03: 0.8415300546448088
+  2026-06: 0.8852459016393443
+  2026-09: 0.9180327868852459
+  2026-12: 1.0
+}
+
+// The same walk by RECOVERY START, which every lease in this roll sets three
+// months after its lease start. This is the share of expenses reimbursed.
+curve recovery_share step {
+  2024-05: 0.0
+  2026-03: 0.7868852459016393
+  2026-06: 0.8415300546448088
+  2026-09: 0.8852459016393443
+  2026-12: 0.9180327868852459
+  2027-03: 1.0
+}
+
+// Property taxes are owed at a fraction of stabilized during lease-up: half in
+// operating year one, three quarters in year two, whole thereafter (rows 91-92).
+curve tax_phase_in step {
+  2024-05: 0.0
+  2025-12: 0.5
+  2026-12: 0.75
+  2027-12: 1.0
+}
+
+// ---------------------------------------------------------------------------
+// Development period — months 0 to 18.
+// ---------------------------------------------------------------------------
+
+// Land, closing costs and diligence all settle at month 0, the analysis
+// date, alongside the financing fees.
+stream center.land on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month due from 2024-05 to 2024-05
+  amount = inputs.land_purchase + inputs.land_closing + inputs.land_diligence
+}
+
+stream center.financing_fees on entity asset.center outflow currency USD {
+  category financing.debt_service
+  schedule every month due from 2024-05 to 2024-05
+  amount = inputs.financing_fees
+}
+
+// The two S-curve lines take the same eighteen weights; only the amount
+// differs, which is exactly what the workbook's METHOD column says.
+stream center.construction_costs on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.construction_costs * curve_value("scurve_18", time.date)
+}
+
+stream center.other_hard_costs on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.other_hard_costs * curve_value("scurve_18", time.date)
+}
+
+// Offsite improvements are straight-line over two months, not eighteen.
+stream center.offsite on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2024-07
+  amount = inputs.offsite_improvements / 2.0
+}
+
+// The soft cost lines are all straight-line across the build.
+stream center.arch_engineering on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.arch_engineering / inputs.soft_cost_months
+}
+
+stream center.construction_mgmt on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.construction_mgmt / inputs.soft_cost_months
+}
+
+stream center.marketing_leasing on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.marketing_leasing / inputs.soft_cost_months
+}
+
+stream center.const_period_tax on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.const_period_tax / inputs.soft_cost_months
+}
+
+stream center.development_fee on entity asset.center outflow currency USD {
+  category investing.capital.construction
+  schedule every month from 2024-06 to 2025-11
+  amount = inputs.development_fee / inputs.soft_cost_months
+}
+
+// ---------------------------------------------------------------------------
+// The rent roll — twelve suites, each its own stream.
+//
+// A suite's rent starts at its RENT START month, which sits after its lease
+// start by the free-rent period the leasing brief negotiated. It then steps by
+// its own growth rate on its OWN FREQUENCY: the anchor and the two outparcels
+// step every five years, the inline shops annually. That frequency is why
+// these are hand-written streams rather than `cre.lease_unit` contracts — the
+// pack's `escalation` term steps on lease anniversaries and has no word for
+// "every five years", so three of these twelve leases are not expressible in
+// the pack's vocabulary. See NOTES.md.
+//
+// The step count is round_down((t - rent_start) / (12 * frequency), 0), which
+// is the floor CFDL spells with round_down.
+// ---------------------------------------------------------------------------
+stream rent.anchor_walbert on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-03 to 2028-12
+  amount = 65000.0 * 14.0 / 12.0 * pow(1.10, round_down((time.t - 22.0) / 60.0, 0.0))
+}
+
+stream rent.suite_525_102 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-06 to 2028-12
+  amount = 2500.0 * 28.0 / 12.0 * pow(1.025, round_down((time.t - 25.0) / 12.0, 0.0))
+}
+
+stream rent.suite_525_103 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-06 to 2028-12
+  amount = 2500.0 * 25.0 / 12.0 * pow(1.025, round_down((time.t - 25.0) / 12.0, 0.0))
+}
+
+stream rent.suite_525_104 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-09 to 2028-12
+  amount = 2500.0 * 25.0 / 12.0 * pow(1.025, round_down((time.t - 28.0) / 12.0, 0.0))
+}
+
+stream rent.suite_625_101 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-09 to 2028-12
+  amount = 1500.0 * 30.0 / 12.0 * pow(1.025, round_down((time.t - 28.0) / 12.0, 0.0))
+}
+
+stream rent.suite_625_102 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-12 to 2028-12
+  amount = 1500.0 * 30.0 / 12.0 * pow(1.025, round_down((time.t - 31.0) / 12.0, 0.0))
+}
+
+stream rent.suite_625_103 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-12 to 2028-12
+  amount = 1500.0 * 30.0 / 12.0 * pow(1.025, round_down((time.t - 31.0) / 12.0, 0.0))
+}
+
+stream rent.suite_625_104 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2027-03 to 2028-12
+  amount = 1500.0 * 30.0 / 12.0 * pow(1.025, round_down((time.t - 34.0) / 12.0, 0.0))
+}
+
+stream rent.suite_725_101 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2027-03 to 2028-12
+  amount = 3000.0 * 27.0 / 12.0 * pow(1.025, round_down((time.t - 34.0) / 12.0, 0.0))
+}
+
+stream rent.suite_725_102 on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2027-03 to 2028-12
+  amount = 3000.0 * 24.0 / 12.0 * pow(1.025, round_down((time.t - 34.0) / 12.0, 0.0))
+}
+
+stream rent.outparcel_whosaburger on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-03 to 2028-12
+  amount = 4500.0 * 110.0 / 12.0 * pow(1.075, round_down((time.t - 22.0) / 60.0, 0.0))
+}
+
+stream rent.outparcel_coffee on entity asset.center inflow currency USD {
+  category operating.revenue.base_rent
+  schedule every month from 2026-03 to 2028-12
+  amount = 2500.0 * 85.0 / 12.0 * pow(1.10, round_down((time.t - 22.0) / 60.0, 0.0))
+}
+
+// ---------------------------------------------------------------------------
+// Other income and the three directly-stated expenses.
+//
+// Both the expense escalation and the other-income growth step on the
+// OPERATING anniversary (months 19, 31, 43), not the calendar year, so each
+// line applies its own rate over round_down((t - 19) / 12, 0). That is an
+// expression, not a curve: the escalator is a rate the workbook states, and a
+// rate compounded on a stated anniversary is exactly what pow() is for.
+// Parking varies with occupancy; percentage rent and the other line are fixed.
+// ---------------------------------------------------------------------------
+stream other_income.parking on entity asset.center inflow currency USD {
+  category operating.revenue.other
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.parking_income_year / 12.0            * curve_value("occupancy", time.date)            * pow(1.0 + inputs.other_income_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+stream other_income.percentage_rent on entity asset.center inflow currency USD {
+  category operating.revenue.percentage_rent
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.pct_rent_year / 12.0            * pow(1.0 + inputs.other_income_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+stream other_income.other on entity asset.center inflow currency USD {
+  category operating.revenue.other
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.other_income_year / 12.0            * pow(1.0 + inputs.other_income_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+// CAM is 25% fixed: a quarter is owed at nil occupancy and the rest tracks
+// the space actually leased. Insurance is wholly fixed. Property taxes are
+// wholly fixed too, but phase in over the first two operating years.
+stream opex_base.cam on entity asset.center outflow currency USD {
+  category operating.expense.opex
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.cam_year / 12.0            * (inputs.cam_fixed_share               + (1.0 - inputs.cam_fixed_share) * curve_value("occupancy", time.date))            * pow(1.0 + inputs.expense_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+stream opex_base.insurance on entity asset.center outflow currency USD {
+  category operating.expense.opex
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.insurance_year / 12.0            * pow(1.0 + inputs.expense_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+stream opex_base.property_tax on entity asset.center outflow currency USD {
+  category operating.expense.opex
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.property_tax_year / 12.0            * curve_value("tax_phase_in", time.date)            * pow(1.0 + inputs.expense_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+// ---------------------------------------------------------------------------
+// The three lines that close the fee loop.
+//
+// Each is written from the closed form in the header comment, reading only
+// phase-1 series, because a phase-2 stream may not read another phase-2
+// stream. The algebra is therefore repeated rather than named — CFDL has no
+// let-binding, and this is the one place in the model where that costs
+// readability. The shared sub-expression, every time, is
+//
+//   EGR = (1-v)(R + O + sC) / (1 - f*s*(1-v))
+//
+// with R the rent roll, O other income, C the three stated expenses (negated,
+// since series_sum returns signed amounts and those are outflows), s the share
+// of expenses recovered this period and v the vacancy rate.
+// ---------------------------------------------------------------------------
+stream opex.management_fee on entity asset.center outflow currency USD {
+  category operating.expense.opex
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.mgmt_fee_rate            * (1.0 - inputs.vacancy_rate)            * (series_sum("rent.*", time.t, time.t)               + series_sum("other_income.*", time.t, time.t)               + curve_value("recovery_share", time.date)                 * -series_sum("opex_base.*", time.t, time.t))            / (1.0 - inputs.mgmt_fee_rate                   * curve_value("recovery_share", time.date)                   * (1.0 - inputs.vacancy_rate))
+}
+
+// Recoveries reimburse the recovered share of TOTAL operating expenses — the
+// three stated lines plus the management fee, which is why this reads the
+// same closed form rather than a running total.
+stream ops.recoveries on entity asset.center inflow currency USD {
+  category operating.revenue.recovery
+  schedule every month from 2025-12 to 2028-12
+  amount = curve_value("recovery_share", time.date)            * (-series_sum("opex_base.*", time.t, time.t)               + inputs.mgmt_fee_rate                 * (1.0 - inputs.vacancy_rate)                 * (series_sum("rent.*", time.t, time.t)                    + series_sum("other_income.*", time.t, time.t)                    + curve_value("recovery_share", time.date)                      * -series_sum("opex_base.*", time.t, time.t))                 / (1.0 - inputs.mgmt_fee_rate                        * curve_value("recovery_share", time.date)                        * (1.0 - inputs.vacancy_rate)))
+}
+
+// Vacancy and credit loss is 5% of potential gross income, and potential
+// gross income includes the recoveries above — so it resolves through the fee
+// as well.
+stream ops.vacancy_loss on entity asset.center outflow currency USD {
+  category operating.deduction.vacancy
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.vacancy_rate            * (series_sum("rent.*", time.t, time.t)               + series_sum("other_income.*", time.t, time.t)               + curve_value("recovery_share", time.date)                 * (-series_sum("opex_base.*", time.t, time.t)                    + inputs.mgmt_fee_rate                      * (1.0 - inputs.vacancy_rate)                      * (series_sum("rent.*", time.t, time.t)                         + series_sum("other_income.*", time.t, time.t)                         + curve_value("recovery_share", time.date)                           * -series_sum("opex_base.*", time.t, time.t))                      / (1.0 - inputs.mgmt_fee_rate                             * curve_value("recovery_share", time.date)                             * (1.0 - inputs.vacancy_rate))))
+}
+
+// ---------------------------------------------------------------------------
+// Reserves.
+//
+// The leasing reserve is A.CRE's stand-in for rollover: it charges the
+// annualized probability-weighted cost of keeping the center leased rather
+// than modeling second-generation leases, which is why no `cre.rollover`
+// appears anywhere in this model.
+// ---------------------------------------------------------------------------
+stream reserve.leasing on entity asset.center outflow currency USD {
+  category investing.capital.leasing
+  schedule every month from 2026-12 to 2028-12
+  amount = inputs.leasing_reserve_year / 12.0            * pow(1.0 + inputs.expense_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
+// The capital reserve starts at OPERATIONS begin, twelve months before the
+// leasing reserve, which waits for stabilization. Two reserves, two start
+// months: a repair bill does not wait for the last suite to sign.
+stream reserve.capex on entity asset.center outflow currency USD {
+  category investing.capital.capex
+  schedule every month from 2025-12 to 2028-12
+  amount = inputs.capex_reserve_year / 12.0            * pow(1.0 + inputs.expense_growth, round_down((time.t - 19.0) / 12.0, 0.0))
+}
+
