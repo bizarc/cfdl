@@ -3072,16 +3072,18 @@ The item's proposed `ends when` clause on a contract would put the decision
 inside the record of what was agreed, which is the error §7.40 made. A contract
 records the agreement and its `term` states when the obligations run.
 
-**What is true is narrower: no pack uses this.** No lowering rule in any of the
-four packs reads entity state in an amount expression, so a pack's cash cannot
-today respond to a decision the model makes. That is pack authoring, not a
-missing capability.
+**What is true is narrower: no lowering rule uses this.** No rule in any of the
+four packs reads entity state in an amount expression, so the streams a contract
+lowers to cannot today respond to a decision the model makes. That is rule
+authoring, not a missing capability.
 
-**One residue, recorded in §7.40.** A pack can zero its cash but cannot
-deactivate it, because a lowering rule has no `active_when` key. The course
-draws the distinction: a guard states that a claim conditionally EXISTS, where
-an `if` states that it is sometimes zero. A zeroed stream still occurs and still
-publishes a series of zeros.
+**One residue, recorded in §7.40.** A lowering rule can make its stream's amount
+zero but cannot make the stream inactive, having no `active_when` key. §9.3
+gives every stream an activation predicate and §6.4 of the pack interface
+provides no way to set one, so a lowered stream reaches the guard's economics
+through its amount and never its statement: a guard says the claim does not
+occur, a conditional amount says it occurs and is zero, and the second still
+publishes a series.
 
 Provenance: found finishing `benchmarks/credit/americredit_2017_1`, August 2026.
 Closed August 2026 after probing each piece. The case asserts nothing after the
