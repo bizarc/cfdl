@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack validation hygiene: unique codes, and a deliberate match mode.
+"""Pack validation hygiene: unique diagnostic codes.
 
 ## 1. Every diagnostic code must name exactly one check.
 
@@ -25,21 +25,20 @@ literals scattered across crates and would need a different, noisier extraction;
 the pack files are where authors add codes by hand and where all four
 collisions occurred.
 
-## 2. Every validation must declare `match` explicitly.
+## 2. (Removed.) Every validation used to have to declare `match` explicitly.
 
-A validation matches a contract by EXACT name unless it declares
-`match = "instance"`. Contracts are routinely written suffixed
-(`opco.revenue_line.core`), so an unflagged validation is silently skipped on
-the form models actually use — it never fires, and nothing says so.
+A validation used to match a contract by EXACT name unless it declared
+`match = "instance"`, and 33 of 48 shipped validations had not — so
+`E7001_OPCO_LINE_MISSING_AMOUNT` rejected `opco.revenue_line` with no amount
+and accepted `opco.revenue_line.core` with no amount. One character apart.
 
-33 of 48 shipped validations were in that state. Credit had all ten flagged;
-cre, energy and opco had almost none, so `E7001_OPCO_LINE_MISSING_AMOUNT`
-rejected `opco.revenue_line` with no amount and accepted
-`opco.revenue_line.core` with no amount. One character of difference.
+Requiring the declaration fixed it here and nowhere else: this gate reads
+`packs/*/validations.toml` in THIS repository, and packs are a published
+extension point, so an outside author still got the silent default.
 
-Defaulting is the trap, so this requires the choice to be WRITTEN — either
-`instance` or `exact`. An author who wants exact matching may still have it;
-they just have to say so.
+The field is gone instead. Matching is now unconditional and shared with
+lowering, which never offered the choice in the first place. There is nothing
+left to state, so there is nothing left to check.
 
 Codes are identified by LETTER plus number (`E5010`, `W3001`), not by the number
 alone, so `E3500` and `W3500` are distinct and may coexist. Both checks below
@@ -111,7 +110,6 @@ DIAGNOSTICS_DOC = REPO_ROOT / "docs" / "08_diagnostics.md"
 DOC_CODE_RE = re.compile(r"`([EWI]\d+)_([A-Z0-9_]+)`")
 
 CODE_RE = re.compile(r'code = "([EWI]\d+)_([A-Z0-9_]+)"')
-MATCH_RE = re.compile(r'^match = ', re.M)
 STREAM_NAME_RE = re.compile(r'stream_name = "([^"]+)"')
 TEMPLATE_RE = re.compile(r"\{\{[^}]+\}\}")
 
@@ -142,29 +140,6 @@ def main() -> int:
         pack = path.parent.name
         for match in CODE_RE.finditer(path.read_text(encoding="utf-8")):
             seen[match.group(1)].append((pack, match.group(2)))
-
-    # --- 2. every validation states its match mode -------------------------
-    unstated = []
-    for path in files:
-        pack = path.parent.name
-        for block in path.read_text(encoding="utf-8").split("[[validations]]")[1:]:
-            if not MATCH_RE.search(block):
-                code = CODE_RE.search(block)
-                unstated.append(f"{pack}: {code.group(0).split(chr(34))[1] if code else '<no code>'}")
-    if unstated:
-        print(
-            f"  {len(unstated)} validation(s) do not state `match`, so they"
-            " default to EXACT\n  and are silently skipped on suffixed contracts:",
-            file=sys.stderr,
-        )
-        for u in unstated:
-            print(f"      {u}", file=sys.stderr)
-        print(
-            '\n  Add `match = "instance"` (or `match = "exact"` if that is really meant).\n'
-            "  It must follow the CLOSE of a multi-line `contracts` array.",
-            file=sys.stderr,
-        )
-        return 1
 
     # --- 1. codes are unique ----------------------------------------------
     failures = 0
@@ -289,7 +264,7 @@ def main() -> int:
     print(
         f"check-pack-validations: OK ({len(seen)} pack codes across {len(files)} packs, "
         f"{len(documented)} documented codes, "
-        f"each naming one check; every validation states its match mode; "
+        f"each naming one check; "
         f"{checked_selectors} metric selectors reach their streams)"
     )
     return 0

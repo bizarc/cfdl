@@ -13,7 +13,6 @@ code_prefix = "E7"
 # almost never intended but is not currently rejected.
 [[validations]]
 contracts = ["opco.revenue_line", "opco.opex_line"]
-match = "instance"
 code = "E7001_OPCO_LINE_MISSING_AMOUNT"
 message = "OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual)."
 check = "any_term_present"
@@ -23,7 +22,6 @@ on_invalid = "report"
 
 [[validations]]
 contracts = ["opco.revenue_line", "opco.opex_line"]
-match = "instance"
 code = "E7002_OPCO_LINE_INVALID_SCHEDULE"
 message = "OpCo line term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -31,7 +29,6 @@ check = "term_range_within_timeline"
 # Optional term: only checked when supplied.
 [[validations]]
 contracts = ["opco.revenue_line", "opco.opex_line"]
-match = "instance"
 code = "E7003_OPCO_LINE_INVALID_GROWTH"
 message = "OpCo line has invalid 'growth_rate' term."
 check = "term_number"
@@ -43,7 +40,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.working_capital"
-match = "instance"
 code = "E7013_OPCO_WC_MISSING_AMOUNT_OR_RULE"
 message = "OpCo working capital requires term 'amount' or a supported rule expression."
 check = "term_number"
@@ -53,7 +49,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.working_capital"
-match = "instance"
 code = "E7014_OPCO_WC_INVALID_SCHEDULE"
 message = "OpCo working capital term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -64,7 +59,6 @@ check = "term_range_within_timeline"
 # parsed-but-not-positive.
 [[validations]]
 contract = "opco.exit_multiple"
-match = "instance"
 code = "E7020_OPCO_EXIT_MISSING_MULTIPLE"
 message = "OpCo exit is missing required term 'exit_multiple'."
 check = "term_number"
@@ -74,7 +68,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_multiple"
-match = "instance"
 code = "E7021_OPCO_EXIT_INVALID_MULTIPLE"
 message = "OpCo exit 'exit_multiple' must be greater than 0."
 check = "term_number"
@@ -85,7 +78,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "opco.exit_multiple"
-match = "instance"
 code = "E7022_OPCO_EXIT_MISSING_BASE_VALUE"
 message = "OpCo exit requires numeric term 'base_value'."
 check = "term_number"
@@ -95,7 +87,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_multiple"
-match = "instance"
 code = "E7023_OPCO_EXIT_INVALID_SCHEDULE"
 message = "OpCo exit term range is missing, invalid, or outside model timeline (exit occurs at term_start)."
 check = "term_range_within_timeline"
@@ -104,7 +95,6 @@ check = "term_range_within_timeline"
 
 [[validations]]
 contract = "opco.exit_ebitda"
-match = "instance"
 code = "E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE"
 message = "OpCo EBITDA exit requires 'exit_multiple' greater than 0."
 check = "term_number"
@@ -117,7 +107,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "opco.term_debt"
-match = "instance"
 code = "E7030_OPCO_DEBT_INVALID_AMORT"
 message = "OpCo term debt requires 'amort_months' greater than 0."
 check = "term_number"
@@ -128,7 +117,6 @@ exclusive_min = 0.0
 
 [[validations]]
 contract = "opco.term_debt"
-match = "instance"
 code = "E7031_OPCO_DEBT_INVALID_RATE"
 message = "OpCo term debt requires a non-negative 'rate'."
 check = "term_number"
@@ -142,7 +130,6 @@ min = 0.0
 # silently add them.
 [[validations]]
 contracts = ["opco.revenue_line", "opco.opex_line", "opco.capex_line"]
-match = "instance"
 code = "E7010_OPCO_LINE_AMBIGUOUS_AMOUNT"
 message = "OpCo line states both 'amount' (per period) and 'amount_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"
@@ -150,7 +137,6 @@ terms = ["amount", "amount_year"]
 
 [[validations]]
 contract = "opco.cash_taxes"
-match = "instance"
 code = "E7011_OPCO_TAXES_AMBIGUOUS_DA"
 message = "OpCo cash taxes state both 'da_monthly' (per period) and 'da_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"
@@ -161,7 +147,6 @@ terms = ["da_monthly", "da_year"]
 # `tax_rate` exists so the curve can stand alone, not so it can be omitted.
 [[validations]]
 contracts = ["opco.cash_taxes"]
-match = "instance"
 code = "E7012_OPCO_TAXES_MISSING_RATE"
 message = "OpCo cash taxes must state a rate: 'tax_rate' (scalar) or 'tax_rate_curve' (a model curve name)."
 check = "any_term_present"
@@ -179,7 +164,6 @@ on_invalid = "report"
 # anything. Guarded first because the other checks would still pass.
 [[validations]]
 contract = "opco.exit_perpetuity"
-match = "instance"
 code = "E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH"
 message = "OpCo exit perpetuity needs 'discount_rate' strictly greater than 'growth_rate'. A perpetuity growing at or above its discount rate has no finite value."
 check = "term_compare"
@@ -189,7 +173,6 @@ right = "growth_rate"
 
 [[validations]]
 contract = "opco.exit_perpetuity"
-match = "instance"
 code = "E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE"
 message = "OpCo exit perpetuity is missing required term 'base_value' — the terminal-period flow the perpetuity is struck on."
 check = "term_number"
@@ -199,7 +182,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_perpetuity"
-match = "instance"
 code = "E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE"
 message = "OpCo exit perpetuity is missing required term 'discount_rate'. This is the terminal capitalization rate and is stated on the contract, not taken from the run's discount rate."
 check = "term_number"
@@ -209,7 +191,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_perpetuity"
-match = "instance"
 code = "E7028_OPCO_PERPETUITY_MISSING_GROWTH"
 message = "OpCo exit perpetuity is missing required term 'growth_rate'. State 0 for a flat perpetuity."
 check = "term_number"
@@ -219,7 +200,6 @@ on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_perpetuity"
-match = "instance"
 code = "E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS"
 message = "OpCo exit perpetuity 'selling_costs' is a fraction between 0 and 1."
 check = "term_number"

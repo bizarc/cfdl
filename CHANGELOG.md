@@ -8,6 +8,40 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking for external packs): a validation's `match` field is gone
+
+A pack validation matched a contract by EXACT name unless it declared
+`match = "instance"`. A model must suffix a contract whenever a deal has more
+than one of something — two tenants are `cre.lease_unit.tenant_a` and
+`.tenant_b` — so a validation that omitted the flag was silently skipped on the
+form models actually use. It never fired, and nothing said so. Two thirds of
+the shipped validations were dead that way: `E7001_OPCO_LINE_MISSING_AMOUNT`
+rejected `opco.revenue_line` with no amount and accepted
+`opco.revenue_line.core` with no amount, one character apart.
+
+That was fixed by requiring the declaration and gating it. The gate reads
+`packs/*/validations.toml` in THIS repository, and packs are a published
+extension point — so an author writing a pack elsewhere still got the silent
+default, from a field the pack interface documentation never mentioned.
+
+Lowering never offered the choice. `rule_matches_contract` has always matched
+instances unconditionally, for the case that decides what cash a contract
+produces, and its six lines were a byte-for-byte copy of the validation path's
+`Instance` arm. Validations were the outlier and no reason was ever recorded.
+
+So `ContractMatch` is deleted, matching is unconditional, and both callers share
+one predicate. The 68 `match = "instance"` declarations are removed, and so is
+the gate that required them — there is nothing left to state.
+
+**Migration:** delete `match` from your validations. `PackValidation` sets
+`deny_unknown_fields`, so a pack that still carries it fails to load with an
+error naming the key rather than loading with it ignored. `match = "exact"` has
+no replacement; if you have a case that needs it, it is worth hearing about.
+
+Golden outputs are byte-identical: every shipped validation already declared
+`instance`, so nothing in this repository changes behaviour.
+
+
 ### Added: the run configuration schema is a gate
 
 `docs/schemas/run.schema.json` describes what a `run.json` may contain, and

@@ -3686,10 +3686,11 @@ fn units_equal(a: &str, b: &str) -> bool {
 }
 
 fn rule_matches_contract(rule_contract: &str, contract_name: &str) -> bool {
-    contract_name == rule_contract
-        || contract_name
-            .strip_prefix(rule_contract)
-            .is_some_and(|rest| rest.starts_with('.'))
+    // One predicate, shared with pack validations. It was duplicated here and
+    // in `cfdl-pack` — the same six lines twice, which is a drift waiting to
+    // happen between "which rule lowers this contract" and "which rule
+    // validates it". Those two must never disagree.
+    cfdl_pack::matches_contract_name(rule_contract, contract_name)
 }
 
 /// Relative coarseness of a schedule interval and a calendar cadence, so the
