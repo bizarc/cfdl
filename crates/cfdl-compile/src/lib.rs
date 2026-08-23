@@ -1273,6 +1273,53 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         .collect();
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    // A STREAM CANNOT READ A WATERFALL STEP. docs/03 §3.2: a step's series is
+    // visible to a later waterfall's `from` and to nothing else — steps
+    // publish when their waterfall finishes, and every waterfall runs after
+    // every stream. The engine's series store never holds a step, so this
+    // read aggregated to zero in silence: `check_series_names` counted the
+    // step as a known producer and stayed quiet, and no other check looked.
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+            for referenced in cfdl_expr::series_references(&slot.src) {
+                // A selector states that matching nothing is intended, and the
+                // packs read whole families with them — same allowance E1342
+                // makes.
+                if referenced.ends_with(".*") {
+                    continue;
+                }
+                if !step_owner.contains_key(&referenced) {
+                    continue;
+                }
+                diagnostics.push(Diagnostic {
+                    code: "E1346_STREAM_READS_WATERFALL_STEP".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' reads series '{referenced}', which is a waterfall \
+                         step. Steps publish when their waterfall finishes, and every \
+                         waterfall runs after every stream — so this read could only \
+                         ever aggregate to zero.",
+                        stream.name
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(slot.span)),
+                    path: None,
+                    hint: Some(
+                        "A step's series is visible to a later waterfall's `from` and to \
+                         nothing else. Model the quantity the step pays as a stream or a \
+                         field if a stream needs to read it."
+                            .to_string(),
+                    ),
+                    notes: Vec::new(),
+                });
+            }
+        }
+    }
+
     let mut waterfall_order = 0usize;
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
@@ -1319,8 +1366,8 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         // A `series_sum` naming a step that is not yet published aggregates to
         // zero and says nothing, which is how a preferred return came to be paid
         // in full six times. The two sibling reads already fail loudly —
-        // `E1341` for `paid.` naming a later step, the engine's phase check for
-        // a stream reading a stream that itself reads one — so this one does too.
+        // `E1341` for `paid.` naming a later step, the engine's cycle check for
+        // a circular series read — so this one does too.
         let series_visibility = |src: &str, where_: String, span| {
             let mut out: Vec<Diagnostic> = Vec::new();
             for referenced in cfdl_expr::series_references(src) {

@@ -1,0 +1,39 @@
+version 0.1
+model "stream-reads-waterfall-step"
+time calendar annual from 2020-01 for 6
+
+// A STREAM MAY NOT READ A WATERFALL STEP.
+//
+// The spelling below is the one an author reaches for: a management fee that
+// tracks what the waterfall actually paid out. It reads as a dependency and it
+// cannot be one — every waterfall runs after every stream, and a step's series
+// publishes when its waterfall finishes, visible to a later waterfall's `from`
+// and to nothing else (docs/03 §3.2). At the moment any stream evaluates there
+// is nothing under that name to read; `series_sum` answered zero for it in
+// silence, because the step counted as a known producer and no check looked.
+//
+// Dependency-ordered waves make deep chains between STREAMS legal, which makes
+// this neighbouring read the more tempting to write — and it still cannot
+// work, so it now says so at compile time instead of contributing nothing.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume proceeds = 3000000.0
+
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2020-01
+  amount = inputs.proceeds
+}
+
+stream fund.fee_on_distributions on entity asset.fund outflow currency USD {
+  schedule every year from 2020-01 to 2025-01
+  amount = 0.01 * series_sum("fund.distribution.residual", 0, time.t)
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay residual to party.gp = remaining
+}
