@@ -9,7 +9,7 @@ entity asset permanent : Asset.Financial
 
 // Operating expenses during stabilized operations (2029-01 to 2033-12)
 // mgmt + maintenance + insurance + RE taxes + utilities = $55,000/mo
-contract cre.ops_expense on entity asset.property {
+contract cre.opex_line on entity asset.property {
   term 2029-01..2033-12
   terms {
     amount = 55000

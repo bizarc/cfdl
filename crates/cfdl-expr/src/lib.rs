@@ -587,15 +587,12 @@ mod tests {
 
     #[test]
     fn selector_any_is_a_disjunction_and_empty_matches_nothing() {
-        let patterns = vec![
-            "cre.ops.expense".to_string(),
-            "cre.property.opex.*".to_string(),
-        ];
-        assert!(selector_matches_any(&patterns, "cre.ops.expense"));
-        assert!(selector_matches_any(&patterns, "cre.property.opex"));
-        assert!(selector_matches_any(&patterns, "cre.property.opex.taxes"));
+        let patterns = vec!["cre.opex.line".to_string(), "cre.opex.line.*".to_string()];
+        assert!(selector_matches_any(&patterns, "cre.opex.line"));
+        assert!(selector_matches_any(&patterns, "cre.opex.line"));
+        assert!(selector_matches_any(&patterns, "cre.opex.line.taxes"));
         assert!(!selector_matches_any(&patterns, "cre.vacancy.loss"));
-        assert!(!selector_matches_any(&[], "cre.ops.expense"));
+        assert!(!selector_matches_any(&[], "cre.opex.line"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "e490f9c2c042c0f475141cfec6ea52de7adef7e0770bec7821dd18d35d4cf4bc",
-  "ledger_hash": "24a456e287c897993c3dde55d990322acd36cdf9ae9de0609482288613eb6ed4",
+  "model_hash": "f9f68295fb39c594a38293457e24202578c27981436e9e5d1d83dad7e3161259",
+  "ledger_hash": "64cbef84633c37911bac9ba72e66430df30c9c3db7e91d87adf8a555300ae564",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -29,7 +29,7 @@
       "model.wal_years": 1.041667,
       "run.annual_discount_rate": 0.0,
       "run.periods_per_year": 12.0,
-      "stream.cre.ops.expense.total": {
+      "stream.cre.opex.line.total": {
         "amount": -240000.0,
         "currency": "USD"
       },
@@ -358,7 +358,7 @@
           }
         ]
       },
-      "stream.cre.ops.expense": {
+      "stream.cre.opex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -696,7 +696,7 @@
             }
           ]
         },
-        "stream.cre.ops.expense": {
+        "stream.cre.opex.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -2407,7 +2407,7 @@
             ],
             "total": 120000.0,
             "streams": [
-              "cre.ops.expense",
+              "cre.opex.line",
               "cre.ops.revenue",
               "loan.permanent_debt_service"
             ]
@@ -2421,7 +2421,7 @@
         "diagnostics": [
           {
             "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "3 stream(s) are in no row of statement 'operating', so the bottom line is short by 120000.00: cre.ops.expense, cre.ops.revenue, loan.permanent_debt_service. Classify them, or give the statement a row that claims them."
+            "message": "3 stream(s) are in no row of statement 'operating', so the bottom line is short by 120000.00: cre.opex.line, cre.ops.revenue, loan.permanent_debt_service. Classify them, or give the statement a row that claims them."
           }
         ]
       },
@@ -2721,7 +2721,7 @@
             ],
             "total": 120000.0,
             "streams": [
-              "cre.ops.expense",
+              "cre.opex.line",
               "cre.ops.revenue",
               "loan.permanent_debt_service"
             ]
@@ -2735,7 +2735,7 @@
         "diagnostics": [
           {
             "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "3 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by 120000.00: cre.ops.expense, cre.ops.revenue, loan.permanent_debt_service. Classify them, or give the statement a row that claims them."
+            "message": "3 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by 120000.00: cre.opex.line, cre.ops.revenue, loan.permanent_debt_service. Classify them, or give the statement a row that claims them."
           }
         ]
       }

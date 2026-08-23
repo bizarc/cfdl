@@ -3,4 +3,4 @@
 "cre.ExitCap" = "cre_exit_cap"
 "cre.Construction" = "cre_construction_stub"
 "cre.OperationsRevenue" = "cre_ops_revenue"
-"cre.OperationsExpense" = "cre_ops_expense"
+"cre.OperatingExpense" = "cre_opex_line"

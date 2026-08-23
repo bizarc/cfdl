@@ -913,7 +913,7 @@ id = "domain.cre.noi"           # output key
 kind = "money"                  # money | number
 op = "sum"                      # sum | negated_sum | ratio | wal_years
 numerator_streams = ["cre.lease.base_rent", "cre.ops.revenue"]
-denominator_streams = ["cre.ops.expense"]
+denominator_streams = ["cre.opex.line"]
 formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
 
 [[metrics]]

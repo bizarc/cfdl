@@ -25,10 +25,10 @@ contract cre.lease_unit.tenant_a on entity asset.tower {
   }
 }
 
-contract cre.property_opex on entity asset.tower {
+contract cre.opex_line on entity asset.tower {
   term 2025-01..2028-12
   terms {
-    opex_year = 300000
+    amount_year = 300000
     escalation = 0.025
   }
 }

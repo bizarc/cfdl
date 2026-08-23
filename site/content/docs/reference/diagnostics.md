@@ -168,6 +168,9 @@ register, so it cannot fall behind the language.
 | `E6058_CRE_CONSTRUCTION_INVALID_RATE` | Pack domain validations | a nominal annual rate in [0, 1], which catches 8 entered where 0.08 was meant |
 | `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` | Pack domain validations | where in the period a draw lands, in [0, 1]; 0.5 is funding drawn ratably through it |
 | `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` | Pack domain validations | the build must sit inside the model timeline, or the schedule silently loses draws |
+| `E6061_CRE_OPEX_LINE_MISSING_AMOUNT` | Pack domain validations | an operating expense line states `amount` or `amount_year`; both default to zero, so stating neither is a line that silently costs nothing |
+| `E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE` | Pack domain validations | the fixed SHARE, in [0, 1]; catches 81 entered where 0.81 was meant, which would otherwise report a wrong expense rather than fail |
+| `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` | Pack domain validations | a ratio of occupied space, in [0, 1]; zero is a fully dark building and is legitimate |
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | Pack domain validations |  |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | Pack domain validations |  |
 | `E7003_OPCO_LINE_INVALID_GROWTH` | Pack domain validations |  |
@@ -210,7 +213,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*158 codes.*
+*161 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

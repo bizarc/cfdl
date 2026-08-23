@@ -22,7 +22,7 @@ stream ancillary.income on entity asset.property inflow currency USD {
 
 // Operating expenses: mgmt 6% ($11,100) + maintenance ($18,500) + insurance ($6,500)
 // + RE taxes ($14,200) + utilities ($8,800) + capex reserves ($4,500) = $63,600/mo
-contract cre.ops_expense on entity asset.property {
+contract cre.opex_line on entity asset.property {
   term 2026-01..2030-12
   terms {
     amount = 63600

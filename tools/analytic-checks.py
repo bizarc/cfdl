@@ -1090,9 +1090,9 @@ contract cre.lease_unit.a on entity asset.tower {
   terms { rent_year = 120000  escalation = 0.03  free_rent_months = 6 }
 }
 
-contract cre.property_opex.main on entity asset.tower {
+contract cre.opex_line.main on entity asset.tower {
   term 2026-01..2029-01
-  terms { opex_year = 40000  escalation = 0.02 }
+  terms { amount_year = 40000  escalation = 0.02 }
 }
 
 contract cre.vacancy_loss on entity asset.tower {

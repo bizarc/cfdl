@@ -52,20 +52,6 @@ schedule_to = "{{contract.term_end}}"
 # `amount` is required; the term supplies the schedule.
 
 [[rules]]
-id = "cre_ops_expense"
-contract_name = "cre.ops_expense"
-stream_name = "cre.ops.expense"
-owner_entity = "${subject}"
-direction = "outflow"
-category = "operating.expense.opex"
-amount_expr = "{{contract.amount}}"
-schedule_kind = "every"
-schedule_from = "{{contract.term_start}}"
-schedule_to = "{{contract.term_end}}"
-
-# `amount` is required; the term supplies the schedule.
-
-[[rules]]
 id = "cre_exit_cap_sale"
 contract_name = "cre.exit_cap"
 stream_name = "cre.exit.sale"
@@ -227,20 +213,55 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
+# THE operating expense contract. One rule spans a single blended figure and a
+# full itemised schedule; the grain is chosen by how many instances a model
+# declares, and the LEVEL by the entity each hangs on (`part_of` rolls them up).
+# It replaced `cre.opex_line` and `cre.opex_line`, which differed only in
+# escalation and in whether they could be instanced — and, confusingly, the one
+# named for a single property was the repeatable one.
+#
+# ESCALATION AND OCCUPANCY ARE EACH A PAIR, not a toggle. A term is a literal or
+# one declared input, never an expression — the parser says so:
+#
+#   Term 'escalation' takes a single value. A term is a literal or one declared
+#   input (e.g. `inputs.yield`); compute derived values in an `assume` instead.
+#
+# So `escalation = 0.03` and `escalation = inputs.cpi` both work, and a
+# time-varying rate cannot arrive through the term at all. The pack composes the
+# `curve_value` call and the term carries only the curve NAME. `escalation = 0`
+# is the default and IS "no escalation"; a boolean would be a second way to say
+# it and a way for the two to disagree.
+#
+# The occupancy factor is `pct_fixed + (1 - pct_fixed) * occupancy`. Property
+# tax and insurance run whether the building is full or empty; utilities and
+# cleaning track occupied space. At the default `pct_fixed = 1` the factor is 1
+# and this reduces to a plain escalating series.
+#
+# `pow(1 + esc, time.elapsed_years)` steps ANNUALLY — elapsed_years is
+# `round_down(months / 12, 0)` — which is how commercial opex escalates. It is
+# deliberately not opco's per-period recurrence: the two give different numbers
+# and the HUD case is the evidence that the difference is material.
 [[rules]]
-id = "cre_property_opex"
-contract_name = "cre.property_opex"
-stream_name = "cre.property.opex{{contract.dot_suffix}}"
+id = "cre_opex_line"
+contract_name = "cre.opex_line"
+stream_name = "cre.opex.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.opex"
-amount_expr = "({{contract.opex_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + if(\"{{contract.escalation_curve}}\" == \"\", {{contract.escalation}}, curve_value(\"{{contract.escalation_curve}}\", time.date)), {{time.elapsed_years}}) * ({{contract.pct_fixed}} + (1 - {{contract.pct_fixed}}) * if(\"{{contract.occupancy_curve}}\" == \"\", {{contract.occupancy}}, curve_value(\"{{contract.occupancy_curve}}\", time.date)))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+# Either amount term satisfies E6041; the unstated one contributes zero.
+amount = "0"
+amount_year = "0"
 escalation = "0"
+escalation_curve = ""
+pct_fixed = "1"
+occupancy = "1"
+occupancy_curve = ""
 
 [[rules]]
 id = "cre_exit_forward_noi"
@@ -295,7 +316,14 @@ category = "investing.reversion"
 # the bare name as well as its children, so an unsuffixed cre.PercentageRent
 # contract entered forward NOI twice and inflated the exit price it strikes.
 # Latent only because every shipped model suffixes the contract.
-amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.expense\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.property.opex\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
+#
+# `cre.opex.line.*` carries a `.*` for the same reason, and it did not always.
+# The two opex streams it replaces were summed by BARE name, and
+# `cre.opex_line` was instanceable — so `cre.opex_line.taxes` emitted
+# `cre.opex.line.taxes`, which the bare pattern did not match. Opex dropped
+# out of forward NOI, NOI was overstated, and the exit price struck off it was
+# too high. Silent, and worth real money.
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * (1 - {{contract.selling_costs}})"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.

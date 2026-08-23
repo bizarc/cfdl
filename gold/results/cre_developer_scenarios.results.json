@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "28f885d4214a999ee2d3b87f8537e385e78e0b802a836ea7d74364115c5e1e3a",
-  "ledger_hash": "7fc314614d0f0f7d21d5d7d4c2bbf45434357398e1d6b7ef91497dbe18d23b67",
+  "model_hash": "8deb440286193990424fad44fa6e0def7891628808436ea5ff34d8e6e14b633d",
+  "ledger_hash": "48ce34574e996734a24e4300a94acf23788fa0e6cdba4bc28df6a52fdf9c968c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -35,10 +35,24 @@
         }
       },
       {
-        "contract": "cre.ops_expense",
-        "stream": "cre.ops.expense",
+        "contract": "cre.opex_line",
+        "defaults_applied": [
+          "amount_year",
+          "escalation",
+          "escalation_curve",
+          "occupancy",
+          "occupancy_curve",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line",
         "terms": {
-          "amount": "12000"
+          "amount": "12000",
+          "amount_year": "0",
+          "escalation": "0",
+          "escalation_curve": "",
+          "occupancy": "1",
+          "occupancy_curve": "",
+          "pct_fixed": "1"
         }
       },
       {
@@ -85,7 +99,7 @@
         "amount": 1650000.0,
         "currency": "USD"
       },
-      "stream.cre.ops.expense.total": {
+      "stream.cre.opex.line.total": {
         "amount": -576000.0,
         "currency": "USD"
       },
@@ -3446,7 +3460,7 @@
           }
         ]
       },
-      "stream.cre.ops.expense": {
+      "stream.cre.opex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -4390,7 +4404,7 @@
             }
           ]
         },
-        "stream.cre.ops.expense": {
+        "stream.cre.opex.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -4496,7 +4510,7 @@
             "amount": 1650000.0,
             "currency": "USD"
           },
-          "stream.cre.ops.expense.total": {
+          "stream.cre.opex.line.total": {
             "amount": -576000.0,
             "currency": "USD"
           },
@@ -4540,7 +4554,7 @@
             "amount": 1485000.0,
             "currency": "USD"
           },
-          "stream.cre.ops.expense.total": {
+          "stream.cre.opex.line.total": {
             "amount": -633600.0,
             "currency": "USD"
           },

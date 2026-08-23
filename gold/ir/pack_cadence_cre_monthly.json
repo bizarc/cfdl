@@ -144,8 +144,8 @@
       }
     },
     {
-      "id": "6b71b61353aa74ffa80388a10e780790",
-      "name": "cre.property_opex",
+      "id": "9a6463ca7ed884d3801014c9283d3f44",
+      "name": "cre.opex_line",
       "type": "core.Contract",
       "subject": {
         "symbol": "asset.tower"
@@ -187,7 +187,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.expense\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.property.opex\", time.t + 1.0, time.t + 12.0)) / 0.065 * (1.0 - 0.02)"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065 * (1.0 - 0.02)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -211,8 +211,8 @@
       }
     },
     {
-      "id": "6ae95f4440dcc285f9dd042dc89c02bb",
-      "name": "cre.property.opex",
+      "id": "f8962668fb68cc4e7ff46772df7c6893",
+      "name": "cre.opex.line",
       "owner": {
         "symbol": "asset.tower"
       },
@@ -227,7 +227,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(300000.0 / 12.0) * pow(1.0 + 0.025, round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 12.0, 0.0))"
+        "src": "(0.0 + 300000.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.025, curve_value(\"\", time.date)), round_down(months_between(parse_date(\"2025-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * if(\"\" == \"\", 1.0, curve_value(\"\", time.date)))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -246,7 +246,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_property_opex"
+          "rule_id": "cre_opex_line"
         }
       }
     },
@@ -453,12 +453,24 @@
       ]
     },
     {
-      "stream": "cre.property.opex",
-      "contract": "cre.property_opex",
+      "stream": "cre.opex.line",
+      "contract": "cre.opex_line",
       "terms": {
+        "amount": "0",
+        "amount_year": "300000",
         "escalation": "0.025",
-        "opex_year": "300000"
-      }
+        "escalation_curve": "",
+        "occupancy": "1",
+        "occupancy_curve": "",
+        "pct_fixed": "1"
+      },
+      "defaults_applied": [
+        "amount",
+        "escalation_curve",
+        "occupancy",
+        "occupancy_curve",
+        "pct_fixed"
+      ]
     },
     {
       "stream": "cre.exit.proceeds",

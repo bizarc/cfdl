@@ -65,6 +65,19 @@ op = "sum"
 categories = ["operating.*"]
 formula = "sum(operating.*)"
 
+# ONE ROW, THOUGH `cre.opex_line` IS INSTANCED PER EXPENSE. Every instance
+# carries the same category — `category` is not a template-expanded rule field —
+# so a category row renders one number however many lines a model declares.
+#
+# Itemising them by STREAM selector works at runtime (rows accept `streams`, and
+# the evaluator emits a `residual` row for streams no row claimed) but it cannot
+# be reconciled with the completeness check below: a statement must claim every
+# category a lowering rule emits, checked STATICALLY at pack load, and a stream
+# selector naming one instance says nothing about the category in general. A
+# modeller's own instance name is unknowable at load time, so the static
+# guarantee and per-line display cannot both hold as things stand. The guarantee
+# wins; see backlog 7.59.
+
 # What coverage is measured against: the categories that are PAYMENTS on the
 # debt, not the whole financing section.
 #

@@ -68,17 +68,26 @@ message = "CRE exit requires either 'noi_ref' or 'noi_value'."
 check = "any_term_present"
 terms = ["noi_ref", "noi_value", "noi"]
 
-# --- cre.ops_revenue / cre.ops_expense --------------------------------------
+# --- cre.ops_revenue --------------------------------------------------------
+#
+# E6020 demands a bare `amount`. It used to cover the operating expense side too,
+# back when that was `cre.ops_expense` and a per-period figure was the only shape
+# it had. `cre.opex_line` takes `amount` OR `amount_year`, which is E6061.
 
 [[validations]]
-contracts = ["cre.ops_revenue", "cre.ops_expense"]
+contract = "cre.ops_revenue"
 code = "E6020_CRE_OPS_MISSING_AMOUNT"
 message = "CRE ops contract is missing required term 'amount'."
 check = "term_present"
 term = "amount"
 
+# Not applied to `cre.opex_line`. It reached the operating expense side only
+# because that used to be `cre.ops_expense`; an expense term legitimately runs
+# into the projection tail — `cre_office_two_tenant` states 2026-01..2036-12 on
+# a 120-month timeline with `project 12`, so that forward NOI has expenses to
+# read — and `cre.property_opex` never carried this constraint.
 [[validations]]
-contracts = ["cre.ops_revenue", "cre.ops_expense"]
+contract = "cre.ops_revenue"
 code = "E6021_CRE_OPS_INVALID_SCHEDULE"
 message = "CRE ops term range is missing, invalid, or outside model timeline."
 check = "term_range_within_timeline"
@@ -276,3 +285,43 @@ contract = "cre.construction_loan"
 code = "E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE"
 message = "CRE construction loan term must fall within the model timeline."
 check = "term_range_within_timeline"
+
+# --- cre.opex_line ----------------------------------------------------------
+#
+# The contract that replaced `cre.opex_line` and `cre.opex_line`. Both
+# amount terms default to zero so either one alone is enough; stating neither is
+# a line that silently costs nothing, which is why it is checked rather than
+# defaulted away.
+
+[[validations]]
+contract = "cre.opex_line"
+code = "E6061_CRE_OPEX_LINE_MISSING_AMOUNT"
+message = "CRE operating expense line must state an amount: 'amount' (per period) or 'amount_year' (annual)."
+check = "any_term_present"
+terms = ["amount", "amount_year"]
+
+# A share, not a percentage: 0.81, never 81. Outside [0,1] the occupancy factor
+# `pct_fixed + (1 - pct_fixed) * occupancy` goes negative or exceeds the
+# unoccupied cost, and the line quietly reports the wrong expense rather than
+# failing.
+[[validations]]
+contract = "cre.opex_line"
+code = "E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE"
+message = "CRE operating expense 'pct_fixed' is the fixed SHARE and must be between 0 and 1 (0.81, not 81)."
+check = "term_number"
+term = "pct_fixed"
+min = 0
+max = 1
+when = "present"
+
+# Occupancy is a ratio of occupied space. Zero is a fully dark building, which
+# is legitimate; negative is not, and above 1 is not occupancy.
+[[validations]]
+contract = "cre.opex_line"
+code = "E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE"
+message = "CRE operating expense 'occupancy' is a ratio of occupied space and must be between 0 and 1."
+check = "term_number"
+term = "occupancy"
+min = 0
+max = 1
+when = "present"

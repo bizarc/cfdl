@@ -8,6 +8,74 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): one CRE operating expense contract, `cre.opex_line`
+
+`cre.property_opex` and `cre.ops_expense` are removed. They differed only in
+escalation — an annual figure compounding against a raw per-period amount — and
+in whether they could be instanced, and on that second point their names said
+the opposite of the truth: `cre.property_opex` carried `{{contract.dot_suffix}}`
+and repeated, while `cre.ops_expense`, the generic-sounding one, was a singleton.
+A modeller could not be expected to pick correctly and nothing documented it.
+
+`cre.opex_line` replaces both and spans the range from a single blended figure
+to a fully itemised schedule. Grain is how many instances a model declares;
+LEVEL is the entity each hangs on, with `part_of` doing the rollup, because the
+CRE ontology already says a building may be modeled as one asset, as unit types
+or as individual suites — a `level` term would restate that where the two could
+disagree.
+
+New terms: `amount` / `amount_year`, `escalation` / `escalation_curve`,
+`pct_fixed`, `occupancy` / `occupancy_curve`. Escalation and occupancy are each
+a PAIR rather than a toggle, because a contract term is a literal or one
+declared input and never an expression — so a time-varying rate cannot arrive
+through the term and the pack composes the `curve_value` call from a curve name.
+`escalation = 0` is the default and is "no escalation".
+
+The occupancy factor `pct_fixed + (1 - pct_fixed) * occupancy` closes backlog
+1.1. `benchmarks/cre/mit_rentleg_plaza` now runs on the pack contract instead of
+a hand-written stream and still reconciles to MIT 11.431J at a one-cent period
+tolerance: $4.81/SF on 30,000 SF at 81% fixed gives $135,161 of 2001 opex, not
+$144,300, and the published answer depends on it.
+
+`templates.toml` — a real loaded structure the LSP reads for snippet
+completion, empty in this pack since it was created — now ships nine
+conventional expense lines plus a blended one.
+
+### Fixed: opex dropped out of forward NOI when the contract was instanced
+
+`cre.exit_forward` summed `series_sum("cre.property.opex", …)` by BARE name
+while `cre.property_opex` was instanceable. A `.*` pattern matches the bare name
+and its children; a bare pattern matches only itself. So
+`cre.property_opex.taxes` emitted a stream the exit rule did not see: opex fell
+out of forward NOI, NOI was overstated, and the exit price struck off it was too
+high. Silent, and worth real money. It is the same defect found and fixed for
+`cre.pct_rent`, one term over in the same expression.
+
+Both opex terms are now one `series_sum("cre.opex.line.*", …)`.
+
+### Migration
+
+Rename the contract, and `opex_year` to `amount_year`. Note `cre.lease_unit`
+also has an `opex_year` term — its expense stop — which is unrelated and
+unchanged.
+
+`E6020_CRE_OPS_MISSING_AMOUNT` and `E6021_CRE_OPS_INVALID_SCHEDULE` no longer
+apply to the expense side. E6020 demanded a bare `amount`, which `E6061` now
+replaces with "either amount term"; E6021 rejected a term reaching into the
+projection tail, which an expense legitimately does so that forward NOI has
+expenses to read.
+
+New codes: `E6061_CRE_OPEX_LINE_MISSING_AMOUNT`,
+`E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE`, `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE`.
+
+Published stream names change: `cre.property.opex` and `cre.ops.expense` both
+become `cre.opex.line{.<id>}`. Scenario overrides keyed
+`stream.cre.ops.expense:amount` move with them.
+
+Goldens were re-blessed. Across 98 results files and 88,863 numeric leaves,
+every number is identical under the rename — only names moved.
+
+
 ### Changed (breaking for external packs): a validation's `match` field is gone
 
 A pack validation matched a contract by EXACT name unless it declared
@@ -268,8 +336,8 @@ A stream is the atom a statement reports, so a stream that is secretly an
 aggregate is a row a statement cannot show. Three of them were.
 
 **A property may now have more than one expense line (1.5).**
-`cre.property_opex` takes a suffix and `domain.cre.noi` selects
-`cre.property.opex.*`. `benchmarks/cre/hud_home_multifamily` carries its four
+`cre.opex_line` takes a suffix and `domain.cre.noi` selects
+`cre.opex.line.*`. `benchmarks/cre/hud_home_multifamily` carries its four
 published sub-lines as four streams and **asserts all four independently**
 against the Sample workbook's Operating Pro Forma rows 18–21, where it
 previously asserted only their total. The four states already existed — split

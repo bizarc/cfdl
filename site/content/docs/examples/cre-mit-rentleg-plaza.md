@@ -186,14 +186,31 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 // of 30k), full thereafter.
 // ---------------------------------------------------------------------------
 
-stream cre.property.opex on entity asset.rentleg outflow currency USD {
-  schedule every year from 2001-01 to 2006-01
-  category operating.expense.opex
-  amount = inputs.building_sf * inputs.opex_psf_full
-           * pow(1 + inputs.opex_growth, time.t)
-           * (inputs.opex_pct_fixed
-              + (1 - inputs.opex_pct_fixed)
-                * if(time.t == 0, 2.0 / 3.0, if(time.t == 3, 5.0 / 6.0, 1.0)))
+// Occupancy, per MIT fn 7. A `step` curve is flat-forward — the last point at
+// or before the date — which is what a suite going dark and coming back is.
+// Two-thirds in 2001 (Suite 200 dark), full in 2002-03, five-sixths in 2004
+// (Suite 100 dark a quarter of the year on 20k of 30k SF), full thereafter.
+curve occupancy step {
+  2001-01: 0.66666666666667
+  2002-01: 1.0
+  2004-01: 0.83333333333333
+  2005-01: 1.0
+}
+
+// $4.81/SF on 30,000 SF at full occupancy = $144,300, growing 4%/yr, of which
+// 81% is fixed and 19% varies directly with occupancy. That split is why 2001
+// opex is $135,161 and not $144,300: a suite is dark, and only the variable
+// share falls with it.
+assume opex_year_full = 144300      // 4.81 * 30000
+
+contract cre.opex_line {
+  term 2001-01..2006-01
+  terms {
+    amount_year = inputs.opex_year_full
+    escalation = inputs.opex_growth
+    pct_fixed = inputs.opex_pct_fixed
+    occupancy_curve = "occupancy"
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -324,7 +341,7 @@ Checked period by period: **12 series** across **5 periods** — **60 values** i
 - `cre.abatement.suite_200`
 - `cre.capex`
 - `cre.exit.proceeds`
-- `cre.property.opex`
+- `cre.opex.line`
 - `cre.unit.base_rent.suite_100`
 - `cre.unit.base_rent.suite_200`
 - `cre.unit.recoveries.suite_100`

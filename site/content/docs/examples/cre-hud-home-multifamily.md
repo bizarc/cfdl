@@ -80,7 +80,7 @@ without it.
 // and the switch wrong would look correct for thirteen years.
 //
 // WHY THESE ARE NATIVE STREAMS. Two CRE pack rules nearly fit and do not:
-// `cre.property_opex` emits a single un-suffixed stream, so a property cannot
+// `cre.opex_line` emits a single un-suffixed stream, so a property cannot
 // have more than one expense line; and `cre.vacancy_loss` takes a CONSTANT
 // `potential_gross_year`, so vacancy cannot track a rent roll that grows. Both
 // The streams below are named into
@@ -201,32 +201,32 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 
 // One stream per PUBLISHED sub-line. The workbook reports these four
 // separately — it escalates and rounds each on its own before summing — and
-// until `cre.property_opex` took a suffix a model could declare exactly one
+// until `cre.opex_line` took a suffix a model could declare exactly one
 // expense line, so they had to be added together here and the four published
 // figures could not be checked against anything.
 //
 // The states were already per-sub-line for the rounding reason, so this is a
 // decomposition and not a change: the four sum to what the single stream
 // carried, to the cent.
-stream cre.property.opex.management on entity asset.home_project outflow currency USD {
+stream cre.opex.line.management on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
   amount = asset.home_project.opex_management
 }
 
-stream cre.property.opex.maintenance on entity asset.home_project outflow currency USD {
+stream cre.opex.line.maintenance on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
   amount = asset.home_project.opex_maintenance
 }
 
-stream cre.property.opex.utilities on entity asset.home_project outflow currency USD {
+stream cre.opex.line.utilities on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
   amount = asset.home_project.opex_utilities
 }
 
-stream cre.property.opex.taxes_insurance on entity asset.home_project outflow currency USD {
+stream cre.opex.line.taxes_insurance on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
   amount = asset.home_project.opex_taxes_ins
@@ -235,7 +235,7 @@ stream cre.property.opex.taxes_insurance on entity asset.home_project outflow cu
 // The replacement reserve is its own published line and is semantically not an
 // operating expense — HUD reports it below total expenses — but it does sit
 // above NOI, which is why it is an operating deduction rather than capital.
-stream cre.ops.expense on entity asset.home_project outflow currency USD {
+stream cre.opex.line on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.expense.opex
   amount = asset.home_project.reserve
@@ -292,11 +292,11 @@ Checked period by period: **13 series** across **11 periods** — **138 values**
 - `cre.unit.base_rent.home` — within ±0.5
 - `cre.vacancy.loss` — within ±0.5
 - `cre.ops.revenue` — within ±0.5
-- `cre.property.opex.management` — within ±0.5
-- `cre.property.opex.maintenance` — within ±0.5
-- `cre.property.opex.utilities` — within ±0.5
-- `cre.property.opex.taxes_insurance` — within ±0.5
-- `cre.ops.expense` — within ±0.5
+- `cre.opex.line.management` — within ±0.5
+- `cre.opex.line.maintenance` — within ±0.5
+- `cre.opex.line.utilities` — within ±0.5
+- `cre.opex.line.taxes_insurance` — within ±0.5
+- `cre.opex.line` — within ±0.5
 - `loan.permanent_debt_service` — within ±0.5
 - `loan.mortgage_insurance` — within ±0.5
 - `domain.cre.egi` — within ±1.0

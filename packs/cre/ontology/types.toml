@@ -243,20 +243,15 @@ subject_family = "asset"
 parties = ["landlord"]
 
 [[contracts]]
-type_id = "CRE.Contract.PropertyOperatingExpense"
-contract_name = "cre.property_opex"
+type_id = "CRE.Contract.OperatingExpense"
+contract_name = "cre.opex_line"
 subject_family = "asset"
 parties = ["owner"]
+description = "One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level."
 
 [[contracts]]
 type_id = "CRE.Contract.OperatingRevenue"
 contract_name = "cre.ops_revenue"
-subject_family = "asset"
-parties = ["owner"]
-
-[[contracts]]
-type_id = "CRE.Contract.OperatingExpense"
-contract_name = "cre.ops_expense"
 subject_family = "asset"
 parties = ["owner"]
 

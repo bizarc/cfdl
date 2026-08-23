@@ -283,7 +283,7 @@ mod tests {
                 "money",
                 "sum",
                 &["cre.lease.base_rent", "cre.ops.revenue"],
-                &["cre.ops.expense"],
+                &["cre.opex.line"],
                 None,
                 None,
                 "sum(numerator_streams) + sum(denominator_streams)",
@@ -367,7 +367,7 @@ mod tests {
     fn spec_driven_cre_dscr() {
         let results = make_results_with_metrics(vec![
             ("stream.cre.ops.revenue.total", 720_000.0),
-            ("stream.cre.ops.expense.total", -240_000.0),
+            ("stream.cre.opex.line.total", -240_000.0),
             ("stream.loan.permanent_debt_service.total", -360_000.0),
         ]);
         let dm = compute("cre", &cre_specs(), &results).expect("metrics");
@@ -527,7 +527,7 @@ mod tests {
     fn require_positive_gates_dependent_ratio() {
         let results = make_results_with_metrics(vec![
             ("stream.cre.ops.revenue.total", 100_000.0),
-            ("stream.cre.ops.expense.total", -40_000.0),
+            ("stream.cre.opex.line.total", -40_000.0),
         ]);
         let dm = compute("cre", &cre_specs(), &results).expect("metrics");
         assert!(!dm.metrics.contains_key("domain.cre.debt_service"));

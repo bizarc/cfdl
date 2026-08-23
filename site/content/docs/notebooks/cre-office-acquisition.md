@@ -226,7 +226,7 @@ results.metrics_frame()
 11                 run.annual_discount_rate  7.250000e-02                 core
 12                     run.periods_per_year  1.200000e+01                 core
 13           stream.cre.exit.proceeds.total  3.237143e+06      USD        core
-14           stream.cre.property.opex.total -3.361015e+06      USD        core
+14               stream.cre.opex.line.total -3.361015e+06      USD        core
 15  stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD        core
 16  stream.cre.rollover.ti_lc.tenant_a.t... -1.750000e+05      USD        core
 17  stream.cre.unit.abatement.tenant_a.t... -1.200000e+05      USD        core

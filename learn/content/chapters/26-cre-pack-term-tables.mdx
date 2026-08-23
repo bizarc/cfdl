@@ -16,13 +16,13 @@ The CRE pack's contract types, one table each: the terms, which are required, wh
 |---|---|---|
 | `amount` | yes | Draw per period — a material number the model must state |
 
-**`cre.ops_revenue`** → `cre.ops.revenue` (operating.revenue.other, inflow); **`cre.ops_expense`** → `cre.ops.expense` (operating.expense.opex, outflow). Flat amount per period over the term.
+**`cre.ops_revenue`** → `cre.ops.revenue` (operating.revenue.other, inflow); **`cre.opex_line`** → `cre.opex.line` (operating.expense.opex, outflow). Flat amount per period over the term.
 
 | Term | Required | Meaning |
 |---|---|---|
 | `amount` | yes | Per-period amount |
 
-**`cre.property_opex`** → `cre.property.opex[.suffix]` (operating.expense.opex, outflow).
+**`cre.opex_line`** → `cre.opex.line[.suffix]` (operating.expense.opex, outflow).
 
 | Term | Required | Default | Meaning |
 |---|---|---|---|

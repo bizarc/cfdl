@@ -56,10 +56,10 @@ contract cre.vacancy_loss on entity asset.strip_center {
   }
 }
 
-contract cre.property_opex on entity asset.strip_center {
+contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
-    opex_year = 240000
+    amount_year = 240000
     escalation = 0.03
   }
 }

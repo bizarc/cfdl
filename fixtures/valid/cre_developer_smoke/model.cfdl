@@ -26,7 +26,7 @@ contract cre.ops_revenue {
   }
 }
 
-contract cre.ops_expense {
+contract cre.opex_line {
   term 2028-01..2031-12
   terms {
     amount = 12000

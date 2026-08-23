@@ -2636,7 +2636,7 @@ check = "term_present"
 term = "base_rent"
 
 [[validations]]
-contracts = ["cre.ops_revenue", "cre.ops_expense"]
+contracts = ["cre.ops_revenue", "cre.opex_line"]
 code = "E6020_CRE_OPS_MISSING_AMOUNT"
 message = "missing amount"
 check = "term_number"
