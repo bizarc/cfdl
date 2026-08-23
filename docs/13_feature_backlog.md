@@ -28,11 +28,41 @@ figure the model computes rather than one the analyst states.
 MIT fn 5 does exactly this: the replacement Suite 100 lease takes its stop from
 actual 2004 opex, which is why its 2004 reimbursement is exactly zero.
 
-Blocks: the same benchmark. Also forces a duplicated opex formula — see 5.1,
-which is the underlying cause.
+Blocks: the same benchmark, which duplicates the opex formula to work around
+it:
 
-Shape: a term that names a period rather than an amount, resolved after the
-opex stream exists. Depends on 5.1.
+```cfdl
+assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
+```
+
+Change an opex assumption and that copy goes stale in silence, and every
+reimbursement after 2004 is wrong.
+
+**The duplication is avoidable and the blocker is the two-phase rule.** Reading
+the opex stream directly — `series_sum("cre.opex.line", time.t, time.t)` —
+reproduces the recoveries EXACTLY (61,960.440704, to the cent). But it makes the
+recoveries stream phase-2, and `cre.exit_forward` is phase-2 and reads
+`cre.unit.recoveries.*`, so forward NOI loses every recovery. Measured on this
+benchmark: the exit price falls from 3,051,540.54 to 2,935,100.91.
+
+That collision is now DIAGNOSED rather than silent — the phase guard used to
+compare exact names and missed every globbed reference, which is the form the
+packs use. It is still a collision.
+
+Shape: a term that names a period rather than an amount, resolved after the opex
+stream exists. What it really needs is for a stream to read another stream's
+settled value without the reader becoming un-readable itself — the same
+constraint that blocks occupancy derived from the rent roll and a
+percentage-of-EGI management fee. Three ordinary CRE requirements, one cause.
+
+*(This item used to say "depends on 5.1". That dependency SHIPPED — 5.1 is
+rule-declared state, and closed items are removed from this file. So the next
+step is to establish whether a latched field closes this outright: state opex
+per SF once as a field, latch its 2004 value into a second field, and have both
+the opex stream and the recoveries stream read them. Fields stay phase-1, so the
+`cre.exit_forward` collision above would not arise. That is the shape
+`docs/26_lessons_learned.md` already records for a balance drawn down by a
+payment, and nobody has tried it here.)*
 
 ### 1.6 Vacancy cannot track a growing rent roll
 
@@ -44,9 +74,10 @@ loss stays flat while the rent it is a percentage *of* rises.
 Found the same way. In that deal vacancy also has to step 46% at the
 affordability cliff, which no constant can do.
 
-Shape: this is really 5.1 in miniature — the rule needs to read another stream.
-Either the term accepts a stream reference, or vacancy becomes a phase-2 rule
-reading the rent families through `series_sum`.
+Shape: the rule needs to read another stream. Either the term accepts a stream
+reference, or vacancy becomes a phase-2 rule reading the rent families through
+`series_sum` — which is the collision 1.2 measures, since `cre.exit_forward`
+already reads those families.
 
 ### 1.7 A rent restriction that expires
 
@@ -206,7 +237,7 @@ the expression environment, so the staircase cannot be written.
 multifamily template escalates expenses as a *recurrence* — each year is last
 year's already-rounded figure times the trend — and two of its four expense
 lines reproduce exactly under that rule and under no closed form. Expressing it
-needs `round_to` **and** a backward period reference (5.1), because the input to
+needs `round_to` **and** a backward period reference, because the input to
 each year's rounding is the previous year's output. That combination is the
 general case; the production credit above is the special case where the
 recurrence happens to have a closed form. That builtin is
@@ -397,13 +428,15 @@ types exercised by at least one of them:
 | opco | **0 / 10** | everything |
 
 And by construction: `hud_home_multifamily` is 0 pack contracts and 6 native
-streams, `banker_dcf_conventions` 0 and 6, `mit_rentleg_plaza` 1 and 10. The
+streams, `banker_dcf_conventions` 0 and 6, `mit_rentleg_plaza` 2 and 9. The
 credit and energy cases are the opposite — `auto_abs_wal` is 43 contracts and
 no native streams.
 
-Each case documents why its pack rules did not fit — single-instance opex,
-non-escalating vacancy, sources that publish per-year figures rather than
-drivers. But the aggregate is circular: **the two packs with the weakest rule
+Each case documents why its pack rules did not fit — non-escalating vacancy,
+sources that publish per-year figures rather than drivers. "Single-instance
+opex" is no longer among the reasons: `cre.opex_line` covers a blended figure
+and an itemised schedule with one contract, and `mit_rentleg_plaza` moved its
+opex onto it. But the aggregate is circular: **the two packs with the weakest rule
 coverage are exactly the ones whose benchmarks bypass the pack**, so for cre and
 opco we are validating the engine, not the domain logic.
 
