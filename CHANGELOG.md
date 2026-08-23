@@ -8,6 +8,32 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: the reserved-word list is the lexer's list, and says which words do nothing
+
+`docs/01` §18 is the published statement of what a modeller may not name a
+thing. The lexer reserved 95 words and §18 listed 57, so 38 identifiers stopped
+working with nothing to explain why. Fourteen reserved words are read by no
+production at all — they render in error messages and nowhere else.
+
+§18 now splits into words a production reads (81) and words reserved for a
+feature not yet built (14), and `tools/check-keyword-register.py` holds the
+split to the lexer and the parser. Adding a keyword now fails CI until §18 says
+which it is.
+
+Closes backlog 7.47 and 7.48.
+
+### Found: `Mon` through `Sun` describe syntax that has never existed
+
+The weekday keywords were documented as weekly-schedule anchors. No production
+reads them, `on` accepts only `day <n>` or `eom`, and `weekly` is not a calendar
+frequency. The specification described a feature that was never built, which is
+exactly what the gate above exists to prevent. Filed as backlog 7.60.
+
+Backlog 7.49 gains a second instance of the same drift in the grammar itself: a
+contract term is documented as `literal_or_expr` and is in fact a literal or one
+declared input.
+
+
 ### Added: a statement row may itemise a stream family, and the CRE operating statement does
 
 A `line` row has always accepted `streams` selectors as well as `categories` —

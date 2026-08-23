@@ -1456,79 +1456,27 @@ config produced an NPV equal to its own total.
 
 ---
 
-### 7.47 Fourteen reserved words are consumed by no production
+### 7.49 The EBNF describes syntax the parser does not accept
 
-*Belongs with language and packs (section 5). Investigate.*
+*Two instances found so far. The keyword half of this drift is closed and gated;
+this is the production half, which nothing checks.*
 
-Fourteen of the 95 words the lexer reserves are read by no parse rule. They
-appear in `crates/cfdl-parser/src/lib.rs` only inside `keyword_text`, which
-renders a keyword back to text for an error message:
-
-```
-Mon Tue Wed Thu Fri Sat Sun          weekday names
-short_front short_back
-long_front long_back                 stub policies
-direction owner tags
-```
-
-Eleven belong to features `docs/10` records as REJECTED — `schedule ... on
-<weekday list>` and `schedule ... stub <policy>` are both struck there. The
-other three are vestigial: a stream states its direction with the bare words
-`inflow` and `outflow`, `owner` appears in no rule, and `tags` is one of the
-blocks `docs/01` §8.1 describes as tolerated by the parser and absent from IR.
-
-They are not free. A reserved word is unavailable everywhere a name is expected
-(§7.19), so each one costs a word a model or a pack might want. `owner` and
-`direction` are the ones to regret: an asset has an owner, a flow has a
-direction, and both are natural field names.
-
-To investigate: whether each is genuinely dead, whether removing it changes any
-diagnostic text, and whether the weekday names should go with the rejected
-feature or be kept against its return.
-
-Found August 2026, auditing every keyword against the production that consumes
-it.
-
----
-
-### 7.48 The lexer reserves 38 words the specification does not list
-
-*Belongs with language and packs (section 5). Investigate.*
-
-`docs/01` §18 documents 57 reserved words. The lexer reserves 95. Nothing goes
-the other way — everything §18 lists is genuinely reserved — so the drift is
-one-directional: the implementation grew and the list did not.
+**A contract term is not `literal_or_expr`.** The grammar says
+`map_entry = qname literal_or_expr`, and the parser says otherwise:
 
 ```
-LogNormal Normal Triangular Uniform clip
-active in state parties tags
-annual daily monthly quarterly year quarter month months day days due mid net
-none following preceding modified_following modified_preceding
-short_front short_back long_front long_back
-phase_start phase_end phase_enter
-curve true false
+Term 'escalation' takes a single value. Expected the next term or '}'. A term is
+a literal or one declared input (e.g. `inputs.yield`); compute derived values in
+an `assume` instead.
 ```
 
-Several are plainly load-bearing and simply went undocumented — `curve` opens a
-statement, `active`, `in` and `state` appear in stream and entity blocks,
-`true` and `false` are literals, and the calendar and interval words drive
-`time` and `schedule`. For those the fix is to publish them.
+So `escalation = 0.03` and `escalation = inputs.cpi` compile and
+`escalation = inputs.cpi + 0.01` does not. This is load-bearing, not cosmetic:
+it is why a pack composes `curve_value` from a curve NAME rather than letting a
+term hold the call, and designing against the EBNF would have removed that pair
+as redundant.
 
-The rest are the reason this is worth investigating rather than just editing.
-`year`, `month`, `net`, `state`, `active`, `in`, `none`, `mid`, `due` and
-`clip` are ordinary words a financial model wants for a field, taken silently
-for constructs where a bare word in a naming position could not be confused
-with them. Eleven of the 38 overlap §7.47 and are reserved for nothing at all.
-
-To investigate: which of the 38 must be reserved, which are local enough to be
-contextual, and which should simply be released — then reconcile §18 with
-whatever survives, so the published list is the enforced one.
-
-Found August 2026, diffing §18 against the lexer's table.
-
----
-
-### 7.49 The EBNF does not describe the entity block the parser accepts
+**And the entity block.**
 
 *Belongs with language and packs (section 5). Investigate.*
 
@@ -1843,3 +1791,30 @@ contract, migrate both match sites, and decide whether the type surfaces in the
 IR schema. Larger than 7.53 was; nothing is broken while it waits.
 
 ---
+
+---
+
+### 7.60 A weekly schedule cannot be anchored to a weekday
+
+*Belongs with the language (section 5). Found building the keyword register.*
+
+`docs/01` §18 documented `Mon` through `Sun` as reserved words for eight
+versions. They are reserved, they render in error messages, and no production
+reads them. The syntax they imply does not exist:
+
+```
+schedule every week on Mon from 2026-01 to 2026-02
+  -> Expected 'day <n>' or 'eom' after 'on'
+```
+
+`weekly` is not a calendar frequency either — the frequencies are `daily`,
+`monthly`, `quarterly` and `annual` — so a weekly TIMELINE is unavailable as
+well, though `every week` is a valid schedule interval.
+
+Provenance: found by the gate that now holds §18 to the lexer. The words were
+documented as though the feature shipped, which is how it went unnoticed.
+
+**What it needs.** `on <weekday>` in the schedule anchor, and a decision on
+whether a weekly calendar frequency is wanted or whether weekly schedules on a
+daily timeline are the answer. No case needs it yet; a rent roll on weekly
+billing or a daily-book instrument settling on Fridays would.

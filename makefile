@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series keyword-register ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -95,7 +95,8 @@ bench:
 # how a 23% weighted-average-life error once survived because `analytic-checks`
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
-          pack-validations pack-series site-voice glossary-check rule-fragments \
+          pack-validations pack-series keyword-register site-voice glossary-check \
+          rule-fragments \
           doc-examples training-examples shipped-examples benchmark-cases
 	@echo
 	@echo "make ci-gates: OK — every gate that is not the platform matrix."
@@ -213,6 +214,13 @@ rule-fragments:
 # both times in forward NOI, both times moving the exit price.
 pack-series:
 	$(PYGATE) tools/check-pack-series.py
+
+# docs/01 §18 is the published list of what a modeller may not name a thing.
+# The lexer reserved 95 words and §18 listed 57, so 38 identifiers stopped
+# working with nothing to explain why — and §18 documented weekday anchors for a
+# weekly schedule that no production has ever read.
+keyword-register:
+	$(PYGATE) tools/check-keyword-register.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot

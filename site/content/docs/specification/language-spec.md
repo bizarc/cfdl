@@ -894,14 +894,37 @@ These MUST compile to typed values in IR.
 
 ## 18. Reserved keywords (v0.1)
 
-`version`, `model`, `use`, `pack`, `import`, `as`, `time`, `calendar`, `from`, `for`, `phase`, `to`,
-`entity`, `contract`, `on`, `term`, `currency`, `terms`, `effects`, `stream`, `owner`, `direction`,
-`inflow`, `outflow`, `schedule`, `on`, `every`, `day`, `eom`, `week`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`,
-`convention`, `calendar`, `stub`, `except`, `also`,
-`assume`, `run`, `deterministic`, `monte_carlo`, `trials`, `seed`,
-`waterfall`,
-`event`, `when`, `set`, `activate`, `deactivate`,
-`option`, `type`, `exercisable`, `exercise`, `payoff`.
+A reserved word cannot be used as an identifier. The list is exhaustive and is
+checked against the lexer, so a word added to one appears in the other.
+
+### 18.1 In use (81)
+
+Read by a production of the grammar:
+
+`activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
+`curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `due`, `effects`, `entity`, `eom`, `event`,
+`every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
+`LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
+`Normal`, `on`, `option`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
+`phase_start`, `preceding`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `stream`, `stub`,
+`term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
+`waterfall`, `week`, `when`, `year`.
+
+### 18.2 Reserved, read by no production (14)
+
+Reserved so that adding the feature later does not break a model that had used
+the word as an identifier. Writing one today is an error, and no syntax accepts
+it:
+
+`direction`, `Fri`, `long_back`, `long_front`, `Mon`, `owner`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
+`Thu`, `Tue`, `Wed`.
+
+`Mon` through `Sun` anchor a weekly schedule to a weekday. That syntax is not
+implemented: `on` accepts `day <n>` or `eom`, and `weekly` is not a calendar
+frequency — the frequencies are `daily`, `monthly`, `quarterly` and `annual`.
+`direction` and `owner` name parts of a stream header the parser reads
+positionally. `tags` and the four stub conventions belong to features that are
+specified and not yet built.
 
 `pay` is contextual — it introduces a waterfall step and is an ordinary
 identifier elsewhere. `remaining`, `paid` and `owed` are bindings the host
