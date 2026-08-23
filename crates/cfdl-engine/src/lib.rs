@@ -55,6 +55,10 @@ pub enum EngineError {
     /// check lives with the ordering rather than being restated in the
     /// compiler where the two could drift.
     SeriesCycle(String),
+    /// A circular derivation among `assume` values. Same shape as
+    /// `SeriesCycle`, one layer up: no order satisfies it, and the engine
+    /// refuses rather than iterating.
+    AssumptionCycle(String),
     /// A name that resolved to nothing. docs/03 §2: "Unknown variables are
     /// hard errors (EXPR_EVAL), not nulls." Every layer honoured that except
     /// the engine, which caught the error and substituted zero — so a
@@ -69,6 +73,7 @@ impl std::fmt::Display for EngineError {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
             EngineError::SeriesCycle(msg) => write!(f, "{msg}"),
+            EngineError::AssumptionCycle(msg) => write!(f, "{msg}"),
             EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
@@ -2001,6 +2006,90 @@ mod tests {
     fn irr_undefined_all_positive() {
         // No sign change → IRR undefined
         assert!(super::irr_with_offsets(&[(vec![100.0, 200.0], 0.0)]).is_none());
+    }
+}
+
+#[cfg(test)]
+mod assumption_order_tests {
+    use super::*;
+
+    fn ir_with(assumes: &[(&str, &str)]) -> Ir {
+        let constants: serde_json::Map<String, serde_json::Value> = assumes
+            .iter()
+            .map(|(name, src)| {
+                (
+                    (*name).to_string(),
+                    serde_json::json!({ "expr": { "lang": "cfdl", "src": src } }),
+                )
+            })
+            .collect();
+        let ir_json = serde_json::json!({
+            "model": { "name": "m", "currency": "USD" },
+            "time": { "calendar": "annual", "start": "2026-01-01", "periods": 2 },
+            "entities": [{ "symbol": "asset.co" }],
+            "assumptions": { "constants": constants },
+            "streams": [{
+                "name": "base.rent",
+                "owner": { "symbol": "asset.co" },
+                "direction": "inflow",
+                "currency": "USD",
+                "amount": { "lang": "cfdl", "src": "1.0" },
+                "schedule": { "kind": "Every", "every": "annual",
+                              "from": "2026-01-01", "to": "2027-01-01" }
+            }]
+        });
+        serde_json::from_value(ir_json).expect("ir parses")
+    }
+
+    /// A derived assumption is ordinary modeling. Evaluated in name order
+    /// alone, `net_sf` read an empty environment and resolved to nothing.
+    #[test]
+    fn an_assumption_may_be_derived_from_another() {
+        let ir = ir_with(&[
+            ("gross_sf", "10000.0"),
+            ("efficiency", "0.85"),
+            ("net_sf", "inputs.gross_sf * inputs.efficiency"),
+        ]);
+        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        assert_eq!(out.resolved_inputs["net_sf"], 8500.0);
+        assert!(out.warnings.is_empty(), "{:?}", out.warnings);
+    }
+
+    /// Name order would have resolved this one by luck; dependency order
+    /// resolves it because it is correct.
+    #[test]
+    fn order_follows_dependencies_not_names() {
+        // `alpha` reads `zulu`, so the alphabetical walk meets it first.
+        let ir = ir_with(&[("alpha", "inputs.zulu * 3.0"), ("zulu", "7.0")]);
+        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        assert_eq!(out.resolved_inputs["alpha"], 21.0);
+    }
+
+    #[test]
+    fn a_circular_derivation_is_refused_with_its_path() {
+        let ir = ir_with(&[
+            ("gross_sf", "inputs.net_sf / 2.0"),
+            ("net_sf", "inputs.gross_sf * 0.85"),
+        ]);
+        let err = run_deterministic(&ir, &RunConfig::default()).expect_err("no order exists");
+        match err {
+            EngineError::AssumptionCycle(msg) => {
+                assert!(msg.contains("cyclic assumptions"), "{msg}");
+                assert!(msg.contains("'gross_sf'"), "{msg}");
+                assert!(msg.contains("'net_sf'"), "{msg}");
+            }
+            other => panic!("expected AssumptionCycle, got {other:?}"),
+        }
+    }
+
+    /// A name that is not an assumption is not an edge — it comes from the run
+    /// configuration, or from nowhere, and the unresolved-name gate speaks for
+    /// the latter.
+    #[test]
+    fn a_non_assumption_name_is_not_a_dependency() {
+        let ir = ir_with(&[("net_sf", "100.0"), ("unused", "5.0")]);
+        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        assert_eq!(out.resolved_inputs["net_sf"], 100.0);
     }
 }
 

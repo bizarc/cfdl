@@ -1897,6 +1897,15 @@ Provenance: a benchmark rewrite tried `assume opex_psf_2004 = inputs.opex_psf_fu
 and the reconciliation caught it. Inlining the expression into the reading
 stream was the workaround.
 
+*(Update — **CLOSED.** Both halves. The silent path went first: an unresolved
+name is now a hard error, so the run stops instead of reporting ok over a
+column of zeros. And the useful half is resolved rather than rejected —
+assumptions evaluate in dependency order, so `assume net_sf = inputs.gross_sf
+* inputs.efficiency` is ordinary modeling. The single rejection is a circular
+derivation, named as a path, on the same principle as cross-stream reads one
+layer down: no order satisfies it, and the engine does not iterate. Pinned by
+`fixtures/valid/assumption_derived` and four engine tests.)*
+
 ---
 
 ### 7.66 Two published pages disagree about the arithmetic, and nothing checks

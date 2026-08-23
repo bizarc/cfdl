@@ -69,7 +69,7 @@ The host (compiler or engine) provides values under these roots:
 | `asset`, `party`, `contract`, `reference` | an entity's fields, spelled bare: `asset.tlb.balance` is the same read as `entity.asset.tlb.balance` |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
-| `inputs` | assumption values (`assume` statements) |
+| `inputs` | assumption values (`assume` statements), including ones derived from other assumptions (§2.1) |
 | `prev` | a field's own previous value, bare — present inside that field's `next` only |
 | `prev.<entity>.<field>` | a field one period back — `prev.asset.tlb.balance`, inside a rule |
 | `remaining` | what is left in the pot — present in waterfall step expressions only (§3.2) |
@@ -77,6 +77,27 @@ The host (compiler or engine) provides values under these roots:
 | `owed` | `owed.<step>`, what an earlier step would have paid, unbounded — steps only |
 
 Unknown variables are hard errors (`EXPR_EVAL`), not nulls.
+
+### 2.1 Derived assumptions
+
+An `assume` may read another through `inputs.<name>`:
+
+```
+assume gross_sf   = 10000.0
+assume efficiency = 0.85
+assume net_sf     = inputs.gross_sf * inputs.efficiency
+```
+
+Assumptions resolve in dependency order, so each one is evaluated after
+everything it reads — declaration order and name order are both irrelevant.
+Random assumptions (`assume ... ~ <dist>`) resolve first: a distribution's
+central value reads nothing, so a derived assumption may be built on one.
+
+A circular derivation is refused with the cycle named, the same way a circular
+series read is (§3.1): no order satisfies it, and the engine does not iterate
+toward a fixed point. A name that is not an assumption is not a dependency —
+it comes from the run configuration, or from nowhere, and an unresolved name
+is a hard error by the rule above.
 
 `time.ppy` is how many periods of the model's calendar make a year — 365, 12,
 4 or 1 — so a model can spread an annual figure without hardcoding a divisor

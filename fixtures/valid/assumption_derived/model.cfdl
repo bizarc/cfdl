@@ -1,0 +1,31 @@
+version 0.1
+model "assumption-derived"
+time calendar annual from 2026-01 for 3
+
+// A DERIVED ASSUMPTION — one assumption computed from others.
+//
+// "Net rentable is gross times efficiency" is ordinary modeling, and stating
+// it once beats restating 8,500 wherever the number is needed: change the
+// efficiency and everything downstream follows.
+//
+// Assumptions once evaluated in name order against an empty environment, so a
+// read of another assumption found nothing, the assumption was skipped, and
+// every read of it resolved to nothing. They now evaluate in dependency
+// order — the same ordering the stream layer does, one layer up — with the
+// same single rejection: a circular derivation, which no order can satisfy.
+//
+// Note the ordering is NOT alphabetical: `net_sf` is declared last but reads
+// two assumptions declared before it, while `rent_psf` reads none.
+
+entity asset co : Asset.Financial
+
+assume gross_sf   = 10000.0
+assume efficiency = 0.85
+assume rent_psf   = 2.0
+assume net_sf     = inputs.gross_sf * inputs.efficiency
+
+// 10,000 x 0.85 = 8,500 SF at $2.00 = $17,000 per period.
+stream base.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = inputs.net_sf * inputs.rent_psf
+}
