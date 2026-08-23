@@ -232,3 +232,105 @@ term_end = "2036-12"
 amount_year = "0"
 escalation = "0.03"
 pct_fixed = "1.0"
+
+# --- revenue lines ----------------------------------------------------------
+#
+# The conventional ancillary income set. Same shape as the expense lines: the
+# vocabulary lives in the instance name, one stream per line. Escalation may
+# hold an expression — `curve_value("cpi", time.date) + 0.005` — so there is
+# no curve twin term.
+
+[[templates]]
+id = "cre.revenue_line.parking"
+label = "Revenue — parking"
+kind = "contract"
+body = """
+contract cre.revenue_line.parking {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+[[templates]]
+id = "cre.revenue_line.storage"
+label = "Revenue — storage"
+kind = "contract"
+body = """
+contract cre.revenue_line.storage {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+[[templates]]
+id = "cre.revenue_line.antenna"
+label = "Revenue — antenna and rooftop"
+kind = "contract"
+body = """
+contract cre.revenue_line.antenna {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.02"
+
+[[templates]]
+id = "cre.revenue_line.laundry_vending"
+label = "Revenue — laundry and vending"
+kind = "contract"
+body = """
+contract cre.revenue_line.laundry_vending {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+[[templates]]
+id = "cre.revenue_line.blended"
+label = "Revenue — single blended line"
+kind = "contract"
+body = """
+contract cre.revenue_line {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"

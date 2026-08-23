@@ -251,7 +251,7 @@ description = "One operating expense line. Instance it per expense for an itemis
 
 [[contracts]]
 type_id = "CRE.Contract.OperatingRevenue"
-contract_name = "cre.ops_revenue"
+contract_name = "cre.revenue_line"
 subject_family = "asset"
 parties = ["owner"]
 

@@ -145,8 +145,8 @@
       }
     },
     {
-      "id": "1e02aeb98fa50658fb35306e4e40dea3",
-      "name": "cre.ops_revenue",
+      "id": "ef2e1431fe7a6bc3eab2d59b8a6f200e",
+      "name": "cre.revenue_line",
       "type": "core.Contract",
       "subject": {
         "symbol": "asset.property"
@@ -252,8 +252,8 @@
       }
     },
     {
-      "id": "1af4c0280526ec8f5a487e5aba2b6481",
-      "name": "cre.ops.revenue",
+      "id": "2ac7d4f13b7d588d6386cffd71ced080",
+      "name": "cre.revenue.line",
       "owner": {
         "symbol": "asset.property"
       },
@@ -268,7 +268,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "5000.0"
+        "src": "(5000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -287,18 +287,24 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_revenue"
+          "rule_id": "cre_revenue_line"
         }
       }
     }
   ],
   "stream_inputs": [
     {
-      "stream": "cre.ops.revenue",
-      "contract": "cre.ops_revenue",
+      "stream": "cre.revenue.line",
+      "contract": "cre.revenue_line",
       "terms": {
-        "amount": "5000"
-      }
+        "amount": "5000",
+        "amount_year": "0",
+        "escalation": "0"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "escalation"
+      ]
     },
     {
       "stream": "cre.opex.line",

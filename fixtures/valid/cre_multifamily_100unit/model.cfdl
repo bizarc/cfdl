@@ -6,7 +6,7 @@ time calendar monthly from 2026-01 for 60
 entity asset property : CRE.Asset.RealProperty
 
 // 100 units × $1,850/mo market rent, 5% vacancy → $175,750/mo effective rental income
-contract cre.ops_revenue on entity asset.property {
+contract cre.revenue_line on entity asset.property {
   term 2026-01..2030-12
   terms {
     amount = 175750

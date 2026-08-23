@@ -5,14 +5,14 @@
   "scenarios": {
     "base": {
       "parameters": {
-        "stream.cre.ops.revenue:amount": 175750.0,
+        "stream.cre.revenue.line:amount": 175750.0,
         "stream.cre.opex.line:amount": 63600.0,
         "stream.cre.exit.sale:amount": 27542307.69
       }
     },
     "downside": {
       "parameters": {
-        "stream.cre.ops.revenue:amount": 170000.0,
+        "stream.cre.revenue.line:amount": 170000.0,
         "stream.cre.opex.line:amount": 69960.0,
         "stream.cre.exit.sale:amount": 22380522.0
       }

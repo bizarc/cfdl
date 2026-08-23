@@ -25,7 +25,7 @@ contract cre.lease {
 // Ops income and expense as pack contracts, so the pack classifies them and
 // the operating statement can claim them. Hand-written streams carry no
 // category, and a statement folds categories rather than stream names.
-contract cre.ops_revenue {
+contract cre.revenue_line {
   term 2028-01..2031-12
   terms {
     amount = 30000

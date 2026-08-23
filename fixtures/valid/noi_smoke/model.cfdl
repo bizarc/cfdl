@@ -7,7 +7,7 @@ entity asset property : CRE.Asset.RealProperty
 
 // Ops streams: revenue $5k/mo, expense $2k/mo, 12 months
 // Monthly ops net = $3,000; annual = $36,000
-contract cre.ops_revenue {
+contract cre.revenue_line {
   term 2026-01..2026-12
   terms {
     amount = 5000

@@ -37,19 +37,30 @@ base_rent = "0"
 base_rent_year = "0"
 lease_up_months = "1"
 
+# THE operating revenue line item, mirroring `cre.opex_line`: one instanced
+# contract per statement line, the vocabulary in the instance name
+# (`cre.revenue_line.parking`), a single blended figure when unsuffixed. It
+# replaced `cre.ops_revenue`, a singleton with a raw amount and no growth.
+#
+# The first rule designed for expression terms: there is no `escalation_curve`
+# twin, because `escalation = curve_value("cpi", time.date) + 0.005` states
+# the agreed formula directly in the contract.
 [[rules]]
-id = "cre_ops_revenue"
-contract_name = "cre.ops_revenue"
-stream_name = "cre.ops.revenue"
+id = "cre_revenue_line"
+contract_name = "cre.revenue_line"
+stream_name = "cre.revenue.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.other"
-amount_expr = "{{contract.amount}}"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
-# `amount` is required; the term supplies the schedule.
+[rules.defaults]
+amount = "0"
+amount_year = "0"
+escalation = "0"
 
 [[rules]]
 id = "cre_exit_cap_sale"
@@ -339,7 +350,7 @@ category = "investing.reversion"
 # `cre.opex.line.taxes`, which the bare pattern did not match. Opex dropped
 # out of forward NOI, NOI was overstated, and the exit price struck off it was
 # too high. Silent, and worth real money.
-amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}}"
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -360,7 +371,7 @@ stream_name = "cre.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.selling_costs"
-amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.ops.revenue\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * {{contract.selling_costs}}"
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"
