@@ -9,7 +9,7 @@ entity asset office : Asset.Real
 //   1. use pack "cre" version "0.1.0"  (in the header)
 //   2. retype the entity: CRE.Asset.RealProperty
 //   3. replace BOTH streams with contracts over the same term —
-//      cre.lease with base_rent = 42000, cre.ops_expense with amount = 15500.
+//      cre.lease with base_rent = 42000, cre.opex_line with amount = 15500.
 // The annual rollup must not change.
 stream office.rent on entity asset.office inflow currency USD {
   schedule every month from 2026-01 to 2028-12

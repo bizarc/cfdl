@@ -177,7 +177,7 @@ Both operating rules that should have fitted did not, so the streams here are
 native, named into the CRE taxonomy so `--pack cre` metrics still aggregate
 them — the same posture `benchmarks/cre/mit_rentleg_plaza` takes.
 
-- **`cre.property_opex` emits a single un-suffixed stream.** One property, one
+- **`cre.opex_line` emits a single un-suffixed stream.** One property, one
   expense line. Every real pro forma splits management, maintenance, utilities
   and taxes, and this one publishes all four. Adding `{{contract.dot_suffix}}`
   is a one-line change to the rule; the `domain.cre.noi` metric would need its
@@ -215,7 +215,7 @@ stopped having to be aggregates.
 **The four expense sub-lines.** The workbook publishes Management, Operations
 and Maintenance, Utilities, and Taxes/Insurance/Reserves separately (Operating
 Pro Forma rows 18–21) and this case previously asserted only their total,
-because `cre.property_opex` emitted one un-suffixed stream and a property could
+because `cre.opex_line` emitted one un-suffixed stream and a property could
 declare exactly one expense line. Four streams now carry them, and
 `expected.csv` asserts all four at every anchor year. The four states already
 existed — they were split for the rounding reason — so this moved nothing:

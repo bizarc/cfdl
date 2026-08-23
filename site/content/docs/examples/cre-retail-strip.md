@@ -37,7 +37,7 @@ compared against it period by period.
 | | |
 |---|---|
 | Pack | `cre` |
-| Contract types | `cre.lease_unit` (two instances), `cre.percentage_rent`, `cre.vacancy_loss`, `cre.property_opex`, `cre.exit` |
+| Contract types | `cre.lease_unit` (two instances), `cre.percentage_rent`, `cre.vacancy_loss`, `cre.opex_line`, `cre.exit` |
 | Language features | multiple instances of one contract type |
 | Conventions | a base-year expense stop with a 95% gross-up, percentage rent over a breakpoint, net leases, staggered rollover |
 
@@ -121,10 +121,10 @@ contract cre.vacancy_loss on entity asset.strip_center {
   }
 }
 
-contract cre.property_opex on entity asset.strip_center {
+contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
-    opex_year = 240000
+    amount_year = 240000
     escalation = 0.03
   }
 }

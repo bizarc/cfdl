@@ -33,8 +33,8 @@
   "contracts": [],
   "streams": [
     {
-      "id": "69b0eec32ff9e9af6ce8e8df72bb0810",
-      "name": "cre.ops.expense",
+      "id": "7a023e3a870383d9fe1b3172cc63459f",
+      "name": "cre.opex.line",
       "owner": {
         "symbol": "asset.prop"
       },

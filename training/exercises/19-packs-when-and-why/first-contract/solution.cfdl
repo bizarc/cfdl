@@ -15,7 +15,7 @@ contract cre.lease {
   }
 }
 
-contract cre.ops_expense {
+contract cre.opex_line {
   term 2026-01..2028-12
   terms {
     amount = 15500

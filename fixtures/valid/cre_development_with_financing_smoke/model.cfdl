@@ -28,7 +28,7 @@ contract cre.ops_revenue on entity asset.property {
   }
 }
 
-contract cre.ops_expense on entity asset.property {
+contract cre.opex_line on entity asset.property {
   term 2028-01..2031-12
   terms {
     amount = 12000

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "3caa2022a4ee4e5638f0b49ca8e16f23866d91a24b0d4dce22d1422edb5a8d22",
-  "ledger_hash": "dc1a7f2e243fd36711003a8578a835b0389e70036bce6d1bf22ec0e27ce17e46",
+  "model_hash": "28b8067c3ff0b90f09e10bb584dad140ccbd108da9c15b3a98f946d6b6540318",
+  "ledger_hash": "76ccebd1f9c808f0801608d5145af2a803706caf6da195bfa10263680220e04f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -113,11 +113,23 @@
         }
       },
       {
-        "contract": "cre.property_opex",
-        "stream": "cre.property.opex",
+        "contract": "cre.opex_line",
+        "defaults_applied": [
+          "amount",
+          "escalation_curve",
+          "occupancy",
+          "occupancy_curve",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line",
         "terms": {
+          "amount": "0",
+          "amount_year": "300000",
           "escalation": "0.025",
-          "opex_year": "300000"
+          "escalation_curve": "",
+          "occupancy": "1",
+          "occupancy_curve": "",
+          "pct_fixed": "1"
         }
       },
       {
@@ -155,7 +167,7 @@
         "amount": 3237142.698205,
         "currency": "USD"
       },
-      "stream.cre.property.opex.total": {
+      "stream.cre.opex.line.total": {
         "amount": -3361014.530356,
         "currency": "USD"
       },
@@ -4740,7 +4752,7 @@
           }
         ]
       },
-      "stream.cre.property.opex": {
+      "stream.cre.opex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -11524,7 +11536,7 @@
             }
           ]
         },
-        "stream.cre.property.opex": {
+        "stream.cre.opex.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -16287,7 +16299,7 @@
             ],
             "total": -3361014.530364,
             "streams": [
-              "cre.property.opex"
+              "cre.opex.line"
             ]
           },
           {
@@ -20787,7 +20799,7 @@
             ],
             "total": -3361014.530364,
             "streams": [
-              "cre.property.opex"
+              "cre.opex.line"
             ]
           },
           {

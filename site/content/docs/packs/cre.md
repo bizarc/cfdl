@@ -26,12 +26,12 @@ each classified so it lands on the right line of a
 | `cre.construction_stub` | `amount` | `cre.construction.draws` |
 | `cre.lease` | `base_rent`, `base_rent_year` | `cre.lease.base_rent` |
 | `cre.ops_revenue` | `amount` | `cre.ops.revenue` |
-| `cre.ops_expense` | `amount` | `cre.ops.expense` |
+| `cre.opex_line` | `amount` | `cre.opex.line` |
 | `cre.exit_cap` | `exit_cap`, `noi_value` | `cre.exit.sale` |
 | `cre.lease_unit` | `escalation`, `expense_stop_year`, `gross_up_factor`, `lc_total`, `opex_escalation`, `opex_year`, `pro_rata_share`, `rent_year`, `ti_total` | `cre.unit.base_rent.[suffix]`, `cre.unit.abatement.[suffix]`, `cre.unit.recoveries.[suffix]`, `cre.unit.ti_lc.[suffix]` |
 | `cre.rollover` | `market_escalation`, `market_rent_year`, `new_ti_lc`, `renewal_probability`, `renewal_rent_year`, `renewal_ti_lc` | `cre.rollover.rent.[suffix]`, `cre.rollover.ti_lc.[suffix]` |
 | `cre.vacancy_loss` | `potential_gross_year`, `rate` | `cre.vacancy.loss` |
-| `cre.property_opex` | `escalation`, `opex_year` | `cre.property.opex[.suffix]` |
+| `cre.opex_line` | `escalation`, `opex_year` | `cre.opex.line[.suffix]` |
 | `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.proceeds` |
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent[.suffix]` |
 | `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds` |

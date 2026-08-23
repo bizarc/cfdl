@@ -25,7 +25,7 @@ developer lifecycle:
 
 - construction (`cre.construction_stub`)
 - lease-up (`cre.lease`)
-- stabilized operations (`cre.ops_revenue`, `cre.ops_expense`)
+- stabilized operations (`cre.ops_revenue`, `cre.opex_line`)
 - exit (`cre.exit_cap`)
 
 ## Pack identity
@@ -47,9 +47,34 @@ in `lowering/rules.toml`:
 - `cre.construction_stub`
 - `cre.lease`
 - `cre.ops_revenue`
-- `cre.ops_expense`
+- `cre.opex_line`
 - `cre.exit_cap`
-- `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.property_opex`,
+
+`cre.opex_line` is the only operating expense contract. It replaced
+`cre.property_opex` and `cre.ops_expense`, which differed only in escalation and
+in whether they could be instanced — and, confusingly, the one named for a
+single property was the repeatable one.
+
+One contract spans the whole range:
+
+- **A single blended figure.** One unsuffixed instance: `amount_year`, maybe
+  `escalation`.
+- **An itemised schedule.** One instance per expense —
+  `cre.opex_line.property_tax`, `cre.opex_line.utilities` — each with its own
+  escalation and its own fixed share. `templates.toml` ships the conventional
+  set as editor snippets; a modeller can name their own.
+- **Any level.** Property, building or suite is the ENTITY the contract hangs
+  on, and `part_of` rolls them up. It is not a term, because that would restate
+  the entity tree somewhere it could disagree with it.
+
+Occupancy response is `pct_fixed + (1 - pct_fixed) * occupancy`. Property tax
+runs whether the building is full or empty; cleaning tracks occupied space. At
+the default `pct_fixed = 1` this reduces to a plain escalating series.
+
+A term is a literal or one declared input, never an expression, so a
+time-varying rate arrives as a curve NAME (`escalation_curve`,
+`occupancy_curve`) that the pack composes into a `curve_value` call.
+- `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.opex_line`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
 - `cre.permanent_debt`
 - `cre.construction_loan`
@@ -144,7 +169,7 @@ defaults, so a missing one fails compilation with `E5006` naming the term.
 | `cre.construction_stub` | `amount` (per period) | — | `cre.construction.draws` (outflow) |
 | `cre.lease` | `base_rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
 | `cre.ops_revenue` | `amount` (per period) | — | `cre.ops.revenue` (inflow) |
-| `cre.ops_expense` | `amount` (per period) | — | `cre.ops.expense` (outflow) |
+| `cre.opex_line` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0) or `escalation_curve`; `pct_fixed` (1) with `occupancy` (1) or `occupancy_curve` | `cre.opex.line{.<id>}` (outflow) |
 | `cre.exit_cap` | `noi_value` (annual), `exit_cap` | — | `cre.exit.sale` (inflow, once at `term_start`) |
 
 `cre.lease` applies an optional straight-line lease-up ramp:
@@ -177,7 +202,7 @@ CRE fixtures and examples include:
 Scenario knobs currently demonstrated:
 
 - `stream.cre.lease.base_rent:amount`
-- `stream.cre.ops.expense:amount`
+- `stream.cre.opex.line:amount`
 - `stream.cre.exit.sale:amount`
 
 Example:
@@ -237,7 +262,7 @@ time.date)`), not model years.
 | `cre.lease_unit.<id>` | `rent_year` | `free_rent_months` (0), `escalation` (0), `expense_stop_year`/`opex_year`/`opex_escalation`/`pro_rata_share` (0 — recoveries off), `ti_total`/`lc_total` (0) |
 | `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `downtime_months` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term starts AT EXPIRY. |
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
-| `cre.property_opex` | `opex_year` | `escalation` (0) |
+| `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0) / `escalation_curve`; `pct_fixed` (1) / `occupancy` (1) / `occupancy_curve`. Instance it per expense for an itemised schedule; the entity it hangs on sets the level. |
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
@@ -268,7 +293,7 @@ does exactly that and says why.
 
 ### Simple whole-property contracts
 
-`cre.lease`, `cre.ops_revenue`, `cre.ops_expense`, `cre.exit_cap`, and
+`cre.lease`, `cre.ops_revenue`, `cre.opex_line`, `cre.exit_cap`, and
 `cre.construction_stub` model a property at the whole-asset level, for when
 lease-by-lease detail is not warranted. They follow the same conventions as
 the lease-by-lease set: schedules run over the contract's own term, time is
@@ -323,10 +348,10 @@ contract cre.lease_unit.tenant_b on entity asset.tower {
 }
 
 // The expense the recoveries above are measured against.
-contract cre.property_opex on entity asset.tower {
+contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
-    opex_year = 300000
+    amount_year = 300000
     escalation = 0.025
   }
 }
@@ -372,9 +397,9 @@ contract cre.exit_forward on entity asset.tower {
 **Property-level opex** (escalating):
 
 ```cfdl
-contract cre.property_opex on entity asset.tower {
+contract cre.opex_line on entity asset.tower {
   term 2026-01..2035-12
-  terms { opex_year = 300000 escalation = 0.025 }
+  terms { amount_year = 300000 escalation = 0.025 }
 }
 ```
 

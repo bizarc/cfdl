@@ -1,1 +1,233 @@
-# Milestone 11: populate CRE templates.
+# CRE contract templates — the conventional starting set, offered by the editor
+# as snippets (the LSP reads these for completion and `applyTemplate`).
+#
+# The OPERATING EXPENSE lines are the point of this file. `cre.opex_line` is one
+# contract instanced per expense, so the vocabulary lives in the INSTANCE NAME —
+# `cre.opex_line.property_tax` — and not in a term restating it. These nine are
+# the lines a commercial operating statement usually carries; a modeller is free
+# to name their own, and `statements.toml` gives the conventional names their
+# own rows while anything else falls to the residual line.
+#
+# `pct_fixed` is the share that does NOT move with occupancy. Property tax and
+# insurance run whether the building is full or empty; cleaning and utilities
+# track occupied space. The defaults here are conventional underwriting values,
+# not measurements — a real deal states its own.
+#
+# `${key}` placeholders resolve from the request, then from [templates.defaults].
+
+[[templates]]
+id = "cre.opex_line.property_tax"
+label = "Operating expense — property tax"
+kind = "contract"
+body = """
+contract cre.opex_line.property_tax {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.02"
+
+[[templates]]
+id = "cre.opex_line.insurance"
+label = "Operating expense — insurance"
+kind = "contract"
+body = """
+contract cre.opex_line.insurance {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.05"
+
+[[templates]]
+id = "cre.opex_line.utilities"
+label = "Operating expense — utilities"
+kind = "contract"
+body = """
+contract cre.opex_line.utilities {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = ${pct_fixed}
+    occupancy_curve = "${occupancy_curve}"
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+pct_fixed = "0.30"
+occupancy_curve = "occupancy"
+
+[[templates]]
+id = "cre.opex_line.repairs_maintenance"
+label = "Operating expense — repairs and maintenance"
+kind = "contract"
+body = """
+contract cre.opex_line.repairs_maintenance {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = ${pct_fixed}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+pct_fixed = "0.60"
+
+[[templates]]
+id = "cre.opex_line.cleaning"
+label = "Operating expense — cleaning"
+kind = "contract"
+body = """
+contract cre.opex_line.cleaning {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = ${pct_fixed}
+    occupancy_curve = "${occupancy_curve}"
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+pct_fixed = "0.15"
+occupancy_curve = "occupancy"
+
+[[templates]]
+id = "cre.opex_line.security"
+label = "Operating expense — security"
+kind = "contract"
+body = """
+contract cre.opex_line.security {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = ${pct_fixed}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+pct_fixed = "0.90"
+
+[[templates]]
+id = "cre.opex_line.landscaping"
+label = "Operating expense — landscaping and grounds"
+kind = "contract"
+body = """
+contract cre.opex_line.landscaping {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+# A management fee is usually a percentage of effective gross income, which is a
+# read of other streams and would make this line phase-2 — and `cre.exit_forward`
+# already reads `cre.opex.line.*` in its own phase-2 forward-NOI sum, so the two
+# cannot both be phase-2. Until that ordering is resolved this template states a
+# fixed fee, which is what a model must do today.
+[[templates]]
+id = "cre.opex_line.management"
+label = "Operating expense — management fee (fixed)"
+kind = "contract"
+body = """
+contract cre.opex_line.management {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+[[templates]]
+id = "cre.opex_line.general_admin"
+label = "Operating expense — general and administrative"
+kind = "contract"
+body = """
+contract cre.opex_line.general_admin {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+
+# A single blended figure — the coarse end of the range. One unsuffixed instance
+# emits `cre.opex.line`, which no itemised row claims, so it lands in the
+# residual line of the operating statement.
+[[templates]]
+id = "cre.opex_line.blended"
+label = "Operating expense — single blended line"
+kind = "contract"
+body = """
+contract cre.opex_line {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = ${amount_year}
+    escalation = ${escalation}
+    pct_fixed = ${pct_fixed}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+amount_year = "0"
+escalation = "0.03"
+pct_fixed = "1.0"

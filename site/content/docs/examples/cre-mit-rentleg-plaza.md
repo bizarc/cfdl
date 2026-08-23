@@ -186,7 +186,7 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 // of 30k), full thereafter.
 // ---------------------------------------------------------------------------
 
-stream cre.property.opex on entity asset.rentleg outflow currency USD {
+stream cre.opex.line on entity asset.rentleg outflow currency USD {
   schedule every year from 2001-01 to 2006-01
   category operating.expense.opex
   amount = inputs.building_sf * inputs.opex_psf_full
@@ -324,7 +324,7 @@ Checked period by period: **12 series** across **5 periods** — **60 values** i
 - `cre.abatement.suite_200`
 - `cre.capex`
 - `cre.exit.proceeds`
-- `cre.property.opex`
+- `cre.opex.line`
 - `cre.unit.base_rent.suite_100`
 - `cre.unit.base_rent.suite_200`
 - `cre.unit.recoveries.suite_100`

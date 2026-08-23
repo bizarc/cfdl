@@ -31,4 +31,4 @@ Each example directory includes a `run.json` (and/or `run.base.json`, `run.stres
 ## Structure
 
 - **Entities:** Examples use one or more entities (e.g. `real_estate property`, `loan construction`, `loan permanent`). Streams are owned by an entity.
-- **Pack contracts:** `cre_construction_stub`, `cre_lease`, `cre_ops_revenue`, `cre_ops_expense`, `cre_exit_cap` — see [Packs](/docs/packs) and [the CRE pack guide](/docs/packs/cre).
+- **Pack contracts:** `cre_construction_stub`, `cre_lease`, `cre_ops_revenue`, `cre_opex_line`, `cre_exit_cap` — see [Packs](/docs/packs) and [the CRE pack guide](/docs/packs/cre).

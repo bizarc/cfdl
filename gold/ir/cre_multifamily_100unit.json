@@ -117,8 +117,8 @@
       }
     },
     {
-      "id": "08c8b9a9dda66c66239d4536354d6dcd",
-      "name": "cre.ops_expense",
+      "id": "9a6463ca7ed884d3801014c9283d3f44",
+      "name": "cre.opex_line",
       "type": "core.Contract",
       "subject": {
         "symbol": "asset.property"
@@ -243,8 +243,8 @@
       }
     },
     {
-      "id": "1bd47f99d3ab874531b239cd0d473bd1",
-      "name": "cre.ops.expense",
+      "id": "f8962668fb68cc4e7ff46772df7c6893",
+      "name": "cre.opex.line",
       "owner": {
         "symbol": "asset.property"
       },
@@ -259,7 +259,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "63600.0"
+        "src": "(63600.0 + 0.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.0, curve_value(\"\", time.date)), round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * if(\"\" == \"\", 1.0, curve_value(\"\", time.date)))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -278,7 +278,7 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_ops_expense"
+          "rule_id": "cre_opex_line"
         }
       }
     },
@@ -332,11 +332,25 @@
       }
     },
     {
-      "stream": "cre.ops.expense",
-      "contract": "cre.ops_expense",
+      "stream": "cre.opex.line",
+      "contract": "cre.opex_line",
       "terms": {
-        "amount": "63600"
-      }
+        "amount": "63600",
+        "amount_year": "0",
+        "escalation": "0",
+        "escalation_curve": "",
+        "occupancy": "1",
+        "occupancy_curve": "",
+        "pct_fixed": "1"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "escalation",
+        "escalation_curve",
+        "occupancy",
+        "occupancy_curve",
+        "pct_fixed"
+      ]
     },
     {
       "stream": "cre.exit.sale",

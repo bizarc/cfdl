@@ -21,7 +21,7 @@ compared against it period by period.
 | | |
 |---|---|
 | Pack | `cre` |
-| Contract types | `cre.lease_unit` (two instances), `cre.percentage_rent`, `cre.vacancy_loss`, `cre.property_opex`, `cre.exit` |
+| Contract types | `cre.lease_unit` (two instances), `cre.percentage_rent`, `cre.vacancy_loss`, `cre.opex_line`, `cre.exit` |
 | Language features | multiple instances of one contract type |
 | Conventions | a base-year expense stop with a 95% gross-up, percentage rent over a breakpoint, net leases, staggered rollover |
 

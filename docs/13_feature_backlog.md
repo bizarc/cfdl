@@ -19,25 +19,6 @@ and shapes the language already supports, are recorded in
 
 ## 1. CRE pack
 
-### 1.1 Occupancy-varying operating expenses
-
-`cre.property_opex` takes `opex_year` and `escalation`, so opex is a geometric
-series. Real buildings split it: a portion is fixed and a portion moves with
-occupancy.
-
-MIT OCW 11.431J PS1 states it as 81% fixed / 19% variable, which is what
-produces $135,161 of 2001 opex rather than $144,300 — and the variable share
-then moves again in 2004 when a suite goes dark. The published answer depends
-on it.
-
-Blocks: `benchmarks/cre/mit_rentleg_plaza` models opex and recoveries as native
-streams. Everything else in that model now runs through pack contracts.
-
-Shape: an `occupancy` input and a `pct_fixed` term, with opex as
-`opex_year * (pct_fixed + (1 - pct_fixed) * occupancy)`. The hard part is that
-occupancy is itself derived from the rent roll, so this may want to be a
-cross-stream (phase-2) rule rather than a term.
-
 ### 1.2 An expense stop that resets to a computed value
 
 `cre.lease_unit.expense_stop_year` is a literal. A lease signed mid-hold
@@ -1844,3 +1825,44 @@ call site.
 **Scope.** Resolve at contract declaration, carry type and instance name on the
 contract, migrate both match sites, and decide whether the type surfaces in the
 IR schema. Larger than 7.53 was; nothing is broken while it waits.
+
+---
+
+### 7.59 A statement's completeness is checked against the pack, not the model
+
+*Belongs with the packs and the compiler (section 5). Found closing 1.1.*
+
+`packs/<pack>/statements.toml` is validated when the PACK loads: every category
+a lowering rule emits must be claimed by some `line` row's `categories`, or the
+pack is rejected —
+
+```
+Statement 'operating': these categories appear in no line row, so their cash
+would be missing from the bottom line: operating.expense.opex.
+```
+
+The invariant is right. Where it runs is not. At pack load no model exists, so
+the only thing the check can reason about is categories. By the time the IR is
+built the model's contracts and their lowered streams are fully known —
+`cre.opex_line.property_tax` is an IR contract and `cre.opex.line.property_tax`
+is an IR stream carrying its category — so the same question can be asked
+against the IR, per model, and answered more precisely.
+
+**What it currently costs.** A `line` row may select by `streams` as well as by
+`categories` — "for what a category cannot express" — and the evaluator already
+emits a `residual` row for streams no row claimed, plus a check that rejects a
+stream claimed twice. So itemising operating expenses per line WORKS at runtime.
+It cannot be declared, because stream rows contribute nothing to the static
+category check and a category row alongside them would double-claim every
+stream.
+
+That is why `cre.opex_line` ships nine conventional expense templates that all
+render as one "Operating expenses" row. The lines are correct in NOI, coverage
+and valuation; they are simply not itemised on the statement.
+
+**What moving it would buy.** Itemised rows, and a stronger guarantee than the
+one given up: a modeller's own instance name falling through no row would be a
+compile error instead of an "Unclassified" line discovered after a run.
+
+**Scope.** A compile-time check over IR streams; decide whether the pack-load
+check stays as a weaker precondition or is replaced.

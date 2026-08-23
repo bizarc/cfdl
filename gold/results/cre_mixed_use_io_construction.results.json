@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "fb8d0dbe4b39972c143acbf50b3f7b8f56fe329947c88509b9e287fee9604c33",
-  "ledger_hash": "ebd05774a72882a756608ff23777b46a6f9d1549300fd562e7f0e8c4af2bb210",
+  "model_hash": "d1c6cd86c078512566b5662175eebc28dace08fcdc1a86502e121ea2652df23f",
+  "ledger_hash": "fccdef5915b2bfed6364e5bd40f908616e5fa1bb087499790c6aa4a173af217c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,10 +10,24 @@
   "inputs": {
     "streams": [
       {
-        "contract": "cre.ops_expense",
-        "stream": "cre.ops.expense",
+        "contract": "cre.opex_line",
+        "defaults_applied": [
+          "amount_year",
+          "escalation",
+          "escalation_curve",
+          "occupancy",
+          "occupancy_curve",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line",
         "terms": {
-          "amount": "55000"
+          "amount": "55000",
+          "amount_year": "0",
+          "escalation": "0",
+          "escalation_curve": "",
+          "occupancy": "1",
+          "occupancy_curve": "",
+          "pct_fixed": "1"
         }
       },
       {
@@ -59,7 +73,7 @@
         "amount": 31636363.636364,
         "currency": "USD"
       },
-      "stream.cre.ops.expense.total": {
+      "stream.cre.opex.line.total": {
         "amount": -3300000.0,
         "currency": "USD"
       },
@@ -4514,7 +4528,7 @@
           }
         ]
       },
-      "stream.cre.ops.expense": {
+      "stream.cre.opex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -7226,7 +7240,7 @@
             }
           ]
         },
-        "stream.cre.ops.expense": {
+        "stream.cre.opex.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

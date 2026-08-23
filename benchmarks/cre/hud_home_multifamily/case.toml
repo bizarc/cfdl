@@ -21,8 +21,8 @@
 #   cre.unit.base_rent.home       worst 0.45   whole-dollar rounding
 #   cre.vacancy.loss              worst 0.48   whole-dollar rounding
 #   cre.ops.revenue               worst 0.42   whole-dollar rounding
-#   cre.property.opex             worst 0.00   exact
-#   cre.ops.expense               worst 0.00   exact
+#   cre.opex.line             worst 0.00   exact
+#   cre.opex.line               worst 0.00   exact
 #   loan.permanent_debt_service   worst 0.00   exact
 #
 # THE TWO EXPENSE LINES WERE THE REASON THIS CASE CARRIED A TOLERANCE OF 13.

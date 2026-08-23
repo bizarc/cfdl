@@ -6,14 +6,14 @@
     "base": {
       "parameters": {
         "stream.cre.lease.base_rent:amount": 25000.0,
-        "stream.cre.ops.expense:amount": 12000.0,
+        "stream.cre.opex.line:amount": 12000.0,
         "stream.cre.exit.sale:amount": 3000000.0
       }
     },
     "stress": {
       "parameters": {
         "stream.cre.lease.base_rent:amount": 22500.0,
-        "stream.cre.ops.expense:amount": 13200.0,
+        "stream.cre.opex.line:amount": 13200.0,
         "stream.cre.exit.sale:amount": 2571428.571429
       }
     }

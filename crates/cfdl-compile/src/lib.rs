@@ -5066,7 +5066,7 @@ mod pack_validation_parity_tests {
 
     #[test]
     fn cre_ops_cases() {
-        for name in ["cre.ops_revenue", "cre.ops_expense"] {
+        for name in ["cre.ops_revenue", "cre.opex_line"] {
             assert_parity("cre", name, &[], true);
             assert_parity("cre", name, &[("amount", "30000")], true);
             assert_parity("cre", name, &[("amount", "30000")], false);

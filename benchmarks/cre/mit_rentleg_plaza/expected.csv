@@ -1,4 +1,4 @@
-year,cre.abatement.suite_200,cre.capex,cre.exit.proceeds,cre.property.opex,cre.unit.base_rent.suite_100,cre.unit.base_rent.suite_200,cre.unit.recoveries.suite_100,cre.unit.recoveries.suite_200,cre.unit.ti_lc.suite_100,cre.unit.ti_lc.suite_200,cre.vacancy.loss,net_cash_flow
+year,cre.abatement.suite_200,cre.capex,cre.exit.proceeds,cre.opex.line,cre.unit.base_rent.suite_100,cre.unit.base_rent.suite_200,cre.unit.recoveries.suite_100,cre.unit.recoveries.suite_200,cre.unit.ti_lc.suite_100,cre.unit.ti_lc.suite_200,cre.vacancy.loss,net_cash_flow
 2001,0.00,-30000.00,0.00,-135161.00,300000.00,140000.00,10107.33,0.00,0.00,0.00,-140000.00,144946.33
 2002,-58333.33,-30000.00,0.00,-150072.00,300000.00,140000.00,20048.00,24.00,0.00,-138500.00,0.00,83166.67
 2003,0.00,-30000.00,0.00,-156074.88,300000.00,140000.00,24049.92,2024.96,0.00,0.00,0.00,280000.00

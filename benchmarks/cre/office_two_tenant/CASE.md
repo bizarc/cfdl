@@ -23,7 +23,7 @@ compared against it period by period.
 | | |
 |---|---|
 | Pack | `cre` |
-| Contract types | `cre.lease_unit` (two instances), `cre.rollover`, `cre.vacancy_loss`, `cre.property_opex`, `cre.permanent_debt`, `cre.exit_forward` |
+| Contract types | `cre.lease_unit` (two instances), `cre.rollover`, `cre.vacancy_loss`, `cre.opex_line`, `cre.permanent_debt`, `cre.exit_forward` |
 | Language features | multiple instances of one contract type, per-period subtotals |
 | Conventions | free rent, anniversary escalation, recoveries above an expense stop, tenant improvements and leasing commissions, probability-blended rollover with downtime, a forward-NOI exit |
 

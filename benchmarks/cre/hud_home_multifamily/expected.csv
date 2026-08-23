@@ -1,4 +1,4 @@
-period,cre.unit.base_rent.home,cre.vacancy.loss,cre.ops.revenue,cre.property.opex.management,cre.property.opex.maintenance,cre.property.opex.utilities,cre.property.opex.taxes_insurance,cre.ops.expense,loan.permanent_debt_service,loan.mortgage_insurance,domain.cre.egi,domain.cre.noi,domain.cre.dscr
+period,cre.unit.base_rent.home,cre.vacancy.loss,cre.ops.revenue,cre.opex.line.management,cre.opex.line.maintenance,cre.opex.line.utilities,cre.opex.line.taxes_insurance,cre.opex.line,loan.permanent_debt_service,loan.mortgage_insurance,domain.cre.egi,domain.cre.noi,domain.cre.dscr
 0,153881,-10772,2448,-37413,-37925,-12300,-14863,-21013,-13314,-675,145557,22043,1.5757380799
 1,156959,-10987,2497,-38348,-38873,-12608,-15235,-21538,-13314,-675,148469,21867,1.563156766
 2,160098,-11207,2547,-39307,-39845,-12923,-15616,-22076,-13314,-675,151438,21671,1.5491457574
