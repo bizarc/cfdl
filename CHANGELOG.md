@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a statement row may itemise a stream family, and the CRE operating statement does
+
+A `line` row has always accepted `streams` selectors as well as `categories` —
+"for what a category cannot express" — but they were undeclarable in practice.
+A statement is checked at pack load for completeness: every category a lowering
+rule emits must be claimed by some line row. Stream selectors contributed
+nothing to that set, so a stream row could not replace the category row it
+duplicated, and keeping both double-claims every stream.
+
+The loader now resolves a stream selector to the category of the rule that emits
+that family, which it can do because the pack declares both. So a stream row
+claims a category exactly as a category row does, and claiming one both ways is
+now an error rather than a double count discovered at runtime.
+
+`cre.opex_line` is the case that needed it: one contract instanced per expense,
+every instance carrying the same category, so a category row could only ever
+render one number however many lines a model declared. The CRE operating
+statement now itemises the nine conventional expense lines that
+`templates.toml` ships, with `domain.cre.opex_total` as the total.
+
+A modeller naming their own instance is not lost — it matches no row and the
+evaluator emits a `residual` row for it. Verified end to end: a model declaring
+`property_tax`, `insurance` and a `moat_maintenance` line of its own renders
+-240,000 and -60,000 on their own rows, -15,000 under "Unclassified", and
+-315,000 as the total.
+
+Closes backlog 7.59.
+
+
 ### Changed (breaking): one CRE operating expense contract, `cre.opex_line`
 
 `cre.property_opex` and `cre.ops_expense` are removed. They differed only in

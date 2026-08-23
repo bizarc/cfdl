@@ -65,18 +65,26 @@ op = "sum"
 categories = ["operating.*"]
 formula = "sum(operating.*)"
 
-# ONE ROW, THOUGH `cre.opex_line` IS INSTANCED PER EXPENSE. Every instance
-# carries the same category — `category` is not a template-expanded rule field —
-# so a category row renders one number however many lines a model declares.
+# ITEMISED BY STREAM, NOT BY CATEGORY. `cre.opex_line` is one contract instanced
+# per expense and every instance carries the same category, so a category row
+# could only ever render one number however many lines a model declares.
 #
-# Itemising them by STREAM selector works at runtime (rows accept `streams`, and
-# the evaluator emits a `residual` row for streams no row claimed) but it cannot
-# be reconciled with the completeness check below: a statement must claim every
-# category a lowering rule emits, checked STATICALLY at pack load, and a stream
-# selector naming one instance says nothing about the category in general. A
-# modeller's own instance name is unknowable at load time, so the static
-# guarantee and per-line display cannot both hold as things stand. The guarantee
-# wins; see backlog 7.59.
+# A `line` row may select by `streams` instead, and the pack loader resolves each
+# selector to the category of the rule that emits that family — so these rows
+# satisfy the completeness check below exactly as a category row would. The
+# category row they replaced cannot be kept alongside them: every itemised
+# stream also carries `operating.expense.opex`, and claiming it twice is checked
+# for, statically here and per stream by the evaluator.
+#
+# A modeller naming their own instance is not lost. It matches no row, and the
+# evaluator emits a `residual` row for streams no row claimed. That is the
+# runtime half of the guarantee, and it is why the static half stops at the
+# category.
+#
+# The total is a subtotal row rather than a line: `domain.cre.opex_total` folds
+# `operating.expense.*`, so it stays right however many lines exist, and
+# subtotals are excluded from the bottom-line reconciliation because they are
+# folds of the lines.
 
 # What coverage is measured against: the categories that are PAYMENTS on the
 # debt, not the whole financing section.
@@ -190,8 +198,78 @@ subtotal = "domain.cre.egi"
 [[statements.rows]]
 kind = "line"
 label = "Operating expenses"
+depth = 2
+streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemised rows below claim the named instances, and `.*` here would claim theirs too
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Property tax"
+depth = 2
+streams = ["cre.opex.line.property_tax"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Insurance"
+depth = 2
+streams = ["cre.opex.line.insurance"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Utilities"
+depth = 2
+streams = ["cre.opex.line.utilities"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Repairs and maintenance"
+depth = 2
+streams = ["cre.opex.line.repairs_maintenance"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Cleaning"
+depth = 2
+streams = ["cre.opex.line.cleaning"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Security"
+depth = 2
+streams = ["cre.opex.line.security"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Landscaping and grounds"
+depth = 2
+streams = ["cre.opex.line.landscaping"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Management fee"
+depth = 2
+streams = ["cre.opex.line.management"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "General and administrative"
+depth = 2
+streams = ["cre.opex.line.general_admin"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Total operating expenses"
 depth = 1
-categories = ["operating.expense.opex"]
+subtotal = "domain.cre.opex_total"
 display = "positive"
 
 [[statements.rows]]
@@ -320,8 +398,78 @@ subtotal = "domain.cre.egi"
 [[statements.rows]]
 kind = "line"
 label = "Operating expenses"
+depth = 2
+streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemised rows below claim the named instances, and `.*` here would claim theirs too
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Property tax"
+depth = 2
+streams = ["cre.opex.line.property_tax"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Insurance"
+depth = 2
+streams = ["cre.opex.line.insurance"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Utilities"
+depth = 2
+streams = ["cre.opex.line.utilities"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Repairs and maintenance"
+depth = 2
+streams = ["cre.opex.line.repairs_maintenance"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Cleaning"
+depth = 2
+streams = ["cre.opex.line.cleaning"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Security"
+depth = 2
+streams = ["cre.opex.line.security"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Landscaping and grounds"
+depth = 2
+streams = ["cre.opex.line.landscaping"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Management fee"
+depth = 2
+streams = ["cre.opex.line.management"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "General and administrative"
+depth = 2
+streams = ["cre.opex.line.general_admin"]
+display = "positive"
+
+[[statements.rows]]
+kind = "subtotal"
+label = "Total operating expenses"
 depth = 1
-categories = ["operating.expense.opex"]
+subtotal = "domain.cre.opex_total"
 display = "positive"
 
 [[statements.rows]]

@@ -1150,9 +1150,13 @@ impl PackRegistry {
                 None => Vec::new(),
             };
             let statement_specs = match lookup(manifest.entrypoints.statements.as_deref()) {
-                Some(raw) => {
-                    parse_statement_specs(raw, &source, &manifest.categories, &subtotal_specs)?
-                }
+                Some(raw) => parse_statement_specs(
+                    raw,
+                    &source,
+                    &manifest.categories,
+                    &subtotal_specs,
+                    &lowering_rules,
+                )?,
                 None => Vec::new(),
             };
             let ontology = match lookup(manifest.entrypoints.ontology.as_deref()) {
@@ -1351,6 +1355,7 @@ impl PackRegistry {
                 manifest.entrypoints.statements.as_deref(),
                 &manifest.categories,
                 &subtotal_specs,
+                &lowering_rules,
             )?;
             let ontology = load_ontology(
                 &pack_dir,
@@ -1951,13 +1956,20 @@ fn load_statement_specs(
     statements_path: Option<&str>,
     categories: &[String],
     subtotals: &[SubtotalSpec],
+    rules: &[LoweringRule],
 ) -> Result<Vec<StatementSpec>, PackLoadError> {
     let Some(relative) = statements_path else {
         return Ok(vec![]);
     };
     let path = pack_dir.join(relative);
     let raw = fs::read_to_string(&path).map_err(io_err)?;
-    parse_statement_specs(&raw, &path.display().to_string(), categories, subtotals)
+    parse_statement_specs(
+        &raw,
+        &path.display().to_string(),
+        categories,
+        subtotals,
+        rules,
+    )
 }
 
 fn load_subtotal_specs(
@@ -2008,6 +2020,7 @@ fn parse_statement_specs(
     source: &str,
     categories: &[String],
     subtotals: &[SubtotalSpec],
+    rules: &[LoweringRule],
 ) -> Result<Vec<StatementSpec>, PackLoadError> {
     let parsed: StatementsFile = toml::from_str(raw).map_err(|err| PackLoadError {
         message: format!("Failed to parse statements '{source}': {err}"),
@@ -2025,7 +2038,34 @@ fn parse_statement_specs(
         if spec.default {
             defaults += 1;
         }
+        // A `line` row may claim by CATEGORY or by STREAM selector. A stream
+        // selector names one instance of a family, and the rule that emits that
+        // family declares its category — so a stream row claims a category just
+        // as surely as a category row does, and the completeness check below
+        // must see it or itemising a family becomes undeclarable.
+        //
+        // Which is exactly what happened: `cre.opex_line` is one contract
+        // instanced per expense, every instance carries the same category, and
+        // a category row can therefore only ever render one number. Rows by
+        // stream are how nine expense lines become nine lines.
+        //
+        // What a stream row does NOT claim is completeness of the family: a
+        // modeller's own instance matches no row, and the evaluator emits a
+        // `residual` row for it. That is the runtime half of this guarantee and
+        // it is why the static half can stop at the category.
+        let category_of = |selector: &str| -> Option<&str> {
+            rules.iter().find_map(|rule| {
+                let base = rule.stream_name.replace("{{contract.dot_suffix}}", "");
+                let hit = selector == base
+                    || selector == format!("{base}.*")
+                    || selector
+                        .strip_prefix(&base)
+                        .is_some_and(|rest| rest.starts_with('.'));
+                hit.then_some(rule.category.as_str())
+            })
+        };
         let mut claimed: Vec<&str> = Vec::new();
+        let mut claimed_by_stream: Vec<&str> = Vec::new();
         for row in &spec.rows {
             match row.kind.as_str() {
                 "spacer" => {}
@@ -2050,6 +2090,27 @@ fn parse_statement_specs(
                             )));
                         }
                         claimed.push(c);
+                    }
+                    for sel in &row.streams {
+                        let Some(cat) = category_of(sel) else {
+                            return Err(err(format!(
+                                "row '{}' selects stream '{sel}', which no lowering rule emits. \
+                                 A stream row names an instance of a family the pack lowers; if \
+                                 the name is right, the rule that emits it is missing.",
+                                row.label
+                            )));
+                        };
+                        if claimed.contains(&cat) {
+                            return Err(err(format!(
+                                "row '{}' selects stream '{sel}', whose category '{cat}' is \
+                                 already claimed by a category row. Every stream in that family \
+                                 carries that category, so it would be counted twice.",
+                                row.label
+                            )));
+                        }
+                        if !claimed_by_stream.contains(&cat) {
+                            claimed_by_stream.push(cat);
+                        }
                     }
                 }
                 "subtotal" | "ratio" => {
@@ -2095,10 +2156,19 @@ fn parse_statement_specs(
                 }
             }
         }
-        // Completeness, checked statically.
+        // Completeness, checked statically. A category counts as claimed if a
+        // category row folds it OR a stream row names an instance of a family
+        // that carries it.
+        if let Some(dup) = claimed.iter().find(|c| claimed_by_stream.contains(c)) {
+            return Err(err(format!(
+                "category '{dup}' is claimed by a category row and by a stream row. Every \
+                 stream a stream row names also carries that category, so it would be \
+                 counted twice."
+            )));
+        }
         let missing: Vec<&String> = categories
             .iter()
-            .filter(|c| !claimed.contains(&c.as_str()))
+            .filter(|c| !claimed.contains(&c.as_str()) && !claimed_by_stream.contains(&c.as_str()))
             .collect();
         if !missing.is_empty() {
             return Err(err(format!(
