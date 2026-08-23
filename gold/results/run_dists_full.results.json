@@ -7,18 +7,18 @@
     "version": "0.7.0"
   },
   "warnings": [
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0.",
-    "Stream 'plant.revenue' amount evaluation failed [EXPR_EVAL]: unknown variable `inputs.n`; using 0."
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",
+    "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0."
   ],
   "deterministic": {
     "status": "ok",

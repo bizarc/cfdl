@@ -178,9 +178,22 @@ fn parse_error(e: cfdl_calc::CalcError) -> ExprError {
     }
 }
 
+/// An unresolvable NAME, as distinct from arithmetic that failed.
+///
+/// The distinction is what lets the engine refuse the first and tolerate the
+/// second. docs/03 is explicit — "Unknown variables are hard errors
+/// (EXPR_EVAL), not nulls" — and every layer honoured it except the engine,
+/// which caught the error and substituted zero.
+pub const EXPR_UNKNOWN_NAME: &str = "EXPR_UNKNOWN_NAME";
+
 fn eval_error(e: cfdl_calc::CalcError) -> ExprError {
+    let code = if e.message.starts_with("unknown variable") {
+        EXPR_UNKNOWN_NAME
+    } else {
+        "EXPR_EVAL"
+    };
     ExprError {
-        code: "EXPR_EVAL".to_string(),
+        code: code.to_string(),
         message: e.message,
         span: e.span.map(|s| ExprSpan {
             start: s.start,
@@ -649,11 +662,22 @@ mod tests {
     }
 
     #[test]
-    fn unknown_variable_is_eval_error() {
+    fn unknown_variable_is_its_own_error_kind() {
+        // Carries EXPR_UNKNOWN_NAME rather than EXPR_EVAL, so a caller can
+        // refuse an unresolvable name while still tolerating arithmetic that
+        // failed for an ordinary reason.
         let compiled = compile_expr("nope.missing + 1").expect("compile");
         let err = eval(&compiled, &ExprEnv::empty()).unwrap_err();
-        assert_eq!(err.code, "EXPR_EVAL");
+        assert_eq!(err.code, EXPR_UNKNOWN_NAME);
         assert!(err.message.contains("nope.missing"));
+    }
+
+    #[test]
+    fn arithmetic_failure_keeps_the_generic_code() {
+        let compiled = compile_expr("1 / 0").expect("compile");
+        if let Err(err) = eval(&compiled, &ExprEnv::empty()) {
+            assert_eq!(err.code, "EXPR_EVAL");
+        }
     }
 
     #[test]

@@ -54,6 +54,12 @@ pub enum EngineError {
     /// concept, so the check lives with the split rather than being restated in
     /// the compiler where the two could drift.
     PhaseReference(String),
+    /// A name that resolved to nothing. docs/03 §2: "Unknown variables are
+    /// hard errors (EXPR_EVAL), not nulls." Every layer honoured that except
+    /// the engine, which caught the error and substituted zero — so a
+    /// mistyped `inputs.` or `time.` read produced a column of zeros and a
+    /// run reporting ok.
+    UnknownName(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -62,6 +68,7 @@ impl std::fmt::Display for EngineError {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
             EngineError::PhaseReference(msg) => write!(f, "{msg}"),
+            EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
             EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
@@ -408,6 +415,43 @@ struct DeterministicRunOutput {
     npv: f64,
     annual_rollup: Option<AnnualRollupSection>,
     transitions: Vec<TransitionRecord>,
+}
+
+/// The distinct unresolved names a run's warnings report.
+///
+/// Every evaluation site formats the error's code into its warning, and
+/// `ExprError`'s Display writes `[CODE] message`, so one marker finds them all
+/// however the site chose to phrase the rest. Deduplicated because a name that
+/// fails once fails every period.
+fn unresolved_names(warnings: &[String], declared: &BTreeSet<String>) -> Vec<String> {
+    let mut seen: BTreeSet<String> = BTreeSet::new();
+    for w in warnings {
+        if !w.contains(cfdl_expr::EXPR_UNKNOWN_NAME) {
+            continue;
+        }
+        // The message reads `... unknown variable `inputs.x`; using 0.`
+        let Some(start) = w.find("unknown variable `") else {
+            seen.insert(w.clone());
+            continue;
+        };
+        let rest = &w[start + "unknown variable `".len()..];
+        let Some(end) = rest.find('`') else {
+            seen.insert(w.clone());
+            continue;
+        };
+        let name = &rest[..end];
+        // DECLARED SOMEWHERE IS NOT THE SAME AS BOUND HERE. An input may be
+        // declared only as a Monte Carlo distribution, which leaves it unbound
+        // in the deterministic pass — `run_dists_full` is exactly that model,
+        // and its deterministic run is incidental to the trials it exists to
+        // exercise. That is a different condition from a name nothing
+        // declares, and only the second is fatal.
+        if declared.contains(name) {
+            continue;
+        }
+        seen.insert(format!("`{name}` is not declared"));
+    }
+    seen.into_iter().collect()
 }
 
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
@@ -1132,6 +1176,41 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         ))
     };
 
+    // A NAME THAT RESOLVED TO NOTHING IS FATAL, per docs/03 §2. Detected here,
+    // once, rather than at each of the six evaluation sites: those return a
+    // number deep inside a per-period loop, and the useful message names the
+    // DISTINCT unresolved names rather than repeating one of them per period.
+    //
+    // `inputs.` cannot be checked at compile time — an input may be supplied
+    // entirely by the run configuration, as `run_dists_full` does — so this is
+    // the first layer that knows every source. `time.` is closed and is caught
+    // earlier, by E1133.
+    let mut declared: BTreeSet<String> = BTreeSet::new();
+    for name in base_inputs.keys() {
+        declared.insert(format!("inputs.{name}"));
+    }
+    if let Some(mc) = &config.monte_carlo {
+        for name in mc.distributions.keys() {
+            declared.insert(if name.starts_with("inputs.") {
+                name.clone()
+            } else {
+                format!("inputs.{name}")
+            });
+        }
+    }
+    for scenario in config.scenarios.values() {
+        for name in scenario.parameter_overrides.keys() {
+            declared.insert(name.clone());
+        }
+    }
+    let unresolved = unresolved_names(&warnings, &declared);
+    if !unresolved.is_empty() {
+        return Err(EngineError::UnknownName(format!(
+            "{} — each read as zero. Declare it, supply it in the run configuration, or correct the name.",
+            unresolved.join("; ")
+        )));
+    }
+
     let transitions = event_sim.transitions.clone();
     Ok(DeterministicRunOutput {
         warnings,
@@ -1147,6 +1226,46 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
 impl std::fmt::Display for Date {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:04}-{:02}-{:02}", self.year, self.month, self.day)
+    }
+}
+
+#[cfg(test)]
+mod unresolved_name_tests {
+    use super::unresolved_names;
+    use std::collections::BTreeSet;
+
+    fn warn(name: &str) -> String {
+        format!(
+            "Stream 'x' amount evaluation failed [{}]: unknown variable `{name}`; using 0.",
+            cfdl_expr::EXPR_UNKNOWN_NAME
+        )
+    }
+
+    #[test]
+    fn a_name_nothing_declares_is_fatal() {
+        let found = unresolved_names(&[warn("inputs.typo")], &BTreeSet::new());
+        assert_eq!(found, vec!["`inputs.typo` is not declared".to_string()]);
+    }
+
+    #[test]
+    fn a_declared_name_merely_unbound_here_is_not() {
+        // An input declared only as a Monte Carlo distribution is unbound in
+        // the deterministic pass. `run_dists_full` is that model, and its
+        // deterministic run is incidental to the trials it exercises.
+        let declared: BTreeSet<String> = ["inputs.n".to_string()].into_iter().collect();
+        assert!(unresolved_names(&[warn("inputs.n")], &declared).is_empty());
+    }
+
+    #[test]
+    fn one_entry_per_distinct_name_however_many_periods() {
+        let warnings = vec![warn("inputs.a"), warn("inputs.a"), warn("inputs.b")];
+        assert_eq!(unresolved_names(&warnings, &BTreeSet::new()).len(), 2);
+    }
+
+    #[test]
+    fn an_ordinary_evaluation_failure_is_left_alone() {
+        let w = "Stream 'x' amount evaluation failed [EXPR_EVAL]: division by zero; using 0.";
+        assert!(unresolved_names(&[w.to_string()], &BTreeSet::new()).is_empty());
     }
 }
 
