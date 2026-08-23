@@ -8,6 +8,34 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: the published grammar now describes the language the parser accepts
+
+`docs/schemas/CFDL_v0_1_Grammar.ebnf` is normative — `docs/02` says
+implementations MUST support it and offers it for download as parser-generator
+input. Checked by hand against the parser and against every shipped model, five
+productions were wrong:
+
+- `contract_stmt` wanted two qnames, a mandatory `on entity`, and `term` as a
+  clause BEFORE the block. It is one qname, an optional `on entity`, and `term`
+  is an item inside the block. As written the grammar rejected 519 of the 520
+  contract declarations in this repository.
+- `entity_stmt` made the block mandatory; it is optional. `entity_block` allowed
+  only `IDENT literal_or_expr`, and the real block holds four item forms: a
+  field, a rule-bearing field with `init`/`next`, `part of`, and `state`. The
+  `entity_field` production was defined and referenced by nothing; it is now the
+  field form.
+- `option_stmt` had no `on entity`; it is optional and used.
+- `map_entry` said a contract term is `literal_or_expr`. A term is a literal or
+  one declared input — never a compound expression — which is why a pack
+  composes `curve_value` from a term holding a curve name.
+- `stream_effect_stmt` and `tags_block` describe features that do not exist.
+  Both are now marked NOT IMPLEMENTED, matching §18.2, which lists `owner`,
+  `direction` and `tags` as reserved for features not yet built.
+
+Closes backlog 7.49. Filed 7.61 for the standing check that would stop this
+recurring.
+
+
 ### Fixed: the reserved-word list is the lexer's list, and says which words do nothing
 
 `docs/01` §18 is the published statement of what a modeller may not name a

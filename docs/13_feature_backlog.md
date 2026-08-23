@@ -1489,56 +1489,6 @@ config produced an NPV equal to its own total.
 
 ---
 
-### 7.49 The EBNF describes syntax the parser does not accept
-
-*Two instances found so far. The keyword half of this drift is closed and gated;
-this is the production half, which nothing checks.*
-
-**A contract term is not `literal_or_expr`.** The grammar says
-`map_entry = qname literal_or_expr`, and the parser says otherwise:
-
-```
-Term 'escalation' takes a single value. Expected the next term or '}'. A term is
-a literal or one declared input (e.g. `inputs.yield`); compute derived values in
-an `assume` instead.
-```
-
-So `escalation = 0.03` and `escalation = inputs.cpi` compile and
-`escalation = inputs.cpi + 0.01` does not. This is load-bearing, not cosmetic:
-it is why a pack composes `curve_value` from a curve NAME rather than letting a
-term hold the call, and designing against the EBNF would have removed that pair
-as redundant.
-
-**And the entity block.**
-
-*Belongs with language and packs (section 5). Investigate.*
-
-The canonical grammar says an entity block contains fields and nothing else:
-
-```ebnf
-entity_block    = "{" { kv_stmt } "}" ;
-kv_stmt         = IDENT literal_or_expr ;
-```
-
-The parser also accepts `part of <entity_ref>` and `state <name>`, and the
-grammar file's own comment beside `entity_field` describes the second —
-"`state <name>` inside an entity block is unrelated: it names the lifecycle
-state the entity opens in" — so the omission is in the productions rather than
-in the intent. `docs/01` §7.1 shows both clauses in its examples.
-
-This is the mirror of §7.19. There the implementation is NARROWER than the
-grammar; here it is WIDER. Both are conformance gaps, and both were found by
-reading the EBNF rather than the prose.
-
-To investigate: what else the parser accepts that the EBNF does not state. The
-grammar is published for tooling — railroad diagrams and parser generators —
-so anything it omits is missing from every consumer of it, and a generated
-parser would reject models the reference implementation compiles.
-
-Found August 2026, reading the canonical grammar while walking §7.19.
-
----
-
 ### 7.50 A model cannot name the streams its own contracts produce
 
 *Belongs with language and packs (section 5).*
@@ -1801,6 +1751,15 @@ check the next character is a dot.
 lowering and validations, so the two can no longer disagree. This item is the
 next step, and it is a different claim: the predicate should not need to exist.
 
+**The grammar already answered this and the implementation did not follow.**
+`contract_stmt` takes TWO qnames — the contract TYPE and the INSTANCE NAME —
+so `contract cre.lease_unit tenant_a` states both and neither has to be
+recovered from the other. The implementation accepts one, fusing them into
+`cre.lease_unit.tenant_a`, and every consumer then does string surgery to get
+the type back. `dot_suffix`, the deleted `ContractMatch` mode, the bare-read
+bug class that `tools/check-pack-series.py` now gates, and this item are all
+downstream of that one restriction. See 7.63.
+
 **What carrying the type would buy.**
 
 *Resolution becomes decidable.* The predicate takes the first declared name that
@@ -1851,3 +1810,166 @@ documented as though the feature shipped, which is how it went unnoticed.
 whether a weekly calendar frequency is wanted or whether weekly schedules on a
 daily timeline are the answer. No case needs it yet; a rent roll on weekly
 billing or a daily-book instrument settling on Fridays would.
+
+---
+
+### 7.61 Nothing checks the grammar against the parser
+
+*Belongs with the language (section 5). Replaces the closed 7.49.*
+
+`docs/schemas/CFDL_v0_1_Grammar.ebnf` is NORMATIVE and published. `docs/02`
+says implementations MUST support the lexical rules, calls the grammar
+"suitable as the basis for a hand-written parser or parser-generator input
+after minor adaptation", and the site offers it for download for use with
+"railroad diagram generators, parser generators, etc."
+
+Nobody has ever performed that adaptation, so nobody discovered the grammar did
+not survive it. Five productions were wrong when checked by hand — `contract`
+alone was wrong four ways, and would have rejected 519 of the 520 contract
+declarations in this repository. They are fixed. Nothing stops it recurring.
+
+**The parser is hand-written recursive descent, so the grammar is source for
+nothing.** That is the right call — the diagnostics are a feature and generated
+parsers do not produce them — but it means the two artefacts agree only by
+attention.
+
+**The long-term answer is to make the grammar executable in CI, in both
+directions**, without generating the product parser:
+
+- Build a RECOGNISER from the EBNF and require it to accept every shipped
+  `.cfdl` — around 500 files CI already proves parse. Catches a grammar that is
+  too narrow, which is what `contract_stmt` and `entity_block` were.
+- Generate sentences from the EBNF and require `cfdl parse` to accept them.
+  Catches a grammar that is too broad, which is what `map_entry` was.
+
+That is how a published grammar is normally held to an implementation — spec
+tests, in the manner of WebAssembly or test262 — and it keeps the hand-written
+diagnostics. Cost is a real project: an EBNF adaptation layer, a generator
+dependency, and a gate.
+
+**The cheap interim** is a terminal cross-check: extract the keywords each
+production mentions and require the parser to read them, and the reverse. Same
+shape as `check-keyword-register.py`, no dependency. It would have caught
+`owner` and `direction`; it would NOT have caught `term` moving inside the
+contract block, so it is a stopgap and should be labelled one.
+
+---
+
+### 7.62 An option accepts `on entity`, which nothing documents
+
+*Belongs with the language (section 5). Found reconciling the grammar.*
+
+`option call_at_120 on entity asset.plant type Option.Call { … }` parses and
+ships in models. §14.1 of the language specification does not show the clause,
+and the EBNF does not have it — the parser grew it and neither document
+followed.
+
+Resolve in one direction: document it in §14.1 and the grammar, or remove it and
+migrate the models that use it. It is small either way, and it should not
+survive to v1 as surface nobody wrote down.
+
+---
+
+### 7.63 A contract cannot name its instance separately from its type
+
+*Belongs with the language (section 5). The grammar's design; the implementation
+never met it.*
+
+```ebnf
+contract_stmt = "contract" qname [ qname ] [ "on" "entity" entity_ref ]
+                contract_block ;
+```
+
+Two qnames: the contract TYPE a pack declares, and the INSTANCE NAME. The
+implementation accepts one and fuses them — `cre.lease_unit.tenant_a` — so the
+type is no longer stated anywhere and has to be recovered by stripping a prefix
+and checking the next character is a dot.
+
+**Everything downstream of that restriction is a workaround for it:**
+
+- `{{contract.dot_suffix}}` in every instanceable lowering rule
+- `ContractMatch::Exact` / `::Instance`, deleted this week after two thirds of
+  pack validations turned out to be silently skipped
+- the bare-read bug class — `cre.pct_rent` double-counting into forward NOI,
+  `cre.property.opex` vanishing from it — now gated by
+  `tools/check-pack-series.py`
+- 7.58, which asks for the type to be carried rather than recovered
+
+None of these would exist if the instance name were its own token. No reason for
+the restriction is recorded anywhere.
+
+**Scope.** Accept the two-qname form; keep the fused spelling working or migrate
+the ~520 declarations; carry `type` and `instance` separately on the IR contract;
+then retire the string surgery. Large, and it closes more than it costs.
+
+---
+
+### 7.64 A contract term cannot hold an expression, and the workarounds are worse
+
+*Belongs with the language (section 5). The grammar allowed it; the
+specification restricted it.*
+
+The grammar says `map_entry = qname literal_or_expr`. §8 of the language
+specification says the opposite, with a reason:
+
+> Nothing else. A term MUST NOT contain an expression: `mwh_year = 1000 + 500`
+> is an error, not a value of 1500. Derived quantities belong in an `assume`,
+> which the term then references.
+>
+> A contract records what was agreed, so most terms are literals.
+
+The reason is real — a term whose provenance is a model rather than an
+agreement is not a record of anything. But it does not support the rule it is
+attached to, because **what was agreed is itself an expression in many cases.**
+A lease escalating at "CPI plus 50 basis points" agreed exactly that; so did a
+management fee of "3% of effective gross income", a rent of "the greater of base
+or 6% of sales", and a coupon of "SOFR + 225bp". Forcing those into a
+model-level `assume` does not preserve the agreement — it moves the agreement
+OUT of the contract and leaves a reference behind. The literal-only rule
+records simple agreements faithfully and complex ones worse than an expression
+would.
+
+So the restriction is absolute where the argument is not, and the price is paid
+everywhere.
+
+**What it costs today.**
+
+*Every derived term needs a model-level global.* `assume` is the only escape, so
+`escalation = inputs.cpi + 0.005` becomes a named `assume` that exists solely to
+be referenced once. On a rent roll of forty units that is forty globals.
+
+*A time-varying value cannot come through a term at all.* An expression is
+needed to call `curve_value`, so a pack cannot accept a curve as a term. It
+accepts the curve's NAME, as a string, and composes the call itself:
+
+```
+if("{{contract.escalation_curve}}" == "", {{contract.escalation}},
+   curve_value("{{contract.escalation_curve}}", time.date))
+```
+
+*So every term that might vary becomes a PAIR.* `escalation` /
+`escalation_curve`, `occupancy` / `occupancy_curve`, `growth_rate` /
+`growth_curve`, `tax_rate` / `tax_rate_curve`. Each pair carries that `if` in the
+lowering expression, and the curve reference is a bare string that nothing
+validates until the run reaches it.
+
+**What allowing expressions would buy.** `escalation = curve_value("cpi",
+time.date)` states the intent directly, the pairs collapse, the `if` disappears
+from four packs, and the curve reference becomes an ordinary expression the
+compiler resolves.
+
+**What has to be decided first**, because the specification's reason does not
+evaporate:
+
+1. Does an expression-valued term break provenance — can a reader still see what
+   was agreed? A permitted middle is that terms may reference inputs and curves
+   but not arithmetic over them.
+2. Does it break the term SCHEMA a pack validates against — `term_number` with
+   `min`/`max` cannot bound an expression, so `E6062`-style checks would become
+   run-time or would not apply.
+3. Does it reintroduce ordering problems — an expression reading a stream would
+   make a contract phase-2.
+
+`E5011_TERM_CLIP_OUT_OF_BOUNDS` shows the current design taking bounds
+seriously: a term deferring to an input is checked against that input's clip at
+compile time. Whatever is allowed must keep that property or say why it cannot.
