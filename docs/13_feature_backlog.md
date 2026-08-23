@@ -854,61 +854,6 @@ is neither: the grammar already admits the name, and refusing it at pack load
 would constrain a pack's vocabulary by the core's keyword set, which is the
 opposite of what `docs/07` §6.2 says a pack is for.
 
-### 7.21 Two build-freshness guards hash packs into a binary that does not contain them
-
-*Belongs with the tooling.*
-
-`tools/py-stamp.py` hashes `packs/` into the extension's build stamp, and its
-docstring states why: *"crates/cfdl-pack `include_str!`s every pack TOML at
-compile time — editing a lowering rule changes the extension with no Rust source
-change at all."* `python/tests/test_native_is_fresh.py` globs
-`packs/**/*.toml` under a helper documented as *"most recently modified file
-that is compiled into the native module."*
-
-Both premises are false for the Python extension. The `include_str!` block is
-`#[cfg(feature = "embedded-packs")]`, and `crates/cfdl-py/Cargo.toml` takes
-`cfdl-pack` **without** that feature — only `cfdl-cli`, `cfdl-server` and
-`cfdl-wasm` enable it. The SDK says so itself when asked to compile without a
-pack directory:
-
-```
-E4004_MISSING_PACK: No pack directory was provided and this build has no
-embedded packs.
-```
-
-The SDK reads packs from disk at run time, via `packs_dir`. A pack edit changes
-what it produces without changing the binary at all.
-
-The cost is a false alarm on one of the actions this repository takes most
-often. Editing a lowering rule fails `py-check`, which demands `make
-py-develop`; the rebuild is a no-op because cargo correctly sees no dirty input,
-so the `.so` keeps its old mtime and `test_native_is_fresh` then fails anyway.
-The way out is to touch a crate source to force a rebuild that changes nothing.
-`check-notebooks-fresh` already reasons correctly about exactly this trade —
-`benchmarks/` is deliberately not a directory-wide input there, for the same
-reason.
-
-**The notebook stamp's `packs/` entry is correct and should stay.** Pack data
-changes what a notebook prints, because the SDK reads it at run time. That guard
-is about rendered output; these two are about a compiled binary, and only the
-first has packs in it.
-
-**A second defect the first one hid.** `make py-develop` runs `pip install -e`
-and then `py-stamp --write` unconditionally, so the stamp records the sources as
-built whether or not a rebuild happened. Here that was harmless — the extension
-did not need rebuilding — but it means a genuinely skipped rebuild would be
-certified fresh, and the only reason it was caught at all is that the mtime test
-disagreed with the hash test. Two guards on one property, reaching opposite
-answers, with the wrong one silent.
-
-Shape: drop `packs` from `STAMP_INPUTS` and from the test's globs, and derive
-the stamp from the artefact rather than writing it on faith after an install.
-Both guards should then stay quiet through a pack edit and speak on an engine
-one.
-
-Found shipping `cre.construction_loan`, which is a pack-only change and tripped
-both guards twice.
-
 ### 7.22 A published weighted average life cannot be asserted
 
 Belongs with section 4 (credit pack).

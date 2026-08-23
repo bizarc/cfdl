@@ -8,6 +8,39 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: the Python extension's freshness guards no longer hash packs into it
+
+`tools/py-stamp.py` hashed `packs/` into the extension's build stamp and
+`test_native_is_fresh` globbed `packs/**/*.toml`, both on the premise that
+cfdl-pack `include_str!`s every pack TOML into the binary. It does — but only
+under `#[cfg(feature = "embedded-packs")]`, and crates/cfdl-py takes cfdl-pack
+without it. The extension says so itself: *"No pack directory was provided and
+this build has no embedded packs."* The SDK reads packs from disk at run time,
+so a pack edit cannot stale the binary.
+
+The cost was a false alarm on one of the most common actions in this
+repository. Editing a lowering rule failed `py-check`, which demanded `make
+py-develop`; the rebuild was a no-op because cargo correctly saw no dirty
+input, the `.so` kept its mtime, and the mtime test then failed too — the only
+way out being to touch a crate source to force a rebuild that changed nothing.
+
+Both guards now stay quiet through a pack edit and speak on an engine one,
+verified both ways.
+
+The second defect the first one hid is closed as well. `make py-develop` ran
+`pip install -e` and then stamped unconditionally, so a rebuild that did not
+happen was certified fresh regardless; it was caught only because a second
+guard disagreed. The stamp now records the artefact's identity beside the
+source digest, so a stamp written without a build no longer matches the file
+it claims to describe — and `--write` with no extension present refuses
+instead of writing.
+
+The notebook render stamp keeps its `packs/` entry, correctly: pack data
+changes what a notebook prints, because the SDK reads it at run time.
+
+Closes backlog 7.21.
+
+
 ### Added: every pack ships contract templates, and a gate keeps them working
 
 `templates.toml` was populated for CRE's two line-item contracts and nowhere

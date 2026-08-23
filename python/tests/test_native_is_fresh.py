@@ -19,9 +19,19 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 def _newest_engine_source_mtime() -> tuple[float, pathlib.Path]:
-    """Most recently modified file that is compiled into the native module."""
+    """Most recently modified file that is compiled into the native module.
+
+    `packs/**/*.toml` is deliberately NOT among these. cfdl-pack embeds the
+    pack TOMLs only under `#[cfg(feature = "embedded-packs")]`, and cfdl-py
+    takes cfdl-pack without it — the extension itself reports
+    `E4004_MISSING_PACK: ... this build has no embedded packs`. The SDK reads
+    packs from disk at run time, so a pack edit cannot stale the binary, and
+    including them here failed every pack-only change with a remedy that
+    could not work: the rebuild was a no-op, the .so kept its mtime, and this
+    test failed again.
+    """
     candidates: list[tuple[float, pathlib.Path]] = []
-    for pattern in ("crates/**/*.rs", "crates/**/Cargo.toml", "packs/**/*.toml"):
+    for pattern in ("crates/**/*.rs", "crates/**/Cargo.toml"):
         for path in REPO_ROOT.glob(pattern):
             if "target" in path.parts:
                 continue
