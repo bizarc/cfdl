@@ -46,8 +46,8 @@ Growth is annual-compound stepped continuously on the model clock:
 > actually does: growth decays toward the riskfree rate and the effective tax
 > rate climbs toward the marginal one as a firm matures.
 >
-> `growth_curve` (on `revenue_line`, `opex_line`, `capex_line`) and
-> `tax_rate_curve` (on `cash_taxes`) name a model `curve` instead, read at each
+> A varying rate is stated in the term itself —
+> `growth_rate = curve_value("cpi", time.date)` — read at each
 > period's date — the same mechanism `credit.pool_float_io_bullet` uses for a
 > floating index. Empty by default, so a model stating only the scalar is
 > unchanged.
@@ -67,7 +67,7 @@ Growth is annual-compound stepped continuously on the model clock:
 ### Operating lines
 
 - `opco.revenue_line` — `amount` (monthly), optional `growth_rate` or
-  `growth_curve`.
+  an expression-valued `growth_rate`.
   Stream `opco.revenue.recurring`.
 - `opco.opex_line` — same terms. Stream `opco.opex.recurring` (outflow).
 - `opco.working_capital` — fixed monthly WC outflow (`amount`).
@@ -77,7 +77,7 @@ Growth is annual-compound stepped continuously on the model clock:
   WC in the first period, the period-over-period change afterwards, and
   releases the ending balance in the final period when `release_at_end = 1`.
   Terms: `ar_days`, `ap_days`, `inv_days` (all default 0), `release_at_end`.
-- `opco.capex_line` — fixed `amount` (+ `growth_rate` or `growth_curve`) plus
+- `opco.capex_line` — fixed `amount` (+ `growth_rate`, which may hold an expression) plus
   `pct_of_revenue` of the modeled revenue streams. Stream `opco.capex`.
 
 ### Financing
@@ -95,7 +95,7 @@ Growth is annual-compound stepped continuously on the model clock:
 
 ### Taxes
 
-- `opco.cash_taxes` — `tax_rate` or `tax_rate_curve` on `max(0, EBITDA - D&A - interest)` per
+- `opco.cash_taxes` — `tax_rate` (expression-capable) on `max(0, EBITDA - D&A - interest)` per
   period. EBITDA and interest come from the modeled streams; D&A is a
   declared deduction (`da_monthly`, optional `da_growth`), not a cash
   stream. **No NOL carryforwards** (losses floor at zero tax per period;

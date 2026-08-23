@@ -34,10 +34,11 @@
 # rate climbs toward the marginal one as a firm matures. Both are ordinary and
 # neither was expressible.
 #
-# `growth_curve` / `tax_rate_curve` name a model `curve` instead, read with
-# curve_value at the period's date — the same mechanism
-# credit.pool_float_io_bullet already uses for a floating index. Empty by
-# default, so a model that states only the scalar is unchanged.
+# A varying rate arrives through the term itself —
+# `growth_rate = curve_value("revenue_growth", time.date)` — the same
+# mechanism credit.pool_float_io_bullet uses for a floating index. The
+# `growth_curve`/`tax_rate_curve` twin terms that once selected a curve are
+# gone; a term may hold the expression.
 #
 # THE CURVE CARRIES A PER-PERIOD RATE, which is what a modeller would write and
 # what will be correct once 5.1 lands. It is deliberately NOT a cumulative
@@ -68,7 +69,7 @@ category = "operating.revenue.recurring"
 amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_revenue_growth{{contract.suffix_ident}}"
 field_name = "opco_revenue_growth{{contract.suffix_ident}}"
 field_init = "1"
-field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"
+field_next = "prev * pow(1 + {{contract.growth_rate}}, 1 / {{model.periods_per_year}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -78,7 +79,6 @@ schedule_to = "{{contract.term_end}}"
 amount = "0"
 amount_year = "0"
 growth_rate = "0"
-growth_curve = ""
 
 
 [rules.units]
@@ -94,7 +94,7 @@ category = "operating.expense.opex"
 amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_opex_growth{{contract.suffix_ident}}"
 field_name = "opco_opex_growth{{contract.suffix_ident}}"
 field_init = "1"
-field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"
+field_next = "prev * pow(1 + {{contract.growth_rate}}, 1 / {{model.periods_per_year}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -104,7 +104,6 @@ schedule_to = "{{contract.term_end}}"
 amount = "0"
 amount_year = "0"
 growth_rate = "0"
-growth_curve = ""
 
 # Fixed working-capital adjustment: a constant per-period outflow. For
 # policy-driven working capital see opco.working_capital_policy below.
@@ -182,7 +181,7 @@ category = "investing.capital.capex"
 amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * field.opco_capex_growth{{contract.suffix_ident}} + {{contract.pct_of_revenue}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t))"
 field_name = "opco_capex_growth{{contract.suffix_ident}}"
 field_init = "1"
-field_next = "prev * pow(1 + if(\"{{contract.growth_curve}}\" == \"\", {{contract.growth_rate}}, curve_value(\"{{contract.growth_curve}}\", time.date)), 1 / {{model.periods_per_year}})"
+field_next = "prev * pow(1 + {{contract.growth_rate}}, 1 / {{model.periods_per_year}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -191,7 +190,6 @@ schedule_to = "{{contract.term_end}}"
 amount_year = "0"
 amount = "0"
 growth_rate = "0"
-growth_curve = ""
 pct_of_revenue = "0"
 
 # ---------------------------------------------------------------------------
@@ -263,7 +261,7 @@ stream_name = "opco.taxes.cash{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.tax"
-amount_expr = "max(0, if(\"{{contract.tax_rate_curve}}\" == \"\", {{contract.tax_rate}}, curve_value(\"{{contract.tax_rate_curve}}\", time.date)) * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - ({{contract.da_monthly}} + {{contract.da_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.da_growth}}, time.t / {{model.periods_per_year}})))"
+amount_expr = "max(0, {{contract.tax_rate}} * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - ({{contract.da_monthly}} + {{contract.da_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.da_growth}}, time.t / {{model.periods_per_year}})))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -272,7 +270,6 @@ schedule_to = "{{contract.term_end}}"
 da_monthly = "0"
 da_year = "0"
 da_growth = "0"
-tax_rate_curve = ""
 # Defaulted so a model may state the CURVE instead. Stating neither is
 # E7010 rather than a silent zero-tax model.
 tax_rate = "0"

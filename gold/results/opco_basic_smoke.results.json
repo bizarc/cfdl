@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "09c761df9378f5f0532782ab2703e1261ab2600bfd3a5f53567f12f725158a37",
+  "model_hash": "817eef61f5b8e4e482a31c094452c5fe8c897720b3fedbc11ca30a32193fb528",
   "ledger_hash": "0a53c6f768a6567164b6e28b9eccbdefb45d9045d4c73230945094841bc1f15b",
   "engine": {
     "name": "cfdl-engine",
@@ -12,14 +12,12 @@
       {
         "contract": "opco.revenue_line",
         "defaults_applied": [
-          "amount_year",
-          "growth_curve"
+          "amount_year"
         ],
         "stream": "opco.revenue.recurring",
         "terms": {
           "amount": "120000",
           "amount_year": "0",
-          "growth_curve": "",
           "growth_rate": "0.0"
         }
       },
@@ -27,14 +25,12 @@
         "contract": "opco.opex_line",
         "defaults_applied": [
           "amount_year",
-          "growth_curve",
           "growth_rate"
         ],
         "stream": "opco.opex.recurring",
         "terms": {
           "amount": "70000",
           "amount_year": "0",
-          "growth_curve": "",
           "growth_rate": "0"
         }
       },

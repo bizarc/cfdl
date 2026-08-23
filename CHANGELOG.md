@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Removed (breaking): the curve-selector twin terms
+
+`escalation_curve`/`occupancy_curve` (cre.opex_line), `growth_curve`
+(opco.revenue_line/opex_line/capex_line) and `tax_rate_curve`
+(opco.cash_taxes) are gone, with the `if("" == "", scalar,
+curve_value(...))` splices they required. A varying rate is stated in the
+term itself — `escalation = curve_value("cpi", time.date) + 0.005` — which is
+what expression terms exist for. The canonical curve semantics are unchanged
+(a model-declared `curve`, read flat-forward by `curve_value` at the period's
+date), and a mistyped curve name is an evaluation error rather than a silent
+scalar fallback, which is stricter than the twin was.
+
+`draw_curve` (construction) and `index_curve` (floating pools) remain: the
+curve IS those instruments' primary input, not a selector beside a scalar.
+
+Migration: `x_curve = "name"` becomes `x = curve_value("name", time.date)`.
+The two shipped models using twins migrate that way; results are unchanged in
+every golden — zero numeric differences across all 98 results files — and all
+40 benchmarks pass.
+
+
 ### Changed (breaking): pack streams follow `[domain].[category].[line]`
 
 The pattern is now stated normatively in the pack interface (docs/07 §6.4):

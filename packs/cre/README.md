@@ -72,9 +72,8 @@ runs whether the building is full or empty; cleaning tracks occupied space. At
 the default `pct_fixed = 1` this reduces to a plain escalating series.
 
 A term may also hold an expression — `escalation = curve_value("cpi",
-time.date) + 0.005` states an agreed formula directly. The `escalation_curve` /
-`occupancy_curve` twin terms predate that and remain as a convenience: a curve
-NAME the pack composes into the `curve_value` call for you.
+time.date) + 0.005` states an agreed formula directly. A varying rate arrives
+through the term itself; there are no curve-selector twin terms.
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.opex_line`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
 - `cre.permanent_debt`
@@ -182,7 +181,7 @@ defaults, so a missing one fails compilation with `E5006` naming the term.
 | `cre.construction_stub` | `amount` (per period) | — | `cre.construction.draws` (outflow) |
 | `cre.lease` | `base_rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
 | `cre.revenue_line{.<id>}` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0; may be an expression, e.g. `curve_value("cpi", time.date)`) | `cre.revenue.line{.<id>}` (inflow) |
-| `cre.opex_line` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0) or `escalation_curve`; `pct_fixed` (1) with `occupancy` (1) or `occupancy_curve` | `cre.opex.line{.<id>}` (outflow) |
+| `cre.opex_line` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — each may hold an expression, e.g. `curve_value("occupancy", time.date)` | `cre.opex.line{.<id>}` (outflow) |
 | `cre.exit_cap` | `noi_value` (annual), `exit_cap` | — | `cre.exit.sale` (inflow, once at `term_start`) |
 
 `cre.lease` applies an optional straight-line lease-up ramp:
@@ -275,7 +274,7 @@ time.date)`), not model years.
 | `cre.lease_unit.<id>` | `rent_year` | `free_rent_months` (0), `escalation` (0), `expense_stop_year`/`opex_year`/`opex_escalation`/`pro_rata_share` (0 — recoveries off), `ti_total`/`lc_total` (0) |
 | `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `downtime_months` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term starts AT EXPIRY. |
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
-| `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0) / `escalation_curve`; `pct_fixed` (1) / `occupancy` (1) / `occupancy_curve`. Instance it per expense for an itemised schedule; the entity it hangs on sets the level. |
+| `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — expressions welcome. Instance it per expense for an itemised schedule; the entity it hangs on sets the level. |
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |

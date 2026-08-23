@@ -24,7 +24,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * pow(1 + if(\"\" == \"\", 0, curve_value(\"\", time.date)), 1 / 12)"
+            "src": "prev * pow(1 + 0, 1 / 12)"
           }
         },
         "opco_revenue_growth": {
@@ -34,7 +34,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * pow(1 + if(\"\" == \"\", 0.12, curve_value(\"\", time.date)), 1 / 12)"
+            "src": "prev * pow(1 + 0.12, 1 / 12)"
           }
         }
       },
@@ -295,12 +295,10 @@
       "terms": {
         "amount": "100000",
         "amount_year": "0",
-        "growth_curve": "",
         "growth_rate": "0.12"
       },
       "defaults_applied": [
-        "amount_year",
-        "growth_curve"
+        "amount_year"
       ]
     },
     {
@@ -309,12 +307,10 @@
       "terms": {
         "amount": "60000",
         "amount_year": "0",
-        "growth_curve": "",
         "growth_rate": "0"
       },
       "defaults_applied": [
         "amount_year",
-        "growth_curve",
         "growth_rate"
       ]
     }

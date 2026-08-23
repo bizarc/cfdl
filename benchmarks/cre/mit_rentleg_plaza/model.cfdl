@@ -146,7 +146,7 @@ contract cre.opex_line {
     amount_year = inputs.opex_year_full
     escalation = inputs.opex_growth
     pct_fixed = inputs.opex_pct_fixed
-    occupancy_curve = "occupancy"
+    occupancy = curve_value("occupancy", time.date)
   }
 }
 
