@@ -54,10 +54,16 @@ a branch — both arms are the same type.
 
 ## Numbers
 
-All arithmetic is floating point. Where a source rounds — a workbook that
-computes on already-rounded figures — reach for `round_to` and match the
-source's *method* rather than restating its answer, so the model reproduces the
-published number by doing what the publisher did.
+All arithmetic is exact decimal — 28 significant digits, so `0.1 + 0.2 == 0.3`
+is `true`. Float64 is a documented escape for transcendental work only:
+fractional exponents and iterative solvers. A run may select `excel_compat`
+instead, which reproduces Excel's float representation artifacts for proving
+parity against a spreadsheet.
+
+Where a source rounds — a workbook that computes on already-rounded figures —
+reach for `round_to` and match the source's *method* rather than restating its
+answer, so the model reproduces the published number by doing what the
+publisher did.
 
 ## Functions
 

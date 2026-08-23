@@ -29,10 +29,10 @@ Two evaluation modes exist; models always run in **decimal mode**.
   as Excel does), for proving parity against Excel reference models and
   explaining decimal-vs-float differences.
 
-  It is reachable **only from Rust**, via `cfdl_expr::eval_with_mode`. There is
-  no CLI flag and no run-config key, so a *model* cannot be run in it — the
-  engine always evaluates in decimal. Nothing in the repo calls
-  `eval_with_mode` today. See `docs/13_feature_backlog.md`.
+  A run selects it: `"arithmetic": "excel_compat"` in the run configuration's
+  `deterministic` block, which `run.schema.json` declares and the engine
+  rejects any other value for. Decimal is the default, so a run that says
+  nothing is unaffected.
 
   Whether that matters is measured rather than assumed:
   `excel_compat_stability` in `crates/cfdl-calc/src/lib.rs` runs the credit
