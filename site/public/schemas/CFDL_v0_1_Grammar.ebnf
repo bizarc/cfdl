@@ -40,9 +40,10 @@ cadence         = "daily" | "monthly" | "quarterly" | "annual" ;
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
 
 (* --- entities --- *)
-(* The type annotation is required; the block is not. `entity asset a :
-   Asset.Real` is a complete statement. *)
-entity_stmt     = "entity" IDENT IDENT ":" qname [ entity_block ] ;
+(* Both the type annotation and the block are optional. `entity asset sunset`
+   is a complete statement, and is the form §7 of the language specification
+   opens with. *)
+entity_stmt     = "entity" IDENT IDENT [ ":" qname ] [ entity_block ] ;
 entity_block    = "{" { entity_item } "}" ;
 
 entity_item     = entity_field
@@ -81,15 +82,22 @@ dist_arg        = IDENT "=" literal
                 ;
 
 (* --- contracts --- *)
-(* One qname — the contract TYPE, which a pack declares, optionally suffixed
-   with an instance name (`cre.opex_line.property_tax`) so a deal may hold more
-   than one of the same thing.
+(* TWO qnames by design: the contract TYPE, which a pack declares, and the
+   INSTANCE NAME. The implementation accepts only one, with the instance fused
+   onto the type as a dotted suffix (`cre.opex_line.property_tax`), and that
+   restriction is the root of a family of defects — the type must then be
+   recovered by string surgery, which is what `dot_suffix`, the deleted
+   `ContractMatch` mode, and `tools/check-pack-series.py` all exist to cope
+   with. See backlog 7.58 and 7.63; the design is right and the implementation
+   should meet it.
 
-   `on entity` is OPTIONAL. Omitted, the subject falls back to the model's sole
-   asset; 134 of the 520 contracts in this repository omit it.
+   `on entity` is optional in practice — 134 of this repository's 520 contracts
+   omit it and fall back to the model's sole asset.
 
-   `term` is a contract ITEM, inside the block, not a clause before it. *)
-contract_stmt   = "contract" qname [ "on" "entity" entity_ref ] contract_block ;
+   `term` is a contract ITEM, inside the block. That is §8.1 of the language
+   specification, which is normative and which this grammar contradicted. *)
+contract_stmt   = "contract" qname [ qname ] [ "on" "entity" entity_ref ]
+                  contract_block ;
 
 contract_block  = "{" { contract_item } "}" ;
 
@@ -255,8 +263,11 @@ deactivate_contract_stmt = "deactivate" "contract" qname ;
 exercise_option_stmt   = "exercise" "option" qname ;
 
 (* --- options --- *)
+(* The parser ALSO accepts `on entity <ref>` after the name, and shipped models
+   use it. Neither §14.1 of the language specification nor this grammar
+   documents it — an extension that grew in the implementation. Resolve it in
+   one direction or the other before v1; see backlog 7.62. *)
 option_stmt     = "option" qname
-                  [ "on" "entity" entity_ref ]
                   "type" qname
                   [ "exercisable" "in" qname ]
                   option_block ;
