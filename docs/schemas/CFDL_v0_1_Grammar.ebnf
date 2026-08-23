@@ -40,9 +40,22 @@ cadence         = "daily" | "monthly" | "quarterly" | "annual" ;
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
 
 (* --- entities --- *)
-entity_stmt     = "entity" IDENT IDENT ":" qname entity_block ;
-entity_block    = "{" { kv_stmt } "}" ;
-kv_stmt         = IDENT literal_or_expr ;
+(* The type annotation is required; the block is not. `entity asset a :
+   Asset.Real` is a complete statement. *)
+entity_stmt     = "entity" IDENT IDENT ":" qname [ entity_block ] ;
+entity_block    = "{" { entity_item } "}" ;
+
+entity_item     = entity_field
+                | part_of_stmt
+                | entity_state_stmt
+                ;
+
+(* Where this entity sits in the hierarchy. Optional by design: the same
+   building may be modeled as one asset, as unit types, or as suites. *)
+part_of_stmt    = "part" "of" entity_ref ;
+
+(* The lifecycle state the entity OPENS in. Unrelated to a field. *)
+entity_state_stmt = "state" IDENT ;
 
 (* --- assumptions --- *)
 assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
@@ -55,7 +68,7 @@ assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
 
    `state <name>` inside an entity block is unrelated: it names the lifecycle
    state the entity opens in. --- *)
-entity_field    = IDENT ( "=" literal | "init" expr [ "next" expr ] ) ;
+entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 (* --- curves: named date-indexed values, looked up via curve_value() --- *)
 curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
 curve_interp    = "step" | "linear" ;
@@ -68,10 +81,15 @@ dist_arg        = IDENT "=" literal
                 ;
 
 (* --- contracts --- *)
-contract_stmt   = "contract" qname qname
-                  "on" "entity" entity_ref
-                  "term" date_lit ".." date_lit
-                  contract_block ;
+(* One qname — the contract TYPE, which a pack declares, optionally suffixed
+   with an instance name (`cre.opex_line.property_tax`) so a deal may hold more
+   than one of the same thing.
+
+   `on entity` is OPTIONAL. Omitted, the subject falls back to the model's sole
+   asset; 134 of the 520 contracts in this repository omit it.
+
+   `term` is a contract ITEM, inside the block, not a clause before it. *)
+contract_stmt   = "contract" qname [ "on" "entity" entity_ref ] contract_block ;
 
 contract_block  = "{" { contract_item } "}" ;
 
@@ -82,27 +100,43 @@ contract_block  = "{" { contract_item } "}" ;
    billing is not at a month end. *)
 payment_stmt    = "payment" "net" INT [ "days" | "months" ] ;
 
-contract_item   = payment_stmt
+contract_item   = term_stmt
+                | payment_stmt
                 | currency_stmt
                 | terms_block
                 | effects_block
                 | parties_block
-                | tags_block
                 ;
+
+term_stmt       = "term" date_lit ".." date_lit ;
 
 currency_stmt   = "currency" IDENT ;
 
 terms_block     = "terms" map_block ;
 parties_block   = "parties" map_block ;
+(* NOT IMPLEMENTED. No production reads `tags`; §18.2 lists it as reserved. *)
 tags_block      = "tags" map_block ;
 
 map_block       = "{" { map_entry } "}" ;
-map_entry       = qname literal_or_expr ;
+(* A term is a LITERAL or one declared input, never a compound expression.
+   `escalation = 0.03` and `escalation = inputs.cpi` are terms;
+   `escalation = inputs.cpi + 0.01` is not — compute it in an `assume` first.
+
+   This is load-bearing rather than pedantic. It is why a pack composes
+   `curve_value(...)` from a term holding a curve NAME: a time-varying value
+   cannot reach a rule through the term itself. *)
+map_entry       = qname term_value ;
+term_value      = literal | input_ref ;
+input_ref       = "inputs" "." IDENT ;
 
 (* --- effects (streams in v0.1 core) --- *)
 effects_block   = "effects" "{" { effect_stmt } "}" ;
 effect_stmt     = stream_effect_stmt ;
 
+(* NOT IMPLEMENTED. An `effects` block parses and must currently be empty; no
+   production reads `owner` or `direction`, which is why §18.2 of the language
+   specification lists both as reserved for a feature not yet built. A stream
+   inside a contract is written today as a lowering rule in a pack. *)
 stream_effect_stmt = "stream" qname
                      "owner" "entity" entity_ref
                      "direction" direction
@@ -222,6 +256,7 @@ exercise_option_stmt   = "exercise" "option" qname ;
 
 (* --- options --- *)
 option_stmt     = "option" qname
+                  [ "on" "entity" entity_ref ]
                   "type" qname
                   [ "exercisable" "in" qname ]
                   option_block ;

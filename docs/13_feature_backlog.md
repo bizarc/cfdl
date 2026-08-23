@@ -1456,56 +1456,6 @@ config produced an NPV equal to its own total.
 
 ---
 
-### 7.49 The EBNF describes syntax the parser does not accept
-
-*Two instances found so far. The keyword half of this drift is closed and gated;
-this is the production half, which nothing checks.*
-
-**A contract term is not `literal_or_expr`.** The grammar says
-`map_entry = qname literal_or_expr`, and the parser says otherwise:
-
-```
-Term 'escalation' takes a single value. Expected the next term or '}'. A term is
-a literal or one declared input (e.g. `inputs.yield`); compute derived values in
-an `assume` instead.
-```
-
-So `escalation = 0.03` and `escalation = inputs.cpi` compile and
-`escalation = inputs.cpi + 0.01` does not. This is load-bearing, not cosmetic:
-it is why a pack composes `curve_value` from a curve NAME rather than letting a
-term hold the call, and designing against the EBNF would have removed that pair
-as redundant.
-
-**And the entity block.**
-
-*Belongs with language and packs (section 5). Investigate.*
-
-The canonical grammar says an entity block contains fields and nothing else:
-
-```ebnf
-entity_block    = "{" { kv_stmt } "}" ;
-kv_stmt         = IDENT literal_or_expr ;
-```
-
-The parser also accepts `part of <entity_ref>` and `state <name>`, and the
-grammar file's own comment beside `entity_field` describes the second —
-"`state <name>` inside an entity block is unrelated: it names the lifecycle
-state the entity opens in" — so the omission is in the productions rather than
-in the intent. `docs/01` §7.1 shows both clauses in its examples.
-
-This is the mirror of §7.19. There the implementation is NARROWER than the
-grammar; here it is WIDER. Both are conformance gaps, and both were found by
-reading the EBNF rather than the prose.
-
-To investigate: what else the parser accepts that the EBNF does not state. The
-grammar is published for tooling — railroad diagrams and parser generators —
-so anything it omits is missing from every consumer of it, and a generated
-parser would reject models the reference implementation compiles.
-
-Found August 2026, reading the canonical grammar while walking §7.19.
-
----
-
 ### 7.50 A model cannot name the streams its own contracts produce
 
 *Belongs with language and packs (section 5).*
@@ -1818,3 +1768,45 @@ documented as though the feature shipped, which is how it went unnoticed.
 whether a weekly calendar frequency is wanted or whether weekly schedules on a
 daily timeline are the answer. No case needs it yet; a rent roll on weekly
 billing or a daily-book instrument settling on Fridays would.
+
+---
+
+### 7.61 Nothing checks the grammar against the parser
+
+*Belongs with the language (section 5). Replaces the closed 7.49.*
+
+`docs/schemas/CFDL_v0_1_Grammar.ebnf` is NORMATIVE and published. `docs/02`
+says implementations MUST support the lexical rules, calls the grammar
+"suitable as the basis for a hand-written parser or parser-generator input
+after minor adaptation", and the site offers it for download for use with
+"railroad diagram generators, parser generators, etc."
+
+Nobody has ever performed that adaptation, so nobody discovered the grammar did
+not survive it. Five productions were wrong when checked by hand — `contract`
+alone was wrong four ways, and would have rejected 519 of the 520 contract
+declarations in this repository. They are fixed. Nothing stops it recurring.
+
+**The parser is hand-written recursive descent, so the grammar is source for
+nothing.** That is the right call — the diagnostics are a feature and generated
+parsers do not produce them — but it means the two artefacts agree only by
+attention.
+
+**The long-term answer is to make the grammar executable in CI, in both
+directions**, without generating the product parser:
+
+- Build a RECOGNISER from the EBNF and require it to accept every shipped
+  `.cfdl` — around 500 files CI already proves parse. Catches a grammar that is
+  too narrow, which is what `contract_stmt` and `entity_block` were.
+- Generate sentences from the EBNF and require `cfdl parse` to accept them.
+  Catches a grammar that is too broad, which is what `map_entry` was.
+
+That is how a published grammar is normally held to an implementation — spec
+tests, in the manner of WebAssembly or test262 — and it keeps the hand-written
+diagnostics. Cost is a real project: an EBNF adaptation layer, a generator
+dependency, and a gate.
+
+**The cheap interim** is a terminal cross-check: extract the keywords each
+production mentions and require the parser to read them, and the reverse. Same
+shape as `check-keyword-register.py`, no dependency. It would have caught
+`owner` and `direction`; it would NOT have caught `term` moving inside the
+contract block, so it is a stopgap and should be labelled one.
