@@ -874,7 +874,7 @@ The expression environment MUST support:
 
 **Cross-stream series**
 - `series_sum(<pattern>, <window>)` / `series_avg(...)` — cross-stream
-  references (two-phase evaluation, cycle-free)
+  references (dependency-ordered waves; cycles rejected)
 
 **Math and finance**
 - Standard arithmetic `+ - * / ^`, comparisons, `and/or/not`, `if(cond, a, b)`

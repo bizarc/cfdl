@@ -21,7 +21,7 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `use pack`, `import ... as` | ✅ | |
 | `time calendar <freq> from <date> for <n>` | ✅ | daily/monthly/quarterly/annual |
 | `time ... project <n>` (valuation projection tail) | ✅ | computed for series lookups; excluded from cash/NPV |
-| `series_sum` / `series_avg` (cross-stream references) | ✅ | two-phase evaluation; phase-2 streams cannot reference each other |
+| `series_sum` / `series_avg` (cross-stream references) | ✅ | dependency-ordered waves to any depth; genuine cycles rejected with the named path |
 | `phase <name> from .. to ..` | ✅ | named in IR; gates option exercise |
 | `entity <ns> <name>` | ✅ | basic form |
 | `entity ... : <type> { attrs }` (typed block) | ❌ | rejected; declare entities in the bare form |

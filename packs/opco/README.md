@@ -73,7 +73,7 @@ Growth is annual-compound stepped continuously on the model clock:
 - `opco.working_capital` — fixed monthly WC outflow (`amount`).
 - `opco.working_capital_policy` — DSO/DPO/DIO-driven:
   `WC(t) = annualized revenue * ar_days/365 + annualized opex * (inv_days - ap_days)/365`
-  from the modeled streams (phase-2 series lookups). Books the full initial
+  from the modeled streams (cross-stream series lookups). Books the full initial
   WC in the first period, the period-over-period change afterwards, and
   releases the ending balance in the final period when `release_at_end = 1`.
   Terms: `ar_days`, `ap_days`, `inv_days` (all default 0), `release_at_end`.

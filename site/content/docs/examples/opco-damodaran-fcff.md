@@ -149,7 +149,7 @@ contract opco.opex_line.operating on entity asset.firm {
   }
 }
 
-// Cash taxes on EBIT. The rule reads revenue and opex from phase-1 streams and
+// Cash taxes on EBIT. The rule reads revenue and opex from base streams and
 // opex is signed negative, so their sum is EBIT; no debt and no D&A here.
 contract opco.cash_taxes.federal on entity asset.firm {
   term 2026-01..2035-01

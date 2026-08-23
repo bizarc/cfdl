@@ -76,8 +76,7 @@ order the engine runs them:
 |---:|---|---|
 | 1012 | `compute_states` | every field, every period — the balances a model declares |
 | 1013 | `simulate_events` | per-period entity state, reading those fields |
-| ~1080 | streams, phase 1 | streams that read no series |
-| 1122 | streams, phase 2 | streams that read phase-1 series |
+| ~1080 | streams, in waves | dependency-ordered: wave 0 reads no series, each later wave reads finished ones |
 | 1180 | subtotals | folds of stream categories, for statements |
 | **1308** | **`run_waterfalls`** | **the distributions** |
 | 1403 | `model.net_cash_flow` | the model's netted cash, per period |

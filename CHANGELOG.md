@@ -8,6 +8,33 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: streams evaluate in dependency-ordered waves
+
+The engine's two-phase stream split — streams that read no series, then
+streams that do, against a store sealed between the rounds — banned every
+chain of series reads deeper than one to get acyclicity. Waves get exactly
+acyclicity: `series_references` extracts each read as written,
+`selector_matches` resolves it to the streams it names (the same edges the
+old phase guard walked to *reject* depth-two chains), and each stream
+evaluates one wave past the deepest stream it reads, against a store in
+which everything it names is finished. A genuine circular read is the only
+rejection left — `SeriesCycle` names the path (`'a' -> 'b' -> 'a'`) and the
+engine never iterates toward a fixed point (docs/14 §5). A stream whose
+series names are computed at runtime keeps its old semantics: it evaluates
+after every literally-named stream and cannot itself be read. All existing
+goldens are byte-identical; `fixtures/valid/series_depth_chain` pins the new
+depth with hand-checkable arithmetic. Unblocks backlog 1.2, 1.6 and the
+percentage-of-EGI management fee (migrations are their own PRs).
+
+### Added: E1346_STREAM_READS_WATERFALL_STEP
+
+A stream's `series_sum`/`series_avg` naming a waterfall step aggregated to
+zero in silence — the step counted as a known producer, so no warning fired,
+and the store never holds a step, so the read found nothing. docs/03 §3.2
+always said a step's series is visible to a later waterfall's `from` and to
+nothing else; the compiler now says so too, beside E1341/E1342.
+
+
 ### Fixed: a name that resolves to nothing is refused, not read as zero
 
 `docs/03` §2 has always said *"Unknown variables are hard errors (EXPR_EVAL),

@@ -164,10 +164,12 @@ amount_year = "0"
 escalation = "0.03"
 
 # A management fee is usually a percentage of effective gross income, which is a
-# read of other streams and would make this line phase-2 — and `cre.exit_forward`
-# already reads `cre.opex.line.*` in its own phase-2 forward-NOI sum, so the two
-# cannot both be phase-2. Until that ordering is resolved this template states a
-# fixed fee, which is what a model must do today.
+# read of other streams. The engine's dependency-ordered waves now permit that
+# read alongside `cre.exit_forward`'s forward-NOI sum — the fee simply
+# evaluates a wave earlier than the exit. This template still states a fixed
+# fee; the %-of-EGI upgrade is pack work of its own, because the fee's read
+# window must exclude the fee itself or the read is a (correctly refused)
+# cycle.
 [[templates]]
 id = "cre.opex_line.management"
 label = "Operating expense — management fee (fixed)"

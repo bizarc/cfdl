@@ -136,7 +136,7 @@ spellings are one read. It is the form a pack lowering rule produces, since
 
 A stream environment carries no bare `prev`, so a stream cannot ask for "the
 previous value" of something it does not own — the entry is not there to be
-found. The same mechanism as `series` being empty when a phase-1 stream
+found. The same mechanism as `series` being empty when a wave-0 stream
 evaluates.
 
 Because everything a rule can read is already finished, no reference can close a
@@ -282,14 +282,18 @@ point at or before the query date (the first value before the first point).
 points and clamp flat outside the declared range. Referencing an undeclared
 curve is an evaluation error.
 
-Cross-stream series (phase-2 streams): `series_sum(name, from_t, to_t)` /
+Cross-stream series: `series_sum(name, from_t, to_t)` /
 `series_avg(name, from_t, to_t)` aggregate another stream's signed per-period
 amounts over an inclusive period window (`prefix.*` wildcards supported).
-Streams calling these evaluate in a second phase against finished phase-1
-series — phase-2 streams cannot reference each other, so cycles are
-impossible by construction. Windows may extend into the projection tail
-(`time ... project <n>`), which is computed for valuation lookups but
-excluded from cash results and NPV.
+Streams evaluate in dependency order — waves. A stream that reads no series is
+wave 0; a reader evaluates one wave past the deepest stream it reads, against
+a store in which everything it names is already finished, to any depth. A
+circular read is the one thing no order can satisfy, and the engine refuses it
+with the named cycle rather than iterating toward a fixed point (`docs/14`
+§5). A read whose series name is computed at runtime evaluates after every
+literally-named stream and cannot itself be read. Windows may extend into the
+projection tail (`time ... project <n>`), which is computed for valuation
+lookups but excluded from cash results and NPV.
 
 Logs: `ln(x)` (natural logarithm, `x > 0`) and `exp(x)`. These exist to turn a
 cumulative **product** into a cumulative **sum**: a survival factor or growth
