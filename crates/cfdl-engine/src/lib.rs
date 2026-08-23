@@ -513,6 +513,16 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // should contribute nothing. That default is right for an absent stream and
     // wrong for a present one: the reference can NEVER work, and it reported a
     // plausible zero instead of saying so.
+    // Matched as a SELECTOR, not by exact name. `cre.exit_forward` reads
+    // `series_sum("cre.unit.recoveries.*", ...)`, and the stream it would hit is
+    // `cre.unit.recoveries.suite_100` — so an exact lookup of the pattern found
+    // nothing and the guard stayed silent while the read aggregated to zero.
+    //
+    // The packs use globs for every instanceable family, so the blind spot
+    // covered the cases the guard most needed to see. Measured on
+    // `mit_rentleg_plaza`: making recoveries phase-2 left the exit price
+    // $116,440 lower with no diagnostic, because forward NOI silently lost
+    // every recovery.
     let phase2_names: BTreeSet<&str> = phase2.iter().map(|s| s.name.as_str()).collect();
     for stream in &phase2 {
         let mut sources = vec![stream.amount.src.as_str()];
@@ -521,7 +531,10 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         }
         for src in sources {
             for referenced in series_references(src) {
-                if let Some(other) = phase2_names.get(referenced.as_str()) {
+                let hit = phase2_names.iter().find(|name| {
+                    cfdl_expr::selector_matches_any(std::slice::from_ref(&referenced), name)
+                });
+                if let Some(other) = hit {
                     return Err(EngineError::PhaseReference(format!(
                         "Stream '{}' reads series '{other}', which itself reads a series. A \
                          cross-stream read can only see streams that read none, so this would \
