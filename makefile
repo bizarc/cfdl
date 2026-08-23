@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series keyword-register ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -95,7 +95,8 @@ bench:
 # how a 23% weighted-average-life error once survived because `analytic-checks`
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
-          pack-validations pack-series keyword-register site-voice glossary-check \
+          pack-validations pack-series pack-templates keyword-register site-voice \
+          glossary-check \
           rule-fragments \
           doc-examples training-examples shipped-examples benchmark-cases
 	@echo
@@ -221,6 +222,13 @@ pack-series:
 # weekly schedule that no production has ever read.
 keyword-register:
 	$(PYGATE) tools/check-keyword-register.py
+
+# A template is what the editor inserts when a modeller reaches for a contract.
+# One that does not compile teaches a shape the language rejects, and the
+# modeller ends up debugging the pack's own snippet.
+pack-templates:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/check-pack-templates.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot

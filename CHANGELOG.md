@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: every pack ships contract templates, and a gate keeps them working
+
+`templates.toml` was populated for CRE's two line-item contracts and nowhere
+else — opco, energy and credit had none, and the instruments decomposed this
+week (a mortgage with eight terms, a project loan, three exit forms) had none
+either, despite the design rules saying the conventional vocabulary ships as
+templates.
+
+Now 39 templates across four packs: CRE gains its five instruments beside the
+fifteen line items; opco, energy and credit get their line items and
+instruments from scratch. Each carries the terms its rule requires, with a
+conventional value where a convention exists.
+
+`tools/check-pack-templates.py` renders every template from its declared
+defaults — what the editor inserts when no parameter is supplied — and
+compiles it. It caught two real defects on its first run: `principal = 0` and
+`balance = 0` defaults that the packs' own validations reject (E6051, E8022,
+E9001), and declared ranges that outran the model they were placed in. A
+template that does not compile teaches a shape the language rejects and leaves
+the modeller debugging the pack's own snippet.
+
+### Found: an option's type resolves against nothing (backlog 7.67)
+
+`PackOntology` carries entities, contracts, lifecycles, references and
+relations — no options. No pack declares, lowers or validates an option type,
+so the three type names shipping across five models are free text the compiler
+accepts unexamined. Entities and contracts both have the surface options lack.
+
+
 ### Changed: the teaching and examples adopt expression terms
 
 The adoption pass over learn, training and the examples — pack-using models
