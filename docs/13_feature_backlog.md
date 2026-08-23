@@ -1976,3 +1976,44 @@ claims gate is possible at all, or whether the reference layer should stop
 restating what the specification states and link to it instead — the same
 single-source-of-truth question the gate list and the keyword register both
 answered by making one place authoritative.
+
+---
+
+### 7.67 An option's type resolves against nothing
+
+*Belongs with the packs and the language (section 5). Found surveying what a
+pack can declare.*
+
+A model writes an option with a type:
+
+```cfdl
+option refi_1 type Option.Refinance exercisable in construction {
+  exercise when curve_value("sofr", time.date) < 0.045
+  payoff cfg.refi_savings_estimate - 250000
+}
+```
+
+`Option.Refinance` resolves against nothing. `PackOntology` carries
+`entities`, `contracts`, `lifecycles`, `references` and `relations` — there is
+no options member — and no pack declares an option type, lowers one, or
+validates one. Three type names ship across five models (`Option.Call`,
+`Option.Equity`, `Option.Refinance`) and the compiler accepts any string in
+that position, so a typo is silent.
+
+**Entities and contracts both have the surface options lack.** An entity's type
+is checked (a misspelled field on a typed entity is `E1131`); a contract's type
+selects the lowering rules and the domain validations. An option gets neither,
+which makes it the one core construct a pack cannot describe.
+
+**What a pack option type would carry**, by analogy with `[[contracts]]`:
+a `type_id`, the subject family it attaches to, and the shape of its exercise
+and payoff — enough for the compiler to reject an unknown type and for a pack
+to state, say, that a refinance option's payoff is a function of a debt
+contract's balance.
+
+**Decide first** whether an option is a pack concept at all. The alternative
+reading is that options are pure core language — a payoff expression and a
+trigger, with no domain vocabulary — in which case the fix is smaller: a
+closed set of type names in the specification, checked, rather than a pack
+registry. Either way the current state (an unchecked free-text type) is not
+one of the two.

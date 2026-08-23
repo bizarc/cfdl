@@ -334,3 +334,121 @@ term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
 escalation = "0.03"
+
+# --- instruments ------------------------------------------------------------
+#
+# An instrument states a deal's terms and lowers into its components. These
+# carry the terms a rule REQUIRES, with conventional values where a convention
+# exists — a 30-year amortization on a 10-year loan, a 5% selling cost — and
+# zeros where only the deal knows.
+
+[[templates]]
+id = "cre.permanent_debt"
+label = "Permanent mortgage (proceeds, interest, principal)"
+kind = "contract"
+body = """
+contract cre.permanent_debt {
+  term ${term_start}..${term_end}
+  terms {
+    principal = ${principal}
+    rate = ${rate}
+    amort_months = ${amort_months}
+    io_months = ${io_months}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2035-12"
+principal = "6000000"
+rate = "0.055"
+amort_months = "360"
+io_months = "0"
+
+[[templates]]
+id = "cre.lease_unit"
+label = "Unit lease (rent, abatement, recoveries, TI/LC)"
+kind = "contract"
+body = """
+contract cre.lease_unit.tenant_a {
+  term ${term_start}..${term_end}
+  terms {
+    rent_year = ${rent_year}
+    escalation = ${escalation}
+    free_rent_months = ${free_rent_months}
+    pro_rata_share = ${pro_rata_share}
+    expense_stop_year = ${expense_stop_year}
+    opex_year = ${opex_year}
+    opex_escalation = ${opex_escalation}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2035-12"
+rent_year = "0"
+escalation = "0.03"
+free_rent_months = "0"
+pro_rata_share = "1.0"
+expense_stop_year = "0"
+opex_year = "0"
+opex_escalation = "0.03"
+
+[[templates]]
+id = "cre.exit_forward"
+label = "Exit at forward NOI (gross, selling costs)"
+kind = "contract"
+body = """
+contract cre.exit_forward {
+  term ${term_start}..${term_start}
+  terms {
+    exit_cap = ${exit_cap}
+    selling_costs = ${selling_costs}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2035-12"
+exit_cap = "0.065"
+selling_costs = "0.02"
+
+[[templates]]
+id = "cre.vacancy_loss"
+label = "Vacancy and credit loss"
+kind = "contract"
+body = """
+contract cre.vacancy_loss {
+  term ${term_start}..${term_end}
+  terms {
+    rate = ${rate}
+    potential_gross_year = ${potential_gross_year}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2035-12"
+rate = "0.05"
+potential_gross_year = "0"
+
+[[templates]]
+id = "cre.construction_loan"
+label = "Construction loan (equity, draws, interest)"
+kind = "contract"
+body = """
+contract cre.construction_loan {
+  term ${term_start}..${term_end}
+  terms {
+    draw_curve = "${draw_curve}"
+    equity_commitment = ${equity_commitment}
+    rate = ${rate}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2027-12"
+draw_curve = "draws"
+equity_commitment = "0"
+rate = "0.075"
+
