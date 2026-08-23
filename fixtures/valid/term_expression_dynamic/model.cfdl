@@ -1,0 +1,30 @@
+version 0.1
+model "term-expression-dynamic"
+use pack "energy" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset plant : Energy.Asset.GenerationFacility
+
+assume esc_base = 0.02
+
+// Volume varies by season; the contract reads the curve directly instead of
+// carrying a *_curve twin term for the pack to compose.
+curve production step {
+  2026-01: 1400
+  2026-04: 1700
+  2026-10: 1300
+}
+
+// What was agreed is itself an expression: an escalator of "base plus 50bp",
+// and a volume that follows the production curve. Neither needs a
+// model-level assume to hold the arithmetic.
+contract energy.ppa.plant_a on entity asset.plant {
+  term 2026-01..2026-12
+  terms {
+    mwh_year = curve_value("production", time.date)
+    ppa_price = 3000
+    escalation = inputs.esc_base + 0.005
+    degradation = 0.0
+    availability = 1.0
+  }
+}

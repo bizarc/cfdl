@@ -126,16 +126,13 @@ parties_block   = "parties" map_block ;
 tags_block      = "tags" map_block ;
 
 map_block       = "{" { map_entry } "}" ;
-(* A term is a LITERAL or one declared input, never a compound expression.
-   `escalation = 0.03` and `escalation = inputs.cpi` are terms;
-   `escalation = inputs.cpi + 0.01` is not — compute it in an `assume` first.
-
-   This is load-bearing rather than pedantic. It is why a pack composes
-   `curve_value(...)` from a term holding a curve NAME: a time-varying value
-   cannot reach a rule through the term itself. *)
-map_entry       = qname term_value ;
-term_value      = literal | input_ref ;
-input_ref       = "inputs" "." IDENT ;
+(* A term may be an expression. Restricting it to a literal was a restriction
+   of the IMPLEMENTATION, not of the design: what a contract records is often
+   itself an expression — a rent escalating at "CPI plus 50 basis points", a fee
+   of "3% of effective gross income", a coupon of "SOFR + 225bp". Forcing those
+   through a model-level `assume` moves the agreement out of the contract and
+   leaves a reference behind. See backlog 7.64. *)
+map_entry       = qname literal_or_expr ;
 
 (* --- effects (streams in v0.1 core) --- *)
 effects_block   = "effects" "{" { effect_stmt } "}" ;

@@ -15,10 +15,10 @@
 // its own contract instance, which is why opco.exit_perpetuity carries a
 // suffix on its stream name where the older exit rules do not.
 //
-// WHAT IS STATED VERSUS DERIVED. A contract term is a literal or a single
-// declared input, so the two derivations below are verified in NOTES.md rather
-// than computed here — the same posture as damodaran_fcff's converging growth
-// and tax paths. Both are exact:
+// WHAT IS STATED VERSUS DERIVED. A term may hold an expression, but a
+// reconciliation states the number the source publishes and verifies the
+// derivation in NOTES.md instead — the same posture as damodaran_fcff's
+// converging growth and tax paths. Both are exact:
 //
 //   dividends per share = EPS 3.17 x payout 0.7318611987381703 = 2.32
 //   cost of equity      = riskfree 4.1% + beta 0.8 x premium 4.5% = 7.7%

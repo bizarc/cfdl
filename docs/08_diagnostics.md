@@ -360,12 +360,22 @@ see what is wrong with it.
   contract terms, so the term would be shadowed and never read. Term keys may
   legitimately be dotted, so this is reachable by accident.
 - `E5017_PERIOD_TERM_NOT_LITERAL` — a `_months` term that a rule converts into
-  periods defers to `inputs.<name>`. The conversion happens at compile time and
-  an input is not known until the run.
+  periods is not a literal number: it defers to `inputs.<name>`, holds an
+  expression, or does not parse as a number at all. The conversion happens at
+  compile time and a non-literal is not known until the run.
 - `E5019_UNKNOWN_DAY_COUNT` — a contract's `day_count` or
   `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`,
   `act/365`. Not defaulted silently: the gap between act/360 and act/365 is
   roughly 1.4% of interest.
+- `E5025_TERM_EXPR_INVALID` — a term holds an expression that does not
+  compile. Checked at the term's own span, before substitution: after the
+  splice the error would point at a rule the modeller did not write.
+- `E5026_TERM_EXPR_IN_LITERAL_SLOT` — a term holding an expression is used by
+  a rule where only a literal can go: a stream name, a schedule date, a
+  frequency, or a net-days count. Those slots are never parsed as
+  expressions, so an expression there is not evaluated late — it is wrong.
+  Expression terms are valid where the rule uses the term in an expression,
+  which is `amount_expr` and a field's `init`/`next`.
 
 Both `cadences` gates are a migration scaffold rather than a permanent
 statement about a pack: the entries are removed rule by rule as the

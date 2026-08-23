@@ -320,20 +320,43 @@ Rules:
 - `terms { ... }` is a set of named values.
 - Term keys MAY be qualified names (e.g., `lease_up.months`).
 
-#### 8.2.1 A term holds one value (normative)
+#### 8.2.1 A term records what was agreed (normative)
 
-A term's value MUST be either:
+A term's value is one of:
 
-- a **literal** — a number, string, date, or `true`/`false`; or
-- a **reference to one declared input**, written `inputs.<name>`.
+- a **literal** — a number, string, date, or `true`/`false`;
+- a **reference to one declared input**, written `inputs.<name>`; or
+- an **expression**.
 
-Nothing else. A term MUST NOT contain an expression: `mwh_year = 1000 + 500`
-is an error, not a value of 1500. Derived quantities belong in an `assume`,
-which the term then references.
+A contract records what was agreed — and what was agreed is often itself an
+expression. A lease escalating at "CPI plus 50 basis points" agreed exactly
+that; so did a coupon of "SOFR + 225bp". The term states it directly:
 
-A contract records what was agreed, so most terms are literals. A quantity that
-varies — a yield under study, an escalator being stressed — is named as an
-input instead:
+```cfdl
+curve cpi step {
+  2026-01: 0.021
+  2027-01: 0.024
+}
+
+contract cre.lease on entity asset.sunset {
+  term 2026-02..2036-01
+  terms {
+    base_rent  = 42000                                  // literal fact
+    escalation = curve_value("cpi", time.date) + 0.005  // the agreed formula
+  }
+}
+```
+
+An expression term is compiled at the term's own site
+(`E5025_TERM_EXPR_INVALID` if it does not parse) and substituted into the
+pack's lowering rule **parenthesised**, so `a + b` multiplied by another term
+associates the way it reads. It is valid only where the rule uses the term in
+an expression position — an amount or a field rule. A term a rule reads as a
+name, a date, a frequency, or a period count must stay a literal
+(`E5026_TERM_EXPR_IN_LITERAL_SLOT`, `E5017_PERIOD_TERM_NOT_LITERAL`).
+
+A quantity that varies **per run** — a yield under study, an escalator being
+stressed — is still named as an input rather than computed inline:
 
 ```cfdl
 assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
@@ -351,13 +374,16 @@ The value then arrives from whichever layer is driving the run — `assume x = �
 for a fixed case, a scenario's `parameters` in `run.json`, or a Monte Carlo
 draw. All three write to the same `inputs.<name>` channel, so one declaration
 serves every mode and variation stays layered on top of the contract rather
-than embedded inside it.
+than embedded inside it. An expression term may reference inputs
+(`inputs.cpi + 0.005`) and keeps that property.
 
-A term referencing an input that was never declared is a compile error
-(`E5010_TERM_UNKNOWN_INPUT`), so a misspelling cannot silently resolve to
-nothing. A term whose value is an input reference is not range-checked at
-compile time, since its value is not yet known; pack bounds still apply to
-literal terms.
+Bounds are checked where the value is knowable. A literal term is checked
+against the pack's declared bounds at compile time. A term referencing an
+input is checked against that input's `clip`
+(`E5011_TERM_CLIP_OUT_OF_BOUNDS`), and referencing an undeclared input is an
+error (`E5010_TERM_UNKNOWN_INPUT`). An expression term's value is not knowable
+until the run, so pack bounds do not apply to it at compile time — the same
+tier as an input reference.
 
 Pack interaction:
 - A pack MAY provide a schema for `<TypeId>` and validate `terms`.

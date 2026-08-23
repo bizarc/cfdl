@@ -2725,7 +2725,26 @@ fn lower_contract_streams(
         // table would be a new silent-wrong-answer path, which is the whole
         // class of failure this work has been closing. The model restates the
         // value in the unit the rule expects, and stays literal.
+        let before = diagnostics.len();
         for (key, term) in &contract.terms {
+            // An expression term is compiled HERE, at the term's own span,
+            // rather than left for E5009 to reject after substitution — by
+            // then the text is a spliced template and the error points at a
+            // rule the modeller did not write.
+            if term.kind == cfdl_parser::TermValueKind::Expr {
+                if let Err(err) = cfdl_expr::compile_expr(&term.value) {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5025_TERM_EXPR_INVALID",
+                        &format!(
+                            "Contract '{}' term '{}' is an expression that does not compile [{}]: {}",
+                            contract.name, key, err.code, err.message
+                        ),
+                        source_stmt,
+                        term.span,
+                    ));
+                    continue;
+                }
+            }
             let matched = pack
                 .lowering_rules
                 .iter()
@@ -2794,7 +2813,6 @@ fn lower_contract_streams(
                 }
             }
         }
-        let before = diagnostics.len();
         diagnostics.extend(validate_pack_contract(
             pack,
             source_stmt,
@@ -2854,12 +2872,27 @@ fn lower_contract_streams(
             // awareness. A frequency can only ever come from a literal term
             // (`payment_frequency = "month"`), never from an expression that
             // depends on periods-per-year, so this ordering is well-founded.
+            // Errors raised from inside the resolvers, which can only
+            // return Option and so cannot emit diagnostics themselves.
+            let resolver_errors: std::cell::RefCell<Vec<(String, String)>> =
+                std::cell::RefCell::new(Vec::new());
             let resolve_plain = |key: &str| -> Option<String> {
-                contract
-                    .terms
-                    .get(key)
-                    .map(|term| term.value.clone())
-                    .or_else(|| rule.defaults.get(key).cloned())
+                match contract.terms.get(key) {
+                    Some(term) => {
+                        if term.kind == cfdl_parser::TermValueKind::Expr {
+                            resolver_errors.borrow_mut().push((
+                                "E5026_TERM_EXPR_IN_LITERAL_SLOT".to_string(),
+                                format!(
+                                    "Pack lowering rule '{}' uses term '{}' as a literal (a frequency or day count), so it cannot hold an expression; contract '{}' supplies `{}`.",
+                                    rule.id, key, contract.name, term.value
+                                ),
+                            ));
+                            return None;
+                        }
+                        Some(term.value.clone())
+                    }
+                    None => rule.defaults.get(key).cloned(),
+                }
             };
             let schedule_every =
                 cfdl_pack::expand_rule_template(&rule.schedule_every, &resolve_plain)
@@ -2871,30 +2904,48 @@ fn lower_contract_streams(
             // 365 — falling back to the model's calendar.
             let rule_freq = rule_frequency(&schedule_every, ctx.time_calendar).to_string();
             let ppy = periods_per_year(&rule_freq);
-            // Errors raised from inside the resolver, which can only return
-            // Option and so cannot emit diagnostics itself.
-            let period_errors: std::cell::RefCell<Vec<(String, String)>> =
-                std::cell::RefCell::new(Vec::new());
-
             // Converts a months-denominated term into this rule's periods.
             // `_months` always means calendar months, on every calendar: it
             // describes the contract, not the modeller's grid choice.
             let months_to_periods = |key: &str, whole: bool| -> Option<String> {
-                let raw = resolve_plain(key)?;
-                if raw.trim_start().starts_with("inputs.") {
-                    period_errors.borrow_mut().push((
-                        "E5017_PERIOD_TERM_NOT_LITERAL".to_string(),
-                        format!(
-                            "Pack lowering rule '{}' converts term '{}' from months into periods, so it must be a literal; contract '{}' defers it to {}.",
-                            rule.id, key, contract.name, raw.trim()
-                        ),
-                    ));
-                    return None;
+                // Classified by kind, not by sniffing the text — an
+                // expression term is as non-literal as an input ref, and both
+                // are rejected the same way.
+                if let Some(term) = contract.terms.get(key) {
+                    if term.kind != cfdl_parser::TermValueKind::Literal {
+                        resolver_errors.borrow_mut().push((
+                            "E5017_PERIOD_TERM_NOT_LITERAL".to_string(),
+                            format!(
+                                "Pack lowering rule '{}' converts term '{}' from months into periods, so it must be a literal; contract '{}' supplies `{}`.",
+                                rule.id, key, contract.name, term.value.trim()
+                            ),
+                        ));
+                        return None;
+                    }
                 }
-                let months: f64 = raw.trim().parse().ok()?;
+                let raw = match contract.terms.get(key) {
+                    Some(term) => term.value.clone(),
+                    None => rule.defaults.get(key).cloned()?,
+                };
+                let months: f64 = match raw.trim().parse() {
+                    Ok(months) => months,
+                    Err(_) => {
+                        // `.ok()?` here used to surface as E5006 "missing
+                        // term" — present but non-numeric is a different
+                        // fact, and the message should say which.
+                        resolver_errors.borrow_mut().push((
+                            "E5017_PERIOD_TERM_NOT_LITERAL".to_string(),
+                            format!(
+                                "Pack lowering rule '{}' converts term '{}' from months into periods, but `{}` is not a number.",
+                                rule.id, key, raw.trim()
+                            ),
+                        ));
+                        return None;
+                    }
+                };
                 let periods = months * f64::from(ppy) / 12.0;
                 if whole && (periods.fract().abs() > 1e-9) {
-                    period_errors.borrow_mut().push((
+                    resolver_errors.borrow_mut().push((
                         "E5015_TERM_MONTHS_NOT_DIVISIBLE".to_string(),
                         format!(
                             "Pack lowering rule '{}' uses term '{}' as a count of payment periods, but {} months is {} periods at {} frequency. Use a multiple of {} months, declare a finer payment_frequency, or model on a finer calendar.",
@@ -2923,7 +2974,7 @@ fn lower_contract_streams(
             // Template expansion: resolve {{contract.<key>}} placeholders from
             // contract terms (term_start/term_end from the term range), then
             // rule defaults. Missing keys are compile errors.
-            let resolve = |key: &str| -> Option<String> {
+            let resolve_with = |key: &str, expr_slot: bool| -> Option<String> {
                 // Cadence primitives are claimed before contract terms, so a
                 // term could shadow one — E5016 rejects that outright.
                 if let Some(term) = key.strip_prefix("periods.") {
@@ -3028,39 +3079,83 @@ fn lower_contract_streams(
                             .unwrap_or_default()
                             .replace('.', "_"),
                     ),
-                    _ => contract.terms.get(key).map(|term| term.value.clone()),
+                    _ => match contract.terms.get(key) {
+                        Some(term) => match term.kind {
+                            // A compound value is PARENTHESISED on
+                            // substitution. Expansion is a textual splice, so
+                            // `a + b` into `{{x}} * {{y}}` would otherwise
+                            // silently associate as `a + (b * y)` — an error
+                            // worth real money and invisible in the output.
+                            // Atomic values splice verbatim, byte-identically
+                            // to every model written before expressions.
+                            cfdl_parser::TermValueKind::Expr if expr_slot => {
+                                Some(format!("({})", term.value))
+                            }
+                            // A name, a date, a frequency, a net-days count:
+                            // these slots are never parsed as expressions, so
+                            // an expression here is not late — it is wrong.
+                            cfdl_parser::TermValueKind::Expr => {
+                                resolver_errors.borrow_mut().push((
+                                    "E5026_TERM_EXPR_IN_LITERAL_SLOT".to_string(),
+                                    format!(
+                                        "Pack lowering rule '{}' uses term '{}' in a slot that is not an expression (a name, date, frequency, or count), so it cannot hold an expression; contract '{}' supplies `{}`.",
+                                        rule.id, key, contract.name, term.value
+                                    ),
+                                ));
+                                None
+                            }
+                            _ => Some(term.value.clone()),
+                        },
+                        None => None,
+                    },
                 };
                 from_contract.or_else(|| rule.defaults.get(key).cloned())
             };
+            let resolve_expr = |key: &str| resolve_with(key, true);
+            let resolve_literal = |key: &str| resolve_with(key, false);
             let mut expanded_rule = rule.clone();
             let mut missing_keys: Vec<String> = Vec::new();
-            for (slot, target) in [
-                (&rule.amount_expr, &mut expanded_rule.amount_expr),
-                (&rule.schedule_from, &mut expanded_rule.schedule_from),
-                (&rule.schedule_to, &mut expanded_rule.schedule_to),
-                (&rule.stream_name, &mut expanded_rule.stream_name),
+            // A slot is an EXPRESSION slot when its expansion is compiled by
+            // cfdl-expr and evaluated per period; everything else — names,
+            // dates, frequencies, counts — takes a term literally.
+            for (slot, target, expr_slot) in [
+                (&rule.amount_expr, &mut expanded_rule.amount_expr, true),
+                (&rule.schedule_from, &mut expanded_rule.schedule_from, false),
+                (&rule.schedule_to, &mut expanded_rule.schedule_to, false),
+                (&rule.stream_name, &mut expanded_rule.stream_name, false),
                 (
                     &rule.schedule_net_days,
                     &mut expanded_rule.schedule_net_days,
+                    false,
                 ),
                 (
                     &rule.schedule_net_months,
                     &mut expanded_rule.schedule_net_months,
+                    false,
                 ),
                 // Templated so a contract can declare its own payment rhythm
                 // (`payment_frequency = "month"`), letting one rule serve a
                 // monthly, quarterly and daily-book version of the same
                 // instrument. Already expanded above to derive ppy; expanding
                 // it again here is what puts the result on the rule.
-                (&rule.schedule_every, &mut expanded_rule.schedule_every),
-                (&rule.field_name, &mut expanded_rule.field_name),
-                (&rule.field_init, &mut expanded_rule.field_init),
-                (&rule.field_next, &mut expanded_rule.field_next),
-                (&rule.field_every, &mut expanded_rule.field_every),
-                (&rule.field_from, &mut expanded_rule.field_from),
-                (&rule.field_to, &mut expanded_rule.field_to),
+                (
+                    &rule.schedule_every,
+                    &mut expanded_rule.schedule_every,
+                    false,
+                ),
+                (&rule.field_name, &mut expanded_rule.field_name, false),
+                (&rule.field_init, &mut expanded_rule.field_init, true),
+                (&rule.field_next, &mut expanded_rule.field_next, true),
+                (&rule.field_every, &mut expanded_rule.field_every, false),
+                (&rule.field_from, &mut expanded_rule.field_from, false),
+                (&rule.field_to, &mut expanded_rule.field_to, false),
             ] {
-                match cfdl_pack::expand_rule_template(slot, &resolve) {
+                let resolver: &dyn Fn(&str) -> Option<String> = if expr_slot {
+                    &resolve_expr
+                } else {
+                    &resolve_literal
+                };
+                match cfdl_pack::expand_rule_template(slot, resolver) {
                     Ok(expanded) => *target = expanded,
                     Err(missing) => {
                         for key in missing {
@@ -3074,9 +3169,9 @@ fn lower_contract_streams(
             // A months-to-periods conversion that could not be done — a
             // non-integral payment count, or a term deferred to an input —
             // would otherwise silently drop the placeholder.
-            let period_errors = period_errors.into_inner();
-            if !period_errors.is_empty() {
-                for (code, message) in &period_errors {
+            let resolver_errors = resolver_errors.into_inner();
+            if !resolver_errors.is_empty() {
+                for (code, message) in &resolver_errors {
                     diagnostics.push(lowering_rule_diag(
                         code,
                         message,
@@ -3226,6 +3321,35 @@ fn lower_contract_streams(
                     source_stmt,
                     contract.span,
                 ));
+                continue;
+            }
+
+            // The schedule reads `net_days`/`net_months` with `.parse().ok()`,
+            // silently falling back to the contract's payment terms when the
+            // expansion is not an integer. A garbage expansion must be an
+            // error, not a different schedule.
+            let mut bad_net = false;
+            for (label, expanded) in [
+                ("schedule_net_days", rule.schedule_net_days.trim()),
+                ("schedule_net_months", rule.schedule_net_months.trim()),
+            ] {
+                if !expanded.is_empty() && expanded.parse::<i64>().is_err() {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5004_INVALID_LOWERING_RULE",
+                        &format!(
+                            "Pack lowering rule '{}' expanded {label} to `{}` for contract '{}', which is not a whole number of {}.",
+                            rule.id,
+                            expanded,
+                            contract.name,
+                            if label == "schedule_net_days" { "days" } else { "months" }
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                    bad_net = true;
+                }
+            }
+            if bad_net {
                 continue;
             }
 
@@ -4945,6 +5069,7 @@ mod pack_validation_parity_tests {
                 (*key).to_string(),
                 cfdl_parser::ContractTerm {
                     value: (*value).to_string(),
+                    kind: cfdl_parser::ContractTerm::classify_atomic(value),
                     unit: None,
                     span: span(),
                 },

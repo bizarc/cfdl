@@ -1,0 +1,216 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "term-expression-dynamic",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "f5160f6d699abe84dd287f28e2a63842",
+      "symbol": "asset.plant",
+      "type": "Energy.Asset.GenerationFacility",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "esc_base": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.02"
+        },
+        "name": "esc_base",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "curves": [
+    {
+      "name": "production",
+      "interpolation": "step",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 1400.0
+        },
+        {
+          "date": "2026-04-01",
+          "value": 1700.0
+        },
+        {
+          "date": "2026-10-01",
+          "value": 1300.0
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.energy.revenue",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.energy.opex",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.ebitda",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.energy.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.energy.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service"
+      ],
+      "formula": "-sum(financing.debt_service)"
+    },
+    {
+      "id": "domain.energy.dscr_periodic",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.energy.cfads",
+      "denominator": "domain.energy.debt_service_periodic",
+      "formula": "domain.energy.cfads / domain.energy.debt_service_periodic"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "a0337ee6854e092c9c2b8f8da6b15e5f",
+      "name": "energy.ppa.plant_a",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.plant"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2026-12-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "01e75b37cd2aa7955e2572e2062927c0",
+      "name": "energy.ppa.revenue.plant_a",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.energy",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "((curve_value(\"production\", time.date)) / 12.0) * 1.0 * pow(1.0 - 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * 3000.0 * pow(1.0 + (inputs.esc_base + 0.005), round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_ppa_revenue"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "energy.ppa.revenue.plant_a",
+      "contract": "energy.ppa.plant_a",
+      "terms": {
+        "availability": "1.0",
+        "degradation": "0.0",
+        "escalation": "inputs.esc_base + 0.005",
+        "mwh_year": "curve_value(\"production\", time.date)",
+        "ppa_price": "3000"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "e37f7451351cef8ab4e58f32498a7a9f",
+      "notes": [
+        "active_pack=energy@0.1.0"
+      ]
+    }
+  }
+}

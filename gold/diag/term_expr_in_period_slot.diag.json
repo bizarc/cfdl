@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5017_PERIOD_TERM_NOT_LITERAL",
+    "severity": "error",
+    "message": "Pack lowering rule 'emit_cadence_probe' converts term 'term_months' from months into periods, so it must be a literal; contract 'test.cadence_probe' supplies `12 + 12`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 17,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -71,9 +71,10 @@ Occupancy response is `pct_fixed + (1 - pct_fixed) * occupancy`. Property tax
 runs whether the building is full or empty; cleaning tracks occupied space. At
 the default `pct_fixed = 1` this reduces to a plain escalating series.
 
-A term is a literal or one declared input, never an expression, so a
-time-varying rate arrives as a curve NAME (`escalation_curve`,
-`occupancy_curve`) that the pack composes into a `curve_value` call.
+A term may also hold an expression — `escalation = curve_value("cpi",
+time.date) + 0.005` states an agreed formula directly. The `escalation_curve` /
+`occupancy_curve` twin terms predate that and remain as a convenience: a curve
+NAME the pack composes into the `curve_value` call for you.
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.opex_line`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
 - `cre.permanent_debt`

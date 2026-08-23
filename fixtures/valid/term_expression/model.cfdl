@@ -1,12 +1,14 @@
 version 0.1
-model "term-trailing-tokens"
+model "term-expression"
 use pack "energy" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
 entity asset plant : Energy.Asset.GenerationFacility
 
-// A term takes one value. Arithmetic here used to be discarded in silence,
-// so this compiled as mwh_year = 1000.
+// A term may hold an expression. This exact model was the INVALID fixture
+// `term_trailing_tokens`: the arithmetic used to be discarded in silence, so
+// it compiled as mwh_year = 1000 — then it became a parse error — and now it
+// means what it says. The results must equal the same model stating 1500.
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
