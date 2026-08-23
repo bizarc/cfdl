@@ -90,7 +90,7 @@ print("streams:", len(model.ir["streams"]))
 ```
 
 ```
-streams: 7
+streams: 9
 ```
 
 ## Run
@@ -120,7 +120,7 @@ cf.head()
 ```
 
 ```
-shape: (300, 15)
+shape: (300, 17)
 ```
 
 ```
@@ -148,29 +148,29 @@ period
 2026-04                          1.870377e+04         1.870377e+04   
 2026-05                          1.870377e+04         1.870377e+04   
 
-         stream.energy.capacity.revenue  stream.energy.capex.outlay  stream.energy.debt.service  \
-period                                                                                            
-2026-01                          5000.0                  -2400000.0               -11462.896936   
-2026-02                          5000.0                         0.0               -11462.896936   
-2026-03                          5000.0                         0.0               -11462.896936   
-2026-04                          5000.0                         0.0               -11462.896936   
-2026-05                          5000.0                         0.0               -11462.896936   
+         stream.energy.capacity.revenue  stream.energy.capex.outlay  stream.energy.debt.interest  \
+period                                                                                             
+2026-01                          5000.0                  -2400000.0                 -8000.000000   
+2026-02                          5000.0                         0.0                 -7982.685515   
+2026-03                          5000.0                         0.0                 -7965.284458   
+2026-04                          5000.0                         0.0                 -7947.796396   
+2026-05                          5000.0                         0.0                 -7930.220893   
 
-         stream.energy.itc.credit  stream.energy.om.expense  stream.energy.ppa.revenue  \
-period                                                                                   
-2026-01                       0.0              -5833.333333                    29750.0   
-2026-02                       0.0              -5833.333333                    29750.0   
-2026-03                       0.0              -5833.333333                    29750.0   
-2026-04                       0.0              -5833.333333                    29750.0   
-2026-05                       0.0              -5833.333333                    29750.0   
+         stream.energy.debt.principal  stream.energy.debt.proceeds  stream.energy.itc.credit  \
+period                                                                                         
+2026-01                  -3462.896936                          0.0                       0.0   
+2026-02                  -3480.211420                          0.0                       0.0   
+2026-03                  -3497.612477                          0.0                       0.0   
+2026-04                  -3515.100540                          0.0                       0.0   
+2026-05                  -3532.676043                          0.0                       0.0   
 
-         stream.energy.storage.margin  
-period                                 
-2026-01                        1250.0  
-2026-02                        1250.0  
-2026-03                        1250.0  
-2026-04                        1250.0  
-2026-05                        1250.0  
+         stream.energy.om.expense  stream.energy.ppa.revenue  stream.energy.storage.margin  
+period                                                                                      
+2026-01              -5833.333333                    29750.0                        1250.0  
+2026-02              -5833.333333                    29750.0                        1250.0  
+2026-03              -5833.333333                    29750.0                        1250.0  
+2026-04              -5833.333333                    29750.0                        1250.0  
+2026-05              -5833.333333                    29750.0                        1250.0  
 ```
 
 ```python
@@ -211,11 +211,13 @@ results.metrics_frame()
 14                  run.periods_per_year  1.200000e+01                    core
 15  stream.energy.capacity.revenue.total  1.500000e+06      USD           core
 16      stream.energy.capex.outlay.total -2.400000e+06      USD           core
-17      stream.energy.debt.service.total -2.751095e+06      USD           core
-18        stream.energy.itc.credit.total  7.200000e+05      USD           core
-19        stream.energy.om.expense.total -2.391043e+06      USD           core
-20       stream.energy.ppa.revenue.total  1.071900e+07      USD           core
-21    stream.energy.storage.margin.total  3.750000e+05      USD           core
+17     stream.energy.debt.interest.total -1.151095e+06      USD           core
+18    stream.energy.debt.principal.total -1.600000e+06      USD           core
+19     stream.energy.debt.proceeds.total  0.000000e+00      USD           core
+20        stream.energy.itc.credit.total  7.200000e+05      USD           core
+21        stream.energy.om.expense.total -2.391043e+06      USD           core
+22       stream.energy.ppa.revenue.total  1.071900e+07      USD           core
+23    stream.energy.storage.margin.total  3.750000e+05      USD           core
 ```
 
 ## What-if
