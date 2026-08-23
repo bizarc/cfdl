@@ -248,8 +248,14 @@ jobs:
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
           --token=${{ secrets.VERCEL_TOKEN }}
 
+      # `--archive=tgz` uploads ONE archive instead of one API request per
+      # file. Vercel caps file-upload requests at 40,000 a day, and a ~46 MB
+      # static site is thousands of files per deploy — a day of ordinary merges
+      # exhausts it and every later deploy fails with
+      # `code: "api-upload-paid"`, which is what Vercel's own error tells you
+      # to fix this way.
       - name: Deploy
         run: >
-          npx vercel@latest deploy --prebuilt
+          npx vercel@latest deploy --prebuilt --archive=tgz
           ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
           --token=${{ secrets.VERCEL_TOKEN }}
