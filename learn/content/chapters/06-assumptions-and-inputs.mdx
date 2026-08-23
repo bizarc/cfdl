@@ -84,7 +84,7 @@ The complete decision, four tests long — apply them in order:
 1. **If a reviewer would question it** → an `assume`, on the assumption page. (Growth, margins, pricing, costs.)
 2. **If the answer varies per run, per scenario, per user** → `cfg.*`, in the run configuration. (Stress factors, toggles, the discount rate itself.)
 3. **If the world supplies it after the model is written** → `obs.*`. (Fixings, actuals, appraisals.)
-4. **If it is structure, not opinion** → leave it literal. (Twelve months in a year, a contractual `net 45`, a stated loan principal in a signed document.)
+4. **If it is structure, not opinion** → leave it literal. (Twelve months in a year, a contractual `net 45`, a stated loan principal in a signed document.) Signed structure can itself be a formula — a rent escalating at "CPI plus 50 basis points" — and then the term states the formula: `escalation = curve_value("cpi", time.date) + 0.005`. What was agreed stays in the contract either way; only opinions move to the assumption page.
 
 The failure mode this prevents has a familiar smell: the spreadsheet whose "inputs" tab is half the story, with the other half hard-coded in formulas nobody has opened since the analyst who wrote them left. Here, the four homes are syntactically distinct, so *where a number lives states what kind of number it is* — and the model documents its own epistemology.
 

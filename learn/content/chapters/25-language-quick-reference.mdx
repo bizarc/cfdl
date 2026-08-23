@@ -79,7 +79,7 @@ Read as `inputs.<name>` and `curve_value("<name>", <date>)`. Deterministic runs 
 ```text
 contract <pack>.<type>[.<suffix>] [on entity <ref>] {
   term <date>..<date>
-  terms { <key> = <literal | inputs.name>  ... }
+  terms { <key> = <literal | inputs.name | expression>  ... }
 }
 
 event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period

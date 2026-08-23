@@ -58,7 +58,7 @@ The exercise below runs this migration on a small office model; the capstone the
 
 ## What can go wrong
 
-**A contract for a deal that is not that contract.** The lease with eighteen months free rent, stepped escalations, and a termination option is not `base_rent = 25000` — and stating it as one buries the deviations a reviewer most needs to see. When a contract's terms cannot state your deal's terms, that mismatch is information: write the claims by hand.
+**A contract for a deal that is not that contract.** A term may hold what was agreed even when the agreement is a formula — `escalation = curve_value("cpi", time.date) + 0.005` states "CPI plus 50 basis points" directly, and free rent is a term of `cre.lease_unit`. The boundary is *structure*: a termination option, a payoff that depends on another instrument, a shape the contract's terms simply do not have. When the deal's structure is not the contract's structure, that mismatch is information: write the claims by hand.
 
 **Fighting the validation.** A pack refusal that seems wrong usually means your deal and the pack disagree about what is standard — which is worth knowing, not suppressing. Read the refusal as domain review, then decide deliberately: fix the model, or take that storyline packless.
 

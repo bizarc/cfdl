@@ -39,16 +39,22 @@ entity asset business : OpCo.Asset.Enterprise
 // converts it to the model's grain geometrically, so 3% a year is 3% a year
 // on any calendar.
 assume base_revenue = 120000
-assume revenue_growth = 0.03
 assume base_opex = 70000
 assume exit_base_value = 800000
 assume exit_multiple = 6.5
+
+// The growth PLAN, as the operator states it: 5% while the ramp lasts, 3%
+// mature. A step curve holds the last point at or before the date.
+curve growth_plan step {
+  2026-01: 0.05
+  2029-01: 0.03
+}
 
 contract opco.revenue_line {
   term 2026-01..2031-12
   terms {
     amount = inputs.base_revenue
-    growth_rate = inputs.revenue_growth
+    growth_rate = curve_value("growth_plan", time.date)
   }
 }
 
