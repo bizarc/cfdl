@@ -336,11 +336,12 @@ contract cre.exit_forward on entity asset.rentleg {
 
 ## Verified results
 
-Checked period by period: **12 series** across **5 periods** — **60 values** in all, each within ±0.01 of the reference.
+Checked period by period: **13 series** across **5 periods** — **65 values** in all, each within ±0.01 of the reference.
 
 - `cre.abatement.suite_200`
 - `cre.capex`
 - `cre.exit.proceeds`
+- `cre.exit.selling_costs`
 - `cre.opex.line`
 - `cre.unit.base_rent.suite_100`
 - `cre.unit.base_rent.suite_200`

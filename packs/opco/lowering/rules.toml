@@ -290,10 +290,28 @@ stream_name = "opco.exit.value"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.exit"
-amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * (1 - {{contract.selling_costs}})"
+amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t))"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
+schedule_kind = "on_date"
+schedule_at_period_end = true
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"
+
+[[rules]]
+id = "opco_exit_ebitda_selling_costs"
+contract_name = "opco.exit_ebitda"
+stream_name = "opco.exit.selling_costs"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "investing.selling_costs"
+# The identical trailing-EBITDA window, times the cost rate; gross less costs
+# is the old net, so net cash flow is unchanged.
+amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"
@@ -358,10 +376,27 @@ stream_name = "opco.exit.value{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.exit"
-amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * (1 - {{contract.selling_costs}})"
+amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}})"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
+schedule_kind = "on_date"
+schedule_at_period_end = true
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+selling_costs = "0"
+
+
+[[rules]]
+id = "opco_exit_perpetuity_selling_costs"
+contract_name = "opco.exit_perpetuity"
+stream_name = "opco.exit.selling_costs{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "investing.selling_costs"
+amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_at_period_end = true
 schedule_from = "{{contract.term_start}}"

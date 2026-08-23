@@ -920,6 +920,27 @@
             "total": 0.0
           },
           {
+            "kind": "line",
+            "label": "Less: selling costs",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
             "kind": "residual",
             "label": "Unclassified",
             "depth": 1,
@@ -1566,6 +1587,27 @@
             "label": "Sale proceeds",
             "depth": 1,
             "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Less: selling costs",
+            "depth": 1,
+            "display_sign": -1.0,
             "values": [
               {
                 "amount": 0.0,

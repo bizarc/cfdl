@@ -267,7 +267,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065 * (1.0 - 0.02)"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065"
       },
       "active_when": {
         "lang": "cfdl",
@@ -287,6 +287,45 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_exit_forward_noi_derived"
+        }
+      }
+    },
+    {
+      "id": "814ba55537ee5962db58d2389b788c76",
+      "name": "cre.exit.selling_costs",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.selling_costs",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2035-12-01",
+        "at_period_end": true
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.ops.revenue\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065 * 0.02"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 74,
+          "start_col": 1,
+          "end_line": 80,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_forward_selling_costs"
         }
       }
     },
@@ -926,6 +965,13 @@
     },
     {
       "stream": "cre.exit.proceeds",
+      "contract": "cre.exit_forward",
+      "terms": {
+        "exit_cap": "0.065"
+      }
+    },
+    {
+      "stream": "cre.exit.selling_costs",
       "contract": "cre.exit_forward",
       "terms": {
         "exit_cap": "0.065",

@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: exit contracts state the sale gross, with selling costs as their own line
+
+Four exit rules folded selling costs into the proceeds via `* (1 -
+selling_costs)` — `cre.exit`, `cre.exit_forward`, `opco.exit_ebitda`,
+`opco.exit_perpetuity`. A pro forma shows the gross sale value and the
+transaction costs; a netted figure can show neither. The proceeds streams are
+now GROSS and each contract lowers a sibling `*.selling_costs` outflow
+(`investing.selling_costs`), so gross less costs is the old net: net cash
+flow and NPV are unchanged to the digit on every fixture, verified
+numerically. Statements gain a "Less: selling costs" row.
+
+`mit_rentleg_plaza` now asserts both columns — the gross at ten times forward
+NOI and the 5% commission are each the source's own stated quantities; the
+net_cash_flow column is untouched. All 40 benchmarks pass.
+
+
 ### Changed (breaking): `energy.debt_service` lowers to the whole instrument
 
 Same decomposition as `cre.permanent_debt`, same reason: one netted stream,
