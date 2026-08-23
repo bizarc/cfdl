@@ -1,4 +1,4 @@
-period,opco.revenue.recurring.core,opco.opex.recurring.operating,opco.taxes.federal,opco.capex.reinvestment
+period,opco.revenue.recurring.core,opco.opex.recurring.operating,opco.taxes.cash.federal,opco.capex.line.reinvestment
 0,22853.6700,-19639.7250,-562.4404,-668.8079
 1,23996.3535,-20621.7113,-590.5624,-702.2483
 2,25196.1712,-21652.7968,-620.0905,-737.3607

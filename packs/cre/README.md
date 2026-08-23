@@ -130,11 +130,11 @@ than needing a solver — and is not modeled here.
 A commercial mortgage on a stabilized property. Emits three streams — the
 whole instrument, per the contract design rules:
 
-- `loan.permanent_debt.proceeds{.<id>}` — the draw at closing
+- `cre.debt.proceeds{.<id>}` — the draw at closing
   (`financing.debt_proceeds`)
-- `loan.permanent_debt.interest{.<id>}` — the interest leg
+- `cre.debt.interest{.<id>}` — the interest leg
   (`financing.interest`)
-- `loan.permanent_debt.principal{.<id>}` — scheduled amortization, plus the
+- `cre.debt.principal{.<id>}` — scheduled amortization, plus the
   balloon when opted in (`financing.debt_principal`)
 
 Interest plus principal reproduce the level payment exactly (`ipmt + ppmt =

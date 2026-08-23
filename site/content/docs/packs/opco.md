@@ -28,9 +28,9 @@ each classified so it lands on the right line of a
 | `opco.working_capital` | `amount` | `opco.working_capital.adjustment[.suffix]` |
 | `opco.exit_multiple` | `base_value`, `exit_multiple` | `opco.exit.value` |
 | `opco.working_capital_policy` | `ap_days`, `ar_days`, `inv_days`, `release_at_end` | `opco.working_capital.adjustment[.suffix]` |
-| `opco.capex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate`, `pct_of_revenue` | `opco.capex[.suffix]` |
+| `opco.capex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate`, `pct_of_revenue` | `opco.capex.line[.suffix]` |
 | `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
-| `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate`, `tax_rate_curve` | `opco.taxes[.suffix]` |
+| `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate`, `tax_rate_curve` | `opco.taxes.cash[.suffix]` |
 | `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
 | `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
 | `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |

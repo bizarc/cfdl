@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "e850620ba9e98a61ca9c91ec07b60bb37a6104e7c896f5bbd0b77f6a2e162d28",
-  "ledger_hash": "72c21d5a6d3f8239e5af38f45231e4ee23e6982c8ca21f45da26f28e7427f8e8",
+  "model_hash": "3aa2e459e3f62c3968fd49686d9583fd134cd91d75ae19ae0644f49d93349529",
+  "ledger_hash": "f54c89ec4bafc8cbb1f832fc449cf74d7bc742e345f0a49e23806878460fe8f1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -54,7 +54,7 @@
           "growth_curve",
           "growth_rate"
         ],
-        "stream": "opco.capex",
+        "stream": "opco.capex.line",
         "terms": {
           "amount": "5000",
           "amount_year": "0",
@@ -97,7 +97,7 @@
           "da_year",
           "tax_rate_curve"
         ],
-        "stream": "opco.taxes",
+        "stream": "opco.taxes.cash",
         "terms": {
           "da_growth": "0",
           "da_monthly": "20000",
@@ -156,7 +156,7 @@
         "amount": -5000000.0,
         "currency": "USD"
       },
-      "stream.opco.capex.total": {
+      "stream.opco.capex.line.total": {
         "amount": -220635.135743,
         "currency": "USD"
       },
@@ -188,7 +188,7 @@
         "amount": 5031756.787135,
         "currency": "USD"
       },
-      "stream.opco.taxes.total": {
+      "stream.opco.taxes.cash.total": {
         "amount": -283917.829898,
         "currency": "USD"
       },
@@ -1696,7 +1696,7 @@
           }
         ]
       },
-      "stream.opco.capex": {
+      "stream.opco.capex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -2544,7 +2544,7 @@
           }
         ]
       },
-      "stream.opco.taxes": {
+      "stream.opco.taxes.cash": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -2974,7 +2974,7 @@
             }
           ]
         },
-        "stream.opco.capex": {
+        "stream.opco.capex.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -3110,7 +3110,7 @@
             }
           ]
         },
-        "stream.opco.taxes": {
+        "stream.opco.taxes.cash": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -3734,7 +3734,7 @@
             ],
             "total": -283917.829896,
             "streams": [
-              "opco.taxes"
+              "opco.taxes.cash"
             ]
           },
           {
@@ -3950,7 +3950,7 @@
             ],
             "total": -220635.135743,
             "streams": [
-              "opco.capex"
+              "opco.capex.line"
             ]
           },
           {
@@ -5542,7 +5542,7 @@
             ],
             "total": -283917.829896,
             "streams": [
-              "opco.taxes"
+              "opco.taxes.cash"
             ]
           },
           {
@@ -5758,7 +5758,7 @@
             ],
             "total": -220635.135743,
             "streams": [
-              "opco.capex"
+              "opco.capex.line"
             ]
           },
           {
@@ -6803,7 +6803,7 @@
             ],
             "total": -283917.829896,
             "streams": [
-              "opco.taxes"
+              "opco.taxes.cash"
             ]
           },
           {
@@ -7129,7 +7129,7 @@
             ],
             "total": -220635.135743,
             "streams": [
-              "opco.capex"
+              "opco.capex.line"
             ]
           },
           {

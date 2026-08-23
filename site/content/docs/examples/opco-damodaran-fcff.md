@@ -182,6 +182,6 @@ Checked period by period: **4 series** across **10 periods** — **34 values** i
 
 - `opco.revenue.recurring.core`
 - `opco.opex.recurring.operating`
-- `opco.taxes.federal`
-- `opco.capex.reinvestment`
+- `opco.taxes.cash.federal`
+- `opco.capex.line.reinvestment`
 

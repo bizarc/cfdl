@@ -333,6 +333,16 @@ What belongs in the rule is the instrument's own mechanics: amortization
 arithmetic, the split of a payment into interest and principal, the schedule.
 What belongs in the term is what the parties agreed.
 
+**Pack streams are named `[domain].[category].[line]{.[instance]}`.** A
+contract's several streams share their `[domain].[category]` — `cre.unit.`
+carries `base_rent`, `abatement`, `recoveries` and `ti_lc`; `opco.debt.`
+carries `proceeds`, `interest` and `principal`. A line-item contract puts the
+line in the instance slot: `cre.opex.line.property_tax`. Contract TYPES may
+use underscores (`cre.lease_unit`, `cre.opex_line`) — they are authoring
+surface — but the streams a rule emits may not. This applies to PACK-LOWERED
+streams only: a hand-written stream is the modeller's own name and no pattern
+is enforced on it.
+
 **Categories are the semantics; names are addresses.** Every stream a rule
 emits MUST carry a category, and aggregation reads the category — which is why
 decomposition never moves a total: the components fold where the netted line
@@ -975,7 +985,7 @@ formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["loan.permanent_debt.interest.*", "loan.permanent_debt.principal.*"]
+numerator_streams = ["cre.debt.interest.*", "cre.debt.principal.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true          # omit unless value > 0
 

@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): pack streams follow `[domain].[category].[line]`
+
+The pattern is now stated normatively in the pack interface (docs/07 §6.4):
+a pack-lowered stream is named `[domain].[category].[line]{.[instance]}`, a
+contract's several streams share their `[domain].[category]`, and contract
+TYPES may keep underscores — they are authoring surface. Hand-written streams
+are the modeller's own names and carry no pattern.
+
+Four streams violated it and rename, values identical everywhere:
+
+- `loan.permanent_debt.*` → `cre.debt.*` (wrong domain, inherited from the
+  retired netted stream)
+- `opco.capex{.id}` → `opco.capex.line{.id}`
+- `opco.taxes{.id}` → `opco.taxes.cash{.id}`
+- `cre.pct_rent{.id}` → `cre.pct_rent.overage{.id}`
+
+Metric selectors match the new names by prefix and are unchanged.
+damodaran_fcff's two asserted columns rename with their streams; all 40
+benchmarks and 22 exercises pass with identical values.
+
+
 ### Changed (breaking): one CRE revenue line item, `cre.revenue_line`
 
 `cre.ops_revenue` — a singleton with a raw per-period amount and no growth —

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "1a88606bc9aa7ca50c35d861fba74752333140be9ea7e76455970ed66934c80c",
-  "ledger_hash": "b4630ed5e489256d5c97fa3e9e0cf320cb4c3257cc8d2c234706ac5e0dfc02ac",
+  "model_hash": "0c40ed8eb135e471110d85046e912d1bacc8d1d67554750cba988ef603541079",
+  "ledger_hash": "8e6a58093529dd5578ba0f1a3e33dba042d0ce5c6c69b0cf5073a347b7098061",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -44,7 +44,7 @@
           "growth_curve",
           "growth_rate"
         ],
-        "stream": "opco.capex",
+        "stream": "opco.capex.line",
         "terms": {
           "amount": "0",
           "amount_year": "60000",
@@ -60,7 +60,7 @@
           "da_monthly",
           "tax_rate_curve"
         ],
-        "stream": "opco.taxes",
+        "stream": "opco.taxes.cash",
         "terms": {
           "da_growth": "0",
           "da_monthly": "0",
@@ -89,7 +89,7 @@
       "model.wal_years": 2.0,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
-      "stream.opco.capex.total": {
+      "stream.opco.capex.line.total": {
         "amount": -266400.0,
         "currency": "USD"
       },
@@ -101,7 +101,7 @@
         "amount": 4320000.0,
         "currency": "USD"
       },
-      "stream.opco.taxes.total": {
+      "stream.opco.taxes.cash.total": {
         "amount": -360000.0,
         "currency": "USD"
       }
@@ -407,7 +407,7 @@
           }
         ]
       },
-      "stream.opco.capex": {
+      "stream.opco.capex.line": {
         "index": {
           "calendar": "annual",
           "start": "2025-01-01",
@@ -473,7 +473,7 @@
           }
         ]
       },
-      "stream.opco.taxes": {
+      "stream.opco.taxes.cash": {
         "index": {
           "calendar": "annual",
           "start": "2025-01-01",
