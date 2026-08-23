@@ -8,6 +8,38 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a name that resolves to nothing is refused, not read as zero
+
+`docs/03` §2 has always said *"Unknown variables are hard errors (EXPR_EVAL),
+not nulls."* Every layer honoured it except the engine, which caught the error
+and substituted zero: `inputs.typo` or `time.typo` compiled clean, warned once
+per period, produced a column of zeros, and the run reported `status: ok`.
+Entity fields were the exception — `E1131` has always refused those — so one
+of three namespaces was checked.
+
+The fix splits by what each layer can know.
+
+**`time.` is closed**, so the compiler refuses it:
+`E1133_UNKNOWN_TIME_READ` names the five bindings the engine actually binds
+(`t`, `date`, `days_in_period`, `phase`, `ppy`), at the reader's own source
+span, beside the `E1131` check it extends.
+
+**`inputs.` cannot be checked at compile time** — an input may be supplied
+entirely by the run configuration, which the compiler never sees, and
+`run_dists_full` is exactly that model. The engine refuses it instead, where
+every source is known, with a message naming the distinct unresolved names
+rather than repeating one per period.
+
+The distinction that makes this safe is DECLARED SOMEWHERE versus BOUND HERE.
+An input declared only as a Monte Carlo distribution is unbound in the
+deterministic pass and stays a warning; a name nothing declares is fatal.
+`cfdl-expr` now separates the two failures at the source, giving an
+unresolvable name its own `EXPR_UNKNOWN_NAME` code so arithmetic that merely
+failed is still tolerated.
+
+Goldens: 157 pass, zero numeric differences — the only golden movement is the
+error code inside one fixture's warning text.
+
 ### Fixed: the Python extension's freshness guards no longer hash packs into it
 
 `tools/py-stamp.py` hashed `packs/` into the extension's build stamp and

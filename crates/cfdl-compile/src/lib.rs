@@ -748,8 +748,13 @@ fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
 ///
 /// A DECLARED field is knowable at compile time, so a missing one is a typo
 /// rather than an absence. Status keeps the open world; declared fields do not.
+/// The complete `time.*` vocabulary the engine binds. Both env builders agree
+/// on it, and docs/03 documents the same five.
+const TIME_BINDINGS: [&str; 5] = ["t", "date", "days_in_period", "phase", "ppy"];
+
 fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
     let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+
     for source_stmt in &resolve_output.source_statements {
         if let Stmt::Entity(entity) = &source_stmt.statement {
             let names = known.entry(entity.symbol()).or_default();
@@ -768,6 +773,40 @@ fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<()
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
     let mut check = |src: &str, span: cfdl_parser::Span, file: &str, ctx: &str| {
+        // `time.<field>` is a CLOSED vocabulary the engine binds, so a miss
+        // here is a typo — the same silent wrong number E1131 exists to
+        // refuse, one root over. Unrejected it evaluates to a warned zero
+        // with the run still reporting ok.
+        //
+        // `inputs.` is deliberately NOT checked here. An input may be
+        // declared by an `assume` OR supplied entirely by the run
+        // configuration — `run_dists_full` declares no assume at all and
+        // takes all five from `monte_carlo.distributions` — and the compiler
+        // never sees a run config. Unknown INPUTS are caught by the engine,
+        // where both sources are known.
+        for name in root_paths(src, "time") {
+            if !TIME_BINDINGS.contains(&name.as_str()) {
+                diagnostics.push(Diagnostic {
+                    code: "E1133_UNKNOWN_TIME_READ".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{ctx} reads 'time.{name}', which is not a time binding."
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
+                    path: None,
+                    hint: Some(format!(
+                        "The bindings are {}. Unrejected this evaluates to zero and the run still reports ok.",
+                        TIME_BINDINGS
+                            .iter()
+                            .map(|b| format!("`time.{b}`"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )),
+                    notes: Vec::new(),
+                });
+            }
+        }
         for (symbol, field) in field_paths(src) {
             let Some(names) = known.get(&symbol) else {
                 continue; // an unknown ENTITY is E1301's business, not this one.
@@ -854,6 +893,39 @@ fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<()
 }
 
 /// `(entity symbol, field)` for every family path in an expression source.
+/// Every `<root>.<segment>` in an expression, for a root with a KNOWABLE
+/// vocabulary.
+///
+/// The same shape as `field_paths` and for the same reason. `cfg.` and `obs.`
+/// are deliberately absent: those are channels a model opts into by writing
+/// the path, with nothing to check against.
+fn root_paths(src: &str, root: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    let needle = format!("{root}.");
+    let mut base = 0usize;
+    while let Some(idx) = src[base..].find(&needle) {
+        let at = base + idx;
+        let before_ok = at == 0
+            || !src[..at]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+        base = at + needle.len();
+        if !before_ok {
+            continue;
+        }
+        let rest = &src[base..];
+        let seg: String = rest
+            .chars()
+            .take_while(|c| c.is_alphanumeric() || *c == '_')
+            .collect();
+        if !seg.is_empty() {
+            found.push(seg);
+        }
+    }
+    found
+}
+
 fn field_paths(src: &str) -> Vec<(String, String)> {
     let mut found = Vec::new();
     for family in ["asset", "party", "contract", "reference"] {
