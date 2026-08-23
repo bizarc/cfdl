@@ -74,6 +74,7 @@ register, so it cannot fall behind the language.
 | `E1128_FIELD_DECLARED_TWICE` | Global structure | a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win. |
 | `E1129_PREV_IN_FIRST_PERIOD` | Global structure | a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. Checked on hand-written and pack-lowered streams alike; the lowered form names the contract whose term set the schedule, since that is the term a model author can move. |
 | `E1131_UNKNOWN_FIELD_READ` | Global structure | an expression reads a field the entity does not declare. Field paths resolve through the open-world `entity` root, so unrejected a misspelling reads as null and becomes zero in arithmetic. Lifecycle `status` keeps the open world; declared fields do not. |
+| `E1133_UNKNOWN_TIME_READ` | Global structure | an expression reads a `time.` binding that does not exist. The vocabulary is closed — `t`, `date`, `days_in_period`, `phase`, `ppy` — so a miss is a typo, and unrejected it evaluates to zero every period with the run still reporting ok. There is deliberately no `E1132` for `inputs.`: an input may be supplied entirely by the run configuration, which the compiler never sees, so an unresolved input is the engine's to refuse. |
 | `E1001_DUPLICATE_ENTITY` | Symbols and references | two entities share a name. |
 | `E1002_DUPLICATE_CONTRACT` | Symbols and references | two contracts share a name. Give one a suffix to keep them separable. |
 | `E1003_DUPLICATE_STREAM` | Symbols and references | two streams share a name. |
@@ -216,7 +217,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*164 codes.*
+*165 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

@@ -192,6 +192,12 @@ Fields that move:
 - `E1128_FIELD_DECLARED_TWICE` — a field is declared both with `=` and with a rule. Both bind the same path, so one would silently win.
 - `E1129_PREV_IN_FIRST_PERIOD` — a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. Checked on hand-written and pack-lowered streams alike; the lowered form names the contract whose term set the schedule, since that is the term a model author can move.
 - `E1131_UNKNOWN_FIELD_READ` — an expression reads a field the entity does not declare. Field paths resolve through the open-world `entity` root, so unrejected a misspelling reads as null and becomes zero in arithmetic. Lifecycle `status` keeps the open world; declared fields do not.
+- `E1133_UNKNOWN_TIME_READ` — an expression reads a `time.` binding that does
+  not exist. The vocabulary is closed — `t`, `date`, `days_in_period`, `phase`,
+  `ppy` — so a miss is a typo, and unrejected it evaluates to zero every period
+  with the run still reporting ok. There is deliberately no `E1132` for
+  `inputs.`: an input may be supplied entirely by the run configuration, which
+  the compiler never sees, so an unresolved input is the engine's to refuse.
 
 ### 7.4 Symbols and references (E13xx)
 - `E1001_DUPLICATE_ENTITY` — two entities share a name.
