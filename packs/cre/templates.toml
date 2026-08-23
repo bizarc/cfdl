@@ -209,8 +209,9 @@ amount_year = "0"
 escalation = "0.03"
 
 # A single blended figure — the coarse end of the range. One unsuffixed instance
-# emits `cre.opex.line`, which no itemised row claims, so it lands in the
-# residual line of the operating statement.
+# emits `cre.opex.line`. Every instance of this contract, named or not, folds
+# into the statement's single "Operating expenses" row: the rows select by
+# CATEGORY, and every instance carries the same one.
 [[templates]]
 id = "cre.opex_line.blended"
 label = "Operating expense — single blended line"
