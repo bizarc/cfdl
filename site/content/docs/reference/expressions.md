@@ -42,8 +42,9 @@ Three more are bound inside a [waterfall](/docs/guides/waterfalls) step:
 | `owed.<step>` | what an earlier step would have paid, unbounded |
 
 Inside a pack's lowering rule, `{{contract.*}}` placeholders are substituted
-before the expression is parsed — so by the time it evaluates, a contract term
-is a literal.
+before the expression is parsed. A term holding an expression is substituted
+parenthesised, so it associates the way it reads; a literal or input reference
+is substituted verbatim.
 
 ## Operators
 

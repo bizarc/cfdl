@@ -151,8 +151,10 @@ register, so it cannot fall behind the language.
 | `E5018_TERM_START_OFF_GRID` | Lowering/emission | a pack contract's `term_start` does not fall on one of the model's period boundaries. Periods step from the model's start by whole calendar units, and elapsed-period counting measures whole steps from the term, so a term beginning mid-period counts short for the contract's whole life. Always satisfied on a monthly calendar, where every `YYYY-MM` term is a boundary. |
 | `E5015_TERM_MONTHS_NOT_DIVISIBLE` | Lowering/emission | a `_months` term used as a count of payment periods does not divide into whole periods on this grid. A 30-month loan is not two and a half annual payments, and no closed form can express one, so this is an error rather than a rounding. Thresholds such as `free_rent_months` pro-rate instead and never reach here. |
 | `E5016_RESERVED_TERM_PREFIX` | Lowering/emission | a contract term begins `model.`, `time.`, `periods.` or `whole_periods.`. Lowering rules resolve those prefixes before contract terms, so the term would be shadowed and never read. Term keys may legitimately be dotted, so this is reachable by accident. |
-| `E5017_PERIOD_TERM_NOT_LITERAL` | Lowering/emission | a `_months` term that a rule converts into periods defers to `inputs.<name>`. The conversion happens at compile time and an input is not known until the run. |
+| `E5017_PERIOD_TERM_NOT_LITERAL` | Lowering/emission | a `_months` term that a rule converts into periods is not a literal number: it defers to `inputs.<name>`, holds an expression, or does not parse as a number at all. The conversion happens at compile time and a non-literal is not known until the run. |
 | `E5019_UNKNOWN_DAY_COUNT` | Lowering/emission | a contract's `day_count` or `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap between act/360 and act/365 is roughly 1.4% of interest. |
+| `E5025_TERM_EXPR_INVALID` | Lowering/emission | a term holds an expression that does not compile. Checked at the term's own span, before substitution: after the splice the error would point at a rule the modeller did not write. |
+| `E5026_TERM_EXPR_IN_LITERAL_SLOT` | Lowering/emission | a term holding an expression is used by a rule where only a literal can go: a stream name, a schedule date, a frequency, or a net-days count. Those slots are never parsed as expressions, so an expression there is not evaluated late — it is wrong. Expression terms are valid where the rule uses the term in an expression, which is `amount_expr` and a field's `init`/`next`. |
 | `E6001_CRE_LEASE_MISSING_BASE_RENT` | Pack domain validations |  |
 | `E6002_CRE_LEASE_INVALID_TERM_RANGE` | Pack domain validations |  |
 | `E6003_CRE_LEASE_UP_MISSING_MONTHS` | Pack domain validations |  |
@@ -213,7 +215,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*161 codes.*
+*163 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

@@ -1,0 +1,17 @@
+version 0.1
+model "term-expr-in-period-slot"
+use pack "testpack" version "0.1.0"
+time calendar quarterly from 2026-01 for 8
+
+entity asset borrower : Asset.Financial
+
+// A months-denominated term is converted into the rule's own periods at
+// compile time, so it must be a literal. An expression moves the value to
+// run time, where the conversion can no longer happen.
+contract test.cadence_probe on entity asset.borrower {
+  term 2026-01..2027-10
+  terms {
+    amount_year = 120000
+    term_months = 12 + 12
+  }
+}

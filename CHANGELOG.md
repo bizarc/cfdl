@@ -8,6 +8,53 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a contract term may hold an expression
+
+A term was a literal or one reference to a declared input, and nothing else —
+`escalation = inputs.cpi + 0.01` was a parse error directing the modeller to an
+`assume`. But what was agreed is often itself an expression: a lease escalating
+at "CPI plus 50 basis points", a coupon of "SOFR + 225bp". Forcing those
+through a model-level `assume` moved the agreement out of the contract and left
+a reference behind. The grammar always said `literal_or_expr`; the
+implementation now conforms to it.
+
+```cfdl
+terms {
+  base_rent  = 42000
+  escalation = curve_value("cpi", time.date) + 0.005
+}
+```
+
+An expression term is compiled at its own site (`E5025_TERM_EXPR_INVALID` when
+it does not parse) and substituted into lowering rules PARENTHESISED — template
+expansion is a textual splice, and `a + b` into `{{x}} * {{y}}` would otherwise
+silently associate as `a + (b * y)`. Literals and input references substitute
+verbatim, byte-for-byte as before: across 98 IR and 98 results goldens, every
+pre-existing file is unchanged.
+
+An expression is valid where the rule uses the term in an expression — an
+amount, a field's `init`/`next`. A term a rule reads as a name, date,
+frequency, or period count must stay literal:
+`E5026_TERM_EXPR_IN_LITERAL_SLOT`, and `E5017_PERIOD_TERM_NOT_LITERAL` now
+covers expressions and non-numeric literals (the latter previously misreported
+as a missing term). A non-integer expansion of a rule's net-days no longer
+falls back silently to the contract's payment terms — it is an error.
+
+Pack bounds apply where the value is knowable: literal terms are checked at
+compile time, input references against their clip, expression terms not at all
+— the same tier the specification already granted input references.
+
+Two latent defects closed on the way: `inputs.cpi * 2` would have classified as
+a reference to an input named "cpi * 2" (terms are now kind-classified by the
+parser, and an input reference requires exactly one identifier); and
+`x = -(a + b)` was silently DROPPED, the pack default applying in its place.
+
+`fixtures/invalid/term_trailing_tokens` — the fixture that pinned the old
+restriction — is now `fixtures/valid/term_expression`, and its `1000 + 500`
+produces results identical to stating `1500`. docs/01 §8.2.1 is rewritten:
+a term records what was agreed, and what was agreed is often a formula.
+
+
 ### Fixed: the published grammar now describes the language the parser accepts
 
 `docs/schemas/CFDL_v0_1_Grammar.ebnf` is normative — `docs/02` says

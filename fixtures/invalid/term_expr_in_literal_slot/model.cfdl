@@ -1,0 +1,19 @@
+version 0.1
+model "term-expr-in-literal-slot"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// `payment_frequency` is spliced into the rule's schedule, which is a
+// frequency word, not an expression. An expression here is not late — it is
+// wrong.
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 6000000
+    rate = 0.05 + 0.005
+    amort_months = 300
+    payment_frequency = 1 + 2
+  }
+}

@@ -287,9 +287,23 @@ pub enum PaymentTerms {
     Months(i64),
 }
 
+/// What shape a term's value takes. Classified once, by the parser, so no
+/// downstream consumer has to sniff the text — which is unreliable the moment
+/// a string literal may contain `+`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub enum TermValueKind {
+    /// One literal token: a number, string, date, bare name, or bool.
+    Literal,
+    /// A reference to one declared input: `inputs.<name>`, nothing more.
+    InputRef,
+    /// A full expression, carried as source text and compiled downstream.
+    Expr,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ContractTerm {
     pub value: String,
+    pub kind: TermValueKind,
     /// The unit the modeller states the value is in — `250000 MWh`.
     ///
     /// Optional, and an ASSERTION rather than a conversion instruction: the
@@ -311,15 +325,38 @@ impl ContractTerm {
     /// Monte Carlo draw. That keeps variation layered on top of the contract
     /// rather than embedded in it.
     pub fn is_input_ref(&self) -> bool {
-        self.value
-            .strip_prefix("inputs.")
-            .is_some_and(|name| !name.is_empty() && !name.contains('.'))
+        self.kind == TermValueKind::InputRef
+    }
+
+    /// Classify a value KNOWN to be atomic (one token) — for constructing
+    /// terms outside the parser, e.g. in tests. The parser itself classifies
+    /// from token kind, which is authoritative for full source.
+    pub fn classify_atomic(value: &str) -> TermValueKind {
+        if input_ref_name(value).is_some() {
+            TermValueKind::InputRef
+        } else {
+            TermValueKind::Literal
+        }
     }
 
     /// The input name behind an input-referencing term.
     pub fn input_name(&self) -> Option<&str> {
         self.is_input_ref().then(|| &self.value["inputs.".len()..])
     }
+}
+
+/// `inputs.<name>` where `<name>` is exactly one identifier — the shape an
+/// input-deferring term takes. The remainder must be a VALID identifier, not
+/// merely dot-free: with expression terms, `inputs.cpi * 2` strips to
+/// `cpi * 2`, which contains no dot and used to classify as an input named
+/// "cpi * 2" — a spurious E5010 waiting to fire.
+fn input_ref_name(value: &str) -> Option<&str> {
+    let rest = value.strip_prefix("inputs.")?;
+    let mut chars = rest.chars();
+    let head_ok = chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_');
+    (head_ok && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')).then_some(rest)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -1373,84 +1410,122 @@ impl<'a> Parser<'a> {
                     // number. Without this, `escalation = -0.02` silently
                     // dropped the whole term and the pack default applied —
                     // the model said one thing and the engine did another.
+                    let mut sign_span: Option<Span> = None;
                     let sign = match self.peek().kind {
                         TokenKind::Punct(Punct::Minus) => {
-                            let _ = self.bump();
+                            sign_span = Some(self.bump().span);
                             "-"
                         }
                         TokenKind::Punct(Punct::Plus) => {
-                            let _ = self.bump();
+                            sign_span = Some(self.bump().span);
                             ""
                         }
                         _ => "",
                     };
-                    let value_tok = self.bump();
-                    let value = match value_tok.kind {
-                        TokenKind::String(ref s) => s.clone(),
-                        TokenKind::Number(ref n) => format!("{sign}{n}"),
-                        TokenKind::Date(ref d) => d.clone(),
-                        TokenKind::Ident(ref ident) => ident.clone(),
-                        TokenKind::Qname(ref qname) => qname.clone(),
-                        TokenKind::Keyword(Keyword::True) => "true".to_string(),
-                        TokenKind::Keyword(Keyword::False) => "false".to_string(),
-                        _ => continue,
-                    };
-                    end_span = value_tok.span;
-
-                    // An optional unit follows the value: `250000 MWh`, or
-                    // `27.50 "USD/MWh"` when it is compound and would otherwise
-                    // lex as three tokens. It is an ASSERTION about what the
-                    // number means — the pack's rule declares the truth — so a
-                    // disagreement is a confused model rather than a rescale.
-                    //
-                    // Consumed before the single-value guard below, which would
-                    // otherwise read it as a stray token.
-                    let mut unit: Option<String> = None;
-                    match self.peek().kind {
-                        TokenKind::String(ref text) => {
-                            unit = Some(text.clone());
-                            end_span = self.bump().span;
-                        }
-                        TokenKind::Ident(ref name)
-                            if !matches!(
-                                self.peek_ahead(1).kind,
-                                TokenKind::Punct(Punct::Equal)
-                            ) =>
-                        {
-                            unit = Some(name.clone());
-                            end_span = self.bump().span;
-                        }
-                        _ => {}
-                    }
-
-                    // A term holds exactly one value. Anything else before the
-                    // next term or the closing brace used to be discarded in
-                    // silence, so `mwh_year = 1000 + 500` compiled as 1000 and
-                    // the model said one thing while the engine did another.
-                    let next_starts_term =
-                        matches!(self.peek().kind, TokenKind::Ident(_) | TokenKind::Qname(_))
-                            && matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal));
-                    let next_ends_block = matches!(
+                    if matches!(
                         self.peek().kind,
                         TokenKind::Punct(Punct::RBrace) | TokenKind::Eof
-                    );
-                    if !next_starts_term && !next_ends_block {
-                        let stray = self.peek().clone();
+                    ) {
                         self.push_expected(
-                            stray.span,
-                            format!(
-                                "Term '{key}' takes a single value. Expected the next term or '}}'. \
-                                 A term is a literal or one declared input (e.g. `inputs.yield`); \
-                                 compute derived values in an `assume` instead."
-                            ),
+                            self.current_span(),
+                            format!("Term '{key}' is missing a value."),
                         );
                         return None;
+                    }
+                    let value_tok = self.bump();
+                    // One atomic token, or the start of an expression. The
+                    // atomic path is kept byte-for-byte — a string term stores
+                    // its CONTENT, unquoted, and every existing model's value
+                    // must survive this function unchanged.
+                    let atomic = match value_tok.kind {
+                        TokenKind::String(ref s) => Some(s.clone()),
+                        TokenKind::Number(ref n) => Some(format!("{sign}{n}")),
+                        TokenKind::Date(ref d) => Some(d.clone()),
+                        TokenKind::Ident(ref ident) => Some(ident.clone()),
+                        TokenKind::Qname(ref qname) => Some(qname.clone()),
+                        TokenKind::Keyword(Keyword::True) => Some("true".to_string()),
+                        TokenKind::Keyword(Keyword::False) => Some("false".to_string()),
+                        _ => None,
+                    };
+                    end_span = value_tok.span;
+                    let value_start = sign_span.unwrap_or(value_tok.span);
+
+                    let mut unit: Option<String> = None;
+                    let mut kind;
+                    let mut value;
+                    match atomic {
+                        Some(v) => {
+                            kind = if matches!(value_tok.kind, TokenKind::Qname(_))
+                                && input_ref_name(&v).is_some()
+                            {
+                                TermValueKind::InputRef
+                            } else {
+                                TermValueKind::Literal
+                            };
+                            value = v;
+                            // An optional unit follows the value: `250000 MWh`,
+                            // or `27.50 "USD/MWh"` when it is compound and
+                            // would otherwise lex as three tokens. It is an
+                            // ASSERTION about what the number means — the
+                            // pack's rule declares the truth — so a
+                            // disagreement is a confused model rather than a
+                            // rescale.
+                            if let Some((u, uspan)) = self.try_term_unit() {
+                                unit = Some(u);
+                                end_span = uspan;
+                            }
+                            if !self.term_block_continues() {
+                                // The value keeps going past one token: it is
+                                // an EXPRESSION, not a stray. A "unit"
+                                // consumed above was really part of it — `a`
+                                // in `x = a and b` — and folds back in via
+                                // the source slice, which spans every token
+                                // from the value's first to the munch's last.
+                                unit = None;
+                                let slot = self.parse_expr_slot_until(value_start, &[])?;
+                                value = self.slice_source(merge_spans(value_start, slot.expr_span));
+                                kind = TermValueKind::Expr;
+                                end_span = slot.expr_span;
+                            }
+                        }
+                        None => {
+                            // `(`, a sign before a parenthesis, and anything
+                            // else non-atomic opens an expression. This path
+                            // used to `continue`, silently DROPPING the term —
+                            // `x = -(a + b)` compiled with the pack default
+                            // applied.
+                            let slot = self.parse_expr_slot_until(value_start, &[])?;
+                            value = self.slice_source(merge_spans(value_start, slot.expr_span));
+                            kind = TermValueKind::Expr;
+                            end_span = slot.expr_span;
+                        }
+                    }
+                    if kind == TermValueKind::Expr {
+                        // A unit may still follow the expression — maximal
+                        // munch stops before a bare identifier, so
+                        // `a + b USD` leaves `USD` unconsumed.
+                        if let Some((u, uspan)) = self.try_term_unit() {
+                            unit = Some(u);
+                            end_span = uspan;
+                        }
+                        if !self.term_block_continues() {
+                            let stray = self.peek().clone();
+                            self.push_expected(
+                                stray.span,
+                                format!(
+                                    "Term '{key}': expected a unit, the next term, or '}}' \
+                                     after the expression."
+                                ),
+                            );
+                            return None;
+                        }
                     }
 
                     terms.insert(
                         key.clone(),
                         ContractTerm {
                             value,
+                            kind,
                             unit,
                             span: merge_spans(tok.span, end_span),
                         },
@@ -1898,6 +1973,37 @@ impl<'a> Parser<'a> {
     /// Passed in rather than added to the base set, because every word here
     /// becomes unusable as a bare identifier in an expression, and that cost
     /// should be paid only where the word actually means something.
+    /// The optional unit annotation after a term's value: a string, or a bare
+    /// identifier that is not the start of the next term.
+    fn try_term_unit(&mut self) -> Option<(String, Span)> {
+        match self.peek().kind {
+            TokenKind::String(ref text) => {
+                let unit = text.clone();
+                Some((unit, self.bump().span))
+            }
+            TokenKind::Ident(ref name)
+                if !matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal)) =>
+            {
+                let unit = name.clone();
+                Some((unit, self.bump().span))
+            }
+            _ => None,
+        }
+    }
+
+    /// After a term's value and unit: the block either continues with the
+    /// next `key =` or closes.
+    fn term_block_continues(&self) -> bool {
+        let next_starts_term =
+            matches!(self.peek().kind, TokenKind::Ident(_) | TokenKind::Qname(_))
+                && matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal));
+        let next_ends_block = matches!(
+            self.peek().kind,
+            TokenKind::Punct(Punct::RBrace) | TokenKind::Eof
+        );
+        next_starts_term || next_ends_block
+    }
+
     fn parse_expr_slot_until(
         &mut self,
         start_span: Span,
@@ -3587,6 +3693,111 @@ time monthly from 2026-01 for 12
             }
             other => panic!("expected use-pack stmt, got {other:?}"),
         }
+    }
+
+    /// Parse a model whose contract has the given terms block; return the
+    /// terms map. Panics on any diagnostic.
+    fn parse_terms(block: &str) -> BTreeMap<String, ContractTerm> {
+        let src = format!(
+            "version 0.1\nmodel \"demo\"\ntime calendar monthly from 2026-01 for 2\nentity legal borrower\ncontract a.b on entity legal.borrower {{\n  term 2026-01..2026-02\n  terms {{\n{block}\n  }}\n}}\n"
+        );
+        let (tokens, lex_diags) = lex(&src);
+        assert!(lex_diags.is_empty(), "{lex_diags:?}");
+        let result = parse("model.cfdl", &src, &tokens);
+        assert!(
+            result.diagnostics.is_empty(),
+            "unexpected diagnostics: {:?}",
+            result.diagnostics
+        );
+        let ast = result.ast.expect("AST expected");
+        ast.statements
+            .iter()
+            .find_map(|stmt| match stmt {
+                Stmt::Contract(contract) => Some(contract.terms.clone()),
+                _ => None,
+            })
+            .expect("contract statement")
+    }
+
+    #[test]
+    fn atomic_terms_parse_exactly_as_before() {
+        let terms = parse_terms(
+            "    a = 42000\n    b = -0.02\n    c = \"month\"\n    d = 2026-06\n    e = true\n    f = inputs.cpi\n    g = 250000 MWh",
+        );
+        assert_eq!(terms["a"].value, "42000");
+        assert_eq!(terms["a"].kind, TermValueKind::Literal);
+        assert_eq!(terms["b"].value, "-0.02");
+        assert_eq!(terms["c"].value, "month"); // string content, UNQUOTED
+        assert_eq!(terms["d"].value, "2026-06");
+        assert_eq!(terms["e"].value, "true");
+        assert_eq!(terms["f"].value, "inputs.cpi");
+        assert_eq!(terms["f"].kind, TermValueKind::InputRef);
+        assert_eq!(terms["f"].input_name(), Some("cpi"));
+        assert_eq!(terms["g"].value, "250000");
+        assert_eq!(terms["g"].unit.as_deref(), Some("MWh"));
+    }
+
+    #[test]
+    fn expression_terms_capture_their_source_text() {
+        let terms = parse_terms(
+            "    a = 1000 + 500\n    b = inputs.cpi + 0.005\n    c = curve_value(\"cpi\", time.date)\n    d = -(1 + 2) * 3\n    e = max(0.02, inputs.floor)",
+        );
+        assert_eq!(terms["a"].value, "1000 + 500");
+        assert_eq!(terms["a"].kind, TermValueKind::Expr);
+        assert_eq!(terms["b"].value, "inputs.cpi + 0.005");
+        // An expression REFERENCING an input is not an input-deferring term.
+        assert!(!terms["b"].is_input_ref());
+        assert_eq!(terms["c"].value, "curve_value(\"cpi\", time.date)");
+        assert_eq!(terms["d"].value, "-(1 + 2) * 3");
+        assert_eq!(terms["e"].value, "max(0.02, inputs.floor)");
+    }
+
+    #[test]
+    fn expression_term_keeps_a_trailing_unit() {
+        let terms = parse_terms("    a = 1000 + 500 USD\n    b = 1");
+        assert_eq!(terms["a"].value, "1000 + 500");
+        assert_eq!(terms["a"].kind, TermValueKind::Expr);
+        assert_eq!(terms["a"].unit.as_deref(), Some("USD"));
+        assert_eq!(terms["b"].value, "1");
+    }
+
+    #[test]
+    fn boolean_expression_reclaims_a_misread_unit() {
+        // The unit peek eats `and` before the value is known to continue;
+        // the source slice must fold it back in.
+        let terms = parse_terms("    a = inputs.x and inputs.y");
+        assert_eq!(terms["a"].value, "inputs.x and inputs.y");
+        assert_eq!(terms["a"].kind, TermValueKind::Expr);
+        assert_eq!(terms["a"].unit, None);
+    }
+
+    #[test]
+    fn terms_continue_after_an_expression_term() {
+        let terms = parse_terms("    a = 1 + 2\n    b = 3\n    c = 4 + 5");
+        assert_eq!(terms.len(), 3);
+        assert_eq!(terms["b"].value, "3");
+        assert_eq!(terms["b"].kind, TermValueKind::Literal);
+        assert_eq!(terms["c"].value, "4 + 5");
+    }
+
+    #[test]
+    fn input_ref_requires_a_single_identifier() {
+        assert_eq!(
+            ContractTerm::classify_atomic("inputs.cpi"),
+            TermValueKind::InputRef
+        );
+        assert_eq!(
+            ContractTerm::classify_atomic("inputs.cpi * 2"),
+            TermValueKind::Literal
+        );
+        assert_eq!(
+            ContractTerm::classify_atomic("inputs.a.b"),
+            TermValueKind::Literal
+        );
+        assert_eq!(
+            ContractTerm::classify_atomic("inputs."),
+            TermValueKind::Literal
+        );
     }
 
     #[test]

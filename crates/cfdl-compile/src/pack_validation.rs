@@ -24,6 +24,10 @@ enum TermValue {
     /// the run supplies one. Bounds cannot be checked here — the value may
     /// differ per scenario and per Monte Carlo trial.
     Deferred,
+    /// The term is an expression, evaluated per period at run time. The same
+    /// tier as `Deferred`: present, well-formed (E5025 checks that it
+    /// compiles), value unknowable here.
+    Expression,
     Number(f64),
 }
 
@@ -33,6 +37,9 @@ fn read_number(contract: &cfdl_parser::ContractStmt, term: &str, kind: NumberKin
     };
     if entry.is_input_ref() {
         return TermValue::Deferred;
+    }
+    if entry.kind == cfdl_parser::TermValueKind::Expr {
+        return TermValue::Expression;
     }
     match kind {
         // Integer terms parse as i32 so `18.5` is rejected rather than
@@ -69,9 +76,9 @@ fn term_number_fires(validation: &PackValidation, contract: &cfdl_parser::Contra
         TermValue::Unparseable => {
             validation.when != WhenPresence::Present || validation.on_invalid == OnInvalid::Report
         }
-        // An input-referenced term is present and well-formed; its value is
-        // simply not knowable yet.
-        TermValue::Deferred => false,
+        // An input-referenced or expression term is present and
+        // well-formed; its value is simply not knowable yet.
+        TermValue::Deferred | TermValue::Expression => false,
         TermValue::Number(value) => bounds_violated(validation, value),
     }
 }
