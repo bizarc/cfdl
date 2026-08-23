@@ -431,6 +431,14 @@ CRE pack codes:
   draw lands, in [0, 1]; 0.5 is funding drawn ratably through it
 - `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` — the build must sit inside the
   model timeline, or the schedule silently loses draws
+- `E6061_CRE_OPEX_LINE_MISSING_AMOUNT` — an operating expense line states
+  `amount` or `amount_year`; both default to zero, so stating neither is a line
+  that silently costs nothing
+- `E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE` — the fixed SHARE, in [0, 1]; catches 81
+  entered where 0.81 was meant, which would otherwise report a wrong expense
+  rather than fail
+- `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` — a ratio of occupied space, in [0, 1];
+  zero is a fully dark building and is legitimate
 
 `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
 occupancy terms that no longer exist. Per §8 the code is never reused.
