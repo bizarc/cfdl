@@ -1121,7 +1121,23 @@ Provenance: found probing 7.37, August 2026, when a waterfall step's series
 read as zero and the only reason that was visible at all was a field warning
 about a different read.
 
-**Half of this is now closed, and it is worth being exact about which half.**
+**A third failure mode is now closed, and it was not the one this entry
+describes.** A pack expression could read an INSTANCEABLE stream family by its
+bare name. `.*` matches the bare name and its children; a bare pattern matches
+only the bare name, so every suffixed instance is skipped — and nothing warns,
+because the pattern did match something. That is worse than the case below: the
+warning that would fire on a name matching nothing never fires at all.
+
+It reached main twice, in the same expression, both times in forward NOI:
+`cre.pct_rent` double-counted an unsuffixed contract, and `cre.property.opex`
+made an instanced expense line invisible, overstating NOI and the exit price
+struck off it. Both were found by hand, months apart. `tools/check-pack-series.py`
+is now a gate over three surfaces — lowering expressions, metric selectors, and
+statement row selectors — because the same mistake was made independently on
+two of them.
+
+**Of what this entry actually describes, half is closed, and it is worth being
+exact about which half.**
 A name the model does not produce ANYWHERE warns — `W5022_UNKNOWN_SERIES_REFERENCE`
 — rather than failing, because a literal naming nothing is a pack idiom as well
 as a typo (`cre.exit` names nine NOI components and a given property declares

@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -95,8 +95,8 @@ bench:
 # how a 23% weighted-average-life error once survived because `analytic-checks`
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
-          pack-validations site-voice glossary-check rule-fragments doc-examples \
-          training-examples shipped-examples benchmark-cases
+          pack-validations pack-series site-voice glossary-check rule-fragments \
+          doc-examples training-examples shipped-examples benchmark-cases
 	@echo
 	@echo "make ci-gates: OK — every gate that is not the platform matrix."
 
@@ -205,6 +205,14 @@ pack-validations:
 
 rule-fragments:
 	$(PYGATE) tools/check-rule-fragments.py
+
+# A `.*` selector matches a stream family AND its bare name; a bare selector
+# matches only the bare name. Reading an instanceable family without the glob
+# therefore skips every suffixed instance — and nothing warns, because the
+# pattern did match something. It reached main twice in the same expression,
+# both times in forward NOI, both times moving the exit price.
+pack-series:
+	$(PYGATE) tools/check-pack-series.py
 
 # Closed-form finance the engine must satisfy regardless of implementation.
 # The benchmark suite compares against reference implementations, which cannot
