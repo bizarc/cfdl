@@ -19,7 +19,7 @@ contract cre.lease {
   }
 }
 
-contract cre.ops_revenue {
+contract cre.revenue_line {
   term 2028-01..2031-12
   terms {
     amount = 30000

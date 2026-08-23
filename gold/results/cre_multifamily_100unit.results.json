@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "d34a002bbd98fe1a45c04bd9dbf5eda5c453a746ead5085cde1b1dccd0358b29",
-  "ledger_hash": "23af2983050488a07766409c3c0b1fe4255803c247e5571efcbcd7d0536a8736",
+  "model_hash": "b0501efcf3a472f46876ea17c908a20e0abcceba7db3134b66387c45fc76d656",
+  "ledger_hash": "b1625dd501e48b9082386cfff40d186ace642f0e5cce9e7a1ffcc3f5500f4165",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -10,10 +10,16 @@
   "inputs": {
     "streams": [
       {
-        "contract": "cre.ops_revenue",
-        "stream": "cre.ops.revenue",
+        "contract": "cre.revenue_line",
+        "defaults_applied": [
+          "amount_year",
+          "escalation"
+        ],
+        "stream": "cre.revenue.line",
         "terms": {
-          "amount": "175750"
+          "amount": "175750",
+          "amount_year": "0",
+          "escalation": "0"
         }
       },
       {
@@ -77,7 +83,7 @@
         "amount": -3816000.0,
         "currency": "USD"
       },
-      "stream.cre.ops.revenue.total": {
+      "stream.cre.revenue.line.total": {
         "amount": 10545000.0,
         "currency": "USD"
       }
@@ -2894,7 +2900,7 @@
           }
         ]
       },
-      "stream.cre.ops.revenue": {
+      "stream.cre.revenue.line": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -3451,7 +3457,7 @@
             }
           ]
         },
-        "stream.cre.ops.revenue": {
+        "stream.cre.revenue.line": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -3516,7 +3522,7 @@
             "amount": -3816000.0,
             "currency": "USD"
           },
-          "stream.cre.ops.revenue.total": {
+          "stream.cre.revenue.line.total": {
             "amount": 10545000.0,
             "currency": "USD"
           }
@@ -3552,7 +3558,7 @@
             "amount": -4197600.0,
             "currency": "USD"
           },
-          "stream.cre.ops.revenue.total": {
+          "stream.cre.revenue.line.total": {
             "amount": 10200000.0,
             "currency": "USD"
           }

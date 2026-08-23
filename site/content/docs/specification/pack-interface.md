@@ -967,7 +967,7 @@ order, so ratios may reference earlier ids.
 id = "domain.cre.noi"           # output key
 kind = "money"                  # money | number
 op = "sum"                      # sum | negated_sum | ratio | wal_years
-numerator_streams = ["cre.lease.base_rent", "cre.ops.revenue"]
+numerator_streams = ["cre.lease.base_rent", "cre.revenue.line.*"]
 denominator_streams = ["cre.opex.line"]
 formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
 

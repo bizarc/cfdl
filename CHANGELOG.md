@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): one CRE revenue line item, `cre.revenue_line`
+
+`cre.ops_revenue` — a singleton with a raw per-period amount and no growth —
+is replaced by `cre.revenue_line`, mirroring `cre.opex_line`: instanced per
+statement line, the vocabulary in the instance name
+(`cre.revenue_line.parking`), a blended figure when unsuffixed, `amount` or
+`amount_year` with `escalation`.
+
+It is the first rule designed for expression terms: there is no
+`escalation_curve` twin, because `escalation = curve_value("cpi", time.date)`
+states the agreed formula directly. Five conventional templates ship —
+parking, storage, antenna, laundry/vending, blended.
+
+`E6020`/`E6021` retire with the old contract (E6064 replaces the amount
+check; a revenue term legitimately reaches the projection tail so forward NOI
+has revenue to read). The forward-NOI windows read the instanced family.
+Eighteen models migrate by contract name alone; every golden value is
+identical under the stream rename, and all 40 benchmarks and 22 training
+exercises pass unchanged.
+
+
 ### Changed: exit contracts state the sale gross, with selling costs as their own line
 
 Four exit rules folded selling costs into the proceeds via `* (1 -

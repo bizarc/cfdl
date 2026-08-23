@@ -25,7 +25,7 @@ developer lifecycle:
 
 - construction (`cre.construction_stub`)
 - lease-up (`cre.lease`)
-- stabilized operations (`cre.ops_revenue`, `cre.opex_line`)
+- stabilized operations (`cre.revenue_line`, `cre.opex_line`)
 - exit (`cre.exit_cap`)
 
 ## Pack identity
@@ -46,7 +46,7 @@ in `lowering/rules.toml`:
 
 - `cre.construction_stub`
 - `cre.lease`
-- `cre.ops_revenue`
+- `cre.revenue_line`
 - `cre.opex_line`
 - `cre.exit_cap`
 
@@ -181,7 +181,7 @@ defaults, so a missing one fails compilation with `E5006` naming the term.
 |---|---|---|---|
 | `cre.construction_stub` | `amount` (per period) | — | `cre.construction.draws` (outflow) |
 | `cre.lease` | `base_rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
-| `cre.ops_revenue` | `amount` (per period) | — | `cre.ops.revenue` (inflow) |
+| `cre.revenue_line{.<id>}` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0; may be an expression, e.g. `curve_value("cpi", time.date)`) | `cre.revenue.line{.<id>}` (inflow) |
 | `cre.opex_line` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0) or `escalation_curve`; `pct_fixed` (1) with `occupancy` (1) or `occupancy_curve` | `cre.opex.line{.<id>}` (outflow) |
 | `cre.exit_cap` | `noi_value` (annual), `exit_cap` | — | `cre.exit.sale` (inflow, once at `term_start`) |
 
@@ -306,7 +306,7 @@ does exactly that and says why.
 
 ### Simple whole-property contracts
 
-`cre.lease`, `cre.ops_revenue`, `cre.opex_line`, `cre.exit_cap`, and
+`cre.lease`, `cre.revenue_line`, `cre.opex_line`, `cre.exit_cap`, and
 `cre.construction_stub` model a property at the whole-asset level, for when
 lease-by-lease detail is not warranted. They follow the same conventions as
 the lease-by-lease set: schedules run over the contract's own term, time is

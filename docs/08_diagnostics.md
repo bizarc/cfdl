@@ -441,6 +441,14 @@ CRE pack codes:
   rather than fail
 - `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` — a ratio of occupied space, in [0, 1];
   zero is a fully dark building and is legitimate
+- `E6064_CRE_REVENUE_LINE_MISSING_AMOUNT` — a revenue line states `amount` or
+  `amount_year`; both default to zero, so stating neither is a line that
+  silently earns nothing
+
+`E6020_CRE_OPS_MISSING_AMOUNT` and `E6021_CRE_OPS_INVALID_SCHEDULE` are
+**retired** with `cre.ops_revenue`: the line item takes either amount term
+(E6064), and a revenue term legitimately reaches the projection tail so that
+forward NOI has revenue to read. Per §8 the codes are never reused.
 
 `E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
 occupancy terms that no longer exist. Per §8 the code is never reused.
