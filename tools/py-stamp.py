@@ -22,9 +22,26 @@ a version check cannot see a change that ships without a version bump, and the
 commit that broke this one did not bump anything. A hash over the source bytes
 needs neither git history nor a version.
 
-`packs/` is in the input set because crates/cfdl-pack `include_str!`s every
-pack TOML at compile time — editing a lowering rule changes the extension with
-no Rust source change at all. That is precisely the case that broke.
+`packs/` IS NOT an input, and the reasoning that once put it here was wrong.
+crates/cfdl-pack does `include_str!` every pack TOML, but only under
+`#[cfg(feature = "embedded-packs")]`, and crates/cfdl-py takes cfdl-pack
+WITHOUT that feature — only the CLI, the server and the wasm build enable it.
+The extension says so when asked to compile with no pack directory:
+
+    E4004_MISSING_PACK: No pack directory was provided and this build has no
+    embedded packs.
+
+The SDK reads packs from disk at run time via `packs_dir`, so a pack edit
+changes what it produces without changing the binary at all. Hashing packs
+here raised a false alarm on one of the most common actions in this
+repository: editing a lowering rule demanded `make py-develop`, the rebuild
+was a no-op because cargo correctly saw no dirty input, and the only way out
+was to touch a crate source to force a rebuild that changed nothing.
+
+The notebook render stamp keeps its `packs/` entry, and should: pack data
+changes what a notebook PRINTS, because the SDK reads it at run time. That
+guard is about rendered output; this one is about a compiled binary, and only
+the first has packs in it.
 
 The stamp lives beside the built `.so` and is not committed: it describes one
 machine's build, and a fresh clone correctly has none, so the check fails with
@@ -62,7 +79,6 @@ INPUTS = [
     "crates/cfdl-lexer",
     "crates/cfdl-resolver",
     "crates/cfdl-validate",
-    "packs",
     "Cargo.toml",
 ]
 
@@ -99,13 +115,43 @@ def digest() -> str:
     return h.hexdigest()
 
 
+def _native_fingerprint() -> str | None:
+    """Identity of the built extension: its path, size and mtime.
+
+    Enough to tell a real rebuild from a stamp written after one that did not
+    happen. Not a content hash — the point is cheapness and the artefact's
+    existence, and the source digest beside it already covers content.
+    """
+    for pattern in ("_native*.so", "_native*.pyd", "_native*.dylib"):
+        for path in sorted((REPO_ROOT / "python" / "cfdl_sdk").glob(pattern)):
+            stat = path.stat()
+            return f"{path.name}:{stat.st_size}:{int(stat.st_mtime)}"
+    return None
+
+
 def main() -> int:
     mode = sys.argv[1] if len(sys.argv) > 1 else "--check"
     current = digest()
 
     if mode == "--write":
+        # Record the ARTEFACT the stamp describes, not merely the sources the
+        # install was asked to build. `make py-develop` runs `pip install -e`
+        # and then stamps unconditionally, so a rebuild that was skipped used
+        # to be certified fresh anyway — the failure was silent, and only
+        # caught because a second guard disagreed. Binding the stamp to the
+        # extension's identity means a stamp written without a real build no
+        # longer matches the file it claims to describe.
+        native = _native_fingerprint()
+        if native is None:
+            print(
+                "py-stamp: no compiled cfdl_sdk extension was found to stamp.\n\n"
+                "  Build it first:\n"
+                "    make py-develop\n",
+                file=sys.stderr,
+            )
+            return 1
         STAMP.parent.mkdir(parents=True, exist_ok=True)
-        STAMP.write_text(current + "\n", encoding="utf-8")
+        STAMP.write_text(f"{current}\n{native}\n", encoding="utf-8")
         print(f"py-stamp: wrote {STAMP.relative_to(REPO_ROOT)} ({current[:12]}…)")
         return 0
 
@@ -123,7 +169,19 @@ def main() -> int:
         )
         return 1
 
-    stamped = STAMP.read_text(encoding="utf-8").strip()
+    lines = STAMP.read_text(encoding="utf-8").split()
+    stamped = lines[0] if lines else ""
+    stamped_native = lines[1] if len(lines) > 1 else None
+    native = _native_fingerprint()
+    if stamped_native is not None and native is not None and stamped_native != native:
+        print(
+            "py-stamp: the compiled cfdl_sdk extension is not the one that was\n"
+            "          stamped — it has been rebuilt or replaced since.\n\n"
+            "  Rebuild and stamp it:\n"
+            "    make py-develop\n",
+            file=sys.stderr,
+        )
+        return 1
     if stamped != current:
         print(
             "py-stamp: engine or pack sources changed since the cfdl_sdk extension\n"
