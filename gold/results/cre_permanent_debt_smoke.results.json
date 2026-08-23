@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "22f096cfe3d36e0aa85735a5f6f0a4457e69aac2f37b9296adea538474a8c577",
-  "ledger_hash": "6c9accaa84d23fb9ac30b67d4c4be5d914e6f5e1447255583836ca87c7f4cd47",
+  "model_hash": "219ea68c657813438d6971d5f918fc9aeb58b529598dd056296080c7c9502280",
+  "ledger_hash": "4ce56fde7005e7ba3a6597ff48376a197f8ea889d6151738bcf8b1a92b1e7af6",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -14,12 +14,35 @@
         "defaults_applied": [
           "payment_frequency"
         ],
-        "stream": "loan.permanent_debt_service",
+        "stream": "loan.permanent_debt.interest",
+        "terms": {
+          "payment_frequency": "",
+          "principal": "6000000",
+          "rate": "0.055"
+        }
+      },
+      {
+        "contract": "cre.permanent_debt",
+        "defaults_applied": [
+          "payment_frequency"
+        ],
+        "stream": "loan.permanent_debt.principal",
         "terms": {
           "balloon_at_maturity": "1",
           "payment_frequency": "",
           "principal": "6000000",
           "rate": "0.055"
+        }
+      },
+      {
+        "contract": "cre.permanent_debt",
+        "defaults_applied": [
+          "funded_at_close"
+        ],
+        "stream": "loan.permanent_debt.proceeds",
+        "terms": {
+          "funded_at_close": "1",
+          "principal": "6000000"
         }
       }
     ]
@@ -28,21 +51,32 @@
     "status": "ok",
     "metrics": {
       "entity.asset.tower.total": {
-        "amount": -7621559.308212,
+        "amount": -1621559.308212,
         "currency": "USD"
       },
+      "model.irr": 0.056408,
+      "model.moic": 0.78647,
       "model.npv": {
-        "amount": -6159745.245601,
+        "amount": -159745.245601,
         "currency": "USD"
       },
       "model.total": {
-        "amount": -7621559.308212,
+        "amount": -1621559.308212,
         "currency": "USD"
       },
+      "model.wal_years": 0.0,
       "run.annual_discount_rate": 0.05,
       "run.periods_per_year": 12.0,
-      "stream.loan.permanent_debt_service.total": {
-        "amount": -7621559.308212,
+      "stream.loan.permanent_debt.interest.total": {
+        "amount": -1621559.308212,
+        "currency": "USD"
+      },
+      "stream.loan.permanent_debt.principal.total": {
+        "amount": -6000000.0,
+        "currency": "USD"
+      },
+      "stream.loan.permanent_debt.proceeds.total": {
+        "amount": 6000000.0,
         "currency": "USD"
       }
     },
@@ -1618,7 +1652,7 @@
         },
         "values": [
           {
-            "amount": -27500.0,
+            "amount": 5972500.0,
             "currency": "USD"
           },
           {
@@ -1867,7 +1901,7 @@
         },
         "values": [
           {
-            "amount": -27500.0,
+            "amount": 5972500.0,
             "currency": "USD"
           },
           {
@@ -2108,7 +2142,7 @@
           }
         ]
       },
-      "stream.loan.permanent_debt_service": {
+      "stream.loan.permanent_debt.interest": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -2213,147 +2247,647 @@
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27500.0,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27457.167606,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27414.138897,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27370.912974,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27327.488931,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27283.865862,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27240.042853,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27196.018989,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27151.793349,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27107.365008,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27062.733038,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -27017.896504,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26972.854469,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26927.605991,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26882.150125,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26836.48592,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26790.61242,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26744.528666,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26698.233696,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26651.72654,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26605.006226,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26558.071777,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26510.922213,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26463.556546,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26415.973786,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26368.172939,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26320.153005,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26271.912979,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26223.451853,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26174.768614,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26125.862243,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26076.731718,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -26027.376011,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -25977.794091,
             "currency": "USD"
           },
           {
-            "amount": -36845.249537,
+            "amount": -25927.98492,
             "currency": "USD"
           },
           {
-            "amount": -5671975.574421,
+            "amount": -25877.947457,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan.permanent_debt.principal": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 60
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -9345.249537,
+            "currency": "USD"
+          },
+          {
+            "amount": -9388.081931,
+            "currency": "USD"
+          },
+          {
+            "amount": -9431.110639,
+            "currency": "USD"
+          },
+          {
+            "amount": -9474.336563,
+            "currency": "USD"
+          },
+          {
+            "amount": -9517.760606,
+            "currency": "USD"
+          },
+          {
+            "amount": -9561.383675,
+            "currency": "USD"
+          },
+          {
+            "amount": -9605.206684,
+            "currency": "USD"
+          },
+          {
+            "amount": -9649.230548,
+            "currency": "USD"
+          },
+          {
+            "amount": -9693.456188,
+            "currency": "USD"
+          },
+          {
+            "amount": -9737.884529,
+            "currency": "USD"
+          },
+          {
+            "amount": -9782.516499,
+            "currency": "USD"
+          },
+          {
+            "amount": -9827.353033,
+            "currency": "USD"
+          },
+          {
+            "amount": -9872.395068,
+            "currency": "USD"
+          },
+          {
+            "amount": -9917.643545,
+            "currency": "USD"
+          },
+          {
+            "amount": -9963.099412,
+            "currency": "USD"
+          },
+          {
+            "amount": -10008.763617,
+            "currency": "USD"
+          },
+          {
+            "amount": -10054.637117,
+            "currency": "USD"
+          },
+          {
+            "amount": -10100.720871,
+            "currency": "USD"
+          },
+          {
+            "amount": -10147.015841,
+            "currency": "USD"
+          },
+          {
+            "amount": -10193.522997,
+            "currency": "USD"
+          },
+          {
+            "amount": -10240.243311,
+            "currency": "USD"
+          },
+          {
+            "amount": -10287.17776,
+            "currency": "USD"
+          },
+          {
+            "amount": -10334.327324,
+            "currency": "USD"
+          },
+          {
+            "amount": -10381.692991,
+            "currency": "USD"
+          },
+          {
+            "amount": -10429.275751,
+            "currency": "USD"
+          },
+          {
+            "amount": -10477.076598,
+            "currency": "USD"
+          },
+          {
+            "amount": -10525.096532,
+            "currency": "USD"
+          },
+          {
+            "amount": -10573.336558,
+            "currency": "USD"
+          },
+          {
+            "amount": -10621.797684,
+            "currency": "USD"
+          },
+          {
+            "amount": -10670.480923,
+            "currency": "USD"
+          },
+          {
+            "amount": -10719.387294,
+            "currency": "USD"
+          },
+          {
+            "amount": -10768.517819,
+            "currency": "USD"
+          },
+          {
+            "amount": -10817.873526,
+            "currency": "USD"
+          },
+          {
+            "amount": -10867.455446,
+            "currency": "USD"
+          },
+          {
+            "amount": -10917.264617,
+            "currency": "USD"
+          },
+          {
+            "amount": -5646097.626964,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan.permanent_debt.proceeds": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 60
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 6000000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
@@ -2557,7 +3091,7 @@
           },
           "values": [
             {
-              "amount": -330000.0,
+              "amount": 5670000.0,
               "currency": "USD"
             },
             {
@@ -2578,7 +3112,7 @@
             }
           ]
         },
-        "stream.loan.permanent_debt_service": {
+        "stream.loan.permanent_debt.interest": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -2594,15 +3128,73 @@
               "currency": "USD"
             },
             {
-              "amount": -442142.994443,
+              "amount": -327129.424011,
               "currency": "USD"
             },
             {
-              "amount": -442142.994443,
+              "amount": -320641.754588,
               "currency": "USD"
             },
             {
-              "amount": -6077273.319327,
+              "amount": -313788.129613,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.loan.permanent_debt.principal": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 5
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -115013.570432,
+              "currency": "USD"
+            },
+            {
+              "amount": -121501.239855,
+              "currency": "USD"
+            },
+            {
+              "amount": -5763485.189713,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.loan.permanent_debt.proceeds": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 5
+          },
+          "values": [
+            {
+              "amount": 6000000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
               "currency": "USD"
             }
           ]

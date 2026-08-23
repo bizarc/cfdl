@@ -2,7 +2,7 @@
   {
     "code": "E5022_UNKNOWN_STREAM_CATEGORY",
     "severity": "error",
-    "message": "Stream 'cre.other.income' declares category 'operating_revenue', which is not a category the active pack defines. Known categories: operating.revenue.base_rent, operating.revenue.other, operating.revenue.percentage_rent, operating.revenue.recovery, operating.deduction.vacancy, operating.deduction.abatement, operating.expense.opex, investing.capital.leasing, investing.capital.construction, investing.capital.capex, investing.reversion, financing.debt_service, financing.mortgage_insurance, financing.debt_proceeds, financing.equity.",
+    "message": "Stream 'cre.other.income' declares category 'operating_revenue', which is not a category the active pack defines. Known categories: operating.revenue.base_rent, operating.revenue.other, operating.revenue.percentage_rent, operating.revenue.recovery, operating.deduction.vacancy, operating.deduction.abatement, operating.expense.opex, investing.capital.leasing, investing.capital.construction, investing.capital.capex, investing.reversion, financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance, financing.debt_proceeds, financing.equity.",
     "file": "model.cfdl",
     "span": {
       "start_line": 16,

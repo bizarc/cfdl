@@ -376,15 +376,64 @@ selling_costs = "0"
 # committed source that carries it states P+I+MIP as a single published line.
 # ---------------------------------------------------------------------------
 
+# Decomposed per the contract design rules (docs/07 §6.4): one stream per line
+# a financing statement shows. The single netted `loan.permanent_debt_service`
+# lost the interest/principal split — foreclosing a tax line, interest
+# coverage, and any amortization schedule — and emitted NO PROCEEDS at all: a
+# $6m mortgage that funded nothing, on the most common CRE instrument.
+#
+# The split is exact: ipmt + ppmt equals the level payment identically (pinned
+# in cfdl-calc against Excel), so interest + principal reproduce the old debt
+# service to the digit, and every category folds where the netted line folded.
+#
+# A reconciliation whose source's cash flow starts post-financing states
+# `funded_at_close = 0` and says so — the default is the whole instrument.
 [[rules]]
-id = "cre_permanent_debt_service"
+id = "cre_permanent_debt_proceeds"
 contract_name = "cre.permanent_debt"
-stream_name = "loan.permanent_debt_service"
+stream_name = "loan.permanent_debt.proceeds{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+category = "financing.debt_proceeds"
+amount_expr = "{{contract.principal}} * {{contract.funded_at_close}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+funded_at_close = "1"
+
+[[rules]]
+id = "cre_permanent_debt_interest"
+contract_name = "cre.permanent_debt"
+stream_name = "loan.permanent_debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.debt_service"
-# Interest-only while p < io_months, then the level payment; balloon opt-in.
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{contract.balloon_at_maturity}} == 1 and {{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+category = "financing.interest"
+# Interest-only while p < io_months, then the interest leg of the level
+# payment. Accrual and amortization keep their own divisors: an Actual/360
+# loan accrues on real days while its payment is struck on a 30/360 schedule.
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -ipmt({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}}))"
+schedule_kind = "every"
+schedule_every = "{{contract.payment_frequency}}"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+io_months = "0"
+payment_frequency = ""
+
+[[rules]]
+id = "cre_permanent_debt_principal"
+contract_name = "cre.permanent_debt"
+stream_name = "loan.permanent_debt.principal{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "financing.debt_principal"
+# Scheduled amortization, plus the balloon when opted in — off by default,
+# because folding the unamortized balance into the final period makes that
+# period's coverage ratio meaningless; a sale usually repays it instead.
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, 0, -ppmt({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{contract.balloon_at_maturity}} == 1 and {{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"

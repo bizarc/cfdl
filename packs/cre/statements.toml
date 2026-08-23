@@ -102,8 +102,17 @@ formula = "sum(operating.*)"
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.debt_service", "financing.mortgage_insurance"]
-formula = "-sum(financing.debt_service, financing.mortgage_insurance)"
+# `interest` and `debt_principal` joined when `cre.permanent_debt` decomposed:
+# the two legs fold where the netted payment folded, so coverage is unchanged
+# to the digit. `debt_service` remains for instruments that genuinely pay one
+# line, such as construction-loan interest.
+categories = [
+  "financing.debt_service",
+  "financing.interest",
+  "financing.debt_principal",
+  "financing.mortgage_insurance",
+]
+formula = "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
 
 # Debt service coverage, per period. This is the row backlog 1.4 is about: a
 # lifetime ratio of 1.4 can contain a year at 0.9 and report nothing.
@@ -304,6 +313,20 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
+label = "Interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Principal amortization"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
 label = "Mortgage insurance"
 depth = 1
 categories = ["financing.mortgage_insurance"]
@@ -500,6 +523,20 @@ kind = "line"
 label = "Debt service"
 depth = 1
 categories = ["financing.debt_service"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Principal amortization"
+depth = 1
+categories = ["financing.debt_principal"]
 display = "positive"
 
 [[statements.rows]]

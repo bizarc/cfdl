@@ -127,9 +127,20 @@ than needing a solver — and is not modeled here.
 
 ### `cre.permanent_debt`
 
-A commercial mortgage on a stabilized property. Emits one stream,
-`loan.permanent_debt_service`, which is the exact name `domain.cre.debt_service`
-selects — and therefore what `domain.cre.dscr` divides by.
+A commercial mortgage on a stabilized property. Emits three streams — the
+whole instrument, per the contract design rules:
+
+- `loan.permanent_debt.proceeds{.<id>}` — the draw at closing
+  (`financing.debt_proceeds`)
+- `loan.permanent_debt.interest{.<id>}` — the interest leg
+  (`financing.interest`)
+- `loan.permanent_debt.principal{.<id>}` — scheduled amortization, plus the
+  balloon when opted in (`financing.debt_principal`)
+
+Interest plus principal reproduce the level payment exactly (`ipmt + ppmt =
+pmt`), and both fold into `domain.cre.debt_service`, so coverage is what it
+always was — with the split available for a tax line, interest coverage, or an
+amortization schedule.
 
 | term | meaning | default |
 |---|---|---|
@@ -137,7 +148,8 @@ selects — and therefore what `domain.cre.dscr` divides by.
 | `rate` | nominal annual rate | *required* |
 | `amort_months` | amortization term — strikes the payment | *required* |
 | `io_months` | interest-only months before amortization begins | `0` |
-| `balloon_at_maturity` | `1` pays the unamortized balance as debt service at `term_end` | `0` |
+| `funded_at_close` | share of principal drawn at `term_start`; `0` for a reconciliation whose source starts post-financing | `1` |
+| `balloon_at_maturity` | `1` pays the unamortized balance as principal at `term_end` | `0` |
 | `payment_frequency` | `day`/`week`/`month`/`quarter`/`year` | the model calendar |
 | `day_count`, `amortization_day_count` | interest accrual and payment bases | `30/360` |
 

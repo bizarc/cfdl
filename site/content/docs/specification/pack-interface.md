@@ -975,7 +975,7 @@ formula = "sum(numerator_streams) + sum(denominator_streams)"  # lineage text
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["loan.permanent_debt_service"]
+numerator_streams = ["loan.permanent_debt.interest.*", "loan.permanent_debt.principal.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true          # omit unless value > 0
 

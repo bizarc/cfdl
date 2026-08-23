@@ -81,9 +81,11 @@
       "op": "negated_sum",
       "categories": [
         "financing.debt_service",
+        "financing.interest",
+        "financing.debt_principal",
         "financing.mortgage_insurance"
       ],
-      "formula": "-sum(financing.debt_service, financing.mortgage_insurance)"
+      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
     },
     {
       "id": "domain.cre.dscr",
