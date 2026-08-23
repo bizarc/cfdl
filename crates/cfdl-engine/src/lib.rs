@@ -539,9 +539,7 @@ fn assign_waves(names: &[&str], deps: &[StreamDeps]) -> Result<Vec<usize>, Engin
         chain.push(node);
         let mut deepest = 0usize;
         for &producer in &edges[node] {
-            deepest = deepest.max(depth_of(
-                producer, names, deps, edges, color, depth, chain,
-            )?);
+            deepest = deepest.max(depth_of(producer, names, deps, edges, color, depth, chain)?);
         }
         chain.pop();
         color[node] = BLACK;

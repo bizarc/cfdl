@@ -633,8 +633,8 @@ mod tests {
 
     #[test]
     fn one_computed_name_among_literals_still_counts() {
-        let c = compile_expr(r#"series_sum("a.b", 0, 1) + series_sum(pick, 0, 1)"#)
-            .expect("compile");
+        let c =
+            compile_expr(r#"series_sum("a.b", 0, 1) + series_sum(pick, 0, 1)"#).expect("compile");
         assert!(has_computed_series_name(&c));
         // A series call nested inside another call's arguments is still found.
         let nested = compile_expr("max(0, series_avg(pick, 0, 1))").expect("compile");
