@@ -531,9 +531,9 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         }
         for src in sources {
             for referenced in series_references(src) {
-                let hit = phase2_names
-                    .iter()
-                    .find(|name| cfdl_expr::selector_matches_any(&[referenced.clone()], name));
+                let hit = phase2_names.iter().find(|name| {
+                    cfdl_expr::selector_matches_any(std::slice::from_ref(&referenced), name)
+                });
                 if let Some(other) = hit {
                     return Err(EngineError::PhaseReference(format!(
                         "Stream '{}' reads series '{other}', which itself reads a series. A \
