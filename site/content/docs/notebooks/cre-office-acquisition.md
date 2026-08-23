@@ -90,7 +90,7 @@ print("streams:", len(model.ir["streams"]))
 ```
 
 ```
-streams: 14
+streams: 16
 ```
 
 ## Run
@@ -120,7 +120,7 @@ cf.head()
 ```
 
 ```
-shape: (120, 23)
+shape: (120, 25)
 ```
 
 ```
@@ -140,21 +140,13 @@ period
 2026-04         13500.0               -25000.0         40000.0                     -23345.249537   
 2026-05         13500.0               -25000.0         40000.0                     -23345.249537   
 
-         model.net_cash_flow  stream.cre.exit.proceeds  ...  stream.cre.unit.abatement.tenant_a  \
+         model.net_cash_flow  stream.cre.exit.proceeds  ...  stream.cre.unit.base_rent.tenant_a  \
 period                                                  ...                                       
-2026-01       -263345.249537                       0.0  ...                            -40000.0   
-2026-02        -63345.249537                       0.0  ...                            -40000.0   
-2026-03        -63345.249537                       0.0  ...                            -40000.0   
-2026-04        -23345.249537                       0.0  ...                                 0.0   
-2026-05        -23345.249537                       0.0  ...                                 0.0   
-
-         stream.cre.unit.abatement.tenant_b  stream.cre.unit.base_rent.tenant_a  \
-period                                                                            
-2026-01                                 0.0                             40000.0   
-2026-02                                 0.0                             40000.0   
-2026-03                                 0.0                             40000.0   
-2026-04                                 0.0                             40000.0   
-2026-05                                 0.0                             40000.0   
+2026-01       -263345.249537                       0.0  ...                             40000.0   
+2026-02        -63345.249537                       0.0  ...                             40000.0   
+2026-03        -63345.249537                       0.0  ...                             40000.0   
+2026-04        -23345.249537                       0.0  ...                             40000.0   
+2026-05        -23345.249537                       0.0  ...                             40000.0   
 
          stream.cre.unit.base_rent.tenant_b  stream.cre.unit.recoveries.tenant_a  \
 period                                                                             
@@ -180,15 +172,23 @@ period
 2026-04                             0.0                  -1500.0   
 2026-05                             0.0                  -1500.0   
 
-         stream.loan.permanent_debt_service  
-period                                       
-2026-01                       -36845.249537  
-2026-02                       -36845.249537  
-2026-03                       -36845.249537  
-2026-04                       -36845.249537  
-2026-05                       -36845.249537  
+         stream.loan.permanent_debt.interest  stream.loan.permanent_debt.principal  \
+period                                                                               
+2026-01                        -27500.000000                          -9345.249537   
+2026-02                        -27457.167606                          -9388.081931   
+2026-03                        -27414.138897                          -9431.110639   
+2026-04                        -27370.912974                          -9474.336563   
+2026-05                        -27327.488931                          -9517.760606   
 
-[5 rows x 23 columns]
+         stream.loan.permanent_debt.proceeds  
+period                                        
+2026-01                                  0.0  
+2026-02                                  0.0  
+2026-03                                  0.0  
+2026-04                                  0.0  
+2026-05                                  0.0  
+
+[5 rows x 25 columns]
 ```
 
 ```python
@@ -238,7 +238,9 @@ results.metrics_frame()
 23     stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD        core
 24     stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD        core
 25            stream.cre.vacancy.loss.total -1.800000e+05      USD        core
-26  stream.loan.permanent_debt_service.t... -4.421430e+06      USD        core
+26  stream.loan.permanent_debt.interest.... -2.930792e+06      USD        core
+27  stream.loan.permanent_debt.principal... -1.490638e+06      USD        core
+28  stream.loan.permanent_debt.proceeds....  0.000000e+00      USD        core
 ```
 
 ## What-if

@@ -2,7 +2,7 @@
   {
     "code": "E5026_TERM_EXPR_IN_LITERAL_SLOT",
     "severity": "error",
-    "message": "Pack lowering rule 'cre_permanent_debt_service' uses term 'payment_frequency' as a literal (a frequency or day count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
+    "message": "Pack lowering rule 'cre_permanent_debt_interest' uses term 'payment_frequency' as a literal (a frequency or day count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
     "file": "model.cfdl",
     "span": {
       "start_line": 11,
@@ -17,7 +17,37 @@
   {
     "code": "E5026_TERM_EXPR_IN_LITERAL_SLOT",
     "severity": "error",
-    "message": "Pack lowering rule 'cre_permanent_debt_service' uses term 'payment_frequency' in a slot that is not an expression (a name, date, frequency, or count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
+    "message": "Pack lowering rule 'cre_permanent_debt_interest' uses term 'payment_frequency' in a slot that is not an expression (a name, date, frequency, or count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E5026_TERM_EXPR_IN_LITERAL_SLOT",
+    "severity": "error",
+    "message": "Pack lowering rule 'cre_permanent_debt_principal' uses term 'payment_frequency' as a literal (a frequency or day count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E5026_TERM_EXPR_IN_LITERAL_SLOT",
+    "severity": "error",
+    "message": "Pack lowering rule 'cre_permanent_debt_principal' uses term 'payment_frequency' in a slot that is not an expression (a name, date, frequency, or count), so it cannot hold an expression; contract 'cre.permanent_debt' supplies `1 + 2`.",
     "file": "model.cfdl",
     "span": {
       "start_line": 11,

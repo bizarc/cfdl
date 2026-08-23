@@ -8,6 +8,37 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): `cre.permanent_debt` lowers to the whole instrument
+
+The most common CRE financing instrument lowered to ONE netted stream,
+`loan.permanent_debt_service` — and emitted no proceeds at all: a $6m mortgage
+that funded nothing. The netting foreclosed the interest/principal split — a
+tax line, interest coverage, an amortization schedule — and the missing draw
+made every levered return wrong even while the net line reconciled.
+
+Per the contract design rules (docs/07 §6.4) it now lowers to three streams:
+`loan.permanent_debt.proceeds{.<id>}` (financing.debt_proceeds, at closing),
+`.interest{.<id>}` (financing.interest) and `.principal{.<id>}`
+(financing.debt_principal, balloon folded in when opted on). All three carry
+`dot_suffix`, so a deal may hold more than one mortgage.
+
+The split is exact — ipmt + ppmt equals the level payment identically — and
+`domain.cre.debt_service` now folds the two legs where it folded the netted
+line, so DSCR is unchanged to the digit (verified: the subtotal series is
+byte-identical on the smoke fixture). The operating statement gains Interest
+and Principal amortization rows.
+
+`funded_at_close` (default `1`) draws the principal at `term_start`. A
+reconciliation whose source's cash flow starts post-financing states
+`funded_at_close = 0` and says so — office_two_tenant does, because its
+reference nets rents against debt service and never books the draw.
+
+The learn capstones had hand-written a `harbor.perm_proceeds` stream to work
+around the missing draw. The workaround is deleted from all five capstone
+models and the chapter; the contract funds itself with the same $9.5m, and
+every expected exercise metric is unchanged.
+
+
 ### Added: a contract term may hold an expression
 
 A term was a literal or one reference to a declared input, and nothing else —

@@ -116,13 +116,6 @@ stream cloan.payoff on entity asset.cloan outflow currency USD {
   amount = prev.asset.cloan.balance
 }
 
-// The permanent loan closes as operations begin: interest-only to maturity.
-stream harbor.perm_proceeds on entity asset.harbor inflow currency USD {
-  category financing.debt_proceeds
-  schedule every month due from 2028-07 to 2028-07
-  amount = 9500000
-}
-
 contract cre.permanent_debt on entity asset.harbor {
   term 2028-07..2030-12
   terms {

@@ -18,6 +18,8 @@ categories = [
   "investing.capital.capex",
   "investing.reversion",
   "financing.debt_service",
+  "financing.interest",
+  "financing.debt_principal",
   "financing.mortgage_insurance",
   "financing.debt_proceeds",
   "financing.equity",

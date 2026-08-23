@@ -89,11 +89,16 @@ contract cre.exit_forward on entity asset.tower {
 // The balloon stays off (the default): the unamortized $4.5m is repaid out of
 // the sale, not as debt service, and folding it into the final period would
 // make that period's DSCR meaningless.
+// `funded_at_close = 0`: the reference model's cash flow starts
+// post-financing — it nets rents against debt service and never books the
+// draw — so the proceeds the contract funds by default are excluded here to
+// state what the source states.
 contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2035-12
   terms {
     principal = 6000000
     rate = 0.055
     amort_months = 300
+    funded_at_close = 0
   }
 }

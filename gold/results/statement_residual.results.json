@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "eeeefb4f97ec2dbf348b6e00ea2140c6a1f508224a2b41a1ee8cd9e4dd34f732",
+  "model_hash": "7eab53f21c66195b0ffd3b933f8b84884f6767e0bfe365e2b40fc9a256bbc9a1",
   "ledger_hash": "025b83a90c80602c1322abb77c87f045d183d8115064fefafac5dadd4c0de26d",
   "engine": {
     "name": "cfdl-engine",
@@ -779,6 +779,48 @@
           },
           {
             "kind": "line",
+            "label": "Interest",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Principal amortization",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
             "label": "Mortgage insurance",
             "depth": 1,
             "display_sign": -1.0,
@@ -1380,6 +1422,48 @@
           {
             "kind": "line",
             "label": "Debt service",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Interest",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Principal amortization",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
