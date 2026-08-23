@@ -50,10 +50,11 @@ pub enum EngineError {
     InvalidDate(String),
     InvalidRunConfig(String),
     Schedule(String),
-    /// A cross-stream read that can never resolve. The phase split is an engine
-    /// concept, so the check lives with the split rather than being restated in
-    /// the compiler where the two could drift.
-    PhaseReference(String),
+    /// A circular series read — or a read into a stream whose series names
+    /// are computed at runtime. Evaluation order is an engine concept, so the
+    /// check lives with the ordering rather than being restated in the
+    /// compiler where the two could drift.
+    SeriesCycle(String),
     /// A name that resolved to nothing. docs/03 §2: "Unknown variables are
     /// hard errors (EXPR_EVAL), not nulls." Every layer honoured that except
     /// the engine, which caught the error and substituted zero — so a
@@ -67,7 +68,7 @@ impl std::fmt::Display for EngineError {
         match self {
             EngineError::Io(err) => write!(f, "I/O error: {err}"),
             EngineError::Json(err) => write!(f, "JSON error: {err}"),
-            EngineError::PhaseReference(msg) => write!(f, "{msg}"),
+            EngineError::SeriesCycle(msg) => write!(f, "{msg}"),
             EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
@@ -454,6 +455,125 @@ fn unresolved_names(warnings: &[String], declared: &BTreeSet<String>) -> Vec<Str
     seen.into_iter().collect()
 }
 
+/// One stream's series-read facts, extracted before any stream evaluates.
+struct StreamDeps {
+    /// Calls `series_sum`/`series_avg` anywhere in its amount or guard.
+    uses: bool,
+    /// At least one of those calls computes its series name at runtime.
+    computed: bool,
+    /// The literal read patterns, as written — globs included.
+    refs: Vec<String>,
+}
+
+/// Assign each stream the wave it evaluates in: 0 for streams that read no
+/// series, and one past the deepest stream it reads for everything else. The
+/// only rejections are the ones no order can satisfy — a circular read, and a
+/// read into a stream whose series names are computed at runtime.
+fn assign_waves(names: &[&str], deps: &[StreamDeps]) -> Result<Vec<usize>, EngineError> {
+    // Resolve each literal pattern to the streams it names, reader -> producers.
+    // Matched as SELECTORS, not exact names: `cre.unit.recoveries.*` as written
+    // must find `cre.unit.recoveries.suite_100` as lowered.
+    let mut edges: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); names.len()];
+    for (reader, dep) in deps.iter().enumerate() {
+        for pattern in &dep.refs {
+            for (producer, name) in names.iter().enumerate() {
+                if cfdl_expr::selector_matches(pattern, name) {
+                    edges[reader].insert(producer);
+                }
+            }
+        }
+    }
+
+    // A computed-name reader cannot be placed in the order (its edges are
+    // unknowable), so it evaluates after every literally-named stream — and
+    // nothing may read it, because such a read could never be ordered.
+    for (reader, edge_set) in edges.iter().enumerate() {
+        for &producer in edge_set {
+            if deps[producer].computed {
+                return Err(EngineError::SeriesCycle(format!(
+                    "Stream '{}' reads series '{}', which computes its series names at \
+                     runtime, so its place in the evaluation order cannot be determined. \
+                     A stream with computed series names always evaluates last and cannot \
+                     be read by another stream.",
+                    names[reader], names[producer]
+                )));
+            }
+        }
+    }
+
+    // Depth-first depth assignment. GRAY means "on the current chain", so
+    // reaching a GRAY stream closes a genuine cycle — the one thing that has
+    // no evaluation order. The engine refuses it rather than iterating toward
+    // a fixed point.
+    const WHITE: u8 = 0;
+    const GRAY: u8 = 1;
+    const BLACK: u8 = 2;
+    fn depth_of(
+        node: usize,
+        names: &[&str],
+        deps: &[StreamDeps],
+        edges: &[BTreeSet<usize>],
+        color: &mut [u8],
+        depth: &mut [usize],
+        chain: &mut Vec<usize>,
+    ) -> Result<usize, EngineError> {
+        if color[node] == BLACK {
+            return Ok(depth[node]);
+        }
+        if color[node] == GRAY {
+            let start = chain.iter().position(|&n| n == node).unwrap_or(0);
+            let mut path: Vec<&str> = chain[start..].iter().map(|&n| names[n]).collect();
+            path.push(names[node]);
+            return Err(EngineError::SeriesCycle(format!(
+                "cyclic series reads: {}. Each read needs the stream it names \
+                 finished first, so no evaluation order exists. CFDL refuses a \
+                 circular reference rather than iterating it; break the cycle by \
+                 removing one of the reads.",
+                path.iter()
+                    .map(|n| format!("'{n}'"))
+                    .collect::<Vec<_>>()
+                    .join(" -> ")
+            )));
+        }
+        color[node] = GRAY;
+        chain.push(node);
+        let mut deepest = 0usize;
+        for &producer in &edges[node] {
+            deepest = deepest.max(depth_of(
+                producer, names, deps, edges, color, depth, chain,
+            )?);
+        }
+        chain.pop();
+        color[node] = BLACK;
+        // A reader is never wave 0 even when its reads resolve to nothing: it
+        // still receives the sealed store, exactly as the old phase 2 did, so
+        // an unresolved read keeps aggregating to zero under W5022 instead of
+        // becoming a missing-context warning.
+        depth[node] = if deps[node].uses { deepest + 1 } else { 0 };
+        Ok(depth[node])
+    }
+
+    let mut color = vec![WHITE; names.len()];
+    let mut depth = vec![0usize; names.len()];
+    let mut chain: Vec<usize> = Vec::new();
+    let mut max_literal = 0usize;
+    for node in 0..names.len() {
+        if deps[node].computed {
+            continue;
+        }
+        let d = depth_of(
+            node, names, deps, &edges, &mut color, &mut depth, &mut chain,
+        )?;
+        max_literal = max_literal.max(d);
+    }
+    for node in 0..names.len() {
+        if deps[node].computed {
+            depth[node] = max_literal + 1;
+        }
+    }
+    Ok(depth)
+}
+
 fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
     // Cash horizon vs full evaluation window: the projection tail
     // (`time ... project <n>`) is computed so series_sum/series_avg can read
@@ -492,133 +612,102 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // valuation needs both, while reported cash uses model_series alone.
     let mut valued_streams: Vec<(Vec<f64>, f64)> = Vec::new();
 
-    // Phase 1: streams without series references. Their FULL (projection-
-    // inclusive) values feed the series store for phase 2.
-    let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
-    let mut phase2: Vec<&IrStream> = Vec::new();
+    // --- Streams: dependency-ordered waves ---------------------------------
+    //
+    // Wave 0 is every stream that reads no series. A reader's wave is one past
+    // the deepest stream it reads, so every wave evaluates against a store in
+    // which everything it references is already finished. The graph is the one
+    // the model states: `series_references` extracts each read as written and
+    // `selector_matches` resolves it to the streams it names — the same edges
+    // the old two-phase guard walked to REJECT any chain of depth two. Sorting
+    // them instead gives exactly acyclicity: a genuine circular read is the
+    // only rejection left, because a cycle has no evaluation order and the
+    // engine does not iterate to convergence (docs/14 §5 — no fixed-point
+    // solver). History that shaped this: the guard matched references as
+    // SELECTORS, not exact names, because `cre.exit_forward` reads
+    // `series_sum("cre.unit.recoveries.*", ...)` and an exact lookup of the
+    // pattern found nothing — measured on `mit_rentleg_plaza`, an exit price
+    // $116,440 lower with no diagnostic.
+    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
     for stream in &ir.streams {
-        // A STREAM IS PHASE 2 IF *ANY* OF ITS EXPRESSIONS READS A SERIES, not
-        // just its amount. `active when series_sum(...) > 0` on a stream whose
-        // amount happens not to use one was classified phase 1, handed an empty
-        // series map, and its guard then failed — warned, evaluated FALSE, and
-        // the stream silently produced nothing at all.
-        let uses = |src: &str| {
+        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
+        // amount. `active when series_sum(...) > 0` on a stream whose amount
+        // happens not to use one was once handed an empty series map, and its
+        // guard then failed — warned, evaluated FALSE, and the stream silently
+        // produced nothing at all. An expression that fails to compile
+        // contributes nothing here; `evaluate_stream` warns about it later.
+        let probe = |src: &str| -> (bool, bool) {
             cfdl_expr::compile_expr(src)
-                .map(|compiled| cfdl_expr::uses_series(&compiled))
-                .unwrap_or(false)
+                .map(|c| {
+                    (
+                        cfdl_expr::uses_series(&c),
+                        cfdl_expr::has_computed_series_name(&c),
+                    )
+                })
+                .unwrap_or((false, false))
         };
-        let phase2_stream = uses(&stream.amount.src)
-            || stream
-                .active_when
-                .as_ref()
-                .is_some_and(|guard| uses(&guard.src));
-        if phase2_stream {
-            phase2.push(stream);
-            continue;
-        }
-        let values = evaluate_stream(
-            ir,
-            config,
-            stream,
-            &timeline,
-            &base_inputs,
-            &event_sim,
-            &state_values,
-            None,
-            &mut warnings,
-        )?;
-        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
-        let offset = discount_offset(&stream.schedule, &ir.time.calendar);
-        stream_offsets.insert(stream.name.clone(), offset);
-        valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
-        record_stream(
-            stream,
-            &values,
-            cash_periods,
-            &mut model_series,
-            &mut stream_totals,
-            &mut stream_series,
-        );
-        full_series.insert(stream.name.clone(), values);
-    }
-
-    // A NAME THAT PRODUCES NOTHING READS AS ZERO, and said nothing at all until
-    // now. Same reasoning as the phase check below — a read that can never
-    // resolve reported a plausible number — with a softer verdict, because a
-    // literal name matching nothing is a pack idiom as well as a typo.
-    check_series_names(ir, &mut warnings);
-
-    // A PHASE-2 STREAM CANNOT READ ANOTHER PHASE-2 STREAM, and saying so is
-    // the difference between a wrong number and a diagnostic.
-    //
-    // `full_series` is sealed here and never grows, so a phase-2 stream naming
-    // another one matches nothing — and `series_aggregate` returns 0 for an
-    // unmatched name, deliberately, because a pack rule that lowered no stream
-    // should contribute nothing. That default is right for an absent stream and
-    // wrong for a present one: the reference can NEVER work, and it reported a
-    // plausible zero instead of saying so.
-    // Matched as a SELECTOR, not by exact name. `cre.exit_forward` reads
-    // `series_sum("cre.unit.recoveries.*", ...)`, and the stream it would hit is
-    // `cre.unit.recoveries.suite_100` — so an exact lookup of the pattern found
-    // nothing and the guard stayed silent while the read aggregated to zero.
-    //
-    // The packs use globs for every instanceable family, so the blind spot
-    // covered the cases the guard most needed to see. Measured on
-    // `mit_rentleg_plaza`: making recoveries phase-2 left the exit price
-    // $116,440 lower with no diagnostic, because forward NOI silently lost
-    // every recovery.
-    let phase2_names: BTreeSet<&str> = phase2.iter().map(|s| s.name.as_str()).collect();
-    for stream in &phase2 {
-        let mut sources = vec![stream.amount.src.as_str()];
+        let (mut uses, mut computed) = probe(&stream.amount.src);
+        let mut refs = cfdl_expr::series_references(&stream.amount.src);
         if let Some(guard) = &stream.active_when {
-            sources.push(guard.src.as_str());
+            let (guard_uses, guard_computed) = probe(&guard.src);
+            uses |= guard_uses;
+            computed |= guard_computed;
+            refs.extend(cfdl_expr::series_references(&guard.src));
         }
-        for src in sources {
-            for referenced in series_references(src) {
-                let hit = phase2_names.iter().find(|name| {
-                    cfdl_expr::selector_matches_any(std::slice::from_ref(&referenced), name)
-                });
-                if let Some(other) = hit {
-                    return Err(EngineError::PhaseReference(format!(
-                        "Stream '{}' reads series '{other}', which itself reads a series. A \
-                         cross-stream read can only see streams that read none, so this would \
-                         always aggregate to zero.",
-                        stream.name
-                    )));
-                }
-            }
-        }
+        deps.push(StreamDeps {
+            uses,
+            computed,
+            refs,
+        });
     }
+    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
+    let waves = assign_waves(&stream_names, &deps)?;
+    let max_wave = waves.iter().copied().max().unwrap_or(0);
 
-    // Wrapped once, not per accrual: every phase-2 env shares this one map.
-    let shared_series = Arc::new(full_series);
-
-    // Phase 2: streams calling series_sum/series_avg read phase-1 series
-    // (and only those — no phase-2 -> phase-2 references, so no cycles).
-    for stream in phase2 {
-        let values = evaluate_stream(
-            ir,
-            config,
-            stream,
-            &timeline,
-            &base_inputs,
-            &event_sim,
-            &state_values,
-            Some(&shared_series),
-            &mut warnings,
-        )?;
-        warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
-        let offset = discount_offset(&stream.schedule, &ir.time.calendar);
-        stream_offsets.insert(stream.name.clone(), offset);
-        valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
-        record_stream(
-            stream,
-            &values,
-            cash_periods,
-            &mut model_series,
-            &mut stream_totals,
-            &mut stream_series,
-        );
+    let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for wave in 0..=max_wave {
+        // Wave 0 reads nothing and gets no store, and every later wave gets a
+        // snapshot sealed when the wave before it finished — wrapped once per
+        // wave, not per accrual, so every env in the wave shares one map.
+        let snapshot = (wave > 0).then(|| Arc::new(full_series.clone()));
+        for (idx, stream) in ir.streams.iter().enumerate() {
+            if waves[idx] != wave {
+                continue;
+            }
+            let values = evaluate_stream(
+                ir,
+                config,
+                stream,
+                &timeline,
+                &base_inputs,
+                &event_sim,
+                &state_values,
+                snapshot.as_ref(),
+                &mut warnings,
+            )?;
+            warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
+            let offset = discount_offset(&stream.schedule, &ir.time.calendar);
+            stream_offsets.insert(stream.name.clone(), offset);
+            valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
+            record_stream(
+                stream,
+                &values,
+                cash_periods,
+                &mut model_series,
+                &mut stream_totals,
+                &mut stream_series,
+            );
+            // The FULL (projection-inclusive) values feed later waves.
+            full_series.insert(stream.name.clone(), values);
+        }
+        if wave == 0 {
+            // A NAME THAT PRODUCES NOTHING READS AS ZERO, and said nothing at
+            // all until now. Same reasoning as the cycle check — a read that
+            // can never resolve reported a plausible number — with a softer
+            // verdict, because a literal name matching nothing is a pack idiom
+            // as well as a typo.
+            check_series_names(ir, &mut warnings);
+        }
     }
 
     for (name, values) in &event_sim.option_cash {
@@ -1918,7 +2007,7 @@ mod tests {
 }
 
 #[cfg(test)]
-mod phase_reference_tests {
+mod series_wave_tests {
     use super::*;
 
     #[test]
@@ -1937,12 +2026,78 @@ mod phase_reference_tests {
         assert!(series_references("amount * 2").is_empty());
     }
 
-    /// A phase-2 stream reading another phase-2 stream can never resolve —
-    /// `full_series` is sealed before phase 2 runs and never grows — so it
-    /// would always aggregate to zero. That is a wrong number reported as a
-    /// plausible one, which is the failure this rejects.
+    fn dep(uses: bool, computed: bool, refs: &[&str]) -> StreamDeps {
+        StreamDeps {
+            uses,
+            computed,
+            refs: refs.iter().map(|r| r.to_string()).collect(),
+        }
+    }
+
     #[test]
-    fn phase2_reading_phase2_is_an_error_not_a_zero() {
+    fn waves_are_dependency_depth() {
+        // base -> mid -> top, plus a reader of nothing that still leaves wave 0.
+        let names = ["base", "mid", "orphan_reader", "top"];
+        let deps = vec![
+            dep(false, false, &[]),
+            dep(true, false, &["base"]),
+            dep(true, false, &["no.such.stream"]),
+            dep(true, false, &["mid"]),
+        ];
+        assert_eq!(assign_waves(&names, &deps).unwrap(), vec![0, 1, 1, 2]);
+    }
+
+    #[test]
+    fn glob_references_resolve_to_every_member_of_the_family() {
+        let names = ["fam.a", "fam.b", "reader"];
+        let deps = vec![
+            dep(false, false, &[]),
+            dep(true, false, &["fam.a"]),
+            dep(true, false, &["fam.*"]),
+        ];
+        // `fam.*` reaches fam.b, which reads fam.a — so the reader is wave 2.
+        assert_eq!(assign_waves(&names, &deps).unwrap(), vec![0, 1, 2]);
+    }
+
+    #[test]
+    fn a_self_read_is_a_cycle() {
+        let names = ["x"];
+        let deps = vec![dep(true, false, &["x"])];
+        let err = assign_waves(&names, &deps).unwrap_err();
+        match err {
+            EngineError::SeriesCycle(msg) => {
+                assert!(msg.contains("'x' -> 'x'"), "{msg}");
+            }
+            other => panic!("expected SeriesCycle, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_computed_name_reader_evaluates_last_and_cannot_be_read() {
+        let names = ["base", "literal_reader", "runtime_reader"];
+        let deps = vec![
+            dep(false, false, &[]),
+            dep(true, false, &["base"]),
+            dep(true, true, &[]),
+        ];
+        assert_eq!(assign_waves(&names, &deps).unwrap(), vec![0, 1, 2]);
+
+        let deps_with_read_into = vec![
+            dep(false, false, &[]),
+            dep(true, false, &["runtime_reader"]),
+            dep(true, true, &[]),
+        ];
+        let err = assign_waves(&names, &deps_with_read_into).unwrap_err();
+        match err {
+            EngineError::SeriesCycle(msg) => {
+                assert!(msg.contains("computes its series names at"), "{msg}");
+                assert!(msg.contains("runtime_reader"), "{msg}");
+            }
+            other => panic!("expected SeriesCycle, got {other:?}"),
+        }
+    }
+
+    fn chain_ir(b_reads: &str) -> Ir {
         let ir_json = serde_json::json!({
             "model": { "name": "m", "currency": "USD" },
             "time": { "calendar": "annual", "start": "2026-01-01", "periods": 3 },
@@ -1973,22 +2128,54 @@ mod phase_reference_tests {
                     "direction": "inflow",
                     "currency": "USD",
                     "amount": { "lang": "cfdl",
-                                "src": "series_sum(\"derived.a\", 0, time.t)" },
+                                "src": format!("series_sum(\"{b_reads}\", 0, time.t)") },
                     "schedule": { "kind": "Every", "every": "annual",
                                   "from": "2026-01-01", "to": "2028-01-01" }
                 }
             ]
         });
-        let ir: Ir = serde_json::from_value(ir_json).expect("ir parses");
+        serde_json::from_value(ir_json).expect("ir parses")
+    }
+
+    /// The chain the two-phase engine refused outright: a stream reading a
+    /// stream that itself reads one. Waves order it — and the numbers prove
+    /// `derived.b` saw `derived.a` FINISHED, not the empty store the sealed
+    /// design handed phase 2.
+    #[test]
+    fn a_depth_two_chain_evaluates_in_order() {
+        let ir = chain_ir("derived.a");
+        let out = run_deterministic(&ir, &RunConfig::default()).expect("chain evaluates");
+        // base = [100, 100, 100]; a = cumsum(base) = [100, 200, 300];
+        // b = cumsum(a) = [100, 300, 600]. b's total is 1000 only if a was
+        // complete when b evaluated.
+        let total = |name: &str| -> f64 {
+            out.series[name]
+                .values
+                .iter()
+                .filter_map(|v| v.money_amount())
+                .sum()
+        };
+        assert_eq!(total("stream.derived.a"), 600.0);
+        assert_eq!(total("stream.derived.b"), 1000.0);
+        assert!(out.warnings.is_empty(), "{:?}", out.warnings);
+    }
+
+    /// Two streams reading each other have no evaluation order at all — the
+    /// one rejection waves keep, named as the actual cycle.
+    #[test]
+    fn a_genuine_cycle_is_an_error_naming_the_path() {
+        let mut ir = chain_ir("derived.a");
+        // Rewire: derived.a reads derived.b, closing the loop.
+        ir.streams[1].amount.src = "series_sum(\"derived.b\", 0, time.t)".to_string();
         let err = run_deterministic(&ir, &RunConfig::default())
-            .expect_err("a read that can never resolve is an error");
+            .expect_err("a circular read has no order");
         match err {
-            EngineError::PhaseReference(msg) => {
-                assert!(msg.contains("derived.b"), "{msg}");
-                assert!(msg.contains("derived.a"), "{msg}");
-                assert!(msg.contains("always aggregate to zero"), "{msg}");
+            EngineError::SeriesCycle(msg) => {
+                assert!(msg.contains("cyclic series reads"), "{msg}");
+                assert!(msg.contains("'derived.a'"), "{msg}");
+                assert!(msg.contains("'derived.b'"), "{msg}");
             }
-            other => panic!("expected PhaseReference, got {other:?}"),
+            other => panic!("expected SeriesCycle, got {other:?}"),
         }
     }
 }
