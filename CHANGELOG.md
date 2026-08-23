@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): `energy.debt_service` lowers to the whole instrument
+
+Same decomposition as `cre.permanent_debt`, same reason: one netted stream,
+no draw. Now `energy.debt.proceeds{.<id>}` (financing.debt_proceeds,
+`funded_at_close` default 1), `.interest{.<id>}` and `.principal{.<id>}`.
+The legs sum to the level payment exactly and fold into
+`domain.energy.debt_service_periodic` unchanged, so DSCR holds to the digit.
+
+The five levered energy benchmarks state `funded_at_close = 0` with the reason
+in each model — their references net operations against debt service and never
+book the draw. Three expected.csv files asserted the netted stream by name;
+the column now asserts the positive-signed periodic subtotal instead — same
+magnitudes, per period, against the same sources; only the sign convention
+moved. All 40 benchmarks pass.
+
+
 ### Changed (breaking): `cre.permanent_debt` lowers to the whole instrument
 
 The most common CRE financing instrument lowered to ONE netted stream,

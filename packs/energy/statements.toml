@@ -53,8 +53,10 @@ formula = "sum(operating.*)"
 id = "domain.energy.debt_service_periodic"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.debt_service"]
-formula = "-sum(financing.debt_service)"
+# The interest and principal legs fold where the netted payment folded, so
+# coverage is unchanged by the decomposition.
+categories = ["financing.debt_service", "financing.interest", "financing.debt_principal"]
+formula = "-sum(financing.debt_service, financing.interest, financing.debt_principal)"
 
 # The covenant. Undefined once the debt matures, which is published as `null`
 # rather than as a zero — a period with no debt service has no coverage ratio,
@@ -123,6 +125,26 @@ categories = ["financing.debt_service"]
 display = "positive"
 
 [[statements.rows]]
+kind = "line"
+label = "Interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Principal amortization"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Loan proceeds"
+depth = 1
+categories = ["financing.debt_proceeds"]
+
+[[statements.rows]]
 kind = "ratio"
 label = "Debt service coverage"
 depth = 0
@@ -182,6 +204,26 @@ label = "Debt service"
 depth = 1
 categories = ["financing.debt_service"]
 display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Interest"
+depth = 1
+categories = ["financing.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Principal amortization"
+depth = 1
+categories = ["financing.debt_principal"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Loan proceeds"
+depth = 1
+categories = ["financing.debt_proceeds"]
 
 [[statements.rows]]
 kind = "ratio"

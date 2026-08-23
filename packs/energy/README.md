@@ -24,8 +24,10 @@ no hardcoded amounts.
   model's calendar unless a rule declares its own `schedule_every`.
 - Escalation and degradation step **annually**: `factor ^ floor(t / 12)`,
   matching common project-finance Excel practice.
-- `energy.debt_service` uses the engine's decimal-exact `pmt()` (Excel sign
-  conventions).
+- `energy.debt_service` lowers to the whole instrument — proceeds at closing
+  (`funded_at_close`, default 1), an interest leg (`ipmt`) and a principal leg
+  (`ppmt`), Excel sign conventions throughout. The legs sum to the level
+  payment exactly, and both fold into the coverage subtotal.
 
 > **Escalation here is NOMINAL.** `escalation` is one rate and it is applied
 > whole: `pow(1 + escalation, elapsed_years)`. Project-finance tools commonly
@@ -59,7 +61,7 @@ no hardcoded amounts.
 | `energy.om` | `om_year` | `escalation` (0) |
 | `energy.itc` | `credit` | — (fires on `term_start`) |
 | `energy.capex` | `amount` | — (fires on `term_start`) |
-| `energy.debt_service` | `rate`, `term_months`, `principal` | — |
+| `energy.debt_service` | `rate`, `term_months`, `principal` | `funded_at_close` (1) |
 | `energy.ptc` | `mwh_year`, `credit_per_mwh` | `escalation` (0), `degradation` (0), `availability` (1); term bounds the credit window |
 | `energy.macrs_shield` | `basis`, `tax_rate` | `life` (5; also 7/15/20) — IRS Pub 946 GDS half-year tables via `macrs_rate()` |
 

@@ -66,7 +66,7 @@ statement.
 | `energy.om` | `escalation`, `om_year` | `energy.om.expense[.suffix]` |
 | `energy.itc` | `credit` | `energy.itc.credit[.suffix]` |
 | `energy.capex` | `amount` | `energy.capex.outlay[.suffix]` |
-| `energy.debt_service` | `principal`, `rate` | `energy.debt.service[.suffix]` |
+| `energy.debt_service` | `funded_at_close`, `principal`, `rate` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
 | `energy.ptc` | `availability`, `credit_per_mwh`, `degradation`, `escalation`, `mwh_year`, `round_step` | `energy.ptc.credit[.suffix]` |
 | `energy.macrs_shield` | `basis`, `life`, `tax_rate` | `energy.macrs.shield[.suffix]` |
 

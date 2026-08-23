@@ -66,9 +66,11 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.debt_service"
+        "financing.debt_service",
+        "financing.interest",
+        "financing.debt_principal"
       ],
-      "formula": "-sum(financing.debt_service)"
+      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal)"
     },
     {
       "id": "domain.energy.dscr_periodic",
@@ -343,14 +345,14 @@
       }
     },
     {
-      "id": "7d1973737c5cacf8e375682d2a1afa7d",
-      "name": "energy.debt.service",
+      "id": "07b5846b8db088e4b2fbe57e86cbd501",
+      "name": "energy.debt.interest",
       "owner": {
         "symbol": "asset.microgrid"
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "financing.debt_service",
+      "category": "financing.interest",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -359,7 +361,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "-pmt(0.06 / 12.0, 240.0, 1600000.0)"
+        "src": "-ipmt(0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) + 1.0, 240.0, 1600000.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -378,7 +380,85 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_service"
+          "rule_id": "energy_debt_interest"
+        }
+      }
+    },
+    {
+      "id": "dd23c60699e0f52d58a3f2fbdccaf7ed",
+      "name": "energy.debt.principal",
+      "owner": {
+        "symbol": "asset.microgrid"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt_principal",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2045-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "-ppmt(0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) + 1.0, 240.0, 1600000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 57,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_debt_principal"
+        }
+      }
+    },
+    {
+      "id": "a514f9b2d6f568642e8966ba05299d3f",
+      "name": "energy.debt.proceeds",
+      "owner": {
+        "symbol": "asset.microgrid"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "financing.debt_proceeds",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1600000.0 * 1.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 57,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "energy",
+            "version": "0.1.0"
+          },
+          "rule_id": "energy_debt_proceeds"
         }
       }
     },
@@ -598,12 +678,31 @@
       }
     },
     {
-      "stream": "energy.debt.service",
+      "stream": "energy.debt.interest",
       "contract": "energy.debt_service",
       "terms": {
         "principal": "1600000",
         "rate": "0.06"
       }
+    },
+    {
+      "stream": "energy.debt.principal",
+      "contract": "energy.debt_service",
+      "terms": {
+        "principal": "1600000",
+        "rate": "0.06"
+      }
+    },
+    {
+      "stream": "energy.debt.proceeds",
+      "contract": "energy.debt_service",
+      "terms": {
+        "funded_at_close": "1",
+        "principal": "1600000"
+      },
+      "defaults_applied": [
+        "funded_at_close"
+      ]
     }
   ],
   "events": [],

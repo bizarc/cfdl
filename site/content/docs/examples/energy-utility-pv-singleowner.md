@@ -116,12 +116,17 @@ contract energy.om on entity asset.pv {
 }
 
 // 60% debt at 6% over 18 years, level annual payments.
+// funded_at_close = 0: the reference's cash flow starts post-financing —
+// it nets operations against debt service and never books the draw — so the
+// proceeds the contract funds by default are excluded to state what the
+// source states.
 contract energy.debt_service on entity asset.pv {
   term 2026-01..2043-01
   terms {
     rate = 0.06
     term_months = 216
     principal = 60000000
+    funded_at_close = 0
   }
 }
 
@@ -161,7 +166,7 @@ Checked period by period: **6 series** across **13 periods** — **59 values** i
 
 - `energy.ppa.revenue`
 - `energy.om.expense`
-- `energy.debt.service`
+- `domain.energy.debt_service_periodic`
 - `energy.macrs.shield`
 - `energy.itc.credit`
 - `energy.capex.outlay`

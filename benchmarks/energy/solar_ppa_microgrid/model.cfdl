@@ -47,11 +47,16 @@ contract energy.om on entity asset.microgrid {
   }
 }
 
+// funded_at_close = 0: the reference's cash flow starts post-financing —
+// it nets operations against debt service and never books the draw — so the
+// proceeds the contract funds by default are excluded to state what the
+// source states.
 contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
   terms {
     rate = 0.06
     term_months = 240
     principal = 1600000
+    funded_at_close = 0
   }
 }
