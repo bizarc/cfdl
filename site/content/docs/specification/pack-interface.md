@@ -297,6 +297,61 @@ inherits the model's declared currency, which is what keeps a pack usable
 outside the United States. Set it only when the instrument is genuinely fixed
 to one currency, and the model must then agree (`E2107`).
 
+### Contract design: decomposition and terms
+
+A contract is a helper: the modeller follows its shape and provides the terms,
+and the streams emerge. These rules are what make that shape trustworthy. Each
+exists because its violation shipped and cost something.
+
+**One stream per economically distinct line.** A contract MUST lower to one
+stream per line an operating or financing statement would show — interest and
+principal separately, gross proceeds and selling costs separately. Netting is
+presentation, and belongs to statements; lowering is data. A netted line
+cannot be un-netted downstream, so every consumer of the split — a tax line, a
+coverage ratio, an amortization schedule — is foreclosed at the rule. The
+worst form is cash the model never sees at all: a mortgage rule that emits
+debt service but not the loan proceeds funds nothing, and the model's levered
+return is wrong even while the net line reconciles.
+
+**Two shapes, chosen by the domain.** An *instrument* lowers one contract into
+its components — a loan pool into interest, principal, prepayments,
+recoveries, servicing; a lease into rent, abatement, recoveries, TI/LC. A
+*line item* is one instanced contract per statement line — an operating
+expense schedule — with the vocabulary carried by the instance name
+(`cre.opex_line.property_tax`), never by an enum term restating it.
+
+**Grain by instancing; level by entity.** The modeller chooses grain by how
+many instances they declare, and level by the entity each contract hangs on —
+`part_of` rolls it up. A rule MUST NOT take a `level` or `scope` term: that
+restates the entity tree in a place that can disagree with it.
+
+**Terms carry the agreement; rules carry the instrument.** A term may hold an
+expression, so a pack SHOULD NOT pre-bake value shapes the modeller can state
+directly — an escalator is `escalation = curve_value("cpi", time.date) + 0.005`,
+not a `rate`/`curve` twin-term pair with a selector spliced into the rule.
+What belongs in the rule is the instrument's own mechanics: amortization
+arithmetic, the split of a payment into interest and principal, the schedule.
+What belongs in the term is what the parties agreed.
+
+**Categories are the semantics; names are addresses.** Every stream a rule
+emits MUST carry a category, and aggregation reads the category — which is why
+decomposition never moves a total: the components fold where the netted line
+folded. A statement itemises by selecting streams; a subtotal folds by
+category; both stay correct as the grain changes.
+
+**Every read of an instanceable family is globbed.** A rule whose stream name
+carries `{{contract.dot_suffix}}` emits per instance, and any `series_sum`,
+metric selector, or statement row reading that family MUST use `<base>.*` —
+a bare name matches only the unsuffixed instance and silently drops every
+sibling. `tools/check-pack-series.py` gates this; `# series-allow:` marks the
+rare deliberate bare read.
+
+**The conventional vocabulary ships as templates.** `templates.toml` carries
+the standard set — the nine expense lines a statement usually shows, with
+sensible defaults — as editor snippets. The modeller starts from the
+convention and is free to name their own instance; anything unclaimed lands on
+the statement's residual row rather than vanishing.
+
 ### Schedule interval
 
 Omit `schedule_every` and a recurring rule pays at the model's calendar
