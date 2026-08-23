@@ -59,12 +59,6 @@ assume downtime_years  = 0.50       // 6 months vacancy if the tenant leaves
 assume abatement_months = 5         // 1 month free per year of a 5-year term
 
 
-// Suite 100's replacement lease resets its stop to actual 2004 opex/SF
-// (MIT fn 5). Opex per SF is closed-form in t, so the 2004 value is stated
-// here as a constant. The engine has no way to read another period's phase-1
-// value, so the opex formula is necessarily duplicated — see NOTES.md.
-assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
-
 
 // ---------------------------------------------------------------------------
 // Potential gross revenue — rent roll
@@ -138,12 +132,10 @@ curve occupancy step {
 // 81% is fixed and 19% varies directly with occupancy. That split is why 2001
 // opex is $135,161 and not $144,300: a suite is dark, and only the variable
 // share falls with it.
-assume opex_year_full = 144300      // 4.81 * 30000
-
 contract cre.opex_line {
   term 2001-01..2006-01
   terms {
-    amount_year = inputs.opex_year_full
+    amount_year = inputs.opex_psf_full * inputs.building_sf
     escalation = inputs.opex_growth
     pct_fixed = inputs.opex_pct_fixed
     occupancy = curve_value("occupancy", time.date)
@@ -160,7 +152,10 @@ contract cre.opex_line {
 // ---------------------------------------------------------------------------
 
 // MIT fn 4 (2001-03, $4.00 stop) and fn 5 (2005-06, stop reset to actual
-// 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
+// 2004 opex/SF, which makes the 2004 reimbursement exactly zero). The reset
+// stop is restated from the INPUTS — base, trend, fixed share, 2004
+// occupancy of 5/6 — so a changed assumption propagates instead of going
+// stale in a hand-computed constant.
 stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
   schedule every year from 2001-01 to 2006-01
   category operating.revenue.recovery
@@ -172,7 +167,10 @@ stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD
                     + (1 - inputs.opex_pct_fixed)
                       * if(time.t == 0, 2.0 / 3.0, if(time.t == 3, 5.0 / 6.0, 1.0)))
                ) / inputs.building_sf
-               - if(time.t <= 2, inputs.suite_100_stop_psf, inputs.opex_psf_2004))
+               - if(time.t <= 2, inputs.suite_100_stop_psf,
+                    inputs.opex_psf_full * pow(1 + inputs.opex_growth, 3)
+                      * (inputs.opex_pct_fixed
+                         + (5.0 / 6.0) * (1 - inputs.opex_pct_fixed))))
 }
 
 // MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.

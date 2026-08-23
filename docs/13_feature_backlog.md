@@ -55,14 +55,12 @@ settled value without the reader becoming un-readable itself — the same
 constraint that blocks occupancy derived from the rent roll and a
 percentage-of-EGI management fee. Three ordinary CRE requirements, one cause.
 
-*(This item used to say "depends on 5.1". That dependency SHIPPED — 5.1 is
-rule-declared state, and closed items are removed from this file. So the next
-step is to establish whether a latched field closes this outright: state opex
-per SF once as a field, latch its 2004 value into a second field, and have both
-the opex stream and the recoveries stream read them. Fields stay phase-1, so the
-`cre.exit_forward` collision above would not arise. That is the shape
-`docs/26_lessons_learned.md` already records for a balance drawn down by a
-payment, and nobody has tried it here.)*
+*(Update: the STALENESS half is closed. The 2004 stop is now restated from the
+inputs — base, trend, fixed share, 2004 occupancy — so a changed assumption
+propagates; only the formula's SHAPE is written twice, commented as such. What
+would close the item outright is a same-period cross-stream read, which is the
+dependency-ordering work: the stop is "actual 2004 opex per SF", and reading
+the opex stream directly collides with the exit's forward-NOI window today.)*
 
 ### 1.6 Vacancy cannot track a growing rent roll
 
@@ -1903,3 +1901,37 @@ the ~520 declarations; carry `type` and `instance` separately on the IR contract
 then retire the string surgery. Large, and it closes more than it costs.
 
 ---
+
+---
+
+### 7.65 An assumption cannot reference another assumption, and trying fails at run
+
+*Belongs with the language and engine (section 5). Found during the adoption
+pass.*
+
+`assume b = inputs.a * 2` compiles — the parser and compiler accept it, and the
+expression lowers intact — and then fails at run:
+
+```
+Assumption 'b' failed to evaluate [EXPR_EVAL]: unknown variable `inputs.a`; ignoring.
+```
+
+Assumptions are evaluated without dependency ordering, so one reading another
+finds nothing. Worse than the missing capability is the failure mode: the
+assumption is "ignored", every read of `inputs.b` degrades to a warned zero,
+and the run reports ok — the silent-zero family again, and docs/03's "unknown
+variables are hard errors" rule already says this should refuse.
+
+Two halves:
+
+1. **Reject or resolve at compile time.** Either an assume may not reference
+   `inputs.*` (diagnose it, as terms diagnose E5010) or assumes get dependency
+   ordering with cycle rejection — the same topological question as
+   cross-stream reads, one layer up. Resolving is the useful half: a derived
+   assumption ("net rentable = gross × efficiency") is ordinary modeling.
+2. Whatever is chosen, the current compile-then-die path must close.
+
+Provenance: a benchmark rewrite tried `assume opex_psf_2004 = inputs.opex_psf_full
+* …` to kill parameter staleness; compile passed, the run warned per period,
+and the reconciliation caught it. Inlining the expression into the reading
+stream was the workaround.

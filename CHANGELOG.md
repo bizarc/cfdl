@@ -8,6 +8,30 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: the teaching and examples adopt expression terms
+
+The adoption pass over learn, training and the examples — pack-using models
+only; hand-written core models are untouched:
+
+- The learn quick reference and chapters 6 and 19 teach the capability: a
+  signed formula ("CPI plus 50 basis points") is stated in the term, and the
+  hand-written boundary moves to STRUCTURE the contract does not have.
+- `examples/opco_with_growth` showcases it: the growth plan is a step curve
+  read by the term — `growth_rate = curve_value("growth_plan", time.date)` —
+  5% through the ramp, 3% mature.
+- `mit_rentleg_plaza` states its opex agreement in the term
+  (`amount_year = inputs.opex_psf_full * inputs.building_sf`) and restates the
+  2004 expense stop FROM THE INPUTS, killing the parameter staleness backlog
+  1.2 records. Reconciliation to MIT 11.431J holds at the same tolerance.
+
+### Found: an assumption cannot reference another assumption (backlog 7.65)
+
+`assume b = inputs.a * 2` compiles and then fails at run — assumptions have no
+dependency ordering, the assumption is "ignored", and every read degrades to a
+warned zero with the run reporting ok. Found because a benchmark rewrite tried
+it and the reconciliation caught the zeros.
+
+
 ### Removed (breaking): the curve-selector twin terms
 
 `escalation_curve`/`occupancy_curve` (cre.opex_line), `growth_curve`
