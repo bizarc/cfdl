@@ -156,9 +156,9 @@ contract cre.exit_forward on entity asset.tower {
 // the sale, not as debt service, and folding it into the final period would
 // make that period's DSCR meaningless.
 // `funded_at_close = 0`: the reference model's cash flow starts
-// post-financing — reference_gen.py nets rents against debt service and never
-// books the draw — so the proceeds the contract funds by default are excluded
-// here to state what the source states.
+// post-financing — it nets rents against debt service and never books the
+// draw — so the proceeds the contract funds by default are excluded here to
+// state what the source states.
 contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2035-12
   terms {
