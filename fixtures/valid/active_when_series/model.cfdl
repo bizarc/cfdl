@@ -9,8 +9,8 @@ stream base.revenue on entity asset.co inflow currency USD {
   amount = 100
 }
 
-// The amount uses no series; the GUARD does. Classified phase-1 before this
-// fix, so the guard failed and the stream produced nothing at all.
+// The amount uses no series; the GUARD does. Guards participate in wave
+// classification too — once they did not, and the stream silently produced nothing.
 stream bonus.fee on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   active when series_sum("base.revenue", 0, time.t) > 150

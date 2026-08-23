@@ -8,8 +8,9 @@ predate entity-owned fields, so read its `state.<name>` spellings as
 
 A waterfall is an author-declared priority over a pot of cash. Each step takes
 what it is owed, up to what is left, and the remainder passes down. It is not a
-dependency graph to be solved, which is why it needs no cycle detection and does
-not relax any stream reference rule — the boundary `docs/14` §5 settled.
+dependency graph to be solved, which is why it needs no cycle detection of its
+own — the stream layer's wave ordering carries that — and it stays outside the
+stream graph entirely: the boundary `docs/14` §5 settled.
 
 This is the gate on roughly two thirds of the pack roadmap: securitization
 tranches, private-fund carry, CMBS, RMBS, and the LBO exit waterfall that
@@ -452,6 +453,7 @@ to remember.
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | a step says nothing about what it pays |
 | `E1340_WATERFALL_NO_SOURCE` | no `from` — no pot to allocate |
 | `E1342_WATERFALL_SERIES_NOT_VISIBLE` | `series_sum`/`series_avg` names a step of this waterfall or of a later one. Steps publish when their waterfall finishes, so the read aggregates to zero and says nothing — the same failure `E1341` catches for `paid.`, one spelling over |
+| `E1346_STREAM_READS_WATERFALL_STEP` | a STREAM's `series_sum`/`series_avg` names a waterfall step. Every waterfall runs after every stream, so the read could only ever aggregate to zero — a step's series is visible to a later waterfall's `from` and to nothing else |
 
 ### The 22-step fixture
 

@@ -1,0 +1,163 @@
+{
+  "results_version": "0.3",
+  "model_hash": "f198e94db2e4a4778a8f822355772678f99132ef19102a39e09a34749d744686",
+  "ledger_hash": "4051d2da7e94fc3a9192b2517b68ddbbde3eacfe6ab60eedd78dbf1eae126dea",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.co.total": {
+        "amount": 1900.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1519.909842,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1900.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.368421,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.base.revenue.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.mid.cumulative.total": {
+        "amount": 600.0,
+        "currency": "USD"
+      },
+      "stream.top.cumulative.total": {
+        "amount": 1000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.co.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 600.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 600.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.base.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.mid.cumulative": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.top.cumulative": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 600.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

@@ -14,9 +14,10 @@
 #   - `amount` and `da_monthly` are PER-PERIOD by definition, on whatever grid
 #     the model declares; `da_year` is the annual sibling of the latter.
 #   - Cross-stream contracts (working-capital policy, %-of-revenue capex,
-#     cash taxes, EBITDA exit) reference phase-1 streams via series_sum and
-#     evaluate in phase 2. Outflow streams appear SIGNED NEGATIVE in series,
-#     so sums over mixed streams net correctly.
+#     cash taxes, EBITDA exit) reference base streams via series_sum and
+#     evaluate in a later wave, after everything they read is finished.
+#     Outflow streams appear SIGNED NEGATIVE in series, so sums over mixed
+#     streams net correctly.
 #   - Cash sweeps and revolver draws need per-period persistent state and
 #     require a planned engine allocation pass; term debt here is
 #     scheduled (IO period + level-pay amortization + balloon at maturity).
@@ -142,7 +143,7 @@ schedule_to = ""
 # WC(t) = annualized revenue * ar_days/365
 #       + annualized opex * inv_days/365   (inventory carried on cost base)
 #       - annualized opex * ap_days/365    (payables funded by suppliers)
-# Annualized run rates are 12x the current month's phase-1 streams (opex is
+# Annualized run rates are 12x the current month's base streams (opex is
 # signed negative in series, hence the sign flip below). The stream books
 # the FULL initial WC in the first period, the period-over-period change
 # afterwards, and (optionally) releases the ending balance in the final
@@ -250,7 +251,7 @@ io_months = "0"
 # ---------------------------------------------------------------------------
 # opco.cash_taxes — cash taxes on (EBITDA - D&A - interest), floored at 0
 # per period (no NOL carryforwards; needs H3 state). Revenue/opex/interest
-# come from phase-1 streams (opex and interest are signed negative); D&A is
+# come from base streams (opex and interest are signed negative); D&A is
 # a declared deduction schedule, not a cash stream.
 # ---------------------------------------------------------------------------
 

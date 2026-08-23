@@ -1,12 +1,12 @@
 ---
 title: "Under the hood"
-description: "Deep dive: the compilation pipeline stage by stage, the IR as the model's contract, deterministic evaluation order, and why series reads run in two passes."
+description: "Deep dive: the compilation pipeline stage by stage, the IR as the model's contract, deterministic evaluation order, and how series reads evaluate in dependency-ordered waves."
 part: 2
 order: 14
 track: deep
 ---
 
-The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold — why a compiled model cannot dangle a reference, why runs are byte-reproducible, why a second-pass stream cannot read another. The machinery is not incidental to the language's promises: each promise is a property of a specific stage, and knowing which stage answers which question makes you faster at diagnosing anything.
+The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold — why a compiled model cannot dangle a reference, why runs are byte-reproducible, why a circular series read is refused with its path named. The machinery is not incidental to the language's promises: each promise is a property of a specific stage, and knowing which stage answers which question makes you faster at diagnosing anything.
 
 ## The pipeline, stage by stage
 
@@ -39,20 +39,20 @@ The engine's period loop runs in a fixed order — **rules, then events, then st
 
 Reproducibility falls out of two further choices you have already met. Arithmetic is decimal with defined rounding — no platform float quirks — and every random draw comes from a counter-based generator keyed by `(seed, assumption, trial)`. That keying is why each assumption owns an independent draw stream and why adding one assumption reshuffles nothing else: there is no shared random state anywhere to perturb. Determinism is not a test the engine passes; it is the absence of any mechanism for nondeterminism.
 
-## The two-pass rule for series reads
+## Waves: the order series reads impose
 
-Chapter 9 promised the story behind `series_sum`'s restriction. Here it is, in one breath.
+Chapter 9 promised the story behind `series_sum`'s evaluation order. Here it is, in one breath.
 
-Within a period, streams whose amounts touch no other stream's series are **phase one**: they evaluate first, in no particular order, because nothing they read can depend on their peers. Streams (and guards) that *do* read series — a fee on collections, a kicker on revenue — are **phase two**: they run after phase one has committed, so a series read inside the current period sees finished numbers.
+Every stream's reads are visible in its source — `series_sum("collections", ...)` names what it depends on — so the engine reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0: they evaluate first, in no particular order, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything it names is already **finished** — a series read never sees a half-computed number, because the ordering guarantees the whole series it reads was committed a wave earlier.
 
-The restriction follows immediately: **a phase-two stream cannot read another phase-two stream.** Allowing it would need an ordering *among* the readers — fee reads kicker reads fee — which is the circularity the language refuses everywhere else, one level up. When you hit this wall (a fee on a fee — rare in practice), the fix is the same staging discipline as chapter 8's: read the base quantity both fees share, or make the first fee's economics a rule field the second can read at close. The wall is not a limitation of the implementation; it is the two-pass structure *being visible*, and models that respect it — fees read bases, bases read no one — are models whose evaluation you can narrate.
+One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. Fee reads kicker, kicker reads fee — there is no wave either can go in, and the engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterating toward a fixed point, which is the same circularity the language refuses everywhere else. A cycle in a model is almost always a modeling error; when the economics genuinely loop (a fee on distributions that themselves net the fee), the fix is chapter 8's staging discipline — read the base quantity, or carry one side as a field that advances at period close. The wall is no longer "readers cannot read readers"; it is exactly the wall a spreadsheet gives you, and models that respect it are models whose evaluation you can narrate, wave by wave.
 
 ## Reading this back onto the promises
 
-Every guarantee the course has leaned on now has an address. *Nothing dangles* — resolution. *Nothing silently discarded* — parsing refuses what it cannot represent. *What compiles, runs* — validation and lowering exhaust the structural checks before the engine starts. *Same inputs, same bytes* — decimal arithmetic, keyed draws, ordered evaluation. *Cycles unwritable* — the stage order, twice: rules-before-streams across constructs, two passes within streams. None of these is a slogan; each is a stage doing one job. That is what a small language buys: the machinery is short enough to actually know.
+Every guarantee the course has leaned on now has an address. *Nothing dangles* — resolution. *Nothing silently discarded* — parsing refuses what it cannot represent. *What compiles, runs* — validation and lowering exhaust the structural checks before the engine starts. *Same inputs, same bytes* — decimal arithmetic, keyed draws, ordered evaluation. *Cycles refused* — rules-before-streams across constructs, and the wave sort within streams, which rejects a genuine loop with its path named. None of these is a slogan; each is a stage doing one job. That is what a small language buys: the machinery is short enough to actually know.
 
 ## On your own
 
 1. Compile any model from this course with the command-line tool and read the IR it emits, end to end, once. Find your schedule as enumerated dates and your contract-free streams as they will be computed. Twenty minutes, and the word "compile" stops being abstract.
 2. Reorganize a multi-file model (move a stream between files) and diff the two IRs. Then change one assumption and diff again. The first diff's emptiness and the second's precision are the semantic-diff property, seen with your own eyes.
-3. Predict which phase each stream of your chapter-9 venue model runs in, then explain to a colleague why the percentage-rent kicker cannot ever race the revenue it reads. If you can narrate that, you own this chapter.
+3. Predict which wave each stream of your chapter-9 venue model evaluates in, then explain to a colleague why the percentage-rent kicker cannot ever race the revenue it reads. If you can narrate that, you own this chapter.

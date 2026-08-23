@@ -41,7 +41,7 @@ Structure: **5 parts, ~24 chapters + 2 appendices.** Each chapter = concept → 
 11. **Waterfalls.** `from pot pay step to payee`, `remaining`/`paid`/`owed`, chaining waterfalls; ordinary distribution structures expressed declaratively.
 12. **Uncertainty and Monte Carlo.** `assume ~ Dist`, the four distributions and when each fits, `run monte_carlo`, per-assumption draw streams and reproducibility, reading p01–p99, per-trial branching idiom for bimodal outcomes; run-config override precedence.
 13. **Multi-file models and style.** Import structure, naming conventions, a style guide for reviewable models.
-14. ⚙ **Under the hood.** Lexer→parser→resolver→validate→lower→IR→engine; deterministic IDs, provenance, canonical hashing; two-phase `series_sum` evaluation and its restriction.
+14. ⚙ **Under the hood.** Lexer→parser→resolver→validate→lower→IR→engine; deterministic IDs, provenance, canonical hashing; dependency-ordered `series_sum` waves and the cycle refusal.
 15. ⚙ **Diagnostics as a debugging discipline.** The code taxonomy, reading spans/hints, a tour of the invalid-fixture curriculum; "nothing is silently discarded."
 
 ### Part III — Modeling judgment (the MBA heart)

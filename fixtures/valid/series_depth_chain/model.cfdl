@@ -1,0 +1,33 @@
+version 0.1
+model "series-depth-chain"
+time calendar annual from 2026-01 for 3
+
+// A CHAIN OF SERIES READS, TWO DEEP — the shape the two-phase engine refused
+// outright and dependency-ordered waves evaluate. `mid` reads `base`, and
+// `top` reads `mid`: three waves, each stream evaluating against a store in
+// which everything it names is already finished.
+//
+// The arithmetic is chosen to prove the ordering, not just permit it.
+//   base = 100 each period            -> [100, 100, 100], total 300
+//   mid  = running total of base      -> [100, 200, 300], total 600
+//   top  = running total of mid       -> [100, 300, 600], total 1000
+// `top` reaches 1000 only if `mid` was COMPLETE when `top` evaluated. The old
+// engine's sealed store would have handed `top` nothing — which is exactly why
+// it refused the chain rather than report a plausible zero.
+
+entity asset co : Asset.Financial
+
+stream base.revenue on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+stream mid.cumulative on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = series_sum("base.revenue", 0, time.t)
+}
+
+stream top.cumulative on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = series_sum("mid.cumulative", 0, time.t)
+}

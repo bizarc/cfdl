@@ -62,6 +62,14 @@ would close the item outright is a same-period cross-stream read, which is the
 dependency-ordering work: the stop is "actual 2004 opex per SF", and reading
 the opex stream directly collides with the exit's forward-NOI window today.)*
 
+*(Update 2: the ORDERING is shipped — streams evaluate in dependency-ordered
+waves, so recoveries may read the opex stream and `cre.exit_forward` reads the
+recoveries a wave later. Verified on this benchmark: the direct
+`series_sum("cre.opex.line", time.t, time.t)` read reproduces every recovery
+to the cent and the net exit price returns 3,051,540.54 — the measured
+$116,440 collision, resolved. What remains is the MIGRATION: rewrite the
+benchmark's two recovery streams onto the direct read, its own PR.)*
+
 ### 1.6 Vacancy cannot track a growing rent roll
 
 `cre.vacancy_loss` takes a constant `potential_gross_year` and multiplies it by
@@ -73,9 +81,14 @@ Found the same way. In that deal vacancy also has to step 46% at the
 affordability cliff, which no constant can do.
 
 Shape: the rule needs to read another stream. Either the term accepts a stream
-reference, or vacancy becomes a phase-2 rule reading the rent families through
-`series_sum` — which is the collision 1.2 measures, since `cre.exit_forward`
-already reads those families.
+reference, or vacancy becomes a rule reading the rent families through
+`series_sum` — which used to be the collision 1.2 measures, since
+`cre.exit_forward` already reads those families.
+
+*(Update: the collision is gone — dependency-ordered waves let vacancy read
+the rent families and the exit read vacancy a wave later. What remains is the
+pack design: which term accepts the reference, and what the lowered rule
+reads. Same follow-up family as 1.2's migration.)*
 
 ### 1.7 A rent restriction that expires
 
@@ -1336,7 +1349,7 @@ Crates remain open as the second step if the boundaries earn it.
 
 1. timeline
 2. fields and events — mutually dependent, so one module
-3. streams, in their two phases
+3. streams, in dependency-ordered waves
 4. results — the netted cash, the rollups, the metrics
 5. distributions — waterfalls, which consume a result and emit payee amounts
 

@@ -218,9 +218,17 @@ pub fn compile_expr(src: &str) -> Result<CompiledExpr, ExprError> {
 }
 
 /// Does this expression call `series_sum` / `series_avg`? The engine uses
-/// this to schedule the stream into the second evaluation phase.
+/// this to decide whether the stream reads other streams at all.
 pub fn uses_series(compiled: &CompiledExpr) -> bool {
     cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
+}
+
+/// Does any series call compute its name at runtime instead of naming it as a
+/// literal? `series_references` cannot extract an edge for such a read, so the
+/// engine schedules the stream after every literally-named one — and refuses
+/// to let anything read it, since its own position cannot be reasoned about.
+pub fn has_computed_series_name(compiled: &CompiledExpr) -> bool {
+    cfdl_calc::has_computed_call_name(&compiled.expr, &["series_sum", "series_avg"])
 }
 
 /// The series names an expression reads, as written.
@@ -606,6 +614,31 @@ mod tests {
         assert!(selector_matches_any(&patterns, "cre.opex.line.taxes"));
         assert!(!selector_matches_any(&patterns, "cre.vacancy.loss"));
         assert!(!selector_matches_any(&[], "cre.opex.line"));
+    }
+
+    #[test]
+    fn literal_series_names_are_not_computed() {
+        let c = compile_expr(r#"series_sum("a.b", 0, time.t) + series_avg("c.*", 0, 3)"#)
+            .expect("compile");
+        assert!(uses_series(&c));
+        assert!(!has_computed_series_name(&c));
+    }
+
+    #[test]
+    fn a_variable_series_name_is_computed() {
+        let c = compile_expr("series_sum(inputs.which, 0, time.t)").expect("compile");
+        assert!(uses_series(&c));
+        assert!(has_computed_series_name(&c));
+    }
+
+    #[test]
+    fn one_computed_name_among_literals_still_counts() {
+        let c =
+            compile_expr(r#"series_sum("a.b", 0, 1) + series_sum(pick, 0, 1)"#).expect("compile");
+        assert!(has_computed_series_name(&c));
+        // A series call nested inside another call's arguments is still found.
+        let nested = compile_expr("max(0, series_avg(pick, 0, 1))").expect("compile");
+        assert!(has_computed_series_name(&nested));
     }
 
     #[test]

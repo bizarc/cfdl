@@ -132,9 +132,9 @@ It does **not** contain any stream value at period `t`, and it does not contain
 any state's value at `t`.
 
 This is not a check that can fail. Same-period values are **absent from the
-environment**, exactly as `series` is absent today when a phase-1 stream is
-evaluated (`evaluate_stream` receives `None`; phase-2 receives
-`Some(&full_series)`). The mechanism already exists and is already load-bearing.
+environment**, exactly as `series` is absent today when a wave-0 stream is
+evaluated (`evaluate_stream` receives `None`; later waves receive a snapshot of
+the finished store). The mechanism already exists and is already load-bearing.
 
 Because every edge a state can create points strictly backward in time, **no
 cycle can close.** The guarantee survives, and survives for a better reason than
@@ -164,7 +164,7 @@ place:
 Enforced by absence, as everything else here is. `next` gets a `prev` map and no
 `state` map; a stream gets a `state` map and no `prev` map. Neither is a check
 that can fail — the entry is not there to be found. Same mechanism as `series`
-being `None` when a phase-1 stream evaluates.
+being `None` when a wave-0 stream evaluates.
 
 Implementation cost is nil: another `BTreeMap` in `ExprEnv`, resolved by the
 existing `lookup(path)`, exactly like `inputs.<name>` and `time.<field>`.
@@ -201,7 +201,7 @@ needed at all** — a state sees only the completed `t-1` column, so declaration
 order is irrelevant and mutual reference between states is well-founded.
 
 The projection tail is included: states run to `periods + projection`, so a
-phase-2 stream reading forward finds them populated.
+stream reading forward finds them populated.
 
 ### 3.3 Why the seed is syntax, not a term
 
@@ -248,7 +248,10 @@ cash remains *after this period's* debt service. That is an instantaneous
 dependency; no backward-only construct reaches it. It stays 5.2, and the right
 shape there is an **ordered allocation pass** — a waterfall is an author-declared
 priority over a pot, not a dependency graph to be solved, so it needs no cycle
-detection either.
+detection of its own. (The stream layer, which IS a dependency graph since it
+evaluates in dependency-ordered waves, detects and rejects cycles; a waterfall
+never joins that graph because nothing it does is visible to a same-period
+stream.)
 
 **Genuine fixed points.** Eleven catalogued sources mention "solve" or
 "circular"; at least one (A.CRE's mezzanine capital stack) is explicitly
@@ -263,7 +266,7 @@ never a silent checkbox.
 | | |
 |---|---|
 | **Language surface** | New: `state` declaration, `init`/`next` clauses, `prev` binding, `state.<name>` path. Larger than a builtin. |
-| **Engine** | Interleaved period loop. Bounded — no dependency ordering among streams, which keeps the existing phase split intact. |
+| **Engine** | Interleaved period loop. Bounded — states need no ordering among themselves, and stream waves are untouched. |
 | **IR / results** | States need representing in the IR and probably reporting in `results.series`. Both are versioned contracts with gates (`check-ir-schema`, `check-results-schema`), so the change is visible and tested. |
 | **Performance** | O(n), against O(n²) for the fold. The existing `env.series = series.clone()` per accrual is already the hot spot and should move to a borrowed view as part of this. |
 | **Monte Carlo** | States recompute per trial. A recurrence propagates a per-period error forward rather than keeping it local — worth a note in the docs. |

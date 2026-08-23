@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1346_STREAM_READS_WATERFALL_STEP",
+    "severity": "error",
+    "message": "Stream 'fund.fee_on_distributions' reads series 'fund.distribution.residual', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after every stream — so this read could only ever aggregate to zero.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 32,
+      "start_col": 3,
+      "end_line": 32,
+      "end_col": 69
+    },
+    "path": null,
+    "hint": "A step's series is visible to a later waterfall's `from` and to nothing else. Model the quantity the step pays as a stream or a field if a stream needs to read it.",
+    "notes": []
+  }
+]

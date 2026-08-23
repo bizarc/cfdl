@@ -114,7 +114,7 @@ Scopes: `time.t` (period index from 0), `time.date`, `time.phase` · `inputs.*` 
 | Conditional | `if(cond, then, else)` |
 | Dates | `date` `edate` `eomonth` `days_between` `months_between` `year_frac` `is_business_day` `add_business_days` `roll` |
 | TVM | `pv` `fv` `pmt(rate, nper, pv)` `ipmt` `ppmt` `nper` `rate` |
-| Series | `series_sum("name", from_t, to_t)` `series_avg` — second-pass; readers cannot read readers |
+| Series | `series_sum("name", from_t, to_t)` `series_avg` — dependency-ordered; chains to any depth, cycles refused |
 | Domain | `cpr_to_smm` `macrs_rate(year, life)` `curve_value` |
 
 Full signatures: the expressions reference at [cfdl.dev](https://cfdl.dev/docs/reference/expressions).

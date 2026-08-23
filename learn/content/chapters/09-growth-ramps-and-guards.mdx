@@ -98,7 +98,7 @@ Phase gating in the schedule, a maturity guard, and an amount that is *stepped e
 
 **A ramp clock in integer time.** `time.t / 18` and `time.t / 18.0` agree here — arithmetic is decimal throughout — but write the denominator with the decimal point anyway: the reviewer reading `18.0` knows instantly a fraction was intended, not integer bucketing with `round_down`. Legibility is the habit even where the engine forgives.
 
-**A guard that references what it gates.** `active when` on stream X cannot read X's own series — the condition would gate its own input. The refusal comes from the evaluation-order rule you will meet in the machinery chapter: streams that read other series evaluate in a second pass, and second-pass streams cannot read each other. The practical rule is simpler: guards and fees read *base* streams (revenue, collections), and base streams read no one.
+**A guard that references what it gates.** `active when` on stream X cannot read X's own series — the condition would gate its own input. The refusal comes from the evaluation-order rule you will meet in the machinery chapter: streams evaluate in dependency order, and a stream reading its own output is a cycle — the one dependency no order can satisfy. Chains are fine to any depth (a fee may read a fee that reads revenue); only a genuine loop is refused, with its path named.
 
 **Stepping on the wrong anniversary.** `round_down(time.t / 12, 0)` steps at periods 12, 24, 36 — anniversaries *of the model's origin*. A lease that bumps each January inside a model that starts in July steps at the wrong month. Phase-relative or date-based conditions fix it; the point is to notice that "annually" always means *from when*, and the model makes you answer.
 

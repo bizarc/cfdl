@@ -800,7 +800,7 @@ pub(crate) fn curve_call(
 }
 
 /// Does the expression call any of the given function names? Used by the
-/// engine to split stream evaluation into phases.
+/// engine to decide which streams read series at all.
 pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {
     use crate::ExprKind;
     match &expr.kind {
@@ -810,6 +810,26 @@ pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {
         ExprKind::Unary { expr, .. } => expr_calls_any(expr, names),
         ExprKind::Binary { lhs, rhs, .. } => {
             expr_calls_any(lhs, names) || expr_calls_any(rhs, names)
+        }
+        _ => false,
+    }
+}
+
+/// Does any call to one of the given functions take a NON-LITERAL first
+/// argument? A literal first argument names its series in the source, so the
+/// engine can place the read in the dependency order; a computed name cannot
+/// be placed and must evaluate after every literally-named stream.
+pub fn has_computed_call_name(expr: &crate::Expr, names: &[&str]) -> bool {
+    use crate::ExprKind;
+    match &expr.kind {
+        ExprKind::Call { name, args } => {
+            let computed_here = names.contains(&name.as_str())
+                && !matches!(args.first().map(|a| &a.kind), Some(ExprKind::Str(_)));
+            computed_here || args.iter().any(|a| has_computed_call_name(a, names))
+        }
+        ExprKind::Unary { expr, .. } => has_computed_call_name(expr, names),
+        ExprKind::Binary { lhs, rhs, .. } => {
+            has_computed_call_name(lhs, names) || has_computed_call_name(rhs, names)
         }
         _ => false,
     }
