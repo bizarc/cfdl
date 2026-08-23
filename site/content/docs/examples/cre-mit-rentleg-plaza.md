@@ -215,25 +215,30 @@ contract cre.opex_line {
 // ---------------------------------------------------------------------------
 
 // MIT fn 4 (2001-03, $4.00 stop) and fn 5 (2005-06, stop reset to actual
-// 2004 opex/SF, which makes the 2004 reimbursement exactly zero). The reset
-// stop is restated from the INPUTS — base, trend, fixed share, 2004
-// occupancy of 5/6 — so a changed assumption propagates instead of going
-// stale in a hand-computed constant.
+// 2004 opex/SF, which makes the 2004 reimbursement exactly zero).
+//
+// Both halves READ THE OPEX STREAM rather than restating how it is computed.
+// "Actual opex per SF" is exactly that: this period's opex, divided by the
+// building. The reset stop is the same read with the window pinned to 2004
+// (`time.t` 3, the model starting 2001). Opex books signed negative, hence
+// the negation.
+//
+// Until streams evaluated in dependency order, this read was impossible to
+// write: it made recoveries a reader, and `cre.exit_forward` reads the
+// recoveries in its forward-NOI sum
+// — two readers in a chain, which the old two-phase engine refused (and
+// before that answered with a silent zero, an exit price $116,440 light).
+// Now recoveries evaluate a wave after opex, and the exit a wave after them.
 stream cre.unit.recoveries.suite_100 on entity asset.rentleg inflow currency USD {
   schedule every year from 2001-01 to 2006-01
   category operating.revenue.recovery
   amount = inputs.suite_100_sf
            * max(0,
-               (inputs.building_sf * inputs.opex_psf_full
-                 * pow(1 + inputs.opex_growth, time.t)
-                 * (inputs.opex_pct_fixed
-                    + (1 - inputs.opex_pct_fixed)
-                      * if(time.t == 0, 2.0 / 3.0, if(time.t == 3, 5.0 / 6.0, 1.0)))
-               ) / inputs.building_sf
+               (0 - series_sum("cre.opex.line", time.t, time.t))
+                 / inputs.building_sf
                - if(time.t <= 2, inputs.suite_100_stop_psf,
-                    inputs.opex_psf_full * pow(1 + inputs.opex_growth, 3)
-                      * (inputs.opex_pct_fixed
-                         + (5.0 / 6.0) * (1 - inputs.opex_pct_fixed))))
+                    (0 - series_sum("cre.opex.line", 3, 3))
+                      / inputs.building_sf))
 }
 
 // MIT fn 6 — $5.00/SF stop, running from the 2002 lease commencement.
@@ -242,12 +247,8 @@ stream cre.unit.recoveries.suite_200 on entity asset.rentleg inflow currency USD
   category operating.revenue.recovery
   amount = inputs.suite_200_sf
            * max(0,
-               (inputs.building_sf * inputs.opex_psf_full
-                 * pow(1 + inputs.opex_growth, time.t)
-                 * (inputs.opex_pct_fixed
-                    + (1 - inputs.opex_pct_fixed)
-                      * if(time.t == 3, 5.0 / 6.0, 1.0))
-               ) / inputs.building_sf
+               (0 - series_sum("cre.opex.line", time.t, time.t))
+                 / inputs.building_sf
                - inputs.suite_200_stop_psf)
 }
 

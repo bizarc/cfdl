@@ -62,13 +62,16 @@ would close the item outright is a same-period cross-stream read, which is the
 dependency-ordering work: the stop is "actual 2004 opex per SF", and reading
 the opex stream directly collides with the exit's forward-NOI window today.)*
 
-*(Update 2: the ORDERING is shipped — streams evaluate in dependency-ordered
-waves, so recoveries may read the opex stream and `cre.exit_forward` reads the
-recoveries a wave later. Verified on this benchmark: the direct
-`series_sum("cre.opex.line", time.t, time.t)` read reproduces every recovery
-to the cent and the net exit price returns 3,051,540.54 — the measured
-$116,440 collision, resolved. What remains is the MIGRATION: rewrite the
-benchmark's two recovery streams onto the direct read, its own PR.)*
+*(Update 2 — **CLOSED as a language/engine item.** Streams evaluate in
+dependency-ordered waves, so recoveries read the opex stream and
+`cre.exit_forward` reads the recoveries a wave later. The benchmark is
+migrated: both halves of the reimbursement — this period's actual opex and the
+2004 reset stop — are now `series_sum("cre.opex.line", ...)` reads with
+different windows, the restated formula is gone from all three places, every
+reimbursement reproduces to the cent, and the net exit price is 3,051,540.54.
+The measured $116,440 collision is resolved. What remains is PACK work, not
+language work: a CRE term that declares "stop resets to actual opex in year N"
+so a modeller states it instead of writing the read by hand.)*
 
 ### 1.6 Vacancy cannot track a growing rent roll
 

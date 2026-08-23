@@ -8,6 +8,18 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: MIT Rentleg Plaza reads actual opex instead of restating it
+
+The benchmark's expense reimbursements rebuilt "actual opex per SF" from the
+inputs inside each recovery stream — base, trend, fixed share, that year's
+occupancy — because reading the opex stream made a recovery a reader, and
+`cre.exit_forward` reads the recoveries. Dependency-ordered waves permit that
+chain, so both halves of the formula (this period's opex, and the 2004 reset
+stop) are now the same `series_sum("cre.opex.line", ...)` read with different
+windows. Every reimbursement reproduces to the cent and the net exit price is
+unchanged at 3,051,540.54. Closes the language half of backlog 1.2.
+
+
 ### Changed: streams evaluate in dependency-ordered waves
 
 The engine's two-phase stream split — streams that read no series, then

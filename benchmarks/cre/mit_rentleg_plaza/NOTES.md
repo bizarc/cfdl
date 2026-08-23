@@ -60,10 +60,30 @@ contracts:
 - occupancy-varying opex (MIT fn 7 splits it 81% fixed / 19% variable, which is
   what makes 2001 opex $135,161 rather than $144,300);
 - an expense stop that resets to a computed later-year value (fn 5, which makes
-  the 2004 reimbursement exactly zero).
+  the 2004 reimbursement exactly zero) — the STOP itself is now read straight
+  from the opex stream (see below), so what remains is only the pack term to
+  declare it with.
 
 Both are recorded in `docs/13_feature_backlog.md` §1.1 and §1.2, along with the
 abatement-line gap that was §5 here. They are additive features, not defects.
+
+## 6. RESOLVED — the stop reads actual opex instead of restating it
+
+Originally: the reimbursement formula could not read the opex stream. "Actual
+opex per SF" had to be rebuilt from the inputs inside each recovery stream —
+base, trend, fixed share, that year's occupancy — so the same formula lived in
+three places and any change had to be made in all of them.
+
+The read was not merely inconvenient; it was unwritable. It makes a recovery
+stream a READER, and `cre.exit_forward` reads the recoveries in its forward-NOI
+sum. Two readers in a chain is what the engine's two-phase split refused — and
+before it refused, it answered with a silent zero: forward NOI lost every
+recovery and the exit price came out $116,440 light.
+
+Fixed. Streams evaluate in dependency-ordered waves, so opex evaluates, then
+the recoveries that read it, then the exit that reads them. Both halves of the
+formula — this period's actual opex and the 2004 reset stop — are now the same
+read with a different window, and every reimbursement reproduces to the cent.
 
 ## 5. RESOLVED — the playground shipped a stale engine
 
