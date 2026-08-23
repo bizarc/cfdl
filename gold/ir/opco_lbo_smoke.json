@@ -413,7 +413,7 @@
     },
     {
       "id": "e395e791b206a3c302f162ecfbbb2702",
-      "name": "opco.capex",
+      "name": "opco.capex.line",
       "owner": {
         "symbol": "asset.target"
       },
@@ -729,7 +729,7 @@
     },
     {
       "id": "ef50f4b10beba460a31f8e4121012d65",
-      "name": "opco.taxes",
+      "name": "opco.taxes.cash",
       "owner": {
         "symbol": "asset.target"
       },
@@ -848,7 +848,7 @@
       }
     },
     {
-      "stream": "opco.capex",
+      "stream": "opco.capex.line",
       "contract": "opco.capex_line",
       "terms": {
         "amount": "5000",
@@ -891,7 +891,7 @@
       ]
     },
     {
-      "stream": "opco.taxes",
+      "stream": "opco.taxes.cash",
       "contract": "opco.cash_taxes",
       "terms": {
         "da_growth": "0",

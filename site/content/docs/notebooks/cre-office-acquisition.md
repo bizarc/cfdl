@@ -140,53 +140,45 @@ period
 2026-04         13500.0               -25000.0         40000.0                     -23345.249537   
 2026-05         13500.0               -25000.0         40000.0                     -23345.249537   
 
-         model.net_cash_flow  stream.cre.exit.proceeds  ...  stream.cre.unit.base_rent.tenant_a  \
+         model.net_cash_flow  stream.cre.debt.interest  ...  stream.cre.rollover.ti_lc.tenant_a  \
 period                                                  ...                                       
-2026-01       -263345.249537                       0.0  ...                             40000.0   
-2026-02        -63345.249537                       0.0  ...                             40000.0   
-2026-03        -63345.249537                       0.0  ...                             40000.0   
-2026-04        -23345.249537                       0.0  ...                             40000.0   
-2026-05        -23345.249537                       0.0  ...                             40000.0   
+2026-01       -263345.249537             -27500.000000  ...                                 0.0   
+2026-02        -63345.249537             -27457.167606  ...                                 0.0   
+2026-03        -63345.249537             -27414.138897  ...                                 0.0   
+2026-04        -23345.249537             -27370.912974  ...                                 0.0   
+2026-05        -23345.249537             -27327.488931  ...                                 0.0   
 
-         stream.cre.unit.base_rent.tenant_b  stream.cre.unit.recoveries.tenant_a  \
-period                                                                             
-2026-01                                 0.0                                  0.0   
-2026-02                                 0.0                                  0.0   
-2026-03                                 0.0                                  0.0   
-2026-04                                 0.0                                  0.0   
-2026-05                                 0.0                                  0.0   
+         stream.cre.unit.abatement.tenant_a  stream.cre.unit.abatement.tenant_b  \
+period                                                                            
+2026-01                            -40000.0                                 0.0   
+2026-02                            -40000.0                                 0.0   
+2026-03                            -40000.0                                 0.0   
+2026-04                                 0.0                                 0.0   
+2026-05                                 0.0                                 0.0   
 
-         stream.cre.unit.recoveries.tenant_b  stream.cre.unit.ti_lc.tenant_a  \
-period                                                                         
-2026-01                                  0.0                       -200000.0   
-2026-02                                  0.0                             0.0   
-2026-03                                  0.0                             0.0   
-2026-04                                  0.0                             0.0   
-2026-05                                  0.0                             0.0   
+         stream.cre.unit.base_rent.tenant_a  stream.cre.unit.base_rent.tenant_b  \
+period                                                                            
+2026-01                             40000.0                                 0.0   
+2026-02                             40000.0                                 0.0   
+2026-03                             40000.0                                 0.0   
+2026-04                             40000.0                                 0.0   
+2026-05                             40000.0                                 0.0   
 
-         stream.cre.unit.ti_lc.tenant_b  stream.cre.vacancy.loss  \
-period                                                             
-2026-01                             0.0                  -1500.0   
-2026-02                             0.0                  -1500.0   
-2026-03                             0.0                  -1500.0   
-2026-04                             0.0                  -1500.0   
-2026-05                             0.0                  -1500.0   
+         stream.cre.unit.recoveries.tenant_a  stream.cre.unit.recoveries.tenant_b  \
+period                                                                              
+2026-01                                  0.0                                  0.0   
+2026-02                                  0.0                                  0.0   
+2026-03                                  0.0                                  0.0   
+2026-04                                  0.0                                  0.0   
+2026-05                                  0.0                                  0.0   
 
-         stream.loan.permanent_debt.interest  stream.loan.permanent_debt.principal  \
-period                                                                               
-2026-01                        -27500.000000                          -9345.249537   
-2026-02                        -27457.167606                          -9388.081931   
-2026-03                        -27414.138897                          -9431.110639   
-2026-04                        -27370.912974                          -9474.336563   
-2026-05                        -27327.488931                          -9517.760606   
-
-         stream.loan.permanent_debt.proceeds  
-period                                        
-2026-01                                  0.0  
-2026-02                                  0.0  
-2026-03                                  0.0  
-2026-04                                  0.0  
-2026-05                                  0.0  
+         stream.cre.unit.ti_lc.tenant_a  stream.cre.unit.ti_lc.tenant_b  stream.cre.vacancy.loss  
+period                                                                                            
+2026-01                       -200000.0                             0.0                  -1500.0  
+2026-02                             0.0                             0.0                  -1500.0  
+2026-03                             0.0                             0.0                  -1500.0  
+2026-04                             0.0                             0.0                  -1500.0  
+2026-05                             0.0                             0.0                  -1500.0  
 
 [5 rows x 26 columns]
 ```
@@ -225,23 +217,23 @@ results.metrics_frame()
 10                          model.wal_years  8.508512e+00                 core
 11                 run.annual_discount_rate  7.250000e-02                 core
 12                     run.periods_per_year  1.200000e+01                 core
-13           stream.cre.exit.proceeds.total  3.303207e+06      USD        core
-14      stream.cre.exit.selling_costs.total -6.606414e+04      USD        core
-15               stream.cre.opex.line.total -3.361015e+06      USD        core
-16  stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD        core
-17  stream.cre.rollover.ti_lc.tenant_a.t... -1.750000e+05      USD        core
-18  stream.cre.unit.abatement.tenant_a.t... -1.200000e+05      USD        core
-19  stream.cre.unit.abatement.tenant_b.t...  0.000000e+00      USD        core
-20  stream.cre.unit.base_rent.tenant_a.t...  2.548385e+06      USD        core
-21  stream.cre.unit.base_rent.tenant_b.t...  2.717075e+06      USD        core
-22  stream.cre.unit.recoveries.tenant_a....  3.075942e+04      USD        core
-23  stream.cre.unit.recoveries.tenant_b....  3.012687e+05      USD        core
-24     stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD        core
-25     stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD        core
-26            stream.cre.vacancy.loss.total -1.800000e+05      USD        core
-27  stream.loan.permanent_debt.interest.... -2.930792e+06      USD        core
-28  stream.loan.permanent_debt.principal... -1.490638e+06      USD        core
-29  stream.loan.permanent_debt.proceeds....  0.000000e+00      USD        core
+13           stream.cre.debt.interest.total -2.930792e+06      USD        core
+14          stream.cre.debt.principal.total -1.490638e+06      USD        core
+15           stream.cre.debt.proceeds.total  0.000000e+00      USD        core
+16           stream.cre.exit.proceeds.total  3.303207e+06      USD        core
+17      stream.cre.exit.selling_costs.total -6.606414e+04      USD        core
+18               stream.cre.opex.line.total -3.361015e+06      USD        core
+19  stream.cre.rollover.rent.tenant_a.total  2.782460e+06      USD        core
+20  stream.cre.rollover.ti_lc.tenant_a.t... -1.750000e+05      USD        core
+21  stream.cre.unit.abatement.tenant_a.t... -1.200000e+05      USD        core
+22  stream.cre.unit.abatement.tenant_b.t...  0.000000e+00      USD        core
+23  stream.cre.unit.base_rent.tenant_a.t...  2.548385e+06      USD        core
+24  stream.cre.unit.base_rent.tenant_b.t...  2.717075e+06      USD        core
+25  stream.cre.unit.recoveries.tenant_a....  3.075942e+04      USD        core
+26  stream.cre.unit.recoveries.tenant_b....  3.012687e+05      USD        core
+27     stream.cre.unit.ti_lc.tenant_a.total -2.000000e+05      USD        core
+28     stream.cre.unit.ti_lc.tenant_b.total -1.500000e+05      USD        core
+29            stream.cre.vacancy.loss.total -1.800000e+05      USD        core
 ```
 
 ## What-if
@@ -257,6 +249,6 @@ mf[mf["metric"].str.contains("dscr|noi|exit", case=False)]
                                  metric         value currency      source
 1                       domain.cre.dscr  1.067287e+00           domain:cre
 3                        domain.cre.noi  4.718934e+06      USD  domain:cre
-13       stream.cre.exit.proceeds.total  3.303207e+06      USD        core
-14  stream.cre.exit.selling_costs.total -6.606414e+04      USD        core
+16       stream.cre.exit.proceeds.total  3.303207e+06      USD        core
+17  stream.cre.exit.selling_costs.total -6.606414e+04      USD        core
 ```

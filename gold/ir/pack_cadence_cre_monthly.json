@@ -189,7 +189,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.revenue.line.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.revenue.line.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065"
       },
       "active_when": {
         "lang": "cfdl",
@@ -228,7 +228,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.revenue.line.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065 * 0.02"
+        "src": "(series_sum(\"cre.unit.base_rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.unit.recoveries.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.rollover.rent.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.lease.base_rent\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.revenue.line.*\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.vacancy.loss\", time.t + 1.0, time.t + 12.0) + series_sum(\"cre.opex.line.*\", time.t + 1.0, time.t + 12.0)) / 0.065 * 0.02"
       },
       "active_when": {
         "lang": "cfdl",

@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "219ea68c657813438d6971d5f918fc9aeb58b529598dd056296080c7c9502280",
-  "ledger_hash": "4ce56fde7005e7ba3a6597ff48376a197f8ea889d6151738bcf8b1a92b1e7af6",
+  "model_hash": "26016d23b84528bf275ac9ba003b7d21bffd2ab6e08ef585de1ccd1ed894283f",
+  "ledger_hash": "0e90f8f371ad8e14a2b52ee6ca62f6c9b5bc0961735665651b02989012ae0c61",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -14,7 +14,7 @@
         "defaults_applied": [
           "payment_frequency"
         ],
-        "stream": "loan.permanent_debt.interest",
+        "stream": "cre.debt.interest",
         "terms": {
           "payment_frequency": "",
           "principal": "6000000",
@@ -26,7 +26,7 @@
         "defaults_applied": [
           "payment_frequency"
         ],
-        "stream": "loan.permanent_debt.principal",
+        "stream": "cre.debt.principal",
         "terms": {
           "balloon_at_maturity": "1",
           "payment_frequency": "",
@@ -39,7 +39,7 @@
         "defaults_applied": [
           "funded_at_close"
         ],
-        "stream": "loan.permanent_debt.proceeds",
+        "stream": "cre.debt.proceeds",
         "terms": {
           "funded_at_close": "1",
           "principal": "6000000"
@@ -67,15 +67,15 @@
       "model.wal_years": 0.0,
       "run.annual_discount_rate": 0.05,
       "run.periods_per_year": 12.0,
-      "stream.loan.permanent_debt.interest.total": {
+      "stream.cre.debt.interest.total": {
         "amount": -1621559.308212,
         "currency": "USD"
       },
-      "stream.loan.permanent_debt.principal.total": {
+      "stream.cre.debt.principal.total": {
         "amount": -6000000.0,
         "currency": "USD"
       },
-      "stream.loan.permanent_debt.proceeds.total": {
+      "stream.cre.debt.proceeds.total": {
         "amount": 6000000.0,
         "currency": "USD"
       }
@@ -2142,7 +2142,7 @@
           }
         ]
       },
-      "stream.loan.permanent_debt.interest": {
+      "stream.cre.debt.interest": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -2392,7 +2392,7 @@
           }
         ]
       },
-      "stream.loan.permanent_debt.principal": {
+      "stream.cre.debt.principal": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -2642,7 +2642,7 @@
           }
         ]
       },
-      "stream.loan.permanent_debt.proceeds": {
+      "stream.cre.debt.proceeds": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -3112,7 +3112,7 @@
             }
           ]
         },
-        "stream.loan.permanent_debt.interest": {
+        "stream.cre.debt.interest": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -3141,7 +3141,7 @@
             }
           ]
         },
-        "stream.loan.permanent_debt.principal": {
+        "stream.cre.debt.principal": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -3170,7 +3170,7 @@
             }
           ]
         },
-        "stream.loan.permanent_debt.proceeds": {
+        "stream.cre.debt.proceeds": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",

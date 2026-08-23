@@ -156,37 +156,45 @@ period
 2026-04               1.577407e+05                            -148750.0   
 2026-05               1.596264e+05                            -148750.0   
 
-         domain.opco.net_cash_from_investing  ...  stream.opco.capex  stream.opco.debt.interest  \
-period                                        ...                                                 
-2026-01                        -3.363000e+07  ...      -30000.000000                  -148750.0   
-2026-02                        -3.014603e+04  ...      -30146.026517                  -148750.0   
-2026-03                        -3.029276e+04  ...      -30292.763825                  -148750.0   
-2026-04                        -3.044022e+04  ...      -30440.215385                  -148750.0   
-2026-05                        -3.058838e+04  ...      -30588.384673                  -148750.0   
+         domain.opco.net_cash_from_investing  ...  stream.opco.capex.line  \
+period                                        ...                           
+2026-01                        -3.363000e+07  ...           -30000.000000   
+2026-02                        -3.014603e+04  ...           -30146.026517   
+2026-03                        -3.029276e+04  ...           -30292.763825   
+2026-04                        -3.044022e+04  ...           -30440.215385   
+2026-05                        -3.058838e+04  ...           -30588.384673   
 
-         stream.opco.debt.principal  stream.opco.debt.proceeds  stream.opco.exit.selling_costs  \
-period                                                                                           
-2026-01                         0.0                 21000000.0                             0.0   
-2026-02                         0.0                        0.0                             0.0   
-2026-03                         0.0                        0.0                             0.0   
-2026-04                         0.0                        0.0                             0.0   
-2026-05                         0.0                        0.0                             0.0   
+         stream.opco.debt.interest  stream.opco.debt.principal  stream.opco.debt.proceeds  \
+period                                                                                      
+2026-01                  -148750.0                         0.0                 21000000.0   
+2026-02                  -148750.0                         0.0                        0.0   
+2026-03                  -148750.0                         0.0                        0.0   
+2026-04                  -148750.0                         0.0                        0.0   
+2026-05                  -148750.0                         0.0                        0.0   
 
-         stream.opco.exit.value  stream.opco.opex.recurring  stream.opco.revenue.recurring  \
-period                                                                                       
-2026-01                     0.0              -650000.000000                   1.000000e+06   
-2026-02                     0.0              -652127.930858                   1.004868e+06   
-2026-03                     0.0              -654262.828009                   1.009759e+06   
-2026-04                     0.0              -656404.714257                   1.014674e+06   
-2026-05                     0.0              -658553.612483                   1.019613e+06   
+         stream.opco.exit.selling_costs  stream.opco.exit.value  stream.opco.opex.recurring  \
+period                                                                                        
+2026-01                             0.0                     0.0              -650000.000000   
+2026-02                             0.0                     0.0              -652127.930858   
+2026-03                             0.0                     0.0              -654262.828009   
+2026-04                             0.0                     0.0              -656404.714257   
+2026-05                             0.0                     0.0              -658553.612483   
 
-         stream.opco.taxes  stream.opco.working_capital.adjustment  
-period                                                              
-2026-01      -13325.000000                           -1.052055e+06  
-2026-02      -14037.301124                           -5.802120e+03  
-2026-03      -14753.951204                           -5.832592e+03  
-2026-04      -15474.974297                           -5.863220e+03  
-2026-05      -16200.394584                           -5.894004e+03  
+         stream.opco.revenue.recurring  stream.opco.taxes.cash  \
+period                                                           
+2026-01                   1.000000e+06           -13325.000000   
+2026-02                   1.004868e+06           -14037.301124   
+2026-03                   1.009759e+06           -14753.951204   
+2026-04                   1.014674e+06           -15474.974297   
+2026-05                   1.019613e+06           -16200.394584   
+
+         stream.opco.working_capital.adjustment  
+period                                           
+2026-01                           -1.052055e+06  
+2026-02                           -5.802120e+03  
+2026-03                           -5.832592e+03  
+2026-04                           -5.863220e+03  
+2026-05                           -5.894004e+03  
 
 [5 rows x 27 columns]
 ```
@@ -232,7 +240,7 @@ results.metrics_frame()
 17                 run.annual_discount_rate  1.200000e-01                  core
 18                     run.periods_per_year  1.200000e+01                  core
 19      stream.opco.acquisition.price.total -3.360000e+07      USD         core
-20                  stream.opco.capex.total -2.084574e+06      USD         core
+20             stream.opco.capex.line.total -2.084574e+06      USD         core
 21          stream.opco.debt.interest.total -7.283247e+06      USD         core
 22         stream.opco.debt.principal.total -2.100000e+07      USD         core
 23          stream.opco.debt.proceeds.total  2.100000e+07      USD         core
@@ -240,7 +248,7 @@ results.metrics_frame()
 25             stream.opco.exit.value.total  5.330313e+07      USD         core
 26         stream.opco.opex.recurring.total -4.301637e+07      USD         core
 27      stream.opco.revenue.recurring.total  6.948579e+07      USD         core
-28                  stream.opco.taxes.total -2.648405e+06      USD         core
+28             stream.opco.taxes.cash.total -2.648405e+06      USD         core
 29  stream.opco.working_capital.adjustme...  0.000000e+00      USD         core
 ```
 

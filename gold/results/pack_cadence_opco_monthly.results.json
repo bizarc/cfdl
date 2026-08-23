@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "713821121361db4a9792c7812cb6eb11eedbc9f4bc6f6fe32bcae3f60fa39b41",
-  "ledger_hash": "d618f7b050fda7c28b2f3951db8b8b1b489b4f20139719b948eb5c542406bdd8",
+  "model_hash": "92f32543281b7fb686393af45de06daecc0e8397ed0740ec235a7002513999d7",
+  "ledger_hash": "52b59d8ef80207ea774719a96142edaef722f97bf52ac41c19a667e0f86e235c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -44,7 +44,7 @@
           "growth_curve",
           "growth_rate"
         ],
-        "stream": "opco.capex",
+        "stream": "opco.capex.line",
         "terms": {
           "amount": "0",
           "amount_year": "60000",
@@ -60,7 +60,7 @@
           "da_monthly",
           "tax_rate_curve"
         ],
-        "stream": "opco.taxes",
+        "stream": "opco.taxes.cash",
         "terms": {
           "da_growth": "0",
           "da_monthly": "0",
@@ -89,7 +89,7 @@
       "model.wal_years": 1.541667,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.opco.capex.total": {
+      "stream.opco.capex.line.total": {
         "amount": -266400.0,
         "currency": "USD"
       },
@@ -101,7 +101,7 @@
         "amount": 4320000.0,
         "currency": "USD"
       },
-      "stream.opco.taxes.total": {
+      "stream.opco.taxes.cash.total": {
         "amount": -360000.0,
         "currency": "USD"
       }
@@ -2123,7 +2123,7 @@
           }
         ]
       },
-      "stream.opco.capex": {
+      "stream.opco.capex.line": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -2585,7 +2585,7 @@
           }
         ]
       },
-      "stream.opco.taxes": {
+      "stream.opco.taxes.cash": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -2985,7 +2985,7 @@
             }
           ]
         },
-        "stream.opco.capex": {
+        "stream.opco.capex.line": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -3048,7 +3048,7 @@
             }
           ]
         },
-        "stream.opco.taxes": {
+        "stream.opco.taxes.cash": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",

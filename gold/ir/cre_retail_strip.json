@@ -370,7 +370,7 @@
     },
     {
       "id": "f602b8fe7db23efa0ec07398e320a3ec",
-      "name": "cre.pct_rent.anchor",
+      "name": "cre.pct_rent.overage.anchor",
       "owner": {
         "symbol": "asset.strip_center"
       },
@@ -802,7 +802,7 @@
       }
     },
     {
-      "stream": "cre.pct_rent.anchor",
+      "stream": "cre.pct_rent.overage.anchor",
       "contract": "cre.percentage_rent.anchor",
       "terms": {
         "breakpoint_year": "12000000",
