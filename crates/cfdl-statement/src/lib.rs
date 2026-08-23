@@ -133,7 +133,21 @@ fn render(
                             .iter()
                             .any(|sel| sel == c || matches_prefix(sel, c))
                     });
-                    let by_name = cfdl_expr::selector_matches_any(&row.streams, name);
+                    // A stream row refines WITHIN a category — it itemises a
+                    // family whose members all carry the same one, which is
+                    // why the pack loader can resolve the selector to that
+                    // category and count the row toward completeness.
+                    //
+                    // So an UNCLASSIFIED stream is never claimed by name. A
+                    // pack-less model whose stream happens to share a pack's
+                    // spelling would otherwise be drawn onto a labelled row
+                    // while every subtotal, which folds by category, ignored
+                    // it — an "Operating expenses" line above a Net operating
+                    // income that does not include it. `dscr_smoke` is exactly
+                    // that model. Cash with no category belongs in the
+                    // residual row, which is where it already went.
+                    let by_name = stream_categories.contains_key(name)
+                        && cfdl_expr::selector_matches_any(&row.streams, name);
                     if !(by_category || by_name) {
                         continue;
                     }
