@@ -51,11 +51,16 @@ contract energy.om on entity asset.windfarm {
   }
 }
 
+// funded_at_close = 0: the reference's cash flow starts post-financing —
+// it nets operations against debt service and never books the draw — so the
+// proceeds the contract funds by default are excluded to state what the
+// source states.
 contract energy.debt_service on entity asset.windfarm {
   term 2027-01..2041-12
   terms {
     rate = 0.055
     term_months = 180
     principal = 25000000
+    funded_at_close = 0
   }
 }

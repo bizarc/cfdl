@@ -266,7 +266,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "640000.0 / 0.0675 * (1.0 - 0.015)"
+        "src": "640000.0 / 0.0675"
       },
       "active_when": {
         "lang": "cfdl",
@@ -286,6 +286,45 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_exit_forward_noi"
+        }
+      }
+    },
+    {
+      "id": "7273b7a3b82722d653de93c3b8aaf024",
+      "name": "cre.exit.selling_costs",
+      "owner": {
+        "symbol": "asset.strip_center"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.selling_costs",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2032-12-01",
+        "at_period_end": true
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "640000.0 / 0.0675 * 0.015"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 67,
+          "start_col": 1,
+          "end_line": 74,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_exit_selling_costs"
         }
       }
     },
@@ -840,6 +879,14 @@
     },
     {
       "stream": "cre.exit.proceeds",
+      "contract": "cre.exit",
+      "terms": {
+        "exit_cap": "0.0675",
+        "noi_forward_year": "640000"
+      }
+    },
+    {
+      "stream": "cre.exit.selling_costs",
       "contract": "cre.exit",
       "terms": {
         "exit_cap": "0.0675",

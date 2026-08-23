@@ -135,12 +135,17 @@ contract energy.om on entity asset.wind {
   }
 }
 
+// funded_at_close = 0: the reference's cash flow starts post-financing —
+// it nets operations against debt service and never books the draw — so the
+// proceeds the contract funds by default are excluded to state what the
+// source states.
 contract energy.debt_service on entity asset.wind {
   term 2026-01..2043-01
   terms {
     rate = 0.06
     term_months = 216
     principal = 60000000
+    funded_at_close = 0
   }
 }
 
@@ -169,6 +174,6 @@ Checked period by period: **6 series** across **14 periods** — **84 values** i
 - `energy.capacity.revenue`
 - `energy.ptc.credit`
 - `energy.om.expense`
-- `energy.debt.service`
+- `domain.energy.debt_service_periodic`
 - `energy.macrs.shield`
 

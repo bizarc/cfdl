@@ -66,7 +66,7 @@ statement.
 | `energy.om` | `escalation`, `om_year` | `energy.om.expense[.suffix]` |
 | `energy.itc` | `credit` | `energy.itc.credit[.suffix]` |
 | `energy.capex` | `amount` | `energy.capex.outlay[.suffix]` |
-| `energy.debt_service` | `principal`, `rate` | `energy.debt.service[.suffix]` |
+| `energy.debt_service` | `funded_at_close`, `principal`, `rate` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
 | `energy.ptc` | `availability`, `credit_per_mwh`, `degradation`, `escalation`, `mwh_year`, `round_step` | `energy.ptc.credit[.suffix]` |
 | `energy.macrs_shield` | `basis`, `life`, `tax_rate` | `energy.macrs.shield[.suffix]` |
 
@@ -82,9 +82,9 @@ statement.
 | `cre.rollover` | `market_escalation`, `market_rent_year`, `new_ti_lc`, `renewal_probability`, `renewal_rent_year`, `renewal_ti_lc` | `cre.rollover.rent.[suffix]`, `cre.rollover.ti_lc.[suffix]` |
 | `cre.vacancy_loss` | `potential_gross_year`, `rate` | `cre.vacancy.loss` |
 | `cre.opex_line` | `amount`, `amount_year`, `escalation`, `escalation_curve`, `occupancy`, `occupancy_curve`, `pct_fixed` | `cre.opex.line[.suffix]` |
-| `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.proceeds` |
+| `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.selling_costs`, `cre.exit.proceeds` |
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent[.suffix]` |
-| `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds` |
+| `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
 | `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `payment_frequency`, `principal`, `rate` | `loan.permanent_debt.proceeds[.suffix]`, `loan.permanent_debt.interest[.suffix]`, `loan.permanent_debt.principal[.suffix]` |
 | `cre.construction_loan` | `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]` |
 
@@ -109,9 +109,9 @@ statement.
 | `opco.capex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate`, `pct_of_revenue` | `opco.capex[.suffix]` |
 | `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
 | `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate`, `tax_rate_curve` | `opco.taxes[.suffix]` |
-| `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value` |
+| `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
 | `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
-| `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]` |
+| `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |
 
 <!-- /cfdl:generated pack-contracts -->
 

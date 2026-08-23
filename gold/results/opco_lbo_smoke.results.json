@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "091d1064868b553c1d2889af560ef49e925082be6ccc2a8442f095cfea936c88",
-  "ledger_hash": "3dfa30c19d674f1f5e3136c056ac95fa2b995fb1457722382099940554ca2a36",
+  "model_hash": "e850620ba9e98a61ca9c91ec07b60bb37a6104e7c896f5bbd0b77f6a2e162d28",
+  "ledger_hash": "72c21d5a6d3f8239e5af38f45231e4ee23e6982c8ca21f45da26f28e7427f8e8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -117,6 +117,13 @@
         "contract": "opco.exit_ebitda",
         "stream": "opco.exit.value",
         "terms": {
+          "exit_multiple": "7.0"
+        }
+      },
+      {
+        "contract": "opco.exit_ebitda",
+        "stream": "opco.exit.selling_costs",
+        "terms": {
           "exit_multiple": "7.0",
           "selling_costs": "0.02"
         }
@@ -165,8 +172,12 @@
         "amount": 3000000.0,
         "currency": "USD"
       },
+      "stream.opco.exit.selling_costs.total": {
+        "amount": -150325.857153,
+        "currency": "USD"
+      },
       "stream.opco.exit.value.total": {
-        "amount": 7365967.00048,
+        "amount": 7516292.857633,
         "currency": "USD"
       },
       "stream.opco.opex.recurring.total": {
@@ -2109,6 +2120,112 @@
           }
         ]
       },
+      "stream.opco.exit.selling_costs": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -150325.857153,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.opco.exit.value": {
         "index": {
           "calendar": "monthly",
@@ -2210,7 +2327,7 @@
             "currency": "USD"
           },
           {
-            "amount": 7365967.00048,
+            "amount": 7516292.857633,
             "currency": "USD"
           }
         ]
@@ -2925,6 +3042,23 @@
             }
           ]
         },
+        "stream.opco.exit.selling_costs": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -150325.857153,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.opco.exit.value": {
           "index": {
             "calendar": "annual",
@@ -2937,7 +3071,7 @@
               "currency": "USD"
             },
             {
-              "amount": 7365967.00048,
+              "amount": 7516292.857633,
               "currency": "USD"
             }
           ]
@@ -4602,20 +4736,128 @@
                 "currency": "USD"
               },
               {
-                "amount": 7365967.00048,
+                "amount": 7516292.857633,
                 "currency": "USD"
               }
             ],
-            "total": 7365967.00048,
+            "total": 7516292.857633,
             "streams": [
               "opco.exit.value"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: selling costs",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -150325.857153,
+                "currency": "USD"
+              }
+            ],
+            "total": -150325.857153,
+            "streams": [
+              "opco.exit.selling_costs"
             ]
           }
         ],
         "reconciliation": {
           "bottom_line": 3477085.354431,
           "model_total": 3477085.354431,
-          "residual": -0.0
+          "residual": 0.0
         }
       },
       {
@@ -6081,20 +6323,128 @@
                 "currency": "USD"
               },
               {
-                "amount": 7365967.00048,
+                "amount": 7516292.857633,
                 "currency": "USD"
               }
             ],
-            "total": 7365967.00048,
+            "total": 7516292.857633,
             "streams": [
               "opco.exit.value"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: selling costs",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -150325.857153,
+                "currency": "USD"
+              }
+            ],
+            "total": -150325.857153,
+            "streams": [
+              "opco.exit.selling_costs"
             ]
           }
         ],
         "reconciliation": {
           "bottom_line": 3477085.354431,
           "model_total": 3477085.354431,
-          "residual": -0.0
+          "residual": 0.0
         }
       },
       {
@@ -6989,13 +7339,121 @@
                 "currency": "USD"
               },
               {
-                "amount": 7365967.00048,
+                "amount": 7516292.857633,
                 "currency": "USD"
               }
             ],
-            "total": 7365967.00048,
+            "total": 7516292.857633,
             "streams": [
               "opco.exit.value"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: selling costs",
+            "depth": 1,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -150325.857153,
+                "currency": "USD"
+              }
+            ],
+            "total": -150325.857153,
+            "streams": [
+              "opco.exit.selling_costs"
             ]
           },
           {

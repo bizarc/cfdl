@@ -177,6 +177,13 @@ label = "Exit proceeds"
 depth = 1
 categories = ["investing.exit"]
 
+[[statements.rows]]
+kind = "line"
+label = "Less: selling costs"
+depth = 1
+categories = ["investing.selling_costs"]
+display = "positive"
+
 # ---------------------------------------------------------------------------
 # SUB-INDUSTRY VIEWS.
 #
@@ -329,6 +336,13 @@ label = "Exit proceeds"
 depth = 1
 categories = ["investing.exit"]
 
+[[statements.rows]]
+kind = "line"
+label = "Less: selling costs"
+depth = 1
+categories = ["investing.selling_costs"]
+display = "positive"
+
 # The statement of cash flows, by activity — ASC 230-10-45 / IAS 7.10.
 #
 # The three sections ARE CFDL's category roots, so this view is the language's
@@ -392,6 +406,13 @@ kind = "line"
 label = "Proceeds from disposals"
 depth = 1
 categories = ["investing.exit"]
+
+[[statements.rows]]
+kind = "line"
+label = "Less: selling costs"
+depth = 1
+categories = ["investing.selling_costs"]
+display = "positive"
 
 [[statements.rows]]
 kind = "subtotal"

@@ -359,6 +359,13 @@ label = "Sale proceeds"
 depth = 1
 categories = ["investing.reversion"]
 
+[[statements.rows]]
+kind = "line"
+label = "Less: selling costs"
+depth = 1
+categories = ["investing.selling_costs"]
+display = "positive"
+
 # The same cash, reported annually. Grain belongs to the OUTPUT, so this
 # COEXISTS with the statement above rather than replacing it: one run carries a
 # per-period pro forma and an annual summary of the same ledger.
@@ -572,3 +579,10 @@ kind = "line"
 label = "Sale proceeds"
 depth = 1
 categories = ["investing.reversion"]
+
+[[statements.rows]]
+kind = "line"
+label = "Less: selling costs"
+depth = 1
+categories = ["investing.selling_costs"]
+display = "positive"

@@ -203,12 +203,17 @@ stream energy.royalty.expense on entity asset.plant outflow currency USD {
 // 45% of the $7,000,000 of hard cost, 18 years at 7%, level annual payments.
 // Ends in period 17 (2043), leaving seven unlevered years — the cliff is
 // asserted at periods 17 and 18.
+// funded_at_close = 0: the reference's cash flow starts post-financing —
+// it nets operations against debt service and never books the draw — so the
+// proceeds the contract funds by default are excluded to state what the
+// source states.
 contract energy.debt_service on entity asset.plant {
   term 2026-01..2043-01
   terms {
     rate        = 0.07
     term_months = 216
     principal   = 3150000
+    funded_at_close = 0
   }
 }
 ```
@@ -234,5 +239,5 @@ Checked period by period: **8 series** across **25 periods** — **193 values** 
 - `energy.om.expense.pilot`
 - `energy.royalty.expense`
 - `domain.energy.opex`
-- `energy.debt.service`
+- `domain.energy.debt_service_periodic`
 

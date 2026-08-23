@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "29e2cf2065f422edac1002cca29a8832fbe1a74b21d31aa1f6bbec326f40ca35",
-  "ledger_hash": "8f664383891109b997401768951442ce944c693ea84232ad1262baf1da3f41ba",
+  "model_hash": "bdbfa40e44870225ec846141872846078def2c62f8dbbc56d6d98b8d852bfa07",
+  "ledger_hash": "546c1498bcd5ae67ebd0b8251a33db38865ab130fe72ff324ca1a58e1f18128d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -11,10 +11,19 @@
     "streams": [
       {
         "contract": "opco.exit_perpetuity",
+        "stream": "opco.exit.value",
+        "terms": {
+          "base_value": "1169.858560",
+          "discount_rate": "0.085",
+          "growth_rate": "0.025"
+        }
+      },
+      {
+        "contract": "opco.exit_perpetuity",
         "defaults_applied": [
           "selling_costs"
         ],
-        "stream": "opco.exit.value",
+        "stream": "opco.exit.selling_costs",
         "terms": {
           "base_value": "1169.858560",
           "discount_rate": "0.085",
@@ -44,6 +53,10 @@
       "run.periods_per_year": 1.0,
       "stream.firm.fcff.total": {
         "amount": 5416.32256,
+        "currency": "USD"
+      },
+      "stream.opco.exit.selling_costs.total": {
+        "amount": 0.0,
         "currency": "USD"
       },
       "stream.opco.exit.value.total": {
@@ -440,6 +453,36 @@
           },
           {
             "amount": 1169.85856,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.exit.selling_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]

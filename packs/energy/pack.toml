@@ -11,6 +11,9 @@ categories = [
   "operating.tax_benefit",
   "investing.capital.capex",
   "financing.debt_service",
+  "financing.debt_proceeds",
+  "financing.interest",
+  "financing.debt_principal",
 ]
 
 

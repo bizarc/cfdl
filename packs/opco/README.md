@@ -116,7 +116,7 @@ intrinsic valuation ends with. The pack could previously express only a
 no contract.
 
 ```
-TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate) * (1 - selling_costs)
+TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate)   # gross; selling costs lower separately
 ```
 
 | term | meaning | default |

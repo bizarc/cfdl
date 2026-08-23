@@ -13,6 +13,7 @@ categories = [
   "investing.capital.capex",
   "investing.acquisition",
   "investing.exit",
+  "investing.selling_costs",
   "financing.interest",
   "financing.debt_principal",
   "financing.debt_proceeds",

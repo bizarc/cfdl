@@ -570,6 +570,45 @@
       }
     },
     {
+      "id": "41bd0d7c5c7366f8cdaf4b98cf793c64",
+      "name": "opco.exit.selling_costs",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.selling_costs",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2027-12-01",
+        "at_period_end": true
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "7.0 * (series_sum(\"opco.revenue.recurring.*\", time.t - 12.0 + 1.0, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 12.0 + 1.0, time.t)) * 0.02"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 68,
+          "start_col": 1,
+          "end_line": 74,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_exit_ebitda_selling_costs"
+        }
+      }
+    },
+    {
       "id": "060bc7a90f81ae71ec9651d908daea48",
       "name": "opco.exit.value",
       "owner": {
@@ -585,7 +624,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "7.0 * (series_sum(\"opco.revenue.recurring.*\", time.t - 12.0 + 1.0, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 12.0 + 1.0, time.t)) * (1.0 - 0.02)"
+        "src": "7.0 * (series_sum(\"opco.revenue.recurring.*\", time.t - 12.0 + 1.0, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - 12.0 + 1.0, time.t))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -876,6 +915,13 @@
     },
     {
       "stream": "opco.exit.value",
+      "contract": "opco.exit_ebitda",
+      "terms": {
+        "exit_multiple": "7.0"
+      }
+    },
+    {
+      "stream": "opco.exit.selling_costs",
       "contract": "opco.exit_ebitda",
       "terms": {
         "exit_multiple": "7.0",

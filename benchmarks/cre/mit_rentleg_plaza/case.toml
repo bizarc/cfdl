@@ -1,3 +1,7 @@
+# The reversion asserts two columns since the exit decomposed: the GROSS sale
+# value (ten times forward NOI — the source's own quantity) and the 5%
+# commission as its own line. Gross less commission is the net the source
+# publishes, and the net_cash_flow column is unchanged.
 # Benchmark case: Rentleg Plaza — MIT OCW 11.431J Problem Set 1, Part C.
 #
 # 30,000 NRSF office, two suites, annual 5-year DCF (2001-2005). Expense stops

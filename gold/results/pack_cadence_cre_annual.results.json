@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "9844a6f451b05a1231e0121ce2abf622952422c37d2e2af9c49a31f921fc9ed7",
-  "ledger_hash": "42667ad769cc8e98561b62ba6c3a925fc8376d7032ca8927c0e2ae0075967381",
+  "model_hash": "04a3a65c3748951645cee0ffcec9a13bc66b9fb26f48ebc20b09ab48e04e2258",
+  "ledger_hash": "38e0ab551922cbfe642ce4b7fbf4baf22bb9138641ccc6e11df25a732974a201",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -75,6 +75,13 @@
         "contract": "cre.exit_forward",
         "stream": "cre.exit.proceeds",
         "terms": {
+          "exit_cap": "0.065"
+        }
+      },
+      {
+        "contract": "cre.exit_forward",
+        "stream": "cre.exit.selling_costs",
+        "terms": {
           "exit_cap": "0.065",
           "selling_costs": "0.02"
         }
@@ -103,7 +110,11 @@
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
       "stream.cre.exit.proceeds.total": {
-        "amount": 3176234.993077,
+        "amount": 3241056.115385,
+        "currency": "USD"
+      },
+      "stream.cre.exit.selling_costs.total": {
+        "amount": -64821.122308,
         "currency": "USD"
       },
       "stream.cre.opex.line.total": {
@@ -325,7 +336,29 @@
             "currency": "USD"
           },
           {
-            "amount": 3176234.993077,
+            "amount": 3241056.115385,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.exit.selling_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -64821.122308,
             "currency": "USD"
           }
         ]

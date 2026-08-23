@@ -146,20 +146,61 @@ schedule_to = ""
 [rules.units]
 amount = "USD"
 
+# Decomposed per the contract design rules (docs/07 §6.4): the whole
+# instrument, one stream per line. The single netted `energy.debt.service`
+# lost the interest/principal split and emitted no draw at all. The split is
+# exact — ipmt + ppmt equals the level payment — so the two legs fold where
+# the netted line folded and coverage is unchanged.
+#
+# A reconciliation whose source's cash flow starts post-financing states
+# `funded_at_close = 0` and says so; the default is the whole instrument.
 [[rules]]
-id = "energy_debt_service"
+id = "energy_debt_proceeds"
 contract_name = "energy.debt_service"
-stream_name = "energy.debt.service{{contract.dot_suffix}}"
+stream_name = "energy.debt.proceeds{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+category = "financing.debt_proceeds"
+amount_expr = "{{contract.principal}} * {{contract.funded_at_close}}"
+schedule_kind = "on_date"
+schedule_from = "{{contract.term_start}}"
+schedule_to = ""
+
+[rules.defaults]
+funded_at_close = "1"
+
+[rules.units]
+principal = "USD"
+
+[[rules]]
+id = "energy_debt_interest"
+contract_name = "energy.debt_service"
+stream_name = "energy.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.debt_service"
-# pmt() returns the Excel-convention negative payment for a positive pv;
-# negate for a positive outflow amount. Decimal-exact for whole-month terms.
-amount_expr = "-pmt({{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.term_months}}, {{contract.principal}})"
+category = "financing.interest"
+# ipmt() returns the Excel-convention negative interest for a positive pv;
+# negate for a positive outflow amount.
+amount_expr = "-ipmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
+[rules.units]
+principal = "USD"
+term_months = "months"
+
+[[rules]]
+id = "energy_debt_principal"
+contract_name = "energy.debt_service"
+stream_name = "energy.debt.principal{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "financing.debt_principal"
+amount_expr = "-ppmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
 
 [rules.units]
 principal = "USD"

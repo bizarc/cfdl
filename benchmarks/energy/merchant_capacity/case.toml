@@ -1,3 +1,7 @@
+# The debt column asserts `domain.energy.debt_service_periodic` — the
+# positive-signed subtotal folding the interest and principal legs — rather
+# than the retired netted stream. Same magnitudes, per period, against the
+# same source; only the sign convention moved when the instrument decomposed.
 # Benchmark case: 100 MW merchant renewable with a capacity contract and the
 # production tax credit, against the national laboratory's project-finance model.
 #
