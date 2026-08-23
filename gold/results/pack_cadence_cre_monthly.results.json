@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "3270aa022571cd708d4c980609271fe12ab437b3414c903ce181b2434c4eee29",
+  "model_hash": "743ff30cbfb58dc5974cd4f95413efad07dfb789491e0e8fe7d6410fa30b4e53",
   "ledger_hash": "fc59c4cc931a1824275eb75bdc08aa0f246660dd58075e80640280ab69f4cb31",
   "engine": {
     "name": "cfdl-engine",
@@ -55,9 +55,7 @@
         "contract": "cre.opex_line",
         "defaults_applied": [
           "amount",
-          "escalation_curve",
           "occupancy",
-          "occupancy_curve",
           "pct_fixed"
         ],
         "stream": "cre.opex.line",
@@ -65,9 +63,7 @@
           "amount": "0",
           "amount_year": "300000",
           "escalation": "0.025",
-          "escalation_curve": "",
           "occupancy": "1",
-          "occupancy_curve": "",
           "pct_fixed": "1"
         }
       },

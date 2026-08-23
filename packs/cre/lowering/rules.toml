@@ -231,17 +231,12 @@ schedule_to = "{{contract.term_end}}"
 # escalation and in whether they could be instanced — and, confusingly, the one
 # named for a single property was the repeatable one.
 #
-# ESCALATION AND OCCUPANCY ARE EACH A PAIR, not a toggle. A term is a literal or
-# one declared input, never an expression — the parser says so:
-#
-#   Term 'escalation' takes a single value. A term is a literal or one declared
-#   input (e.g. `inputs.yield`); compute derived values in an `assume` instead.
-#
-# So `escalation = 0.03` and `escalation = inputs.cpi` both work, and a
-# time-varying rate cannot arrive through the term at all. The pack composes the
-# `curve_value` call and the term carries only the curve NAME. `escalation = 0`
-# is the default and IS "no escalation"; a boolean would be a second way to say
-# it and a way for the two to disagree.
+# ESCALATION AND OCCUPANCY ARE EXPRESSIONS when they vary. A term may hold one,
+# so `escalation = 0.03`, `escalation = inputs.cpi`, and
+# `escalation = curve_value("cpi", time.date) + 0.005` all state the agreement
+# directly. The `escalation_curve`/`occupancy_curve` twin terms this rule once
+# carried are gone — a curve arrives through the term itself. `escalation = 0`
+# is the default and IS "no escalation".
 #
 # The occupancy factor is `pct_fixed + (1 - pct_fixed) * occupancy`. Property
 # tax and insurance run whether the building is full or empty; utilities and
@@ -259,7 +254,7 @@ stream_name = "cre.opex.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.opex"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + if(\"{{contract.escalation_curve}}\" == \"\", {{contract.escalation}}, curve_value(\"{{contract.escalation_curve}}\", time.date)), {{time.elapsed_years}}) * ({{contract.pct_fixed}} + (1 - {{contract.pct_fixed}}) * if(\"{{contract.occupancy_curve}}\" == \"\", {{contract.occupancy}}, curve_value(\"{{contract.occupancy_curve}}\", time.date)))"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}) * ({{contract.pct_fixed}} + (1 - {{contract.pct_fixed}}) * {{contract.occupancy}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -269,10 +264,8 @@ schedule_to = "{{contract.term_end}}"
 amount = "0"
 amount_year = "0"
 escalation = "0"
-escalation_curve = ""
 pct_fixed = "1"
 occupancy = "1"
-occupancy_curve = ""
 
 [[rules]]
 id = "cre_exit_selling_costs"
@@ -502,7 +495,7 @@ payment_frequency = ""
 #
 # THE CURVE CARRIES AN ANNUALIZED FUNDING RATE, and every read divides by
 # `{{model.periods_per_year}}`. That is the same convention `rent_year`,
-# `opex_year` and opco's `growth_curve` already follow, and it is what makes
+# `opex_year` and opco's `growth_rate` already follow, and it is what makes
 # the contract cadence-neutral: a `curve` is a LEVEL, so a step curve returns
 # the last point at or before the date whether or not a point was declared
 # there. Read as a per-period TOTAL instead, a schedule stated quarterly and

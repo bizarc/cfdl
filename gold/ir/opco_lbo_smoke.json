@@ -24,7 +24,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * pow(1 + if(\"\" == \"\", 0, curve_value(\"\", time.date)), 1 / 12)"
+            "src": "prev * pow(1 + 0, 1 / 12)"
           }
         },
         "opco_opex_growth": {
@@ -34,7 +34,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * pow(1 + if(\"\" == \"\", 0.03, curve_value(\"\", time.date)), 1 / 12)"
+            "src": "prev * pow(1 + 0.03, 1 / 12)"
           }
         },
         "opco_revenue_growth": {
@@ -44,7 +44,7 @@
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * pow(1 + if(\"\" == \"\", 0.05, curve_value(\"\", time.date)), 1 / 12)"
+            "src": "prev * pow(1 + 0.05, 1 / 12)"
           }
         }
       },
@@ -744,7 +744,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "max(0.0, if(\"\" == \"\", 0.25, curve_value(\"\", time.date)) * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - (20000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, time.t / 12.0)))"
+        "src": "max(0.0, 0.25 * (series_sum(\"opco.revenue.recurring.*\", time.t, time.t) + series_sum(\"opco.opex.recurring.*\", time.t, time.t) + series_sum(\"opco.debt.interest.*\", time.t, time.t) - (20000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, time.t / 12.0)))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -815,12 +815,10 @@
       "terms": {
         "amount": "200000",
         "amount_year": "0",
-        "growth_curve": "",
         "growth_rate": "0.05"
       },
       "defaults_applied": [
-        "amount_year",
-        "growth_curve"
+        "amount_year"
       ]
     },
     {
@@ -829,12 +827,10 @@
       "terms": {
         "amount": "120000",
         "amount_year": "0",
-        "growth_curve": "",
         "growth_rate": "0.03"
       },
       "defaults_applied": [
-        "amount_year",
-        "growth_curve"
+        "amount_year"
       ]
     },
     {
@@ -853,13 +849,11 @@
       "terms": {
         "amount": "5000",
         "amount_year": "0",
-        "growth_curve": "",
         "growth_rate": "0",
         "pct_of_revenue": "0.02"
       },
       "defaults_applied": [
         "amount_year",
-        "growth_curve",
         "growth_rate"
       ]
     },
@@ -897,13 +891,11 @@
         "da_growth": "0",
         "da_monthly": "20000",
         "da_year": "0",
-        "tax_rate": "0.25",
-        "tax_rate_curve": ""
+        "tax_rate": "0.25"
       },
       "defaults_applied": [
         "da_growth",
-        "da_year",
-        "tax_rate_curve"
+        "da_year"
       ]
     },
     {

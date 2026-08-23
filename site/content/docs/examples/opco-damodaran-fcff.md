@@ -135,7 +135,7 @@ contract opco.revenue_line.core on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 22853.6700000000
-    growth_curve = "revenue_growth"
+    growth_rate = curve_value("revenue_growth", time.date)
   }
 }
 
@@ -145,7 +145,7 @@ contract opco.opex_line.operating on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 19639.7250000000
-    growth_curve = "revenue_growth"
+    growth_rate = curve_value("revenue_growth", time.date)
   }
 }
 
@@ -154,7 +154,7 @@ contract opco.opex_line.operating on entity asset.firm {
 contract opco.cash_taxes.federal on entity asset.firm {
   term 2026-01..2035-01
   terms {
-    tax_rate_curve = "tax_rate"
+    tax_rate = curve_value("tax_rate", time.date)
   }
 }
 
@@ -165,7 +165,7 @@ contract opco.capex_line.reinvestment on entity asset.firm {
   term 2026-01..2035-01
   terms {
     amount = 668.8079047797
-    growth_curve = "revenue_growth"
+    growth_rate = curve_value("revenue_growth", time.date)
   }
 }
 ```

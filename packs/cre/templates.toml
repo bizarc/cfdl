@@ -66,7 +66,7 @@ contract cre.opex_line.utilities {
     amount_year = ${amount_year}
     escalation = ${escalation}
     pct_fixed = ${pct_fixed}
-    occupancy_curve = "${occupancy_curve}"
+    occupancy = curve_value("${occupancy_curve}", time.date)
   }
 }
 """
@@ -110,7 +110,7 @@ contract cre.opex_line.cleaning {
     amount_year = ${amount_year}
     escalation = ${escalation}
     pct_fixed = ${pct_fixed}
-    occupancy_curve = "${occupancy_curve}"
+    occupancy = curve_value("${occupancy_curve}", time.date)
   }
 }
 """

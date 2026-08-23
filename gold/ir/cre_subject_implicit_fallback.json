@@ -144,7 +144,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "(12000.0 + 0.0 / 12.0) * pow(1.0 + if(\"\" == \"\", 0.0, curve_value(\"\", time.date)), round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * if(\"\" == \"\", 1.0, curve_value(\"\", time.date)))"
+        "src": "(12000.0 + 0.0 / 12.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * 1.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -176,17 +176,13 @@
         "amount": "12000",
         "amount_year": "0",
         "escalation": "0",
-        "escalation_curve": "",
         "occupancy": "1",
-        "occupancy_curve": "",
         "pct_fixed": "1"
       },
       "defaults_applied": [
         "amount_year",
         "escalation",
-        "escalation_curve",
         "occupancy",
-        "occupancy_curve",
         "pct_fixed"
       ]
     }

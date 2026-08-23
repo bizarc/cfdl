@@ -81,7 +81,7 @@ statement.
 | `cre.lease_unit` | `escalation`, `expense_stop_year`, `gross_up_factor`, `lc_total`, `opex_escalation`, `opex_year`, `pro_rata_share`, `rent_year`, `ti_total` | `cre.unit.base_rent.[suffix]`, `cre.unit.abatement.[suffix]`, `cre.unit.recoveries.[suffix]`, `cre.unit.ti_lc.[suffix]` |
 | `cre.rollover` | `market_escalation`, `market_rent_year`, `new_ti_lc`, `renewal_probability`, `renewal_rent_year`, `renewal_ti_lc` | `cre.rollover.rent.[suffix]`, `cre.rollover.ti_lc.[suffix]` |
 | `cre.vacancy_loss` | `potential_gross_year`, `rate` | `cre.vacancy.loss` |
-| `cre.opex_line` | `amount`, `amount_year`, `escalation`, `escalation_curve`, `occupancy`, `occupancy_curve`, `pct_fixed` | `cre.opex.line[.suffix]` |
+| `cre.opex_line` | `amount`, `amount_year`, `escalation`, `occupancy`, `pct_fixed` | `cre.opex.line[.suffix]` |
 | `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.selling_costs`, `cre.exit.proceeds` |
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent.overage[.suffix]` |
 | `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
@@ -101,14 +101,14 @@ statement.
 
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `opco.revenue_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate` | `opco.revenue.recurring[.suffix]` |
-| `opco.opex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate` | `opco.opex.recurring[.suffix]` |
+| `opco.revenue_line` | `amount`, `amount_year`, `growth_rate` | `opco.revenue.recurring[.suffix]` |
+| `opco.opex_line` | `amount`, `amount_year`, `growth_rate` | `opco.opex.recurring[.suffix]` |
 | `opco.working_capital` | `amount` | `opco.working_capital.adjustment[.suffix]` |
 | `opco.exit_multiple` | `base_value`, `exit_multiple` | `opco.exit.value` |
 | `opco.working_capital_policy` | `ap_days`, `ar_days`, `inv_days`, `release_at_end` | `opco.working_capital.adjustment[.suffix]` |
-| `opco.capex_line` | `amount`, `amount_year`, `growth_curve`, `growth_rate`, `pct_of_revenue` | `opco.capex.line[.suffix]` |
+| `opco.capex_line` | `amount`, `amount_year`, `growth_rate`, `pct_of_revenue` | `opco.capex.line[.suffix]` |
 | `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
-| `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate`, `tax_rate_curve` | `opco.taxes.cash[.suffix]` |
+| `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate` | `opco.taxes.cash[.suffix]` |
 | `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
 | `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
 | `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |

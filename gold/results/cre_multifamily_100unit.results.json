@@ -1,6 +1,6 @@
 {
   "results_version": "0.3",
-  "model_hash": "b0501efcf3a472f46876ea17c908a20e0abcceba7db3134b66387c45fc76d656",
+  "model_hash": "57fc001ec79fa434c78d6c8d327c2a1fe6a3a5ba7ec16240edc4c859beeb9cc3",
   "ledger_hash": "b1625dd501e48b9082386cfff40d186ace642f0e5cce9e7a1ffcc3f5500f4165",
   "engine": {
     "name": "cfdl-engine",
@@ -27,9 +27,7 @@
         "defaults_applied": [
           "amount_year",
           "escalation",
-          "escalation_curve",
           "occupancy",
-          "occupancy_curve",
           "pct_fixed"
         ],
         "stream": "cre.opex.line",
@@ -37,9 +35,7 @@
           "amount": "63600",
           "amount_year": "0",
           "escalation": "0",
-          "escalation_curve": "",
           "occupancy": "1",
-          "occupancy_curve": "",
           "pct_fixed": "1"
         }
       },
