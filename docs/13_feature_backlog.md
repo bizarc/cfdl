@@ -1718,6 +1718,15 @@ check the next character is a dot.
 lowering and validations, so the two can no longer disagree. This item is the
 next step, and it is a different claim: the predicate should not need to exist.
 
+**The grammar already answered this and the implementation did not follow.**
+`contract_stmt` takes TWO qnames — the contract TYPE and the INSTANCE NAME —
+so `contract cre.lease_unit tenant_a` states both and neither has to be
+recovered from the other. The implementation accepts one, fusing them into
+`cre.lease_unit.tenant_a`, and every consumer then does string surgery to get
+the type back. `dot_suffix`, the deleted `ContractMatch` mode, the bare-read
+bug class that `tools/check-pack-series.py` now gates, and this item are all
+downstream of that one restriction. See 7.63.
+
 **What carrying the type would buy.**
 
 *Resolution becomes decidable.* The predicate takes the first declared name that
@@ -1810,3 +1819,124 @@ production mentions and require the parser to read them, and the reverse. Same
 shape as `check-keyword-register.py`, no dependency. It would have caught
 `owner` and `direction`; it would NOT have caught `term` moving inside the
 contract block, so it is a stopgap and should be labelled one.
+
+---
+
+### 7.62 An option accepts `on entity`, which nothing documents
+
+*Belongs with the language (section 5). Found reconciling the grammar.*
+
+`option call_at_120 on entity asset.plant type Option.Call { … }` parses and
+ships in models. §14.1 of the language specification does not show the clause,
+and the EBNF does not have it — the parser grew it and neither document
+followed.
+
+Resolve in one direction: document it in §14.1 and the grammar, or remove it and
+migrate the models that use it. It is small either way, and it should not
+survive to v1 as surface nobody wrote down.
+
+---
+
+### 7.63 A contract cannot name its instance separately from its type
+
+*Belongs with the language (section 5). The grammar's design; the implementation
+never met it.*
+
+```ebnf
+contract_stmt = "contract" qname [ qname ] [ "on" "entity" entity_ref ]
+                contract_block ;
+```
+
+Two qnames: the contract TYPE a pack declares, and the INSTANCE NAME. The
+implementation accepts one and fuses them — `cre.lease_unit.tenant_a` — so the
+type is no longer stated anywhere and has to be recovered by stripping a prefix
+and checking the next character is a dot.
+
+**Everything downstream of that restriction is a workaround for it:**
+
+- `{{contract.dot_suffix}}` in every instanceable lowering rule
+- `ContractMatch::Exact` / `::Instance`, deleted this week after two thirds of
+  pack validations turned out to be silently skipped
+- the bare-read bug class — `cre.pct_rent` double-counting into forward NOI,
+  `cre.property.opex` vanishing from it — now gated by
+  `tools/check-pack-series.py`
+- 7.58, which asks for the type to be carried rather than recovered
+
+None of these would exist if the instance name were its own token. No reason for
+the restriction is recorded anywhere.
+
+**Scope.** Accept the two-qname form; keep the fused spelling working or migrate
+the ~520 declarations; carry `type` and `instance` separately on the IR contract;
+then retire the string surgery. Large, and it closes more than it costs.
+
+---
+
+### 7.64 A contract term cannot hold an expression, and the workarounds are worse
+
+*Belongs with the language (section 5). The grammar allowed it; the
+specification restricted it.*
+
+The grammar says `map_entry = qname literal_or_expr`. §8 of the language
+specification says the opposite, with a reason:
+
+> Nothing else. A term MUST NOT contain an expression: `mwh_year = 1000 + 500`
+> is an error, not a value of 1500. Derived quantities belong in an `assume`,
+> which the term then references.
+>
+> A contract records what was agreed, so most terms are literals.
+
+The reason is real — a term whose provenance is a model rather than an
+agreement is not a record of anything. But it does not support the rule it is
+attached to, because **what was agreed is itself an expression in many cases.**
+A lease escalating at "CPI plus 50 basis points" agreed exactly that; so did a
+management fee of "3% of effective gross income", a rent of "the greater of base
+or 6% of sales", and a coupon of "SOFR + 225bp". Forcing those into a
+model-level `assume` does not preserve the agreement — it moves the agreement
+OUT of the contract and leaves a reference behind. The literal-only rule
+records simple agreements faithfully and complex ones worse than an expression
+would.
+
+So the restriction is absolute where the argument is not, and the price is paid
+everywhere.
+
+**What it costs today.**
+
+*Every derived term needs a model-level global.* `assume` is the only escape, so
+`escalation = inputs.cpi + 0.005` becomes a named `assume` that exists solely to
+be referenced once. On a rent roll of forty units that is forty globals.
+
+*A time-varying value cannot come through a term at all.* An expression is
+needed to call `curve_value`, so a pack cannot accept a curve as a term. It
+accepts the curve's NAME, as a string, and composes the call itself:
+
+```
+if("{{contract.escalation_curve}}" == "", {{contract.escalation}},
+   curve_value("{{contract.escalation_curve}}", time.date))
+```
+
+*So every term that might vary becomes a PAIR.* `escalation` /
+`escalation_curve`, `occupancy` / `occupancy_curve`, `growth_rate` /
+`growth_curve`, `tax_rate` / `tax_rate_curve`. Each pair carries that `if` in the
+lowering expression, and the curve reference is a bare string that nothing
+validates until the run reaches it.
+
+**What allowing expressions would buy.** `escalation = curve_value("cpi",
+time.date)` states the intent directly, the pairs collapse, the `if` disappears
+from four packs, and the curve reference becomes an ordinary expression the
+compiler resolves.
+
+**What has to be decided first**, because the specification's reason does not
+evaporate:
+
+1. Does an expression-valued term break provenance — can a reader still see what
+   was agreed? A permitted middle is that terms may reference inputs and curves
+   but not arithmetic over them.
+2. Does it break the term SCHEMA a pack validates against — `term_number` with
+   `min`/`max` cannot bound an expression, so `E6062`-style checks would become
+   run-time or would not apply.
+3. Does it reintroduce ordering problems — an expression reading a stream would
+   make a contract phase-2.
+
+`E5011_TERM_CLIP_OUT_OF_BOUNDS` shows the current design taking bounds
+seriously: a term deferring to an input is checked against that input's clip at
+compile time. Whatever is allowed must keep that property or say why it cannot.
