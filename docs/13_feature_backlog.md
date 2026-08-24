@@ -68,27 +68,6 @@ is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ## 3. OpCo pack
 
-### 3.3 A settlement lag's sub-period residual is dropped from discounting
-
-Not found by the DCF, but exposed while deciding how `mid` should interact with
-payment terms. `net <n>` is resolved on the calendar — billing date, plus the
-lag, rolled for business days — and then the cash is moved into whichever
-**period** the result lands in. The lag is therefore honoured to whole periods
-and its remainder is dropped from the discounting.
-
-On a monthly model with `net 30` that is exact. With `net 45`, the cash lands
-one period later and the extra fifteen days are not discounted for. The error
-is small and one-directional, and it applies to every schedule carrying payment
-terms, not only to the ones that also want a position.
-
-`mid` with `net` is rejected outright today
-(`E2109_SCHEDULE_CONFLICTING_PLACEMENT`) rather than composed, because
-composing them means answering this. Doing it properly means carrying a
-fractional residual out of the bucketing step and adding it to the stream's
-offset — which the offset mechanism already supports, since it is a float.
-
----
-
 ## 4. Energy pack
 
 ### 4.1 A rounding builtin, and the production credit that needs one

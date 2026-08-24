@@ -8,6 +8,25 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Closed: backlog 3.3, a documented convention rather than a defect
+
+`net <n>` discounts a payment from the period it lands in, not from its exact
+due date. `docs/12` already names this — "Discounting is at bucket
+granularity… This is a stated convention, not an oversight" — quantifies it at
+roughly 0.5% of an affected flow on a monthly grid at 12%, and notes that the
+first-order effect, moving the cash two periods later, IS captured.
+
+The item also described the error backwards: measured, `net 30` and `net 45`
+land in the same bucket, so the residual costs a `net 45` flow nothing against
+a `net 30` one. Recorded in `docs/26` with the measurements, including the two
+ways this is easy to reason about wrongly. Removing the convention would be an
+architectural change — per-payment discount offsets in `npv_with_offsets` —
+that moves numbers in every model using `net`, and belongs as its own item if
+ever wanted.
+
+Backlog: 44 items.
+
+
 ### Changed: schedule placement is one axis — `start` / `mid` / `end`
 
 **Breaking, pre-release: `due` is removed.** Write `start`.
