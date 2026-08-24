@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Closed: SMM and MDR are expressible today (backlog 2.3)
+
+2.3 asked for `smm`/`mdr` terms because a 1% SMM pool had to be entered as
+`cpr = 0.11361512828387077`, "computed by hand and unrecognisable to a
+reader." A term holds an expression, so the conversion can be stated instead:
+`cpr = 1 - pow(1 - 0.01, time.ppy)` — legible, and cadence-correct via
+`time.ppy` rather than a literal 12, which the item itself asked for. Verified
+byte-identical to the hand-computed constant across every stream and all 361
+periods of a 30-year pool.
+
+Closed rather than built: the remaining ask was vocabulary, not capability, and
+the expression is a complete statement with no staleness risk. The idiom is
+recorded in `docs/26` for any quoted-cadence mismatch.
+
+
 ### Added: E5027_ACTUAL_AMORTIZATION_BASIS
 
 `amortization_day_count` chooses what a level payment is struck on, and an

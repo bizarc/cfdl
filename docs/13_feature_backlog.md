@@ -66,24 +66,6 @@ single-pool model at **0.0** across all 372 periods, through two aggregations
 that share no code. Heterogeneity of any kind is already exact that way, which
 is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
-### 2.3 SMM and MDR as direct terms
-
-*Partly relieved by 2.1: a pool at a published ramp now states `psa_speed` /
-`sda_speed` / `abs_speed` directly and never touches `cpr`/`cdr`. What remains
-is the flat case, where a hand-computed annual equivalent is still required.*
-
-The pack accepts only annual `cpr`/`cdr`. Practitioners quote monthly SMM and
-MDR — the published reference schedules are specified that way — so a 1% SMM pool
-has to be entered as `cpr = 1 - 0.99^12 = 0.11361512828387077`, computed by
-hand and unrecognisable to a reader.
-
-Shape: accept `smm`/`mdr` alongside `cpr`/`cdr`, mutually exclusive with them
-(the `terms_mutually_exclusive` check kind already exists), converting on the
-way in. Note the conversion is cadence-dependent, so it belongs with
-`{{model.periods_per_year}}` rather than a literal 12.
-
----
-
 ### 2.4 Sequential-pay note classes
 
 The credit pack models collateral. It has no liability stack, so it cannot say
