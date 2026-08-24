@@ -222,6 +222,45 @@ The refactor is the evidence it was mechanical: 17 IR goldens changed shape and
 **not one number moved** — the 17 results goldens that differ do so only in
 hash fields, which necessarily follow the IR.
 
+### Payment terms discount at bucket granularity, on purpose
+
+**Claimed:** `net <n>` honours its lag only to whole periods and drops the
+remainder from discounting, so `net 45` on a monthly grid loses fifteen days.
+A fractional residual should be carried out of the bucketing step and added to
+the stream's offset.
+
+**Actually:** that is a stated convention, and `docs/12` §"Discounting is at
+bucket granularity" says so in those words — *"This is a stated convention, not
+an oversight."* A payment is discounted from the period it lands in; the
+fraction between that period's boundary and the actual due date is not
+modelled, and is worth roughly 0.5% on an affected flow on a monthly grid at
+12%. The first-order effect — moving the cash two periods later — IS captured.
+Measured, billing at the close of period 0 on a monthly grid:
+
+| terms | lands in | discounted from |
+|---|---|---|
+| `net 0` | period 0 | 1.0 periods |
+| `net 30` | period 2 | 3.0 periods |
+| `net 45` | period 2 | 3.0 periods |
+| `net 60` | period 3 | 4.0 periods |
+
+`net 30` and `net 45` landing in the same bucket is the convention working, not
+failing: within a bucket a stream has ONE position, which is its placement —
+`end` by default for a recurrence, so the close.
+
+**Two errors to avoid when reasoning about this.** The residual is not an extra
+discount, so a `net 45` flow is not penalised fifteen days against a `net 30`
+one; and the placement is not an over-discount either, because a period's cash
+is summarised at a single point by design, and which point is what
+`start`/`mid`/`end` selects.
+
+Removing the convention is not a bug fix but an architectural change — giving
+each PAYMENT its own discount offset rather than one per stream, in
+`npv_with_offsets` — and it would move numbers in every model that uses `net`.
+If that is ever wanted, it belongs as an item stated that way. It is also why
+`mid` combined with `net` is refused (`E2109`): composing them means answering
+this question, and picking a default quietly would answer it wrongly.
+
 ## How to achieve a behavior
 
 ### A rate quoted on a different cadence than the term takes
