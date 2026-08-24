@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Research: the A.CRE Retail Development Model catalogued as source 107
+
+Salvaged from a stale branch. The catalogue now carries 107 sourced models,
+63 of them with full period-by-period numeric output, and the A.CRE Retail
+Development Model (v2.2) is flagged as the sharpest available test of
+solve-to-target over a circular reference — the shape `docs/14` §5 rules out
+of the language and would need an explicit, bounded, convergence-checked
+construct if ever built.
+
+A work-in-progress benchmark for that model was NOT salvaged: it has no
+`case.toml`, so the benchmark runner cannot read it. It is preserved at
+`d197c5768a867eaec44cb6aec4c5f78ec3d06272` (branch `docs/remediate-backlog`, deleted) and can be recovered from
+there if the case is picked up.
+
+
 ### Closed: SMM and MDR are expressible today (backlog 2.3)
 
 2.3 asked for `smm`/`mdr` terms because a 1% SMM pool had to be entered as
