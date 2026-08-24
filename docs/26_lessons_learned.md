@@ -261,6 +261,42 @@ If that is ever wanted, it belongs as an item stated that way. It is also why
 `mid` combined with `net` is refused (`E2109`): composing them means answering
 this question, and picking a default quietly would answer it wrongly.
 
+### A quantity quoted to a tick, and the staircase it makes
+
+`round_to(x, step)` rounds to any tick — not just powers of ten, so an eighth,
+a quarter-cent or a 25-unit lot all work. It rounds ONE value; the recurrence
+is built around it.
+
+**A rounded recurrence is an entity field**, because `next` reads `prev`:
+
+```cfdl
+entity asset home_project : CRE.Asset.RealProperty {
+  opex_management init inputs.opex_management
+       next round_to(prev * (1 + inputs.opex_trend), 1)
+}
+```
+
+Each year escalates the previous year's ALREADY-ROUNDED figure, which is what
+a published schedule does and what no closed form reproduces. A stream cannot
+read its own prior period; a field can, and that is the whole difference.
+`benchmarks/cre/hud_home_multifamily` reproduces its source this way on five
+expense lines. Where the staircase happens to have a closed form — a statutory
+credit escalating off a fixed base — one `round_to` call inside the amount is
+enough, as `energy.ptc` does.
+
+**Check the unit before choosing the step.** The production tax credit is
+published "to the nearest 0.1 cent per kWh", which on a per-MWh quantity is
+`1.00`, not `0.10`: 0.1 cent = $0.001/kWh x 1000 kWh = $1.00/MWh. Rounding a
+per-MWh figure to 0.10 rounds to a hundredth of a cent, which is
+indistinguishable from not rounding at all — the pack default is `1.00` for
+exactly this reason, and only an external reference caught it.
+
+**Why an omitted staircase hides.** Carrying the credit continuously was wrong
+by up to 1.8% in a single year and about -0.3% over ten, because the error
+ALTERNATES SIGN rather than drifting. In aggregate it looks like noise, so it
+survives reconciliation against anything but a source that rounds — and a debt
+sizing struck off one year's coverage feels the 1.8%.
+
 ## How to achieve a behavior
 
 ### A rate quoted on a different cadence than the term takes

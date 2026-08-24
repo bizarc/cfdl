@@ -8,6 +8,25 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Closed: backlog 4.1, already shipped
+
+`round_to(x, step)` is in the expression vocabulary and `energy.ptc` already
+computes the statutory credit as a staircase, gated on a `round_step` term
+that defaults to 1.00 — whole dollars per MWh, since 0.1 cent/kWh is $1.00/MWh
+and rounding a per-MWh figure to 0.10 would be indistinguishable from not
+rounding. The item's "general case", a recurrence over already-rounded
+figures, is live in `benchmarks/cre/hud_home_multifamily` on five expense
+lines: an entity field whose `next` reads `prev`.
+
+Corrects a stale comment on `round_to` claiming the recurrence "needs a stream
+to read its own prior period, which the language cannot do". A stream cannot;
+a field can, and the comment now shows the shape. Recorded in `docs/26`,
+including the unit trap and why an omitted staircase survives reconciliation
+(the error alternates sign rather than drifting).
+
+Backlog: 43 items.
+
+
 ### Closed: backlog 3.3, a documented convention rather than a defect
 
 `net <n>` discounts a payment from the period it lands in, not from its exact

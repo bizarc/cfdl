@@ -70,37 +70,6 @@ is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ## 4. Energy pack
 
-### 4.1 A rounding builtin, and the production credit that needs one
-
-`energy_ptc_credit` carries the escalated credit rate as a continuous quantity.
-The statutory credit is published **rounded to the nearest 0.1 cent per kWh**
-after each year's inflation adjustment, so the real schedule is a staircase and
-the pack computes the ramp underneath it.
-
-The error alternates sign rather than drifting — reconciled over a 10-year
-window it runs from -1.79% in year 1 to +1.18% in year 5, netting -0.30% over
-the window. Small in aggregate, up to 1.8% in any single year, and a debt sizing
-struck off one year's coverage will feel it.
-
-The blocker is the language, not the pack: there is no `round_to(x, step)` in
-the expression environment, so the staircase cannot be written.
-
-**A second source now asks for the same builtin, and for more.** The HUD
-multifamily template escalates expenses as a *recurrence* — each year is last
-year's already-rounded figure times the trend — and two of its four expense
-lines reproduce exactly under that rule and under no closed form. Expressing it
-needs `round_to` **and** a backward period reference, because the input to
-each year's rounding is the previous year's output. That combination is the
-general case; the production credit above is the special case where the
-recurrence happens to have a closed form. That builtin is
-the item; the rule change is one call once it exists. It would also serve
-tariff blocks, tranche denominations and any other quantity quoted to a tick.
-
-Found reconciling `benchmarks/energy/utility_pv_singleowner` against an external
-project-finance model. `benchmarks/energy/wind_ptc_macrs` asserts the unrounded
-figure against an in-house generator, so both sides carried the same omission
-and had always agreed.
-
 ### 4.2 A derived depreciable basis
 
 `energy.macrs_shield` takes `basis` as an input. Taking an investment credit

@@ -169,10 +169,17 @@ pub fn call(name: &str, args: &[Arg], span: Span, mode: Mode) -> Result<Value, C
         // A STEP rather than a decimal count, because the ticks that matter are
         // not all powers of ten: an eighth, a quarter-cent, a 25-unit lot.
         //
-        // Note this rounds ONE value. It does not express a recurrence — "each
-        // year is last year's rounded figure, escalated" needs a stream to read
-        // its own prior period, which the language cannot do. See
-        // docs/13_feature_backlog.md.
+        // Note this rounds ONE value; the recurrence is built around it. "Each
+        // year is last year's ALREADY-ROUNDED figure, escalated" is an entity
+        // field, where `next` reads `prev`:
+        //
+        //     opex_management init inputs.opex_management
+        //          next round_to(prev * (1 + inputs.opex_trend), 1)
+        //
+        // A stream cannot read its own prior period, but a field can, and that
+        // is the shape — `benchmarks/cre/hud_home_multifamily` reproduces its
+        // source that way on five expense lines. The closed form is the special
+        // case where the staircase happens to have one.
         "round_to" => {
             let [x, step] = exactly::<2>(name, args, span)?;
             let (x, step) = (num(x)?, num(step)?);
