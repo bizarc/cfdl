@@ -1,7 +1,7 @@
 # CFDL — Domain Pack Roadmap & Reference Model Sourcing
 
 **Prepared 1 August 2026.** Companion workbook: `CFDL_pack_roadmap_and_model_catalogue.xlsx`
-(106 sourced models, 40 roadmap candidates, 221 exploded capability requirements).
+(107 sourced models, 40 roadmap candidates, 221 exploded capability requirements).
 
 ---
 
@@ -221,27 +221,27 @@ cash (seniors served in full before juniors receive anything), which is a genuin
 
 ## What was collected
 
-106 sources, all publicly accessible, all URLs fetched and confirmed:
+107 sources, all publicly accessible, all URLs fetched and confirmed:
 
 | | Count |
 |---|---:|
 | **By access** | |
 | Direct download (no gate) | 65 |
-| Free registration (email) | 20 |
+| Free registration (email) | 21 |
 | Free to view, no download | 21 |
 | **By validation fidelity** | |
-| Full cash flow table available — checkable period by period | 62 |
+| Full cash flow table available — checkable period by period | 63 |
 | Assumptions and outputs only — endpoint checkable | 27 |
 | Methodology only — specification, no numbers | 17 |
 | **By domain group** | |
-| CRE | 20 |
+| CRE | 21 |
 | Energy & infrastructure | 19 |
 | Credit & structured finance | 22 |
 | OpCo & corporate finance | 21 |
 | Transport, resources & royalty/IP | 24 |
 
 The sourcing bias was deliberate: a published cash flow schedule you can check period by period is
-worth far more than a methodology description, so **62 of 106 entries carry full numeric output**.
+worth far more than a methodology description, so **63 of 107 entries carry full numeric output**.
 
 ## The highest-value validation targets, by existing pack
 
@@ -260,6 +260,26 @@ a redistributable license. Beyond that: A.CRE's commercial mortgage model for da
 discrepancy is a bug, not a convention difference — and A.CRE's waterfall model with catch-up and
 clawback, where clawback specifically tests whether the language can express a distribution that is
 provisional until a terminal test resolves.
+
+Added 22 August 2026: the **A.CRE Retail Development Model (v2.2)** is the strongest development-side
+target in the CRE set, and the sharpest test anywhere in the catalog of *solve-to-target over a circular
+constraint*. The workbook carries two independent circularities and is explicit about both. Capitalized
+construction interest accrues onto the drawn balance, which grows total uses, which moves the
+percent-of-sources that the loan-to-cost test is supposed to pin — and the management fee is a percentage
+of effective gross revenue while EGR includes recovery income that includes the management fee. A.CRE
+deliberately refuses Excel's iterative-calculation setting and instead ships a VBA "click to recalculate"
+macro driving two hard-coded plug cells until each constraint closes. That is exactly the case CFDL should
+express declaratively as a constraint rather than an iteration, so a parity test here is a test of the
+solve, not just of the arithmetic. Beyond the circularity it validates a three-date lease (term start,
+rent start, recovery start as separate months), a per-lease recovery cap that overrides the computed
+pro-rata share, a fixed/variable split on every opex line, a property-tax phase-in vector during lease-up,
+reserve-based leasing cost standing in for explicit rollover, and the merchant-build versus build-to-core
+fork — one file producing two financing and exit regimes over an identical operating model. The shipped
+default case gives checkable endpoints (NOI $2,068,645, stabilized value $29,552,066, 306.9 bp development
+spread, 19.56% unlevered and 31.08% levered IRR, 1.66x and 2.50x, LP 24.23% and GP 99.39% through a
+four-tier waterfall with catch-up) with every monthly cash flow visible, so parity can be asserted period
+by period. The workbook and a transcript of the author's 31-minute video walkthrough are held in this
+folder; neither is redistributable, so this is a validation-only reference.
 
 **Energy.** NREL's System Advisor Model is the strongest end-to-end reference: BSD-3 licensed, so
 any disagreement can be traced to a specific formula rather than argued about. **PySAM (`pip install
@@ -340,7 +360,8 @@ strictly forbidden"). Fannie Mae and Freddie Mac loan-level datasets — free wi
 terms bar distributing data to third parties and, for Fannie, "using it in support of external
 commercial purposes"; read them before wiring either into CI. A.CRE and Finamodel models are free
 (pay-what-you-can / email signup) but state no redistribution rights — fine to model against, not to
-commit. Ed Bodmer's collection is ungated but unlicensed.
+commit. The Retail Development Model workbook and video transcript held in `cfdl/research/` fall under
+this rule: benchmark against their numbers, do not vendor either file into the repo. Ed Bodmer's collection is ungated but unlicensed.
 
 **Public filings** (SEC EDGAR prospectuses, technical reports, fairness opinions, 10-Ks) are freely
 accessible and citable; the underlying documents may still carry filer copyright, so cite and
@@ -372,7 +393,7 @@ reproduce numbers rather than republishing files.
   capability and buyer density; a commercial reason to jump the queue would override them.
 - Market-size figures are as reported by the cited source on the date fetched. They are for relative
   sizing, not a verified market study.
-- All 106 URLs were re-fetched on 1 August 2026. 105 resolved and matched their description. One
+- All 106 original URLs were re-fetched on 1 August 2026. 105 resolved and matched their description. One
   exception: the Ginnie Mae bulk-data layout page returns a generic shell rather than the layout
   content — navigate from the Ginnie Mae disclosure-data index instead. Flagged in the workbook's
   Link check column.
