@@ -148,6 +148,32 @@ compiles and runs, the item is documentation, not development.
 
 ## How to achieve a behavior
 
+### A rate quoted on a different cadence than the term takes
+
+Practitioners quote monthly SMM and MDR; the credit pack's `cpr`/`cdr` terms
+take annual figures. The conversion does NOT have to be done by hand and
+pasted in as `0.11361512828387077` — a term holds an expression, so state the
+quoted figure and the identity that converts it:
+
+```cfdl
+contract credit.pool_level_pay on entity asset.pool {
+  terms {
+    cpr = 1 - pow(1 - 0.01, time.ppy)   // a 1% SMM pool
+    cdr = 1 - pow(1 - 0.0005, time.ppy) // a 0.05% MDR pool
+  }
+}
+```
+
+`time.ppy` rather than a literal 12, so the conversion follows the model's
+calendar instead of assuming a monthly grid. Verified byte-identical to the
+hand-computed constant across every stream and all 361 periods of a 30-year
+pool — this is a legibility idiom, not a different number.
+
+The same shape covers any quoted-cadence mismatch: what belongs in the term is
+the figure the source states plus the identity, never a pre-multiplied constant
+that no reader can check and that goes stale silently if the quoted figure
+changes.
+
 ### A line derived from other lines
 
 A contract term holds an expression, and the expression may read another
