@@ -49,7 +49,7 @@ schedule every month on eom from 2026-01 to 2026-12
 
 `on day 31` in a run of months that includes February is not clamped for you — that is what `on eom` is for, and the distinction is deliberate: "the 31st" and "month-end" are different contractual claims, and only one of them exists in February.
 
-## Within-period placement: end, due, mid
+## Within-period placement: start, mid, end
 
 Every occurrence also has a position *within* its period, and this single keyword carries more valuation weight than any other in the chapter:
 
@@ -59,14 +59,16 @@ schedule every year from 2026-01 to 2029-01
 
 // due: cash at the period's start — payment in advance, the annuity due.
 // Rent and leases are due; debt service is in arrears.
-schedule every year due from 2026-01 to 2029-01
+schedule every year start from 2026-01 to 2029-01
 
 // mid: the mid-period convention — cash treated as arriving at the period's
 // midpoint, the standard treatment for operating flows earned continuously.
 schedule every year mid from 2026-01 to 2029-01
 ```
 
-The finance content here is exactly the ordinary-annuity / annuity-due distinction from any valuation course, plus the mid-year convention: three identical totals, three different NPVs, ordered `due` > `mid` > end because earlier cash discounts less. When a valuation you are matching uses the mid-year convention and your model does not, the gap is systematic and this keyword is the fix. A one-shot date takes `mid` the same way (`schedule on 2028-01 mid`) — used when a lump represents a year of activity rather than a strike at an instant. `due` is the one placement a bare date does not take: it belongs to stride schedules, and a single-occurrence stride (`every month due from 2026-01 to 2026-01`) is the idiom for one payment in advance.
+The finance content here is exactly the ordinary-annuity / annuity-due distinction from any valuation course, plus the mid-year convention: three identical totals, three different NPVs, ordered `start` > `mid` > `end` because earlier cash discounts less. When a valuation you are matching uses the mid-year convention and your model does not, the gap is systematic and this keyword is the fix.
+
+`start`, `mid` and `end` are one axis with three positions, so a schedule takes at most one, and **all three work on a one-shot date as well as on a stride** — `schedule on 2028-01 mid` for a lump that represents a year of activity, `schedule on 2028-01 end` for a disposal, since a reversion is taken at the close of the holding period rather than on the date named. What differs between the two forms is only the default: a stride defaults to `end`, a one-shot to `start`.
 
 ## Business days: conventions and calendars
 
@@ -140,4 +142,4 @@ Two things practitioners sometimes look for are not in the schedule language, on
 Then, on your own:
 
 1. Take the payment-terms model above and change collections to `net 2 months`. Predict which periods change before running — remember the calendar steps by months, not by 60 days.
-2. Build a four-payment annual stream three ways — default, `due`, `mid` — at a 10% discount rate, and rank the three NPVs before running. You are re-deriving the annuity-due relationship, and the engine will grade you.
+2. Build a four-payment annual stream three ways — `start`, `mid`, `end` — at a 10% discount rate, and rank the three NPVs before running. You are re-deriving the annuity-due relationship, and the engine will grade you.

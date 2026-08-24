@@ -100,7 +100,8 @@ pub enum Keyword {
     // interval set has a weekly member (a weekly grid is not representable).
     // `day` reuses the existing Keyword::Day, which `on day <n>` also uses;
     // position disambiguates them.
-    Due,
+    Start,
+    End,
     Mid,
     Week,
     Month,
@@ -627,7 +628,8 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "monthly" => Keyword::Monthly,
         "quarterly" => Keyword::Quarterly,
         "annual" => Keyword::Annual,
-        "due" => Keyword::Due,
+        "start" => Keyword::Start,
+        "end" => Keyword::End,
         "mid" => Keyword::Mid,
         "week" => Keyword::Week,
         "month" => Keyword::Month,

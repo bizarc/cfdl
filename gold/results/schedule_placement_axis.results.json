@@ -1,7 +1,7 @@
 {
   "results_version": "0.3",
-  "model_hash": "eb6eaf5cd734cff5cf090960e2fd35f307d7d02ee093b4daf765f832769fbeac",
-  "ledger_hash": "324c97579c88f9031ba7439066ab374d8bbc9c07007ab232a63f5ada78991d2b",
+  "model_hash": "b4fbf3595df0999632ba5f41852e102df51749b28ae3553f7b9678b55d38ba65",
+  "ledger_hash": "771edf2fb69bc1418f2a1abb90df8188796c9cea0030687cc146453f92dfd6f2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -11,34 +11,42 @@
     "status": "ok",
     "metrics": {
       "entity.asset.co.total": {
-        "amount": 2200.0,
+        "amount": 1200.0,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 1786.115647,
+        "amount": 1043.294292,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 2200.0,
+        "amount": 1200.0,
         "currency": "USD"
       },
-      "model.wal_years": 2.227273,
+      "model.wal_years": 1.5,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
-      "stream.co.flow_due.total": {
-        "amount": 400.0,
+      "stream.one.end.total": {
+        "amount": 100.0,
         "currency": "USD"
       },
-      "stream.co.flow_end.total": {
-        "amount": 400.0,
+      "stream.one.mid.total": {
+        "amount": 100.0,
         "currency": "USD"
       },
-      "stream.co.flow_mid.total": {
-        "amount": 400.0,
+      "stream.one.start.total": {
+        "amount": 100.0,
         "currency": "USD"
       },
-      "stream.co.oneshot_mid.total": {
-        "amount": 1000.0,
+      "stream.rec.end.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.rec.mid.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.rec.start.total": {
+        "amount": 300.0,
         "currency": "USD"
       }
     },
@@ -55,15 +63,15 @@
             "currency": "USD"
           },
           {
-            "amount": 300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1300.0,
+            "amount": 600.0,
             "currency": "USD"
           },
           {
             "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
@@ -80,20 +88,72 @@
             "currency": "USD"
           },
           {
-            "amount": 300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1300.0,
+            "amount": 600.0,
             "currency": "USD"
           },
           {
             "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.co.flow_due": {
+      "stream.one.end": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.one.mid": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 0.5,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.one.start": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
@@ -102,7 +162,7 @@
         "offset": 0.0,
         "values": [
           {
-            "amount": 100.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -110,16 +170,16 @@
             "currency": "USD"
           },
           {
-            "amount": 100.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 100.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.co.flow_end": {
+      "stream.rec.end": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
@@ -140,12 +200,12 @@
             "currency": "USD"
           },
           {
-            "amount": 100.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.co.flow_mid": {
+      "stream.rec.mid": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
@@ -166,29 +226,29 @@
             "currency": "USD"
           },
           {
-            "amount": 100.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.co.oneshot_mid": {
+      "stream.rec.start": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
           "periods": 4
         },
-        "offset": 0.5,
+        "offset": 0.0,
         "values": [
           {
-            "amount": 0.0,
+            "amount": 100.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 100.0,
             "currency": "USD"
           },
           {
-            "amount": 1000.0,
+            "amount": 100.0,
             "currency": "USD"
           },
           {

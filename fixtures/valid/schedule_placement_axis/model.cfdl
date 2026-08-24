@@ -1,0 +1,56 @@
+version 0.1
+model "schedule-placement-axis"
+time calendar annual from 2026-01 for 4
+
+// WHERE IN ITS PERIOD A FLOW SITS — one axis, three positions, both forms.
+//
+// `start`, `mid` and `end` are alternatives, not flags, so a schedule states
+// at most one and stating two is a parse error rather than a diagnostic. The
+// engine reads a single `placement`, which is why the contradictory state is
+// unwritable instead of rejected.
+//
+// The forms differ only in which position they DEFAULT to, and that is why
+// every position is nameable in both. A recurrence defaults to `end` — an
+// ordinary annuity, where the interval elapses and then payment falls. A
+// one-shot defaults to `start`: it settles on the date stated, not after
+// waiting through a period it never waited through.
+//
+// The one-shot `end` is what a disposal needs and what no surface syntax
+// could say until now. A reversion is taken at the close of the holding
+// period, so a year-5 sale discounts five periods rather than four — on an
+// annual model a whole year, and 9% of the reversion at 12%. A pack rule
+// could reach it through `schedule_placement`; a hand-written model could not.
+//
+// Offsets are the assertion: 0.0 at the open, 0.5 halfway, 1.0 at the close.
+
+entity asset co : Asset.Financial
+
+stream one.start on entity asset.co inflow currency USD {
+  schedule on 2027-01 start
+  amount = 100.0
+}
+
+stream one.mid on entity asset.co inflow currency USD {
+  schedule on 2027-01 mid
+  amount = 100.0
+}
+
+stream one.end on entity asset.co inflow currency USD {
+  schedule on 2027-01 end
+  amount = 100.0
+}
+
+stream rec.start on entity asset.co inflow currency USD {
+  schedule every year start from 2026-01 to 2028-01
+  amount = 100.0
+}
+
+stream rec.mid on entity asset.co inflow currency USD {
+  schedule every year mid from 2026-01 to 2028-01
+  amount = 100.0
+}
+
+stream rec.end on entity asset.co inflow currency USD {
+  schedule every year end from 2026-01 to 2028-01
+  amount = 100.0
+}

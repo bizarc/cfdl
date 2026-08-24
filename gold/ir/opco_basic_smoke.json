@@ -271,7 +271,7 @@
       "schedule": {
         "kind": "OnDate",
         "on": "2031-12-01",
-        "at_period_end": true
+        "placement": "end"
       },
       "amount": {
         "lang": "cfdl",

@@ -18,7 +18,7 @@ stream co.flow_end on entity asset.co inflow currency USD {
 
 // `due` is the other end of the axis: the period's start.
 stream co.flow_due on entity asset.co inflow currency USD {
-  schedule every year due from 2026-01 to 2029-01
+  schedule every year start from 2026-01 to 2029-01
   amount = 100
 }
 

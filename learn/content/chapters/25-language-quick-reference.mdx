@@ -60,7 +60,7 @@ schedule every <day|week|month|quarter|year> [due|mid]
 schedule on phase_enter("<phase>")
 ```
 
-Placement: default = period end (arrears); `due` = start (advance; stride schedules only — one payment in advance is `every month due from X to X`); `mid` = midpoint (mid-period convention). Conventions: `none`, `following`, `preceding`, `modified_following`, `modified_preceding`. Calendars: `"weekend"`, `"us"`, `"uk"`, `"target"`. `net` counts days, or steps calendar months. Occurrences pushed off the grid are compile errors.
+Placement: one axis, three positions, at most one — `start` (advance), `mid` (mid-period convention), `end` (arrears). Both `every` and `on <date>` take all three; only the default differs, `end` for a stride and `start` for a one-shot. Conventions: `none`, `following`, `preceding`, `modified_following`, `modified_preceding`. Calendars: `"weekend"`, `"us"`, `"uk"`, `"target"`. `net` counts days, or steps calendar months. Occurrences pushed off the grid are compile errors.
 
 ## Assumptions and curves
 

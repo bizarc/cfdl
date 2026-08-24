@@ -549,14 +549,28 @@ schedule every month from 2026-02-01 to 2028-01-31
 
 #### 10.2.3 Position in the period
 ```cfdl
-schedule every year due from 2026-01 to 2030-01   // start of each period
-schedule every year from 2026-01 to 2030-01       // end (the default)
-schedule every year mid from 2026-01 to 2030-01   // halfway through
+schedule every year start from 2026-01 to 2030-01 // start of each period
+schedule every year mid   from 2026-01 to 2030-01 // halfway through
+schedule every year end   from 2026-01 to 2030-01 // end (the default)
+
+schedule on 2029-06 start                         // one-shot (the default)
 schedule on 2029-06 mid                           // one-shot, same axis
+schedule on 2029-06 end                           // one-shot, settles at close
 ```
 
-`due`, the default and `mid` say where in its period a payment sits, and so how
-far it is discounted. `mid` is the project-finance mid-period convention: cash
+**One axis, three positions, at most one.** `start`, `mid` and `end` say where
+in its period a payment sits, and so how far it is discounted. Stating two is a
+parse error rather than a diagnostic — the positions are alternatives, not
+flags.
+
+What differs between the forms is only which position they DEFAULT to when the
+model says nothing: a recurrence defaults to `end` (an ordinary annuity — the
+interval elapses, then payment falls), a one-shot to `start` (it settles on the
+date stated, not after waiting a period it never waited through). Because the
+default is not a single constant, every position is nameable in both forms so a
+model never has to rely on it.
+
+`start` is an annuity due, which is what expense-like streams want. `mid` is the project-finance mid-period convention: cash
 arrives through the period rather than at one end, so it is summarized at the
 midpoint — half a period on **every** calendar, unlike a day rule. Stating two
 positions at once is `E2109_SCHEDULE_CONFLICTING_PLACEMENT`. See
@@ -923,16 +937,16 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (81)
+### 18.1 In use (82)
 
 Read by a production of the grammar:
 
 `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
-`curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `due`, `effects`, `entity`, `eom`, `event`,
+`curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `effects`, `end`, `entity`, `eom`, `event`,
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `stream`, `stub`,
+`phase_start`, `preceding`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 

@@ -280,6 +280,16 @@ pub(crate) struct IrOnRule {
     pub(crate) day: i32,
 }
 
+/// Where in its period a flow sits. The single axis that `due` / `mid` /
+/// `at_period_end` used to spell as three booleans.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum Placement {
+    Start,
+    Mid,
+    End,
+}
+
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 pub(crate) struct IrSchedule {
@@ -287,18 +297,18 @@ pub(crate) struct IrSchedule {
     pub(crate) on: Option<String>,
     #[serde(default)]
     pub(crate) every: Option<String>,
-    /// Annuity due: payment at the start of each interval. Absent means an
-    /// ordinary annuity — the interval elapses, then payment falls.
+    /// WHERE IN ITS PERIOD THE FLOW SITS. One axis with three positions, not
+    /// three independent flags: `start` and `mid` and `end` are mutually
+    /// exclusive by construction, so the conflicting-placement state cannot
+    /// be written rather than being rejected at run time.
+    ///
+    /// Absent means the FORM's default, which differs and cannot be a single
+    /// constant: a one-shot defaults to its period's start (right for an
+    /// acquisition), a recurrence to its period's end (an ordinary annuity —
+    /// the interval elapses, then payment falls). `placement_of` is the one
+    /// place that resolution lives.
     #[serde(default)]
-    pub(crate) due: bool,
-    /// A one-shot flow that settles at the END of its period.
-    #[serde(default)]
-    pub(crate) at_period_end: bool,
-    /// Mid-period convention: cash treated as arriving halfway through the
-    /// period it was earned in. A discounting convention rather than a date,
-    /// so it is 0.5 of a period on every calendar.
-    #[serde(default)]
-    pub(crate) mid: bool,
+    pub(crate) placement: Option<Placement>,
     /// How long after a flow is earned its cash moves. Absent means the cash
     /// lands in the period that earned it.
     #[serde(default)]

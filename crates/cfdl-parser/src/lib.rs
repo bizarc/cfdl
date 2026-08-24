@@ -386,6 +386,11 @@ pub struct ScheduleSpec {
     /// interval — matching `pmt(rate, nper, pv, [fv], [due])` in the
     /// expression library and Excel's `type` argument.
     pub due: bool,
+    /// The flow settles at the END of its period. On a one-shot this is the
+    /// position a disposal needs — a reversion is taken at the close of the
+    /// holding period, so a year-5 sale discounts five periods, not four.
+    /// On a recurrence it is the default, statable explicitly.
+    pub at_period_end: bool,
     /// Business-day roll convention: none/following/modified_following/
     /// preceding/modified_preceding.
     pub convention: Option<String>,
@@ -2149,6 +2154,27 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// One placement at most, from the three that name the same axis.
+    /// Returns `(start, mid, end)`; unstated leaves the form's default to the
+    /// compiler, which is the only layer that knows which form this is.
+    fn parse_placement(&mut self) -> (bool, bool, bool) {
+        match self.peek().kind {
+            TokenKind::Keyword(Keyword::Start) => {
+                let _ = self.bump();
+                (true, false, false)
+            }
+            TokenKind::Keyword(Keyword::Mid) => {
+                let _ = self.bump();
+                (false, true, false)
+            }
+            TokenKind::Keyword(Keyword::End) => {
+                let _ = self.bump();
+                (false, false, true)
+            }
+            _ => (false, false, false),
+        }
+    }
+
     fn parse_schedule_interval(&mut self) -> Option<String> {
         let tok = self.peek().clone();
         let interval = match tok.kind {
@@ -2194,6 +2220,7 @@ impl<'a> Parser<'a> {
                         kind: ScheduleKind::PhaseEnter { phase },
                         every: None,
                         due: false,
+                        at_period_end: false,
                         mid: false,
                         end_of_month: false,
                         net: None,
@@ -2234,21 +2261,20 @@ impl<'a> Parser<'a> {
                     );
                     return None;
                 }
-                // `on <date> mid` treats the flow as arriving evenly across
-                // the period its date falls in, rather than at that period's
-                // open. A valuation date that is not a period boundary needs
-                // it: the cash sits inside the period, not at either edge.
-                let mut on_date_mid = false;
-                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Mid)) {
-                    let _ = self.bump();
-                    on_date_mid = true;
-                }
+                // The same three positions a recurrence has. A one-shot
+                // defaults to its period's START — it settles on the date
+                // stated, not after waiting a period it never waited through.
+                // `mid` treats it as arriving evenly across the period; `end`
+                // is what a disposal needs, since a reversion is taken at the
+                // close of the holding period.
+                let (_on_date_start, on_date_mid, on_date_end) = self.parse_placement();
                 let mut spec = ScheduleSpec {
                     kind: ScheduleKind::OnDate,
                     every: None,
                     end_of_month: false,
                     net: None,
                     due: false,
+                    at_period_end: on_date_end,
                     mid: on_date_mid,
                     from: Some(date.clone()),
                     to: Some(date),
@@ -2265,26 +2291,14 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Every) => {
                 let _ = self.bump();
                 let every = self.parse_schedule_interval()?;
-                let mut due = false;
                 let mut net = None;
-                // Ordinary annuity by default: the interval elapses, then
-                // payment falls, so `every year from 2026-01` first pays
-                // 2027-01. `due` makes it an annuity due — payment at the
-                // start of each interval, as for rent.
-                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Due)) {
-                    let _ = self.bump();
-                    due = true;
-                }
-                // `mid` is the other end of the same axis: `due` puts the cash
-                // at the start of the interval, the default at the end, `mid`
-                // halfway. Mutually exclusive with `due` by construction —
-                // taking both would be contradictory, so the second wins the
-                // parse and E1015 rejects it.
-                let mut mid = false;
-                if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Mid)) {
-                    let _ = self.bump();
-                    mid = true;
-                }
+                // WHERE IN ITS INTERVAL THE CASH SITS — one axis, three
+                // positions, so at most one is taken. `start` pays as the
+                // interval opens (an annuity due, as for rent), `end` as it
+                // closes, `mid` halfway. Unstated means `end`: an ordinary
+                // annuity, where the interval elapses and then payment falls,
+                // so `every year from 2026-01` first pays 2027-01.
+                let (due, mid, at_end) = self.parse_placement();
                 // `net <n>` sits beside `due` because both describe when cash
                 // moves, and it reads as one clause: `every month net 30 from …`.
                 if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Net)) {
@@ -2395,6 +2409,7 @@ impl<'a> Parser<'a> {
                         net,
                         due,
                         mid,
+                        at_period_end: at_end,
                         from: None,
                         to: None,
                         day_of_month,
@@ -2437,6 +2452,7 @@ impl<'a> Parser<'a> {
                     end_of_month,
                     net,
                     due,
+                    at_period_end: false,
                     mid,
                     from: Some(from),
                     to: Some(to),
@@ -3413,7 +3429,8 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Monthly => "monthly",
         Keyword::Quarterly => "quarterly",
         Keyword::Annual => "annual",
-        Keyword::Due => "due",
+        Keyword::Start => "start",
+        Keyword::End => "end",
         Keyword::Mid => "mid",
         Keyword::Week => "week",
         Keyword::Month => "month",

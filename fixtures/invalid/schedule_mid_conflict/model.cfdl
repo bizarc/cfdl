@@ -5,7 +5,7 @@ entity asset co : Asset.Financial
 
 // Two positions in one period is a contradiction, not a refinement.
 stream co.mid_and_due on entity asset.co inflow currency USD {
-  schedule every year due mid from 2026-01 to 2029-01
+  schedule every year mid on day 15 from 2026-01 to 2029-01
   amount = 100
 }
 

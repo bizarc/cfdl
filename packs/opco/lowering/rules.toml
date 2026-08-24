@@ -134,7 +134,7 @@ amount_expr = "{{contract.base_value}} * {{contract.exit_multiple}}"
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
-schedule_at_period_end = true
+schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -293,7 +293,7 @@ amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
-schedule_at_period_end = true
+schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -311,7 +311,7 @@ category = "investing.selling_costs"
 # is the old net, so net cash flow is unchanged.
 amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
-schedule_at_period_end = true
+schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -379,7 +379,7 @@ amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{con
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
 schedule_kind = "on_date"
-schedule_at_period_end = true
+schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
@@ -396,7 +396,7 @@ direction = "outflow"
 category = "investing.selling_costs"
 amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
-schedule_at_period_end = true
+schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 

@@ -193,22 +193,25 @@ waterfall_step  = "pay" IDENT "to" entity_ref "=" expr ;
 (* --- schedules --- *)
 schedule_stmt   = "schedule" schedule_expr ;
 
+(* Where in its period a flow sits: one axis, three positions, at most one. *)
+placement       = "start" | "mid" | "end" ;
+
 schedule_expr   = schedule_on
                 | schedule_every
                 | schedule_phase_enter
                 | schedule_every_phase
                 ;
 
-schedule_on     = "on" date_lit ;
+schedule_on     = "on" date_lit [ placement ] ;
 
 schedule_phase_enter = "on" "phase_enter" "(" string_lit ")" ;
 
-schedule_every_phase = "every" interval [ "due" ]
+schedule_every_phase = "every" interval [ placement ]
                        "from" "phase_start" "(" string_lit ")"
                        "to" "phase_end" "(" string_lit ")"
                        [ schedule_opts ] ;
 
-schedule_every  = "every" interval [ "due" ] [ "net" INT [ "days" | "months" ] ]
+schedule_every  = "every" interval [ placement ] [ "net" INT [ "days" | "months" ] ]
                   [ schedule_on_day ]
                   "from" date_lit "to" date_lit
                   [ schedule_opts ] ;

@@ -41,7 +41,7 @@ payment inside its own period, and therefore how far it is discounted.
 | Written | Position in period | Discounted from |
 |---|---|---|
 | `on <date>` | start (default) | the period's open |
-| `on <date>`, rule sets `schedule_at_period_end` | end | the period's close |
+| `on <date> end`, or a rule with `schedule_placement = "end"` | end | the period's close |
 | `every month from … to …` | end (default) | end of the period |
 | `every month due from … to …` | start | start of the period |
 | `every month on eom from … to …` | end | end of the period |
@@ -58,7 +58,7 @@ case it was written for: a purchase on 2026-01 settles then and has not waited
 through a period. It is wrong for a **disposal**. A reversion is taken at the
 end of the holding period, so a year-5 sale discounts five periods, not four —
 the date names the period, and the position within it is a separate fact. A
-pack lowering rule says which it means with `schedule_at_period_end`; the
+pack lowering rule says which it means with `schedule_placement`; the
 disposal rules in `cre` and `opco` set it, and acquisitions, funding draws,
 dated leasing costs and tax credits do not.
 
@@ -80,9 +80,10 @@ where `offset` is:
 
 | Schedule detail | offset |
 |---|---|
-| `due` | `0.0` |
+| `start` | `0.0` |
 | `mid` | `0.5` |
-| default, or `on eom` | `1.0` |
+| `end`, the recurrence default, or `on eom` | `1.0` |
+| one-shot default | `0.0` |
 | `on day <n>` | `n / days_in_period` |
 
 There is one mechanism, not three special cases. A schedule specified more
@@ -97,7 +98,7 @@ what project finance and banker DCFs mean by mid-period or mid-year
 discounting, and it applies to flows rather than to prices: a terminal value or
 a sale is struck at a point in time and is discounted whole.
 
-`mid` states a position, so it cannot be combined with another one. With `due`,
+`mid` states a position, so it cannot be combined with another one. With `start`,
 a day rule, or `net` payment terms it is
 `E2109_SCHEDULE_CONFLICTING_PLACEMENT`. The `net` case is the interesting one:
 payment terms are resolved on the calendar and move cash between period
@@ -145,7 +146,7 @@ period 1, monthly calendar:
 
 | Flow | Period | Offset | Discounted from |
 |---|---|---|---|
-| purchase (1,000,000 out) | 1 | 0.0 (`due`) | period 0 — undiscounted |
+| purchase (1,000,000 out) | 1 | 0.0 (`start`) | period 0 — undiscounted |
 | coupon 1 (50,000) | 12 | 1.0 | end of period 12 |
 | coupon 5 (50,000) | 60 | 1.0 | end of period 60 |
 | principal (1,000,000) | 60 | 1.0 | end of period 60 |

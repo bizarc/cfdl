@@ -146,6 +146,82 @@ layer down from where the item placed it, so the remedy each item proposed was
 for the wrong layer. Probe the spelling before designing the term: if the shape
 compiles and runs, the item is documentation, not development.
 
+### A valuation date that is not on a fiscal-year boundary
+
+**Claimed:** `time calendar <c> from <d> for <n>` produces periods of one
+length, so a valuation dated off a fiscal-year boundary has a partial first
+period the language cannot express. The calendar needs a leading stub, so
+period lengths are `[stub, p, p, ...]`.
+
+**Actually:** THE CALENDAR IS NOT THE DEAL'S FISCAL YEAR. It is a neutral
+coordinate grid — a 120-month grid can host deals active for a few periods of
+it — and a deal's fiscal convention is a property of the deal, mapped onto the
+grid by DATE. Putting a stub in the calendar pushes one deal's fiscal shape
+into the shared axis.
+
+Calendar and schedule are separate concepts and each already carries its half:
+
+- The **calendar** (`docs/01` §6.1) takes any start date, so the grid origin
+  can simply be the valuation date.
+- The **schedule** (`docs/01` §11.2) carries placement — `due` for the start of
+  a period, the default for its end, `mid` for halfway — plus day rules
+  (`on day <n>`, `on eom`), business-day conventions, and stub policies
+  (`short_front`, `long_front`, and the back forms). The stub concept exists
+  here, where the recurrence is, not on the grid.
+- Discounting reads `(period + offset) / ppy` continuously (`docs/12`), so a
+  fractional position is an ordinary number, not a special case.
+
+A 30 September valuation with fiscal years ending 30 June, on a plain monthly
+grid:
+
+```cfdl
+time calendar monthly from 2026-09-30 for 60
+
+stream fy.cash on entity asset.co inflow currency USD {
+  schedule every year start from 2027-06-30 to 2031-06-30
+  amount = 1000.0
+}
+```
+
+lands at 0.75, 1.75, 2.75, 3.75 and 4.75 years out — exactly the off-cycle
+spacing a banker's DCF needs.
+
+**The trap that produced the claim.** Omitting `due` places the payment at the
+END of each annual period, roughly eleven months later, which reads as the
+schedule "drifting" off the fiscal year end. It is not drift; it is the
+documented default. Say where in the period the cash sits.
+
+### One axis is one field, not three booleans
+
+Where a flow sits in its period was spelled as three independent flags —
+`due`, `mid`, `at_period_end` — in the parser, the IR, the engine and the pack
+interface. Three consequences followed, and they are the signature of this
+mistake wherever it appears:
+
+- **A contradictory state was representable**, so it needed a runtime check
+  (`E2109`) to reject `due mid`.
+- **Coverage drifted between the layers.** A one-shot could say `mid` but not
+  `end`, so a disposal's reversion could only be placed by a pack rule, never
+  by a hand-written model — the error that discounted a CRE reversion a period
+  short, worth 9% of it at 12%.
+- **The vocabulary diverged.** The same position was `due` on a recurrence,
+  a default on a one-shot, and `schedule_at_period_end` in a pack.
+
+It is now `Placement { Start, Mid, End }`, one field, spelled `start`/`mid`/
+`end` everywhere including pack rules. The contradictory state is unwritable
+rather than rejected, so `E2109` shrank to what it should always have been:
+clashes across DIFFERENT axes — a placement against a day rule, or against
+`net` payment terms.
+
+**Defaults that differ by form are not a reason to leave a position
+unnameable.** A recurrence defaults to `end`, a one-shot to `start`, and no
+single constant covers both — which is exactly why every position must be
+statable in both forms, so a model never depends on which default applies.
+
+The refactor is the evidence it was mechanical: 17 IR goldens changed shape and
+**not one number moved** — the 17 results goldens that differ do so only in
+hash fields, which necessarily follow the IR.
+
 ## How to achieve a behavior
 
 ### A rate quoted on a different cadence than the term takes
@@ -173,6 +249,56 @@ The same shape covers any quoted-cadence mismatch: what belongs in the term is
 the figure the source states plus the identity, never a pre-multiplied constant
 that no reader can check and that goes stale silently if the quoted figure
 changes.
+
+### A liability stack — notes, subordination and a distribution waterfall
+
+An ABS capital structure is ONE waterfall: one set of distribution
+instructions, executed as ordered steps, on a stated distribution date. Free
+cash accumulates between dates and cascades when the date arrives.
+`benchmarks/credit/americredit_2017_1` is the worked example — 22 prospectus
+clauses, 30 `pay` steps, reproducing the published grid and all 48 weighted
+average lives.
+
+**State a claim, never a payment.** A step says what a class is OWED; the
+engine pays it out of what is left. Pre-computing a payment and then
+reconciling it restates what `remaining` already decides, and the two drift the
+moment the pot is short.
+
+**A step has no guard.** `waterfall_step = "pay" IDENT "to" entity_ref "="
+expr` — a step always executes and declines to fire by evaluating to zero.
+`if(time.t >= 12.0, bal_a1, 0.0)` is a trigger written as arithmetic, and
+`max(senior_balances - pool_prior, 0.0)` is a test that pays nothing when it
+passes. On the AmeriCredit deal 13 of the 30 steps never pay a cent, which is
+faithful to an indenture whose loss-cure clauses exist but are not reached.
+
+**A capped fee's overflow is `owed.<step> - paid.<step>`**, paid at a lower
+priority. Clause 21 of that deal is exactly this.
+
+**Whether a class needs a BALANCE depends on one question: does what is
+distributed equal what is produced?**
+
+When it does — plain sequential pay — there is no balance. The outstanding is
+derived from cumulative collections and the waterfall reads it:
+
+```cfdl
+stream notes.a_outstanding on entity asset.trust inflow currency USD {
+  amount = max(0.0, inputs.a_face - series_sum("pool.principal", 0, time.t - 1))
+}
+```
+
+Interest accrues on that stream, principal is capped by it, the class receives
+exactly its face, and nothing is carried or restated. (A chain like this is a
+depth-2 series read, which only became expressible when streams began
+evaluating in dependency-ordered waves.)
+
+When distribution DIVERGES from production — a step-down amount, an
+overcollateralization redirection, losses, capitalizing interest — the
+outstanding is knowable only from what was actually paid, and a field cannot
+read a waterfall's steps. The balance then has to be a field whose `next`
+restates the distribution arithmetic, which is why AmeriCredit carries seven
+balance fields each duplicating its step-down expression. Do not reach for that
+shape until the divergence is real: it costs the same formula written twice and
+required to stay in sync.
 
 ### A line derived from other lines
 
