@@ -19,107 +19,6 @@ and shapes the language already supports, are recorded in
 
 ## 1. CRE pack
 
-### 1.2 An expense stop that resets to a computed value
-
-`cre.lease_unit.expense_stop_year` is a literal. A lease signed mid-hold
-conventionally sets its stop at the *then-current* opex per SF, which is a
-figure the model computes rather than one the analyst states.
-
-MIT fn 5 does exactly this: the replacement Suite 100 lease takes its stop from
-actual 2004 opex, which is why its 2004 reimbursement is exactly zero.
-
-Blocks: the same benchmark, which duplicates the opex formula to work around
-it:
-
-```cfdl
-assume opex_psf_2004 = 4.81 * pow(1.04, 3) * (0.81 + (5.0 / 6.0) * 0.19)
-```
-
-Change an opex assumption and that copy goes stale in silence, and every
-reimbursement after 2004 is wrong.
-
-**The duplication is avoidable and the blocker is the two-phase rule.** Reading
-the opex stream directly — `series_sum("cre.opex.line", time.t, time.t)` —
-reproduces the recoveries EXACTLY (61,960.440704, to the cent). But it makes the
-recoveries stream phase-2, and `cre.exit_forward` is phase-2 and reads
-`cre.unit.recoveries.*`, so forward NOI loses every recovery. Measured on this
-benchmark: the exit price falls from 3,051,540.54 to 2,935,100.91.
-
-That collision is now DIAGNOSED rather than silent — the phase guard used to
-compare exact names and missed every globbed reference, which is the form the
-packs use. It is still a collision.
-
-Shape: a term that names a period rather than an amount, resolved after the opex
-stream exists. What it really needs is for a stream to read another stream's
-settled value without the reader becoming un-readable itself — the same
-constraint that blocks occupancy derived from the rent roll and a
-percentage-of-EGI management fee. Three ordinary CRE requirements, one cause.
-
-*(Update: the STALENESS half is closed. The 2004 stop is now restated from the
-inputs — base, trend, fixed share, 2004 occupancy — so a changed assumption
-propagates; only the formula's SHAPE is written twice, commented as such. What
-would close the item outright is a same-period cross-stream read, which is the
-dependency-ordering work: the stop is "actual 2004 opex per SF", and reading
-the opex stream directly collides with the exit's forward-NOI window today.)*
-
-*(Update 2 — **CLOSED as a language/engine item.** Streams evaluate in
-dependency-ordered waves, so recoveries read the opex stream and
-`cre.exit_forward` reads the recoveries a wave later. The benchmark is
-migrated: both halves of the reimbursement — this period's actual opex and the
-2004 reset stop — are now `series_sum("cre.opex.line", ...)` reads with
-different windows, the restated formula is gone from all three places, every
-reimbursement reproduces to the cent, and the net exit price is 3,051,540.54.
-The measured $116,440 collision is resolved.)*
-
-*(Update 3 — **CLOSED OUTRIGHT.** The remaining "pack work" was mis-scoped:
-`cre.lease_unit` already has the terms, and they already accept expressions, so
-a stop that resets to a later year's actual opex is a read with the window
-pinned to that year — no new term, no new rule:*
-
-```
-opex_year         = (0 - series_sum("cre.opex.line", time.t, time.t)) * time.ppy
-expense_stop_year = (0 - series_sum("cre.opex.line", 24, 24)) * time.ppy
-```
-
-*Pinned in `fixtures/valid/cre_derived_lines`, where recoveries stay at zero
-until actual opex passes the 2028 stop and then track it exactly.)*
-
-### 1.6 Vacancy cannot track a growing rent roll
-
-`cre.vacancy_loss` takes a constant `potential_gross_year` and multiplies it by
-a rate. But potential gross rent grows — with escalation, with rollover, with
-the end of a rent restriction — and the rule cannot see any of it, so vacancy
-loss stays flat while the rent it is a percentage *of* rises.
-
-Found the same way. In that deal vacancy also has to step 46% at the
-affordability cliff, which no constant can do.
-
-Shape: the rule needs to read another stream. Either the term accepts a stream
-reference, or vacancy becomes a rule reading the rent families through
-`series_sum` — which used to be the collision 1.2 measures, since
-`cre.exit_forward` already reads those families.
-
-*(Update — **CLOSED, and no pack change was needed.** A contract term already
-holds an expression, and the expression may name another stream, so the term
-that "accepts the reference" is the one already there:*
-
-```
-contract cre.vacancy_loss on entity asset.strip_center {
-  terms {
-    rate = if(time.date >= date(2030, 1, 1), 0.46, 0.03)
-    potential_gross_year = series_sum("cre.unit.base_rent.*", time.t, time.t) * time.ppy
-  }
-}
-```
-
-*Vacancy follows escalation, follows a suite coming online, and follows one
-going dark — verified to the cent in `fixtures/valid/cre_derived_lines`. The
-46% affordability cliff this deal needed is the `rate` expression, stated where
-it happens. Shipped as the `cre.vacancy_loss.tracking` template so the pattern
-is discoverable rather than reinvented. What the item actually needed was the
-ENGINE ordering, which shipped; the pack surface was already sufficient and the
-gap was that nothing demonstrated it.)*
-
 ### 1.7 A rent restriction that expires
 
 Affordable housing is rent-capped for an affordability period and reverts to
@@ -1905,49 +1804,6 @@ then retire the string surgery. Large, and it closes more than it costs.
 
 ---
 
-### 7.65 An assumption cannot reference another assumption, and trying fails at run
-
-*Belongs with the language and engine (section 5). Found during the adoption
-pass.*
-
-`assume b = inputs.a * 2` compiles — the parser and compiler accept it, and the
-expression lowers intact — and then fails at run:
-
-```
-Assumption 'b' failed to evaluate [EXPR_EVAL]: unknown variable `inputs.a`; ignoring.
-```
-
-Assumptions are evaluated without dependency ordering, so one reading another
-finds nothing. Worse than the missing capability is the failure mode: the
-assumption is "ignored", every read of `inputs.b` degrades to a warned zero,
-and the run reports ok — the silent-zero family again, and docs/03's "unknown
-variables are hard errors" rule already says this should refuse.
-
-Two halves:
-
-1. **Reject or resolve at compile time.** Either an assume may not reference
-   `inputs.*` (diagnose it, as terms diagnose E5010) or assumes get dependency
-   ordering with cycle rejection — the same topological question as
-   cross-stream reads, one layer up. Resolving is the useful half: a derived
-   assumption ("net rentable = gross × efficiency") is ordinary modeling.
-2. Whatever is chosen, the current compile-then-die path must close.
-
-Provenance: a benchmark rewrite tried `assume opex_psf_2004 = inputs.opex_psf_full
-* …` to kill parameter staleness; compile passed, the run warned per period,
-and the reconciliation caught it. Inlining the expression into the reading
-stream was the workaround.
-
-*(Update — **CLOSED.** Both halves. The silent path went first: an unresolved
-name is now a hard error, so the run stops instead of reporting ok over a
-column of zeros. And the useful half is resolved rather than rejected —
-assumptions evaluate in dependency order, so `assume net_sf = inputs.gross_sf
-* inputs.efficiency` is ordinary modeling. The single rejection is a circular
-derivation, named as a path, on the same principle as cross-stream reads one
-layer down: no order satisfies it, and the engine does not iterate. Pinned by
-`fixtures/valid/assumption_derived` and four engine tests.)*
-
----
-
 ### 7.66 Two published pages disagree about the arithmetic, and nothing checks
 
 *Belongs with the documentation (section 7). Found reading the live site.*
@@ -2032,7 +1888,8 @@ one of the two.
 
 ### 7.68 An assumption that fails to evaluate is reported as "not declared"
 
-*Belongs with the language and engine (section 5). Found closing 7.65.*
+*Belongs with the language and engine (section 5). Found while giving
+assumptions dependency ordering.*
 
 When an `assume` fails to evaluate, the engine warns and skips it. Every later
 read of that name then hits the unresolved-name gate, which says:

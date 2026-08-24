@@ -125,7 +125,80 @@ financing resolves at a period boundary: after that period's results, or at the
 next period's open from prior activity. Until those terms are written down, the
 requirement is phantom and the language should not move to meet it.
 
+### A contract term that "needs to accept a stream reference" already does
+
+**Claimed:** three CRE requirements — vacancy tracking the rent roll, a
+management fee as a percentage of EGI, an expense stop resetting to a later
+year's actual opex — each need a new pack term that accepts a stream
+reference, or a new lowering rule that reads one.
+
+**Actually:** none of the three needed a pack change. A contract term already
+holds an expression, an expression may name another stream through
+`series_sum`, and the term's text splices into the lowering rule's
+`amount_expr`. The only thing missing was the ENGINE's evaluation order, which
+allowed a reader to read only non-readers; once streams evaluated in
+dependency-ordered waves, all three worked as written.
+
+The reasoning failed in a specific and repeatable way: **a capability gap and a
+demonstration gap look identical from the backlog.** All three items had real
+provenance — someone hit a wall modelling a real deal — but the wall was one
+layer down from where the item placed it, so the remedy each item proposed was
+for the wrong layer. Probe the spelling before designing the term: if the shape
+compiles and runs, the item is documentation, not development.
+
 ## How to achieve a behavior
+
+### A line derived from other lines
+
+A contract term holds an expression, and the expression may read another
+stream. That is the whole mechanism behind "this line is a percentage of that
+one" — no pack term is required for it, and the number never goes stale.
+
+```cfdl
+contract cre.vacancy_loss on entity asset.strip_center {
+  terms {
+    rate = if(time.date >= date(2030, 1, 1), 0.46, 0.03)
+    potential_gross_year = series_sum("cre.unit.base_rent.*", time.t, time.t) * time.ppy
+  }
+}
+```
+
+`time.ppy` annualizes rather than a hard-coded twelve, so the term follows the
+model's calendar. A window pinned to a period reads a specific year — an
+expense stop resetting to the 2028 actual is
+`series_sum("cre.opex.line", 24, 24) * time.ppy`. Outflow streams book signed
+negative, so a read of one is usually negated.
+
+Name the read as narrowly as the economics allow. A management fee reading
+`cre.opex.line.*` reaches the recoveries that read the fee, and the engine
+refuses the loop by name:
+
+```
+cyclic series reads: 'cre.opex.line.management' -> 'cre.unit.recoveries.anchor'
+-> 'cre.opex.line.management'.
+```
+
+Reading `cre.opex.line` exactly is the fix, and the diagnostic says so rather
+than answering with a number. `fixtures/valid/cre_derived_lines` carries all of
+this; `packs/cre/templates.toml` ships the two patterns as templates.
+
+### An assumption derived from other assumptions
+
+`assume` values resolve in dependency order, so one may be computed from
+others and stating a number once beats restating it:
+
+```cfdl
+assume gross_sf   = 10000.0
+assume efficiency = 0.85
+assume net_sf     = inputs.gross_sf * inputs.efficiency
+```
+
+Declaration order and name order are both irrelevant. Random assumptions
+resolve first, as leaves, so a derived assumption may be built on one. A
+circular derivation is refused with the cycle named — the same rule as series
+reads one layer down, and for the same reason: no order satisfies it, and the
+engine does not iterate toward a fixed point.
+
 
 ### A regime that turns on and off repeatedly
 

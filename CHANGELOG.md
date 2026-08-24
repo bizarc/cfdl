@@ -8,6 +8,20 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Housekeeping: closed backlog items removed, their lessons kept
+
+`docs/13` states that closed items are removed, not archived — a shipped
+capability is described in the language documentation, and reasoning that
+turned out to be wrong goes to `docs/26_lessons_learned.md`. Items 1.2, 1.6
+and 7.65 were marked closed in place rather than removed, which left the count
+misleading. They are now removed and the file holds 50 open items.
+
+`docs/26` gains what they were worth keeping: a corrected-reasoning entry (the
+three CRE requirements did NOT need new pack terms — a capability gap and a
+demonstration gap look identical from the backlog) and two how-to entries (a
+line derived from other lines, an assumption derived from other assumptions).
+
+
 ### Added: CRE lines derived from other lines (vacancy, management fee, expense stop)
 
 The three requirements the backlog called "three ordinary CRE requirements, one
