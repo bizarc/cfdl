@@ -163,13 +163,10 @@ term_end = "2036-12"
 amount_year = "0"
 escalation = "0.03"
 
-# A management fee is usually a percentage of effective gross income, which is a
-# read of other streams. The engine's dependency-ordered waves now permit that
-# read alongside `cre.exit_forward`'s forward-NOI sum — the fee simply
-# evaluates a wave earlier than the exit. This template still states a fixed
-# fee; the %-of-EGI upgrade is pack work of its own, because the fee's read
-# window must exclude the fee itself or the read is a (correctly refused)
-# cycle.
+# A management fee is usually a percentage of effective gross income. Both
+# spellings ship: this one states a FIXED fee, which some agreements do, and
+# `cre.opex_line.management_egi` below states the percentage. Neither is a
+# workaround for the other.
 [[templates]]
 id = "cre.opex_line.management"
 label = "Operating expense — management fee (fixed)"
@@ -189,6 +186,39 @@ term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
 escalation = "0.03"
+
+# A management fee stated as a PERCENTAGE OF EFFECTIVE GROSS INCOME, which is
+# what most agreements say. EGI is rent plus recoveries less vacancy — all
+# revenue, so the fee reads no operating expense and cannot read itself. It
+# falls when vacancy rises, which is the point of stating it as a percentage
+# rather than restating a number that goes stale.
+#
+# Streams evaluate in dependency order, so the fee simply evaluates after the
+# lines it reads and before `cre.exit_forward`, which reads every opex line
+# including this one. Read REVENUE families here: a selector that reaches an
+# opex line the fee is part of would be a circular read, which the engine
+# refuses by name.
+[[templates]]
+id = "cre.opex_line.management_egi"
+label = "Operating expense — management fee (percentage of EGI)"
+kind = "contract"
+body = """
+contract cre.opex_line.management {
+  term ${term_start}..${term_end}
+  terms {
+    amount_year = (series_sum("cre.unit.base_rent.*", time.t, time.t)
+                   + series_sum("cre.unit.recoveries.*", time.t, time.t)
+                   + series_sum("cre.vacancy.loss", time.t, time.t))
+                  * time.ppy * ${fee_pct}
+    escalation = 0
+    pct_fixed = 1.0
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2036-12"
+fee_pct = "0.04"
 
 [[templates]]
 id = "cre.opex_line.general_admin"
@@ -432,6 +462,30 @@ term_start = "2026-01"
 term_end = "2035-12"
 rate = "0.05"
 potential_gross_year = "0"
+
+# Vacancy measured against the ACTUAL rent roll rather than a constant. The
+# roll grows with escalation and changes as suites come and go, and the loss
+# follows it instead of staying flat while the rent it is a percentage OF
+# rises. `rate` is an expression too, so a step at a cliff date is stated
+# where it happens: `if(time.date >= date(2030, 1, 1), 0.46, 0.05)`.
+[[templates]]
+id = "cre.vacancy_loss.tracking"
+label = "Vacancy and credit loss (tracks the rent roll)"
+kind = "contract"
+body = """
+contract cre.vacancy_loss {
+  term ${term_start}..${term_end}
+  terms {
+    rate = ${rate}
+    potential_gross_year = series_sum("cre.unit.base_rent.*", time.t, time.t)
+                           * time.ppy
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2035-12"
+rate = "0.05"
 
 [[templates]]
 id = "cre.construction_loan"

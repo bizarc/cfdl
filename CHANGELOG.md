@@ -8,6 +8,26 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: CRE lines derived from other lines (vacancy, management fee, expense stop)
+
+The three requirements the backlog called "three ordinary CRE requirements, one
+cause" — a vacancy that tracks the rent roll, a management fee that is a
+percentage of effective gross income, and an expense stop that resets to a
+later year's actual opex — all work now, and none needed a pack change. A
+contract term already holds an expression and the expression may name another
+stream; what was missing was the engine ordering, which dependency-ordered
+waves supply.
+
+Two templates make the patterns discoverable: `cre.vacancy_loss.tracking` and
+`cre.opex_line.management_egi`. The fixed-fee management template stays — some
+agreements do state one — and is no longer described as a workaround.
+`fixtures/valid/cre_derived_lines` pins all three, including the deepest chain
+(rent, then vacancy and recoveries reading rent and opex, then the fee reading
+those, then the exit reading every opex line) and a 46% vacancy cliff.
+
+Closes backlog 1.2 and 1.6.
+
+
 ### Added: an assumption may be derived from other assumptions
 
 `assume net_sf = inputs.gross_sf * inputs.efficiency` compiled and then failed
