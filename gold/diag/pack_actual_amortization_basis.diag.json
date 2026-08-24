@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5027_ACTUAL_AMORTIZATION_BASIS",
+    "severity": "error",
+    "message": "Contract 'credit.pool_level_pay' declares amortization_day_count = 'act/360'. A level payment is struck once and held; an Actual basis makes it move with month length, because the divisor is period-local and the annuity applies it to every remaining period. Strike the payment on '30/360' or '30e/360' and accrue interest on the Actual basis with `day_count`, which is what an Actual/360 loan document says.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 38,
+      "start_col": 5,
+      "end_line": 38,
+      "end_col": 38
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -3781,6 +3781,48 @@ fn validate_pack_contract(
         }
     }
 
+    // A LEVEL PAYMENT CANNOT BE STRUCK FROM A VARYING DIVISOR.
+    //
+    // `{{model.amortization_divisor}}` expands an Actual convention to
+    // `(360 / time.days_in_period)`, which is a per-period value, and the
+    // annuity it feeds — `pmt(rate / divisor, n - p, 1)` — applies it to ALL
+    // `n - p` remaining periods. January therefore strikes a payment as if
+    // every remaining month had 31 days and February as if every one had 28,
+    // so the payment moves with month length. No loan document does that: a
+    // commercial Actual/360 loan fixes its payment on a 30/360 schedule and
+    // lets principal absorb the difference.
+    //
+    // Measured on a single 1,200,000 loan at 6% with no prepayment and no
+    // defaults, `amortization_day_count = "act/360"` swings the payment by
+    // 460.68 over twelve months (7,349.63 in a 31-day month, 6,888.95 in
+    // February). This is NOT a pool effect — it is the closed form applying a
+    // period-local divisor to a whole remaining term, and it is wrong for a
+    // single loan too. The sibling failure was measured once already, on the
+    // ACCRUAL divisor, at 697k-754k in `benchmarks/credit/mbs_pool_conventions`;
+    // splitting the two divisors fixed that spelling and left this one.
+    //
+    // Accrual is unaffected: `day_count = "act/360"` is a per-period accrual
+    // and a per-period divisor is exactly right for it.
+    if let Some(term) = contract.terms.get("amortization_day_count") {
+        let value = term.value.trim().trim_matches('"');
+        if matches!(value, "act/360" | "act/365") {
+            diagnostics.push(pack_diag(
+                "E5027_ACTUAL_AMORTIZATION_BASIS",
+                &format!(
+                    "Contract '{}' declares amortization_day_count = '{}'. A level payment \
+                     is struck once and held; an Actual basis makes it move with month \
+                     length, because the divisor is period-local and the annuity applies \
+                     it to every remaining period. Strike the payment on '30/360' or \
+                     '30e/360' and accrue interest on the Actual basis with `day_count`, \
+                     which is what an Actual/360 loan document says.",
+                    contract.name, value
+                ),
+                source_stmt,
+                term.span,
+            ));
+        }
+    }
+
     // Elapsed-period counting measures whole calendar steps from the
     // contract's start, so a term that does not begin on a period boundary
     // lands mid-period and counts short. On a monthly grid every `YYYY-MM`

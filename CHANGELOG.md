@@ -8,6 +8,34 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: E5027_ACTUAL_AMORTIZATION_BASIS
+
+`amortization_day_count` chooses what a level payment is struck on, and an
+Actual convention expands to `(360 / time.days_in_period)` — a period-local
+value that the annuity then applies to every remaining period. January struck a
+payment as if all remaining months had 31 days, February as if all had 28, so
+the payment moved with month length. Measured on a single 1,200,000 loan at 6%
+with no pool, no prepayment and no defaults: a **460.68 swing** over twelve
+months. Now refused, for every pack and every instrument.
+
+The pairing a loan document states is unaffected and still compiles: accrue on
+`act/360` via `day_count`, strike the payment on `30/360`, and the payment
+holds at 7,194.61 while interest moves 6,200.00 to 5,594.43 with month length.
+`day_count` itself is untouched — a per-period divisor is exactly right for a
+per-period accrual.
+
+This is the sibling of a failure already measured on the accrual divisor
+(697k-754k in `benchmarks/credit/mbs_pool_conventions`); splitting the two
+divisors fixed that spelling and left this one, and the shipped fixture pairs
+`act/360` accrual with `30/360` amortization, so the broken combination was
+never exercised. No shipped model changes.
+
+Backlog 2.2 is rewritten rather than closed: it diagnosed this as a pool-factor
+limit and proposed a gate for pools, and both were wrong — the defect is in the
+closed form and applies to a single loan. Two stale claims in the credit
+README are corrected alongside (age-varying hazards ARE expressible, and
+loan-level heterogeneity ships as `benchmarks/credit/mbs_pool_by_loan`).
+
 ### Changed: an expiring rent restriction is an event, not a hand-written switch
 
 `benchmarks/cre/hud_home_multifamily` carried its affordability cliff as an

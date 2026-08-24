@@ -96,9 +96,10 @@ parity against the published industry reference schedule.
 The [mortgage pool conventions benchmark](/docs/examples/credit-mbs-pool-conventions) asserts anchor figures across the life
 of a 30-year pool and passes, including recoveries — a level-pay pool's
 defaulted balance keeps amortizing in foreclosure, so what is liquidated is the
-amortized balance rather than face. One limitation remains: age-varying
-prepayment and default curves are not expressible, so only constant-hazard
-pools can be modeled.
+amortized balance rather than face. Age-varying prepayment and default curves
+ARE expressible: the survival factor is a declared state stepped once per
+payment period, not `pow(k, p)`, so PSA, SDA and the ABS convention all ramp
+correctly.
 
 ## Contract types
 
@@ -230,7 +231,10 @@ benchmark purchases at a 1-point discount.
 - **Floating-rate loans** — needs the `curve` input concept and
   mean-reverting rate paths (stochastic roadmap item 4).
 - Zero note rate on `pool_level_pay` (closed form divides by `r`).
-- Delinquency states, servicer advances, loan-level heterogeneity.
+- Delinquency states and servicer advances.
+- An Actual `amortization_day_count`, refused by `E5027`: a level payment is
+  struck once and held, and a period-local divisor makes it move with month
+  length. Accrue on `act/360` and strike the payment on `30/360`.
 
 ## Quick start
 
