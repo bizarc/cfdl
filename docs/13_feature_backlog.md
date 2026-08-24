@@ -69,9 +69,20 @@ migrated: both halves of the reimbursement — this period's actual opex and the
 2004 reset stop — are now `series_sum("cre.opex.line", ...)` reads with
 different windows, the restated formula is gone from all three places, every
 reimbursement reproduces to the cent, and the net exit price is 3,051,540.54.
-The measured $116,440 collision is resolved. What remains is PACK work, not
-language work: a CRE term that declares "stop resets to actual opex in year N"
-so a modeller states it instead of writing the read by hand.)*
+The measured $116,440 collision is resolved.)*
+
+*(Update 3 — **CLOSED OUTRIGHT.** The remaining "pack work" was mis-scoped:
+`cre.lease_unit` already has the terms, and they already accept expressions, so
+a stop that resets to a later year's actual opex is a read with the window
+pinned to that year — no new term, no new rule:*
+
+```
+opex_year         = (0 - series_sum("cre.opex.line", time.t, time.t)) * time.ppy
+expense_stop_year = (0 - series_sum("cre.opex.line", 24, 24)) * time.ppy
+```
+
+*Pinned in `fixtures/valid/cre_derived_lines`, where recoveries stay at zero
+until actual opex passes the 2028 stop and then track it exactly.)*
 
 ### 1.6 Vacancy cannot track a growing rent roll
 
@@ -88,10 +99,26 @@ reference, or vacancy becomes a rule reading the rent families through
 `series_sum` — which used to be the collision 1.2 measures, since
 `cre.exit_forward` already reads those families.
 
-*(Update: the collision is gone — dependency-ordered waves let vacancy read
-the rent families and the exit read vacancy a wave later. What remains is the
-pack design: which term accepts the reference, and what the lowered rule
-reads. Same follow-up family as 1.2's migration.)*
+*(Update — **CLOSED, and no pack change was needed.** A contract term already
+holds an expression, and the expression may name another stream, so the term
+that "accepts the reference" is the one already there:*
+
+```
+contract cre.vacancy_loss on entity asset.strip_center {
+  terms {
+    rate = if(time.date >= date(2030, 1, 1), 0.46, 0.03)
+    potential_gross_year = series_sum("cre.unit.base_rent.*", time.t, time.t) * time.ppy
+  }
+}
+```
+
+*Vacancy follows escalation, follows a suite coming online, and follows one
+going dark — verified to the cent in `fixtures/valid/cre_derived_lines`. The
+46% affordability cliff this deal needed is the `rate` expression, stated where
+it happens. Shipped as the `cre.vacancy_loss.tracking` template so the pattern
+is discoverable rather than reinvented. What the item actually needed was the
+ENGINE ordering, which shipped; the pack surface was already sufficient and the
+gap was that nothing demonstrated it.)*
 
 ### 1.7 A rent restriction that expires
 
@@ -1140,6 +1167,19 @@ first case, and it stays open until the convention is settled — the question i
 whether a pack's own expression should be able to name a component the model
 lacks, not whether a typo should be caught.
 
+*(Update: the unsettled convention has a measurable cost, probed while writing
+`E1346`. Both step-visibility checks skip any reference ending `.*`, on the
+reading that a selector states matching nothing is intended. So a stream
+reading `series_sum("fund.distribution.*", ...)` — a glob over a WATERFALL's
+steps — compiles, runs, and pays 0.00 every period with no diagnostic, while
+the same read spelled exactly is `E1346`. The distinction the allowance rests
+on does not hold: a selector matching nothing is a pack idiom, but a selector
+whose matches are all step names is naming things that DO exist and are simply
+unreadable from a stream at any time. Settling the convention should
+distinguish those two, rather than treating every `.*` as an intent to match
+nothing. A few lines in the existing checks — the step set and
+`selector_matches` are both already there.)*
+
 ---
 
 ### 7.41 Invariants the gates do not check
@@ -1987,3 +2027,33 @@ trigger, with no domain vocabulary — in which case the fix is smaller: a
 closed set of type names in the specification, checked, rather than a pack
 registry. Either way the current state (an unchecked free-text type) is not
 one of the two.
+
+---
+
+### 7.68 An assumption that fails to evaluate is reported as "not declared"
+
+*Belongs with the language and engine (section 5). Found closing 7.65.*
+
+When an `assume` fails to evaluate, the engine warns and skips it. Every later
+read of that name then hits the unresolved-name gate, which says:
+
+```
+`inputs.net_sf` is not declared — each read as zero. Declare it, supply it in
+the run configuration, or correct the name.
+```
+
+All three remedies are wrong, because the name **is** declared. The model says
+`assume net_sf = ...` in plain sight; the assumption simply did not produce a
+number. A modeller reading that message goes looking for a missing declaration
+or a typo and finds neither.
+
+Dependency ordering removed the common cause (an assume reading another
+assume), so the message is now reachable only when an assumption fails for its
+own reasons — a non-numeric result, a division by zero, a call the empty
+assumption environment cannot serve. Rarer, and the diagnosis is still wrong
+when it happens.
+
+Shape: the gate knows the declared names, so it can distinguish "no such
+assumption" from "declared but unresolved" and say which. The second case
+should also name the ORIGINAL failure — the warning that explains why is
+already in the warnings array, one entry above.

@@ -1,0 +1,100 @@
+version 0.1
+model "cre-derived-lines"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 84
+
+// THREE CRE LINES DERIVED FROM OTHER LINES.
+//
+// The backlog called these "three ordinary CRE requirements, one cause": a
+// vacancy that tracks the rent roll, a management fee that is a percentage of
+// effective gross income, and an expense stop that resets to a later year's
+// ACTUAL opex. Each needs one line to read another, and each was written as a
+// restated constant instead — a number that goes stale the moment an
+// assumption changes.
+//
+// The cause was the engine's two-phase stream split, which allowed a reader to
+// read only non-readers. Streams now evaluate in dependency-ordered waves, so
+// a chain is ordinary: opex, then the recoveries that read it, then the exit
+// that reads them. NO PACK CHANGE WAS NEEDED for any of the three — a contract
+// term already holds an expression, and the expression may name another
+// stream. This fixture is the proof, and the pattern a modeller copies.
+
+entity asset strip_center : CRE.Asset.RealProperty
+
+// The operating expense the other lines are measured against.
+contract cre.opex_line on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    amount_year = 240000
+    escalation = 0.03
+  }
+}
+
+// (1) AN EXPENSE STOP THAT RESETS TO ACTUAL OPEX.
+//
+// Recoveries are tested against what the building actually spent, not against
+// a restatement of how the spend is computed, and the stop resets to the 2028
+// actual (period 24) rather than a hand-computed constant. Opex books signed
+// negative, hence the negation; `time.ppy` annualizes a monthly figure because
+// the terms are stated per year, and follows the model's calendar rather than
+// hard-coding twelve.
+//
+// The read names `cre.opex.line` EXACTLY. A `cre.opex.line.*` selector would
+// also pull in the management fee below, which reads these recoveries — a
+// genuine cycle, which the engine refuses by name rather than answering.
+contract cre.lease_unit.anchor on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    rent_year = 540000
+    escalation = 0.02
+    opex_year = (0 - series_sum("cre.opex.line", time.t, time.t)) * time.ppy
+    opex_escalation = 0
+    expense_stop_year = (0 - series_sum("cre.opex.line", 24, 24)) * time.ppy
+    gross_up_factor = 1.0
+    pro_rata_share = 0.60
+    ti_total = 150000
+    lc_total = 60000
+  }
+}
+
+// (2) VACANCY THAT TRACKS THE RENT ROLL, AND STEPS AT A CLIFF.
+//
+// Potential gross rent grows with escalation and changes as suites come and
+// go, and the loss follows it. The rate is an expression too, so the 46% step
+// at a 2030 affordability cliff is stated where it happens.
+contract cre.vacancy_loss on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    rate = if(time.date >= date(2030, 1, 1), 0.46, 0.03)
+    potential_gross_year = series_sum("cre.unit.base_rent.*", time.t, time.t) * time.ppy
+  }
+}
+
+// (3) A MANAGEMENT FEE THAT IS A PERCENTAGE OF EGI.
+//
+// Effective gross income is rent plus recoveries less vacancy — all revenue,
+// so the fee reads no opex line and cannot read itself. The fee falls when
+// vacancy rises, which is the whole point of stating it as a percentage.
+//
+// This is the deepest chain here: rent, then vacancy and recoveries that read
+// rent and opex, then this fee that reads them, then the exit that reads every
+// opex line including this one.
+contract cre.opex_line.management on entity asset.strip_center {
+  term 2026-01..2032-12
+  terms {
+    amount_year = (series_sum("cre.unit.base_rent.*", time.t, time.t)
+                   + series_sum("cre.unit.recoveries.*", time.t, time.t)
+                   + series_sum("cre.vacancy.loss", time.t, time.t)) * time.ppy * 0.04
+    escalation = 0
+    pct_fixed = 1.0
+  }
+}
+
+contract cre.exit on entity asset.strip_center {
+  term 2032-12..2032-12
+  terms {
+    noi_forward_year = 640000
+    exit_cap = 0.0675
+    selling_costs = 0.015
+  }
+}
