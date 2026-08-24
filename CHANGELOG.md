@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: an assumption may be derived from other assumptions
+
+`assume net_sf = inputs.gross_sf * inputs.efficiency` compiled and then failed
+at run: assumptions evaluated in name order against an empty environment, so a
+read of another assumption found nothing, the assumption was skipped, and every
+read of it resolved to nothing. They now evaluate in dependency order, with
+random assumptions resolved first as leaves. A circular derivation is refused
+with the cycle named (`'gross_sf' -> 'net_sf' -> 'gross_sf'`), on the same
+principle as cross-stream reads one layer down: no order satisfies it, and the
+engine does not iterate toward a fixed point. Closes backlog 7.65.
+
 ### Changed: MIT Rentleg Plaza reads actual opex instead of restating it
 
 The benchmark's expense reimbursements rebuilt "actual opex per SF" from the

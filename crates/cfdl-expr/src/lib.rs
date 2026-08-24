@@ -231,6 +231,38 @@ pub fn has_computed_series_name(compiled: &CompiledExpr) -> bool {
     cfdl_calc::has_computed_call_name(&compiled.expr, &["series_sum", "series_avg"])
 }
 
+/// Every `<root>.<segment>` an expression names, as written.
+///
+/// A source scan, for the same reason `series_references` is one: the callers
+/// hold the source, and one scanner means the compiler and the engine cannot
+/// drift into disagreeing about what a model says. Guards against matching
+/// mid-identifier, so `my_inputs.x` is not an `inputs.` read.
+pub fn root_references(src: &str, root: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    let needle = format!("{root}.");
+    let mut base = 0usize;
+    while let Some(idx) = src[base..].find(&needle) {
+        let at = base + idx;
+        let before_ok = at == 0
+            || !src[..at]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+        base = at + needle.len();
+        if !before_ok {
+            continue;
+        }
+        let seg: String = src[base..]
+            .chars()
+            .take_while(|c| c.is_alphanumeric() || *c == '_')
+            .collect();
+        if !seg.is_empty() {
+            found.push(seg);
+        }
+    }
+    found
+}
+
 /// The series names an expression reads, as written.
 ///
 /// Only literal first arguments — `series_sum("a.b", ...)` — which is what a

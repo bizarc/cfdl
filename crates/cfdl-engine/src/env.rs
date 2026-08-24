@@ -477,15 +477,44 @@ pub(crate) fn build_expr_env(
 /// Resolve `assume` values from IR: constants evaluate their expression;
 /// random assumptions contribute their deterministic central value (Monte
 /// Carlo trials override these via `inputs.<name>` parameter overrides).
+///
+/// Constants evaluate IN DEPENDENCY ORDER, so one assumption may be derived
+/// from another — `assume net_sf = inputs.gross_sf * inputs.efficiency` is
+/// ordinary modeling. Evaluated in name order alone, such a read found an
+/// empty environment, the assumption was skipped, and every read of it
+/// resolved to nothing. The same ordering the stream layer does, one layer
+/// up, and with the same single rejection: a circular derivation, which no
+/// order can satisfy and which the engine refuses rather than iterating.
 pub(crate) fn assumption_inputs(
     ir: &Ir,
     warnings: &mut Vec<String>,
 ) -> Result<BTreeMap<String, f64>, EngineError> {
     let mut inputs = BTreeMap::new();
-    let empty_env = ExprEnv::empty();
-    for (name, constant) in &ir.assumptions.constants {
+
+    // Random assumptions are leaves: a distribution's central value reads
+    // nothing. Resolved first so a constant may be derived from one.
+    for (name, random) in &ir.assumptions.random {
+        let spec = ir_distribution_spec(&random.dist)?;
+        inputs.insert(
+            name.clone(),
+            apply_clip(central_value(&spec), random.dist.clip),
+        );
+    }
+
+    let order = assumption_order(ir)?;
+    for name in order {
+        let Some(constant) = ir.assumptions.constants.get(&name) else {
+            continue;
+        };
+        // Everything this assumption is allowed to read is already resolved.
+        let mut env = ExprEnv::empty();
+        for (resolved, value) in &inputs {
+            env.inputs
+                .insert(resolved.clone(), ExprValue::Decimal(*value));
+        }
+        let name = &name;
         match cfdl_expr::compile_expr(&constant.expr.src)
-            .and_then(|compiled| cfdl_expr::eval(&compiled, &empty_env))
+            .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
         {
             Ok(ExprValue::Decimal(v)) => {
                 inputs.insert(name.clone(), v);
@@ -502,14 +531,76 @@ pub(crate) fn assumption_inputs(
             )),
         }
     }
-    for (name, random) in &ir.assumptions.random {
-        let spec = ir_distribution_spec(&random.dist)?;
-        inputs.insert(
-            name.clone(),
-            apply_clip(central_value(&spec), random.dist.clip),
-        );
-    }
     Ok(inputs)
+}
+
+/// The order constant assumptions evaluate in: an assumption after every
+/// assumption it reads. Names that are not assumptions are not edges — they
+/// come from the run configuration or from nowhere, and the unresolved-name
+/// gate already speaks for the latter.
+fn assumption_order(ir: &Ir) -> Result<Vec<String>, EngineError> {
+    let names: Vec<&String> = ir.assumptions.constants.keys().collect();
+    let mut edges: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
+    for name in &names {
+        let constant = &ir.assumptions.constants[*name];
+        let mut reads: BTreeSet<&str> = BTreeSet::new();
+        for referenced in cfdl_expr::root_references(&constant.expr.src, "inputs") {
+            if let Some(hit) = names.iter().find(|n| ***n == referenced) {
+                reads.insert(hit.as_str());
+            }
+        }
+        edges.insert(name.as_str(), reads);
+    }
+
+    // GRAY means "on the current chain", so reaching one closes a cycle.
+    const WHITE: u8 = 0;
+    const GRAY: u8 = 1;
+    const BLACK: u8 = 2;
+    fn visit<'a>(
+        node: &'a str,
+        edges: &BTreeMap<&'a str, BTreeSet<&'a str>>,
+        color: &mut BTreeMap<&'a str, u8>,
+        chain: &mut Vec<&'a str>,
+        out: &mut Vec<String>,
+    ) -> Result<(), EngineError> {
+        match color.get(node).copied().unwrap_or(WHITE) {
+            BLACK => return Ok(()),
+            GRAY => {
+                let start = chain.iter().position(|n| *n == node).unwrap_or(0);
+                let mut path: Vec<&str> = chain[start..].to_vec();
+                path.push(node);
+                return Err(EngineError::AssumptionCycle(format!(
+                    "cyclic assumptions: {}. Each one needs the other resolved \
+                     first, so no evaluation order exists. Break the cycle by \
+                     stating one of them directly.",
+                    path.iter()
+                        .map(|n| format!("'{n}'"))
+                        .collect::<Vec<_>>()
+                        .join(" -> ")
+                )));
+            }
+            _ => {}
+        }
+        color.insert(node, GRAY);
+        chain.push(node);
+        if let Some(reads) = edges.get(node) {
+            for referenced in reads {
+                visit(referenced, edges, color, chain, out)?;
+            }
+        }
+        chain.pop();
+        color.insert(node, BLACK);
+        out.push(node.to_string());
+        Ok(())
+    }
+
+    let mut color: BTreeMap<&str, u8> = BTreeMap::new();
+    let mut chain: Vec<&str> = Vec::new();
+    let mut out: Vec<String> = Vec::new();
+    for name in &names {
+        visit(name.as_str(), &edges, &mut color, &mut chain, &mut out)?;
+    }
+    Ok(out)
 }
 
 pub(crate) fn stream_amount_override(config: &RunConfig, stream_name: &str) -> Option<f64> {

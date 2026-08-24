@@ -1,0 +1,119 @@
+{
+  "results_version": "0.3",
+  "model_hash": "f6322cf38d92b2be05e6ae4baaef810463d6551170ed1e9d4691c73df4ec2c9e",
+  "ledger_hash": "aac55252dae3230e1e821ac15c27025367e6df477c9ba6ba91ed968200608f8c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "efficiency": 0.85,
+      "gross_sf": 10000.0,
+      "net_sf": 8500.0,
+      "rent_psf": 2.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.co.total": {
+        "amount": 51000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 42276.483847,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 51000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.base.rent.total": {
+        "amount": 51000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.co.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.base.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 17000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
