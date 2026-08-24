@@ -275,7 +275,7 @@ of them than "occurrences are indistinguishable" suggests.
   remainder. All need dated flows to reach valuation, which the ledger provides
   and this document does not spend.
 
-**Not touched by it** — cross-stream reads (1.1, 1.2, 1.6), contract shapes
+**Not touched by it** — cross-stream reads (1.1), contract shapes
 (1.5, 1.7, 7.5, 7.9), ordered allocation (5.2, 2.4), and everything that needs a
 source rather than a capability.
 

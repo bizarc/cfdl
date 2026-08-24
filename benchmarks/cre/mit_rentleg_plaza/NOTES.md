@@ -59,13 +59,13 @@ contracts:
 
 - occupancy-varying opex (MIT fn 7 splits it 81% fixed / 19% variable, which is
   what makes 2001 opex $135,161 rather than $144,300);
-- an expense stop that resets to a computed later-year value (fn 5, which makes
-  the 2004 reimbursement exactly zero) — the STOP itself is now read straight
-  from the opex stream (see below), so what remains is only the pack term to
-  declare it with.
+- ~~an expense stop that resets to a computed later-year value~~ (fn 5, which
+  makes the 2004 reimbursement exactly zero) — **no longer a gap.** The stop is
+  read straight from the opex stream, with the window pinned to the reset year
+  (see §6 below); `docs/26_lessons_learned.md` records the shape.
 
-Both are recorded in `docs/13_feature_backlog.md` §1.1 and §1.2, along with the
-abatement-line gap that was §5 here. They are additive features, not defects.
+The first is recorded in `docs/13_feature_backlog.md` §1.1, along with the
+abatement-line gap that was §5 here. It is an additive feature, not a defect.
 
 ## 6. RESOLVED — the stop reads actual opex instead of restating it
 
