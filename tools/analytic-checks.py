@@ -208,7 +208,7 @@ stream holder.payment on entity legal.holder inflow currency USD {
 }
 """
     due = ordinary.replace(
-        "schedule every month from", "schedule every month due from"
+        "schedule every month from", "schedule every month start from"
     ).replace('model "ordinary"', 'model "due"')
     i = monthly_rate(0.06)
     return npv(run_model(due, 0.06)), npv(run_model(ordinary, 0.06)) * (1.0 + i)
@@ -326,7 +326,7 @@ stream holder.payment on entity legal.holder inflow currency USD {{
 }}
 """
         due = ordinary.replace(
-            f"schedule every {interval} from", f"schedule every {interval} due from"
+            f"schedule every {interval} from", f"schedule every {interval} start from"
         ).replace(f'model "ordinary-{calendar}"', f'model "due-{calendar}"')
         i = periodic_rate(0.06, ppy)
         got = npv(run_model(due, 0.06))
@@ -480,7 +480,7 @@ def wal_due_vs_ordinary() -> tuple[float, float]:
     ordinary = wal(run_model(_single_flow(
         "monthly", 24, "every month from 2026-01 to 2027-12"), 0.08))
     due = wal(run_model(_single_flow(
-        "monthly", 24, "every month due from 2026-01 to 2027-12"), 0.08))
+        "monthly", 24, "every month start from 2026-01 to 2027-12"), 0.08))
     return ordinary - due, 1.0 / 12.0
 
 
@@ -491,7 +491,7 @@ def wal_mid_is_halfway() -> tuple[float, float]:
     mid = wal(run_model(_single_flow(
         "annual", 5, "every year mid from 2026-01 to 2030-01"), 0.08))
     due = wal(run_model(_single_flow(
-        "annual", 5, "every year due from 2026-01 to 2030-01"), 0.08))
+        "annual", 5, "every year start from 2026-01 to 2030-01"), 0.08))
     return mid - due, 0.5
 
 

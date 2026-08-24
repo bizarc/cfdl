@@ -549,6 +549,37 @@ struct IrOnRule {
     day: Option<i32>,
 }
 
+/// A pack rule's stated placement, or `None` for the form's default.
+/// Validated by the pack loader, so an unknown string cannot reach here.
+fn placement_of_rule(stated: Option<&str>) -> Option<Placement> {
+    match stated {
+        Some("start") => Some(Placement::Start),
+        Some("mid") => Some(Placement::Mid),
+        Some("end") => Some(Placement::End),
+        _ => None,
+    }
+}
+
+/// The single placement a parsed schedule states, or `None` for the form's
+/// default. The parser guarantees at most one is set.
+fn placement_of_parsed(due: bool, mid: bool, at_end: bool) -> Option<Placement> {
+    match (due, mid, at_end) {
+        (true, _, _) => Some(Placement::Start),
+        (_, true, _) => Some(Placement::Mid),
+        (_, _, true) => Some(Placement::End),
+        _ => None,
+    }
+}
+
+/// Where in its period a flow sits. Serialized as `"start"|"mid"|"end"`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Placement {
+    Start,
+    Mid,
+    End,
+}
+
 #[derive(Debug, Clone, Serialize)]
 struct IrSchedule {
     kind: String,
@@ -556,18 +587,12 @@ struct IrSchedule {
     on: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     every: Option<String>,
-    /// Annuity due: payment at the start of each interval. Omitted for an
-    /// ordinary annuity, which is the default and the common case.
-    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
-    due: bool,
-    /// A one-shot flow that settles at the END of its period rather than on
-    /// the stated date. Disposals want this; acquisitions do not.
-    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
-    at_period_end: bool,
-    /// Mid-period convention: cash discounted from halfway through the period
-    /// that earned it, rather than from its end. Omitted for the default.
-    #[serde(skip_serializing_if = "std::ops::Not::not", default)]
-    mid: bool,
+    /// WHERE IN ITS PERIOD THE FLOW SITS — one axis with three positions,
+    /// not three booleans, so two placements cannot both be set. Omitted when
+    /// the model states none and the form's default applies: a one-shot opens
+    /// its period, a recurrence closes it.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    placement: Option<Placement>,
     /// How long after a flow is earned its cash moves. Omitted when cash
     /// lands in the period that earned it.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4116,9 +4141,7 @@ fn lower_rule_state_schedule(
     }
     Some(IrSchedule {
         kind: "Every".to_string(),
-        due: false,
-        at_period_end: false,
-        mid: false,
+        placement: None,
         net_days: None,
         net_months: None,
         on: None,
@@ -4167,9 +4190,7 @@ fn lower_pack_rule_schedule(
     if rule.schedule_kind.eq_ignore_ascii_case("on_date") {
         IrSchedule {
             kind: "OnDate".to_string(),
-            due: false,
-            at_period_end: rule.schedule_at_period_end,
-            mid: false,
+            placement: placement_of_rule(rule.schedule_placement.as_deref()),
             net_days: None,
             net_months: None,
             on: Some(normalize_date(&rule.schedule_from)),
@@ -4186,9 +4207,7 @@ fn lower_pack_rule_schedule(
     } else {
         IrSchedule {
             kind: "Every".to_string(),
-            due: rule.schedule_due,
-            at_period_end: false,
-            mid: rule.schedule_mid,
+            placement: placement_of_rule(rule.schedule_placement.as_deref()),
             net_days,
             net_months,
             on: None,
@@ -4745,9 +4764,7 @@ fn lower_schedule(
     let Some(schedule) = schedule else {
         return Ok(IrSchedule {
             kind: "OnDate".to_string(),
-            due: false,
-            at_period_end: false,
-            mid: false,
+            placement: None,
             net_days: None,
             net_months: None,
             on: Some(time_start.to_string()),
@@ -4785,9 +4802,7 @@ fn lower_schedule(
         ),
         ScheduleKind::OnDate => Ok(IrSchedule {
             kind: "OnDate".to_string(),
-            due: false,
-            at_period_end: false,
-            mid: schedule.mid,
+            placement: placement_of_parsed(false, schedule.mid, schedule.at_period_end),
             net_days: None,
             net_months: None,
             on: Some(normalize_date(
@@ -4813,9 +4828,7 @@ fn lower_schedule(
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
-            due: schedule.due,
-            at_period_end: false,
-            mid: schedule.mid,
+            placement: placement_of_parsed(schedule.due, schedule.mid, schedule.at_period_end),
             net_days: split_payment_terms(schedule.net).0,
             net_months: split_payment_terms(schedule.net).1,
             on: None,
@@ -4853,9 +4866,7 @@ fn lower_schedule(
             })?;
             Ok(IrSchedule {
                 kind: "OnDate".to_string(),
-                due: false,
-                at_period_end: false,
-                mid: false,
+                placement: None,
                 net_days: None,
                 net_months: None,
                 on: Some(start.clone()),
@@ -4884,9 +4895,7 @@ fn lower_schedule(
             })?;
             Ok(IrSchedule {
                 kind: "Every".to_string(),
-                due: schedule.due,
-                at_period_end: false,
-                mid: schedule.mid,
+                placement: placement_of_parsed(schedule.due, schedule.mid, schedule.at_period_end),
                 net_days: split_payment_terms(schedule.net).0,
             net_months: split_payment_terms(schedule.net).1,
                 on: None,

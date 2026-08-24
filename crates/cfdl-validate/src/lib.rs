@@ -313,10 +313,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 // properly means billing from the midpoint and carrying the
                 // lag's sub-period residual into the offset; that is a real
                 // design question and it is not answered by picking one.
+                // NOTE: `start`/`mid`/`end` cannot clash with each other —
+                // they are one axis and the parser takes at most one, so that
+                // state is unwritable rather than rejected. What remains here
+                // are clashes across DIFFERENT axes.
                 if schedule.mid {
-                    let clash = if schedule.due {
-                        Some("`due`, which places the same cash at the start of the period")
-                    } else if schedule.day_of_month.is_some() || schedule.end_of_month {
+                    let clash = if schedule.day_of_month.is_some() || schedule.end_of_month {
                         Some("a day rule, which places the same cash on a stated date")
                     } else if schedule.net.is_some() {
                         Some("`net` payment terms, which are resolved on the calendar rather than as a position in the period")

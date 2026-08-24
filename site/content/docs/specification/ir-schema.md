@@ -788,18 +788,6 @@ against it by `make ir-schema`.
             "type": "string"
           }
         },
-        "due": {
-          "description": "Annuity due: payment falls at the start of each interval, as for rent. Omitted for an ordinary annuity, which pays at the interval's end and is the default. Determines how far a payment is discounted, not which period holds it — see 12_payment_timing.md.",
-          "type": "boolean"
-        },
-        "at_period_end": {
-          "description": "A one-shot (`on_date`) flow that settles at the END of the period its date falls in, rather than on the date itself. Set by a pack lowering rule for a DISPOSAL: a reversion is taken at the end of the holding period and so discounts the full n periods, where an acquisition settles on its date and does not. Omitted for the default. See 12_payment_timing.md.",
-          "type": "boolean"
-        },
-        "mid": {
-          "description": "Mid-period convention: the flow is discounted from halfway through the period that earned it, rather than from that period's end. A convention rather than a date, so it is half a period on every calendar — which is what separates it from a day rule. Standard in project finance and banker DCFs, on the reasoning that a period's cash arrives throughout it. Applies to a price struck at a point in time (a disposal, a terminal value) only if that price really does accrue, which it normally does not. Mutually exclusive with `due`, a day rule, and payment terms (E2109). Omitted for the default. See 12_payment_timing.md.",
-          "type": "boolean"
-        },
         "net_days": {
           "description": "Days between a flow being earned and its cash moving. Omitted when cash lands in the period that earned it.",
           "type": "integer",
@@ -809,6 +797,15 @@ against it by `make ir-schema`.
           "description": "Months between a flow being earned and its cash moving, stepped by the calendar rather than as 30-day units.",
           "type": "integer",
           "minimum": 0
+        },
+        "placement": {
+          "type": "string",
+          "enum": [
+            "start",
+            "mid",
+            "end"
+          ],
+          "description": "Where in its period the flow sits. One axis with three positions, so two placements cannot both be stated. Omitted for the form's default, which differs by form: a one-shot (`OnDate`) opens its period, a recurrence closes it (an ordinary annuity — the interval elapses, then payment falls). `start` is an annuity due and what expense-like streams want; `mid` is the project-finance convention, half a period on every calendar, a convention rather than a date; `end` is what a disposal needs, since a reversion is taken at the close of the holding period. Mutually exclusive with a day rule and with payment terms (E2109). See 12_payment_timing.md."
         }
       },
       "allOf": [

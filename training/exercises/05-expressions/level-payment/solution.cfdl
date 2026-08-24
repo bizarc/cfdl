@@ -14,6 +14,6 @@ stream loan.debt_service on entity asset.borrower outflow currency USD {
 
 // A single-occurrence due stride: the advance arrives at January's start.
 stream loan.proceeds on entity asset.borrower inflow currency USD {
-  schedule every month due from 2026-01 to 2026-01
+  schedule every month start from 2026-01 to 2026-01
   amount = 250000
 }

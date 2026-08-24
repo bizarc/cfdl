@@ -758,7 +758,7 @@ A placeholder with no contract value and no default is a compile error
 ### Where a one-shot flow sits in its period
 
 `schedule_kind = "on_date"` settles on the stated date, which discounts from
-the period's open. Set `schedule_at_period_end = true` for a **disposal**: a
+the period's open. Set `schedule_placement = "end"` for a **disposal**: a
 reversion is taken at the end of the holding period and discounts the full n
 periods. The distinction is by kind, not by being one-shot — acquisitions,
 draws, dated leasing costs and tax credits all want the default.
@@ -773,11 +773,11 @@ throughout it rather than on the last day.
 It is a convention rather than a date, so it is half a period on every
 calendar. It works on `every` and on `on_date` rules alike, and it is mutually
 exclusive with `schedule_due` and with a day rule — all three name a position,
-and stating two is `E2109_SCHEDULE_CONFLICTING_PLACEMENT`.
+and a rule states at most one, as `schedule_placement = "start" | "mid" | "end"`.
 
 Use it for operating flows. Do not use it for a **price**: a disposal, a
 terminal value or an acquisition is struck at a point in time and discounts
-whole, which is what `schedule_at_period_end` is for.
+whole, which is what `schedule_placement` is for.
 
 ### A rule may declare a field
 

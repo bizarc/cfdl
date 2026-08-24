@@ -8,6 +8,66 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: schedule placement is one axis — `start` / `mid` / `end`
+
+**Breaking, pre-release: `due` is removed.** Write `start`.
+
+Where a flow sits in its period was three independent booleans (`due`, `mid`,
+`at_period_end`) repeated across the parser, IR, engine and pack interface. It
+is now a single `Placement { Start, Mid, End }`, spelled `start`/`mid`/`end`
+everywhere, including pack rules as `schedule_placement = "start"|"mid"|"end"`
+(replacing `schedule_at_period_end`).
+
+Three things this fixes:
+
+- **A one-shot can now settle at its period's close.** `schedule on <date> end`
+  is what a disposal needs — a reversion is taken at the end of the holding
+  period, so a year-5 sale discounts five periods, not four. A pack rule could
+  already reach it; a hand-written model could not. Closes backlog 3.2.
+- **Two placements can no longer be stated**, because the positions are
+  alternatives rather than flags. `E2109_SCHEDULE_CONFLICTING_PLACEMENT` is
+  narrowed to clashes across different axes — a placement against a day rule
+  or against `net` payment terms — and no longer covers placement-vs-placement,
+  which is now a parse error.
+- **The grammar file was stale** and is corrected: `schedule_on` omitted the
+  `mid` modifier that the parser accepted and the spec documented.
+
+Defaults are unchanged — a recurrence still defaults to `end`, a one-shot to
+`start` — but every position is now nameable in both forms, so no model has to
+rely on a default that differs by form.
+
+**No number moved.** 17 IR goldens changed shape and the 17 results goldens
+that differ do so only in hash fields; 163 goldens and 40 benchmarks pass.
+15 shipped models migrated from `due` to `start`.
+
+Also closes backlog 2.4 and 3.1, both already expressible — see `docs/26`.
+
+
+### Closed: backlog 2.4 and 3.1, both already expressible
+
+**2.4 (sequential-pay note classes).** The liability stack is not missing —
+`benchmarks/credit/americredit_2017_1` models a real deal as one waterfall of
+22 prospectus clauses in 30 `pay` steps and reproduces the published grid,
+including all 48 weighted average lives. What the item calls for is pack
+surface, not capability. `docs/26` records the shape: accumulate free cash,
+cascade on the distribution date, state a claim rather than a payment, and
+carry a class balance as a field ONLY when what is distributed diverges from
+what is produced (a step-down amount, an overcollateralization redirection,
+losses). Where payments track production, the outstanding is a derived stream
+and no balance exists at all.
+
+**3.1 (a stub first period).** The calendar is a neutral coordinate grid, not
+the deal's fiscal year, so a leading stub belongs nowhere near it. The grid
+takes any start date, the schedule carries placement (`due`/default/`mid`, day
+rules, and its own `short_front`/`long_front` stub policies), and discounting
+reads `(period + offset) / ppy` continuously. A 30 September valuation with
+30 June fiscal years lands at 0.75, 1.75, 2.75, 3.75 and 4.75 years out on a
+plain monthly grid. The item's premise came from omitting `due`, which places
+cash at the END of each period — the documented default, not drift.
+
+Backlog: 46 items.
+
+
 ### Research: the A.CRE Retail Development Model catalogued as source 107
 
 Salvaged from a stale branch. The catalogue now carries 107 sourced models,

@@ -66,67 +66,7 @@ single-pool model at **0.0** across all 372 periods, through two aggregations
 that share no code. Heterogeneity of any kind is already exact that way, which
 is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
-### 2.4 Sequential-pay note classes
-
-The credit pack models collateral. It has no liability stack, so it cannot say
-what a Class A-2 or a Class D receives, and every published ABS exhibit states
-its answers per class.
-
-`benchmarks/credit/auto_abs_wal` gets around this because Class A-1 had already
-retired, leaving A-2 taking 100% of pool principal — so its pay-down *is* the
-collateral's, scaled by one constant. That is luck, and it does not extend to
-the other five classes in the same exhibit.
-
-Shape: an ordered waterfall over available funds, with subordination, an
-overcollateralisation target that excess spread turbos toward, and a reserve
-account. This is the pack roadmap's waterfall item rather than a small addition,
-and it is the single thing standing between this pack and mainstream consumer
-ABS. Also wants the optional clean-up call, which every such exhibit reports
-both with and without.
-
----
-
 ## 3. OpCo pack
-
-### 3.1 A stub first period
-
-`time calendar <c> from <d> for <n>` produces `n` periods of one length. A
-valuation dated off a fiscal-year boundary — which is every live deal, because
-valuation dates are negotiated and fiscal years are not — has a **stub** first
-period, and there is no way to say so.
-
-Reproducing a disclosed banker DCF made this concrete: valuation date 30
-September, fiscal year ending 30 June, so the first forecast period is nine
-months and the full years after it sit at 1.25, 2.25, 3.25 and 4.25 years out
-rather than 1, 2, 3, 4. `benchmarks/opco/banker_dcf_conventions` works around it
-by dropping to a monthly grid and placing each fiscal year's cash on the date
-that carries its convention. Every exponent lands exactly, which is luck — the
-offsets happen to be month boundaries except the stub's, which happens to be a
-month midpoint. A valuation dated mid-month has no such out.
-
-Shape: a leading partial period the calendar knows the length of, so period
-lengths are `[stub, p, p, …]` and discounting, escalation and `elapsed_years`
-all read it. Note the schedule grammar already has `stub short_front` /
-`long_front` for *schedules*; this is the same idea for the *calendar*, and the
-two should probably share a spelling.
-
-### 3.2 A one-shot cannot settle at its period's end from surface syntax
-
-`schedule on <date>` discounts from the period's open. A pack lowering rule can
-move it to the close with `schedule_at_period_end` — added when the CRE
-reversion turned out to be discounted a period short — but no surface syntax
-exposes it, so a hand-written model cannot say it.
-
-The workaround is a single-occurrence `every`: `schedule every month from
-2025-12 to 2025-12` is an ordinary annuity, so it falls at its period's end.
-That produces the right answer and reads like a workaround.
-
-Shape: `schedule on <date> at end`, beside the `mid` modifier that already
-works there. Small, and it closes an asymmetry between what packs can express
-and what models can.
-
-Found the same way. Related to 3.1 — both are about a flow whose position is
-not one of the three the calendar offers.
 
 ### 3.3 A settlement lag's sub-period residual is dropped from discounting
 

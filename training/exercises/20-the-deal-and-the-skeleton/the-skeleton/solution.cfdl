@@ -11,7 +11,7 @@ entity asset harbor : CRE.Asset.RealProperty
 // Land closes at the start of month one.
 stream harbor.land_acquisition on entity asset.harbor outflow currency USD {
   category investing.capital.construction
-  schedule every month due from 2026-01 to 2026-01
+  schedule every month start from 2026-01 to 2026-01
   amount = 5500000
 }
 

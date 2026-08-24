@@ -50,34 +50,37 @@ pub(crate) fn periods_per_year(calendar: &str) -> f64 {
 /// period the cash sits, and so how far it is discounted. One mechanism covers
 /// every case — an annuity due sits at the start, an ordinary annuity at the
 /// end, and a day rule at its own point in between.
+/// The placement a schedule states, or `None` when it states none and the
+/// form's default applies. The ONE place that resolution lives.
+pub(crate) fn placement_of(schedule: &IrSchedule) -> Option<Placement> {
+    schedule.placement
+}
+
 pub(crate) fn discount_offset(schedule: &IrSchedule, calendar: &str) -> f64 {
-    // A one-shot flow happens on its stated date, not at the end of the
-    // period containing it: a purchase on 2026-01 is settled then, so it is
-    // not discounted for a period it never waited through.
+    // WHERE IN ITS PERIOD THE CASH SITS. One axis, three positions, and the
+    // only thing that differs between forms is which position they default to
+    // when the model does not say.
     //
-    // Unless it says otherwise. That default is right for an acquisition and
-    // wrong for a disposal: a reversion is taken at the END of the holding
-    // period, so a year-5 sale must discount five periods rather than four.
-    // The date names the period; `at_period_end` says where in it the cash
-    // falls. On a monthly model the gap is one month; on an annual one it is a
-    // whole year, and 9% of the reversion at 12%.
-    if schedule.kind == "OnDate" {
-        // Three placements, same axis: the stated date's period opens (the
-        // default, right for an acquisition), closes (`at_period_end`, right
-        // for a disposal), or is treated as arriving evenly across it (`mid`).
-        return if schedule.mid {
-            0.5
-        } else if schedule.at_period_end {
-            1.0
-        } else {
-            0.0
-        };
-    }
-    if schedule.due {
-        return 0.0;
-    }
-    if schedule.mid {
-        return 0.5;
+    // A one-shot happens on its stated date, so it defaults to that period's
+    // START: a purchase on 2026-01 settles then and is not discounted for a
+    // period it never waited through. A recurrence defaults to its period's
+    // END — an ordinary annuity, where the interval elapses and then payment
+    // falls.
+    //
+    // That one-shot default is right for an acquisition and wrong for a
+    // disposal: a reversion is taken at the END of the holding period, so a
+    // year-5 sale must discount five periods rather than four. On a monthly
+    // model the gap is one month; on an annual one it is a whole year, and 9%
+    // of the reversion at 12%. `end` is how a model says so.
+    let one_shot = schedule.kind == "OnDate";
+    match placement_of(schedule) {
+        Some(Placement::Start) => return 0.0,
+        Some(Placement::Mid) => return 0.5,
+        Some(Placement::End) => return 1.0,
+        // Unstated: a one-shot opens its period, a recurrence closes it — and
+        // a recurrence's close may be refined by a day rule below.
+        None if one_shot => return 0.0,
+        None => {}
     }
     match schedule.on_rule.as_ref() {
         // `on day <n>`: n days into the period, so the divisor is the period's
@@ -258,7 +261,7 @@ pub(crate) fn apply_schedule_indices(
                 // annuity pays as it closes — the last calendar period the
                 // interval covers, which for an annual interval on a monthly
                 // grid is its twelfth month, not its first.
-                let pay_idx = if schedule.due {
+                let pay_idx = if placement_of(schedule) == Some(Placement::Start) {
                     accrual_idx
                 } else {
                     let next = starts

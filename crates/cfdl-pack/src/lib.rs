@@ -722,34 +722,28 @@ pub struct LoweringRule {
     pub schedule_net_months: String,
     /// Annuity due: the stream pays at the start of each interval.
     ///
-    /// Streams that behave like an expense — opex, rent paid, fees, capex —
-    /// fall due in the period they belong to. Streams that behave like an
-    /// annuity — coupons, debt service, pool collections — pay at the end of
-    /// the interval that earned them, which is the default.
-    #[serde(default)]
-    pub schedule_due: bool,
-    /// Mid-period convention: the stream's cash is discounted from halfway
-    /// through the period that earned it.
+    /// WHERE IN ITS PERIOD THE STREAM'S CASH SITS — `"start"`, `"mid"` or
+    /// `"end"`. One axis with three positions rather than three booleans, so
+    /// a rule cannot state two.
     ///
-    /// A convention, not a date — half a period on every calendar. It is what
-    /// a project-finance or banker DCF means by "mid-year discounting": a
-    /// year's cash arrives evenly, so treating it as a single point at the
-    /// year's midpoint is closer than treating it as arriving on 31 December.
-    /// Mutually exclusive with `schedule_due` and with a day rule, since all
-    /// three name a position in the period.
-    #[serde(default)]
-    pub schedule_mid: bool,
-    /// For a one-shot (`on_date`) rule: settle at the END of the period the
-    /// date falls in rather than its start.
+    /// Omitted means the FORM's default, which differs: an `on_date` rule
+    /// opens its period (right for an acquisition), a recurring rule closes
+    /// it (an ordinary annuity — the interval elapses, then payment falls).
     ///
-    /// `on_date` otherwise means "on the stated date", which discounts from
-    /// the period's open — right for an acquisition, wrong for a disposal. A
-    /// reversion is taken at the end of the holding period, so a year-5 sale
-    /// must be discounted five periods, not four. On a monthly model the
-    /// difference is one month and easy to miss; on an annual model it is a
-    /// full year.
-    #[serde(default)]
-    pub schedule_at_period_end: bool,
+    /// `"start"` is what an expense-like stream wants — opex, rent paid,
+    /// fees, capex fall due in the period they belong to. `"mid"` is the
+    /// project-finance and banker-DCF convention: a year's cash arrives
+    /// evenly, so treating it as a single point at the year's midpoint beats
+    /// treating it as arriving on 31 December. It is a convention, not a
+    /// date — half a period on every calendar.
+    ///
+    /// `"end"` matters most on a one-shot. `on_date` otherwise discounts from
+    /// the period's open, which is wrong for a disposal: a reversion is taken
+    /// at the end of the holding period, so a year-5 sale must be discounted
+    /// five periods, not four. On a monthly model that is one month and easy
+    /// to miss; on an annual model it is a full year.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub schedule_placement: Option<String>,
     /// May contain `{{contract.term_start}}` / `{{contract.<key>}}` placeholders.
     pub schedule_from: String,
     /// May contain `{{contract.term_end}}` / `{{contract.<key>}}` placeholders.

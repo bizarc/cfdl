@@ -345,7 +345,7 @@ entity asset rom : Asset.Real {
 // ---------------------------------------------------------------------------
 
 stream mine.revenue.copper on entity asset.cu_mill inflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.revenue.recurring
   amount = inputs.price_cu * 2204.6 / 1000.0
            * (inputs.rec_cu_mill * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(time.t <= 2, curve_value("grade_policy_cu", time.date),
@@ -354,13 +354,13 @@ stream mine.revenue.copper on entity asset.cu_mill inflow currency USD {
 }
 
 stream mine.revenue.molybdenum on entity asset.cu_mill inflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.revenue.recurring
   amount = inputs.price_mo * 2204.6 / 1000.0 * inputs.rec_mo * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(asset.cu_mill.tonnes > 0.0, asset.cu_mill.mo / asset.cu_mill.tonnes / 10.0, 0.0)) * 10.0)
 }
 
 stream mine.revenue.zinc on entity asset.zn_mill inflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.revenue.recurring
   amount = inputs.price_zn * 2204.6 / 1000.0 * inputs.rec_zn * (min(inputs.cap_zn_mill, asset.zn_mill.tonnes) * (if(asset.zn_mill.tonnes > 0.0, asset.zn_mill.zn / asset.zn_mill.tonnes / 10.0, 0.0)) * 10.0)
 }
@@ -370,13 +370,13 @@ stream mine.revenue.zinc on entity asset.zn_mill inflow currency USD {
 // ---------------------------------------------------------------------------
 
 stream mine.opex.mining on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.cost_mining * (1.0 + inputs.strip_ratio) * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes))
 }
 
 stream mine.opex.processing on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.cost_mill * min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes)
            + inputs.cost_zinc_plant * min(inputs.cap_zn_mill, asset.zn_mill.tonnes)
@@ -386,7 +386,7 @@ stream mine.opex.processing on entity asset.cu_mill outflow currency USD {
 }
 
 stream mine.opex.selling on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = 2204.6 / 1000.0
            * (inputs.sell_cu * (inputs.rec_cu_mill * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) * (if(time.t <= 2, curve_value("grade_policy_cu", time.date),
@@ -397,14 +397,14 @@ stream mine.opex.selling on entity asset.cu_mill outflow currency USD {
 }
 
 stream mine.opex.gna on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.cost_gna * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes)
                               + min(inputs.cap_zn_mill, asset.zn_mill.tonnes))
 }
 
 stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.accretion
 }
@@ -414,14 +414,14 @@ stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
 // ---------------------------------------------------------------------------
 
 stream mine.fiscal.duty on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
 }
 
 stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.tax
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
@@ -430,7 +430,7 @@ stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
 }
 
 stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.tax
   amount = max(0.0,
                inputs.tax_rate
@@ -444,19 +444,19 @@ stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
 }
 
 stream mine.noncash.accretion_addback on entity asset.cu_mill inflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category operating.expense.opex
   amount = inputs.accretion
 }
 
 stream mine.capital.sustaining on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2025-01 to 2065-01
+  schedule every year start from 2025-01 to 2065-01
   category investing.capital.capex
   amount = inputs.capital_lom * (min(if(time.t <= 10, inputs.cap_cu_mill_full, inputs.cap_cu_mill_reduced), asset.cu_mill.tonnes) + min(inputs.cap_zn_mill, asset.zn_mill.tonnes) + min(inputs.rate_crushed_leach, asset.crushed.tonnes) + min(inputs.rate_rom_leach, asset.rom.tonnes)) / inputs.reserve_ore_total
 }
 
 stream mine.capital.closure on entity asset.cu_mill outflow currency USD {
-  schedule every year due from 2061-01 to 2065-01
+  schedule every year start from 2061-01 to 2065-01
   category investing.capital.capex
   amount = inputs.closure_total / 5.0
 }

@@ -20,6 +20,6 @@ stream agency.payroll on entity asset.agency outflow currency USD {
 // single-occurrence stride carries it: one January payment, placed at the
 // period's start. (A bare `on` date sits at its period's end.)
 stream agency.deposit on entity asset.agency inflow currency USD {
-  schedule every month due from 2026-01 to 2026-01
+  schedule every month start from 2026-01 to 2026-01
   amount = 15000
 }

@@ -261,7 +261,7 @@ Fields that move:
   be exact; anything else is silently wrong, so both are rejected. Use a coarser
   interval, or declare a finer calendar.
 - `E2109_SCHEDULE_CONFLICTING_PLACEMENT` — a schedule combines `mid` with
-  `due`, a day rule, or `net` payment terms. Each states where in its period
+  a day rule or `net` payment terms. Each states where in its period
   the cash sits; two placements is a contradiction, not a refinement.
 
 ### 7.6 Events and actions (E22xx)
