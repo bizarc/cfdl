@@ -19,23 +19,6 @@ and shapes the language already supports, are recorded in
 
 ## 1. CRE pack
 
-### 1.7 A rent restriction that expires
-
-Affordable housing is rent-capped for an affordability period and reverts to
-market afterwards. It is the defining mechanic of the asset class, and the HUD
-source models it by carrying two rent tracks side by side and switching.
-
-CFDL expresses it today as a hand-written `if(time.t < n, restricted, market)`
-across two geometric series — workable, but it is a pack primitive, not a
-one-off.
-
-Shape: `cre.restricted_rent` with a `restriction_years` term and a market track,
-or a `reverts_after` term on `cre.lease_unit`. Note the HUD template's own
-switch fires a year before its stated period, which is the kind of convention a
-pack rule should settle once rather than leaving to each modeller.
-
----
-
 ## 2. Credit pack
 
 ### 2.2 Actual-day-count amortisation on a pool

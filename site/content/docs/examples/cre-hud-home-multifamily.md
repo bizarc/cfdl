@@ -98,6 +98,11 @@ use pack "cre" version "0.1.0"
 time calendar annual from 2024-01 for 29
 
 entity asset home_project : CRE.Asset.RealProperty {
+  // The affordability regime, as a fact about the building. An event clears it
+  // once and permanently; every line keyed to rent reads it rather than
+  // restating the switch.
+  restricted init 1.0
+
   // THE OPERATING LINES ARE THE PROPERTY'S, each escalating on the trend.
   // The trend is the shared assumption; the amounts are facts about this
   // building, so they belong to it.
@@ -150,7 +155,18 @@ assume pi_mip_monthly     = 1165.7819   // sizing tab, monthly P+I+MIP
 // Restriction runs through year 14; year 15 is the first at market rents. The
 // assumptions tab states a 15-year affordability period, and the workbook's own
 // switch fires one year earlier than that label reads — see NOTES.md.
+//
+// THE EVENT BELOW IS WHY THAT DISCREPANCY IS NOW AUDITABLE rather than only
+// explained in a comment. Events latch — at most one fire per run — which is
+// exactly a restriction that expires: it happens once and does not come back.
+// The run publishes the transition, so the period and date the reversion took
+// effect are in the results and can be checked against the source workbook
+// instead of re-derived from a `<` in an expression.
 assume restricted_years   = 14
+
+event affordability_expires when time.t >= inputs.restricted_years {
+  set entity asset.home_project.restricted = 0.0
+}
 
 // ---------------------------------------------------------------------------
 // Revenue
@@ -159,9 +175,9 @@ assume restricted_years   = 14
 stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.revenue.base_rent
-  amount = if(time.t < inputs.restricted_years,
-            inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
-            inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+  amount = if(asset.home_project.restricted == 1.0,
+            inputs.rent_restricted_y1,
+            inputs.rent_market_y1) * pow(1 + inputs.rent_trend, time.t)
 }
 
 stream cre.ops.revenue on entity asset.home_project inflow currency USD {
@@ -170,14 +186,14 @@ stream cre.ops.revenue on entity asset.home_project inflow currency USD {
   amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, time.t)
 }
 
-// Vacancy tracks the active rent track, so it steps at the cliff too.
+// Vacancy tracks the active rent track, so it steps at the cliff too — by
+// READING the rent it is a percentage of, rather than restating how rent is
+// computed. The switch is stated once, in the event above.
 stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2052-01
   category operating.deduction.vacancy
-  amount = inputs.vacancy_rate *
-           if(time.t < inputs.restricted_years,
-             inputs.rent_restricted_y1 * pow(1 + inputs.rent_trend, time.t),
-             inputs.rent_market_y1 * pow(1 + inputs.rent_trend, time.t))
+  amount = inputs.vacancy_rate
+           * series_sum("cre.unit.base_rent.*", time.t, time.t)
 }
 
 // ---------------------------------------------------------------------------

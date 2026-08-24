@@ -200,6 +200,60 @@ reads one layer down, and for the same reason: no order satisfies it, and the
 engine does not iterate toward a fixed point.
 
 
+### A regime that changes once and stays changed
+
+The mirror of the entry below, and the LATCHING property decides which you
+want. An event fires at most once per run (`docs/01` §13.1), which makes it
+wrong for something that recurs and exactly right for a permanent transition:
+a rent restriction expiring, a PPA term ending and revenue going merchant, a
+teaser rate resetting. Carry the regime as a field, clear it with an event, and
+let every line that cares read the field:
+
+```cfdl
+entity asset home : CRE.Asset.RealProperty {
+  restricted init 1.0
+}
+
+event affordability_expires when time.t >= inputs.restricted_years {
+  set entity asset.home.restricted = 0.0
+}
+
+contract cre.lease_unit.home on entity asset.home {
+  terms {
+    rent_year = if(asset.home.restricted == 1.0,
+                   inputs.rent_restricted_y1,
+                   inputs.rent_market_y1)
+    escalation = inputs.rent_trend
+  }
+}
+```
+
+**Why this beats a pack term, and why no pack should add one.** The shape
+recurs in every pack — CRE restriction to market, energy PPA to merchant,
+credit fixed to floating — so a `reverts_after` term would be built four times,
+each with its own sentinel for "never reverts", each less expressive than the
+expression it replaced. The event form reverts on any condition a date, a
+curve crossing or a balance can state, not just a year offset.
+
+**It also makes the boundary auditable, which a convention cannot.** The run
+publishes the transition:
+
+```json
+{"period": 14, "date": "2038-01-01", "entity": "asset.home_project",
+ "field": "restricted", "from": "1", "to": "0", "event": "affordability_expires"}
+```
+
+`benchmarks/cre/hud_home_multifamily` reproduces its source workbook to the
+cent this way. Its affordability period is the case in point: the workbook's
+own switch fires a year earlier than its "15-year" label reads, and that
+discrepancy used to survive only as a comment. It is now a record in the
+results that can be checked against the source, rather than an off-by-one a
+reader has to re-derive from a `<`.
+
+Lines keyed to the regime read the STREAM, not the switch — vacancy is
+`inputs.vacancy_rate * series_sum("cre.unit.base_rent.*", time.t, time.t)` —
+so the transition is stated once and nothing restates it.
+
 ### A regime that turns on and off repeatedly
 
 Events LATCH — at most one fire per run (`docs/01` §13.1) — so an event is not
