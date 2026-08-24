@@ -1,0 +1,40 @@
+version 0.1
+model "pack-actual-amortization-basis"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 361
+
+// A LEVEL PAYMENT CANNOT BE STRUCK FROM A VARYING DIVISOR.
+//
+// `amortization_day_count` chooses what the constant payment is struck on. An
+// Actual convention expands to `(360 / time.days_in_period)`, which is a
+// per-period value, and the annuity it feeds applies it to every remaining
+// period — so January strikes a payment as if all 359 remaining months had 31
+// days, and February as if they all had 28. The payment then moves with month
+// length, which no loan document does.
+//
+// Measured on exactly this loan before the check existed: the payment swung
+// 460.68 over twelve months — 7,349.63 in a 31-day month, 6,888.95 in
+// February. That is not a pool effect. There is no pool here: no prepayment,
+// no defaults, one balance. The closed form is applying a period-local divisor
+// to a whole remaining term, and it is wrong for a single loan too.
+//
+// What an Actual/360 loan document says is the OTHER pairing, and it compiles:
+// strike the payment on `30/360` and accrue interest on `act/360`. The payment
+// then holds at 7,194.61 while interest moves with month length — 6,200.00 in
+// January, 5,594.43 in February — and principal absorbs the difference.
+// `fixtures/valid/pack_amortization_day_count` pins that spelling.
+
+entity asset loan : Credit.Asset.LoanPool
+
+contract credit.pool_level_pay on entity asset.loan {
+  term 2026-01..2056-01
+  terms {
+    balance = 1200000
+    rate = 0.06
+    term_months = 360
+    cpr = 0
+    cdr = 0
+    day_count = "act/360"
+    amortization_day_count = "act/360"
+  }
+}

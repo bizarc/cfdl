@@ -381,6 +381,16 @@ see what is wrong with it.
   `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`,
   `act/365`. Not defaulted silently: the gap between act/360 and act/365 is
   roughly 1.4% of interest.
+- `E5027_ACTUAL_AMORTIZATION_BASIS` — a contract's `amortization_day_count`
+  is `act/360` or `act/365`. That term chooses what the CONSTANT payment is
+  struck on, and an Actual basis expands to a period-local divisor
+  (`360 / time.days_in_period`) which the annuity then applies to every
+  remaining period — so the payment moves with month length. Measured on a
+  single 1.2m loan at 6%: a 460.68 swing over twelve months, with no pool, no
+  prepayment and no defaults involved. Strike the payment on `30/360` and
+  accrue interest on the Actual basis with `day_count`, which is what an
+  Actual/360 loan document says; `day_count` itself is unaffected, because a
+  per-period divisor is exactly right for a per-period accrual.
 - `E5025_TERM_EXPR_INVALID` — a term holds an expression that does not
   compile. Checked at the term's own span, before substitution: after the
   splice the error would point at a rule the modeller did not write.

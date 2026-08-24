@@ -154,6 +154,7 @@ register, so it cannot fall behind the language.
 | `E5016_RESERVED_TERM_PREFIX` | Lowering/emission | a contract term begins `model.`, `time.`, `periods.` or `whole_periods.`. Lowering rules resolve those prefixes before contract terms, so the term would be shadowed and never read. Term keys may legitimately be dotted, so this is reachable by accident. |
 | `E5017_PERIOD_TERM_NOT_LITERAL` | Lowering/emission | a `_months` term that a rule converts into periods is not a literal number: it defers to `inputs.<name>`, holds an expression, or does not parse as a number at all. The conversion happens at compile time and a non-literal is not known until the run. |
 | `E5019_UNKNOWN_DAY_COUNT` | Lowering/emission | a contract's `day_count` or `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap between act/360 and act/365 is roughly 1.4% of interest. |
+| `E5027_ACTUAL_AMORTIZATION_BASIS` | Lowering/emission | a contract's `amortization_day_count` is `act/360` or `act/365`. That term chooses what the CONSTANT payment is struck on, and an Actual basis expands to a period-local divisor (`360 / time.days_in_period`) which the annuity then applies to every remaining period — so the payment moves with month length. Measured on a single 1.2m loan at 6%: a 460.68 swing over twelve months, with no pool, no prepayment and no defaults involved. Strike the payment on `30/360` and accrue interest on the Actual basis with `day_count`, which is what an Actual/360 loan document says; `day_count` itself is unaffected, because a per-period divisor is exactly right for a per-period accrual. |
 | `E5025_TERM_EXPR_INVALID` | Lowering/emission | a term holds an expression that does not compile. Checked at the term's own span, before substitution: after the splice the error would point at a rule the modeller did not write. |
 | `E5026_TERM_EXPR_IN_LITERAL_SLOT` | Lowering/emission | a term holding an expression is used by a rule where only a literal can go: a stream name, a schedule date, a frequency, or a net-days count. Those slots are never parsed as expressions, so an expression there is not evaluated late — it is wrong. Expression terms are valid where the rule uses the term in an expression, which is `amount_expr` and a field's `init`/`next`. |
 | `E6001_CRE_LEASE_MISSING_BASE_RENT` | Pack domain validations |  |
@@ -217,7 +218,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*165 codes.*
+*166 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

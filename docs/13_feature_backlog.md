@@ -21,22 +21,50 @@ and shapes the language already supports, are recorded in
 
 ## 2. Credit pack
 
-### 2.2 Actual-day-count amortisation on a pool
+### 2.2 A pool that amortizes on an Actual basis
 
-**Resolved for the payment.** `amortization_day_count` now strikes the level-pay
-payment while `day_count` accrues interest, so an Actual-convention loan holds a
-constant payment with interest varying by month length. What remains is the pool
-factor: `S(p)` is built from a single periodic rate, so a pool that *amortises*
-on an Actual basis (rather than merely accruing on one) still needs a per-period
-divisor inside the closed form, which has no elementary form.
+*Rewritten. The original entry diagnosed this as a pool-factor limit and
+proposed a validation gate for pools. Both were wrong, and the measurement
+that settled it is below.*
 
-Today `amortization_day_count = "act/360"` on a pool is accepted and computes a
-month-length-varying schedule — correct for a single loan, an approximation for
-a pool whose factor assumes constancy. Worth a validation gate, or an explicit
-rejection, before an Actual-amortising pool benchmark lands.
+**What was claimed:** `amortization_day_count = "act/360"` holds a constant
+payment on a single loan and is only an approximation on a pool, because the
+pool factor `S(p)` is a closed form built from one periodic rate.
 
-Found closing the recovery gap in `benchmarks/credit/mbs_pool_conventions`; the
-recovery basis itself is fixed and asserted there.
+**What is true:** it does not hold a constant payment on a single loan either.
+Measured on one 1,200,000 loan at 6% with `cpr = cdr = 0` — no pool, no
+prepayment, no defaults — the payment swung **460.68** over twelve months:
+7,349.63 in a 31-day month, 6,888.95 in February. The cause is not pooling. An
+Actual basis expands to `(360 / time.days_in_period)`, a period-local value,
+and the annuity `pmt(rate / divisor, n - p, 1)` applies it to all `n - p`
+remaining periods — January strikes a payment as if every remaining month had
+31 days. It is the same failure already measured on the ACCRUAL divisor
+(697k-754k, `benchmarks/credit/mbs_pool_conventions`); splitting the two
+divisors fixed that spelling and left this one, and the shipped fixture pairs
+`act/360` accrual with `30/360` amortization, so the broken combination was
+never exercised.
+
+**Shipped:** `E5027_ACTUAL_AMORTIZATION_BASIS` refuses an Actual
+`amortization_day_count` outright, for every pack and every instrument rather
+than for pools. The pairing a loan document actually states still compiles and
+is pinned: strike the payment on `30/360`, accrue interest on `act/360`, and
+the payment holds at 7,194.61 while interest moves 6,200.00 to 5,594.43 with
+month length.
+
+**What remains, if anything.** An instrument whose payment genuinely does
+recompute each period — not a commercial Actual/360 loan, which does not — is
+a BALANCE RECURRENCE, not a closed form. Nothing in the language blocks it: a
+field's `next` sees `time.days_in_period` and reads no series, and `docs/07`
+uses `field.loan_balance` as its own worked example. Open this only when a
+real instrument needs it, with the document that says so.
+
+**And the pool-factor concern was misplaced.** A pool that the closed form
+cannot hold does not need a gate — it needs its components.
+`benchmarks/credit/mbs_pool_by_loan` declares one 100m pool as four loans of
+40/30/20/10, each `part of` the pool with its own contract, and ties to the
+single-pool model at **0.0** across all 372 periods, through two aggregations
+that share no code. Heterogeneity of any kind is already exact that way, which
+is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ### 2.3 SMM and MDR as direct terms
 
