@@ -72,7 +72,7 @@ The host (compiler or engine) provides values under these roots:
 | Root | Contents |
 |---|---|
 | `model` | `model.id`, `model.base_currency` |
-| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period`; inside a stream also `time.elapsed_periods` and `time.elapsed_years`, counted from that stream's own schedule start |
+| `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period` |
 | `entity` | fields of the stream's owning entity, and every entity's fields under its family — `entity.asset.tlb.balance` |
 | `asset`, `party`, `contract`, `reference` | an entity's fields, spelled bare: `asset.tlb.balance` is the same read as `entity.asset.tlb.balance` |
 | `cfg` | run-config values (scenario knobs) |

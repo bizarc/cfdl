@@ -566,6 +566,14 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
+[rules.defaults]
+# Drawn ratably through the period unless a deal says otherwise.
+draw_accrual_fraction = "0.5"
+# Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest
+# as it accrues, which is what every model written before this did — so
+# adding the term moves no existing golden.
+capitalize_interest = "0"
+
 [[rules]]
 id = "cre_construction_loan_draw"
 contract_name = "cre.construction_loan"
@@ -583,6 +591,14 @@ field_to = "{{contract.term_end}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+# Drawn ratably through the period unless a deal says otherwise.
+draw_accrual_fraction = "0.5"
+# Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest
+# as it accrues, which is what every model written before this did — so
+# adding the term moves no existing golden.
+capitalize_interest = "0"
 
 [[rules]]
 id = "cre_construction_loan_interest"

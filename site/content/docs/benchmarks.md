@@ -81,7 +81,6 @@ checked, and a write-up of the reference and the residual.
 | [Energy: a tax-equity flip, with the date derived](/docs/examples/energy-tax-equity-flip) | A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model. |
 | [Energy: utility-scale PV, single owner](/docs/examples/energy-utility-pv-singleowner) | A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor. |
 | [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs) | A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule. |
-| [CRE: retail development](/docs/examples/cre-acre-retail-development) | A ground-up retail development on a twelve-suite rent roll, reconciled against A.CRE's own workbook: an S-curve construction draw, NNN recoveries whose management fee closes a circular loop in closed form, and a merchant-build exit. |
 | [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) | A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends. |
 | [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) | A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate. |
 | [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) | An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years. |
@@ -117,7 +116,7 @@ checked, and a write-up of the reference and the residual.
 | [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) | A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*41 cases.*
+*40 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

@@ -614,7 +614,6 @@ if (fs.existsSync(benchRoot)) {
 const benchmarkTitles = {
   "bespoke/buenavista_del_cobre": "Bespoke: open-pit copper mine",
   "bespoke/ppiaf_toll_highway": "Bespoke: tolled highway PPP concession",
-  "cre/acre_retail_development": "CRE: retail development",
   "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
   "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
   "cre/office_two_tenant": "CRE: two-tenant office",
