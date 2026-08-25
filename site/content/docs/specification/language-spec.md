@@ -737,6 +737,46 @@ curve power_price linear {
 - Curve names MUST be unique; a curve MUST declare at least one point and
   at most one value per date.
 
+### 12.6 Quantiles (share-indexed inputs)
+
+A `curve` is indexed by **when**. A `quantile` is indexed by **how much** — a
+named series of values against cumulative share, for a quantity whose
+*dispersion* drives the answer rather than its level:
+
+```cfdl
+quantile ercot_north linear by exceedance ref energy.power_price {
+  1.00: 512.0
+  0.98: 340.0
+  0.50:  28.0
+  0.00:  11.0
+}
+```
+
+- Shares MUST lie in `0..1`. The physical measure — hours in the year, pool
+  balance, rentable area — belongs to whatever reads the quantile, so one
+  declaration serves assets of different size.
+- Values MUST be non-decreasing in share. A quantile function that fell would
+  leave `quantile_of` without a single answer.
+- Interpolation is `step` (the last point at or below the query share) or
+  `linear`, with the same meanings they carry on a curve. It also fixes
+  quadrature: `quantile_mean` is the **exact integral** of the function these
+  describe, so no separate quadrature mode is declared and none is needed.
+- `by exceedance` writes the points worst-first, as a duration curve reads.
+  It is authoring surface only: the compiler normalises to one ascending form,
+  so the IR carries no orientation. `by quantile` is the default.
+- `ref <id>` names the pack `[[references]]` entry this realises, which is what
+  supplies its unit.
+- Names MUST be unique and a quantile MUST declare at least one point
+  (`E5028_INVALID_QUANTILE`).
+
+Expressions read one with `quantile_at`, `quantile_mean` and `quantile_of`
+(§16.2).
+
+A quantile is **univariate**. A joint declaration over two quantities would be
+a correlation, which §1.1.10 and §17.4 exclude from the core language and from
+the IR. It is also never sampled: it is declared data, and uncertainty *about*
+one is an ordinary `assume` scaling it.
+
 ---
 
 ## 13. Events (discrete model changes)
@@ -884,6 +924,8 @@ The expression environment MUST support:
 - `obs.<name>` — externally supplied observable values (provided via
   run-config parameters with the `obs.` key prefix)
 - `curve_value(<name>, <date>)` — lookup into a declared `curve`
+- `quantile_at(<name>, <share>)`, `quantile_mean(<name>, <from>, <to>)`,
+  `quantile_of(<name>, <value>)` — lookups into a declared `quantile`
 - `ref.<name>` is reserved for ontology references (not in the v0.1 dialect)
 
 **Cross-stream series**
@@ -899,6 +941,8 @@ The expression environment MUST support:
 - `is_business_day/roll/add_business_days` with named holiday calendars
 - `macrs_rate`, `cpr_to_smm`
 - `curve_value`, `series_sum`, `series_avg`
+- `quantile_at`, `quantile_mean`, `quantile_of` (lookups into a declared
+  `quantile`; see §12.6)
 - The authoritative function catalog is `03_expression_environment.md`
 
 ### 16.3 Currency literals
@@ -937,7 +981,7 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (82)
+### 18.1 In use (83)
 
 Read by a production of the grammar:
 
@@ -946,7 +990,7 @@ Read by a production of the grammar:
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
+`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 

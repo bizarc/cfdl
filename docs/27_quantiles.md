@@ -1,6 +1,9 @@
 # Quantiles — a value indexed by cumulative share
 
-Status: **proposal**. Nothing here has shipped.
+Status: **stage 1 shipped**. The declaration and the three functions are
+built, specified in `docs/01` §12.6, and pinned by unit tests and fixtures.
+Stages 2 to 4 in §9 — provenance wiring, and the two pack contracts that
+consume this — have not been built.
 
 Some quantities are not one number, and not one number per date either. They
 are a *spread of values within a period*, and the thing the model needs from
@@ -298,8 +301,13 @@ calibration, which is the objection 7.1 raises and this answers.
 
 Each stage is independently landable and keeps the suite green.
 
-1. **Language core.** Declaration, three functions, IR node, `docs/01` §12.6,
-   the grammar, and fixtures. No pack changes.
+1. ~~**Language core.**~~ **SHIPPED.** Declaration, three functions, IR node,
+   `docs/01` §12.6, the grammar, and fixtures. No pack changes. The one
+   departure from this document as written: the functions are `quantile_at`,
+   `quantile_mean` and `quantile_of` rather than the `curve_area` this
+   originally proposed — an area is not what the payoff needs, a partial
+   expectation is, and `quantile_of` was added because without an inverse only
+   quantities already stated as percentiles could be sliced.
 2. **Provenance wiring.** `required_refs` from `ref` clauses;
    `InputsSection.quantiles`.
 3. **`cre.percentage_rent` takes an optional sales quantile.** Cross-domain

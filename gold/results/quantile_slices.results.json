@@ -1,0 +1,219 @@
+{
+  "results_version": "0.3",
+  "model_hash": "d6d792e993103b4ae1e7f44fbe6e648216b5c413c484d772195c6663dc5bbcc4",
+  "ledger_hash": "47455c3e773ce2d7b2ce427f85fb62e2e089fe1e52a8b39c443843c6a97902d5",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.battery.total": {
+        "amount": 125801.647059,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 123821.676105,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 125801.647059,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.166667,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.battery.arbitrage.total": {
+        "amount": 120917.647059,
+        "currency": "USD"
+      },
+      "stream.battery.arbitrage_step.total": {
+        "amount": 3300.0,
+        "currency": "USD"
+      },
+      "stream.battery.inverse.total": {
+        "amount": 1584.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.battery.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 41933.882353,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.battery.arbitrage": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 40305.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 40305.882353,
+            "currency": "USD"
+          },
+          {
+            "amount": 40305.882353,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.battery.arbitrage_step": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.battery.inverse": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 528.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 528.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 528.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 125801.647059,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.battery.arbitrage": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 120917.647059,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.battery.arbitrage_step": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 3300.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.battery.inverse": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1584.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

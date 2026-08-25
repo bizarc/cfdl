@@ -1,0 +1,194 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "quantile-slices",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "73fd425ba95c2e0890f62b3b7075f08a",
+      "symbol": "asset.battery",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "quantiles": [
+    {
+      "name": "prices",
+      "interpolation": "linear",
+      "reference": "energy.power_price",
+      "points": [
+        {
+          "share": 0.0,
+          "value": 11.0
+        },
+        {
+          "share": 0.5,
+          "value": 28.0
+        },
+        {
+          "share": 0.98,
+          "value": 340.0
+        },
+        {
+          "share": 1.0,
+          "value": 512.0
+        }
+      ]
+    },
+    {
+      "name": "prices_step",
+      "interpolation": "step",
+      "points": [
+        {
+          "share": 0.0,
+          "value": 11.0
+        },
+        {
+          "share": 0.5,
+          "value": 28.0
+        },
+        {
+          "share": 0.98,
+          "value": 340.0
+        },
+        {
+          "share": 1.0,
+          "value": 512.0
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "51d0621ccd1ca694946f4fd5aed275a4",
+      "name": "battery.arbitrage",
+      "owner": {
+        "symbol": "asset.battery"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.energy",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(quantile_mean(\"prices\", 0.98, 1.0) - quantile_mean(\"prices\", 0.0, 0.5) / 0.85) * 100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "6ff9656d40c69796da3f1e608988f6d8",
+      "name": "battery.arbitrage_step",
+      "owner": {
+        "symbol": "asset.battery"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.energy",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "quantile_mean(\"prices_step\", 0.0, 0.5) * 100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e13444e6bab5b1ddbbc4cb2e1ec30c6a",
+      "name": "battery.inverse",
+      "owner": {
+        "symbol": "asset.battery"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.energy",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "quantile_of(\"prices\", 28.0) * 1000.0 + quantile_at(\"prices\", 0.5)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

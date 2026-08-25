@@ -60,6 +60,10 @@ An electable right held by a party.
 
 A domain vocabulary supplying types, roles, and terms to a model.
 
+**quantile**
+
+A named series of values indexed by cumulative share.
+
 **rule field**
 
 A field carrying a recurrence: `init` gives the first period's value, `next` is evaluated each later period with `prev` bound to the field's own previous value.

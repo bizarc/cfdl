@@ -113,6 +113,14 @@ against it by `make ir-schema`.
         "$ref": "#/$defs/Curve"
       }
     },
+    "quantiles": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Quantile"
+      },
+      "description": "Values indexed by cumulative share. Always ascending by share: a declaration written `by exceedance` is reversed at compile time, so this document carries one orientation and no reader has to know which way the source was written."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -476,6 +484,54 @@ against it by `make ir-schema`.
             "properties": {
               "date": {
                 "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Quantile": {
+      "type": "object",
+      "required": [
+        "name",
+        "points"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "interpolation": {
+          "type": "string",
+          "enum": [
+            "step",
+            "linear"
+          ],
+          "description": "The same two words a curve uses. It also fixes quadrature: `quantile_mean` is the exact integral of the function these describe, so the declaration carries no separate quadrature choice."
+        },
+        "reference": {
+          "type": "string",
+          "description": "The pack `[[references]]` id this realises, when the declaration named one. Present only when stated."
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "share",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Cumulative share of the measure. The measure itself — hours, balance, square feet — belongs to the contract that reads this, which is what lets one declaration serve assets of different size."
               },
               "value": {
                 "type": "number"

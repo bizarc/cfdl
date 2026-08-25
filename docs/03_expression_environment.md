@@ -304,6 +304,19 @@ point at or before the query date (the first value before the first point).
 points and clamp flat outside the declared range. Referencing an undeclared
 curve is an evaluation error.
 
+Quantiles: a `quantile` declaration is indexed by cumulative share, not by
+date, and three functions read one. `quantile_at(name, share)` is the value at
+a share — the direct analogue of `curve_value`. `quantile_mean(name, from, to)`
+is the mean over a share slice: a PARTIAL EXPECTATION, computed as the exact
+integral of the interpolated function (rectangles under `step`, trapezoids
+under `linear`) rather than by sampling it. `quantile_of(name, value)` is the
+inverse of `quantile_at` — the share at or below which a value sits — and is
+what turns a stated threshold, a lease breakpoint or a tranche attachment
+point, into a share a slice can be taken against. Referencing an undeclared
+quantile is an evaluation error, and so is passing a curve to these or a
+quantile to `curve_value`: the two are on different axes and neither resolves
+against the other.
+
 Cross-stream series: `series_sum(name, from_t, to_t)` /
 `series_avg(name, from_t, to_t)` aggregate another stream's signed per-period
 amounts over an inclusive period window (`prefix.*` wildcards supported).

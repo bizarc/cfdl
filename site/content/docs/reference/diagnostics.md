@@ -143,6 +143,7 @@ register, so it cannot fall behind the language.
 | `E5006_MISSING_CONTRACT_TERM` | Lowering/emission | a lowering rule reads a contract term the contract does not supply. |
 | `E5007_DUPLICATE_LOWERED_STREAM` | Lowering/emission | two contracts lower to the same stream name. Give one a suffix. |
 | `E5008_INVALID_CURVE` | Lowering/emission | duplicate curve name, duplicate point date, or malformed point in a `curve` statement |
+| `E5028_INVALID_QUANTILE` | Lowering/emission | duplicate quantile name, a malformed point, a share outside `0..1`, shares out of order or repeated, or values that fall as share rises. The last is the one worth stating plainly: a quantile function that decreases leaves `quantile_of` with no single answer, so a threshold lookup would silently pick one of several. Rejecting it is what makes the inverse well-defined rather than merely usually right. |
 | `E5009_LOWERED_EXPR_INVALID` | Lowering/emission | a pack lowering rule expanded to an amount expression the parser rejects. Without this the engine evaluates the failed expression as zero and continues with only a warning. |
 | `E5020_LOWERED_FIELD_INVALID` | Lowering/emission | a pack lowering rule expanded to a field `init` or `next` the parser rejects. Same reasoning as `E5009`: the engine's fallback for a failed rule is zero, which would flatten every stream reading the field rather than fail loudly. |
 | `E5021_DUPLICATE_LOWERED_FIELD` | Lowering/emission | two contracts lower to one field name with *different* recurrences, so one would silently win. Give the rule's `field_name` a per-contract discriminator (`{{contract.suffix_ident}}`). Identical definitions collapse instead, which is what several contracts sharing one curve should do. |
@@ -234,7 +235,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*182 codes.*
+*183 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

@@ -209,11 +209,13 @@ occurrences = 98
 term = "quantile"
 category = "language"
 definition = "A named series of values indexed by cumulative share."
-status = "proposed"
 occurrences = 0
-note = """PROPOSED, not yet built — see docs/27_quantiles.md. Registered ahead of
-implementation because the naming decision was the hard part and three candidates
-were rejected on measured evidence:
+note = """SHIPPED — the declaration, `quantile_at`, `quantile_mean` and
+`quantile_of`. Designed in docs/27_quantiles.md, specified in docs/01 §12.6.
+`occurrences` is 0 because the count predates the construct; re-measure.
+
+The naming decision was the hard part, and three candidates were rejected on
+measured evidence:
 
   profile       10 occurrences, every one meaning a TIME-ORDERED path — "the
                 collection profile shortens", "a development's funding profile",

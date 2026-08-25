@@ -29,6 +29,8 @@ pub(crate) struct Ir {
     #[serde(default)]
     pub(crate) curves: Vec<IrCurve>,
     #[serde(default)]
+    pub(crate) quantiles: Vec<IrQuantile>,
+    #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
@@ -57,6 +59,22 @@ pub(crate) fn default_interpolation() -> String {
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrCurvePoint {
     pub(crate) date: String,
+    pub(crate) value: f64,
+}
+
+/// A quantile as the compiler emitted it: always ascending by share, whatever
+/// the source declared.
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrQuantile {
+    pub(crate) name: String,
+    #[serde(default = "default_interpolation")]
+    pub(crate) interpolation: String,
+    pub(crate) points: Vec<IrQuantilePoint>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrQuantilePoint {
+    pub(crate) share: f64,
     pub(crate) value: f64,
 }
 

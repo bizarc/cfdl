@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E5028_INVALID_QUANTILE",
+    "severity": "error",
+    "message": "Quantile 'broken' falls from 100 to 40 as share increases. A quantile function is non-decreasing; without that, `quantile_of` has no single answer and a threshold lookup would silently pick one of several.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 20,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "quantile 'broken'"
+    ]
+  }
+]

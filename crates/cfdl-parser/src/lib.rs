@@ -30,6 +30,7 @@ pub enum Stmt {
     Entity(EntityStmt),
     Assume(AssumeStmt),
     Curve(CurveStmt),
+    Quantile(QuantileStmt),
     Contract(ContractStmt),
     Stream(StreamStmt),
     Event(EventStmt),
@@ -239,6 +240,29 @@ pub struct CurveStmt {
     /// "step" (flat-forward, default) or "linear".
     pub interpolation: String,
     /// (date literal, numeric literal) pairs in source order.
+    pub points: Vec<(String, String)>,
+    pub span: Span,
+}
+
+/// `quantile <name> [step|linear] [by quantile|exceedance] [ref <qname>]
+/// { <share>: <number>, ... }` — a named series of values indexed by
+/// CUMULATIVE SHARE rather than by date, read with `quantile_at`,
+/// `quantile_mean` and `quantile_of`.
+///
+/// `by exceedance` is authoring surface only: the compiler reverses those
+/// points into the one canonical ascending form, so nothing downstream carries
+/// an orientation. See docs/27_quantiles.md.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct QuantileStmt {
+    pub name: String,
+    /// "step" (the last point at or below the share, default) or "linear".
+    pub interpolation: String,
+    /// "quantile" (ascending, default) or "exceedance" (descending as written).
+    pub order: String,
+    /// The pack `[[references]]` id this quantile realises, when stated.
+    pub reference: Option<String>,
+    /// (share literal, value literal) pairs in SOURCE order, before any
+    /// reversal. Normalising here would lose the spans a diagnostic needs.
     pub points: Vec<(String, String)>,
     pub span: Span,
 }
@@ -660,6 +684,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
+            TokenKind::Keyword(Keyword::Quantile) => self.parse_quantile_stmt().map(Stmt::Quantile),
             // A value that changes over time belongs to the thing it
             // describes, so there is no model-level declaration for one: a
             // field names a fact about an entity where a loose variable would
@@ -2836,6 +2861,7 @@ impl<'a> Parser<'a> {
                         | TokenKind::Keyword(Keyword::Entity)
                         | TokenKind::Keyword(Keyword::Assume)
                         | TokenKind::Keyword(Keyword::Curve)
+                        | TokenKind::Keyword(Keyword::Quantile)
                         | TokenKind::Keyword(Keyword::State)
                         | TokenKind::Keyword(Keyword::Contract)
                         | TokenKind::Keyword(Keyword::Stream)
@@ -3161,6 +3187,144 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// `quantile <ident> [step|linear] [by quantile|exceedance] [ref <qname>]
+    /// { <number>: <number>[,] ... }`
+    ///
+    /// `step`, `linear`, `by` and `ref` are read as contextual identifiers,
+    /// not keywords — the same way a curve's interpolation mode is — so this
+    /// construct reserves exactly one new word.
+    fn parse_quantile_stmt(&mut self) -> Option<QuantileStmt> {
+        let start = self.expect_keyword(Keyword::Quantile, "'quantile'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'quantile'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let mut interpolation = "step".to_string();
+        if let TokenKind::Ident(ref s) = self.peek().kind {
+            if s == "step" || s == "linear" {
+                interpolation = s.clone();
+                let _ = self.bump();
+            }
+        }
+        let mut order = "quantile".to_string();
+        if matches!(self.peek().kind, TokenKind::Ident(ref s) if s == "by") {
+            let _ = self.bump();
+            let tok = self.bump();
+            let word = match tok.kind {
+                TokenKind::Ident(ref s) => s.clone(),
+                TokenKind::Keyword(Keyword::Quantile) => "quantile".to_string(),
+                _ => String::new(),
+            };
+            match word.as_str() {
+                "quantile" | "exceedance" => order = word,
+                other => {
+                    self.push_expected(
+                        tok.span,
+                        format!(
+                            "Unknown quantile order '{other}' (use 'quantile' or 'exceedance')."
+                        ),
+                    );
+                    return None;
+                }
+            }
+        }
+        let mut reference = None;
+        if matches!(self.peek().kind, TokenKind::Ident(ref s) if s == "ref") {
+            let _ = self.bump();
+            let tok = self.bump();
+            match tok.kind {
+                // A reference id is dotted (`energy.power_price`), which the
+                // lexer hands over as one Qname token; a bare segment is
+                // accepted too so a pack-less model can name its own.
+                TokenKind::Qname(ref s) | TokenKind::Ident(ref s) => reference = Some(s.clone()),
+                _ => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected a reference id after 'ref' (e.g. energy.power_price)."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut points: Vec<(String, String)> = Vec::new();
+        let end;
+        loop {
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::RBrace)) {
+                end = self.bump();
+                break;
+            }
+            let share_tok = self.bump();
+            let share = match share_tok.kind {
+                TokenKind::Number(ref n) => n.clone(),
+                TokenKind::Eof => {
+                    self.push_expected(
+                        share_tok.span,
+                        "Expected <share> or '}' in quantile block.".to_string(),
+                    );
+                    return None;
+                }
+                _ => {
+                    self.push_expected(
+                        share_tok.span,
+                        "Expected <share> point in quantile block (e.g. 0.98: 340.0).".to_string(),
+                    );
+                    return None;
+                }
+            };
+            let _ = self.expect_punct(Punct::Colon, "':'")?;
+            let mut negative = false;
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Minus)) {
+                negative = true;
+                let _ = self.bump();
+            }
+            let value_tok = self.bump();
+            let value = match value_tok.kind {
+                TokenKind::Number(ref n) => {
+                    if negative {
+                        format!("-{n}")
+                    } else {
+                        n.clone()
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        value_tok.span,
+                        "Expected <number> after ':' in quantile point.".to_string(),
+                    );
+                    return None;
+                }
+            };
+            points.push((share, value));
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                let _ = self.bump();
+            }
+        }
+        if points.is_empty() {
+            self.push_expected(
+                end.span,
+                format!("Quantile '{name}' must declare at least one point."),
+            );
+            return None;
+        }
+        Some(QuantileStmt {
+            name,
+            interpolation,
+            order,
+            reference,
+            points,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn synchronize_to_next_statement(&mut self) {
         while !self.is_eof() {
             match self.peek().kind {
@@ -3173,6 +3337,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Curve)
+                | TokenKind::Keyword(Keyword::Quantile)
                 | TokenKind::Keyword(Keyword::State)
                 | TokenKind::Keyword(Keyword::Contract)
                 | TokenKind::Keyword(Keyword::Event)
@@ -3380,6 +3545,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
+        Stmt::Quantile(s) => s.span,
         Stmt::Run(s) => s.span,
         Stmt::Contract(s) => s.span,
         Stmt::Stream(s) => s.span,
@@ -3500,6 +3666,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Trials => "trials",
         Keyword::Seed => "seed",
         Keyword::Curve => "curve",
+        Keyword::Quantile => "quantile",
         Keyword::State => "state",
 
         Keyword::True => "true",
@@ -3536,6 +3703,7 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Entity)
             | TokenKind::Keyword(Keyword::Assume)
             | TokenKind::Keyword(Keyword::Curve)
+            | TokenKind::Keyword(Keyword::Quantile)
             | TokenKind::Keyword(Keyword::Contract)
             | TokenKind::Keyword(Keyword::Stream)
             | TokenKind::Keyword(Keyword::Event)

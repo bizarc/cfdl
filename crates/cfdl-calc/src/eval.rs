@@ -46,6 +46,24 @@ pub trait Env {
     fn curve_value(&self, _name: &str, _date: crate::CalcDate) -> Option<Decimal> {
         None
     }
+
+    /// Host hook for `quantile_at`: the declared quantile's value at a
+    /// cumulative share. None when the host has no quantile by that name.
+    fn quantile_at(&self, _name: &str, _share: Decimal) -> Option<Decimal> {
+        None
+    }
+
+    /// Host hook for `quantile_mean`: the mean value over a share slice — the
+    /// partial expectation the dispersion payoffs need.
+    fn quantile_mean(&self, _name: &str, _from: Decimal, _to: Decimal) -> Option<Decimal> {
+        None
+    }
+
+    /// Host hook for `quantile_of`: the share at or below which a value sits.
+    /// The inverse of `quantile_at`.
+    fn quantile_of(&self, _name: &str, _value: Decimal) -> Option<Decimal> {
+        None
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -125,6 +143,9 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
             }
             if name == "curve_value" {
                 return funcs::curve_call(name, &values, expr.span, env);
+            }
+            if name == "quantile_at" || name == "quantile_mean" || name == "quantile_of" {
+                return funcs::quantile_call(name, &values, expr.span, env);
             }
             funcs::call(name, &values, expr.span, mode)
         }
