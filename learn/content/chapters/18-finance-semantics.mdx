@@ -6,7 +6,7 @@ order: 18
 track: core
 ---
 
-Several chapters have brushed against the same fact from different sides: the language's machinery *encodes finance*. The rate conversion in chapter 3, the `due`/`mid` placements in chapter 4, the TVM family in chapter 5 — each is a financial convention promoted into semantics. This chapter collects them and completes the set, because a modeler who knows *which conventions the machinery applies* can reconcile against any source; one who does not will spend afternoons chasing third-digit ghosts that were never errors at all.
+Several chapters have brushed against the same fact from different sides: the language's machinery *encodes finance*. The rate conversion in chapter 3, the `start`/`mid`/`end` placements in chapter 4, the TVM family in chapter 5 — each is a financial convention promoted into semantics. This chapter collects them and completes the set, because a modeler who knows *which conventions the machinery applies* can reconcile against any source; one who does not will spend afternoons chasing third-digit ghosts that were never errors at all.
 
 ## Day counts: what a year is
 
@@ -22,7 +22,7 @@ The same geometry governs **prepayment**. A pool quoted at 8 CPR (8% of balance 
 
 ## Placement as valuation: the annuity family, revisited
 
-Chapter 4's `due`/`mid`/end trio is the machinery form of a valuation-course staple, restated here as semantics you can now defend in a committee. Payments in **arrears** (the default) are the ordinary annuity — debt service, most fees. Payments in **advance** (`due`) are the annuity due — rent, leases, insurance — worth more at the same total because every payment discounts one period less. **Mid-period** is the valuation convention for operating flows earned continuously, splitting the difference deliberately. When your NPV disagrees with a source by a factor suspiciously near one period's discounting, the placement convention is the first suspect — and the fix is one keyword, not a rebuild.
+Chapter 4's `start`/`mid`/`end` trio is the machinery form of a valuation-course staple, restated here as semantics you can now defend in a committee. Payments in **arrears** (the default) are the ordinary annuity — debt service, most fees. Payments in **advance** (`due`) are the annuity due — rent, leases, insurance — worth more at the same total because every payment discounts one period less. **Mid-period** is the valuation convention for operating flows earned continuously, splitting the difference deliberately. When your NPV disagrees with a source by a factor suspiciously near one period's discounting, the placement convention is the first suspect — and the fix is one keyword, not a rebuild.
 
 ## Declared schedules: depreciation as a table
 

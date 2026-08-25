@@ -24,13 +24,14 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `series_sum` / `series_avg` (cross-stream references) | ✅ | dependency-ordered waves to any depth; genuine cycles rejected with the named path |
 | `phase <name> from .. to ..` | ✅ | named in IR; gates option exercise |
 | `entity <ns> <name>` | ✅ | basic form |
-| `entity ... : <type> { attrs }` (typed block) | ❌ | rejected; declare entities in the bare form |
 | `assume <name> = <expr>` | ✅ | evaluated into `inputs.*` |
 | `assume <name> ~ Normal/LogNormal/Uniform/Triangular(..., clip=[..])` | ✅ | per-assumption seeded Monte Carlo; central values in deterministic runs |
 | `curve <name> [step\|linear] { <date>: <num>, ... }` | ✅ | date-indexed value curves; `curve_value(name, date)` lookup (step = flat-forward, linear = calendar-day interpolation) |
 | entity field rules (`<field> init <expr> next <expr>` in an entity block) | ✅ | a named number per period, owned by the entity it describes and read as `<family>.<entity>.<field>`. `init` is mandatory; `next` sees `prev`, `prev.<family>.<entity>.<field>`, `time.*`, `inputs.*` and curves — never a same-period value, which is what keeps cycles impossible by construction. Read from stream amounts, guards, events and options. The retired top-level `state` declaration is rejected (`E1125`) with a message pointing here. See 03 §3.1 and 18_entity_owned_properties.md |
 | — pack-side (`field_name` / `field_init` / `field_next` / `field_every` / `field_from` / `field_to` on a lowering rule) | ✅ | a rule may declare a field on the contract's subject entity; `field_name` must expand to a single identifier, so per-instance fields use `{{contract.suffix_ident}}` |
 | `entity <ns> <name> : <Type> { <field> = <lit>, part of <ref>, state <name> }` | ✅ | typed against the active ontology, or the language's base vocabulary when no pack is active. `part of` is optional at every grain. `state` sets the lifecycle state the entity opens in |
+| `waterfall <name> on entity <ref> { schedule … from <expr> pay <step> to <ref> = <expr> }` | ✅ | an ordered allocation over a pot, in declaration order; `remaining` draws it down, `paid.<step>`/`owed.<step>` read earlier steps. Schedule is mandatory |
+| waterfall step visibility (`E1340`–`E1346`) | ✅ | a step may read an EARLIER waterfall's published series, never its own or a later one's; a stream may read none |
 | `contract` (subject, `term A..B`, `terms { k = v }`) | ✅ | terms feed `{{contract.*}}` lowering templates |
 | `contract ... parties { <role> = <party> }` | ✅ | roles are declared by the contract TYPE, not the entity — the same party is lessor in one agreement and lender in another |
 | `terms { k = v <unit> }` | ✅ | an optional unit is an ASSERTION about what the number means; the rule declares the truth and a mismatch is `E5024`. Units are never converted |

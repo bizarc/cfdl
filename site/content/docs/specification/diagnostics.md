@@ -410,6 +410,22 @@ see what is wrong with it.
   accrue interest on the Actual basis with `day_count`, which is what an
   Actual/360 loan document says; `day_count` itself is unaffected, because a
   per-period divisor is exactly right for a per-period accrual.
+- `E2301_ASSUME_UNKNOWN_DIST` — a random assumption names a distribution that
+  does not exist. The supported set is `Normal`, `LogNormal`, `Uniform`,
+  `Triangular`.
+- `E2302_ASSUME_INVALID_PARAM` — a distribution parameter is not a number, or
+  is outside what the distribution admits.
+- `E2303_ASSUME_MISSING_PARAM` — a distribution is missing a parameter it
+  requires.
+- `E2304_ASSUME_INVALID_CLIP` — a `clip=[lo, hi]` is malformed or inverted.
+- `E2401_OPTION_MISSING_EXERCISE` — an option declares no `exercise when`, so
+  nothing can ever trigger it.
+- `E2402_OPTION_MISSING_PAYOFF` — an option declares no `payoff`, so exercising
+  it would move no cash.
+- `E5023_SUBTOTAL_UNKNOWN_CATEGORY` — a pack subtotal folds a category no rule
+  emits, so the row would always be zero.
+- `E5024_TERM_UNIT_MISMATCH` — a term is supplied in units the rule does not
+  declare for it.
 - `E5025_TERM_EXPR_INVALID` — a term holds an expression that does not
   compile. Checked at the term's own span, before substitution: after the
   splice the error would point at a rule the modeller did not write.
@@ -484,6 +500,10 @@ CRE pack codes:
   rather than fail
 - `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` — a ratio of occupied space, in [0, 1];
   zero is a fully dark building and is legitimate
+- `E6065_CRE_CONSTRUCTION_INVALID_CAPITALIZE_INTEREST` — a construction loan's
+  `capitalize_interest` is neither 0 nor 1. It is an election, not a rate: 1
+  rolls each period's accrued interest into the balance, 0 pays it as it
+  accrues. 0 is the default, so a model that says nothing is unaffected.
 - `E6064_CRE_REVENUE_LINE_MISSING_AMOUNT` — a revenue line states `amount` or
   `amount_year`; both default to zero, so stating neither is a line that
   silently earns nothing

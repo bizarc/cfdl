@@ -43,7 +43,7 @@ payment inside its own period, and therefore how far it is discounted.
 | `on <date>` | start (default) | the period's open |
 | `on <date> end`, or a rule with `schedule_placement = "end"` | end | the period's close |
 | `every month from … to …` | end (default) | end of the period |
-| `every month due from … to …` | start | start of the period |
+| `every month start from … to …` | start | start of the period |
 | `every month on eom from … to …` | end | end of the period |
 | `every month on day 15 from … to …` | day 15 | that point in the period |
 | `every year mid from … to …` | halfway | the period's midpoint |
