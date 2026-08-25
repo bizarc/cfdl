@@ -567,6 +567,8 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+# Drawn ratably through the period unless a deal says otherwise.
+draw_accrual_fraction = "0.5"
 # Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest as
 # it accrues, which is what every model written before this term did.
 capitalize_interest = "0"
@@ -590,6 +592,8 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
+# Drawn ratably through the period unless a deal says otherwise.
+draw_accrual_fraction = "0.5"
 # Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest as
 # it accrues, which is what every model written before this term did.
 capitalize_interest = "0"
