@@ -1,0 +1,24 @@
+version 0.1
+model "cre-pct-rent-expected-no-quantile"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+entity asset store : CRE.Asset.RealProperty
+
+// AN EXPECTATION NEEDS SOMETHING TO TAKE AN EXPECTATION OVER.
+//
+// This states a point estimate of sales, which is what the ORIGINAL contract
+// takes. Accepting it here would compute an expectation over a distribution
+// that does not exist, and the natural fallback — treat the point estimate as
+// certain — is not a smaller version of this contract, it IS the other one,
+// silently. So it is refused with the name of the contract that fits.
+//
+// Expect E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE.
+contract cre.percentage_rent_expected.no_dist on entity asset.store {
+  term 2026-01..2027-01
+  terms {
+    sales_year      = 1000000
+    breakpoint_year = 1200000
+    overage_pct     = 0.06
+  }
+}

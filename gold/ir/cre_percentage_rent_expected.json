@@ -1,0 +1,314 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "cre-percentage-rent-expected",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "606728644e715df84f286288f846c929",
+      "symbol": "asset.store",
+      "type": "CRE.Asset.RealProperty",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "quantiles": [
+    {
+      "name": "store_sales",
+      "interpolation": "linear",
+      "points": [
+        {
+          "share": 0.0,
+          "value": 400000.0
+        },
+        {
+          "share": 0.25,
+          "value": 700000.0
+        },
+        {
+          "share": 0.5,
+          "value": 950000.0
+        },
+        {
+          "share": 0.75,
+          "value": 1250000.0
+        },
+        {
+          "share": 1.0,
+          "value": 1800000.0
+        }
+      ]
+    }
+  ],
+  "quantile_inputs": [
+    {
+      "quantile": "store_sales",
+      "function": "quantile_mean",
+      "args": []
+    },
+    {
+      "quantile": "store_sales",
+      "function": "quantile_of",
+      "args": []
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service",
+        "financing.interest",
+        "financing.debt_principal",
+        "financing.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "4d6826e748c4742ea09be96f61a26548",
+      "name": "cre.percentage_rent.point",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.store"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "29e220a78dd74b89f6da604052a47301",
+      "name": "cre.percentage_rent_expected.dist",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.store"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "05828846703af6b6ac0ce6505981a5c5",
+      "name": "cre.pct_rent.overage.dist",
+      "owner": {
+        "symbol": "asset.store"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.percentage_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 - quantile_of(\"store_sales\", (1200000.0 / pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))))) * (quantile_mean(\"store_sales\", quantile_of(\"store_sales\", (1200000.0 / pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)))), 1.0) - (1200000.0 / pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)))) * 0.06 / 1.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_percentage_rent_expected"
+        }
+      }
+    },
+    {
+      "id": "b1de4e913be1f172178837f05f104788",
+      "name": "cre.pct_rent.overage.point",
+      "owner": {
+        "symbol": "asset.store"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.percentage_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "max(0.0, 1000000.0 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) - 1200000.0) * 0.06 / 1.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_percentage_rent"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.pct_rent.overage.point",
+      "contract": "cre.percentage_rent.point",
+      "terms": {
+        "breakpoint_year": "1200000",
+        "overage_pct": "0.06",
+        "sales_growth": "0.0",
+        "sales_year": "1000000"
+      }
+    },
+    {
+      "stream": "cre.pct_rent.overage.dist",
+      "contract": "cre.percentage_rent_expected.dist",
+      "terms": {
+        "breakpoint_year": "1200000",
+        "overage_pct": "0.06",
+        "sales_growth": "0.0",
+        "sales_quantile": "store_sales"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

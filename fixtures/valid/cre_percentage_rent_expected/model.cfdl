@@ -1,0 +1,44 @@
+version 0.1
+model "cre-percentage-rent-expected"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+entity asset store : CRE.Asset.RealProperty
+
+// A tenant's annual sales as a DISTRIBUTION. The trapezoids average to exactly
+// 1,000,000, which is the point estimate used below — so the two contracts
+// differ in the shape of the payoff and in nothing else. Any gap between them
+// is the option, not two disagreeing forecasts.
+quantile store_sales linear {
+  0.00:  400000.0
+  0.25:  700000.0
+  0.50:  950000.0
+  0.75: 1250000.0
+  1.00: 1800000.0
+}
+
+// THE SAME LEASE, PRICED TWICE.
+//
+// The breakpoint is 1,200,000 — above expected sales, which is the ordinary
+// shape of a natural breakpoint. The point-estimate contract therefore pays
+// EXACTLY ZERO: max(0, 1,000,000 - 1,200,000) is zero however much of the
+// distribution lies above the breakpoint. Roughly 29% of it does.
+contract cre.percentage_rent.point on entity asset.store {
+  term 2026-01..2028-01
+  terms {
+    sales_year      = 1000000
+    sales_growth    = 0.0
+    breakpoint_year = 1200000
+    overage_pct     = 0.06
+  }
+}
+
+contract cre.percentage_rent_expected.dist on entity asset.store {
+  term 2026-01..2028-01
+  terms {
+    sales_quantile  = store_sales
+    sales_growth    = 0.0
+    breakpoint_year = 1200000
+    overage_pct     = 0.06
+  }
+}
