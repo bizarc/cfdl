@@ -126,10 +126,19 @@ Inside `next`, the environment contains:
 - `prev` — this state's previous value
 - `time.*`, `inputs.*`, curves — the ordinary expression environment
 - other states' **previous** values, as `prev.<name>` (§3.1.1)
-- stream series **up to and including `t-1`**
 
-It does **not** contain any stream value at period `t`, and it does not contain
-any state's value at `t`.
+It contains **no stream series at all** — not at period `t`, and not at `t-1`
+either. `compute_states` builds the environment with the series argument set to
+`None` (`crates/cfdl-engine/src/state.rs`), so a recurrence cannot read what
+the model's own streams produced in any period. It also does not contain any
+state's value at `t`.
+
+The design would permit series up to `t-1`, since a backward-only read closes
+no cycle, and §7.10 of the backlog carries that as an open item: enforcing the
+bound means a truncated per-period view, which is a borrowed slice if it is
+done well and an O(n) copy per period if it is not. Until then the absence is
+total, and a balance moved by realised cash has to restate how that cash is
+computed — see backlog §5.2.
 
 This is not a check that can fail. Same-period values are **absent from the
 environment**, exactly as `series` is absent today when a wave-0 stream is

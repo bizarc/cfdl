@@ -200,6 +200,25 @@ Fields that move:
 - `E1006_DUPLICATE_OPTION` — two options share a name.
 - `E1007_DUPLICATE_EVENT` — two events share a name.
 - `E1301_UNRESOLVED_ENTITY_REF` — a stream, contract or event action names an entity that is not declared.
+- `E1340_WATERFALL_NO_SOURCE` — a waterfall declares no `from`, so there is no
+  pot to allocate.
+- `E1341_WATERFALL_FORWARD_REF` — a step's `paid.<step>` names a step declared
+  later in the same waterfall. Steps pay in declaration order, so a later step
+  has not paid anything when an earlier one is evaluated.
+- `E1342_WATERFALL_SERIES_NOT_VISIBLE` — `series_sum`/`series_avg` names a step
+  of this waterfall or of a later one. Steps publish when their waterfall
+  finishes, so the read would aggregate to zero and say nothing. An EARLIER
+  waterfall is the documented composition and still compiles.
+- `E1343_WATERFALL_DUPLICATE_STEP` — two steps in one waterfall share a name,
+  which would make `paid.<step>` ambiguous.
+- `E1344_WATERFALL_NO_REMAINDER` — a waterfall never says where the remainder
+  goes, so cash could be left unallocated with nothing to say so.
+- `E1345_WATERFALL_STEP_NO_AMOUNT` — a step says nothing about what it pays.
+- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's `series_sum`/`series_avg`
+  names a waterfall step. Every waterfall runs after every stream and a step's
+  series is visible to a later waterfall's `from` and to nothing else, so the
+  read could only ever aggregate to zero. Model the quantity the step pays as a
+  stream or a field if a stream must read it.
 - `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning.
 - `E1303_UNRESOLVED_CONTRACT_REF` — an event activates or deactivates a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
