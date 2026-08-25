@@ -278,6 +278,7 @@ time.date)`), not model years.
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
+| `cre.percentage_rent_expected.<id>` | `sales_quantile`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — the same overage as an EXPECTATION over a sales distribution |
 | `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALIZED), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
@@ -311,6 +312,24 @@ lease-by-lease detail is not warranted. They follow the same conventions as
 the lease-by-lease set: schedules run over the contract's own term, time is
 measured from `term_start`, and every material value is a required term —
 the pack supplies no amounts, rates, or dates of its own.
+
+### Overage rent at a point estimate, and over a distribution
+
+`cre.percentage_rent` pays `max(0, sales - breakpoint) * pct` on a single sales
+figure. That is a call option evaluated at the expected underlying, which is not
+the expected value of the option — it is strictly below it, and it is exactly
+zero whenever the point estimate sits under the breakpoint, however much
+probability mass lies above.
+
+A 1,200,000 breakpoint against sales expected at 1,000,000 pays **0.00** at the
+point estimate and **4,937.50 a year** over a distribution with that same mean.
+The gap is the whole payment, and a natural breakpoint above expected sales is
+the ordinary case rather than a corner.
+
+`cre.percentage_rent_expected` states the sales distribution as a `quantile` and
+takes the partial expectation over it. Use it when the lease is worth
+underwriting on a range. The original stays correct for a lease underwritten on
+one figure, and is the form the reconciled retail benchmark uses.
 
 ## Quick start
 

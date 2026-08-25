@@ -83,6 +83,7 @@ statement.
 | `cre.vacancy_loss` | `potential_gross_year`, `rate` | `cre.vacancy.loss` |
 | `cre.opex_line` | `amount`, `amount_year`, `escalation`, `occupancy`, `pct_fixed` | `cre.opex.line[.suffix]` |
 | `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.selling_costs`, `cre.exit.proceeds` |
+| `cre.percentage_rent_expected` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_quantile` | `cre.pct_rent.overage[.suffix]` |
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent.overage[.suffix]` |
 | `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
 | `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `payment_frequency`, `principal`, `rate` | `cre.debt.proceeds[.suffix]`, `cre.debt.interest[.suffix]`, `cre.debt.principal[.suffix]` |

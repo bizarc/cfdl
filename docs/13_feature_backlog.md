@@ -1660,3 +1660,84 @@ answer to "what does a bucket's exponent mean", and a decision on whether
 `model.irr` follows the grain or is documented in `06_results_schema.md` as
 always model-grain. If the exponent ever does become electable, it belongs on
 `Grain` as a property of the partition, not as a second code path.
+
+### 7.70 A quantile's audit record is empty for the contracts that will use it
+
+*Belongs with the language and engine (section 5). Found closing stage 3 of
+`docs/27_quantiles.md`, against the contract that stage shipped.*
+
+`InputsSection.quantiles` publishes each quantile call site with the slice it
+asked for and what that resolved to. For a hand-written model it does what it
+was built for:
+
+    quantile_mean  prices  [0.98, 1.0]  ->  426.0
+
+For `cre.percentage_rent_expected`, the first pack contract to consume a
+quantile, it publishes this:
+
+    quantile_mean  store_sales  []  ->  ABSENT
+    quantile_of    store_sales  []  ->  ABSENT
+
+**Not a defect in the resolver.** The record is computed at compile time, and
+the pack rule deflates the breakpoint by
+`pow(1 + growth, {{time.elapsed_years}})`, which expands to an expression over
+`time.date`. The slice bounds are therefore genuinely different in every
+period, and no single compile-time value exists to publish. Declining to invent
+one is correct.
+
+Constant folding does not rescue it. Even at `sales_growth = 0` the expanded
+text still reads `time.date`, so the expression is not constant however
+degenerate the arithmetic.
+
+**What that costs.** The audit chain's stated purpose is that a reviewer can
+check a nonlinear input without redoing the integral. That holds for a
+hand-written model and does not hold for a pack-lowered one — which is the case
+most models will be, and is precisely the case the primitive was built to
+serve. `docs/27` §6 claims the property in general; it is true in one half.
+
+**And the shape misreads.** `args: []` renders as a call taking no arguments
+rather than one whose arguments vary by period. The results schema says
+"empty when they were not literals", so the document is accurate and the
+rendering is still misleading to anyone who has not read it.
+
+**The fix is a stage 2 revision, not a patch here.** Recording slices during
+EVALUATION would capture a value per period, which is the true answer. It was
+considered and rejected when stage 2 was built, for reasons that have not
+changed: the `Env` hooks take `&self`, so recording needs interior mutability;
+it moves work into the per-period path that the compile-time design keeps out
+of it; and the same call recurs every period, so it needs a dedup rule and a
+canonical order or the results document stops being reproducible.
+
+**The shape is already in the language, and it is not a scalar.** The slice
+bound and the resolved mean are a NUMBER PER PERIOD — geometrically a curve,
+but emitted rather than declared, which makes it a SERIES. The results document
+already publishes non-cash per-period numbers that way: an entity field appears
+as `{index: {calendar, start, periods}, values: [...]}` under its own key, bare
+numbers with no currency wrapper, and 58 such series exist across the goldens.
+
+Framing it as a series dissolves two of the three objections that stopped this
+being built at evaluation time. Dedup and canonical order are moot, because a
+series is one value per period in period order. Reproducibility is moot, for
+the same reason it is moot for any stream. Only interior mutability survives,
+and it may not survive either: the engine already evaluates these expressions
+every period and already emits a per-period number for a field, so this is the
+existing machinery rather than new machinery.
+
+**And it is the argument that settles the design.** A scalar in
+`InputsSection` is inert — a reviewer reads it and takes it on trust. A series
+in `deterministic.series` is checkable BY MACHINE, every period, against a
+reference: it inherits the CSV export, the per-period tolerance in the
+benchmark harness, and the statement layer. `docs/26` makes exactly this point
+about covenants — a benchmark asserts COLUMNS, and testing every period is
+strictly stronger than testing one number. For a nonlinear input that is the
+difference between publishing a figure and proving it.
+
+So the design is: emit the resolved slice as a series under its own key, the
+way a field is published, and let the audit run through machinery that already
+exists. What remains open is the key's name, whether both the slice bound and
+the resolved value are published or only the second, and whether the
+compile-time scalar record stays for the literal case or is replaced.
+
+Open this before any further pack contract consumes a quantile. Shipping a
+second one against an audit record that does not work would make the gap
+structural rather than a known debt.

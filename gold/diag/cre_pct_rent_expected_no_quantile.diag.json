@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE",
+    "severity": "error",
+    "message": "CRE expected percentage rent must name a sales distribution in 'sales_quantile'. Without one there is no distribution to take an expectation over — use 'cre.percentage_rent' for a lease underwritten on a single sales figure.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 1,
+      "end_line": 24,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

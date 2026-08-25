@@ -510,6 +510,15 @@ CRE pack codes:
   `capitalize_interest` is neither 0 nor 1. It is an election, not a rate: 1
   rolls each period's accrued interest into the balance, 0 pays it as it
   accrues. 0 is the default, so a model that says nothing is unaffected.
+
+- `E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE` — `cre.percentage_rent_expected`
+  states no `sales_quantile`. There is then no distribution to take an
+  expectation over, and the natural fallback — treat the point estimate as
+  certain — is not a smaller version of this contract, it IS
+  `cre.percentage_rent`. The message names that contract rather than letting
+  the two collapse silently.
+- `E6067_CRE_PCT_RENT_INVALID_OVERAGE_PCT` — a fraction between 0 and 1.
+
 - `E6064_CRE_REVENUE_LINE_MISSING_AMOUNT` — a revenue line states `amount` or
   `amount_year`; both default to zero, so stating neither is a line that
   silently earns nothing

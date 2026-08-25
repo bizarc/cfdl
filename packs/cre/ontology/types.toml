@@ -237,6 +237,12 @@ subject_family = "asset"
 parties = ["landlord", "tenant"]
 
 [[contracts]]
+type_id = "CRE.Contract.PercentageRentExpected"
+contract_name = "cre.percentage_rent_expected"
+subject_family = "asset"
+parties = ["landlord", "tenant"]
+
+[[contracts]]
 type_id = "CRE.Contract.VacancyAllowance"
 contract_name = "cre.vacancy_loss"
 subject_family = "asset"

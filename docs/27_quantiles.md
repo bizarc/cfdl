@@ -1,9 +1,10 @@
 # Quantiles — a value indexed by cumulative share
 
-Status: **stages 1 and 2 shipped**. The declaration, the three functions and
-the provenance wiring are built, specified in `docs/01` §12.6, and pinned by
-unit tests and fixtures. Stages 3 and 4 in §9 — the two pack contracts that
-consume this — have not been built.
+Status: **stages 1 to 3 shipped**. The declaration, the three functions, the
+provenance wiring and the first pack contract to consume them are built and
+specified in `docs/01` §12.6. Stage 4 in §9 — `energy.storage_dispatch` — has
+not been built, and is gated on whether a dispatch reference can be made to run
+at all.
 
 Some quantities are not one number, and not one number per date either. They
 are a *spread of values within a period*, and the thing the model needs from
@@ -333,10 +334,23 @@ Each stage is independently landable and keeps the suite green.
    to the engine's published-number policy, so the figure agrees exactly with
    the ledger figure it explains and no last-bit float noise reaches
    `model_hash`.
-3. **`cre.percentage_rent` takes an optional sales quantile.** Cross-domain
-   proof, and the cheaper first validation: `benchmarks/cre/retail_strip`
-   already exists, so the Jensen gap is measurable without a new reference
-   model.
+3. ~~**`cre.percentage_rent` takes an optional sales quantile.**~~ **SHIPPED**,
+   as a SIBLING contract rather than an optional term. This document said
+   "optional sales quantile" before it was known that a lowering rule has
+   exactly one `amount_expr` and no conditional. The pack's own answer to a
+   variant is a separate contract type — opco carries three exit forms — so
+   `cre.percentage_rent_expected` sits beside `cre.percentage_rent`, which is
+   left byte-untouched and keeps `benchmarks/cre/retail_strip` reconciling.
+
+   The distribution is stated in currency and carries the level, so no
+   `sales_year` term sits beside it to disagree with. Escalation rides outside
+   on `E[max(0, kS - B)] = k * E[max(0, S - B/k)]`.
+
+   **The gap is measured.** A 1,200,000 breakpoint against sales expected at
+   1,000,000 pays 0.00 at the point estimate and 4,937.50 a year over a
+   distribution with that same mean, so the two differ in the shape of the
+   payoff and in nothing else. The whole payment is the Jensen gap, and a
+   breakpoint above expected sales is the ordinary case.
 4. **`energy.storage_dispatch`** (backlog 7.5). Gated on whether a dispatch
    reference can be made to run at all — `Battwatts` discharged 27.9 MWh across
    a year behind the meter and segfaulted reconfigured front-of-meter, so the

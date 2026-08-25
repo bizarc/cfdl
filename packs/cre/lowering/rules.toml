@@ -303,6 +303,54 @@ schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
+# cre.percentage_rent_expected — overage rent as an EXPECTATION over a sales
+# distribution, rather than the overage at a point estimate of sales.
+#
+# WHY A SIBLING RATHER THAN A TERM ON cre.percentage_rent. Overage rent is a
+# call option on tenant sales: `max(0, sales - breakpoint) * pct`. Evaluating a
+# call at the expected underlying is not the expected value of the call — it is
+# strictly below it, and it is exactly zero whenever the point estimate sits
+# under the breakpoint, however much probability mass lies above. The two are
+# different quantities computed from different inputs, so they are two
+# contracts, the way opco carries three exit forms rather than one with a
+# selector. cre.percentage_rent is unchanged and stays correct for a lease
+# underwritten on a single sales figure.
+#
+# THE DISTRIBUTION IS BASE-YEAR SALES IN CURRENCY, not a ratio, so a modeller
+# states what they know: this tenant's sales, as a distribution. Escalation
+# then rides on the outside, because scaling sales by k and scaling the
+# breakpoint by 1/k are the same thing under the option:
+#
+#   E[max(0, k*S - B)] = k * E[max(0, S - B/k)]
+#
+# which is why `k` multiplies the result and divides the breakpoint, and why no
+# separate `sales_year` term exists — the distribution already carries the
+# level, and a point estimate beside it would be a second statement of the same
+# fact that nothing keeps in agreement.
+#
+# THE PARTIAL EXPECTATION. With x the share at or below the deflated
+# breakpoint, E[max(0, S - B/k)] = (1 - x) * (E[S | S >= B/k] - B/k), and
+# `quantile_mean(q, x, 1)` is that conditional mean. The degenerate cases fall
+# out without special handling: a breakpoint above the whole distribution gives
+# x = 1 and pays nothing; one below it gives x = 0 and pays on the full mean.
+[[rules]]
+id = "cre_percentage_rent_expected"
+contract_name = "cre.percentage_rent_expected"
+stream_name = "cre.pct_rent.overage{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "inflow"
+category = "operating.revenue.percentage_rent"
+amount_expr = "pow(1 + {{contract.sales_growth}}, {{time.elapsed_years}}) * (1 - quantile_of(\"{{contract.sales_quantile}}\", ({{contract.breakpoint_year}} / pow(1 + {{contract.sales_growth}}, {{time.elapsed_years}})))) * (quantile_mean(\"{{contract.sales_quantile}}\", quantile_of(\"{{contract.sales_quantile}}\", ({{contract.breakpoint_year}} / pow(1 + {{contract.sales_growth}}, {{time.elapsed_years}}))), 1.0) - ({{contract.breakpoint_year}} / pow(1 + {{contract.sales_growth}}, {{time.elapsed_years}}))) * {{contract.overage_pct}} / {{model.periods_per_year}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+sales_growth = "0"
+
+[rules.units]
+breakpoint_year = "USD/yr"
+
 [[rules]]
 id = "cre_percentage_rent"
 contract_name = "cre.percentage_rent"
