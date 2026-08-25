@@ -312,11 +312,35 @@ pub(crate) fn npv_at_grain(
 /// zero. Bisection, because the basis is rebuilt for each candidate rate.
 pub(crate) fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
     let f = |r: f64| npv_with_offsets(streams, r);
-    let (mut lo, mut hi) = (-0.9999_f64, 10.0_f64);
-    let (mut f_lo, f_hi) = (f(lo), f(hi));
+    let mut hi = 10.0_f64;
+    let f_hi = f(hi);
+    // The lower bracket cannot simply be -0.9999. `npv_with_offsets` divides by
+    // (1 + r)^i, and at r = -0.9999 that is 1e-4^i, which underflows to zero
+    // once i passes ~81. The inflows then evaluate to +inf and the outflows to
+    // -inf, their sum is NaN, and the sign test below rejects a perfectly
+    // ordinary cash flow. Every model longer than about 82 periods — which is
+    // most development deals on a monthly grid — lost its IRR that way.
+    //
+    // So walk inward until the present value is finite. The first candidate is
+    // the original bound, so nothing moves for series short enough to evaluate
+    // there; only the models that used to return None are affected.
+    let mut lo = f64::NAN;
+    let mut f_lo = f64::NAN;
+    for candidate in [
+        -0.9999_f64, -0.999, -0.99, -0.95, -0.9, -0.8, -0.6, -0.4, -0.2,
+    ] {
+        let value = f(candidate);
+        if value.is_finite() {
+            lo = candidate;
+            f_lo = value;
+            break;
+        }
+    }
     if f_lo.is_nan() || f_hi.is_nan() || f_lo * f_hi > 0.0 {
         return None;
     }
+    let mut lo = lo;
+    let mut f_lo = f_lo;
     for _ in 0..200 {
         let mid = (lo + hi) / 2.0;
         let f_mid = f(mid);
