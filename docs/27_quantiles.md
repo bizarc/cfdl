@@ -1,8 +1,8 @@
 # Quantiles — a value indexed by cumulative share
 
-Status: **stage 1 shipped**. The declaration and the three functions are
-built, specified in `docs/01` §12.6, and pinned by unit tests and fixtures.
-Stages 2 to 4 in §9 — provenance wiring, and the two pack contracts that
+Status: **stages 1 and 2 shipped**. The declaration, the three functions and
+the provenance wiring are built, specified in `docs/01` §12.6, and pinned by
+unit tests and fixtures. Stages 3 and 4 in §9 — the two pack contracts that
 consume this — have not been built.
 
 Some quantities are not one number, and not one number per date either. They
@@ -256,6 +256,12 @@ struck the revenue", not merely "a quantile was declared". `resolved` is keyed
 by `inputs.<name>`, so this wants a sibling `quantiles` key — a small additive
 change to `docs/schemas/results.schema.json`.
 
+**Built as described**, with one refinement the design did not anticipate: the
+record is per CALL SITE rather than per quantile. A model asks several
+questions of one declaration — the top 2%, the bottom half, the share below a
+breakpoint — and it is the questions that explain the numbers, not the
+declaration they were asked of.
+
 Publishing the resolved slice is not a nicety. A nonlinear input whose
 evaluation is not published is a number no reviewer can check.
 
@@ -308,8 +314,25 @@ Each stage is independently landable and keeps the suite green.
    originally proposed — an area is not what the payoff needs, a partial
    expectation is, and `quantile_of` was added because without an inverse only
    quantities already stated as percentiles could be sliced.
-2. **Provenance wiring.** `required_refs` from `ref` clauses;
-   `InputsSection.quantiles`.
+2. ~~**Provenance wiring.**~~ **SHIPPED.** `required_refs` is populated from
+   `ref` clauses — its first content since v0.1, having been declared by §17.3
+   and hard-coded empty. `InputsSection.quantiles` publishes every call site
+   with the slice it asked for and what that resolved to.
+
+   Two decisions worth recording. The record is built at COMPILE time and
+   passed through verbatim, the way `stream_inputs` already is, so the engine
+   and the per-period evaluation path are untouched; and it walks the
+   assembled IR rather than the statement list, so an expression is reached
+   wherever it sits — a stream amount, a field's `next`, an event guard, a
+   waterfall step — and a construct added later is covered without changing
+   this code.
+
+   A call whose arguments are not literals cannot be resolved at compile time.
+   It is published WITHOUT a value rather than dropped, because a missing call
+   site would read as a model that never made one. Resolved values are rounded
+   to the engine's published-number policy, so the figure agrees exactly with
+   the ledger figure it explains and no last-bit float noise reaches
+   `model_hash`.
 3. **`cre.percentage_rent` takes an optional sales quantile.** Cross-domain
    proof, and the cheaper first validation: `benchmarks/cre/retail_strip`
    already exists, so the Jensen gap is measurable without a new reference
