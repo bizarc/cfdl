@@ -75,3 +75,44 @@ spec §11.2.3, the EBNF, `12_payment_timing.md` §3 and
 `10_implementation_status.md` row 44, but is not a token — it lexes as a bare
 identifier and fails with `E0004_EXPECTED_TOKEN`. The parser and the IR
 schema's `placement` enum both say `start | mid | end`.
+
+## The facility, and what it publishes
+
+Interest capitalizes. It is stated GROSS — an outflow at `financing.interest`
+and a matching draw at `financing.debt_proceeds` — rather than folded silently
+into the balance. The two legs net to zero in cash, so the balance grows by the
+accrual either way, but the gross form means `domain.cre.debt_service` sees the
+real 48,448,594 of interest and coverage during the build is measurable.
+
+The payoff is categorized `investing.reversion`, not `financing.debt_principal`.
+It is retired entirely out of sale and condominium proceeds, and
+`financing.debt_principal` folds into `domain.cre.debt_service`, where a
+$394M bullet would make every coverage ratio in the disposal period
+meaningless. The cre pack says the same of a permanent loan's balloon: the
+payoff sits in the reversion.
+
+Note this is a hand-built facility of five entity field recurrences, not the
+pack's `cre.construction_loan` contract, and so it does not use that contract's
+`capitalize_interest` election. The behaviour is the same; the implementation is
+independent.
+
+## No discount rate is asserted
+
+`model.npv` is deliberately absent from `expected_metrics.json`.
+
+Two reasons, either sufficient. The model carries financing streams, so its NPV
+is a LEVERED one and would need a cost of equity rather than a project rate —
+discounting levered flows at a project rate books the financing spread as
+value. On this deal the unlevered PV at 10% is −171,050 while the financing
+streams contribute +9,229,459, so essentially the whole of a reported NPV would
+be that artifact.
+
+And no source document for The Highlands states a discount rate. The SP #445
+record and both Arlington Commercial Guidebooks publish CAPITALIZATION rates —
+5.15% loaded for high-rise/Metro/2010+, against 4.43% and 4.46% implied by the
+recorded sales — which value a stabilized year, not a stream. The
+`annual_discount_rate` in `run.json` is a stated placeholder, present because a
+run needs one.
+
+`model.irr` and `model.moic` are asserted, because both are solved from the
+cash flows rather than struck against an assumed rate.

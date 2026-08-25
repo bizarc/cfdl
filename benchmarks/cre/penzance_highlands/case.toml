@@ -11,6 +11,11 @@ summary = "A 160-month ground-up CRE development: land 2011, 39-month constructi
 pack = "cre"
 period_tolerance = 0.01
 
+# `model.npv` is deliberately not asserted. The model carries financing
+# streams, so its NPV is a LEVERED one, and no source document for this deal
+# states a discount rate — the rate in run.json is a stated placeholder. The
+# other CRE cases carrying financing (one_lincoln_street, hud_home_multifamily)
+# assert no model.npv for the same reason.
 [tolerance]
 "domain.cre.noi" = 0.01
 "domain.cre.egi" = 0.01

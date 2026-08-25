@@ -772,9 +772,29 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
   amount = asset.facility.draw
 }
 
+// Interest capitalizes: the facility funds its own accrual, so the two legs
+// net to zero in cash while the balance grows. Stated GROSS rather than folded
+// into the balance silently, so `domain.cre.debt_service` sees real interest
+// and coverage during the build is measurable instead of absent.
+stream cre.loan_interest on entity asset.project outflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category financing.interest
+  amount = asset.facility.interest
+}
+
+stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category financing.debt_proceeds
+  amount = asset.facility.interest
+}
+
+// The payoff sits in the reversion. `financing.debt_principal` folds into
+// `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
+// debt service — it would make every coverage ratio in the disposal period
+// meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_principal
+  category investing.reversion
   amount = asset.facility.repay
 }
 
