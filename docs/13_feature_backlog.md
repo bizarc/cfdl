@@ -461,6 +461,18 @@ Mitigated: the gate now also checks numeric-prefix uniqueness across
 `docs/08_diagnostics.md`, the published register where every engine code is
 listed. Confirmed to bite.
 
+*Update — the mitigation's own assumption failed, exactly as predicted.* It
+rests on `docs/08` listing every engine code, which nothing enforces: the gate
+reads the register and the pack TOML, never the Rust. Found by auditing the
+backlog itself — the whole waterfall family, `E1340` through `E1346`, was
+emitted by the compiler and absent from the register, while every other
+`E13xx` code was present. `E1346` had been added to `docs/17`'s table and
+nowhere else, on the day it shipped. The seven are now documented, but the
+gate that would have caught it still does not exist: it must extract codes
+from the Rust string literals and require each to appear in the register,
+which is the same shape as `tools/check-keyword-register.py` does for
+keywords.
+
 What is still missing is the other half of the pair — a check that every code
 emitted in non-test Rust actually appears in that register. Without it the doc
 gate only fires for codes someone remembered to document. Extracting from Rust
