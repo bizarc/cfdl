@@ -617,6 +617,15 @@ pub struct InputsSection {
     /// evaluation path are untouched by it.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub streams: Vec<serde_json::Value>,
+    /// Which slice of a declared quantile each expression asked for, and what
+    /// it resolved to.
+    ///
+    /// A nonlinear input whose evaluation is not published is a number no
+    /// reviewer can check: the declaration alone says a price stack existed,
+    /// not that the top 2% of hours averaged 340.00 and that this is what
+    /// struck the revenue.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub quantiles: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]

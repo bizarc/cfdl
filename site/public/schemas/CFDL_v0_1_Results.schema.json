@@ -590,6 +590,13 @@
             "type": "object"
           },
           "description": "Per-stream record of the contract terms a pack rule consumed to strike it, passed through from the IR's `stream_inputs` verbatim. See the IR schema's StreamInputs. Hand-written streams have no entry, because no rule struck them."
+        },
+        "quantiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantileCall"
+          },
+          "description": "Which slice of a declared quantile each expression asked for, and what it resolved to. Passed through from the IR's quantile_inputs verbatim. A nonlinear input whose evaluation is not published is a number no reviewer can check: the top 2% of hours averaging 340.00 is the fact that explains the revenue, and the declaration alone does not state it."
         }
       }
     },
@@ -773,6 +780,40 @@
     },
     "SeriesValue": {
       "description": "A series point: money, a bare number, or null where undefined."
+    },
+    "QuantileCall": {
+      "type": "object",
+      "required": [
+        "quantile",
+        "function",
+        "args"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "quantile": {
+          "type": "string",
+          "description": "The quantile named at the call site."
+        },
+        "function": {
+          "type": "string",
+          "enum": [
+            "quantile_at",
+            "quantile_mean",
+            "quantile_of"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "The literal arguments after the name, in source order. Empty when they were not literals."
+        },
+        "value": {
+          "type": "number",
+          "description": "What the call resolves to, rounded to the engine's published-number policy so it agrees exactly with the ledger figure it explains. ABSENT when an argument is not a literal — the call is still listed, because a silently omitted call site would read as a model that never made one."
+        }
+      }
     }
   }
 }

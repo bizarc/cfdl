@@ -121,6 +121,14 @@ against it by `make ir-schema`.
       },
       "description": "Values indexed by cumulative share. Always ascending by share: a declaration written `by exceedance` is reversed at compile time, so this document carries one orientation and no reader has to know which way the source was written."
     },
+    "quantile_inputs": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/QuantileCall"
+      },
+      "description": "Every quantile call site in the document, resolved and deduplicated. The audit record for a nonlinear input: publishing the declaration alone would say a distribution existed, not which slice of it struck a number."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -538,6 +546,40 @@ against it by `make ir-schema`.
               }
             }
           }
+        }
+      }
+    },
+    "QuantileCall": {
+      "type": "object",
+      "required": [
+        "quantile",
+        "function",
+        "args"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "quantile": {
+          "type": "string",
+          "description": "The quantile named at the call site."
+        },
+        "function": {
+          "type": "string",
+          "enum": [
+            "quantile_at",
+            "quantile_mean",
+            "quantile_of"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "The literal arguments after the name, in source order. Empty when they were not literals."
+        },
+        "value": {
+          "type": "number",
+          "description": "What the call resolves to, rounded to the engine's published-number policy so it agrees exactly with the ledger figure it explains. ABSENT when an argument is not a literal — the call is still listed, because a silently omitted call site would read as a model that never made one."
         }
       }
     },

@@ -365,6 +365,108 @@ pub fn series_references(src: &str) -> Vec<String> {
 /// Selectors match NAMES. The key format a caller stores them under
 /// (`stream.<name>`, `stream.<name>.total`) is the caller's business, which is
 /// what stops the accident above from being load-bearing again.
+/// One resolved quantile call site: the slice a model actually asked for, and
+/// what it came to.
+///
+/// This is the audit record for a NONLINEAR input. Publishing the declaration
+/// alone would say a price stack existed; it would not say that the top 2% of
+/// hours averaged 340.00 and that this is the number which struck the revenue.
+/// A reviewer cannot check the second from the first without redoing the
+/// integral by hand.
+#[derive(Debug, Clone, PartialEq)]
+pub struct QuantileCall {
+    /// The quantile named at the call site.
+    pub quantile: String,
+    /// `quantile_at`, `quantile_mean` or `quantile_of`.
+    pub function: String,
+    /// The literal arguments after the name, in source order.
+    pub args: Vec<f64>,
+    /// What the call resolves to. `None` when an argument is not a literal —
+    /// the call is still listed, because a silently omitted call site would
+    /// read as a model that never made one.
+    pub value: Option<f64>,
+}
+
+/// Every quantile call site in `src`, resolved against `quantiles` where the
+/// arguments are literals.
+///
+/// Walks the parsed expression rather than scanning text, so a name inside a
+/// comment or a string cannot be mistaken for a call. Returns an empty vector
+/// for a source that does not parse: the caller has already reported that as
+/// E5009, and reporting it twice would be noise.
+pub fn quantile_calls(src: &str, quantiles: &BTreeMap<String, QuantileDef>) -> Vec<QuantileCall> {
+    let Ok(compiled) = compile_expr(src) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    collect_quantile_calls(&compiled.expr, quantiles, &mut out);
+    out
+}
+
+fn collect_quantile_calls(
+    expr: &cfdl_calc::Expr,
+    quantiles: &BTreeMap<String, QuantileDef>,
+    out: &mut Vec<QuantileCall>,
+) {
+    use cfdl_calc::ExprKind;
+    match &expr.kind {
+        ExprKind::Call { name, args } => {
+            if matches!(
+                name.as_str(),
+                "quantile_at" | "quantile_mean" | "quantile_of"
+            ) {
+                if let Some(call) = resolve_quantile_call(name, args, quantiles) {
+                    out.push(call);
+                }
+            }
+            for a in args {
+                collect_quantile_calls(a, quantiles, out);
+            }
+        }
+        ExprKind::Unary { expr, .. } => collect_quantile_calls(expr, quantiles, out),
+        ExprKind::Binary { lhs, rhs, .. } => {
+            collect_quantile_calls(lhs, quantiles, out);
+            collect_quantile_calls(rhs, quantiles, out);
+        }
+        _ => {}
+    }
+}
+
+fn resolve_quantile_call(
+    name: &str,
+    args: &[cfdl_calc::Expr],
+    quantiles: &BTreeMap<String, QuantileDef>,
+) -> Option<QuantileCall> {
+    use cfdl_calc::ExprKind;
+    let ExprKind::Str(quantile) = &args.first()?.kind else {
+        // A computed quantile name. Nothing to record against a declaration.
+        return None;
+    };
+    let literals: Option<Vec<f64>> = args[1..]
+        .iter()
+        .map(|a| match &a.kind {
+            ExprKind::Number(n) => n.to_f64(),
+            _ => None,
+        })
+        .collect();
+    let def = quantiles.get(quantile);
+    let value = match (literals.as_ref(), def) {
+        (Some(nums), Some(def)) => match (name, nums.as_slice()) {
+            ("quantile_at", [x]) => quantile_eval(def, *x),
+            ("quantile_mean", [a, b]) => quantile_slice_mean(def, *a, *b),
+            ("quantile_of", [v]) => quantile_invert(def, *v),
+            _ => None,
+        },
+        _ => None,
+    };
+    Some(QuantileCall {
+        quantile: quantile.clone(),
+        function: name.to_string(),
+        args: literals.unwrap_or_default(),
+        value,
+    })
+}
+
 pub fn selector_matches(pattern: &str, name: &str) -> bool {
     match pattern.strip_suffix(".*") {
         Some(prefix) => name == prefix || name.starts_with(&format!("{prefix}.")),
@@ -553,7 +655,7 @@ fn to_f64(d: Decimal) -> Option<f64> {
 ///
 /// `step` reads the last point at or below the share, which is the same
 /// flat-forward rule a `step` curve uses on dates.
-fn quantile_eval(q: &QuantileDef, share: f64) -> Option<f64> {
+pub(crate) fn quantile_eval(q: &QuantileDef, share: f64) -> Option<f64> {
     let pts = &q.points;
     if pts.is_empty() {
         return None;
@@ -587,7 +689,7 @@ fn quantile_eval(q: &QuantileDef, share: f64) -> Option<f64> {
 /// approximation of it.
 ///
 /// A zero-width slice is the point value, not a division by zero.
-fn quantile_slice_mean(q: &QuantileDef, from: f64, to: f64) -> Option<f64> {
+pub(crate) fn quantile_slice_mean(q: &QuantileDef, from: f64, to: f64) -> Option<f64> {
     if q.points.is_empty() || !from.is_finite() || !to.is_finite() {
         return None;
     }
@@ -632,7 +734,7 @@ fn quantile_slice_mean(q: &QuantileDef, from: f64, to: f64) -> Option<f64> {
 /// modeller knows rather than a percentile they would have to work out.
 /// Well-defined because values are non-decreasing in share, which the compiler
 /// enforces.
-fn quantile_invert(q: &QuantileDef, value: f64) -> Option<f64> {
+pub(crate) fn quantile_invert(q: &QuantileDef, value: f64) -> Option<f64> {
     let pts = &q.points;
     if pts.is_empty() {
         return None;
@@ -913,6 +1015,38 @@ mod tests {
             },
         );
         env
+    }
+
+    #[test]
+    fn quantile_calls_records_every_site_including_the_unresolvable() {
+        let mut defs = BTreeMap::new();
+        defs.insert(
+            "p".to_string(),
+            quantile_env("linear").quantiles["p"].clone(),
+        );
+
+        // Nested inside arithmetic and inside another call, to show the walk
+        // reaches call sites a flat scan of the top level would miss.
+        let calls = quantile_calls(
+            "max(quantile_mean(\"p\", 0.5, 1.0) - quantile_at(\"p\", 0.0), 0)",
+            &defs,
+        );
+        assert_eq!(calls.len(), 2);
+        assert_eq!(calls[0].function, "quantile_mean");
+        assert_eq!(calls[0].value, Some(40.0));
+        assert_eq!(calls[1].value, Some(10.0));
+
+        // A computed argument cannot be resolved, and the site is still
+        // listed. Dropping it would read as a model that never made the call.
+        let calls = quantile_calls("quantile_mean(\"p\", inputs.lo, 1.0)", &defs);
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].value, None);
+
+        // A name that is not a literal has no declaration to record against.
+        assert!(quantile_calls("quantile_at(some.name, 0.5)", &defs).is_empty());
+
+        // An unparseable source is the caller's E5009, not ours to repeat.
+        assert!(quantile_calls("quantile_at(\"p\", ", &defs).is_empty());
     }
 
     #[test]

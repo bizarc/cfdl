@@ -387,8 +387,12 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         let section = InputsSection {
             resolved: base_run.resolved_inputs.clone(),
             streams: ir.stream_inputs.clone(),
+            quantiles: ir.quantile_inputs.clone(),
         };
-        (!section.resolved.is_empty() || !section.streams.is_empty()).then_some(section)
+        (!section.resolved.is_empty()
+            || !section.streams.is_empty()
+            || !section.quantiles.is_empty())
+        .then_some(section)
     };
 
     Ok(Results {

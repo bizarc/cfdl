@@ -359,6 +359,10 @@ struct Ir {
     /// so existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     quantiles: Vec<IrQuantile>,
+    /// Every quantile call site, resolved. The audit record for a nonlinear
+    /// input: which slice each expression asked for, and what it came to.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    quantile_inputs: Vec<IrQuantileCall>,
     /// Ordered allocations of a pot. Omitted when a model declares none, so
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -466,6 +470,21 @@ struct IrQuantile {
 struct IrQuantilePoint {
     share: f64,
     value: f64,
+}
+
+/// One resolved quantile call site.
+///
+/// Recorded at compile time, the way `stream_inputs` is, so the engine and the
+/// per-period evaluation path are untouched by it.
+#[derive(Debug, Serialize, Clone)]
+struct IrQuantileCall {
+    quantile: String,
+    function: String,
+    args: Vec<f64>,
+    /// Absent when an argument is not a literal. The call is still listed: a
+    /// silently omitted call site would read as a model that never made one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    value: Option<f64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -2566,7 +2585,7 @@ fn build_ir(
         })
         .collect();
 
-    Ok(Ir {
+    let mut ir = Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
             name: model_name,
@@ -2586,6 +2605,8 @@ fn build_ir(
         },
         curves: ir_curves,
         quantiles: ir_quantiles,
+        // Filled below, once the document exists to be walked.
+        quantile_inputs: Vec::new(),
         waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
@@ -2640,7 +2661,117 @@ fn build_ir(
                     .map(|pack| vec![format!("active_pack={}@{}", pack.name, pack.version)]),
             },
         },
-    })
+    };
+
+    // Provenance, computed once the rest of the document exists.
+    //
+    // Both walk the ASSEMBLED IR rather than the statement list, so an
+    // expression reaches these no matter which construct carries it — a
+    // stream amount, a field's `next`, an event guard, a waterfall step —
+    // and a construct added later is covered without touching this.
+    let quantile_defs = ir_quantile_defs_for_provenance(&ir.quantiles);
+    ir.quantile_inputs = collect_quantile_inputs(&ir, &quantile_defs);
+    ir.required_refs = ir
+        .quantiles
+        .iter()
+        .filter_map(|q| q.reference.clone())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect();
+
+    Ok(ir)
+}
+
+/// The quantile definitions in the shape `cfdl_expr` resolves against, so the
+/// slice published here is computed by the SAME code the engine runs rather
+/// than by a second implementation that could drift from it.
+fn ir_quantile_defs_for_provenance(
+    quantiles: &[IrQuantile],
+) -> std::collections::BTreeMap<String, cfdl_expr::QuantileDef> {
+    quantiles
+        .iter()
+        .map(|q| {
+            (
+                q.name.clone(),
+                cfdl_expr::QuantileDef {
+                    interpolation: q.interpolation.clone(),
+                    points: q.points.iter().map(|p| (p.share, p.value)).collect(),
+                },
+            )
+        })
+        .collect()
+}
+
+/// Every quantile call site in the document, resolved and deduplicated.
+///
+/// Deduplicated because the same slice appears in every period's expression
+/// once and in several streams often; the audit record wants the distinct
+/// questions asked, not one row per occurrence. Sorted so the IR is canonical.
+fn collect_quantile_inputs(
+    ir: &Ir,
+    defs: &std::collections::BTreeMap<String, cfdl_expr::QuantileDef>,
+) -> Vec<IrQuantileCall> {
+    if defs.is_empty() {
+        return Vec::new();
+    }
+    let Ok(doc) = serde_json::to_value(ir) else {
+        return Vec::new();
+    };
+    let mut srcs: Vec<String> = Vec::new();
+    collect_expr_sources(&doc, &mut srcs);
+    let mut seen = std::collections::BTreeMap::new();
+    for src in srcs {
+        for call in cfdl_expr::quantile_calls(&src, defs) {
+            let key = (
+                call.quantile.clone(),
+                call.function.clone(),
+                call.args.iter().map(|a| a.to_bits()).collect::<Vec<_>>(),
+            );
+            seen.entry(key).or_insert(IrQuantileCall {
+                quantile: call.quantile,
+                function: call.function,
+                args: call.args,
+                // Rounded to the engine's single global policy for published
+                // numbers (1e-6). Two reasons, and the second is the load-
+                // bearing one: it matches what the ledger publishes, and this
+                // value enters the IR and therefore `model_hash`. An
+                // unrounded integral would carry the last bits of f64
+                // arithmetic into a hash compared across three platforms —
+                // 425.99999999999994 for what is exactly 426.
+                value: call.value.map(round_published),
+            });
+        }
+    }
+    seen.into_values().collect()
+}
+
+/// The engine's rounding policy for published numbers, applied here so a
+/// compile-time figure and the ledger figure it explains agree exactly.
+fn round_published(value: f64) -> f64 {
+    (value * 1_000_000.0).round() / 1_000_000.0
+}
+
+/// Pull every `{ "lang": _, "src": _ }` out of a serialized IR — the shape
+/// every expression takes, wherever it sits.
+fn collect_expr_sources(value: &serde_json::Value, out: &mut Vec<String>) {
+    match value {
+        serde_json::Value::Object(map) => {
+            if let (Some(_), Some(serde_json::Value::String(src))) =
+                (map.get("lang"), map.get("src"))
+            {
+                out.push(src.clone());
+            }
+            for v in map.values() {
+                collect_expr_sources(v, out);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for v in items {
+                collect_expr_sources(v, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// Pack resolution: use `options.packs_dir` if set, else
