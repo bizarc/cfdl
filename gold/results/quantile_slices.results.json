@@ -1,25 +1,80 @@
 {
   "results_version": "0.3",
-  "model_hash": "d6d792e993103b4ae1e7f44fbe6e648216b5c413c484d772195c6663dc5bbcc4",
-  "ledger_hash": "47455c3e773ce2d7b2ce427f85fb62e2e089fe1e52a8b39c443843c6a97902d5",
+  "model_hash": "84cd09ed0d9eedc42f7de655e76edb42f958995ce26436f4bab6ad100ab3d7c1",
+  "ledger_hash": "a6c292f41aa269512e31f51ab4faed0831cd9835088d655c8047b65ccd895d81",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "resolved": {
+      "tail_start": 0.9
+    },
+    "quantiles": [
+      {
+        "args": [
+          0.5
+        ],
+        "function": "quantile_at",
+        "quantile": "prices",
+        "value": 28.0
+      },
+      {
+        "args": [],
+        "function": "quantile_mean",
+        "quantile": "prices"
+      },
+      {
+        "args": [
+          0.0,
+          0.5
+        ],
+        "function": "quantile_mean",
+        "quantile": "prices",
+        "value": 19.5
+      },
+      {
+        "args": [
+          0.98,
+          1.0
+        ],
+        "function": "quantile_mean",
+        "quantile": "prices",
+        "value": 426.0
+      },
+      {
+        "args": [
+          28.0
+        ],
+        "function": "quantile_of",
+        "quantile": "prices",
+        "value": 0.5
+      },
+      {
+        "args": [
+          0.0,
+          0.5
+        ],
+        "function": "quantile_mean",
+        "quantile": "prices_step",
+        "value": 11.0
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {
       "entity.asset.battery.total": {
-        "amount": 125801.647059,
+        "amount": 135893.647059,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 123821.676105,
+        "amount": 133754.839816,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 125801.647059,
+        "amount": 135893.647059,
         "currency": "USD"
       },
       "model.wal_years": 0.166667,
@@ -31,6 +86,10 @@
       },
       "stream.battery.arbitrage_step.total": {
         "amount": 3300.0,
+        "currency": "USD"
+      },
+      "stream.battery.computed_slice.total": {
+        "amount": 10092.0,
         "currency": "USD"
       },
       "stream.battery.inverse.total": {
@@ -47,15 +106,15 @@
         },
         "values": [
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           },
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           },
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           }
         ]
@@ -68,15 +127,15 @@
         },
         "values": [
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           },
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           },
           {
-            "amount": 41933.882353,
+            "amount": 45297.882353,
             "currency": "USD"
           }
         ]
@@ -125,6 +184,28 @@
           }
         ]
       },
+      "stream.battery.computed_slice": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 3364.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 3364.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 3364.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.battery.inverse": {
         "index": {
           "calendar": "monthly",
@@ -158,7 +239,7 @@
           },
           "values": [
             {
-              "amount": 125801.647059,
+              "amount": 135893.647059,
               "currency": "USD"
             }
           ]
@@ -185,6 +266,19 @@
           "values": [
             {
               "amount": 3300.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.battery.computed_slice": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 10092.0,
               "currency": "USD"
             }
           ]

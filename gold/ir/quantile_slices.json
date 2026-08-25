@@ -20,7 +20,16 @@
     }
   ],
   "assumptions": {
-    "constants": {},
+    "constants": {
+      "tail_start": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.9"
+        },
+        "name": "tail_start",
+        "type": "Decimal"
+      }
+    },
     "random": {}
   },
   "quantiles": [
@@ -68,6 +77,56 @@
           "value": 512.0
         }
       ]
+    }
+  ],
+  "quantile_inputs": [
+    {
+      "quantile": "prices",
+      "function": "quantile_at",
+      "args": [
+        0.5
+      ],
+      "value": 28.0
+    },
+    {
+      "quantile": "prices",
+      "function": "quantile_mean",
+      "args": []
+    },
+    {
+      "quantile": "prices",
+      "function": "quantile_mean",
+      "args": [
+        0.0,
+        0.5
+      ],
+      "value": 19.5
+    },
+    {
+      "quantile": "prices",
+      "function": "quantile_mean",
+      "args": [
+        0.98,
+        1.0
+      ],
+      "value": 426.0
+    },
+    {
+      "quantile": "prices",
+      "function": "quantile_of",
+      "args": [
+        28.0
+      ],
+      "value": 0.5
+    },
+    {
+      "quantile": "prices_step",
+      "function": "quantile_mean",
+      "args": [
+        0.0,
+        0.5
+      ],
+      "value": 11.0
     }
   ],
   "contracts": [],
@@ -139,6 +198,39 @@
       }
     },
     {
+      "id": "73738de972af5eb78f266f8aa9c90c2d",
+      "name": "battery.computed_slice",
+      "owner": {
+        "symbol": "asset.battery"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.energy",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "quantile_mean(\"prices\", inputs.tail_start, 1.0) * 10.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 58,
+          "start_col": 1,
+          "end_line": 62,
+          "end_col": 1
+        }
+      }
+    },
+    {
       "id": "e13444e6bab5b1ddbbc4cb2e1ec30c6a",
       "name": "battery.inverse",
       "owner": {
@@ -180,7 +272,9 @@
     }
   ],
   "required_observables": [],
-  "required_refs": [],
+  "required_refs": [
+    "energy.power_price"
+  ],
   "provenance": {
     "sources": [
       "model.cfdl"

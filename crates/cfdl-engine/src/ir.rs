@@ -30,6 +30,11 @@ pub(crate) struct Ir {
     pub(crate) curves: Vec<IrCurve>,
     #[serde(default)]
     pub(crate) quantiles: Vec<IrQuantile>,
+    /// Resolved quantile call sites, passed straight through to the results
+    /// document. Opaque here on purpose: the compiler computed them and the
+    /// engine has no reason to reinterpret them.
+    #[serde(default)]
+    pub(crate) quantile_inputs: Vec<serde_json::Value>,
     #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
