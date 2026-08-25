@@ -8,6 +8,30 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Backlog: three items closed, three narrowed to what actually remains
+
+Closed. **7.15** — both stated reasons are false: One Lincoln Street exercises
+`cre.construction_loan` against its own external figures, and the retail source
+it called unregistrable is vendored. **7.8** — supersedes itself and records no
+provenance, saying outright "Nothing currently needs it". **7.42** — the
+specification no longer teaches a model-level discount rate; the one surviving
+`assume discount_rate = 0.10`, in `docs/01`'s multi-file example, was also a
+DEAD assumption never read, and is now `base_rent`, which the example's
+contract actually uses.
+
+Narrowed rather than closed, because each had real residue under a stale
+headline. **7.41** was five invariants, four now gated; what remains is that
+nothing checks a waterfall's `from` for naming a pack-lowered family, which the
+pack-series gate could cover. **7.44** claimed the engine is one file of 5,341
+lines; the split shipped and `lib.rs` is about 2,200 across ten modules, so
+what remains is the crate boundary, with its cost stated. **7.51** shipped its
+schema gate; what remains is that a `parameter_overrides` key is never checked
+against the model, so a typo overrides nothing and the run reports ok — the
+same family as the unresolved-name work, one layer out.
+
+Backlog: 38 items.
+
+
 ### Removed: backlog 6.3, a symmetry gap with no case behind it
 
 6.3 wanted a one-shot flow whose PERIOD differs from its contract term — a sale

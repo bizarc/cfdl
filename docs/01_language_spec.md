@@ -996,7 +996,7 @@ entity loan senior
 
 **assumptions.cfdl**
 ```cfdl
-assume discount_rate = 0.10
+assume base_rent = 42000
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
 
 curve sofr linear {
@@ -1010,7 +1010,7 @@ curve sofr linear {
 contract cre.lease on entity asset.sunset {
   term 2027-01..2031-12
   terms {
-    base_rent = 42000
+    base_rent = inputs.base_rent
   }
 }
 

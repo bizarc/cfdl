@@ -341,62 +341,6 @@ own homework.
 arbitrage is priced against a duration curve rather than a scalar spread (7.1).
 Credit's three uncovered contract types need a source, not a new contract.
 
-### 7.8 A stream cannot be non-cash, which blocks the log-sum technique
-
-*Belongs with the language and engine (section 5). Small surface, and it is the
-only thing standing between `exp`/`ln` and closing 2.1.*
-
-`ln` and `exp` now exist so a cumulative **product** can be computed as a
-cumulative **sum**:
-
-    PROD(1 + r_i)  ==  exp(series_sum("ln_one_plus_r", 0, t))
-
-with a helper stream carrying `ln(1 + r_t)`. **Verified end to end**: a probe
-reproduces all ten years of a published forecast whose growth rate decays,
-exactly, where `pow(1 + g, t)` drifts to −2.4% by year 10.
-
-The blocker is that **every stream is a cash stream**. `record_stream`
-(`crates/cfdl-engine/src/lib.rs`) adds each one to `model_series`, so the helper
-lands in net cash flow and NPV. In the probe, year-1 net cash flow came to
-22,853.7188 against a true 22,853.6700 — the extra 0.0488 is a dimensionless
-logarithm being added to dollars.
-
-So the technique cannot be used from a pack rule, which is where it is needed:
-`credit` for the PSA/SDA/ABS ramps (2.1) and `opco` for a decaying growth path.
-
-Shape, and the choice matters:
-
-- **A non-cash stream kind** — `stream ... informational` or similar, computed
-  and readable by `series_sum` but excluded from `model_series`, totals and NPV.
-  General, and it also gives packs somewhere to put intermediate quantities that
-  are not money, which several rules currently inline and recompute.
-- **A `curve_sum` builtin** — aggregate a *curve* over a period window without a
-  stream at all. Narrower: it serves rates that are already curves (the opco
-  growth path) but not rates that are a formula of loan age (PSA, SDA), which
-  is most of 2.1.
-
-The first is the better answer for the same reason the delayed-reference design
-was: it solves the general case rather than the instance in front of us. It is
-also a genuine language surface addition, so it wants deciding rather than
-assuming — note that a non-cash stream has knock-on questions for the results
-schema, the domain metrics, and whether it appears in `series` at all.
-
-**Update — largely superseded, and the knock-on questions are answered.** The
-log-sum technique existed to reach a recurrence, and 5.1 now reaches it directly
-and decimal-exactly, without escaping to `f64` and without a helper stream. Both
-cases named above are closed: the opco growth path by rule-declared states, the
-credit ramps expressible the same way.
-
-A declared `state` also happens to be the non-cash quantity this item asked for,
-and shipping it settled every question listed: it appears in `series` under a
-`state.` prefix, as bare numbers rather than Money, and it is excluded from
-`model_series`, totals, NPV, the annual rollup and every domain metric — with an
-identity asserting exactly that.
-
-What survives is narrower: a non-cash quantity that must aggregate a *stream's*
-values over a window (`series_sum` over something that is not cash). A state
-cannot do that, because `next` has no series access. Nothing currently needs it.
-
 ### 7.9 `opco.capex_line` cannot express a derived line
 
 Found closing 5.1 against `benchmarks/opco/damodaran_fcff`, and worth separating
@@ -517,42 +461,6 @@ fuel cost as a driver, and a heat offtake contract. The catalogue's remaining
 Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
-
-### 7.15 Adding a contract and a source did not move CRE's coverage
-
-Measured after shipping `cre.permanent_debt` and
-`benchmarks/cre/one_lincoln_street`. Counting pack contract types exercised by
-at least one **externally reconciled** case:
-
-| pack | before | after |
-|---|---|---|
-| energy | 9/10 | 9/10 |
-| opco | 4/10 | **5/11** |
-| credit | 1/4 | 1/4 |
-| CRE | 1/12 | **1/13** |
-
-CRE went *backwards as a ratio*, and the reason is worth stating rather than
-smoothing over.
-
-**The contract's only user is an in-house case.** `cre.permanent_debt` converted
-`benchmarks/cre/office_two_tenant`, whose `case.toml` says plainly: *"Reference:
-reference_gen.py (independent implementation). Status: pending practitioner
-review."* Its figures are ours. `hud_home_multifamily` — which is external —
-could not convert, for the two reasons in 7.14.
-
-**The new source exercises no contract.** One Lincoln Street's funding waterfall
-is an equity commitment that depletes mid-quarter, and `cre.construction_stub`
-takes a flat draw, so the case runs on native streams and a declared state.
-
-Neither is a defect; both are the same gap seen from two sides. What CRE needs
-is a source that publishes the DRIVERS of an operating pro forma — a rent roll
-with escalations and expense stops — rather than its results. One Lincoln
-Street's Exhibit 5 is exactly that pro forma and was rejected for exactly that
-reason: it publishes the lines, not the leases.
-
-Every direct-download CRE candidate in the catalogue has now been checked. The
-remaining ones (A.CRE, Finamodel, PropertyMetrics) require an email
-registration, which is the actual blocker on CRE coverage — not the pack.
 
 ### 7.18 Monte Carlo carries no transition log
 
@@ -968,132 +876,23 @@ nothing. A few lines in the existing checks — the step set and
 
 ---
 
-### 7.41 Invariants the gates do not check
+### 7.41 A waterfall's pot is never checked for what it names
 
-`make ci` runs fifteen gates and every one of them checks an *output*: goldens
-match, benchmark cases reconcile, examples compile, prose conforms. None checks
-an *invariant* — a property the engine must hold whatever a model says. Each of
-the following is mechanical, and each corresponds to something that went wrong
-this month and was found by hand.
+*Narrowed. Four of the five invariants this item listed have shipped: cash
+purity and pack additivity as `tools/invariant-checks.py` in `make ci`, the
+series-visibility refusal as `E1342`, and the interleaved state/event walk with
+`fixtures/valid/event_reseeds_recurrence`. The framing also no longer holds —
+`make ci` now runs invariant gates alongside the output gates.*
 
-**1. Cash purity.** — **shipped**, `tools/invariant-checks.py`, in `make ci`,
-and mutation-tested: a waterfall step counted as cash is caught in period 0.
-Originally: no field, subtotal, entity rollup or waterfall step may
-enter `model_series` or `valued_streams`. The engine holds this by construction
-today, and `crates/cfdl-engine/src/lib.rs:1350` explains why — but the
-explanation was stale for a year, naming a `state.` prefix that stopped being
-the guard when fields began publishing under their owning entity. A gate:
-build a model carrying a field, a cumulative subtotal and a waterfall, and
-assert `model.net_cash_flow` equals the sum of the stream series to the cent.
-Would catch anyone "fixing" the comment's mechanism and losing the real one.
+What remains is the fifth: nothing flags a waterfall whose `from` expression
+names a pack-lowered stream. A pot built from `series_sum` over a family the
+pack emits will silently miss instances if the selector is wrong, in exactly
+the way `tools/check-pack-series.py` catches for pack rules but not for a
+model's own waterfall.
 
-**2. Pack additivity.** — **shipped** as a two-way ratchet in the same gate:
-a new stream clause fails until accepted, waived or recorded; a known gap that
-closes fails until the record is removed. Originally: For every clause `StreamStmt` accepts, `ContractStmt`
-should accept it too or waive it explicitly. The absence costs what §7.50 records: a
-contract's streams cannot be gated from the model. A gate comparing the
-two surfaces would have caught it the day the second clause was added to
-streams, rather than in a benchmark three packs later.
-
-**3. A series read that cannot resolve from its context must FAIL, not warn.**
-— **shipped**. `E1342_WATERFALL_SERIES_NOT_VISIBLE` refuses a `series_sum` /
-`series_avg` naming a step of the waterfall it is written in, or of a later
-one; an EARLIER waterfall is the documented composition and still compiles.
-Checked in the compiler beside `E1341`, its sibling one spelling over, so the
-two answer the same reference the same way. The message names the right model:
-`paid.<step>` for this period, a balance the distribution moves for a running
-total.
-
-Re-scoped from a survey gate after review: a waterfall step is a pure function
-of its inputs — accept the pot, allocate, move forward — so a step reading its
-own waterfall's prior payments is not a missing capability, it is the account
-reconstructing its own postings, and the cumulative quantity it wants is a
-BALANCE the distribution moves — see `docs/26_lessons_learned.md`.
-
-**It had already shipped a wrong number.**
-`fixtures/valid/waterfall_after_contract` capped a note at its balance by
-subtracting what it had paid so far. The read saw nothing, the cap never bound,
-and a $500,000 note paid out $1,200,000 over six periods with a golden agreeing
-— the preferred return paid in full six times, found in the repository rather
-than in a report. The fixture now states a per-period cap, which is what it was
-computing all along: `ledger_hash` is unchanged, so every published number was
-identical and only the expression became honest. `docs/17` §10 was corrected
-before this landed and now names the diagnostic.
-
-**4. One path, one value.** — **shipped**, with the semantics decided in
-review: an event's write OVERWRITES the field's value at that period, in the
-field store itself, and the recurrence resumes from it — a partial liquidation
-reduces the balance and the next period amortizes from the reduced balance,
-standard finance. Fields and events are now one interleaved walk per period
-(`crates/cfdl-engine/src/state.rs`): the recurrence computes the candidate,
-guards read the frozen pre-state plus the candidates, writes settle the
-column, and `prev` at t+1 reads what settled. A write to a rule-bearing field
-never enters the entity-state record, so there is no second copy to go stale.
-`fixtures/valid/event_reseeds_recurrence` pins the semantics —
-`1000, 900, 550, 450, 350, 250` published, read, and resumed identically.
-Originally: the two stores diverged permanently after a write, and a benchmark
-asserting the field would have blessed a number no stream ever saw.
-
-**5. A distribution's pot.** `docs/17` §4 says the pot a waterfall allocates is
-this period's cash. 29 of 31 waterfalls in the repository build their own out of
-assumptions, literals, pack-internal stream ids or hand-maintained fields
-(`docs/25`). Until cash-available is bindable there is nothing to assert
-against, but the weaker check is available now: flag a `from` expression that
-names a stream a pack lowered, since a model reaching into another layer's
-internals is the shape that breaks when the pack changes.
-
-The first four are cheap and would each have turned a week of hand-probing into
-a failing gate. The fifth waits on the capability.
-
-Provenance: every item is a defect found by hand in August 2026 while writing
-`benchmarks/credit/americredit_2017_1` and auditing what it exposed.
-
----
-
-### 7.42 The discount rate is a run-config item and the specification implies otherwise
-
-Discounting belongs to the run, not the deal: the same cash flows are valued at
-different rates by different readers, and a scenario should be able to move the
-rate without editing the model. The engine implements that — `config.discount_rate`
-drives `npv_at_grain` and `npv_with_offsets`, and is republished as
-`run.annual_discount_rate`.
-
-The specification says something else. `docs/01` §12.1 introduces deterministic
-assumptions with exactly this example:
-
-```cfdl
-assume discount_rate = 0.10
-```
-
-which does nothing. Measured, with `assume discount_rate = 0.25` in the model:
-
-| run config | `model.npv` |
-|---|---:|
-| 0.03 | 2,828.61 |
-| 0.10 | 2,486.85 |
-
-The model's figure is ignored at both. A reader following the specification's
-own illustration sets the deal's discount rate, sees a plausible NPV, and is
-looking at the run's default.
-
-**Items 1 and 2 are done.** §12.1 now illustrates the construct with
-`assume base_rent = 4000`, states that a deterministic assumption is a value the
-model owns and is read as `inputs.<name>`, and says that discounting belongs to
-the run as `annual_discount_rate`, pointing at `docs/09_user_guide.md` where the
-run configuration is documented. The specification no longer teaches the trap.
-
-**Item 3, a diagnostic, is open and is not obviously right.** Warning on the
-NAME alone would fire on a model that declares `assume discount_rate` and uses
-it for something of its own, which is legal. The safer shape is a check that
-does not guess at intent: an assumption declared and never read as
-`inputs.<name>` is dead weight whatever it is called, and this case is one
-instance of it. That is a larger check than this item, and worth deciding on its
-own merits rather than as a name heuristic.
-
-Provenance: found while writing a model without a pack, August 2026 — the
-assumption was declared, the NPV moved with the config, and nothing said so.
-
----
+Shape: extend the pack-series gate to waterfall `from` expressions, since it
+already knows which families are instanceable and already understands that a
+bare name matches only the unsuffixed instance.
 
 ### 7.43 Results do not say which entity owns a stream
 
@@ -1153,43 +952,23 @@ claim, which does not hold — the parent's streams are published individually a
 the rollup arithmetic closes — and finding the ownership gap underneath it.
 ---
 
-### 7.44 The engine is one file, and the stages it runs are invisible in it
+### 7.44 The engine's stages are modules, not crates
 
-`crates/cfdl-engine/src/lib.rs` is 5,341 lines. It holds the timeline, the
-fields, the events, both stream phases, the subtotals, the waterfalls, the
-entity rollups, the metrics and the results assembly.
+*Narrowed. The file split shipped: `crates/cfdl-engine/src/` is ten modules and
+`lib.rs` is about 2,200 lines, not the 5,341 this item was filed against.
+`run_deterministic` reads as the stage list it runs — config, timeline, state,
+streams in waves, subtotals, waterfalls, results.*
 
-Those stages are real. Each completes before the next begins, each sees only
-what finished earlier, and the boundaries between them are the language's own
-semantics: a field reads no cash, a subtotal folds cash and is never counted as
-cash, a waterfall allocates cash and never feeds it back.
-`fixtures/valid/evaluation_order` pins them.
+What remains is the second step the original entry proposed: making the stages
+CRATES rather than modules, so the compiler enforces the layering that the
+module boundaries currently only suggest. A module can reach across a boundary
+and nothing objects; a crate cannot.
 
-None of that is visible in the file layout, and the cost is not hypothetical. A
-comment at line 1350 described the boundary that keeps state out of cash, named
-the wrong mechanism, and stayed wrong for a year — because nothing about the
-file's shape says where one stage ends.
-
-Shape: crates or modules per stage, orchestrated in order. **Modules shipped,
-August 2026**: `config`, `timeline`, `ir`, `env`, `fields`, `events`,
-`streams`, `distributions`, `results`, `stochastic`, with `run_deterministic`
-in `lib.rs` as the orchestrator — 149 goldens byte-identical across the move.
-Crates remain open as the second step if the boundaries earn it.
-
-1. timeline
-2. fields and events — mutually dependent, so one module
-3. streams, in dependency-ordered waves
-4. results — the netted cash, the rollups, the metrics
-5. distributions — waterfalls, which consume a result and emit payee amounts
-
-The repository already runs sixteen crates, so the pattern is established. The
-split is mechanical: the call order in `run_deterministic` already names the
-stages, one call each.
-
-Provenance: raised August 2026, after a session in which every finding was a
-boundary between two stages that the code does not separate.
-
----
+Weigh it against the cost before doing it. The stages share the IR types and
+the expression environment, so crate boundaries mean either a shared types
+crate everything depends on, or a lot of re-export. The benefit is enforcement
+of an order that is already documented and already tested by
+`fixtures/valid/evaluation_order`, which is a real but modest gain.
 
 ### 7.45 A waterfall with no schedule distributes once, at the model start
 
@@ -1376,45 +1155,27 @@ the same event, in the same form, against two targets.
 
 ---
 
-### 7.51 Nothing validates a run configuration against its schema — SHIPPED (first half)
+### 7.51 A parameter override is never checked against the model
 
-`tools/check-run-schema.py` validates every `run.json` in `benchmarks/`,
-`fixtures/`, `training/` and `examples/` against
-`docs/schemas/run.schema.json`, and `make ci` runs it. 123 configs pass. It
-follows `check-ir-schema.py`, including its rule that a gate which can pass
-without running is not a gate: `CFDL_REQUIRE_SCHEMA_GATE=1` turns a missing
-`jsonschema` into a failure rather than a skip.
+*Narrowed. The schema half shipped — `tools/check-run-schema.py`, wired at
+`run-schema` in the makefile, validates every committed run configuration
+against `run.schema.json`.*
 
-It catches what the schema's own description says the design prevents:
+What remains is resolution, which the schema cannot do. `parameter_overrides`
+are applied by key with no check that the key names anything the model
+declares, so `inputs.captial_cost` for `inputs.capital_cost` overrides nothing
+and the run reports ok. The schema knows the SHAPE of an override key; only the
+IR knows whether it resolves.
 
-```
-deterministic: Additional properties are not allowed ('anual_discount_rate' was unexpected)
-deterministic/arithmetic: 'float' is not one of ['decimal', 'excel_compat']
-```
+This is the same family as the unresolved-name work: a name that resolves to
+nothing must not read as silence. The engine already refuses an unresolved
+`inputs.` read inside an expression; an override naming a non-existent input is
+the same mistake one layer out, and should be the same kind of error.
 
-The drift that prompted it is closed too. `valuation_grain` had been accepted by
-the engine and documented for as long as it existed while the schema never
-listed it, and `DeterministicCase` sets `additionalProperties: false` — so a run
-stating its own grain would have been rejected by the schema it conforms to. It
-is in the schema now, and a config using it passes.
-
-**The second half is open, and is a decision rather than a gate.** An override
-key that resolves to nothing is still accepted in silence. Probed with four
-that match nothing — an assumption that does not exist, a `cfg` path no
-expression reads, an `obs` path no expression reads, and a stream that does not
-exist — all four were accepted, discarded, and unreported, with the cash
-unchanged.
-
-Two of the four could be checked and two could not. `inputs.<name>` names an
-`assume` statement and `stream.<name>:amount` names a stream: both are declared,
-so both are verifiable against the IR. `cfg.<path>` and `obs.<path>` name
-nothing declared — they are channels a model opts into by writing the path in an
-expression — so the only available signal is that no expression reads it, which
-may be legitimate in a run driving several models.
-
-`Parameters` also says the opposite of the document it lives in: *"Four key
-shapes are recognized and anything else is ignored"* against the schema's
-*"Unknown properties are rejected."* Whichever is intended, they should agree.
+`run.schema.json` also contradicts itself on the point — its header says
+"Unknown properties are rejected", and the `parameter_overrides` description
+says "Four key shapes are recognized and anything else is ignored". Both cannot
+be true, and the second is what the engine does.
 
 ### 7.54 The HUD case cannot move onto `cre.permanent_debt`
 
