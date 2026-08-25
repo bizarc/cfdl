@@ -2,16 +2,16 @@
   {
     "code": "E1133_UNKNOWN_TIME_READ",
     "severity": "error",
-    "message": "Stream 'a.s' reads 'time.elapsed_years', which is not a time binding.",
+    "message": "Stream 'a.s' reads 'time.years_remaining', which is not a time binding.",
     "file": "model.cfdl",
     "span": {
-      "start_line": 12,
+      "start_line": 13,
       "start_col": 3,
-      "end_line": 12,
-      "end_col": 36
+      "end_line": 13,
+      "end_col": 38
     },
     "path": null,
-    "hint": "The bindings are `time.t`, `time.date`, `time.days_in_period`, `time.phase`, `time.ppy`. Unrejected this evaluates to zero and the run still reports ok.",
+    "hint": "The bindings are `time.t`, `time.date`, `time.days_in_period`, `time.phase`, `time.ppy`, `time.elapsed_periods`, `time.elapsed_years`. Unrejected this evaluates to zero and the run still reports ok.",
     "notes": []
   }
 ]

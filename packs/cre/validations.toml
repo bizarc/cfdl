@@ -259,7 +259,6 @@ max = 1.0
 # debt. Anything but 0 or 1 is not an election.
 [[validations]]
 contract = "cre.construction_loan"
-match = "instance"
 code = "E6061_CRE_CONSTRUCTION_INVALID_CAPITALIZE_INTEREST"
 message = "CRE construction loan 'capitalize_interest' must be 0 (pay interest as it accrues) or 1 (capitalize it into the balance)."
 check = "term_number"

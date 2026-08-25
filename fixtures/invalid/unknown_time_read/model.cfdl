@@ -4,10 +4,11 @@ time calendar monthly from 2026-01 for 12
 
 entity asset a : Asset.Real
 
-// `time.` is a CLOSED vocabulary — t, date, days_in_period, phase, ppy — so a
+// `time.` is a CLOSED vocabulary — t, date, days_in_period, phase, ppy,
+// elapsed_periods, elapsed_years — so a
 // miss is a typo. Unrejected this evaluated to zero every period and the run
 // still reported ok.
 stream a.s on entity asset.a inflow currency USD {
   schedule every month from 2026-01 to 2026-12
-  amount = 1000 * time.elapsed_years
+  amount = 1000 * time.years_remaining
 }

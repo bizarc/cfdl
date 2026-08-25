@@ -775,7 +775,19 @@ fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
 /// rather than an absence. Status keeps the open world; declared fields do not.
 /// The complete `time.*` vocabulary the engine binds. Both env builders agree
 /// on it, and docs/03 documents the same five.
-const TIME_BINDINGS: [&str; 5] = ["t", "date", "days_in_period", "phase", "ppy"];
+const TIME_BINDINGS: [&str; 7] = [
+    "t",
+    "date",
+    "days_in_period",
+    "phase",
+    "ppy",
+    // Anchored on the STREAM's own schedule start, not the model's. A pack
+    // lowering rule has had these since packs existed; a hand-written stream
+    // gained them alongside, so this closed list has to carry them or the
+    // compile-time check refuses what the engine supplies.
+    "elapsed_periods",
+    "elapsed_years",
+];
 
 fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
     let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();

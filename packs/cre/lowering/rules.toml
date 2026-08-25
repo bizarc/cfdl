@@ -566,6 +566,11 @@ schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
+[rules.defaults]
+# Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest as
+# it accrues, which is what every model written before this term did.
+capitalize_interest = "0"
+
 [[rules]]
 id = "cre_construction_loan_draw"
 contract_name = "cre.construction_loan"
@@ -583,6 +588,11 @@ field_to = "{{contract.term_end}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+# Opt-in, like `balloon_at_maturity` on permanent debt: 0 pays interest as
+# it accrues, which is what every model written before this term did.
+capitalize_interest = "0"
 
 [[rules]]
 id = "cre_construction_loan_interest"
