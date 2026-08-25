@@ -14,5 +14,13 @@
   "domain.cre.debt_service": {
     "value": 48448594.1,
     "tolerance": 1.0
+  },
+  "entity.party.baupost.total": {
+    "value": 160851859.44,
+    "tolerance": 1.0
+  },
+  "entity.party.penzance.total": {
+    "value": 35509653.04,
+    "tolerance": 1.0
   }
 }

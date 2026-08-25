@@ -53,16 +53,28 @@ the guideline loaded cap gives the assessor's own NOI, solved back to
 $3,522/unit for Aubrey and $3,273/unit for Evo.
 
 Assumed: construction cost, debt pricing, lease-up pace, and the JV tiers. The
-Penzance/Baupost terms are private, so the waterfall here is a stated
-placeholder rather than the real split.
+Penzance/Baupost terms are private, so the tier percentages here are stated
+placeholders rather than the real split.
+
+The distribution is a **once-at-end** waterfall, at the final condominium
+closing in 2024-06. A development JV does not distribute while the deal is
+live, so the preferred return and the capital are cumulative balances the
+venture carries, per `docs/17` §10. Two consequences follow from the pot rather
+than from the deal. `available` is *this period's* netted cash, which on a
+once-at-end schedule is one month rather than the deal, so the pot is
+`series_sum("cre.*", 0, time.t)` — the streams' own running sum. And there is no
+return-of-capital tier: contributions are outflows inside those streams, so the
+running sum has already recovered the capital, and what survives to the end is
+profit. The preference accrues from construction start, not from the 2011 land
+purchase — compounding the land for 12.75 years consumes the entire promote.
 
 ## What it exercises
 
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 4 curves, 7 entities, 28 streams, 1 waterfall, 5 field recurrences |
-| Language features | entity field recurrences (`init`/`next`/`prev`), `curve` lookups, `waterfall` over `available`, `part of` roll-up, `start` placement |
+| Declared | 4 curves, 8 entities, 28 streams, 1 waterfall, 8 field recurrences |
+| Language features | entity field recurrences (`init`/`next`/`prev`), `curve` lookups, a once-at-end `waterfall` drawing a cumulative pot with `series_sum`, `part of` roll-up, `start` placement |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, sale in lease-up |
 
 The facility is five recurrences on one entity — `equity_funded`, `interest`,
@@ -928,17 +940,58 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
   amount = asset.facility.repay
 }
 
-// ------------------------------------------------------------- the JV split
-// Penzance / Baupost terms are not public; these tiers are stated assumptions.
-// The pot is `available` -- the project's own streams netted with east and
-// west rolled up by `part of`, i.e. the levered cash the deal threw off.
-waterfall cre.jv_split on entity asset.project {
-  schedule every month start from 2011-09 to 2024-12
-  from available
+// ------------------------------------------------------------ the JV capital
+// A development JV does not distribute while the deal is live. Cash accrues to
+// the venture and is split once, when the last unit closes, so the preference
+// and the capital are CUMULATIVE quantities carried as balances rather than
+// re-derived at the distribution -- 17_ordered_waterfall.md section 10.
+//
+// Both partners fund pro rata and nothing is returned before the split, so the
+// two balances only grow. Their difference is the accrued preference.
+//
+// The preference accrues from CONSTRUCTION START, not from the 2011 land
+// purchase: the venture is formed to build, and the land it is capitalized
+// with earns nothing for the seven years before there is anything to build.
+// Compounding that $67M from 2011 instead consumes the entire promote, which
+// is how the assumption announced itself.
+entity asset jv : Asset.Financial {
+  // The facility's equity funding one period back, so a month's contribution
+  // can be differenced without reaching two periods behind.
+  funded_prev init 0.0
+              next prev.asset.facility.equity_funded
 
-  pay preferred to party.baupost  = available * (1.0 - inputs.sponsor_share) * inputs.pref_rate
-  pay promote   to party.penzance = remaining * 0.20
-  pay residual  to party.baupost  = remaining
+  capital init 0.0
+          next prev.asset.jv.capital
+             + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+
+  unreturned init 0.0
+             next prev.asset.jv.unreturned * (1.0 + if(time.t >= 79, inputs.pref_rate / 12.0, 0.0))
+                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+}
+
+// -------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+//
+// `available` is THIS period's netted cash, so on a once-at-end waterfall it
+// would draw only the final month. The pot is the streams' own running sum
+// since inception instead -- cumulative net cash, after every cost, every draw
+// and the facility payoff. The waterfall is named outside the `cre.` prefix so
+// the selector cannot match its own steps (E1342).
+//
+// There is no return-of-capital tier, and that is a property of the pot rather
+// than of the deal. Contributions are outflows inside the streams, so a running
+// sum of them has ALREADY recovered the capital: what survives to the end is
+// profit. Paying capital back out of profit would recover it a second time and
+// leave nothing for the promote -- which is exactly what it did.
+waterfall jv.distribution on entity asset.project {
+  schedule on 2024-06 end
+  from series_sum("cre.*", 0, time.t)
+
+  pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
+  pay promote       to party.penzance = remaining * 0.20
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
+  pay residual_sp   to party.penzance = remaining
 }
 ```
 
@@ -974,3 +1027,5 @@ Summary metrics for the base run:
 | `model.irr` | 0.110161 | ±0.00001 |
 | `model.moic` | 2.04664 | ±0.0001 |
 | `domain.cre.debt_service` | 48,448,594.1 | ±1 |
+| `entity.party.baupost.total` | 160,851,859.44 | ±1 |
+| `entity.party.penzance.total` | 35,509,653.04 | ±1 |

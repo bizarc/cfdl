@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>The Highlands Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --ground:#FAF9F7; --surface:#F2F0EC; --ink:#191C1F; --muted:#5C6570;
+    --rule:#E2DFDA; --accent:#1F4E5F; --accent-soft:#E6EDEF; --good:#3F6B4F;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+    --mono:"IBM Plex Mono","SF Mono",Menlo,Consolas,monospace;
+    --measure:68ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+      --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30; --good:#8FBF9F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+    --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30; --good:#8FBF9F;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16.5px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--measure); margin:0 auto; padding:0 24px 96px}
+
+  /* ---------- masthead ---------- */
+  header.mast{padding:72px 0 0}
+  .eyebrow{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  h1.title{
+    font-family:var(--serif); font-weight:500; font-size:clamp(2rem,5vw,2.7rem);
+    line-height:1.12; letter-spacing:-.02em; text-wrap:balance;
+    margin:.7rem 0 .6rem;
+  }
+  .standfirst{
+    font-family:var(--serif); font-size:1.14rem; line-height:1.55;
+    color:var(--muted); margin:0 0 2rem; text-wrap:pretty;
+  }
+  .byline{
+    display:flex; flex-wrap:wrap; gap:.4rem 1.4rem; padding:1rem 0;
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+    font-family:var(--mono); font-size:.74rem; color:var(--muted);
+  }
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 0}
+  section > .eyebrow{display:block; margin-bottom:.55rem}
+  h2{
+    font-family:var(--serif); font-weight:500; font-size:1.42rem;
+    letter-spacing:-.01em; line-height:1.25; margin:0 0 .9rem; text-wrap:balance;
+  }
+  h3{
+    font-family:var(--sans); font-weight:600; font-size:.95rem;
+    margin:1.8rem 0 .5rem; letter-spacing:.005em;
+  }
+  p{margin:0 0 1rem; text-wrap:pretty}
+  a{color:var(--accent); text-underline-offset:2px}
+  strong{font-weight:600}
+  hr{border:0; border-top:1px solid var(--rule); margin:44px 0 0}
+
+  ul{margin:0 0 1rem; padding-left:1.1rem}
+  li{margin:0 0 .45rem}
+  li::marker{color:var(--muted)}
+
+  /* ---------- data ---------- */
+  .scroll{overflow-x:auto; margin:0 0 1.1rem}
+  table{border-collapse:collapse; width:100%; font-size:.88rem}
+  caption{
+    caption-side:top; text-align:left; font-family:var(--mono);
+    font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); padding-bottom:.55rem;
+  }
+  th,td{
+    text-align:left; padding:.44rem .8rem .44rem 0;
+    border-bottom:1px solid var(--rule); vertical-align:baseline;
+  }
+  th{font-weight:600; font-size:.76rem; letter-spacing:.03em; color:var(--muted)}
+  td.num,th.num{
+    text-align:right; font-family:var(--mono);
+    font-variant-numeric:tabular-nums; padding-right:0;
+  }
+  tr.total td{border-top:1px solid var(--ink); border-bottom:none; font-weight:600}
+  .exact{color:var(--good); font-family:var(--mono); font-size:.82rem}
+
+  pre{
+    font-family:var(--mono); font-size:.8rem; line-height:1.6; margin:0 0 1.1rem;
+    padding:.95rem 1.05rem; background:var(--surface);
+    border:1px solid var(--rule); border-left:2px solid var(--accent);
+    border-radius:2px; overflow-x:auto;
+  }
+  code{font-family:var(--mono); font-size:.86em; background:var(--surface); padding:.1em .3em; border-radius:2px}
+  pre code{background:none; padding:0; font-size:1em}
+  .cmt{color:var(--muted)}
+
+  .note{
+    border-left:2px solid var(--rule); padding:.15rem 0 .15rem 1rem;
+    margin:0 0 1.1rem; color:var(--muted); font-size:.92rem;
+  }
+  .srclist{font-size:.88rem}
+  .srclist dt{font-weight:600; margin-top:.9rem}
+  .srclist dd{margin:.15rem 0 0; color:var(--muted)}
+  .srclist dd.ref{font-family:var(--mono); font-size:.78rem}
+
+  details{
+    border:1px solid var(--rule); border-radius:2px; background:var(--surface);
+    margin:0 0 1.1rem;
+  }
+  summary{
+    cursor:pointer; padding:.7rem .9rem; font-family:var(--mono); font-size:.78rem;
+    letter-spacing:.03em; color:var(--accent); list-style:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+  "; font-weight:500}
+  details[open] summary::before{content:"\2212  "}
+  details[open] summary{border-bottom:1px solid var(--rule)}
+  summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+  details pre{
+    margin:0; border:0; border-left:0; border-radius:0; background:none;
+    max-height:32rem; overflow:auto;
+  }
+  details .scroll{margin:0}
+
+  footer{
+    margin-top:52px; padding-top:20px; border-top:1px solid var(--rule);
+    font-size:.82rem; color:var(--muted);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    #doc{animation:fade .4s ease both}
+    @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+  }
+</style>
+</head>
+<body>
+
+
+<div id="doc">
+<div class="wrap">
+
+  <header class="mast">
+    <span class="eyebrow">CFDL Benchmark Case &middot; Commercial Real Estate</span>
+    <h1 class="title">The Highlands, rebuilt from the public record</h1>
+    <p class="standfirst">
+      A ground-up mixed-use development in Rosslyn, Virginia, modeled in CFDL and
+      reconciled to the cent against an independent implementation. Every figure below
+      comes from Arlington County records or is marked as an assumption.
+    </p>
+    <div class="byline">
+      <span>Arlington County Site Plan #445</span>
+      <span>160 monthly periods</span>
+      <span>2011&ndash;2024</span>
+    </div>
+  </header>
+
+  <section>
+    <span class="eyebrow">The deal</span>
+    <h2>Two towers, one basis</h2>
+    <p>
+      Penzance acquired 1555 Wilson Boulevard on 30 September 2011. The site was
+      redeveloped under a public&ndash;private agreement with Arlington County. Seven of
+      the twelve parcels are ground-leased from the County rather than owned.
+    </p>
+    <p>
+      The project delivered two buildings over one shared podium. The East Building
+      carries both for-sale and rental product. This is what makes the deal worth
+      modeling: the costs of the condominium and the apartments are not separable.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Program as built</caption>
+        <thead>
+          <tr><th>Building</th><th>Name</th><th>Tenure</th><th class="num">Units</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>East / North tower</td><td>Pierce</td><td>For sale</td><td class="num">104</td></tr>
+          <tr><td>East / South tower</td><td>Evo</td><td>Rental</td><td class="num">455</td></tr>
+          <tr><td>West</td><td>Aubrey</td><td>Rental</td><td class="num">331</td></tr>
+          <tr class="total"><td colspan="3">Total</td><td class="num">890</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The site plan also required a new Fire Station 10, a rebuilt Rosslyn Highlands Park,
+      and a new public street. The developer designs, builds and maintains North Pierce
+      Street for the life of the site plan. These are costs with no revenue against them.
+      The model carries them as such.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The record</span>
+    <h2>What is fact, and what is assumed</h2>
+    <p>
+      A model is only as honest as its labels. The case separates the two, line by line.
+    </p>
+
+    <h3>Recorded fact</h3>
+    <ul>
+      <li>Unit counts and mix by tower, gross floor area, parking and heights, from the
+        1555 Wilson Boulevard site plan record and its 2018 and 2020 amendments.</li>
+      <li>Land basis of <strong>$67,000,000</strong>, recorded 30 September 2011.</li>
+      <li>Both tower sale prices, 17 May 2022: <strong>$266,455,000</strong> for Aubrey
+        and <strong>$334,600,000</strong> for Evo.</li>
+      <li>The condominium sellout, unit by unit: <strong>102 of 104 units</strong> for
+        <strong>$190,186,220</strong> between August 2021 and June 2024.</li>
+      <li>Operating parameters from Arlington's published Commercial Guidebook: a 5.15%
+        loaded capitalization rate for high-rise Metro-adjacent property, 8% vacancy,
+        and $7,511 of operating expense per unit.</li>
+    </ul>
+
+    <h3>Derived, not assumed</h3>
+    <p>
+      Rents are not guessed. Each tower's assessed value for 1 January 2022, multiplied
+      by the County's own guideline rate, gives the assessor's implied net operating
+      income. The model solves back from that figure to a rent per unit.
+    </p>
+
+    <h3>Stated assumption</h3>
+    <ul>
+      <li>Construction cost, debt pricing, and the lease-up pace.</li>
+      <li>The joint-venture split. Those terms are private.</li>
+    </ul>
+
+    <div class="note">
+      The two towers were sold on the same day, as one transaction. The deed recording
+      dates differ &mdash; 18 May for the leasehold, 12 July for the fee &mdash; which is why
+      the press reported two separate deals two months apart.
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The model</span>
+    <h2>What the language does here</h2>
+    <p>
+      The model is 812 lines of CFDL. It runs on a monthly grid because interest accrues
+      monthly. Four features carry most of the work.
+    </p>
+
+    <h3>A balance that remembers</h3>
+    <p>
+      A construction loan balance depends on its own previous value. In CFDL that is a
+      field on the entity it describes. <code>prev</code> is the value at the last close.
+      A rule can read only completed values, so a circular reference cannot be written.
+    </p>
+<pre><code>entity asset facility : Asset.Financial {
+  <span class="cmt">// equity funds to its commitment first, then the loan draws</span>
+  equity_funded init min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                next min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+
+  balance init 0.0
+          next max(0.0, prev + draw + interest - repay)
+}</code></pre>
+
+    <h3>A recorded schedule, not a curve fitted to one</h3>
+    <p>
+      Every condominium closing is a declared point. The model reads the real absorption,
+      including the long tail through 2024 that a smooth assumption would hide.
+    </p>
+<pre><code>curve pierce_sellout {
+  2021-08: 2056400.00
+  2021-09: 8109000.00
+  2021-10: 6243000.00
+  <span class="cmt">... 35 months, every one declared</span>
+}</code></pre>
+
+    <h3>An ordered priority of payments</h3>
+    <p>
+      A distribution waterfall is a first-class construct. Steps pay in declaration order.
+      A step takes what is left if the pot is short, and one step must claim the residual.
+    </p>
+<pre><code>waterfall jv.distribution on entity asset.project {
+  schedule on 2024-06 end
+  from series_sum("cre.*", 0, time.t)
+
+  pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
+  pay promote       to party.penzance = remaining * 0.20
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
+  pay residual_sp   to party.penzance = remaining
+}</code></pre>
+      <p class="note">
+        The parties are the real ones: Penzance as sponsor, The Baupost Group as equity
+        partner, Mack Real Estate Credit Strategies as construction lender. The tier
+        percentages are not &mdash; the partnership's economics appear in no public
+        source, so an 8% preferred return, a 90/10 split and a 20% promote stand in for
+        them. What the example shows is the structure: payments in declared order,
+        each step taking what is left if the pot is short, and a named claimant on the
+        residual.
+      </p>
+
+    <h3>Where in the period the cash falls</h3>
+    <p>
+      Rent received in January is not the same as rent received in September. CFDL
+      declares where in a period the cash falls, and discounts on that basis. The two
+      conventions differ by 13 basis points of return on this deal while leaving every
+      total identical &mdash; a distinction most models never surface, because a total
+      cannot show it.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The result</span>
+    <h2>How closely it reconciles</h2>
+    <p>
+      The CFDL model was checked against an independent implementation of the same deal,
+      built in a spreadsheet from the same frozen inputs.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>CFDL against the reference implementation</caption>
+        <thead>
+          <tr><th>Measure</th><th class="num">Reference</th><th class="num">CFDL</th><th class="num">Difference</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Peak debt</td><td class="num">370,411,950.94</td><td class="num">370,411,950.94</td><td class="num exact">0.00</td></tr>
+          <tr><td>Peak equity</td><td class="num">186,245,280.59</td><td class="num">186,245,280.59</td><td class="num exact">0.00</td></tr>
+          <tr><td>Capitalized interest</td><td class="num">48,448,594.10</td><td class="num">48,448,594.10</td><td class="num exact">0.00</td></tr>
+          <tr><td>Levered profit</td><td class="num">196,361,512.48</td><td class="num">196,361,512.48</td><td class="num exact">0.00</td></tr>
+          <tr><td>Equity multiple</td><td class="num">2.046640</td><td class="num">2.046640</td><td class="num exact">0.00</td></tr>
+          <tr><td>Levered IRR</td><td class="num">11.016126%</td><td class="num">11.016100%</td><td class="num">2.6e&minus;7</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Five of the six agree exactly. The internal rate of return differs in the seventh
+      decimal place, because the engine rounds the published figure to six.
+    </p>
+    <p>
+      CFDL evaluates in exact 128-bit decimal, not floating point. <code>0.1 + 0.2</code>
+      equals <code>0.3</code>. On a deal of this size the arithmetic contributes no
+      measurable error.
+    </p>
+
+    <div class="note">
+      Two independent implementations of one specification agreeing is evidence that the
+      model is built correctly. It is not evidence that the assumptions are right.
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The split</span>
+    <h2>What each partner receives</h2>
+    <p>
+      A development joint venture does not distribute while the deal is live. Cash accrues
+      to the venture and is split once, when the last condominium closes in June 2024. The
+      preferred return and the contributed capital are therefore cumulative balances the
+      model carries forward month by month, not quantities recomputed at the distribution.
+    </p>
+    <p>
+      Two details follow from the pot rather than from the deal. CFDL supplies
+      <code>available</code> as the cash an entity produced <em>this period</em>, which on a
+      once-at-end distribution would be a single month rather than the whole deal &mdash; so
+      the pot is the streams&rsquo; own running sum since inception. And there is no
+      return-of-capital tier: contributions are outflows inside those same streams, so the
+      running sum has already recovered the capital, and what survives to the end is profit.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>The distribution, June 2024</caption>
+        <thead>
+          <tr><th>Tier</th><th>Paid to</th><th class="num">Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>preferred_inv</code></td><td>The Baupost Group</td><td class="num">97,357,852.26</td></tr>
+          <tr><td><code>preferred_sp</code></td><td>Penzance</td><td class="num">10,817,539.14</td></tr>
+          <tr><td><code>promote</code></td><td>Penzance</td><td class="num">17,637,224.21</td></tr>
+          <tr><td><code>residual_inv</code></td><td>The Baupost Group</td><td class="num">63,494,007.17</td></tr>
+          <tr><td><code>residual_sp</code></td><td>Penzance</td><td class="num">7,054,889.69</td></tr>
+          <tr class="total"><td><strong>Total distributed</strong></td><td></td><td class="num"><strong>196,361,512.48</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The total is the deal&rsquo;s lifetime net cash to the dollar. That is not an assertion
+      the case makes &mdash; it is what the pot <em>is</em>, so the distribution cannot
+      allocate more or less than the deal produced.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>By partner</caption>
+        <thead>
+          <tr><th>Partner</th><th class="num">Capital</th><th class="num">Distribution</th><th class="num">Share of profit</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>The Baupost Group</td><td class="num">90%</td><td class="num">160,851,859.44</td><td class="num">81.92%</td></tr>
+          <tr><td>Penzance</td><td class="num">10%</td><td class="num">35,509,653.04</td><td class="num">18.08%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The sponsor earns 18.08% of the profit on a 10% share of the capital. That spread is
+      the promote, and it is the whole economic point of the structure: 10,817,539 as its
+      pro-rata share of the preferred return, 17,637,224 of promote on the profit above that
+      return, and 7,054,889 as its share of what is left.
+    </p>
+
+    <div class="note">
+      The parties are the real ones: Penzance as sponsor, The Baupost Group as equity partner,
+      Mack Real Estate Credit Strategies as construction lender. The tier percentages are not
+      &mdash; an 8% preferred return accruing from construction start, a 90/10 capital split
+      and a 20% promote stand in for economics that appear in no public source. Replacing
+      them is a four-line change, and every figure above recomputes from it.
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Sensitivity</span>
+    <h2>Which numbers are structural, and which are conventions</h2>
+    <p>
+      One model, nine discount rates, one run. The engine values the same cash flows at
+      each rate and reports them together.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>The same deal at nine discount rates</caption>
+        <thead>
+          <tr>
+            <th>Discount rate</th>
+            <th class="num">Net present value</th>
+            <th class="num">Return</th>
+            <th class="num">Multiple</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>4.46% &mdash; implied by the sale</td><td class="num">84,206,257</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>5.15% &mdash; county guideline</td><td class="num">71,816,575</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>6.00%</td><td class="num">57,945,142</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>8.00%</td><td class="num">30,519,327</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>10.00%</td><td class="num">9,058,409</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>11.02% &mdash; at the return</td><td class="num">219</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>12.00%</td><td class="num">&minus;7,770,385</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>15.00%</td><td class="num">&minus;26,500,927</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>20.00%</td><td class="num">&minus;46,033,231</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Net present value moves by <strong>$130 million</strong> across the range. Return
+      and multiple do not move at all. They are solved from the cash flows; net present
+      value is struck against a rate somebody chose.
+    </p>
+    <p>
+      No source document for this deal states a discount rate. That is why the case
+      reports a return and a multiple, and does not report a net present value. The row
+      at 11.02% is the arithmetic check: discount at the reported return and the value
+      falls to <strong>219</strong> on a deal of $196 million.
+    </p>
+    <p>
+      Each row is one line of run configuration. The model itself is untouched.
+    </p>
+<pre><code>"scenarios": {
+  "guideline_cap": { "annual_discount_rate": 0.0515 },
+  "ten":           { "annual_discount_rate": 0.10 },
+  "twenty":        { "annual_discount_rate": 0.20 }
+}</code></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Sources</span>
+    <h2>Where each figure comes from</h2>
+    <dl class="srclist">
+      <dt>Program, obligations and entitlement history</dt>
+      <dd>Arlington County Board, Site Plan #445 &mdash; approval of 25 February 2017 and
+        the amendments of 22 September 2018 and 14 November 2020.</dd>
+      <dd class="ref">Retrieved from the County's public meeting archive.</dd>
+
+      <dt>Land basis, sale prices and the condominium sellout</dt>
+      <dd>Arlington County Department of Real Estate Assessments &mdash; parcel records,
+        sales history and assessment history, queried per parcel.</dd>
+      <dd class="ref">propertysearch.arlingtonva.us</dd>
+
+      <dt>Capitalization rates, rents, vacancy and operating expense</dt>
+      <dd>Arlington County Commercial Market Analysis &amp; Guidelines, 2022 and 2023
+        editions, published by the Department of Real Estate Assessments.</dd>
+      <dd class="ref">Including the recorded sale prices for both towers.</dd>
+
+      <dt>Construction facility</dt>
+      <dd>Reported in the trade press as a $380 million facility from Mack Real Estate
+        Credit Strategies. Not verified against the recorded instrument.</dd>
+    </dl>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Limits</span>
+    <h2>What this does not claim</h2>
+    <p>
+      This is a reconstruction from public records. It is not a statement of what the
+      partnership earned.
+    </p>
+    <ul>
+      <li>Construction cost and debt pricing are assumptions. They are calibrated so that
+        peak debt sits at 97.5% of the reported facility, but they are not the real
+        numbers.</li>
+      <li>The joint-venture terms are named inputs, not the partnership's terms. Those are
+        private, and nothing here should be read as a view on them.</li>
+      <li>No net present value is reported. The model carries financing, so its NPV would
+        be a levered one, and no source document for this deal states a discount rate.</li>
+      <li>Both towers were sold before they stabilized. The model shows them at 83% and
+        60% occupancy on the sale date.</li>
+    </ul>
+    <p>
+      Where the model and the real deal differ, the difference is in the assumptions, and
+      the assumptions are all named. That is the point of building it this way.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The source</span>
+    <h2>The model in full</h2>
+    <p>
+      This is the whole model: entities, curves, streams, the facility and the
+      distribution. It runs as written. Three curves declare a value for every period of
+      the 160-month grid; those runs of figures are abridged here for length and are
+      complete in the model itself.
+    </p>
+    <details>
+      <summary>Show the model &mdash; 853 lines of CFDL</summary>
+      <div class="scroll"><pre><code>version 0.1
+model &quot;penzance-highlands&quot; currency USD
+use pack &quot;cre&quot; version &quot;0.1.0&quot;
+time calendar monthly from 2011-09 for 160
+
+// ===========================================================================
+// THE HIGHLANDS — Rosslyn, Virginia.  Penzance / The Baupost Group.
+// Arlington County Site Plan SP #445.  Land 2011-09-30, delivered 2021,
+// both rental towers sold to Cortland 2022-05-17, condo sellout to 2024-06.
+//
+// Two towers over one shared podium and one construction facility:
+//   east  = Pierce (104 for-sale condos) + Evo (455 rental)
+//   west  = Aubrey (331 rental)
+// The for-sale and rental product share a basis, which is what makes this
+// deal worth modeling rather than a generic development.
+//
+// Program, obligations, land basis, both sale prices and the whole condo
+// sellout are recorded fact — Arlington&#x27;s site-plan record, deed register,
+// assessment roll and Commercial Guidebook. Cost, debt pricing and the JV
+// split are stated assumptions. Provenance is in CASE.md.
+// ===========================================================================
+
+phase predevelopment from 2011-09 to 2018-03
+phase construction   from 2018-04 to 2021-06
+phase lease_up       from 2021-07 to 2022-05
+phase condo_tail     from 2022-06 to 2024-12
+
+assume loan_rate        = 0.065
+assume loan_commitment  = 380000000
+assume equity_commitment = 186245280.585
+assume condo_selling_cost = 0.05
+assume cost_of_sale     = 0.01
+assume pref_rate        = 0.08
+assume sponsor_share    = 0.10
+
+// Development cost per period and its running total. Declared as curves so
+// the facility&#x27;s recurrence can read them: `next` sees curves, but never a
+// stream (docs/03 §3.1), and cost here is a pure function of time.
+//
+// EVERY period is declared, including the zeros. A step curve is
+// flat-forward (docs/03 §4): omit the quiet months and the last construction
+// draw is held forever, which compounds into a balance that never stops.
+curve dev_cost {
+  2011-09: 67000000.0000
+  2011-10: 0.0000
+  2011-11: 0.0000
+  2011-12: 0.0000
+  // ... 154 further points, one per period, omitted for length
+  2024-11: 0.0000
+  2024-12: 0.0000
+}
+
+curve dev_cost_cum {
+  2011-09: 67000000.0000
+  2011-10: 67000000.0000
+  2011-11: 67000000.0000
+  2011-12: 67000000.0000
+  // ... 154 further points, one per period, omitted for length
+  2024-11: 532129373.1000
+  2024-12: 532129373.1000
+}
+
+// Pierce condo closings — every one of 102 recorded sales, by month.
+// 34 months, not the smooth absorption an assumption would give.
+curve pierce_sellout {
+  2021-08: 2056400.00
+  2021-09: 8109000.00
+  2021-10: 6243000.00
+  2021-11: 16820000.00
+  // ... 29 further points, one per period, omitted for length
+  2024-05: 3950000.00
+  2024-06: 3975000.00
+}
+
+
+// ---------------------------------------------------------------- structure
+entity asset project : CRE.Asset.Portfolio
+entity asset east : CRE.Asset.RealProperty { asset_class = &quot;mixed_use&quot;  part of asset.project }
+entity asset west : CRE.Asset.RealProperty { asset_class = &quot;multifamily&quot;  part of asset.project }
+
+entity party penzance : CRE.Party.Sponsor  { name = &quot;Penzance&quot; }
+entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot; }
+entity party mack     : CRE.Party.Lender   { name = &quot;Mack Real Estate Credit Strategies&quot; }
+
+// ------------------------------------------------------------------ capital
+stream cre.land on entity asset.project outflow currency USD {
+  schedule on 2011-09
+  category investing.capital.capex
+  amount = 67000000.00
+}
+
+
+stream cre.hard_buildings on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.hard_garage on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.fire_station on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.park_and_street on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.soft_costs on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.contingency on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.developer_fee on entity asset.project outflow currency USD {
+  schedule every month start from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+
+// SP #445 conditions: utility undergrounding and TDM at permit; public art,
+// green building and affordable housing at certificate of occupancy.
+stream cre.obligations_permit on entity asset.project outflow currency USD {
+  schedule on 2018-04
+  category investing.capital.construction
+  amount = 157303.00
+}
+
+stream cre.obligations_co on entity asset.project outflow currency USD {
+  schedule on 2021-09
+  category investing.capital.construction
+  amount = 12252500.00
+}
+
+
+// ---- aubrey: delivered 2021-07, sold 2022-05 — still in lease-up
+stream cre.aubrey_rent on entity asset.west inflow currency USD {
+  schedule every month start from 2021-07 to 2022-05
+  category operating.revenue.base_rent
+  amount = min(331.0, max(0.0, (time.t - 117.0) * 25.0)) * 3369.8496
+}
+
+stream cre.aubrey_retail on entity asset.west inflow currency USD {
+  schedule every month start from 2021-07 to 2022-05
+  category operating.revenue.other
+  amount = 35236.8
+}
+
+stream cre.aubrey_parking on entity asset.west inflow currency USD {
+  schedule every month start from 2021-07 to 2022-05
+  category operating.revenue.other
+  amount = 39720
+}
+
+stream cre.aubrey_opex on entity asset.west outflow currency USD {
+  schedule every month start from 2021-07 to 2022-05
+  category operating.expense.opex
+  amount = 207178.4167
+}
+
+stream cre.aubrey_tax on entity asset.west outflow currency USD {
+  schedule every month start from 2021-07 to 2022-05
+  category operating.expense.opex
+  amount = 215699.0142
+}
+
+// ---- evo: delivered 2021-09, sold 2022-05 — still in lease-up
+stream cre.evo_rent on entity asset.east inflow currency USD {
+  schedule every month start from 2021-09 to 2022-05
+  category operating.revenue.base_rent
+  amount = min(455.0, max(0.0, (time.t - 119.0) * 25.0)) * 3131.6064
+}
+
+stream cre.evo_retail on entity asset.east inflow currency USD {
+  schedule every month start from 2021-09 to 2022-05
+  category operating.revenue.other
+  amount = 50007.6
+}
+
+stream cre.evo_parking on entity asset.east inflow currency USD {
+  schedule every month start from 2021-09 to 2022-05
+  category operating.revenue.other
+  amount = 54600
+}
+
+stream cre.evo_opex on entity asset.east outflow currency USD {
+  schedule every month start from 2021-09 to 2022-05
+  category operating.expense.opex
+  amount = 284792.0833
+}
+
+stream cre.evo_tax on entity asset.east outflow currency USD {
+  schedule every month start from 2021-09 to 2022-05
+  category operating.expense.opex
+  amount = 273135.4075
+}
+
+
+// ---------------------------------------------------------------------- exit
+// Both towers sold 2022-05-17 as ONE transaction; only the deed recording
+// dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
+stream cre.aubrey_sale on entity asset.west inflow currency USD {
+  schedule on 2022-05
+  category investing.reversion
+  amount = 266455000.00
+}
+
+stream cre.evo_sale on entity asset.east inflow currency USD {
+  schedule on 2022-05
+  category investing.reversion
+  amount = 334642240.00
+}
+
+stream cre.sale_costs on entity asset.project outflow currency USD {
+  schedule on 2022-05
+  category investing.selling_costs
+  amount = 601097240.00 * inputs.cost_of_sale
+}
+
+stream cre.pierce_closings on entity asset.east inflow currency USD {
+  schedule every month start from 2021-08 to 2024-06
+  category investing.reversion
+  amount = curve_value(&quot;pierce_sellout&quot;, time.date) * (1.0 - inputs.condo_selling_cost)
+}
+
+// Cash available to repay the facility: condo closings net of selling costs,
+// plus the two tower sales net of cost of sale. Every period is declared, so
+// the step curve cannot hold a value forward into a quiet month.
+curve loan_proceeds {
+  2011-09: 0.0000
+  2011-10: 0.0000
+  2011-11: 0.0000
+  2011-12: 0.0000
+  // ... 154 further points, one per period, omitted for length
+  2024-11: 0.0000
+  2024-12: 0.0000
+}
+
+
+// ------------------------------------------------------------- the facility
+// The $380M construction facility (Mack Real Estate Credit Strategies).
+//
+// Equity funds to its commitment first, the loan draws the residual, interest
+// capitalizes into the balance, and sale and condo proceeds repay it. Four
+// recurrences, each a fact about the facility, each reading only values that
+// are already finished -- `prev` and the cost curves -- which is what keeps
+// the whole thing acyclic by construction.
+entity asset facility : Asset.Financial {
+  equity_funded init min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+                next min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+
+  interest init 0.0
+           next prev.asset.facility.balance * inputs.loan_rate / 12.0
+
+  draw init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
+       next min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+
+  repay init 0.0
+        next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value(&quot;loan_proceeds&quot;, time.date)))
+
+  balance init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
+          next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value(&quot;loan_proceeds&quot;, time.date))))
+}
+
+// Interest is capitalized, so it is never a cash line -- it is repaid inside
+// the principal repayment. That is the convention the reference workbook uses.
+stream cre.loan_draw on entity asset.project inflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category financing.debt_proceeds
+  amount = asset.facility.draw
+}
+
+// Interest capitalizes: the facility funds its own accrual, so the two legs
+// net to zero in cash while the balance grows. Stated GROSS rather than folded
+// into the balance silently, so `domain.cre.debt_service` sees real interest
+// and coverage during the build is measurable instead of absent.
+stream cre.loan_interest on entity asset.project outflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category financing.interest
+  amount = asset.facility.interest
+}
+
+stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category financing.debt_proceeds
+  amount = asset.facility.interest
+}
+
+// The payoff sits in the reversion. `financing.debt_principal` folds into
+// `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
+// debt service — it would make every coverage ratio in the disposal period
+// meaningless. The cre pack says the same of a permanent loan&#x27;s balloon.
+stream cre.loan_repayment on entity asset.project outflow currency USD {
+  schedule every month start from 2011-09 to 2024-12
+  category investing.reversion
+  amount = asset.facility.repay
+}
+
+// ------------------------------------------------------------ the JV capital
+// A development JV does not distribute while the deal is live. Cash accrues to
+// the venture and is split once, when the last unit closes, so the preference
+// and the capital are CUMULATIVE quantities carried as balances rather than
+// re-derived at the distribution -- 17_ordered_waterfall.md section 10.
+//
+// Both partners fund pro rata and nothing is returned before the split, so the
+// two balances only grow. Their difference is the accrued preference.
+//
+// The preference accrues from CONSTRUCTION START, not from the 2011 land
+// purchase: the venture is formed to build, and the land it is capitalized
+// with earns nothing for the seven years before there is anything to build.
+// Compounding that $67M from 2011 instead consumes the entire promote, which
+// is how the assumption announced itself.
+entity asset jv : Asset.Financial {
+  // The facility&#x27;s equity funding one period back, so a month&#x27;s contribution
+  // can be differenced without reaching two periods behind.
+  funded_prev init 0.0
+              next prev.asset.facility.equity_funded
+
+  capital init 0.0
+          next prev.asset.jv.capital
+             + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+
+  unreturned init 0.0
+             next prev.asset.jv.unreturned * (1.0 + if(time.t &gt;= 79, inputs.pref_rate / 12.0, 0.0))
+                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+}
+
+// -------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+//
+// `available` is THIS period&#x27;s netted cash, so on a once-at-end waterfall it
+// would draw only the final month. The pot is the streams&#x27; own running sum
+// since inception instead -- cumulative net cash, after every cost, every draw
+// and the facility payoff. The waterfall is named outside the `cre.` prefix so
+// the selector cannot match its own steps (E1342).
+//
+// There is no return-of-capital tier, and that is a property of the pot rather
+// than of the deal. Contributions are outflows inside the streams, so a running
+// sum of them has ALREADY recovered the capital: what survives to the end is
+// profit. Paying capital back out of profit would recover it a second time and
+// leave nothing for the promote -- which is exactly what it did.
+waterfall jv.distribution on entity asset.project {
+  schedule on 2024-06 end
+  from series_sum(&quot;cre.*&quot;, 0, time.t)
+
+  pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
+  pay promote       to party.penzance = remaining * 0.20
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
+  pay residual_sp   to party.penzance = remaining
+}</code></pre></div>
+    </details>
+  </section>
+
+  <footer>
+    Prepared with CFDL, a domain language for cash-flow models. This page is shared
+    privately and is not published. Figures reflect the benchmark case as committed on
+    25 August 2026.
+  </footer>
+
+</div>
+</div>
+
+
+</body>
+</html>

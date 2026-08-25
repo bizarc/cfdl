@@ -37,16 +37,28 @@ the guideline loaded cap gives the assessor's own NOI, solved back to
 $3,522/unit for Aubrey and $3,273/unit for Evo.
 
 Assumed: construction cost, debt pricing, lease-up pace, and the JV tiers. The
-Penzance/Baupost terms are private, so the waterfall here is a stated
-placeholder rather than the real split.
+Penzance/Baupost terms are private, so the tier percentages here are stated
+placeholders rather than the real split.
+
+The distribution is a **once-at-end** waterfall, at the final condominium
+closing in 2024-06. A development JV does not distribute while the deal is
+live, so the preferred return and the capital are cumulative balances the
+venture carries, per `docs/17` §10. Two consequences follow from the pot rather
+than from the deal. `available` is *this period's* netted cash, which on a
+once-at-end schedule is one month rather than the deal, so the pot is
+`series_sum("cre.*", 0, time.t)` — the streams' own running sum. And there is no
+return-of-capital tier: contributions are outflows inside those streams, so the
+running sum has already recovered the capital, and what survives to the end is
+profit. The preference accrues from construction start, not from the 2011 land
+purchase — compounding the land for 12.75 years consumes the entire promote.
 
 ## What it exercises
 
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 4 curves, 7 entities, 28 streams, 1 waterfall, 5 field recurrences |
-| Language features | entity field recurrences (`init`/`next`/`prev`), `curve` lookups, `waterfall` over `available`, `part of` roll-up, `start` placement |
+| Declared | 4 curves, 8 entities, 28 streams, 1 waterfall, 8 field recurrences |
+| Language features | entity field recurrences (`init`/`next`/`prev`), `curve` lookups, a once-at-end `waterfall` drawing a cumulative pot with `series_sum`, `part of` roll-up, `start` placement |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, sale in lease-up |
 
 The facility is five recurrences on one entity — `equity_funded`, `interest`,
