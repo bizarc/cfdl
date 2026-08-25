@@ -192,6 +192,8 @@ register, so it cannot fall behind the language.
 | `E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE` | Pack domain validations | the fixed SHARE, in [0, 1]; catches 81 entered where 0.81 was meant, which would otherwise report a wrong expense rather than fail |
 | `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` | Pack domain validations | a ratio of occupied space, in [0, 1]; zero is a fully dark building and is legitimate |
 | `E6065_CRE_CONSTRUCTION_INVALID_CAPITALIZE_INTEREST` | Pack domain validations | a construction loan's `capitalize_interest` is neither 0 nor 1. It is an election, not a rate: 1 rolls each period's accrued interest into the balance, 0 pays it as it accrues. 0 is the default, so a model that says nothing is unaffected. |
+| `E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE` | Pack domain validations | `cre.percentage_rent_expected` states no `sales_quantile`. There is then no distribution to take an expectation over, and the natural fallback — treat the point estimate as certain — is not a smaller version of this contract, it IS `cre.percentage_rent`. The message names that contract rather than letting the two collapse silently. |
+| `E6067_CRE_PCT_RENT_INVALID_OVERAGE_PCT` | Pack domain validations | a fraction between 0 and 1. |
 | `E6064_CRE_REVENUE_LINE_MISSING_AMOUNT` | Pack domain validations | a revenue line states `amount` or `amount_year`; both default to zero, so stating neither is a line that silently earns nothing |
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | Pack domain validations |  |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | Pack domain validations |  |
@@ -235,7 +237,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*183 codes.*
+*185 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related
