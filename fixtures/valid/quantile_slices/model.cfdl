@@ -1,0 +1,48 @@
+version 0.1
+model "quantile-slices"
+time calendar monthly from 2026-01 for 3
+
+entity asset battery : Asset.Financial
+
+// A price stack written worst-first, the way a duration curve reads. The
+// compiler stores it ascending, so the order word never reaches the IR.
+quantile prices linear by exceedance ref energy.power_price {
+  1.00: 512.0
+  0.98: 340.0
+  0.50:  28.0
+  0.00:  11.0
+}
+
+// The same points, written ascending and read as steps. Declared to pin that
+// the two interpolations give DIFFERENT integrals over the same slice — the
+// shape is a declaration, not a detail.
+quantile prices_step step {
+  0.00:  11.0
+  0.50:  28.0
+  0.98: 340.0
+  1.00: 512.0
+}
+
+// A dispersion payoff: the top 2% of hours against the bottom half, at 85%
+// round-trip efficiency. This is the shape a battery earns and the reason a
+// scalar spread cannot express it.
+stream battery.arbitrage on entity asset.battery inflow currency USD {
+  category operating.revenue.energy
+  schedule every month from 2026-01 to 2026-03
+  amount = (quantile_mean("prices", 0.98, 1.0) - quantile_mean("prices", 0.0, 0.5) / 0.85) * 100.0
+}
+
+// Step over the same slice, to hold the two apart.
+stream battery.arbitrage_step on entity asset.battery inflow currency USD {
+  category operating.revenue.energy
+  schedule every month from 2026-01 to 2026-03
+  amount = quantile_mean("prices_step", 0.0, 0.5) * 100.0
+}
+
+// quantile_of inverts quantile_at: a stated THRESHOLD becomes a share, which
+// is what a lease breakpoint or a tranche attachment point needs.
+stream battery.inverse on entity asset.battery inflow currency USD {
+  category operating.revenue.energy
+  schedule every month from 2026-01 to 2026-03
+  amount = quantile_of("prices", 28.0) * 1000.0 + quantile_at("prices", 0.5)
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E5028_INVALID_QUANTILE",
+    "severity": "error",
+    "message": "Quantile 'hours' has share 8760, which is outside 0..1. A share is a fraction of the measure, and the measure itself belongs to the contract that reads it.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 15,
+      "start_col": 1,
+      "end_line": 18,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "quantile 'hours'"
+    ]
+  }
+]

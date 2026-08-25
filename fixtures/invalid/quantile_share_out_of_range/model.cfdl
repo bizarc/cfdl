@@ -1,0 +1,24 @@
+version 0.1
+model "quantile-share-out-of-range"
+time calendar monthly from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+// A SHARE IS A FRACTION, NOT A COUNT.
+//
+// 8760 is the hours in a year, and writing it here is the mistake the [0, 1]
+// range exists to catch: the measure belongs to whatever READS the quantile,
+// which is what lets one price stack serve a 20 MW battery and a 200 MW one.
+// Put the hours in the contract and the shares stay dimensionless.
+//
+// Expect E5028_INVALID_QUANTILE.
+quantile hours {
+  0.0:    11.0
+  8760.0: 512.0
+}
+
+stream a.line on entity asset.a inflow currency USD {
+  category operating.revenue.other
+  schedule every month from 2026-01 to 2026-02
+  amount = quantile_at("hours", 0.5)
+}
