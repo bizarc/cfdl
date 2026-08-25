@@ -181,7 +181,13 @@ item says which section it belongs with.
 
 ### 7.1 Storage revenue is a reduced form with an unquantified error
 
-*Belongs with the energy pack (section 4).*
+*Rewritten. The entry proposed a price-duration curve input and said it "needs
+no new engine capability". That was wrong on both counts: a duration curve is
+not a date-indexed curve, and the defect is not confined to the energy pack.
+Both corrections are below, and the design they led to is `docs/27_quantiles.md`.*
+
+*Belongs with the language and engine (section 5). It was filed against the
+energy pack and is not an energy item.*
 
 `energy.storage_arbitrage` is `mwh_cycled_year * spread * (1 - degradation)^y`.
 The industry reference models a battery with a **dispatch optimiser** over an
@@ -215,18 +221,65 @@ A real comparison needs the full `Battery` module with a price-signal dispatch
 choice and a generation chain, not `Battwatts`. Worth doing, but it is a
 scoping exercise of its own rather than a benchmark.
 
+**What the error actually is.** Storage revenue is a DISPERSION FUNCTIONAL: it
+depends on the spread of the price distribution, not its level, because a
+battery discharges only into the upper tail and charges only from the lower one.
+A mean-preserving spread strictly increases it. `spread` is a hand-supplied
+stand-in for that dispersion, which is the precise reason fitting it is
+calibration — you are fitting the answer.
+
+That decomposes the unquantified error into two parts, and only one of them
+needs a dispatch model:
+
+- a **Jensen gap**, from evaluating a dispersion functional at a point
+  statistic; and
+- a **chronology error**, because a four-hour battery cannot reach eight
+  non-contiguous peak hours without recharging.
+
+**The same defect is already shipped in the CRE pack.** `cre.percentage_rent`
+lowers to `max(0, sales - breakpoint) * pct` — a call option on tenant sales
+evaluated at a point estimate of sales. Below the breakpoint it returns exactly
+zero when the true expectation is positive. `benchmarks/cre/retail_strip`
+exercises it. Two packs, one shape, so the fix is a language primitive rather
+than an energy contract.
+
+**Correction: a duration curve is not expressible today.** The previous entry
+said CFDL's `curve` declarations already cover this. They do not. A `curve` is
+indexed by DATE at every layer — the grammar's `curve_point = DATE ":" NUMBER`,
+the IR schema's required `points[].date`, and `CurveDef`'s `Vec<(Date, f64)>` —
+and is consumed by point lookup. A duration curve is indexed by cumulative
+share and is consumed by INTEGRATION, and no expression function integrates
+anything. What is expressible today is a price curve varying by year, which is
+a different object on a different axis and would not close this item.
+
+**And it breaks the circularity the paragraph above identifies.** Unlike
+`mwh_cycled_year`, a price duration curve is a summary of the hourly price
+series the dispatch model ALSO takes as input — so it is an input on both sides.
+Cycled energy then becomes an output of our rule, derived from power rating,
+duration and efficiency, and comparable to the reference's output. That is
+validation rather than calibration. It is the reason to build this, and it does
+not depend on the reduced form being replaced.
+
 The reduced form is not wrong; practitioners use exactly this shape at the
-financing stage. What is missing is a bound on its error. Two ways forward, in
-order of cost:
+financing stage. Ways forward, in order of cost:
 
-- **A price-duration curve input.** CFDL already has `curve` declarations (used
-  for floating-rate credit). Integrating a spread against a duration curve is
-  materially more faithful and needs no new engine capability.
+- **A `quantile` declaration and three functions.** Designed in
+  `docs/27_quantiles.md`: a value indexed by cumulative share, with
+  `quantile_at`, `quantile_mean` and `quantile_of`. Language surface — spec,
+  grammar, IR schema, two IR structs and a `CurveDef` sibling — so roughly a
+  week, not free. It closes the Jensen gap in both packs. Cheapest first proof
+  is `cre.percentage_rent` against `benchmarks/cre/retail_strip`, which needs no
+  new reference model.
+- **`energy.storage_dispatch`** (7.5), the contract that consumes it.
 - **State of charge**, which needs per-period persistent state (5.2) and would
-  let cycling be modelled rather than assumed.
+  let cycling be modeled rather than assumed.
 
-True hourly dispatch optimisation is out of scope and should stay there — that
-is an optimiser, not a declarative cash-flow model.
+Note what none of these close. The chronology error still needs the dispatch
+comparison, so this item stays open after the primitive lands and energy stays
+at 9 of 10 rules in 7.3 until that measurement exists.
+
+True hourly dispatch optimization is out of scope and should stay there — that
+is an optimizer, not a declarative cash-flow model.
 
 ### 7.3 The external cases route around the packs they should be validating
 
@@ -337,8 +390,10 @@ own homework.
 | `opco.share_count` | Both — a share count that dilutes over time, so per-share value is expressible at all. |
 | `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | Every LBO source. All three need per-period state (5.2) and should be designed with it rather than before it. |
 
-**Elsewhere.** `energy.storage_dispatch`, a curve-integrated storage rule so
-arbitrage is priced against a duration curve rather than a scalar spread (7.1).
+**Elsewhere.** `energy.storage_dispatch`, a storage rule priced against a
+declared price distribution rather than a scalar spread (7.1). It consumes the
+`quantile` primitive designed in `docs/27_quantiles.md` and cannot be built
+before it — a `curve` is indexed by date and cannot express the integral.
 Credit's three uncovered contract types need a source, not a new contract.
 
 ### 7.9 `opco.capex_line` cannot express a derived line
