@@ -829,6 +829,21 @@ function formatMetricValue(value) {
     : String(value);
 }
 
+// Cases deliberately NOT published to the site. The case stays in the
+// repository and every gate still runs it — this withholds the PAGE, not the
+// benchmark. A key here is a decision about disclosure, not about quality.
+//
+// `cre/penzance_highlands` models a named private partnership's deal, and its
+// JV economics are assumed rather than sourced. Publishing that at a public
+// URL, under the real parties' names, is not ours to do unilaterally.
+const benchmarkUnpublished = new Set([
+  "cre/penzance_highlands",
+]);
+
+const publishedBenchmarkCount = benchCases.filter(
+  ({ pack, name }) => !benchmarkUnpublished.has(`${pack}/${name}`),
+).length;
+
 const benchmarkExampleLinks = {};
 
 for (const { pack, name } of benchCases) {
@@ -842,6 +857,9 @@ for (const { pack, name } of benchCases) {
         `Add one in sentence case, prefixed by the pack — "OpCo: leveraged buyout".`,
     );
   }
+
+  // Withheld cases get no page, no index entry and no place in the count.
+  if (benchmarkUnpublished.has(key)) continue;
 
   const model = fs.readFileSync(path.resolve(caseDir, "model.cfdl"), "utf8").trimEnd();
   const runConfig = fs.readFileSync(path.resolve(caseDir, "run.json"), "utf8").trimEnd();
@@ -1388,7 +1406,7 @@ const dataRegions = [
         ),
       ),
       "",
-      `*${benchCases.length} cases.*`,
+      `*${publishedBenchmarkCount} cases.*`,
     ],
   },
 ];
@@ -1401,7 +1419,7 @@ const dataRegions = [
 // so they are counted from the repository here and read from this file.
 const stats = {
   packs: packGuides.length,
-  benchmarkCases: benchCases.length,
+  benchmarkCases: publishedBenchmarkCount,
   // Both halves: a model that must compile and run to a fixed output, and a
   // model that must be REJECTED with a named diagnostic. The second half is
   // half the fixtures and is the part that keeps error messages from rotting.
