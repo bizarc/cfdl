@@ -215,6 +215,58 @@ def main() -> int:
                     code = f"{match.group(1)}_{match.group(2)}"
                     if code not in known:
                         invented.append(f"  {page.relative_to(REPO_ROOT)}:{n}  {code}")
+    # --- 5. every code the CODE emits is in the register ---------------------
+    #
+    # The check above runs one way only: it catches a page inventing a code.
+    # Nothing asserted the reverse, so a diagnostic could ship, fire at a
+    # modeller, and never appear in the published register — which is exactly
+    # what happened to the whole E1340-E1346 waterfall family, to E5027, and
+    # to E6065 on the day it shipped. The register is the only place a
+    # modeller can look a code up, so a code missing from it is a diagnostic
+    # that cannot be researched.
+    #
+    # Rust string literals are the source of truth: a code exists when some
+    # crate can emit it. Test-only codes are excluded by name, since they are
+    # deliberately absent from the register.
+    # A code written inside `mod tests` is a fixture, not a diagnostic anyone
+    # can hit, so it is not expected in the register. Everything a crate can
+    # actually emit is.
+    emitted: dict[str, list[tuple[str, int]]] = collections.defaultdict(list)
+    crates = REPO_ROOT / "crates"
+    if crates.exists():
+        for rs in sorted(crates.rglob("*.rs")):
+            if "/target/" in str(rs):
+                continue
+            text = rs.read_text(encoding="utf-8")
+            tests_at = text.find("\nmod tests {")
+            if tests_at == -1:
+                tests_at = text.find("\n#[cfg(test)]")
+            cutoff = text[:tests_at].count("\n") + 1 if tests_at != -1 else None
+            for n, line in enumerate(text.splitlines(), 1):
+                if cutoff is not None and n >= cutoff:
+                    break
+                for match in re.finditer(r'"([EWI]\d{4}_[A-Z0-9_]+)"', line):
+                    emitted[match.group(1)].append((str(rs.relative_to(REPO_ROOT)), n))
+    undocumented = sorted(
+        code for code in emitted
+        if code not in known
+    )
+    if undocumented:
+        print(
+            "check-pack-validations: codes are emitted but not documented.\n",
+            file=sys.stderr,
+        )
+        for code in undocumented:
+            where = emitted[code][0]
+            print(f"  {code}  emitted at {where[0]}:{where[1]}", file=sys.stderr)
+        print(
+            "\nThe register in docs/08_diagnostics.md is where a modeller looks a\n"
+            "code up. A code that fires but is not listed there cannot be\n"
+            "researched, so add an entry beside its family.",
+            file=sys.stderr,
+        )
+        return 1
+
     if invented:
         print(
             "check-pack-validations: authored pages cite codes that do not exist.\n",
