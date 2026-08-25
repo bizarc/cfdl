@@ -2,9 +2,9 @@
 import csv, datetime as dt, json, tomllib
 from pathlib import Path
 
-EVS  = Path("/Users/matthewmccrea/Documents/evs-platform/docs/benchmarks/penzance-highlands")
-OUT  = Path("/Users/matthewmccrea/Documents/cfdl/benchmarks/cre/penzance_highlands")
-T    = tomllib.load(open(EVS / "inputs" / "highlands.toml", "rb"))
+CASE = Path(__file__).resolve().parent
+OUT  = CASE
+T    = tomllib.load(open(CASE / "inputs" / "highlands.toml", "rb"))
 
 M0, N       = dt.date(2011, 9, 1), 160
 T_C0, T_C1  = 79, 117          # construction window (2018-04 .. 2021-06)
@@ -51,7 +51,7 @@ time calendar monthly from {ym(0)} for {N}
 //   east  = Pierce (104 for-sale condos) + Evo (455 rental)
 //   west  = Aubrey (331 rental)
 // The for-sale and rental product share a basis, which is what makes this
-// deal worth modelling rather than a generic development.
+// deal worth modeling rather than a generic development.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
 // sellout are recorded fact — Arlington's site-plan record, deed register,
@@ -92,7 +92,7 @@ for t in range(N):
     w(f"  {ym(t)}: {cum:.4f}")
 w("}\n")
 
-rows = list(csv.DictReader(open(EVS / "inputs" / "pierce_sellout_actual.csv")))
+rows = list(csv.DictReader(open(CASE / "inputs" / "pierce_sellout_actual.csv")))
 sched = {int(r["month_index"]) - 1: float(r["gross_proceeds"]) for r in rows}
 lo, hi = min(sched), max(sched)
 w("// Pierce condo closings — every one of 102 recorded sales, by month.\n"
@@ -107,22 +107,6 @@ w(f'''
 entity asset project : CRE.Asset.Portfolio
 entity asset east : CRE.Asset.RealProperty {{ asset_class = "mixed_use"  part of asset.project }}
 entity asset west : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of asset.project }}
-
-// The construction facility. `balance` is a fact about the facility, so the
-// facility holds it. Equity funds to its commitment first and the loan draws
-// the residual — the standard structure, expressed as two recurrences.
-entity asset facility : Asset.Financial {{
-  equity_funded init min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                next min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-
-  balance init 0.0
-          next max(0.0,
-                   prev
-                   + max(0.0, curve_value("dev_cost", time.date)
-                              - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                                 - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1)))))
-                   + prev * inputs.loan_rate / 12.0)
-}}
 
 entity party penzance : CRE.Party.Sponsor  {{ name = "Penzance" }}
 entity party baupost  : CRE.Party.Investor {{ name = "The Baupost Group" }}
@@ -139,7 +123,7 @@ stream cre.land on entity asset.project outflow currency USD {{
 for name, total in COSTS.items():
     w(f'''
 stream cre.{name} on entity asset.project outflow currency USD {{
-  schedule every month from {ym(T_C0)} to {ym(T_C1)}
+  schedule every month start from {ym(T_C0)} to {ym(T_C1)}
   category investing.capital.construction
   amount = {total:.2f} * (time.t - {T_C0 - 1}.0) * ({T_C1 + 1}.0 - time.t) / {WSUM}.0
 }}''')
@@ -167,31 +151,31 @@ for tag, p in (("aubrey", A), ("evo", E)):
     w(f'''
 // ---- {tag}: delivered {ym(p["deliv"])}, sold {ym(T_EXIT)} — still in lease-up
 stream cre.{tag}_rent on entity {ent} inflow currency USD {{
-  schedule every month from {ym(p["deliv"])} to {ym(T_EXIT)}
+  schedule every month start from {ym(p["deliv"])} to {ym(T_EXIT)}
   category operating.revenue.base_rent
   amount = {occ} * {p["rent"] * (1 + OTHER) * (1 - VAC):.10g}
 }}
 
 stream cre.{tag}_retail on entity {ent} inflow currency USD {{
-  schedule every month from {ym(p["deliv"])} to {ym(T_EXIT)}
+  schedule every month start from {ym(p["deliv"])} to {ym(T_EXIT)}
   category operating.revenue.other
   amount = {p["retail"] * RRENT * ROCC / 12:.10g}
 }}
 
 stream cre.{tag}_parking on entity {ent} inflow currency USD {{
-  schedule every month from {ym(p["deliv"])} to {ym(T_EXIT)}
+  schedule every month start from {ym(p["deliv"])} to {ym(T_EXIT)}
   category operating.revenue.other
   amount = {p["units"] * PRATIO * PRATE:.10g}
 }}
 
 stream cre.{tag}_opex on entity {ent} outflow currency USD {{
-  schedule every month from {ym(p["deliv"])} to {ym(T_EXIT)}
+  schedule every month start from {ym(p["deliv"])} to {ym(T_EXIT)}
   category operating.expense.opex
   amount = {p["units"] * OPEX / 12:.10g}
 }}
 
 stream cre.{tag}_tax on entity {ent} outflow currency USD {{
-  schedule every month from {ym(p["deliv"])} to {ym(T_EXIT)}
+  schedule every month start from {ym(p["deliv"])} to {ym(T_EXIT)}
   category operating.expense.opex
   amount = {p["assess"] * TAXR / 12:.10g}
 }}''')
@@ -221,11 +205,109 @@ stream cre.sale_costs on entity asset.project outflow currency USD {{
 }}
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {{
-  schedule every month from {ym(lo)} to {ym(hi)}
+  schedule every month start from {ym(lo)} to {ym(hi)}
   category investing.reversion
   amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
 }}
 ''')
+
+# ---- proceeds available to repay the facility (deterministic in time) ------
+AUB_P2, EVO_P2 = 266_455_000.0, 334_642_240.0
+proceeds = {t: v * 0.95 for t, v in sched.items()}
+proceeds[T_EXIT] = proceeds.get(T_EXIT, 0.0) + (AUB_P2 + EVO_P2) * (1 - 0.01)
+w("// Cash available to repay the facility: condo closings net of selling costs,")
+w("// plus the two tower sales net of cost of sale. Every period is declared, so")
+w("// the step curve cannot hold a value forward into a quiet month.")
+w("curve loan_proceeds {")
+for t in range(N):
+    w("  %s: %.4f" % (ym(t), proceeds.get(t, 0.0)))
+w("}\n")
+
+EQD = ('(min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))'
+       ' - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))')
+INT = 'prev.asset.facility.balance * inputs.loan_rate / 12.0'
+DRAW = ('min(max(0.0, curve_value("dev_cost", time.date) - %s), '
+        'max(0.0, inputs.loan_commitment - prev.asset.facility.balance - %s))' % (EQD, INT))
+REPAY = ('min(prev.asset.facility.balance + %s + %s, '
+         'max(0.0, curve_value("loan_proceeds", time.date)))' % (INT, DRAW))
+INIT_DRAW = 'max(0.0, curve_value("dev_cost", time.date) - inputs.equity_commitment)'
+
+w("""
+// ------------------------------------------------------------- the facility
+// The $380M construction facility (Mack Real Estate Credit Strategies).
+//
+// Equity funds to its commitment first, the loan draws the residual, interest
+// capitalizes into the balance, and sale and condo proceeds repay it. Four
+// recurrences, each a fact about the facility, each reading only values that
+// are already finished -- `prev` and the cost curves -- which is what keeps
+// the whole thing acyclic by construction.
+entity asset facility : Asset.Financial {
+  equity_funded init min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                next min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+
+  interest init 0.0
+           next %s
+
+  draw init %s
+       next %s
+
+  repay init 0.0
+        next %s
+
+  balance init %s
+          next max(0.0, prev.asset.facility.balance + %s + %s - %s)
+}
+
+// Interest is capitalized, so it is never a cash line -- it is repaid inside
+// the principal repayment. That is the convention the reference workbook uses.
+stream cre.loan_draw on entity asset.project inflow currency USD {
+  schedule every month start from %s to %s
+  category financing.debt_proceeds
+  amount = asset.facility.draw
+}
+
+// Interest capitalizes: the facility funds its own accrual, so the two legs
+// net to zero in cash while the balance grows. Stated GROSS rather than folded
+// into the balance silently, so `domain.cre.debt_service` sees real interest
+// and coverage during the build is measurable instead of absent.
+stream cre.loan_interest on entity asset.project outflow currency USD {
+  schedule every month start from %s to %s
+  category financing.interest
+  amount = asset.facility.interest
+}
+
+stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+  schedule every month start from %s to %s
+  category financing.debt_proceeds
+  amount = asset.facility.interest
+}
+
+// The payoff sits in the reversion. `financing.debt_principal` folds into
+// `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
+// debt service — it would make every coverage ratio in the disposal period
+// meaningless. The cre pack says the same of a permanent loan's balloon.
+stream cre.loan_repayment on entity asset.project outflow currency USD {
+  schedule every month start from %s to %s
+  category investing.reversion
+  amount = asset.facility.repay
+}
+
+// ------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+// The pot is `available` -- the project's own streams netted with east and
+// west rolled up by `part of`, i.e. the levered cash the deal threw off.
+waterfall cre.jv_split on entity asset.project {
+  schedule every month start from %s to %s
+  from available
+
+  pay preferred to party.baupost  = available * (1.0 - inputs.sponsor_share) * inputs.pref_rate
+  pay promote   to party.penzance = remaining * 0.20
+  pay residual  to party.baupost  = remaining
+}
+""" % (INT, INIT_DRAW, DRAW, REPAY, INIT_DRAW, DRAW, INT, REPAY,
+       ym(0), ym(N - 1), ym(0), ym(N - 1), ym(0), ym(N - 1),
+       ym(0), ym(N - 1), ym(0), ym(N - 1)))
+
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "model.cfdl").write_text("\n".join(L))
 print("wrote", OUT / "model.cfdl", len((OUT / "model.cfdl").read_text().splitlines()), "lines")
