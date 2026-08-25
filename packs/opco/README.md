@@ -88,8 +88,10 @@ Growth is annual-compound stepped continuously on the model clock:
   period the loan amortizes level-pay over `amort_months`; the remaining
   balance pays as a balloon at the contract's `term_end`. Streams
   `opco.debt.proceeds`, `opco.debt.interest`, `opco.debt.principal`.
-  **Cash sweeps and revolvers need per-period persistent state and are not
-  in v0.1.**
+  **Cash sweeps and revolvers are stated in the model rather than lowered,
+  because the free-cash-flow build is deal-specific. Carry the sweep as a
+  balance field drawn down by a free-cash-flow field, and let the published
+  line read the same field so the build is stated once.**
 - `opco.acquisition` — purchase `price` paid at `term_start`
   (the equity check when paired with debt proceeds at the same date).
 

@@ -72,36 +72,58 @@ is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ## 5. Language and engine
 
-### 5.2 Per-period persistent state
+### 5.2 A recurrence cannot read the model's own streams
 
-**Scope boundary now settled** (`docs/14_state_and_recurrence.md` §5): the
-backward-only state variable in 5.1 does *not* reach this. A cash sweep needs
-same-period information — how much cash remains after this period's debt
-service — which is an instantaneous dependency. The right shape here is an
-**ordered allocation pass**: a waterfall is an author-declared priority over a
-pot, not a dependency graph to be solved, so it needs no cycle detection either.
-Design it separately; do not relax the stream reference rules to get it.
+*Rewritten. The entry said cash sweeps and revolver draws were "still blocked"
+and needed an ordered allocation pass. A sweep is not blocked — a shipped
+benchmark reconciles one — and the allocation pass exists as the waterfall.
+What remains is narrower and is a duplication cost, not an absence.*
 
-**What is left, now that declared state has shipped.** The original entry said
-"no accumulator, no carryforward, no balance that a period can add to and a
-later period draw down", and listed six things needing it. That sentence is no
-longer true and contradicted the paragraph above it — a state IS an accumulator,
-and `next` reading `prev` IS a balance a period adds to and a later one draws
-down. The list splits:
+**A cash sweep works today.** `benchmarks/opco/lbo_financing_cases` sweeps every
+dollar of free cash flow against a Term Loan B and reproduces the reference's
+MoIC and IRR across three financing cases. Two things make it work, and neither
+is new: the balance/interest circularity is affine, so collecting terms solves
+it in one substitution rather than iterating (`docs/14` §9); and the operating
+drivers are CURVES, which a recurrence may read.
 
-- **Still blocked**, because they need SAME-PERIOD information: cash sweeps and
-  revolver draws. How much cash remains after this period's debt service is an
-  instantaneous dependency, and no backward-only construct reaches it. This is
-  the ordered allocation pass above, and it is what remains of 5.2.
-- **Now expressible** as backward recurrences: FF&E reserves, escrow accounts,
-  NOL carryforwards and construction-interest capitalisation.
-  `benchmarks/opco/lbo_circular_interest` carries an average-balance interest
-  schedule with no iteration, which is the shape all four take.
+**What is actually blocked is a recurrence reading a series.** A field's `next`
+sees `prev`, other fields' `prev`, `time.*`, `inputs`, `cfg`, `obs` and curves —
+and no series at all (`docs/07`, `docs/14` §3.1). So a balance whose movement is
+determined by REALISED cash, rather than by drivers a field can also see, has to
+restate how that cash is computed. Two shipped models pay that cost:
+`americredit_2017_1` carries seven class balances each duplicating its step-down
+expression, and the LBO above rebuilds its whole free-cash-flow stack inside the
+balance recurrence.
 
-Not discovered by this work — it was a known absence — but recorded here because
-5.1 was a strictly smaller version of it and the two shared a design.
+**Much of the duplication is avoidable today, and models should do this first.**
+State the quantity ONCE as a field and let both the published stream and the
+recurrence read it, rather than computing it twice:
 
----
+```cfdl
+entity asset co : Asset.Financial {
+  fcf     init <build> next <build>          // stated once
+  balance init 3000.0  next max(0.0, prev - prev.asset.co.fcf)
+}
+stream opco.fcf on entity asset.co inflow currency USD {
+  amount = asset.co.fcf                       // the published line reads it
+}
+```
+
+Verified: the balance tracks the sweep to the cent with one statement of the
+build. This works whenever free cash flow is derivable from curves, inputs and
+fields — which is what the LBO's curve-shaped operating case achieves.
+
+**The residue.** When the quantity is only knowable from stream output — a
+pack-lowered contract's cash, or what a waterfall actually paid under a short
+pot — no field can see it, and the restatement is forced. Shapes that would
+close it, none designed: a truncated series view up to `t-1` (§7.10, which
+costs an O(n) copy per period unless it is a borrowed slice); `prev.<waterfall>.<step>`
+as the symmetric extension of `prev.<entity>.<field>`, strictly backward and so
+cycle-free by the same argument; or a step that moves a balance directly.
+
+Do not relax the same-period stream reference rules to get any of it: a
+waterfall is an author-declared priority over a pot, and reading this period's
+realised cash is what the waterfall is already for.
 
 ## 6. Cross-pack
 

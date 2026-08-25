@@ -8,6 +8,29 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Rewritten: backlog 5.2 — a recurrence cannot read the model's own streams
+
+5.2 said cash sweeps and revolver draws were "still blocked" and needed an
+ordered allocation pass. Both halves were wrong: a sweep is expressible today
+(`benchmarks/opco/lbo_financing_cases` sweeps a Term Loan B and reproduces the
+reference's MoIC and IRR across three financing cases), and the allocation pass
+exists as the waterfall.
+
+What remains is narrower and is a duplication cost rather than an absence: a
+field's `next` reads no series, so a balance whose movement is determined by
+realised cash must restate how that cash is computed. Much of that is avoidable
+today by letting a FIELD own the quantity and having the published stream read
+the same field — verified to the cent, with the free-cash-flow build stated
+once. `docs/26` carries the shape.
+
+Corrects two pack notes that repeated the false claim: `packs/opco`'s lowering
+rules and README both said sweeps "need per-period persistent state" and were
+unavailable, which conflated a pack's choice not to lower them with a language
+limit.
+
+Backlog: 42 items.
+
+
 ### Changed: the PV benchmark derives its depreciable basis (backlog 4.2)
 
 `benchmarks/energy/utility_pv_singleowner` carried `basis = 85000000` with the
