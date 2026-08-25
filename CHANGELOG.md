@@ -8,6 +8,28 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Removed: backlog 6.3, a symmetry gap with no case behind it
+
+6.3 wanted a one-shot flow whose PERIOD differs from its contract term — a sale
+agreed in one period and settling in another. Removed under this file's own
+standard: it recorded no provenance, saying plainly that "no live case forced
+this; it is a symmetry gap noticed while fixing the disposal discounting", and
+the header requires that each entry say what could not be expressed and what
+forced the discovery, because "a backlog item with no provenance is a guess".
+
+The neighbouring facts also make it a thin case: a one-shot placed on the
+SETTLEMENT date already says when the cash moves, `start`/`mid`/`end` now place
+it within that period, and a single-occurrence recurrence accepts `net <n>`
+where a one-shot correctly refuses it for having no accrual period.
+
+Also de-stales the "Where these came from" section, which cited items 1.4-1.7
+and 5.1 by number after those items had been closed and removed. It now names
+the benchmarks and their external references instead, which is the part that
+does not dangle.
+
+Backlog: 41 items.
+
+
 ### Rewritten: backlog 5.2 — a recurrence cannot read the model's own streams
 
 5.2 said cash sweeps and revolver draws were "still blocked" and needed an

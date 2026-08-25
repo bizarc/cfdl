@@ -127,36 +127,27 @@ realised cash is what the waterfall is already for.
 
 ## 6. Cross-pack
 
-### 6.3 An acquisition or disposal in a period other than the term's
-
-`schedule_kind = "on_date"` places a one-shot flow in the period containing its
-date, and `schedule_at_period_end` now says where in that period it sits. What
-cannot be expressed is a flow whose *period* differs from the contract term —
-a sale agreed in one period and settling in another. Payment terms
-(`net <n>`) cover this for recurring flows but not for `on_date`, which rejects
-them outright, correctly, as having no accrual period.
-
-No live case forced this; it is a symmetry gap noticed while fixing the
-disposal discounting.
-
----
-
 ## Where these came from
 
-Items 1.4 through 1.7 were found building `benchmarks/cre/hud_home_multifamily`
-against HUD's own populated underwriting Sample — the only source in the
-programme that may be redistributed, and so the only one whose reference
-workbook is committed beside the model.
+Almost every item in sections 1 to 6 was found by reconciling a benchmark
+against an external reference, and the sections are named for the pack the
+reconciliation exercised. Individual item numbers are not cited here: closed
+items are removed from this file, so a citation would dangle. The sources are
+what matter, and they are recorded in each benchmark's `NOTES.md`.
 
-Section 1's first three items and item 5.1 were found building `benchmarks/cre/mit_rentleg_plaza`
-against MIT OpenCourseWare 11.431J Problem Set 1 — the first CFDL benchmark
-checked against a published third-party figure rather than an in-house
-reference. Section 2 came the same way, from `benchmarks/credit/mbs_pool_conventions`
+The CRE items came from `benchmarks/cre/hud_home_multifamily` against HUD's own
+populated underwriting Sample — the only source in the programme that may be
+redistributed, and so the only one whose reference workbook is committed beside
+the model — and from `benchmarks/cre/mit_rentleg_plaza` against MIT
+OpenCourseWare 11.431J Problem Set 1, the first CFDL benchmark checked against a
+published third-party figure rather than an in-house reference.
+
+The credit items came the same way, from `benchmarks/credit/mbs_pool_conventions`
 against the published industry reference for MBS cash flows — which also found
 three outright defects, in the prepayment base, the recovery basis and the
 payment-striking divisor, all fixed rather than listed here.
 
-Section 3 came from `benchmarks/opco/banker_dcf_conventions` against a
+The opco items came from `benchmarks/opco/banker_dcf_conventions` against a
 disclosed valuation in a public merger filing — the opco pack's first external
 check. All nine cells of the banker's answer grid reproduce within $1.2mm on
 $19bn. It also found two outright engine defects, fixed rather than listed
