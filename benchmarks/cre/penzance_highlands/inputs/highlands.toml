@@ -1,0 +1,421 @@
+# The Highlands — frozen input set for the CFDL private benchmark case
+#
+# PROVENANCE RULE: every table carries `source`.
+#   source = "SP445:<report>:<locator>"  -> public record, verified, do not edit
+#   source = "assumption"                -> not publicly sourceable; must be
+#                                           stated in the model output
+# The reference (Excel) model and the CFDL model MUST both read this file.
+# If a number is not here, it does not belong in either model.
+
+[meta]
+name          = "The Highlands"
+site_plan     = "SP #445"
+jurisdiction  = "Arlington County, Virginia"
+sponsor       = "Penzance"
+jv_partner    = "The Baupost Group"
+applicant     = "West Rosslyn Development Company, LLC"
+owner_entity  = "1555 Wilson Property Owner LLC"
+frozen_on     = 2026-08-24
+status        = "realized"
+
+# ---------------------------------------------------------------- site
+
+[site]
+source        = "SP445:2017-02-25:pp.11-12"
+address       = "1555 Wilson Blvd and 1788 N. Pierce St, Arlington VA"
+rpc           = ["16-033-008","16-033-009","16-033-010","16-033-011","16-033-012",
+                 "16-033-013","16-033-014","16-033-016","16-033-017","16-033-018",
+                 "16-033-021","16-033-022"]
+area_sf       = 118311
+area_acres    = 2.72
+zoning        = "C-O Mixed-Use"
+glup          = "High Office-Apartment-Hotel; Western Rosslyn Coordinated Redevelopment District"
+far_approved  = 10.0
+far_max       = 10.0          # approved AT the cap — no residual density
+avg_elevation_ft = 175.24
+
+[site.tenure]
+source        = "SP445:2017-02-25:pp.1,266-303"
+# NOT a fee-simple assemblage. Two tenures under one site plan.
+fee_parcels    = ["16-033-008","16-033-009","16-033-010","16-033-011","16-033-018"]
+ground_leased  = ["16-033-012","16-033-013","16-033-014","16-033-016","16-033-017",
+                  "16-033-021","16-033-022"]
+ground_lessor  = "Arlington County Board"
+ground_lease_executed      = 2016-07-21
+development_agreement_executed = 2016-11-05
+ground_rent_terms = "assumption"   # instrument recorded; not yet pulled
+# FACT [Arlington assessments]: fee parcels acquired 1555 Wilson Property Owner
+# LLC (Penzance) on 2011-09-30. Corroborates Kusturiss's "eleven years" at exit.
+land_acquired = 2011-09-30
+land_price_usd = 67_000_000   # FACT: deed 4491/2257, sales code "4-Multiple RPCs",
+                              # one price across fee parcels -008/-009/-010/-011/-018
+# FACT: County parcels flip "Exempt to Tax" on 2018-12-31 (RPC -012) and
+# 2019-12-31 (RPC -016) — the ground lease vesting, visible in the tax roll.
+
+# ------------------------------------------------------- entitlement
+
+[[entitlement]]
+date   = 2015-01-01
+event  = "Western Rosslyn Area Plan (WRAP) adopted"
+source = "SP445:2017-02-25:background"
+
+[[entitlement]]
+date   = 2017-02-25
+event  = "County Board approves SP #445, GP-336-16-1, Z-2594-16-1, use permits"
+source = "SP445:2017-02-25:clip_id=3314,meta_id=157770"
+
+[[entitlement]]
+date   = 2018-09-22
+event  = "Amendment: GFA reallocation, CVS anchor retail, revised conditions"
+source = "SP445:2018-09-22:clip_id=3556,meta_id=179659"
+
+[[entitlement]]
+date   = 2020-11-14
+event  = "Amendment: 19,041 sf retail reverted to residential (COVID)"
+source = "SP445:2020-11-14:meta_id=198705"
+
+[[entitlement]]
+date   = 2021-01-01
+event  = "Delivery (staff report anticipated Summer 2021)"
+source = "SP445:2020-11-14:p.2"
+note   = "Month not in the public record; refine from certificates of occupancy."
+
+# ----------------------------------------------------------- buildings
+
+[building.east]
+source            = "SP445:2020-11-14:Figure 5"
+towers            = ["north","south"]   # two towers over one shared podium
+stories           = 27
+main_roof_ft      = 269.76
+main_roof_max_ft  = 270.0
+penthouse_roof_ft = 292.76
+gfa_total_sf      = 768458
+gfa_residential_sf= 754567
+gfa_retail_sf     = 13891
+gfa_fire_station_sf = 18637
+units             = 559
+leed              = "BD+C v4 Silver (59 pts)"
+
+[building.west]
+source            = "SP445:2020-11-14:Figure 5"
+towers            = ["west"]
+stories           = 23
+main_roof_ft      = 240.0
+main_roof_max_ft  = 240.0
+penthouse_roof_ft = 263.0
+gfa_total_sf      = 414652
+gfa_residential_sf= 404864
+gfa_retail_sf     = 9788
+units             = 331
+leed              = "BD+C v4 Silver (59 pts)"
+
+[building.totals]
+source              = "SP445:2020-11-14:Figure 5"
+gfa_total_sf        = 1183110
+gfa_residential_sf  = 1159431
+gfa_retail_sf       = 23679
+units               = 890
+far                 = 10.0
+
+# --------------------------------------------------------------- assets
+# Three separately-exited assets. Two rentals sold whole; one condo sold
+# unit-by-unit. All three share one construction budget and one loan.
+
+[asset.pierce]
+source        = "SP445:2018-09-22:p.40 (UNIT MIX - CONDO)"
+building      = "east"
+tower         = "north"
+tenure        = "for_sale"
+units         = 104
+exit          = "unit_by_unit_sellout"
+address       = "1781 N Pierce St, Arlington VA 22209"
+[asset.pierce.unit_mix]
+"1BR+Den"     = 4
+"2BR"         = 39
+"2BR+Den"     = 61
+
+[asset.evo]
+source        = "SP445:2018-09-22:p.40 (UNIT MIX - APARTMENT) + 2020 restoration"
+building      = "east"
+tower         = "south"
+tenure        = "rental"
+units         = 455
+exit          = "bulk_sale"
+exit_buyer    = "Cortland"
+exit_date     = 2022-07-12          # FACT: deed recorded, doc 20220100013307
+exit_price_usd = 334_642_240        # FACT [deed 20220100013307; Guidebook rounds to $334,600,000]
+exit_price_source = "propertysearch.arlingtonva.us — grantee N PIERCE VA PARTNERS--PHASE II LLC c/o Cortland"
+units_assessor = 453                # assessor's count vs 455 marketed / 456 SP445
+year_built     = 2020               # FACT [assessor]
+rpc_active     = "16-033-025"
+[asset.evo.unit_mix]
+# 2018 tabulation totals 449; the Nov-2020 amendment restored 6 units whose
+# type split is NOT in the public record. 449 + 6 = 455.
+source        = "SP445:2018-09-22:p.40"
+"Studio"      = 49
+"Jr1BR"       = 52
+"1BR"         = 194
+"1BR+Den"     = 22
+"Jr2BR"       = 24
+"2BR"         = 83
+"2BR+Den"     = 23
+"3BR"         = 2
+unallocated_2020_restoration = 6
+
+[asset.aubrey]
+source        = "SP445:2018-09-22:p.28 sheet A3.01 (STUDIOS architecture)"
+building      = "west"
+tower         = "west"
+tenure        = "rental"
+units         = 331
+exit          = "bulk_sale"
+exit_buyer    = "Cortland"
+exit_date     = 2022-05-18
+exit_rebrand  = "Cortland Rosslyn West"
+# Aubrey sits on the seven GROUND-LEASED County parcels. Cortland took an
+# assignment of leasehold, which produces NO recorded sale price in the
+# assessment record. Price is not recoverable from this source — by structure,
+# not by omission.
+exit_price_usd = "unrecoverable_from_assessments"
+assessed_2026_usd = 222_955_600     # FACT: sum of 7 leasehold parcels
+assessed_2026_per_unit = 673_582
+year_built    = 2020                # FACT [assessor]
+typical_floor = "L3-L22: 16 units (2 ST / 7 1BR / 1 1BR+Den / 5 2BR / 1 3BR)"
+[asset.aubrey.unit_mix]
+"Studio"      = 40
+"1BR"         = 143
+"1BR+Den"     = 23
+"2BR"         = 102
+"2BR+Den"     = 3
+"3BR"         = 20
+
+# ---------------------------------------------------------------- retail
+
+[retail]
+source           = "SP445:2020-11-14:Figure 5"
+gfa_sf           = 23679
+anchor_tenant    = "CVS Pharmacy (West Building, dual frontage Wilson Blvd / N. Pierce St)"
+anchor_source    = "SP445:2018-09-22:pp.4-5"
+# Modelling note: a fitness tenant was underwritten into 19,041 sf of East
+# Building L2 in 2018, then reversed to residential in Nov 2020 when COVID
+# killed the deal. A real retail round trip, in the public record.
+
+# ------------------------------------------------------------- parking
+
+[parking]
+source              = "SP445:2020-11-14:Figure 5"
+total_spaces        = 1037
+residential_spaces  = 712
+retail_spaces       = 41
+flexible_spaces     = 160
+fire_station_spaces = 24
+school_spaces       = 100
+residential_ratio   = 0.80          # spaces per unit
+retail_ratio_sf     = 580           # 1 space per N sf GFA
+
+# ------------------------------------------------- public obligations
+# Cash contributions. Amounts and triggers are in the approved conditions.
+
+[[obligation]]
+item = "Underground utility fund"
+amount_usd = 143303
+basis = "$52,685/acre x 2.72 ac"
+trigger = "Final Building Permit"
+source = "SP445:2017-02-25:cond.#(utility)"
+
+[[obligation]]
+item = "Public art contribution"
+amount_usd = 250000
+basis = "$125,000 per building"
+trigger = "pre-Certificate of Occupancy"
+source = "SP445:2017-02-25:cond.#(public art)"
+
+[[obligation]]
+item = "Public art minimum project cost"
+amount_usd = 150000
+basis = "inclusive of artist fees, travel, fabrication"
+trigger = "n/a"
+source = "SP445:2017-02-25"
+
+[[obligation]]
+item = "Green Building Fund"
+amount_usd = 2500
+basis = "$1,250 per building ($0.045/sf)"
+trigger = "pre-Certificate of Occupancy"
+source = "SP445:2017-02-25"
+
+[[obligation]]
+item = "TDM program buy-in"
+amount_usd = 14000
+basis = "$7,000 per building land use type"
+trigger = "one-time"
+source = "SP445:2017-02-25"
+
+[[obligation]]
+item = "Tree canopy fund"
+amount_usd = 2400
+basis = "per tree, minimum"
+trigger = "as applicable"
+source = "SP445:2017-02-25"
+
+[[obligation]]
+item = "Resident transit benefit"
+amount_usd = 65
+basis = "SmarTrip card or bikeshare, per unit"
+trigger = "move-in"
+source = "SP445:2017-02-25"
+
+[[obligation_recurring]]
+item = "TDM annual contribution"
+rate_usd_per_sf_commercial = 0.06
+rate_usd_per_sf_residential = 0.035
+escalates = true
+source = "SP445:2017-02-25"
+
+[[obligation_recurring]]
+item = "N. Pierce Street maintenance"
+amount_usd = "assumption"
+term = "life of the site plan"
+note = "Developer designs, constructs AND maintains a public street in perpetuity."
+source = "SP445:2017-02-25:p.34"
+
+[obligation_open]
+item    = "Affordable housing contribution"
+amount_usd = "assumption"
+source  = "SP445:2017-02-25:cond.#42"
+note    = """Condition #42 deliberately does NOT fix an amount. Satisfied per
+Zoning Ordinance sec.15.6.8 at Shell & Core C.O., at the developer's election of
+cash OR on-site/off-site units. Condition #42.B (bonus-density AH) is
+'Intentionally Omitted'. Model as a decision variable, not a constant."""
+
+# In-kind benefits: developer designs, builds and funds; no cash line.
+[obligation_in_kind]
+source = "SP445:2017-02-25:p.34"
+items = [
+  "New Fire Station 10 (18,637 sf, within East Building) + 24 dedicated spaces",
+  "New Rosslyn Highlands Park (County-delivered schematic design)",
+  "New public street: N. Pierce Street (design, construct, maintain for life of site plan)",
+  "100 dedicated parking spaces for Arlington Public Schools",
+  "West Building elevator + lobby serving APS (226 sf, GFA-excluded)",
+  "In-building wireless first-responder network",
+  "Reciprocal Easements Agreement with the County",
+]
+
+# GFA excluded from the 10.0 FAR cap — affects buildable vs billable area.
+[gfa_exclusions]
+source = "SP445:2018-09-22:Table 1 fn.2-3"
+fire_station_sf            = 18637
+below_grade_mech_storage_sf = 26653   # increased from 15,279 in 2018
+vertical_shafts_sf         = 10601
+east_retail_mezzanine_sf   = 1798
+west_aps_elevator_lobby_sf = 226
+trash_recycling_sf         = 2601
+service_corridors_sf       = 2094
+
+# ================================================================
+# ASSUMPTIONS — nothing below this line is publicly sourceable.
+# Every one of these must be surfaced in the model's output.
+# ================================================================
+
+[capital]
+source = "mixed — land is now FACT, the rest assumption"
+land_basis_usd            = 67_000_000   # FACT [Arlington assessments, 2011-09-30]
+hard_cost_per_sf          = 0
+soft_cost_pct_of_hard     = 0
+developer_fee_pct         = 0
+contingency_pct           = 0
+
+[debt]
+construction_loan_usd = 380000000    # press-reported, NOT yet verified to instrument
+lender                = "Mack Real Estate Credit Strategies"
+source                = "press: Commercial Observer / MHN"
+spread_bps            = 0            # assumption
+index                 = "assumption"
+term_months           = 0            # assumption
+extension_options     = "assumption"
+draw_curve            = "assumption"
+
+[equity]
+source              = "assumption"
+sponsor_pct         = 0
+lp_pct              = 0
+pref_rate           = 0
+promote_tiers       = []             # Baupost JV terms not public
+
+[operations]
+# NOW SOURCED — Arlington Commercial Guidebook, High-Rise / effective age 2010+.
+source                = "Arlington 2022 Commercial Guidebook"
+opex_per_unit_annual  = 7_511      # FACT 2022 (2023 ed: $7,267). Excludes RE tax.
+vacancy_pct           = 0.08       # FACT 2022 (2023 ed: 6%)
+parking_per_space_mo  = 150        # FACT: Guidebook garage range $50-$150
+replacement_reserve   = 0.002      # FACT: assumed inside the cap rate
+mgmt_fee_pct          = 0          # still assumption (inside opex/unit)
+# NOTE: real estate tax is NOT an assumption — Arlington assessment history is
+# public per RPC. Pull it before defaulting to a rate.
+# NO LONGER AN ASSUMPTION — assessment histories pulled; see
+# sources/assessments/FINDINGS.md for full series by RPC.
+real_estate_tax       = "sourced: see sources/assessments/FINDINGS.md"
+
+[leaseup]
+source                  = "rents DERIVED from the assessor's own implied NOI"
+# Method: 1/1/2022 assessed value x Arlington's guideline loaded cap (5.15%)
+# = the assessor's NOI before RE tax. Solve for the rent that reproduces it,
+# using Guidebook opex, vacancy and parking. No CoStar needed.
+aubrey_rent_per_unit_mo = 3_522
+evo_rent_per_unit_mo    = 3_273
+evo_units_per_month     = 0        # pace still assumption
+aubrey_units_per_month  = 0
+
+[condo_sellout]
+source            = "FACT — Arlington assessments, 104 units scraped individually"
+schedule_file     = "inputs/pierce_sellout_actual.csv"
+units_sold        = 102          # 2 of 104 never transferred
+gross_sellout_usd = 190_186_220  # FACT: sum of first arms-length sale per unit
+avg_price_usd     = 1_864_571
+median_price_usd  = 1_774_000
+min_price_usd     = 822_000
+max_price_usd     = 3_920_000
+first_close       = 2021-08-30
+last_close        = 2024-06-04
+sellout_months    = 34           # NOT the 13 originally assumed
+presale_open      = 2020-02-01       # press-reported
+delivery          = 2021-01-01
+price_low_usd     = 900000           # press: "starting in the $900s"
+price_high_usd    = 3000000          # press: "nearly $3,000,000" penthouses
+absorption_curve  = "assumption"
+# NO LONGER NEEDS BRIGHT MLS. The 104 Pierce units are individually assessed at
+# 1781 N Pierce St with sales dates AND prices, free, at
+# propertysearch.arlingtonva.us. Condo declaration recorded 2021-08-20.
+# Not yet scraped in full. Samples: unit 201 $1,478,000 (2023-04-13);
+# unit 203 $888,000 (2023-04-27).
+declaration_recorded = 2021-08-20
+declarant            = "PIERCE HIGHLANDS LLC % PENZANCE"
+# NOT IN THE MODEL: 245 separately deeded PARKING units at 1771 N Pierce St,
+# assessed $20,000-$25,000 each. A revenue line we had missed entirely.
+parking_units_deeded = 245
+
+[exit]
+# PARTIALLY RESOLVED — Evo is now fact.
+evo_price_usd       = 334_642_240    # FACT, recorded 2022-07-12
+evo_price_per_unit  = 738_725        # $334,642,240 / 453 units
+evo_source          = "Arlington assessments RPC 16-033-025, deed 20220100013307"
+# Aubrey is DERIVED, not assumed. Both towers are assessed as of 1/1/2022 and Evo
+# sold 2022-07-12, so the contemporaneous sale/assessment ratio transfers cleanly.
+# NOW FACT — Arlington 2023 Commercial Guidebook p.13 publishes both prices.
+aubrey_price_usd        = 266_455_000   # FACT
+aubrey_price_per_unit   = 805_000
+aubrey_source           = "Arlington 2023 Commercial Guidebook p.13, 'Cortland Rosslyn West'"
+aubrey_derived_estimate = 264_268_000   # the ratio method's answer — 0.8% low. Method validated.
+blended_per_unit        = 764_700       # (334.6M + 266.455M) / 786 units
+# BOTH towers sold 2022-05-17 as ONE transaction. Only the deed recording dates
+# differ (5/18 leasehold, 7/12 fee), which is why the press reported two deals.
+sale_date               = 2022-05-17
+# Cap rate is no longer an input OR a guess — it is measured.
+implied_loaded_cap_aubrey = 0.0443
+implied_loaded_cap_evo    = 0.0446
+implied_base_cap_aubrey   = 0.0341
+implied_base_cap_evo      = 0.0345
+arlington_guideline_loaded_cap = 0.0515  # High-Rise / Metro / 2010+, 2022 AND 2023
+cap_convention = "Arlington loads the effective tax rate into the cap and applies it to NOI BEFORE real estate tax."
+# Evo sale / Jan-2022 assessment = 1.154x. Board of Equalization cut the
+# assessment ~$45M in Oct-2023, which is itself a signal on holding-period value.
