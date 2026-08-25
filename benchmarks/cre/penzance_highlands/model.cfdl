@@ -1,0 +1,792 @@
+version 0.1
+model "penzance-highlands" currency USD
+use pack "cre" version "0.1.0"
+time calendar monthly from 2011-09 for 160
+
+// ===========================================================================
+// THE HIGHLANDS — Rosslyn, Virginia.  Penzance / The Baupost Group.
+// Arlington County Site Plan SP #445.  Land 2011-09-30, delivered 2021,
+// both rental towers sold to Cortland 2022-05-17, condo sellout to 2024-06.
+//
+// Two towers over one shared podium and one construction facility:
+//   east  = Pierce (104 for-sale condos) + Evo (455 rental)
+//   west  = Aubrey (331 rental)
+// The for-sale and rental product share a basis, which is what makes this
+// deal worth modelling rather than a generic development.
+//
+// Program, obligations, land basis, both sale prices and the whole condo
+// sellout are recorded fact — Arlington's site-plan record, deed register,
+// assessment roll and Commercial Guidebook. Cost, debt pricing and the JV
+// split are stated assumptions. Provenance is in CASE.md.
+// ===========================================================================
+
+phase predevelopment from 2011-09 to 2018-03
+phase construction   from 2018-04 to 2021-06
+phase lease_up       from 2021-07 to 2022-05
+phase condo_tail     from 2022-06 to 2024-12
+
+assume loan_rate        = 0.065
+assume loan_commitment  = 380000000
+assume equity_commitment = 186245280.585
+assume condo_selling_cost = 0.05
+assume cost_of_sale     = 0.01
+assume pref_rate        = 0.08
+assume sponsor_share    = 0.10
+
+// Development cost per period and its running total. Declared as curves so
+// the facility's recurrence can read them: `next` sees curves, but never a
+// stream (docs/03 §3.1), and cost here is a pure function of time.
+//
+// EVERY period is declared, including the zeros. A step curve is
+// flat-forward (docs/03 §4): omit the quiet months and the last construction
+// draw is held forever, which compounds into a balance that never stops.
+curve dev_cost {
+  2011-09: 67000000.0000
+  2011-10: 0.0000
+  2011-11: 0.0000
+  2011-12: 0.0000
+  2012-01: 0.0000
+  2012-02: 0.0000
+  2012-03: 0.0000
+  2012-04: 0.0000
+  2012-05: 0.0000
+  2012-06: 0.0000
+  2012-07: 0.0000
+  2012-08: 0.0000
+  2012-09: 0.0000
+  2012-10: 0.0000
+  2012-11: 0.0000
+  2012-12: 0.0000
+  2013-01: 0.0000
+  2013-02: 0.0000
+  2013-03: 0.0000
+  2013-04: 0.0000
+  2013-05: 0.0000
+  2013-06: 0.0000
+  2013-07: 0.0000
+  2013-08: 0.0000
+  2013-09: 0.0000
+  2013-10: 0.0000
+  2013-11: 0.0000
+  2013-12: 0.0000
+  2014-01: 0.0000
+  2014-02: 0.0000
+  2014-03: 0.0000
+  2014-04: 0.0000
+  2014-05: 0.0000
+  2014-06: 0.0000
+  2014-07: 0.0000
+  2014-08: 0.0000
+  2014-09: 0.0000
+  2014-10: 0.0000
+  2014-11: 0.0000
+  2014-12: 0.0000
+  2015-01: 0.0000
+  2015-02: 0.0000
+  2015-03: 0.0000
+  2015-04: 0.0000
+  2015-05: 0.0000
+  2015-06: 0.0000
+  2015-07: 0.0000
+  2015-08: 0.0000
+  2015-09: 0.0000
+  2015-10: 0.0000
+  2015-11: 0.0000
+  2015-12: 0.0000
+  2016-01: 0.0000
+  2016-02: 0.0000
+  2016-03: 0.0000
+  2016-04: 0.0000
+  2016-05: 0.0000
+  2016-06: 0.0000
+  2016-07: 0.0000
+  2016-08: 0.0000
+  2016-09: 0.0000
+  2016-10: 0.0000
+  2016-11: 0.0000
+  2016-12: 0.0000
+  2017-01: 0.0000
+  2017-02: 0.0000
+  2017-03: 0.0000
+  2017-04: 0.0000
+  2017-05: 0.0000
+  2017-06: 0.0000
+  2017-07: 0.0000
+  2017-08: 0.0000
+  2017-09: 0.0000
+  2017-10: 0.0000
+  2017-11: 0.0000
+  2017-12: 0.0000
+  2018-01: 0.0000
+  2018-02: 0.0000
+  2018-03: 0.0000
+  2018-04: 1813594.1101
+  2018-05: 3227644.2146
+  2018-06: 4714059.3134
+  2018-07: 6115536.4066
+  2018-08: 7432075.4941
+  2018-09: 8663676.5760
+  2018-10: 9810339.6523
+  2018-11: 10872064.7229
+  2018-12: 11848851.7878
+  2019-01: 12740700.8471
+  2019-02: 13547611.9007
+  2019-03: 14269584.9487
+  2019-04: 14906619.9911
+  2019-05: 15458717.0278
+  2019-06: 15925876.0589
+  2019-07: 16308097.0843
+  2019-08: 16605380.1040
+  2019-09: 16817725.1182
+  2019-10: 16945132.1266
+  2019-11: 16987601.1295
+  2019-12: 16945132.1266
+  2020-01: 16817725.1182
+  2020-02: 16605380.1040
+  2020-03: 16308097.0843
+  2020-04: 15925876.0589
+  2020-05: 15458717.0278
+  2020-06: 14906619.9911
+  2020-07: 14269584.9487
+  2020-08: 13547611.9007
+  2020-09: 12740700.8471
+  2020-10: 11848851.7878
+  2020-11: 10872064.7229
+  2020-12: 9810339.6523
+  2021-01: 8663676.5760
+  2021-02: 7432075.4941
+  2021-03: 6115536.4066
+  2021-04: 4714059.3134
+  2021-05: 3227644.2146
+  2021-06: 1656291.1101
+  2021-07: 0.0000
+  2021-08: 0.0000
+  2021-09: 12252500.0000
+  2021-10: 0.0000
+  2021-11: 0.0000
+  2021-12: 0.0000
+  2022-01: 0.0000
+  2022-02: 0.0000
+  2022-03: 0.0000
+  2022-04: 0.0000
+  2022-05: 0.0000
+  2022-06: 0.0000
+  2022-07: 0.0000
+  2022-08: 0.0000
+  2022-09: 0.0000
+  2022-10: 0.0000
+  2022-11: 0.0000
+  2022-12: 0.0000
+  2023-01: 0.0000
+  2023-02: 0.0000
+  2023-03: 0.0000
+  2023-04: 0.0000
+  2023-05: 0.0000
+  2023-06: 0.0000
+  2023-07: 0.0000
+  2023-08: 0.0000
+  2023-09: 0.0000
+  2023-10: 0.0000
+  2023-11: 0.0000
+  2023-12: 0.0000
+  2024-01: 0.0000
+  2024-02: 0.0000
+  2024-03: 0.0000
+  2024-04: 0.0000
+  2024-05: 0.0000
+  2024-06: 0.0000
+  2024-07: 0.0000
+  2024-08: 0.0000
+  2024-09: 0.0000
+  2024-10: 0.0000
+  2024-11: 0.0000
+  2024-12: 0.0000
+}
+
+curve dev_cost_cum {
+  2011-09: 67000000.0000
+  2011-10: 67000000.0000
+  2011-11: 67000000.0000
+  2011-12: 67000000.0000
+  2012-01: 67000000.0000
+  2012-02: 67000000.0000
+  2012-03: 67000000.0000
+  2012-04: 67000000.0000
+  2012-05: 67000000.0000
+  2012-06: 67000000.0000
+  2012-07: 67000000.0000
+  2012-08: 67000000.0000
+  2012-09: 67000000.0000
+  2012-10: 67000000.0000
+  2012-11: 67000000.0000
+  2012-12: 67000000.0000
+  2013-01: 67000000.0000
+  2013-02: 67000000.0000
+  2013-03: 67000000.0000
+  2013-04: 67000000.0000
+  2013-05: 67000000.0000
+  2013-06: 67000000.0000
+  2013-07: 67000000.0000
+  2013-08: 67000000.0000
+  2013-09: 67000000.0000
+  2013-10: 67000000.0000
+  2013-11: 67000000.0000
+  2013-12: 67000000.0000
+  2014-01: 67000000.0000
+  2014-02: 67000000.0000
+  2014-03: 67000000.0000
+  2014-04: 67000000.0000
+  2014-05: 67000000.0000
+  2014-06: 67000000.0000
+  2014-07: 67000000.0000
+  2014-08: 67000000.0000
+  2014-09: 67000000.0000
+  2014-10: 67000000.0000
+  2014-11: 67000000.0000
+  2014-12: 67000000.0000
+  2015-01: 67000000.0000
+  2015-02: 67000000.0000
+  2015-03: 67000000.0000
+  2015-04: 67000000.0000
+  2015-05: 67000000.0000
+  2015-06: 67000000.0000
+  2015-07: 67000000.0000
+  2015-08: 67000000.0000
+  2015-09: 67000000.0000
+  2015-10: 67000000.0000
+  2015-11: 67000000.0000
+  2015-12: 67000000.0000
+  2016-01: 67000000.0000
+  2016-02: 67000000.0000
+  2016-03: 67000000.0000
+  2016-04: 67000000.0000
+  2016-05: 67000000.0000
+  2016-06: 67000000.0000
+  2016-07: 67000000.0000
+  2016-08: 67000000.0000
+  2016-09: 67000000.0000
+  2016-10: 67000000.0000
+  2016-11: 67000000.0000
+  2016-12: 67000000.0000
+  2017-01: 67000000.0000
+  2017-02: 67000000.0000
+  2017-03: 67000000.0000
+  2017-04: 67000000.0000
+  2017-05: 67000000.0000
+  2017-06: 67000000.0000
+  2017-07: 67000000.0000
+  2017-08: 67000000.0000
+  2017-09: 67000000.0000
+  2017-10: 67000000.0000
+  2017-11: 67000000.0000
+  2017-12: 67000000.0000
+  2018-01: 67000000.0000
+  2018-02: 67000000.0000
+  2018-03: 67000000.0000
+  2018-04: 68813594.1101
+  2018-05: 72041238.3247
+  2018-06: 76755297.6381
+  2018-07: 82870834.0447
+  2018-08: 90302909.5389
+  2018-09: 98966586.1149
+  2018-10: 108776925.7672
+  2018-11: 119648990.4900
+  2018-12: 131497842.2778
+  2019-01: 144238543.1249
+  2019-02: 157786155.0256
+  2019-03: 172055739.9744
+  2019-04: 186962359.9655
+  2019-05: 202421076.9933
+  2019-06: 218346953.0522
+  2019-07: 234655050.1364
+  2019-08: 251260430.2405
+  2019-09: 268078155.3586
+  2019-10: 285023287.4853
+  2019-11: 302010888.6147
+  2019-12: 318956020.7414
+  2020-01: 335773745.8595
+  2020-02: 352379125.9636
+  2020-03: 368687223.0478
+  2020-04: 384613099.1067
+  2020-05: 400071816.1345
+  2020-06: 414978436.1256
+  2020-07: 429248021.0744
+  2020-08: 442795632.9751
+  2020-09: 455536333.8222
+  2020-10: 467385185.6100
+  2020-11: 478257250.3328
+  2020-12: 488067589.9851
+  2021-01: 496731266.5611
+  2021-02: 504163342.0553
+  2021-03: 510278878.4619
+  2021-04: 514992937.7753
+  2021-05: 518220581.9899
+  2021-06: 519876873.1000
+  2021-07: 519876873.1000
+  2021-08: 519876873.1000
+  2021-09: 532129373.1000
+  2021-10: 532129373.1000
+  2021-11: 532129373.1000
+  2021-12: 532129373.1000
+  2022-01: 532129373.1000
+  2022-02: 532129373.1000
+  2022-03: 532129373.1000
+  2022-04: 532129373.1000
+  2022-05: 532129373.1000
+  2022-06: 532129373.1000
+  2022-07: 532129373.1000
+  2022-08: 532129373.1000
+  2022-09: 532129373.1000
+  2022-10: 532129373.1000
+  2022-11: 532129373.1000
+  2022-12: 532129373.1000
+  2023-01: 532129373.1000
+  2023-02: 532129373.1000
+  2023-03: 532129373.1000
+  2023-04: 532129373.1000
+  2023-05: 532129373.1000
+  2023-06: 532129373.1000
+  2023-07: 532129373.1000
+  2023-08: 532129373.1000
+  2023-09: 532129373.1000
+  2023-10: 532129373.1000
+  2023-11: 532129373.1000
+  2023-12: 532129373.1000
+  2024-01: 532129373.1000
+  2024-02: 532129373.1000
+  2024-03: 532129373.1000
+  2024-04: 532129373.1000
+  2024-05: 532129373.1000
+  2024-06: 532129373.1000
+  2024-07: 532129373.1000
+  2024-08: 532129373.1000
+  2024-09: 532129373.1000
+  2024-10: 532129373.1000
+  2024-11: 532129373.1000
+  2024-12: 532129373.1000
+}
+
+// Pierce condo closings — every one of 102 recorded sales, by month.
+// 34 months, not the smooth absorption an assumption would give.
+curve pierce_sellout {
+  2021-08: 2056400.00
+  2021-09: 8109000.00
+  2021-10: 6243000.00
+  2021-11: 16820000.00
+  2021-12: 22430000.00
+  2022-01: 23646000.00
+  2022-02: 11617000.00
+  2022-03: 4729000.00
+  2022-04: 7200000.00
+  2022-05: 2750000.00
+  2022-06: 2407000.00
+  2022-07: 5735000.00
+  2022-08: 3673000.00
+  2022-09: 10380320.00
+  2022-10: 1500000.00
+  2022-11: 1813000.00
+  2022-12: 6830500.00
+  2023-01: 2496000.00
+  2023-02: 0.00
+  2023-03: 2845000.00
+  2023-04: 12874000.00
+  2023-05: 2357000.00
+  2023-06: 4589000.00
+  2023-07: 0.00
+  2023-08: 2320000.00
+  2023-09: 6060000.00
+  2023-10: 3250000.00
+  2023-11: 2160000.00
+  2023-12: 3548000.00
+  2024-01: 0.00
+  2024-02: 1823000.00
+  2024-03: 0.00
+  2024-04: 0.00
+  2024-05: 3950000.00
+  2024-06: 3975000.00
+}
+
+
+// ---------------------------------------------------------------- structure
+entity asset project : CRE.Asset.Portfolio
+entity asset east : CRE.Asset.RealProperty { asset_class = "mixed_use"  part of asset.project }
+entity asset west : CRE.Asset.RealProperty { asset_class = "multifamily"  part of asset.project }
+
+entity party penzance : CRE.Party.Sponsor  { name = "Penzance" }
+entity party baupost  : CRE.Party.Investor { name = "The Baupost Group" }
+entity party mack     : CRE.Party.Lender   { name = "Mack Real Estate Credit Strategies" }
+
+// ------------------------------------------------------------------ capital
+stream cre.land on entity asset.project outflow currency USD {
+  schedule on 2011-09
+  category investing.capital.capex
+  amount = 67000000.00
+}
+
+
+stream cre.hard_buildings on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.hard_garage on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.fire_station on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.park_and_street on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.soft_costs on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.contingency on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+stream cre.developer_fee on entity asset.project outflow currency USD {
+  schedule every month from 2018-04 to 2021-06
+  category investing.capital.construction
+  amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+}
+
+
+// SP #445 conditions: utility undergrounding and TDM at permit; public art,
+// green building and affordable housing at certificate of occupancy.
+stream cre.obligations_permit on entity asset.project outflow currency USD {
+  schedule on 2018-04
+  category investing.capital.construction
+  amount = 157303.00
+}
+
+stream cre.obligations_co on entity asset.project outflow currency USD {
+  schedule on 2021-09
+  category investing.capital.construction
+  amount = 12252500.00
+}
+
+
+// ---- aubrey: delivered 2021-07, sold 2022-05 — still in lease-up
+stream cre.aubrey_rent on entity asset.west inflow currency USD {
+  schedule every month from 2021-07 to 2022-05
+  category operating.revenue.base_rent
+  amount = min(331.0, max(0.0, (time.t - 117.0) * 25.0)) * 3369.8496
+}
+
+stream cre.aubrey_retail on entity asset.west inflow currency USD {
+  schedule every month from 2021-07 to 2022-05
+  category operating.revenue.other
+  amount = 35236.8
+}
+
+stream cre.aubrey_parking on entity asset.west inflow currency USD {
+  schedule every month from 2021-07 to 2022-05
+  category operating.revenue.other
+  amount = 39720
+}
+
+stream cre.aubrey_opex on entity asset.west outflow currency USD {
+  schedule every month from 2021-07 to 2022-05
+  category operating.expense.opex
+  amount = 207178.4167
+}
+
+stream cre.aubrey_tax on entity asset.west outflow currency USD {
+  schedule every month from 2021-07 to 2022-05
+  category operating.expense.opex
+  amount = 215699.0142
+}
+
+// ---- evo: delivered 2021-09, sold 2022-05 — still in lease-up
+stream cre.evo_rent on entity asset.east inflow currency USD {
+  schedule every month from 2021-09 to 2022-05
+  category operating.revenue.base_rent
+  amount = min(455.0, max(0.0, (time.t - 119.0) * 25.0)) * 3131.6064
+}
+
+stream cre.evo_retail on entity asset.east inflow currency USD {
+  schedule every month from 2021-09 to 2022-05
+  category operating.revenue.other
+  amount = 50007.6
+}
+
+stream cre.evo_parking on entity asset.east inflow currency USD {
+  schedule every month from 2021-09 to 2022-05
+  category operating.revenue.other
+  amount = 54600
+}
+
+stream cre.evo_opex on entity asset.east outflow currency USD {
+  schedule every month from 2021-09 to 2022-05
+  category operating.expense.opex
+  amount = 284792.0833
+}
+
+stream cre.evo_tax on entity asset.east outflow currency USD {
+  schedule every month from 2021-09 to 2022-05
+  category operating.expense.opex
+  amount = 273135.4075
+}
+
+
+// ---------------------------------------------------------------------- exit
+// Both towers sold 2022-05-17 as ONE transaction; only the deed recording
+// dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
+stream cre.aubrey_sale on entity asset.west inflow currency USD {
+  schedule on 2022-05
+  category investing.reversion
+  amount = 266455000.00
+}
+
+stream cre.evo_sale on entity asset.east inflow currency USD {
+  schedule on 2022-05
+  category investing.reversion
+  amount = 334642240.00
+}
+
+stream cre.sale_costs on entity asset.project outflow currency USD {
+  schedule on 2022-05
+  category investing.selling_costs
+  amount = 601097240.00 * inputs.cost_of_sale
+}
+
+stream cre.pierce_closings on entity asset.east inflow currency USD {
+  schedule every month from 2021-08 to 2024-06
+  category investing.reversion
+  amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
+}
+
+// Cash available to repay the facility: condo closings net of selling costs,
+// plus the two tower sales net of cost of sale. Every period is declared, so
+// the step curve cannot hold a value forward into a quiet month.
+curve loan_proceeds {
+  2011-09: 0.0000
+  2011-10: 0.0000
+  2011-11: 0.0000
+  2011-12: 0.0000
+  2012-01: 0.0000
+  2012-02: 0.0000
+  2012-03: 0.0000
+  2012-04: 0.0000
+  2012-05: 0.0000
+  2012-06: 0.0000
+  2012-07: 0.0000
+  2012-08: 0.0000
+  2012-09: 0.0000
+  2012-10: 0.0000
+  2012-11: 0.0000
+  2012-12: 0.0000
+  2013-01: 0.0000
+  2013-02: 0.0000
+  2013-03: 0.0000
+  2013-04: 0.0000
+  2013-05: 0.0000
+  2013-06: 0.0000
+  2013-07: 0.0000
+  2013-08: 0.0000
+  2013-09: 0.0000
+  2013-10: 0.0000
+  2013-11: 0.0000
+  2013-12: 0.0000
+  2014-01: 0.0000
+  2014-02: 0.0000
+  2014-03: 0.0000
+  2014-04: 0.0000
+  2014-05: 0.0000
+  2014-06: 0.0000
+  2014-07: 0.0000
+  2014-08: 0.0000
+  2014-09: 0.0000
+  2014-10: 0.0000
+  2014-11: 0.0000
+  2014-12: 0.0000
+  2015-01: 0.0000
+  2015-02: 0.0000
+  2015-03: 0.0000
+  2015-04: 0.0000
+  2015-05: 0.0000
+  2015-06: 0.0000
+  2015-07: 0.0000
+  2015-08: 0.0000
+  2015-09: 0.0000
+  2015-10: 0.0000
+  2015-11: 0.0000
+  2015-12: 0.0000
+  2016-01: 0.0000
+  2016-02: 0.0000
+  2016-03: 0.0000
+  2016-04: 0.0000
+  2016-05: 0.0000
+  2016-06: 0.0000
+  2016-07: 0.0000
+  2016-08: 0.0000
+  2016-09: 0.0000
+  2016-10: 0.0000
+  2016-11: 0.0000
+  2016-12: 0.0000
+  2017-01: 0.0000
+  2017-02: 0.0000
+  2017-03: 0.0000
+  2017-04: 0.0000
+  2017-05: 0.0000
+  2017-06: 0.0000
+  2017-07: 0.0000
+  2017-08: 0.0000
+  2017-09: 0.0000
+  2017-10: 0.0000
+  2017-11: 0.0000
+  2017-12: 0.0000
+  2018-01: 0.0000
+  2018-02: 0.0000
+  2018-03: 0.0000
+  2018-04: 0.0000
+  2018-05: 0.0000
+  2018-06: 0.0000
+  2018-07: 0.0000
+  2018-08: 0.0000
+  2018-09: 0.0000
+  2018-10: 0.0000
+  2018-11: 0.0000
+  2018-12: 0.0000
+  2019-01: 0.0000
+  2019-02: 0.0000
+  2019-03: 0.0000
+  2019-04: 0.0000
+  2019-05: 0.0000
+  2019-06: 0.0000
+  2019-07: 0.0000
+  2019-08: 0.0000
+  2019-09: 0.0000
+  2019-10: 0.0000
+  2019-11: 0.0000
+  2019-12: 0.0000
+  2020-01: 0.0000
+  2020-02: 0.0000
+  2020-03: 0.0000
+  2020-04: 0.0000
+  2020-05: 0.0000
+  2020-06: 0.0000
+  2020-07: 0.0000
+  2020-08: 0.0000
+  2020-09: 0.0000
+  2020-10: 0.0000
+  2020-11: 0.0000
+  2020-12: 0.0000
+  2021-01: 0.0000
+  2021-02: 0.0000
+  2021-03: 0.0000
+  2021-04: 0.0000
+  2021-05: 0.0000
+  2021-06: 0.0000
+  2021-07: 0.0000
+  2021-08: 1953580.0000
+  2021-09: 7703550.0000
+  2021-10: 5930850.0000
+  2021-11: 15979000.0000
+  2021-12: 21308500.0000
+  2022-01: 22463700.0000
+  2022-02: 11036150.0000
+  2022-03: 4492550.0000
+  2022-04: 6840000.0000
+  2022-05: 597698767.6000
+  2022-06: 2286650.0000
+  2022-07: 5448250.0000
+  2022-08: 3489350.0000
+  2022-09: 9861304.0000
+  2022-10: 1425000.0000
+  2022-11: 1722350.0000
+  2022-12: 6488975.0000
+  2023-01: 2371200.0000
+  2023-02: 0.0000
+  2023-03: 2702750.0000
+  2023-04: 12230300.0000
+  2023-05: 2239150.0000
+  2023-06: 4359550.0000
+  2023-07: 0.0000
+  2023-08: 2204000.0000
+  2023-09: 5757000.0000
+  2023-10: 3087500.0000
+  2023-11: 2052000.0000
+  2023-12: 3370600.0000
+  2024-01: 0.0000
+  2024-02: 1731850.0000
+  2024-03: 0.0000
+  2024-04: 0.0000
+  2024-05: 3752500.0000
+  2024-06: 3776250.0000
+  2024-07: 0.0000
+  2024-08: 0.0000
+  2024-09: 0.0000
+  2024-10: 0.0000
+  2024-11: 0.0000
+  2024-12: 0.0000
+}
+
+
+// ------------------------------------------------------------- the facility
+// The $380M construction facility (Mack Real Estate Credit Strategies).
+//
+// Equity funds to its commitment first, the loan draws the residual, interest
+// capitalises into the balance, and sale and condo proceeds repay it. Four
+// recurrences, each a fact about the facility, each reading only values that
+// are already finished -- `prev` and the cost curves -- which is what keeps
+// the whole thing acyclic by construction.
+entity asset facility : Asset.Financial {
+  equity_funded init min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                next min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+
+  interest init 0.0
+           next prev.asset.facility.balance * inputs.loan_rate / 12.0
+
+  draw init max(0.0, curve_value("dev_cost", time.date) - inputs.equity_commitment)
+       next min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+
+  repay init 0.0
+        next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value("loan_proceeds", time.date)))
+
+  balance init max(0.0, curve_value("dev_cost", time.date) - inputs.equity_commitment)
+          next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value("loan_proceeds", time.date))))
+}
+
+// Interest is capitalised, so it is never a cash line -- it is repaid inside
+// the principal repayment. That is the convention the reference workbook uses.
+stream cre.loan_draw on entity asset.project inflow currency USD {
+  schedule every month from 2011-09 to 2024-12
+  category financing.debt_proceeds
+  amount = asset.facility.draw
+}
+
+stream cre.loan_repayment on entity asset.project outflow currency USD {
+  schedule every month from 2011-09 to 2024-12
+  category financing.debt_principal
+  amount = asset.facility.repay
+}
+
+// ------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+// The pot is `available` -- the project's own streams netted with east and
+// west rolled up by `part of`, i.e. the levered cash the deal threw off.
+waterfall cre.jv_split on entity asset.project {
+  schedule every month from 2011-09 to 2024-12
+  from available
+
+  pay preferred to party.baupost  = available * (1.0 - inputs.sponsor_share) * inputs.pref_rate
+  pay promote   to party.penzance = remaining * 0.20
+  pay residual  to party.baupost  = remaining
+}

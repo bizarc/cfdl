@@ -1,0 +1,19 @@
+# Benchmark case: The Highlands, Rosslyn VA — Penzance / The Baupost Group.
+# Ground-up mixed-use development on a public-private site: two towers over one
+# shared podium, carrying both for-sale and rental product on a single basis,
+# a $380M construction facility, and a phased exit.
+#
+# Reference: an independent Excel implementation (reference_gen.py generates
+# this model from the same frozen input set the workbook reads, so the two tie
+# by construction rather than by transcription).
+# Status: pending practitioner review.
+summary = "A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalised, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing."
+pack = "cre"
+period_tolerance = 0.01
+
+[tolerance]
+"domain.cre.noi" = 0.01
+"domain.cre.egi" = 0.01
+"domain.cre.opex_total" = 0.01
+"domain.cre.debt_service" = 0.01
+"domain.cre.dscr" = 1.0e-6
