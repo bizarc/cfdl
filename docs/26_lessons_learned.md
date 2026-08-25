@@ -163,7 +163,7 @@ Calendar and schedule are separate concepts and each already carries its half:
 
 - The **calendar** (`docs/01` §6.1) takes any start date, so the grid origin
   can simply be the valuation date.
-- The **schedule** (`docs/01` §11.2) carries placement — `due` for the start of
+- The **schedule** (`docs/01` §11.2) carries placement — `start` for the start of
   a period, the default for its end, `mid` for halfway — plus day rules
   (`on day <n>`, `on eom`), business-day conventions, and stub policies
   (`short_front`, `long_front`, and the back forms). The stub concept exists
