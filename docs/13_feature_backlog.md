@@ -389,40 +389,6 @@ carryforward of realised losses.
 Shape when needed: a borrowed truncated view rather than a copy, so the cost is a
 slice and the restriction stays structural.
 
-### 7.11 Engine diagnostic codes have no uniqueness gate
-
-`tools/check-pack-validations.py` gates `packs/*/validations.toml`, where authors
-add codes by hand and where four collisions occurred. It does not see codes the
-**engine** emits, which live in Rust string literals.
-
-That gap bit while adding the lowering diagnostics for 5.1: `E5010` and `E5011`
-were picked by reading the file and both were already taken
-(`E5010_TERM_UNKNOWN_INPUT`, `E5011_TERM_CLIP_OUT_OF_BOUNDS`). The same failure
-as 7.6, one layer over, and by the same method — picking a free code by eye is
-not reliable.
-
-Mitigated: the gate now also checks numeric-prefix uniqueness across
-`docs/08_diagnostics.md`, the published register where every engine code is
-listed. Confirmed to bite.
-
-*Update — the mitigation's own assumption failed, exactly as predicted.* It
-rests on `docs/08` listing every engine code, which nothing enforces: the gate
-reads the register and the pack TOML, never the Rust. Found by auditing the
-backlog itself — the whole waterfall family, `E1340` through `E1346`, was
-emitted by the compiler and absent from the register, while every other
-`E13xx` code was present. `E1346` had been added to `docs/17`'s table and
-nowhere else, on the day it shipped. The seven are now documented, but the
-gate that would have caught it still does not exist: it must extract codes
-from the Rust string literals and require each to appear in the register,
-which is the same shape as `tools/check-keyword-register.py` does for
-keywords.
-
-What is still missing is the other half of the pair — a check that every code
-emitted in non-test Rust actually appears in that register. Without it the doc
-gate only fires for codes someone remembered to document. Extracting from Rust
-needs to exclude the deliberately corrupted codes inside parser tests
-(`E7001_WRONG_PACK` and friends), which is why it was not done in the same pass.
-
 ### 7.13 District energy has no usable reference model
 
 Scoped, not built. `research/CFDL_pack_roadmap_and_model_catalogue.xlsx` ranks

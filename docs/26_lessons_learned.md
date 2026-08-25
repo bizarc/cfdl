@@ -297,6 +297,28 @@ ALTERNATES SIGN rather than drifting. In aggregate it looks like noise, so it
 survives reconciliation against anything but a source that rounds — and a debt
 sizing struck off one year's coverage feels the 1.8%.
 
+### A register check must run in both directions
+
+`tools/check-pack-validations.py` asserted that a documentation page never
+cites a code that does not exist. It never asserted the reverse — that every
+code the crates can emit appears in the register — and the asymmetry hid a
+whole class of defect, because the failure is silent on the side nobody checks.
+
+What it let through: the entire `E1340`-`E1346` waterfall family, `E5027`, and
+`E6065` on the day it shipped. Each fires at a modeller and each was absent
+from `docs/08_diagnostics.md`, which is the only place a code can be looked up.
+A diagnostic that cannot be researched is barely better than no diagnostic.
+
+The check now scans Rust string literals for `"E####_NAME"` and requires each
+in the register. Codes inside a crate's `mod tests` are excluded by position,
+not by an allow-list of names, so a new test fixture does not need the gate
+edited to accommodate it.
+
+**The general shape.** Any gate comparing two artefacts should say which
+direction it runs, and a one-directional gate should record why the other
+direction is not checked. Registers, mirrors and generated pages all have this
+property: drift is only caught on the side the tool looks at.
+
 ## How to achieve a behavior
 
 ### A balance swept by the period's free cash flow
