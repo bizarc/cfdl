@@ -327,7 +327,15 @@ pub(crate) fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
     let mut lo = f64::NAN;
     let mut f_lo = f64::NAN;
     for candidate in [
-        -0.9999_f64, -0.999, -0.99, -0.95, -0.9, -0.8, -0.6, -0.4, -0.2,
+        -0.9999_f64,
+        -0.999,
+        -0.99,
+        -0.95,
+        -0.9,
+        -0.8,
+        -0.6,
+        -0.4,
+        -0.2,
     ] {
         let value = f(candidate);
         if value.is_finite() {
