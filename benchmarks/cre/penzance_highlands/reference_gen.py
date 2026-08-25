@@ -9,6 +9,7 @@ T    = tomllib.load(open(CASE / "inputs" / "highlands.toml", "rb"))
 M0, N       = dt.date(2011, 9, 1), 160
 T_C0, T_C1  = 79, 117          # construction window (2018-04 .. 2021-06)
 T_AUB, T_EVO, T_EXIT = 118, 120, 128
+T_DIST      = 153              # 2024-06, the last condominium closing
 WSUM        = sum((t - 78) * (118 - t) for t in range(T_C0, T_C1 + 1))
 
 def ym(t):
@@ -292,21 +293,62 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
   amount = asset.facility.repay
 }
 
-// ------------------------------------------------------------- the JV split
-// Penzance / Baupost terms are not public; these tiers are stated assumptions.
-// The pot is `available` -- the project's own streams netted with east and
-// west rolled up by `part of`, i.e. the levered cash the deal threw off.
-waterfall cre.jv_split on entity asset.project {
-  schedule every month start from %s to %s
-  from available
+// ------------------------------------------------------------ the JV capital
+// A development JV does not distribute while the deal is live. Cash accrues to
+// the venture and is split once, when the last unit closes, so the preference
+// and the capital are CUMULATIVE quantities carried as balances rather than
+// re-derived at the distribution -- 17_ordered_waterfall.md section 10.
+//
+// Both partners fund pro rata and nothing is returned before the split, so the
+// two balances only grow. Their difference is the accrued preference.
+//
+// The preference accrues from CONSTRUCTION START, not from the 2011 land
+// purchase: the venture is formed to build, and the land it is capitalized
+// with earns nothing for the seven years before there is anything to build.
+// Compounding that $67M from 2011 instead consumes the entire promote, which
+// is how the assumption announced itself.
+entity asset jv : Asset.Financial {
+  // The facility's equity funding one period back, so a month's contribution
+  // can be differenced without reaching two periods behind.
+  funded_prev init 0.0
+              next prev.asset.facility.equity_funded
 
-  pay preferred to party.baupost  = available * (1.0 - inputs.sponsor_share) * inputs.pref_rate
-  pay promote   to party.penzance = remaining * 0.20
-  pay residual  to party.baupost  = remaining
+  capital init 0.0
+          next prev.asset.jv.capital
+             + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+
+  unreturned init 0.0
+             next prev.asset.jv.unreturned * (1.0 + if(time.t >= %d, inputs.pref_rate / 12.0, 0.0))
+                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+}
+
+// -------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+//
+// `available` is THIS period's netted cash, so on a once-at-end waterfall it
+// would draw only the final month. The pot is the streams' own running sum
+// since inception instead -- cumulative net cash, after every cost, every draw
+// and the facility payoff. The waterfall is named outside the `cre.` prefix so
+// the selector cannot match its own steps (E1342).
+//
+// There is no return-of-capital tier, and that is a property of the pot rather
+// than of the deal. Contributions are outflows inside the streams, so a running
+// sum of them has ALREADY recovered the capital: what survives to the end is
+// profit. Paying capital back out of profit would recover it a second time and
+// leave nothing for the promote -- which is exactly what it did.
+waterfall jv.distribution on entity asset.project {
+  schedule on %s end
+  from series_sum("cre.*", 0, time.t)
+
+  pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
+  pay promote       to party.penzance = remaining * 0.20
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
+  pay residual_sp   to party.penzance = remaining
 }
 """ % (INT, INIT_DRAW, DRAW, REPAY, INIT_DRAW, DRAW, INT, REPAY,
        ym(0), ym(N - 1), ym(0), ym(N - 1), ym(0), ym(N - 1),
-       ym(0), ym(N - 1), ym(0), ym(N - 1)))
+       ym(0), ym(N - 1), T_C0, ym(T_DIST)))
 
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "model.cfdl").write_text("\n".join(L))

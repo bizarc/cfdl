@@ -16,6 +16,7 @@
     "sync:examples": "node scripts/sync-playground-examples.mjs",
     "check:examples": "node scripts/sync-playground-examples.mjs --check",
     "check:dialogs": "node scripts/check-no-native-dialogs.mjs",
+    "check:middleware": "node scripts/check-middleware.mjs",
     "check:notebooks": "node scripts/check-notebooks-fresh.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

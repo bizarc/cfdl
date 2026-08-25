@@ -136,6 +136,7 @@ verify-site-nofresh:
 	cd site && npm run check:links
 	cd site && npm run check:examples
 	cd site && npm run check:dialogs
+	cd site && npm run check:middleware
 	cd site && npm run check:descriptions
 	# The learn app mirrors the design system from site/; a site-side edit to a
 	# shared file fails here until learn/ is re-synced. Runs plain node, so it
