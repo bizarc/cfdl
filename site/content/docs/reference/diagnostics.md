@@ -162,6 +162,14 @@ register, so it cannot fall behind the language.
 | `E5017_PERIOD_TERM_NOT_LITERAL` | Lowering/emission | a `_months` term that a rule converts into periods is not a literal number: it defers to `inputs.<name>`, holds an expression, or does not parse as a number at all. The conversion happens at compile time and a non-literal is not known until the run. |
 | `E5019_UNKNOWN_DAY_COUNT` | Lowering/emission | a contract's `day_count` or `amortization_day_count` is not one of `30/360`, `30e/360`, `act/360`, `act/365`. Not defaulted silently: the gap between act/360 and act/365 is roughly 1.4% of interest. |
 | `E5027_ACTUAL_AMORTIZATION_BASIS` | Lowering/emission | a contract's `amortization_day_count` is `act/360` or `act/365`. That term chooses what the CONSTANT payment is struck on, and an Actual basis expands to a period-local divisor (`360 / time.days_in_period`) which the annuity then applies to every remaining period — so the payment moves with month length. Measured on a single 1.2m loan at 6%: a 460.68 swing over twelve months, with no pool, no prepayment and no defaults involved. Strike the payment on `30/360` and accrue interest on the Actual basis with `day_count`, which is what an Actual/360 loan document says; `day_count` itself is unaffected, because a per-period divisor is exactly right for a per-period accrual. |
+| `E2301_ASSUME_UNKNOWN_DIST` | Lowering/emission | a random assumption names a distribution that does not exist. The supported set is `Normal`, `LogNormal`, `Uniform`, `Triangular`. |
+| `E2302_ASSUME_INVALID_PARAM` | Lowering/emission | a distribution parameter is not a number, or is outside what the distribution admits. |
+| `E2303_ASSUME_MISSING_PARAM` | Lowering/emission | a distribution is missing a parameter it requires. |
+| `E2304_ASSUME_INVALID_CLIP` | Lowering/emission | a `clip=[lo, hi]` is malformed or inverted. |
+| `E2401_OPTION_MISSING_EXERCISE` | Lowering/emission | an option declares no `exercise when`, so nothing can ever trigger it. |
+| `E2402_OPTION_MISSING_PAYOFF` | Lowering/emission | an option declares no `payoff`, so exercising it would move no cash. |
+| `E5023_SUBTOTAL_UNKNOWN_CATEGORY` | Lowering/emission | a pack subtotal folds a category no rule emits, so the row would always be zero. |
+| `E5024_TERM_UNIT_MISMATCH` | Lowering/emission | a term is supplied in units the rule does not declare for it. |
 | `E5025_TERM_EXPR_INVALID` | Lowering/emission | a term holds an expression that does not compile. Checked at the term's own span, before substitution: after the splice the error would point at a rule the modeller did not write. |
 | `E5026_TERM_EXPR_IN_LITERAL_SLOT` | Lowering/emission | a term holding an expression is used by a rule where only a literal can go: a stream name, a schedule date, a frequency, or a net-days count. Those slots are never parsed as expressions, so an expression there is not evaluated late — it is wrong. Expression terms are valid where the rule uses the term in an expression, which is `amount_expr` and a field's `init`/`next`. |
 | `E6001_CRE_LEASE_MISSING_BASE_RENT` | Pack domain validations |  |
@@ -182,6 +190,7 @@ register, so it cannot fall behind the language.
 | `E6061_CRE_OPEX_LINE_MISSING_AMOUNT` | Pack domain validations | an operating expense line states `amount` or `amount_year`; both default to zero, so stating neither is a line that silently costs nothing |
 | `E6062_CRE_OPEX_LINE_PCT_FIXED_RANGE` | Pack domain validations | the fixed SHARE, in [0, 1]; catches 81 entered where 0.81 was meant, which would otherwise report a wrong expense rather than fail |
 | `E6063_CRE_OPEX_LINE_OCCUPANCY_RANGE` | Pack domain validations | a ratio of occupied space, in [0, 1]; zero is a fully dark building and is legitimate |
+| `E6065_CRE_CONSTRUCTION_INVALID_CAPITALIZE_INTEREST` | Pack domain validations | a construction loan's `capitalize_interest` is neither 0 nor 1. It is an election, not a rate: 1 rolls each period's accrued interest into the balance, 0 pays it as it accrues. 0 is the default, so a model that says nothing is unaffected. |
 | `E6064_CRE_REVENUE_LINE_MISSING_AMOUNT` | Pack domain validations | a revenue line states `amount` or `amount_year`; both default to zero, so stating neither is a line that silently earns nothing |
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | Pack domain validations |  |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | Pack domain validations |  |
@@ -225,7 +234,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*173 codes.*
+*182 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

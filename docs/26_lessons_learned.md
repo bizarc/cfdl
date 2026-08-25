@@ -186,7 +186,7 @@ stream fy.cash on entity asset.co inflow currency USD {
 lands at 0.75, 1.75, 2.75, 3.75 and 4.75 years out — exactly the off-cycle
 spacing a banker's DCF needs.
 
-**The trap that produced the claim.** Omitting `due` places the payment at the
+**The trap that produced the claim.** Omitting the placement puts the payment at the
 END of each annual period, roughly eleven months later, which reads as the
 schedule "drifting" off the fiscal year end. It is not drift; it is the
 documented default. Say where in the period the cash sits.

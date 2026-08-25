@@ -291,7 +291,7 @@ check = "term_range_within_timeline"
 
 # --- cre.opex_line ----------------------------------------------------------
 #
-# The contract that replaced `cre.opex_line` and `cre.opex_line`. Both
+# The contract that replaced `cre.property_opex` and `cre.ops_expense`. Both
 # amount terms default to zero so either one alone is enough; stating neither is
 # a line that silently costs nothing, which is why it is checked rather than
 # defaulted away.

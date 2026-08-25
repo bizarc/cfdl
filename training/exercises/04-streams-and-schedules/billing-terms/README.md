@@ -3,7 +3,7 @@
 The totals are already right; the *timing* is wrong. Apply the two stated terms.
 
 1. Make collections settle `net 45`.
-2. Add the 15,000 retainer deposit at the start of January, written as a one-shot placed with `due`.
+2. Add the 15,000 retainer deposit at the start of January, written as a one-shot placed with `start`.
 
 Predict the shape before you run:
 

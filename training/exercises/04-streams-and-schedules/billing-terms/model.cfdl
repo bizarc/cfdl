@@ -8,7 +8,7 @@ entity asset agency : Asset.Intangible
 // are missing from this model:
 //   1. Clients pay net 45 — apply it to collections.
 //   2. A 15,000 retainer deposit arrives at the START of January 2026 —
-//      add it as a single-occurrence stream placed with `due` (hint: a
+//      add it as a single-occurrence stream placed with `start` (hint: a
 //      stride from 2026-01 to 2026-01 has exactly one occurrence).
 stream agency.collections on entity asset.agency inflow currency USD {
   schedule every month from 2026-01 to 2026-06

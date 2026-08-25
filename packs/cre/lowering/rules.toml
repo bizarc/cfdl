@@ -227,7 +227,7 @@ schedule_to = "{{contract.term_end}}"
 # THE operating expense contract. One rule spans a single blended figure and a
 # full itemised schedule; the grain is chosen by how many instances a model
 # declares, and the LEVEL by the entity each hangs on (`part_of` rolls them up).
-# It replaced `cre.opex_line` and `cre.opex_line`, which differed only in
+# It replaced `cre.property_opex` and `cre.ops_expense`, which differed only in
 # escalation and in whether they could be instanced — and, confusingly, the one
 # named for a single property was the repeatable one.
 #
