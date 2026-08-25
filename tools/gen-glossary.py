@@ -52,7 +52,16 @@ CATEGORIES = [
 
 
 def entries(register: dict) -> list[dict]:
-    return register.get("technical_name", [])
+    # A term may be registered before it is built, to reserve the word and to
+    # record why a name was chosen over its rejected alternatives. The register
+    # wants that entry; the published page must not carry it, because the page
+    # promises "the one meaning it carries" for terms the product actually uses.
+    # `status = "proposed"` keeps the two apart. Absent means shipped.
+    return [
+        e
+        for e in register.get("technical_name", [])
+        if e.get("status", "shipped") != "proposed"
+    ]
 
 
 def render(register: dict) -> str:

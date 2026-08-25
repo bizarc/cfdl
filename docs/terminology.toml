@@ -206,6 +206,35 @@ definition = "A named series of values indexed by time."
 occurrences = 98
 
 [[technical_name]]
+term = "quantile"
+category = "language"
+definition = "A named series of values indexed by cumulative share."
+status = "proposed"
+occurrences = 0
+note = """PROPOSED, not yet built — see docs/27_quantiles.md. Registered ahead of
+implementation because the naming decision was the hard part and three candidates
+were rejected on measured evidence:
+
+  profile       10 occurrences, every one meaning a TIME-ORDERED path — "the
+                collection profile shortens", "a development's funding profile",
+                "generation profile", "decline profile". A chronology-free object
+                cannot take the corpus's word for a chronological one.
+  distribution  279 occurrences. In CFDL this means cash paid down a waterfall.
+                It names an engine stage and a lesson in docs/26.
+  deck          37 occurrences. "Price deck" is already an informal synonym for a
+                date-indexed curve in docs/01 and docs/09.
+
+Domain terms were rejected on principle rather than on count. The precedent is
+`curve` itself: the language took the neutral noun and left "price deck" and
+"rate curve" in prose. A construct serving four domains must not adopt one
+domain's word. The terms of art — price duration curve, load duration curve,
+stratification table, exceedance probability curve, unit mix — stay in
+documentation.
+
+One clause separates this definition from `curve`'s, which is the right distance
+for two constructs that are siblings."""
+
+[[technical_name]]
 term = "fact field"
 category = "language"
 definition = "A field on an entity that takes a literal and nothing else. A value that moves must be a rule field."
