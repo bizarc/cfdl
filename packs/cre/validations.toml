@@ -328,3 +328,26 @@ term = "occupancy"
 min = 0
 max = 1
 when = "present"
+
+# --- cre.percentage_rent_expected -------------------------------------------
+#
+# The quantile name is checked for PRESENCE here; that it resolves to a
+# declared quantile is an evaluation error, the same tier as a curve name a
+# contract states.
+[[validations]]
+contract = "cre.percentage_rent_expected"
+code = "E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE"
+message = "CRE expected percentage rent must name a sales distribution in 'sales_quantile'. Without one there is no distribution to take an expectation over — use 'cre.percentage_rent' for a lease underwritten on a single sales figure."
+check = "any_term_present"
+terms = ["sales_quantile"]
+
+[[validations]]
+contract = "cre.percentage_rent_expected"
+code = "E6067_CRE_PCT_RENT_INVALID_OVERAGE_PCT"
+message = "CRE expected percentage rent 'overage_pct' must be a fraction between 0 and 1."
+check = "term_number"
+term = "overage_pct"
+when = "present"
+on_invalid = "report"
+min = 0.0
+max = 1.0
