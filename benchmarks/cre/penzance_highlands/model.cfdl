@@ -12,7 +12,7 @@ time calendar monthly from 2011-09 for 160
 //   east  = Pierce (104 for-sale condos) + Evo (455 rental)
 //   west  = Aubrey (331 rental)
 // The for-sale and rental product share a basis, which is what makes this
-// deal worth modelling rather than a generic development.
+// deal worth modeling rather than a generic development.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
 // sellout are recorded fact — Arlington's site-plan record, deed register,
@@ -743,7 +743,7 @@ curve loan_proceeds {
 // The $380M construction facility (Mack Real Estate Credit Strategies).
 //
 // Equity funds to its commitment first, the loan draws the residual, interest
-// capitalises into the balance, and sale and condo proceeds repay it. Four
+// capitalizes into the balance, and sale and condo proceeds repay it. Four
 // recurrences, each a fact about the facility, each reading only values that
 // are already finished -- `prev` and the cost curves -- which is what keeps
 // the whole thing acyclic by construction.
@@ -764,7 +764,7 @@ entity asset facility : Asset.Financial {
           next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value("loan_proceeds", time.date))))
 }
 
-// Interest is capitalised, so it is never a cash line -- it is repaid inside
+// Interest is capitalized, so it is never a cash line -- it is repaid inside
 // the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12

@@ -7,7 +7,7 @@
 # this model from the same frozen input set the workbook reads, so the two tie
 # by construction rather than by transcription).
 # Status: pending practitioner review.
-summary = "A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalised, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing."
+summary = "A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalized, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing."
 pack = "cre"
 period_tolerance = 0.01
 

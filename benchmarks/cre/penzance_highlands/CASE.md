@@ -21,9 +21,9 @@ and a new public street — that are pure cost with no revenue.
 
 ## The reference
 
-Public record, and an independent Excel implementation built from it.
-`reference_gen.py` generates this model from the same frozen input set the
-workbook reads, so the two tie by construction rather than by transcription.
+Public record, and an independent spreadsheet implementation built from it.
+Both read the same frozen input set, so they tie by construction rather than by
+transcription.
 
 Fact, from Arlington County: the program, unit mix by tower, GFA, parking, FAR
 and the quantified public obligations (site plan SP #445, 2017 approval with
@@ -53,7 +53,7 @@ The facility is five recurrences on one entity — `equity_funded`, `interest`,
 `draw`, `repay`, `balance` — each reading only `prev` and the cost curves, never
 a stream, which is what keeps it acyclic. It is hand-built rather than the
 pack's `cre.construction_loan` contract, and so does not use that contract's
-`capitalize_interest` election; the behaviour is the same, the implementation
+`capitalize_interest` election; the behavior is the same, the implementation
 independent.
 
 Every cost curve declares **every** period, including the zeros. A step curve is
