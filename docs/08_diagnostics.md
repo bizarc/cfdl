@@ -303,6 +303,12 @@ Warnings:
 - `E5007_DUPLICATE_LOWERED_STREAM` — two contracts lower to the same stream name. Give one a suffix.
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
   malformed point in a `curve` statement
+- `E5028_INVALID_QUANTILE` — duplicate quantile name, a malformed point, a
+  share outside `0..1`, shares out of order or repeated, or values that fall as
+  share rises. The last is the one worth stating plainly: a quantile function
+  that decreases leaves `quantile_of` with no single answer, so a threshold
+  lookup would silently pick one of several. Rejecting it is what makes the
+  inverse well-defined rather than merely usually right.
 - `E5009_LOWERED_EXPR_INVALID` — a pack lowering rule expanded to an amount
   expression the parser rejects. Without this the engine evaluates the failed
   expression as zero and continues with only a warning.

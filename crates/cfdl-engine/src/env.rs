@@ -73,6 +73,22 @@ pub(crate) fn eval_amount_expr(
     }
 }
 
+/// Quantile declarations from IR as expression-env quantile defs. Shares were
+/// range-checked, ordered and normalized to ascending by the compiler.
+pub(crate) fn ir_quantile_defs(ir: &Ir) -> BTreeMap<String, cfdl_expr::QuantileDef> {
+    let mut out = BTreeMap::new();
+    for q in &ir.quantiles {
+        out.insert(
+            q.name.clone(),
+            cfdl_expr::QuantileDef {
+                interpolation: q.interpolation.clone(),
+                points: q.points.iter().map(|p| (p.share, p.value)).collect(),
+            },
+        );
+    }
+    out
+}
+
 /// Curve declarations from IR as expression-env curve defs. Dates were
 /// normalized and validated by the compiler; unparseable points are skipped.
 pub(crate) fn ir_curve_defs(ir: &Ir) -> BTreeMap<String, cfdl_expr::CurveDef> {
@@ -180,6 +196,7 @@ pub(crate) fn build_base_env(
         ExprValue::Decimal(days_in_period(&ir.time.calendar, date)),
     );
     env.curves = ir_curve_defs(ir);
+    env.quantiles = ir_quantile_defs(ir);
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));
     }
@@ -457,6 +474,7 @@ pub(crate) fn build_expr_env(
     );
     // No `entity.state` map — see apply_entity_state.
     env.curves = ir_curve_defs(ir);
+    env.quantiles = ir_quantile_defs(ir);
 
     for (name, value) in base_inputs {
         env.inputs.insert(name.clone(), ExprValue::Decimal(*value));

@@ -806,6 +806,66 @@ pub(crate) fn curve_call(
         })
 }
 
+/// `quantile_at(name, share)`, `quantile_mean(name, from, to)` and
+/// `quantile_of(name, value)`: lookups into a declared `quantile`, resolved by
+/// the host.
+///
+/// A quantile is indexed by cumulative SHARE, not by date — passing one to
+/// `curve_value`, or a curve to these, resolves to nothing and is reported as
+/// an unavailable name rather than silently returning a number off the wrong
+/// axis.
+pub(crate) fn quantile_call(
+    name: &str,
+    args: &[Arg],
+    span: Span,
+    env: &dyn crate::eval::Env,
+) -> Result<Value, CalcError> {
+    let text = |a: &Arg| match &a.0 {
+        Value::Text(s) => Ok(s.clone()),
+        other => Err(CalcError::new(
+            format!(
+                "{name} expects a quantile name text, got {}",
+                other.type_name()
+            ),
+            Some(a.1),
+        )),
+    };
+    let number = |a: &Arg| match &a.0 {
+        Value::Number(n) => Ok(*n),
+        other => Err(CalcError::new(
+            format!("{name} expects a number, got {}", other.type_name()),
+            Some(a.1),
+        )),
+    };
+    let (quantile_name, name_span, result) = match name {
+        "quantile_mean" => {
+            let [q, from, to] = exactly::<3>(name, args, span)?;
+            let qn = text(q)?;
+            (
+                qn.clone(),
+                q.1,
+                env.quantile_mean(&qn, number(from)?, number(to)?),
+            )
+        }
+        "quantile_of" => {
+            let [q, value] = exactly::<2>(name, args, span)?;
+            let qn = text(q)?;
+            (qn.clone(), q.1, env.quantile_of(&qn, number(value)?))
+        }
+        _ => {
+            let [q, share] = exactly::<2>(name, args, span)?;
+            let qn = text(q)?;
+            (qn.clone(), q.1, env.quantile_at(&qn, number(share)?))
+        }
+    };
+    result.map(Value::Number).ok_or_else(|| {
+        CalcError::new(
+            format!("{name}: quantile `{quantile_name}` is not available in this context"),
+            Some(name_span),
+        )
+    })
+}
+
 /// Does the expression call any of the given function names? Used by the
 /// engine to decide which streams read series at all.
 pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {

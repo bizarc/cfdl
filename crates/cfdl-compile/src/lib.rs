@@ -355,6 +355,10 @@ struct Ir {
     assumptions: IrAssumptions,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     curves: Vec<IrCurve>,
+    /// Values indexed by cumulative share. Omitted when a model declares none,
+    /// so existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    quantiles: Vec<IrQuantile>,
     /// Ordered allocations of a pot. Omitted when a model declares none, so
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -437,6 +441,30 @@ struct IrWaterfallStep {
 #[derive(Debug, Serialize)]
 struct IrCurvePoint {
     date: String,
+    value: f64,
+}
+
+/// A named series of values indexed by cumulative share.
+///
+/// ONE CANONICAL FORM. Points are stored ascending by share whatever the
+/// source said: `by exceedance` is reversed here, so the IR carries no
+/// orientation and no consumer has to know which way the author wrote it.
+#[derive(Debug, Serialize)]
+struct IrQuantile {
+    name: String,
+    /// "step" or "linear" — the same two words a curve uses, and the integral
+    /// `quantile_mean` takes is the exact integral of whichever they describe.
+    interpolation: String,
+    /// The pack reference id this realises, when the declaration named one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reference: Option<String>,
+    /// Points sorted ascending by share.
+    points: Vec<IrQuantilePoint>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrQuantilePoint {
+    share: f64,
     value: f64,
 }
 
@@ -2467,6 +2495,12 @@ fn build_ir(
         sort_compile_diagnostics(&mut diagnostics);
         return Err(diagnostics);
     }
+    let (ir_quantiles, quantile_diags) = lower_quantiles(resolve_output);
+    if !quantile_diags.is_empty() {
+        let mut diagnostics = quantile_diags;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
 
     let (ir_subtotals, subtotal_diags) = lower_subtotals(active_pack);
     if !subtotal_diags.is_empty() {
@@ -2551,6 +2585,7 @@ fn build_ir(
             random: assume_random,
         },
         curves: ir_curves,
+        quantiles: ir_quantiles,
         waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
@@ -4461,6 +4496,109 @@ fn lower_subtotals(active_pack: Option<&ActivePackContext>) -> (Vec<IrSubtotal>,
         });
     }
     (out, diags)
+}
+
+/// Lower `quantile` statements into IR: dedupe names, reject a malformed
+/// shape, and normalise every declaration into the one canonical ascending
+/// form.
+///
+/// The checks exist because a quantile has an axis a curve does not, and every
+/// way of getting that axis wrong produces a plausible number rather than an
+/// obvious failure. A share outside [0, 1] is not a share. A repeated share is
+/// two answers to one question. And values must be non-decreasing in share, or
+/// `quantile_of` — the inverse — has no single answer, which would make a
+/// threshold lookup silently pick one.
+fn lower_quantiles(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> (Vec<IrQuantile>, Vec<Diagnostic>) {
+    let mut quantiles: Vec<IrQuantile> = Vec::new();
+    let mut diags = Vec::new();
+
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Quantile(q) = &source_stmt.statement else {
+            continue;
+        };
+        let make_diag = |message: String| Diagnostic {
+            code: "E5028_INVALID_QUANTILE".to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(source_stmt.file.clone()),
+            span: Some(map_span(q.span)),
+            path: None,
+            hint: None,
+            notes: vec![format!("quantile '{}'", q.name)],
+        };
+
+        if quantiles.iter().any(|existing| existing.name == q.name) {
+            diags.push(make_diag(format!(
+                "Quantile '{}' is declared more than once.",
+                q.name
+            )));
+            continue;
+        }
+
+        let mut points: Vec<IrQuantilePoint> = Vec::with_capacity(q.points.len());
+        let mut bad = false;
+        for (share_lit, value_lit) in &q.points {
+            let (Ok(share), Ok(value)) = (share_lit.parse::<f64>(), value_lit.parse::<f64>())
+            else {
+                diags.push(make_diag(format!(
+                    "Quantile '{}' has a malformed point '{share_lit}: {value_lit}'.",
+                    q.name
+                )));
+                bad = true;
+                break;
+            };
+            if !(0.0..=1.0).contains(&share) {
+                diags.push(make_diag(format!(
+                    "Quantile '{}' has share {share}, which is outside 0..1. A share is a \
+                     fraction of the measure, and the measure itself belongs to the contract \
+                     that reads it.",
+                    q.name
+                )));
+                bad = true;
+                break;
+            }
+            points.push(IrQuantilePoint { share, value });
+        }
+        if bad {
+            continue;
+        }
+
+        // `by exceedance` is written worst-first. Reversing here is what keeps
+        // the IR to one orientation.
+        if q.order == "exceedance" {
+            points.reverse();
+        }
+
+        if let Some(w) = points.windows(2).find(|w| w[0].share >= w[1].share) {
+            diags.push(make_diag(format!(
+                "Quantile '{}' has shares {} and {} out of order or repeated. Points must be \
+                 strictly increasing in share once read in the declared order.",
+                q.name, w[0].share, w[1].share
+            )));
+            continue;
+        }
+        if let Some(w) = points.windows(2).find(|w| w[0].value > w[1].value) {
+            diags.push(make_diag(format!(
+                "Quantile '{}' falls from {} to {} as share increases. A quantile function is \
+                 non-decreasing; without that, `quantile_of` has no single answer and a \
+                 threshold lookup would silently pick one of several.",
+                q.name, w[0].value, w[1].value
+            )));
+            continue;
+        }
+
+        quantiles.push(IrQuantile {
+            name: q.name.clone(),
+            interpolation: q.interpolation.clone(),
+            reference: q.reference.clone(),
+            points,
+        });
+    }
+
+    quantiles.sort_by(|a, b| a.name.cmp(&b.name));
+    (quantiles, diags)
 }
 
 fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>, Vec<Diagnostic>) {

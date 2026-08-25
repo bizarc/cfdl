@@ -12,6 +12,7 @@ statement       = version_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
+                | quantile_stmt
                 | contract_stmt
                 | stream_stmt
                 | waterfall_stmt
@@ -74,6 +75,23 @@ entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
 curve_interp    = "step" | "linear" ;
 curve_point     = DATE ":" [ "-" ] NUMBER ;
+
+(* --- quantiles: values indexed by CUMULATIVE SHARE rather than by date, read
+   with quantile_at() / quantile_mean() / quantile_of().
+
+   `step`, `linear`, `by` and `ref` are contextual identifiers, not keywords,
+   exactly as a curve's interpolation mode is — the construct reserves one new
+   word and no more.
+
+   `by exceedance` writes the points worst-first, the way a duration curve
+   reads. It is surface only: the compiler reverses them into the single
+   canonical ascending form, so the IR carries no orientation. --- *)
+quantile_stmt   = "quantile" IDENT [ quantile_interp ] [ quantile_order ]
+                  [ "ref" qname ]
+                  "{" quantile_point { [ "," ] quantile_point } "}" ;
+quantile_interp = "step" | "linear" ;
+quantile_order  = "by" ( "quantile" | "exceedance" ) ;
+quantile_point  = NUMBER ":" [ "-" ] NUMBER ;
 
 dist_expr       = dist_name "(" [ dist_arg { "," dist_arg } ] ")" ;
 dist_name       = "Normal" | "LogNormal" | "Uniform" | "Triangular" ;

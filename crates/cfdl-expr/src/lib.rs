@@ -77,6 +77,11 @@ pub struct ExprEnv {
     /// `curve_value(name, date)`. Populated by the engine from IR; empty
     /// elsewhere.
     pub curves: BTreeMap<String, CurveDef>,
+    /// Named quantile declarations (`quantile` statements) available to
+    /// `quantile_at`, `quantile_mean` and `quantile_of`. A quantile is indexed
+    /// by cumulative share rather than by date, which is the whole difference
+    /// from a curve. Populated by the engine from IR; empty elsewhere.
+    pub quantiles: BTreeMap<String, QuantileDef>,
     /// Declared states at the CURRENT period, read as `state.<name>`.
     /// Populated when evaluating a stream; empty when evaluating a state's
     /// own `next`, which is what makes a same-period read unreachable rather
@@ -121,6 +126,24 @@ pub struct CurveDef {
     pub points: Vec<(Date, f64)>,
 }
 
+/// A named quantile: (share, value) points plus interpolation policy.
+///
+/// CANONICAL FORM IS ASCENDING. `by exceedance` is an authoring convenience
+/// that the compiler reverses, so every consumer sees shares rising from 0 and
+/// no consumer carries an orientation. See docs/27_quantiles.md.
+#[derive(Debug, Clone, PartialEq)]
+pub struct QuantileDef {
+    /// "step" (the value of the last point at or below the query share) or
+    /// "linear" (linear between bracketing points). The same two words a curve
+    /// uses, with the same meanings — and the integral is defined as the exact
+    /// integral of whichever function they describe, so quadrature is derived
+    /// rather than declared.
+    pub interpolation: String,
+    /// Points sorted ascending by share. Shares lie in [0, 1] and values are
+    /// non-decreasing, both enforced at compile time.
+    pub points: Vec<(f64, f64)>,
+}
+
 impl ExprEnv {
     pub fn empty() -> Self {
         Self {
@@ -140,6 +163,7 @@ impl ExprEnv {
             owed: BTreeMap::new(),
             series: Arc::default(),
             curves: BTreeMap::new(),
+            quantiles: BTreeMap::new(),
         }
     }
 }
@@ -503,6 +527,137 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
     fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<Decimal> {
         self.curve_lookup(name, date).and_then(Decimal::from_f64)
     }
+
+    fn quantile_at(&self, name: &str, share: Decimal) -> Option<Decimal> {
+        let q = self.env.quantiles.get(name)?;
+        quantile_eval(q, to_f64(share)?).and_then(Decimal::from_f64)
+    }
+
+    fn quantile_mean(&self, name: &str, from: Decimal, to: Decimal) -> Option<Decimal> {
+        let q = self.env.quantiles.get(name)?;
+        quantile_slice_mean(q, to_f64(from)?, to_f64(to)?).and_then(Decimal::from_f64)
+    }
+
+    fn quantile_of(&self, name: &str, value: Decimal) -> Option<Decimal> {
+        let q = self.env.quantiles.get(name)?;
+        quantile_invert(q, to_f64(value)?).and_then(Decimal::from_f64)
+    }
+}
+
+fn to_f64(d: Decimal) -> Option<f64> {
+    use rust_decimal::prelude::ToPrimitive;
+    d.to_f64()
+}
+
+/// The quantile function at `share`, clamped flat outside [first, last].
+///
+/// `step` reads the last point at or below the share, which is the same
+/// flat-forward rule a `step` curve uses on dates.
+fn quantile_eval(q: &QuantileDef, share: f64) -> Option<f64> {
+    let pts = &q.points;
+    if pts.is_empty() {
+        return None;
+    }
+    if share <= pts[0].0 {
+        return Some(pts[0].1);
+    }
+    let last = pts[pts.len() - 1];
+    if share >= last.0 {
+        return Some(last.1);
+    }
+    let idx = pts.partition_point(|(x, _)| *x <= share);
+    let prev = pts[idx - 1];
+    if q.interpolation == "linear" {
+        let next = pts[idx];
+        let frac = (share - prev.0) / (next.0 - prev.0);
+        Some(prev.1 + (next.1 - prev.1) * frac)
+    } else {
+        Some(prev.1)
+    }
+}
+
+/// The mean value over the share slice `[from, to]` — a PARTIAL EXPECTATION
+/// divided by the slice width, which is what a payoff over a tail actually
+/// needs.
+///
+/// Computed as the exact integral of the interpolated function rather than by
+/// sampling it: rectangles under `step`, trapezoids under `linear`. That is
+/// why the declaration carries no quadrature choice — the interpolation
+/// already decides it, and the answer is exact for that shape rather than an
+/// approximation of it.
+///
+/// A zero-width slice is the point value, not a division by zero.
+fn quantile_slice_mean(q: &QuantileDef, from: f64, to: f64) -> Option<f64> {
+    if q.points.is_empty() || !from.is_finite() || !to.is_finite() {
+        return None;
+    }
+    let (lo, hi) = if from <= to { (from, to) } else { (to, from) };
+    if (hi - lo).abs() < f64::EPSILON {
+        return quantile_eval(q, lo);
+    }
+    // Integrate segment by segment over the breakpoints inside the slice, so
+    // every piece is integrated under the rule its own segment declares.
+    let mut edges: Vec<f64> = vec![lo];
+    for (x, _) in &q.points {
+        if *x > lo && *x < hi {
+            edges.push(*x);
+        }
+    }
+    edges.push(hi);
+    let mut area = 0.0;
+    for w in edges.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let width = b - a;
+        if width <= 0.0 {
+            continue;
+        }
+        area += if q.interpolation == "linear" {
+            // Trapezoid: exact for a segment that is linear by declaration.
+            (quantile_eval(q, a)? + quantile_eval(q, b)?) / 2.0 * width
+        } else {
+            // Rectangle: a step segment holds the value it opened with. Read
+            // just inside the segment so a breakpoint at `a` takes the new
+            // step rather than the one it replaced.
+            quantile_eval(q, a + width / 2.0)? * width
+        };
+    }
+    Some(area / (hi - lo))
+}
+
+/// The share at or below which `value` sits — the CDF, and the inverse of
+/// `quantile_eval`.
+///
+/// This is what turns a stated threshold (a lease breakpoint, a tranche
+/// attachment point) into a share, so a slice can be taken against a value the
+/// modeller knows rather than a percentile they would have to work out.
+/// Well-defined because values are non-decreasing in share, which the compiler
+/// enforces.
+fn quantile_invert(q: &QuantileDef, value: f64) -> Option<f64> {
+    let pts = &q.points;
+    if pts.is_empty() {
+        return None;
+    }
+    if value <= pts[0].1 {
+        return Some(pts[0].0);
+    }
+    let last = pts[pts.len() - 1];
+    if value >= last.1 {
+        return Some(last.0);
+    }
+    let idx = pts.partition_point(|(_, v)| *v <= value);
+    let prev = pts[idx - 1];
+    let next = pts[idx];
+    if q.interpolation == "linear" {
+        let span = next.1 - prev.1;
+        if span.abs() < f64::EPSILON {
+            return Some(prev.0);
+        }
+        Some(prev.0 + (next.0 - prev.0) * (value - prev.1) / span)
+    } else {
+        // A step holds its value across the segment, so the share at which
+        // `value` is first reached is the segment's own opening share.
+        Some(prev.0)
+    }
 }
 
 impl EnvAdapter<'_> {
@@ -598,6 +753,9 @@ fn calc_to_domain(v: cfdl_calc::Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // The quantile hooks are trait methods, so the trait must be in scope for
+    // a test to call them on the adapter directly.
+    use cfdl_calc::Env as _;
 
     #[test]
     fn selector_glob_matches_the_bare_prefix_and_its_children() {
@@ -743,6 +901,113 @@ mod tests {
         if let Err(err) = eval(&compiled, &ExprEnv::empty()) {
             assert_eq!(err.code, "EXPR_EVAL");
         }
+    }
+
+    fn quantile_env(interp: &str) -> ExprEnv {
+        let mut env = ExprEnv::empty();
+        env.quantiles.insert(
+            "p".to_string(),
+            QuantileDef {
+                interpolation: interp.to_string(),
+                points: vec![(0.0, 10.0), (0.5, 20.0), (1.0, 60.0)],
+            },
+        );
+        env
+    }
+
+    #[test]
+    fn quantile_mean_is_the_exact_integral_not_a_sample() {
+        // Linear: the slice 0.5..1.0 is a trapezoid between 20 and 60, so its
+        // mean is 40 exactly. Sampling the midpoint would also give 40 here,
+        // which is why the asymmetric slice below is the real test.
+        let env = quantile_env("linear");
+        let got = EnvAdapter { env: &env }.quantile_mean("p", dec(0.5), dec(1.0));
+        assert_eq!(got.and_then(|d| d.to_f64()), Some(40.0));
+
+        // 0.0..1.0 spans BOTH segments, whose slopes differ. The exact area is
+        // (10+20)/2*0.5 + (20+60)/2*0.5 = 7.5 + 20 = 27.5. A single trapezoid
+        // across the whole range would say 35 — the error this integrates
+        // segment by segment to avoid.
+        let got = EnvAdapter { env: &env }.quantile_mean("p", dec(0.0), dec(1.0));
+        assert_eq!(got.and_then(|d| d.to_f64()), Some(27.5));
+    }
+
+    #[test]
+    fn quantile_mean_under_step_is_rectangles() {
+        // A step holds the value it opened with: 10 across 0.0..0.5, 20 across
+        // 0.5..1.0, so the whole-range mean is 15 rather than linear's 27.5.
+        // Same points, same slice, different declared shape.
+        let env = quantile_env("step");
+        let got = EnvAdapter { env: &env }.quantile_mean("p", dec(0.0), dec(1.0));
+        assert_eq!(got.and_then(|d| d.to_f64()), Some(15.0));
+    }
+
+    #[test]
+    fn quantile_of_inverts_quantile_at() {
+        let env = quantile_env("linear");
+        let a = EnvAdapter { env: &env };
+        // Round-trip on a declared point and on an interpolated one.
+        assert_eq!(
+            a.quantile_of("p", dec(20.0)).and_then(|d| d.to_f64()),
+            Some(0.5)
+        );
+        assert_eq!(
+            a.quantile_at("p", dec(0.5)).and_then(|d| d.to_f64()),
+            Some(20.0)
+        );
+        let share = a.quantile_of("p", dec(40.0)).unwrap();
+        assert_eq!(
+            a.quantile_at("p", share).and_then(|d| d.to_f64()),
+            Some(40.0)
+        );
+    }
+
+    #[test]
+    fn quantile_clamps_flat_outside_its_range() {
+        let env = quantile_env("linear");
+        let a = EnvAdapter { env: &env };
+        assert_eq!(
+            a.quantile_at("p", dec(-1.0)).and_then(|d| d.to_f64()),
+            Some(10.0)
+        );
+        assert_eq!(
+            a.quantile_at("p", dec(2.0)).and_then(|d| d.to_f64()),
+            Some(60.0)
+        );
+        // And the inverse clamps to the share axis, not past it.
+        assert_eq!(
+            a.quantile_of("p", dec(1000.0)).and_then(|d| d.to_f64()),
+            Some(1.0)
+        );
+        assert_eq!(
+            a.quantile_of("p", dec(0.0)).and_then(|d| d.to_f64()),
+            Some(0.0)
+        );
+    }
+
+    #[test]
+    fn a_curve_and_a_quantile_do_not_resolve_against_each_other() {
+        // Different axes. Reaching for one through the other's function finds
+        // nothing, which surfaces as an evaluation error rather than a number
+        // read off the wrong axis.
+        let env = quantile_env("linear");
+        let a = EnvAdapter { env: &env };
+        assert!(a.quantile_at("sofr", dec(0.5)).is_none());
+        let mut env2 = ExprEnv::empty();
+        env2.curves.insert(
+            "sofr".to_string(),
+            CurveDef {
+                interpolation: "step".to_string(),
+                points: vec![],
+            },
+        );
+        assert!(EnvAdapter { env: &env2 }
+            .quantile_at("sofr", dec(0.5))
+            .is_none());
+    }
+
+    fn dec(v: f64) -> Decimal {
+        Decimal::from_f64(v).unwrap()
     }
 
     #[test]
