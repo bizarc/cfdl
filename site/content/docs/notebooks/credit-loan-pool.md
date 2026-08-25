@@ -246,21 +246,22 @@ results.metrics_frame()
 7                   domain.credit.servicing  4.999919e+05      USD  domain:credit
 8                   domain.credit.wal_years  4.056967e+00           domain:credit
 9                  entity.asset.buyer.total  5.477491e+06      USD           core
-10                               model.moic  1.225381e+00                    core
-11                                model.npv -2.959752e+05      USD           core
-12                    model.payback_periods  8.000000e+01                    core
-13                      model.payback_years  6.750000e+00                    core
-14                              model.total  5.477491e+06      USD           core
-15                          model.wal_years  3.843940e+00                    core
-16                 run.annual_discount_rate  6.000000e-02                    core
-17                     run.periods_per_year  1.200000e+01                    core
-18  stream.credit.pool.interest.auto_a.t...  6.499895e+06      USD           core
-19  stream.credit.pool.penalty.auto_a.total  8.220768e+04      USD           core
-20   stream.credit.pool.prepay.auto_a.total  8.220768e+06      USD           core
-21  stream.credit.pool.recoveries.auto_a...  1.167320e+06      USD           core
-22  stream.credit.pool.sched_principal.a...  1.475729e+07      USD           core
-23  stream.credit.pool.servicing.auto_a.... -4.999919e+05      USD           core
-24  stream.credit.purchase.price.auto_a.... -2.475000e+07      USD           core
+10                                model.irr  5.630900e-02                    core
+11                               model.moic  1.225381e+00                    core
+12                                model.npv -2.959752e+05      USD           core
+13                    model.payback_periods  8.000000e+01                    core
+14                      model.payback_years  6.750000e+00                    core
+15                              model.total  5.477491e+06      USD           core
+16                          model.wal_years  3.843940e+00                    core
+17                 run.annual_discount_rate  6.000000e-02                    core
+18                     run.periods_per_year  1.200000e+01                    core
+19  stream.credit.pool.interest.auto_a.t...  6.499895e+06      USD           core
+20  stream.credit.pool.penalty.auto_a.total  8.220768e+04      USD           core
+21   stream.credit.pool.prepay.auto_a.total  8.220768e+06      USD           core
+22  stream.credit.pool.recoveries.auto_a...  1.167320e+06      USD           core
+23  stream.credit.pool.sched_principal.a...  1.475729e+07      USD           core
+24  stream.credit.pool.servicing.auto_a.... -4.999919e+05      USD           core
+25  stream.credit.purchase.price.auto_a.... -2.475000e+07      USD           core
 ```
 
 ## What-if
