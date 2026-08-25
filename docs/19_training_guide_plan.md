@@ -31,7 +31,7 @@ Structure: **5 parts, ~24 chapters + 2 appendices.** Each chapter = concept → 
 3. **Reading results.** Periods, series, annual rollups, NPV/IRR, statements. How to check a model against a source's *method*, not just its answer (`round_to`, decimal vs excel-compat ⚙).
 
 ### Part II — The core language (packless modeling)
-4. **Streams and schedules.** Direction/sign discipline, currency; the full schedule sub-language: cadences, `on day`/`eom`, `due` (annuity due vs ordinary — the finance meaning), phase-driven schedules, business-day conventions and calendars, `except`/`also`, `net N days` payment terms vs accrual.
+4. **Streams and schedules.** Direction/sign discipline, currency; the full schedule sub-language: cadences, `on day`/`eom`, placement (`start`/`mid`/`end` — the annuity-due versus ordinary-annuity distinction), phase-driven schedules, business-day conventions and calendars, `except`/`also`, `net N days` payment terms vs accrual.
 5. **Expressions.** The environment (`model/time/entity/cfg/obs/inputs/state/prev`), decimal-first arithmetic, the TVM builtins (`pv/fv/pmt/ipmt/ppmt/nper/rate`) mapped to their Excel equivalents, date functions, `if`.
 6. **Assumptions and inputs.** `assume x = …`, cfg/obs, what belongs in the model vs the run configuration; scenario thinking.
 7. **Curves.** Rate curves, price decks, escalation paths; step vs linear interpolation; `curve_value`; clamping behavior; when a curve vs an assumption.

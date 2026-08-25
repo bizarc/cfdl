@@ -41,7 +41,7 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `stream ... { category <path> }` | ✅ | what the stream IS, economically — a dotted path into the cash flow statement (`operating.deduction.abatement`). Aggregation reads this rather than pattern-matching the stream's name. Must name a category the active pack declares (`E5022`); the pack's own vocabulary must be rooted in `operating`, `investing` or `financing` |
 | `schedule on <date>` | ✅ | settles on its own date, undiscounted for the period it lands in |
 | `schedule every <interval> from .. to ..` | ✅ | `day`, `week`, `month`, `quarter`, `year`. Distinct from the calendar cadence: a stream may pay quarterly on a monthly grid |
-| `schedule every <interval> due` | ✅ | annuity due — payment at the interval's start. Without it the schedule is an ordinary annuity, paid at the end. See `12_payment_timing.md` |
+| `schedule <on \| every> ... [start\|mid\|end]` | ✅ | one placement axis, three positions, at most one. `start` is an annuity due (interval's start), `mid` halfway, `end` its close. A recurrence defaults to `end` (ordinary annuity), a one-shot to `start`. See `12_payment_timing.md` |
 | `schedule on phase_enter(..)` / `every .. phase_start()/phase_end()` | ✅ | |
 | `schedule ... on day <n>` | ✅ | places the payment within its interval, clamped to the month's length |
 | `contract ... payment net <n> [days\|months]` | ✅ | applies to every stream the contract lowers; billing at period close, due date rolled |
