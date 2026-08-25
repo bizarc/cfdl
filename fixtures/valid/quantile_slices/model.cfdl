@@ -46,3 +46,17 @@ stream battery.inverse on entity asset.battery inflow currency USD {
   schedule every month from 2026-01 to 2026-03
   amount = quantile_of("prices", 28.0) * 1000.0 + quantile_at("prices", 0.5)
 }
+
+// A COMPUTED SLICE IS STILL RECORDED.
+//
+// The lower bound comes from an input, so the compiler cannot resolve this
+// call to a number. It is published WITHOUT a value rather than dropped: a
+// call site missing from the audit record would read as a model that never
+// made one, which is the failure mode the record exists to prevent.
+assume tail_start = 0.9
+
+stream battery.computed_slice on entity asset.battery inflow currency USD {
+  category operating.revenue.energy
+  schedule every month from 2026-01 to 2026-03
+  amount = quantile_mean("prices", inputs.tail_start, 1.0) * 10.0
+}
