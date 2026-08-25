@@ -43,12 +43,40 @@ no hardcoded amounts.
 > investment credit conventionally removes half the credit from the basis, so a
 > $100m project taking $30m of credit depreciates $85m. Entering the installed
 > cost instead overstates the shield by 17.6% for the life of the schedule and
-> nothing here will object. State the adjusted figure.
+> nothing here will object.
 >
-> **`energy.ptc` does not round.** The statutory production credit is published
-> rounded to the nearest 0.1 c/kWh after inflation adjustment; this rule carries
-> the escalated rate continuously. The error alternates sign year to year, up to
-> about 1.8% in any one year and roughly -0.3% over a 10-year credit window.
+> State the adjustment, not the answer. A term holds an expression, so the
+> arithmetic belongs in the model rather than in a comment beside a constant:
+>
+> ```cfdl
+> assume installed_cost = 100000000
+> assume itc_rate       = 0.30
+>
+> contract energy.itc on entity asset.pv {
+>   terms { credit = inputs.installed_cost * inputs.itc_rate }
+> }
+>
+> contract energy.macrs_shield on entity asset.pv {
+>   terms { basis = inputs.installed_cost * (1 - 0.5 * inputs.itc_rate) ... }
+> }
+> ```
+>
+> A pasted `85000000` goes stale the moment either input moves. The
+> [utility-scale PV benchmark](/docs/examples/energy-utility-pv-singleowner)
+> is written this way.
+>
+> **`energy.ptc` rounds to a tick.** The statutory production credit is
+> published rounded after each inflation adjustment, and the rule computes that
+> staircase via `round_to`. `round_step` defaults to **1.00**, not 0.10: the
+> credit is quoted to the nearest 0.1 c/kWh, which on this rule's per-MWh basis
+> is a whole dollar ($0.001/kWh x 1000 kWh). Rounding a per-MWh figure to 0.10
+> would round to a hundredth of a cent and change nothing. Set `round_step = 0`
+> for a jurisdiction that does not round.
+>
+> Carrying the rate continuously — as this rule once did — is wrong by up to
+> about 1.8% in any one year and roughly -0.3% over a 10-year window. The error
+> alternates sign rather than drifting, so it reads as noise in aggregate and
+> survives every reconciliation except against a source that rounds.
 
 ## Contract types
 

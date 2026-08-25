@@ -299,6 +299,40 @@ sizing struck off one year's coverage feels the 1.8%.
 
 ## How to achieve a behavior
 
+### A term whose value is derived from other inputs
+
+A contract term holds an expression, so anything a modeller would work out on
+paper before typing it belongs in the model instead. The rule: **state the
+figures the source gives and the identity that combines them, never the
+product.**
+
+Taking an investment credit conventionally removes half the credit from the
+depreciable basis, so a $100m project claiming a 30% ITC depreciates $85m:
+
+```cfdl
+assume installed_cost = 100000000
+assume itc_rate       = 0.30
+
+contract energy.itc on entity asset.pv {
+  terms { credit = inputs.installed_cost * inputs.itc_rate }
+}
+
+contract energy.macrs_shield on entity asset.pv {
+  terms { basis = inputs.installed_cost * (1 - 0.5 * inputs.itc_rate) ... }
+}
+```
+
+A pasted `85000000` with the arithmetic in a comment beside it is the failure
+mode: change the cost or the rate and the constant is silently wrong, and here
+being wrong means depreciating the FULL basis, which overstates the shield by
+17.6% for the life of the schedule with nothing to object.
+
+**A pack declining to derive something is not a reason to hardcode it.**
+`energy.macrs_shield` takes `basis` as an input deliberately — basis
+adjustments are jurisdictional and a wrong default is worse than none — so the
+model must say WHICH adjustment applies. Saying it and pre-computing it are
+different things.
+
 ### A rate quoted on a different cadence than the term takes
 
 Practitioners quote monthly SMM and MDR; the credit pack's `cpr`/`cdr` terms

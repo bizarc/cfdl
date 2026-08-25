@@ -8,6 +8,28 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: the PV benchmark derives its depreciable basis (backlog 4.2)
+
+`benchmarks/energy/utility_pv_singleowner` carried `basis = 85000000` with the
+arithmetic — `100m - 0.5 * 30m` — in a comment beside it, and the credit as a
+second hardcoded `30000000`. Installed cost and the credit rate are now stated
+once as assumptions, and the capex, the credit and the reduced basis all derive
+from them. Reproduces the reference exactly; 40/40 benchmarks.
+
+4.2 asked for an `itc_basis_reduction` term. None is needed: a term holds an
+expression, so the adjustment can be stated rather than pre-computed. The pack
+still declines to derive the basis, which is right — adjustments are
+jurisdictional — but that is a reason for a model to say which one applies, not
+to paste in the answer.
+
+Corrects two stale claims in `packs/energy/README.md`: it told readers to
+"state the adjusted figure" (now: state the adjustment), and it still said
+"`energy.ptc` does not round" when the rule computes the statutory staircase
+via `round_to` with `round_step` defaulting to 1.00.
+
+Backlog: 42 items.
+
+
 ### Closed: backlog 4.1, already shipped
 
 `round_to(x, step)` is in the expression vocabulary and `energy.ptc` already

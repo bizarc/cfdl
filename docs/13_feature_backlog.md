@@ -70,25 +70,6 @@ is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ## 4. Energy pack
 
-### 4.2 A derived depreciable basis
-
-`energy.macrs_shield` takes `basis` as an input. Taking an investment credit
-conventionally reduces the depreciable basis by half the credit, so a model
-claiming a 30% ITC on $100m must enter $85m by hand; entering $100m overstates
-the shield by 17.6% and nothing objects.
-
-Deliberate today — basis adjustments are jurisdictional and there are several,
-and a wrong default is worse than no default. But the commonest one is
-mechanical, and the pack already has both the credit and the cost in scope.
-
-Shape: an optional `itc_basis_reduction` term on `energy.macrs_shield`, or a
-cross-contract rule that reads `energy.itc`. The latter is phase-2 machinery for
-a one-line arithmetic adjustment, so probably the former.
-
-Found the same way. Documented in `packs/energy/README.md` in the meantime.
-
----
-
 ## 5. Language and engine
 
 ### 5.2 Per-period persistent state
