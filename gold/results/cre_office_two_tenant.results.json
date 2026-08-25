@@ -152,6 +152,7 @@
         "amount": 3009646.651045,
         "currency": "USD"
       },
+      "model.irr": 0.290783,
       "model.moic": 3.234175,
       "model.npv": {
         "amount": 1064404.60548,

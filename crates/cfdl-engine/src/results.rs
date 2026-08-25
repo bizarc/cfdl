@@ -311,6 +311,61 @@ pub(crate) fn npv_at_grain(
 /// IRR over offset-carrying streams: the rate at which their present value is
 /// zero. Bisection, because the basis is rebuilt for each candidate rate.
 pub(crate) fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
+    // AN IRR NEEDS SOMETHING TO BE A RETURN ON. Two shapes qualify:
+    //
+    //   an INVESTMENT — the first cash moved is out. Interim sign changes are
+    //   ordinary in a real asset (lease-up, capex, TI and commissions), so a
+    //   strict Descartes test would throw away figures practitioners quote: a
+    //   two-tenant office DCF here changes sign seven times and its IRR is
+    //   exactly the number the case exists to report.
+    //
+    //   a FINANCING — cash in, then out, and nothing further. Its rate is the
+    //   cost of funds: a 5.5% nominal mortgage compounding monthly returns
+    //   0.0564, which is (1 + 0.055/12)^12 - 1 and worth having.
+    //
+    // What is left over is a series that neither invests nor borrows — a rent
+    // line alternating with a sweep, which is a schedule demonstration and not a
+    // deal. A root still exists near the bracket floor and the bisection will
+    // find it; on a daily calendar it annualizes to exactly -1.0, and a number
+    // that precise is read as a finding rather than as an artifact.
+    //
+    // Counted on the flows as VALUED, bucketed by position in time, because that
+    // is the series the solve below is run against. Streams net only within an
+    // offset (docs/12), so netting the periods first would describe a different
+    // series: two goldens have an all-zero `model.net_cash_flow` and a non-empty
+    // valued series.
+    //
+    // Without this an alternating series still converges — the bisection finds a
+    // root near the bracket floor and reports it, which on a daily calendar
+    // annualizes to exactly -1.0. A number that precise is read as a finding.
+    let mut buckets: BTreeMap<i64, f64> = BTreeMap::new();
+    for (values, offset) in streams {
+        for (i, value) in values.iter().enumerate() {
+            let position = ((i as f64 + offset) * 1e9).round() as i64;
+            *buckets.entry(position).or_insert(0.0) += *value;
+        }
+    }
+    let mut sign_changes = 0usize;
+    let mut previous = 0.0_f64;
+    let mut first = 0.0_f64;
+    for amount in buckets.values() {
+        if amount.abs() <= 1e-9 {
+            continue;
+        }
+        if first == 0.0 {
+            first = *amount;
+        }
+        if previous != 0.0 && previous * amount < 0.0 {
+            sign_changes += 1;
+        }
+        previous = *amount;
+    }
+    let invests = first < 0.0;
+    let finances = first > 0.0 && sign_changes == 1;
+    if !invests && !finances {
+        return None;
+    }
+
     let f = |r: f64| npv_with_offsets(streams, r);
     let mut hi = 10.0_f64;
     let f_hi = f(hi);
@@ -347,8 +402,6 @@ pub(crate) fn irr_with_offsets(streams: &[(Vec<f64>, f64)]) -> Option<f64> {
     if f_lo.is_nan() || f_hi.is_nan() || f_lo * f_hi > 0.0 {
         return None;
     }
-    let mut lo = lo;
-    let mut f_lo = f_lo;
     for _ in 0..200 {
         let mid = (lo + hi) / 2.0;
         let f_mid = f(mid);
