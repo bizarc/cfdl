@@ -86,6 +86,7 @@ checked, and a write-up of the reference and the residual.
 | [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) | An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years. |
 | [CRE: office development joint venture](/docs/examples/cre-one-lincoln-street) | A ground-up office development drawing on a construction facility, capitalizing interest through the build, then stabilizing and refinancing. |
 | [CRE: office development, through the pack contract](/docs/examples/cre-one-lincoln-street-contract) | The same published construction schedule as the native case, declared as one cre.construction_loan contract — equity first, the facility behind it, interest on the drawn balance. |
+| [CRE: mixed-use development with a construction facility](/docs/examples/cre-penzance-highlands) | A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalized, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing. |
 | [CRE: retail strip with expense stops](/docs/examples/cre-retail-strip) | A retail strip center with base-year expense gross-ups, percentage rent over a breakpoint, and staggered tenant rollover across a ten-year hold. |
 | [Credit: auto ABS with a step-down and a turbo](/docs/examples/credit-americredit-2017-1) | The note classes of a sub-prime auto ABS that builds its own overcollateralization: a 22-step waterfall where excess cash accelerates principal toward a target and principal beyond it is retained rather than paid. |
 | [Credit: auto ABS at 0.5x prepayment speed](/docs/examples/credit-auto-abs-speed-050) | An auto loan pool prepaying at 0.5 ABS, amortizing to schedule with prepayments taken as a constant share of the original balance. |
@@ -116,7 +117,7 @@ checked, and a write-up of the reference and the residual.
 | [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) | A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*40 cases.*
+*41 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite
