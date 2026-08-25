@@ -299,6 +299,50 @@ sizing struck off one year's coverage feels the 1.8%.
 
 ## How to achieve a behavior
 
+### A balance swept by the period's free cash flow
+
+A recurrence cannot read the model's own streams — a field's `next` sees
+`prev`, other fields' `prev`, `time.*`, `inputs`, `cfg`, `obs` and curves, and
+no series at all. That does NOT make a cash sweep inexpressible. It means the
+quantity being swept has to be something a field can see, and the way to get
+that is to let the FIELD own it:
+
+```cfdl
+entity asset co : Asset.Financial {
+  // Free cash flow, stated ONCE.
+  fcf     init (curve_value("ebit", time.date) * (1 - inputs.tax_rate))
+               - curve_value("capex", time.date)
+          next (curve_value("ebit", time.date) * (1 - inputs.tax_rate))
+               - curve_value("capex", time.date)
+
+  balance init 3000.0 next max(0.0, prev - prev.asset.co.fcf)
+}
+
+// The published line reads the same field, so nothing is computed twice.
+stream opco.fcf on entity asset.co inflow currency USD {
+  amount = asset.co.fcf
+}
+```
+
+The balance tracks the sweep to the cent, and the free-cash-flow build exists
+in exactly one place. `prev.<entity>.<field>` inside a `next` is that field's
+value in the period being left, so there is no off-by-one — but note `init`
+must compute the first period too, or period 0 silently sweeps nothing.
+
+**Express the operating drivers as curves.** A recurrence may read a curve and
+may not read a series, so a curve-shaped operating case is what lets a balance
+see the deal. `benchmarks/opco/lbo_financing_cases` sweeps a Term Loan B this
+way and reproduces its reference's MoIC and IRR — and its balance/interest
+circularity is affine, so collecting terms solves it in one substitution
+instead of iterating.
+
+**When the quantity is only knowable from stream output** — a pack-lowered
+contract's cash, or what a waterfall actually paid under a short pot — no field
+can see it and the arithmetic must be restated. That is a real cost, not a
+missing capability: `americredit_2017_1` carries seven class balances each
+duplicating its step-down expression. Reach for it only after checking whether
+the quantity can be a field the streams read instead.
+
 ### A term whose value is derived from other inputs
 
 A contract term holds an expression, so anything a modeller would work out on

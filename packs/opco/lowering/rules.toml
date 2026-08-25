@@ -18,8 +18,10 @@
 #     evaluate in a later wave, after everything they read is finished.
 #     Outflow streams appear SIGNED NEGATIVE in series, so sums over mixed
 #     streams net correctly.
-#   - Cash sweeps and revolver draws need per-period persistent state and
-#     require a planned engine allocation pass; term debt here is
+#   - Cash sweeps and revolver draws are not lowered here. They are
+#     expressible — a balance field swept by a free-cash-flow field, as
+#     `benchmarks/opco/lbo_financing_cases` does — but the build is
+#     deal-specific, so it is stated in the model rather than by a rule; term debt here is
 #     scheduled (IO period + level-pay amortization + balloon at maturity).
 #   - No NOL carryforwards in cash taxes (losses floor at zero tax per
 #     period); carryforwards need a field with a recurrence.
@@ -199,7 +201,7 @@ pct_of_revenue = "0"
 # contract's term_end. Payment index k = p - io_months + 1 (1-based, p =
 # months since term_start). Remaining balance after k payments is
 # -fv(r/12, k, pmt(r/12, amort_months, principal), principal).
-# Cash sweeps need H3 state and are not modeled here.
+# Cash sweeps are stated in the model, not lowered here — see the header.
 # ---------------------------------------------------------------------------
 
 [[rules]]
