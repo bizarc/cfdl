@@ -425,43 +425,43 @@ stream cre.land on entity asset.project outflow currency USD {
 
 
 stream cre.hard_buildings on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.hard_garage on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.fire_station on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.park_and_street on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.soft_costs on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.contingency on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
 stream cre.developer_fee on entity asset.project outflow currency USD {
-  schedule every month from 2018-04 to 2021-06
+  schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
@@ -484,62 +484,62 @@ stream cre.obligations_co on entity asset.project outflow currency USD {
 
 // ---- aubrey: delivered 2021-07, sold 2022-05 — still in lease-up
 stream cre.aubrey_rent on entity asset.west inflow currency USD {
-  schedule every month from 2021-07 to 2022-05
+  schedule every month start from 2021-07 to 2022-05
   category operating.revenue.base_rent
   amount = min(331.0, max(0.0, (time.t - 117.0) * 25.0)) * 3369.8496
 }
 
 stream cre.aubrey_retail on entity asset.west inflow currency USD {
-  schedule every month from 2021-07 to 2022-05
+  schedule every month start from 2021-07 to 2022-05
   category operating.revenue.other
   amount = 35236.8
 }
 
 stream cre.aubrey_parking on entity asset.west inflow currency USD {
-  schedule every month from 2021-07 to 2022-05
+  schedule every month start from 2021-07 to 2022-05
   category operating.revenue.other
   amount = 39720
 }
 
 stream cre.aubrey_opex on entity asset.west outflow currency USD {
-  schedule every month from 2021-07 to 2022-05
+  schedule every month start from 2021-07 to 2022-05
   category operating.expense.opex
   amount = 207178.4167
 }
 
 stream cre.aubrey_tax on entity asset.west outflow currency USD {
-  schedule every month from 2021-07 to 2022-05
+  schedule every month start from 2021-07 to 2022-05
   category operating.expense.opex
   amount = 215699.0142
 }
 
 // ---- evo: delivered 2021-09, sold 2022-05 — still in lease-up
 stream cre.evo_rent on entity asset.east inflow currency USD {
-  schedule every month from 2021-09 to 2022-05
+  schedule every month start from 2021-09 to 2022-05
   category operating.revenue.base_rent
   amount = min(455.0, max(0.0, (time.t - 119.0) * 25.0)) * 3131.6064
 }
 
 stream cre.evo_retail on entity asset.east inflow currency USD {
-  schedule every month from 2021-09 to 2022-05
+  schedule every month start from 2021-09 to 2022-05
   category operating.revenue.other
   amount = 50007.6
 }
 
 stream cre.evo_parking on entity asset.east inflow currency USD {
-  schedule every month from 2021-09 to 2022-05
+  schedule every month start from 2021-09 to 2022-05
   category operating.revenue.other
   amount = 54600
 }
 
 stream cre.evo_opex on entity asset.east outflow currency USD {
-  schedule every month from 2021-09 to 2022-05
+  schedule every month start from 2021-09 to 2022-05
   category operating.expense.opex
   amount = 284792.0833
 }
 
 stream cre.evo_tax on entity asset.east outflow currency USD {
-  schedule every month from 2021-09 to 2022-05
+  schedule every month start from 2021-09 to 2022-05
   category operating.expense.opex
   amount = 273135.4075
 }
@@ -567,7 +567,7 @@ stream cre.sale_costs on entity asset.project outflow currency USD {
 }
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {
-  schedule every month from 2021-08 to 2024-06
+  schedule every month start from 2021-08 to 2024-06
   category investing.reversion
   amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
 }
@@ -767,13 +767,13 @@ entity asset facility : Asset.Financial {
 // Interest is capitalised, so it is never a cash line -- it is repaid inside
 // the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
-  schedule every month from 2011-09 to 2024-12
+  schedule every month start from 2011-09 to 2024-12
   category financing.debt_proceeds
   amount = asset.facility.draw
 }
 
 stream cre.loan_repayment on entity asset.project outflow currency USD {
-  schedule every month from 2011-09 to 2024-12
+  schedule every month start from 2011-09 to 2024-12
   category financing.debt_principal
   amount = asset.facility.repay
 }
@@ -783,7 +783,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 // The pot is `available` -- the project's own streams netted with east and
 // west rolled up by `part of`, i.e. the levered cash the deal threw off.
 waterfall cre.jv_split on entity asset.project {
-  schedule every month from 2011-09 to 2024-12
+  schedule every month start from 2011-09 to 2024-12
   from available
 
   pay preferred to party.baupost  = available * (1.0 - inputs.sponsor_share) * inputs.pref_rate

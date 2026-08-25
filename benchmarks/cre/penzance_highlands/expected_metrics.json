@@ -4,11 +4,11 @@
     "tolerance": 1.0
   },
   "model.npv": {
-    "value": 10121976.55,
+    "value": 9058409.1,
     "tolerance": 1.0
   },
   "model.irr": {
-    "value": 0.111454,
+    "value": 0.110161,
     "tolerance": 1e-05
   },
   "model.moic": {

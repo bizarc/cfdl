@@ -55,12 +55,23 @@ placeholder**, not the real split.
 - **`part of`** roll-up: `asset.project` aggregates east and west
 - pack **categories** driving `domain.cre.*`
 
-## Known convention difference
+## Payment placement
 
-`model.irr` here is **11.15%** against the workbook's 11.02%. The totals tie to
-the cent; the difference is payment timing. `schedule every month` is an
-ordinary annuity settling at the interval's end, so the engine discounts each
-flow at `period + offset` (see `docs/12_payment_timing.md`), while the workbook
-places every flow at its bare period index. That is a real difference in what
-the two models say, not a rounding artefact, and it is the kind of thing this
-benchmark exists to surface.
+Every recurring schedule here is `start` — an annuity due, cash at the period's
+open. That is what `12_payment_timing.md` §6 asks for: revenue, opex, capex and
+funding draws fall due in the period they belong to, and only annuity-like
+streams (scheduled debt service, coupons) take the `end` default.
+
+It is also what makes this case tie. The reference workbook places every flow
+at its bare period index, which is offset 0.0 — the same axis `start` puts it
+on. Left at the recurrence default the model returns an IRR of 11.1454%
+against the workbook's 11.0161%; on `start` it returns **11.0161%**. The totals
+tie either way, because a sum does not care where inside a period its cash
+sits — which is exactly why a benchmark that checks only totals would never
+have caught this.
+
+Note the spelling. The keyword is **`start`**; `due` appears in the language
+spec §11.2.3, the EBNF, `12_payment_timing.md` §3 and
+`10_implementation_status.md` row 44, but is not a token — it lexes as a bare
+identifier and fails with `E0004_EXPECTED_TOKEN`. The parser and the IR
+schema's `placement` enum both say `start | mid | end`.
