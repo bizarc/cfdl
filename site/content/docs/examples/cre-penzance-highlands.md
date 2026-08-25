@@ -2,13 +2,13 @@
 id: benchmark-cre-penzance-highlands
 title: "CRE: mixed-use development with a construction facility"
 slug: "/docs/examples/cre-penzance-highlands"
-description: "A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalized, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing."
+description: "A 160-month ground-up CRE development: land in 2011, a 39-month build on a parabolic draw curve, a $380M facility that funds equity first and capitalizes interest, two rental towers sold in lease-up, and a 34-month condominium sellout."
 source: benchmarks/cre/penzance_highlands
 ---
 
 # CRE: mixed-use development with a construction facility
 
-A 160-month ground-up CRE development: land 2011, 39-month construction on a parabolic draw curve, a $380M facility with equity funded first and interest capitalized, two rental towers sold in lease-up, and a 34-month condominium sellout recorded closing by closing.
+A 160-month ground-up CRE development: land in 2011, a 39-month build on a parabolic draw curve, a $380M facility that funds equity first and capitalizes interest, two rental towers sold in lease-up, and a 34-month condominium sellout.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
