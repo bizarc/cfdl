@@ -157,7 +157,7 @@
     <h1 class="title">The Highlands, rebuilt from the public record</h1>
     <p class="standfirst">
       A ground-up mixed-use development in Rosslyn, Virginia, modeled in CFDL and
-      reconciled to the cent against an independent implementation. Every figure below
+      reconciled against an independent implementation of the same deal. Every figure below
       comes from Arlington County records or is marked as an assumption.
     </p>
     <div class="byline">
@@ -177,8 +177,9 @@
     </p>
     <p>
       The project delivered two buildings over one shared podium. The East Building
-      carries both for-sale and rental product. This is what makes the deal worth
-      modeling: the costs of the condominium and the apartments are not separable.
+      carries both for-sale and rental product, so the costs of the condominium and
+      the apartments are not separable. That is the modeling problem the case sets out
+      to handle.
     </p>
 
     <div class="scroll">
@@ -210,7 +211,7 @@
     <span class="eyebrow">The record</span>
     <h2>What is fact, and what is assumed</h2>
     <p>
-      A model is only as honest as its labels. The case separates the two, line by line.
+      The case distinguishes the two line by line.
     </p>
 
     <h3>Recorded fact</h3>
@@ -219,7 +220,7 @@
         1555 Wilson Boulevard site plan record and its 2018 and 2020 amendments.</li>
       <li>Land basis of <strong>$67,000,000</strong>, recorded 30 September 2011.</li>
       <li>Both tower sale prices, 17 May 2022: <strong>$266,455,000</strong> for Aubrey
-        and <strong>$334,600,000</strong> for Evo.</li>
+        and <strong>$334,642,240</strong> for Evo. The County&rsquo;s Guidebook rounds the second figure to $334,600,000; the model uses the recorded amount.</li>
       <li>The condominium sellout, unit by unit: <strong>102 of 104 units</strong> for
         <strong>$190,186,220</strong> between August 2021 and June 2024.</li>
       <li>Operating parameters from Arlington's published Commercial Guidebook: a 5.15%
@@ -229,7 +230,7 @@
 
     <h3>Derived, not assumed</h3>
     <p>
-      Rents are not guessed. Each tower's assessed value for 1 January 2022, multiplied
+      Rents are derived rather than assumed. Each tower's assessed value for 1 January 2022, multiplied
       by the County's own guideline rate, gives the assessor's implied net operating
       income. The model solves back from that figure to a rent per unit.
     </p>
@@ -253,11 +254,11 @@
     <span class="eyebrow">The model</span>
     <h2>What the language does here</h2>
     <p>
-      The model is 812 lines of CFDL. It runs on a monthly grid because interest accrues
+      The model is 853 lines of CFDL. It runs on a monthly grid because interest accrues
       monthly. Four features carry most of the work.
     </p>
 
-    <h3>A balance that remembers</h3>
+    <h3>Carrying a balance across periods</h3>
     <p>
       A construction loan balance depends on its own previous value. In CFDL that is a
       field on the entity it describes. <code>prev</code> is the value at the last close.
@@ -272,7 +273,7 @@
           next max(0.0, prev + draw + interest - repay)
 }</code></pre>
 
-    <h3>A recorded schedule, not a curve fitted to one</h3>
+    <h3>A recorded schedule of closings</h3>
     <p>
       Every condominium closing is a declared point. The model reads the real absorption,
       including the long tail through 2024 that a smooth assumption would hide.
@@ -314,8 +315,8 @@
       Rent received in January is not the same as rent received in September. CFDL
       declares where in a period the cash falls, and discounts on that basis. The two
       conventions differ by 13 basis points of return on this deal while leaving every
-      total identical &mdash; a distinction most models never surface, because a total
-      cannot show it.
+      total identical. A model that reports only lifetime figures cannot distinguish
+      the two conventions.
     </p>
   </section>
 
@@ -351,9 +352,9 @@
       decimal place, because the engine rounds the published figure to six.
     </p>
     <p>
-      CFDL evaluates in exact 128-bit decimal, not floating point. <code>0.1 + 0.2</code>
-      equals <code>0.3</code>. On a deal of this size the arithmetic contributes no
-      measurable error.
+      CFDL evaluates in exact 128-bit decimal rather than binary floating point, so
+      decimal amounts do not accumulate representation error. On a deal of this size
+      the arithmetic contributes no measurable difference.
     </p>
 
     <div class="note">
@@ -374,7 +375,7 @@
       model carries forward month by month, not quantities recomputed at the distribution.
     </p>
     <p>
-      Two details follow from the pot rather than from the deal. CFDL supplies
+      Two properties of the model follow from how the pot is defined. CFDL supplies
       <code>available</code> as the cash an entity produced <em>this period</em>, which on a
       once-at-end distribution would be a single month rather than the whole deal &mdash; so
       the pot is the streams&rsquo; own running sum since inception. And there is no
@@ -401,8 +402,8 @@
 
     <p>
       The total is the deal&rsquo;s lifetime net cash to the dollar. That is not an assertion
-      the case makes &mdash; it is what the pot <em>is</em>, so the distribution cannot
-      allocate more or less than the deal produced.
+      the case asserts. It follows from the definition of the pot, so the distribution
+      cannot allocate more or less than the deal produced.
     </p>
 
     <div class="scroll">
@@ -420,7 +421,7 @@
 
     <p>
       The sponsor earns 18.08% of the profit on a 10% share of the capital. That spread is
-      the promote, and it is the whole economic point of the structure: 10,817,539 as its
+      the promote: 10,817,539 as its
       pro-rata share of the preferred return, 17,637,224 of promote on the profit above that
       return, and 7,054,889 as its share of what is left.
     </p>
@@ -539,7 +540,7 @@
     </ul>
     <p>
       Where the model and the real deal differ, the difference is in the assumptions, and
-      the assumptions are all named. That is the point of building it this way.
+      the assumptions are all named.
     </p>
   </section>
 
@@ -550,7 +551,7 @@
     <h2>The model in full</h2>
     <p>
       This is the whole model: entities, curves, streams, the facility and the
-      distribution. It runs as written. Three curves declare a value for every period of
+      distribution. It runs as written. Four curves declare a value for every period of
       the 160-month grid; those runs of figures are abridged here for length and are
       complete in the model itself.
     </p>
@@ -569,8 +570,8 @@ time calendar monthly from 2011-09 for 160
 // Two towers over one shared podium and one construction facility:
 //   east  = Pierce (104 for-sale condos) + Evo (455 rental)
 //   west  = Aubrey (331 rental)
-// The for-sale and rental product share a basis, which is what makes this
-// deal worth modeling rather than a generic development.
+// The for-sale and rental product share a basis. Their costs are therefore not
+// separable, which is the modeling problem this case addresses.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
 // sellout are recorded fact — Arlington&#x27;s site-plan record, deed register,
@@ -597,7 +598,7 @@ assume sponsor_share    = 0.10
 //
 // EVERY period is declared, including the zeros. A step curve is
 // flat-forward (docs/03 §4): omit the quiet months and the last construction
-// draw is held forever, which compounds into a balance that never stops.
+// draw is held forward indefinitely and the balance compounds without end.
 curve dev_cost {
   2011-09: 67000000.0000
   2011-10: 0.0000
@@ -882,7 +883,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 // purchase: the venture is formed to build, and the land it is capitalized
 // with earns nothing for the seven years before there is anything to build.
 // Compounding that $67M from 2011 instead consumes the entire promote, which
-// is how the assumption announced itself.
+// is how the assumption was identified.
 entity asset jv : Asset.Financial {
   // The facility&#x27;s equity funding one period back, so a month&#x27;s contribution
   // can be differenced without reaching two periods behind.
@@ -927,7 +928,7 @@ waterfall jv.distribution on entity asset.project {
 
   <footer>
     Prepared with CFDL, a domain language for cash-flow models. This page is shared
-    privately and is not published. Figures reflect the benchmark case as committed on
+    privately and is access-controlled. Figures reflect the benchmark case as committed on
     25 August 2026.
   </footer>
 
