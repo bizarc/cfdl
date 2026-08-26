@@ -157,6 +157,13 @@ time calendar monthly from {ym(0)} for {N}
 // weighted by this, so one model carries both and run.json selects.
 assume scenario_b        = 1.0
 
+// The market's premium or discount to the County's guideline basis. 1.00 IS
+// the guideline basis. The two observations available bracket it: The
+// Highlands sold at +32% to this basis in 2022, Central Place at -11.6% in
+// 2026. It scales the EXIT only. A lender sizes the permanent loan off the
+// appraised basis at stabilization, not off the price a later buyer pays.
+assume market_factor     = 1.0
+
 assume rent_per_unit     = {RENT}.0
 assume expenses_per_unit = {EXP}.0
 assume vacancy           = {VAC}
@@ -324,7 +331,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {{
 stream cre.exit_a on entity asset.project inflow currency USD {{
   schedule on {ym(A_EXIT)} end
   category investing.reversion
-  amount = {A_VALUE:.2f} * (1.0 - inputs.scenario_b)
+  amount = {A_VALUE:.2f} * inputs.market_factor * (1.0 - inputs.scenario_b)
 }}
 
 // ------------------------------------------- scenario B: refinance and hold
@@ -346,7 +353,7 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {{
 stream cre.exit_b on entity asset.project inflow currency USD {{
   schedule on {ym(B_EXIT)} end
   category investing.reversion
-  amount = {B_VALUE:.2f} * inputs.scenario_b
+  amount = {B_VALUE:.2f} * inputs.market_factor * inputs.scenario_b
 }}
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {{
@@ -367,6 +374,17 @@ stream cre.perm_payoff on entity asset.project outflow currency USD {{
     "scenarios": {
         "merchant_build": {"parameters": {"inputs.scenario_b": 0.0}},
         "build_to_core": {"parameters": {"inputs.scenario_b": 1.0}},
+        # The market factor, across the range the record supports. 0.884 is
+        # where Central Place traded in 2026; 1.321 is where The Highlands
+        # traded in 2022. 1.00 is the County's guideline basis.
+        "merchant_at_2026_discount": {
+            "parameters": {"inputs.scenario_b": 0.0, "inputs.market_factor": 0.884}},
+        "merchant_at_2022_premium": {
+            "parameters": {"inputs.scenario_b": 0.0, "inputs.market_factor": 1.321}},
+        "core_at_2026_discount": {
+            "parameters": {"inputs.scenario_b": 1.0, "inputs.market_factor": 0.884}},
+        "core_at_2022_premium": {
+            "parameters": {"inputs.scenario_b": 1.0, "inputs.market_factor": 1.321}},
     },
 }, indent=2) + "\n")
 (CASE / "model.cfdl").write_text("\n".join(L) + "\n")

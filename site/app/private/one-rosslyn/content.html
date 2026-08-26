@@ -392,6 +392,99 @@
     </div>
   </section>
 
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Sensitivity</span>
+    <h2>What the market factor is worth</h2>
+    <p>
+      The market factor is the one dial that carries a market view. Everything else in the
+      model comes from a record or a published index. The table runs the same model across
+      the range the record supports.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Net to equity, by market factor</caption>
+        <thead>
+          <tr>
+            <th class="num">Factor</th>
+            <th class="num">A &mdash; net</th><th class="num">A &mdash; multiple</th><th class="num">A &mdash; return</th>
+            <th class="num">B &mdash; net</th><th class="num">B &mdash; multiple</th><th class="num">B &mdash; return</th>
+            <th>Basis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">0.884</td><td class="num">&minus;37,227,293</td><td class="num">0.877x</td><td class="num">&minus;2.90%</td><td class="num">125,718,776</td><td class="num">1.415x</td><td class="num">4.22%</td><td>Central Place, 2026</td></tr>
+          <tr><td class="num">0.950</td><td class="num">221,391</td><td class="num">1.001x</td><td class="num">0.02%</td><td class="num">169,996,045</td><td class="num">1.561x</td><td class="num">5.35%</td><td>&mdash;</td></tr>
+          <tr><td class="num">1.000</td><td class="num">28,591,606</td><td class="num">1.094x</td><td class="num">2.02%</td><td class="num">203,539,431</td><td class="num">1.671x</td><td class="num">6.13%</td><td>guideline basis</td></tr>
+          <tr><td class="num">1.100</td><td class="num">85,332,035</td><td class="num">1.281x</td><td class="num">5.59%</td><td class="num">270,626,203</td><td class="num">1.892x</td><td class="num">7.52%</td><td>&mdash;</td></tr>
+          <tr><td class="num">1.321</td><td class="num">210,728,385</td><td class="num">1.695x</td><td class="num">12.00%</td><td class="num">418,887,969</td><td class="num">2.381x</td><td class="num">10.04%</td><td>The Highlands, 2022</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Two readings follow. The merchant build breaks even at a factor near
+      <strong>0.95</strong>. Below that it returns less than the capital it consumed, and
+      at the level Central Place traded it loses $37M. The five-year hold clears its
+      capital across the whole range, and still returns 1.415x at the 2026 discount.
+    </p>
+
+    <div class="note">
+      Each row is one line of run configuration. The model itself does not change. The
+      factor scales the sale only. A lender sizes the permanent loan on the appraised
+      basis at stabilization, not on the price a later buyer pays.
+    </div>
+
+<pre><code>"core_at_2026_discount": {
+  "parameters": { "inputs.scenario_b": 1.0, "inputs.market_factor": 0.884 }
+}</code></pre>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Sensitivity</span>
+    <h2>Which numbers are structural, and which are conventions</h2>
+    <p>
+      Present value depends on a rate somebody chooses. Return and multiple do not. The
+      table values the same cash flows at eight rates.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Scenario B, at the guideline basis</caption>
+        <thead>
+          <tr><th class="num">Discount rate</th><th class="num">Net present value</th><th class="num">Return</th><th class="num">Multiple</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">4.00%</td><td class="num">50,294,087</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">5.00%</td><td class="num">24,601,947</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">6.00%</td><td class="num">2,595,298</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">6.1289%</td><td class="num">&minus;514</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">8.00%</td><td class="num">&minus;32,335,273</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">10.00%</td><td class="num">&minus;57,774,530</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">15.00%</td><td class="num">&minus;94,197,682</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">20.00%</td><td class="num">&minus;108,426,736</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Present value moves by $159 million across the range. Return and multiple do not move
+      at all, because the model solves them from the cash flows. The row at 6.1289% is the
+      arithmetic check: discount at the reported return and the value falls to
+      &minus;514 on a deal of $203 million.
+    </p>
+
+    <p>
+      No source document for this project states a discount rate. That is why the case
+      reports a return and a multiple, and reports no net present value.
+    </p>
+  </section>
+
   <hr>
 
   <section>
@@ -437,7 +530,7 @@
     </p>
 
     <details>
-      <summary>Show the model &mdash; 1260 lines of CFDL</summary>
+      <summary>Show the model &mdash; 1267 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-one-rosslyn&quot; currency USD
 
@@ -482,6 +575,13 @@ time calendar monthly from 2023-11 for 170
 // 0 = merchant build, 1 = build to core. Every scenario-dependent stream is
 // weighted by this, so one model carries both and run.json selects.
 assume scenario_b        = 1.0
+
+// The market&#x27;s premium or discount to the County&#x27;s guideline basis. 1.00 IS
+// the guideline basis. The two observations available bracket it: The
+// Highlands sold at +32% to this basis in 2022, Central Place at -11.6% in
+// 2026. It scales the EXIT only. A lender sizes the permanent loan off the
+// appraised basis at stabilization, not off the price a later buyer pays.
+assume market_factor     = 1.0
 
 assume rent_per_unit     = 3789.0
 assume expenses_per_unit = 9466.0
@@ -689,7 +789,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 stream cre.exit_a on entity asset.project inflow currency USD {
   schedule on 2031-10 end
   category investing.reversion
-  amount = 567404297.94 * (1.0 - inputs.scenario_b)
+  amount = 567404297.94 * inputs.market_factor * (1.0 - inputs.scenario_b)
 }
 
 // ------------------------------------------- scenario B: refinance and hold
@@ -711,7 +811,7 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {
 stream cre.exit_b on entity asset.project inflow currency USD {
   schedule on 2037-06 end
   category investing.reversion
-  amount = 670867718.37 * inputs.scenario_b
+  amount = 670867718.37 * inputs.market_factor * inputs.scenario_b
 }
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {
