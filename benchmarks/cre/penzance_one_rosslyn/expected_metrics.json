@@ -1,0 +1,14 @@
+{
+  "model.total": {
+    "value": 203539430.96,
+    "tolerance": 1.0
+  },
+  "model.irr": {
+    "value": 0.061289,
+    "tolerance": 1e-05
+  },
+  "model.moic": {
+    "value": 1.671201,
+    "tolerance": 0.0001
+  }
+}

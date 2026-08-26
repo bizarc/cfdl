@@ -1,0 +1,21 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.1,
+    "as_of": "2023-11-01",
+    "parameters": {
+      "inputs.scenario_b": 1.0
+    }
+  },
+  "scenarios": {
+    "merchant_build": {
+      "parameters": {
+        "inputs.scenario_b": 0.0
+      }
+    },
+    "build_to_core": {
+      "parameters": {
+        "inputs.scenario_b": 1.0
+      }
+    }
+  }
+}
