@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>One Rosslyn Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --ground:#FAF9F7; --surface:#F2F0EC; --ink:#191C1F; --muted:#5C6570;
+    --rule:#E2DFDA; --accent:#1F4E5F; --accent-soft:#E6EDEF; --good:#3F6B4F;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+    --mono:"IBM Plex Mono","SF Mono",Menlo,Consolas,monospace;
+    --measure:68ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+      --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30; --good:#8FBF9F;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+    --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30; --good:#8FBF9F;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16.5px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--measure); margin:0 auto; padding:0 24px 96px}
+
+  /* ---------- masthead ---------- */
+  header.mast{padding:72px 0 0}
+  .eyebrow{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  h1.title{
+    font-family:var(--serif); font-weight:500; font-size:clamp(2rem,5vw,2.7rem);
+    line-height:1.12; letter-spacing:-.02em; text-wrap:balance;
+    margin:.7rem 0 .6rem;
+  }
+  .standfirst{
+    font-family:var(--serif); font-size:1.14rem; line-height:1.55;
+    color:var(--muted); margin:0 0 2rem; text-wrap:pretty;
+  }
+  .byline{
+    display:flex; flex-wrap:wrap; gap:.4rem 1.4rem; padding:1rem 0;
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+    font-family:var(--mono); font-size:.74rem; color:var(--muted);
+  }
+
+  /* ---------- sections ---------- */
+  section{padding:44px 0 0}
+  section > .eyebrow{display:block; margin-bottom:.55rem}
+  h2{
+    font-family:var(--serif); font-weight:500; font-size:1.42rem;
+    letter-spacing:-.01em; line-height:1.25; margin:0 0 .9rem; text-wrap:balance;
+  }
+  h3{
+    font-family:var(--sans); font-weight:600; font-size:.95rem;
+    margin:1.8rem 0 .5rem; letter-spacing:.005em;
+  }
+  p{margin:0 0 1rem; text-wrap:pretty}
+  a{color:var(--accent); text-underline-offset:2px}
+  strong{font-weight:600}
+  hr{border:0; border-top:1px solid var(--rule); margin:44px 0 0}
+
+  ul{margin:0 0 1rem; padding-left:1.1rem}
+  li{margin:0 0 .45rem}
+  li::marker{color:var(--muted)}
+
+  /* ---------- data ---------- */
+  .scroll{overflow-x:auto; margin:0 0 1.1rem}
+  table{border-collapse:collapse; width:100%; font-size:.88rem}
+  caption{
+    caption-side:top; text-align:left; font-family:var(--mono);
+    font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); padding-bottom:.55rem;
+  }
+  th,td{
+    text-align:left; padding:.44rem .8rem .44rem 0;
+    border-bottom:1px solid var(--rule); vertical-align:baseline;
+  }
+  th{font-weight:600; font-size:.76rem; letter-spacing:.03em; color:var(--muted)}
+  td.num,th.num{
+    text-align:right; font-family:var(--mono);
+    font-variant-numeric:tabular-nums; padding-right:0;
+  }
+  tr.total td{border-top:1px solid var(--ink); border-bottom:none; font-weight:600}
+  .exact{color:var(--good); font-family:var(--mono); font-size:.82rem}
+
+  pre{
+    font-family:var(--mono); font-size:.8rem; line-height:1.6; margin:0 0 1.1rem;
+    padding:.95rem 1.05rem; background:var(--surface);
+    border:1px solid var(--rule); border-left:2px solid var(--accent);
+    border-radius:2px; overflow-x:auto;
+  }
+  code{font-family:var(--mono); font-size:.86em; background:var(--surface); padding:.1em .3em; border-radius:2px}
+  pre code{background:none; padding:0; font-size:1em}
+  .cmt{color:var(--muted)}
+
+  .note{
+    border-left:2px solid var(--rule); padding:.15rem 0 .15rem 1rem;
+    margin:0 0 1.1rem; color:var(--muted); font-size:.92rem;
+  }
+  .srclist{font-size:.88rem}
+  .srclist dt{font-weight:600; margin-top:.9rem}
+  .srclist dd{margin:.15rem 0 0; color:var(--muted)}
+  .srclist dd.ref{font-family:var(--mono); font-size:.78rem}
+
+  details{
+    border:1px solid var(--rule); border-radius:2px; background:var(--surface);
+    margin:0 0 1.1rem;
+  }
+  summary{
+    cursor:pointer; padding:.7rem .9rem; font-family:var(--mono); font-size:.78rem;
+    letter-spacing:.03em; color:var(--accent); list-style:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"+  "; font-weight:500}
+  details[open] summary::before{content:"\2212  "}
+  details[open] summary{border-bottom:1px solid var(--rule)}
+  summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+  details pre{
+    margin:0; border:0; border-left:0; border-radius:0; background:none;
+    max-height:32rem; overflow:auto;
+  }
+  details .scroll{margin:0}
+
+  footer{
+    margin-top:52px; padding-top:20px; border-top:1px solid var(--rule);
+    font-size:.82rem; color:var(--muted);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    #doc{animation:fade .4s ease both}
+    @keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+  }
+</style>
+</head>
+<body>
+
+
+<div id="doc">
+<div class="wrap">
+
+  <header class="mast">
+    <span class="eyebrow">CFDL Benchmark Case &middot; Commercial Real Estate</span>
+    <h1 class="title">One Rosslyn, underwritten from the public record</h1>
+    <p class="standfirst">
+      An entitled but unbuilt development in Rosslyn, Virginia. Its program and its land
+      are recorded fact. Its economics are forecast. This page leads with where every
+      number comes from, because that is the part a reader can check.
+    </p>
+    <div class="byline">
+      <span>Arlington County Site Plan #419</span>
+      <span>170 monthly periods</span>
+      <span>2023&ndash;2037</span>
+    </div>
+  </header>
+
+  <section>
+    <span class="eyebrow">Sourcing</span>
+    <h2>Where every number comes from</h2>
+    <p>
+      The companion case, The Highlands, reconstructs a deal that completed. The record
+      fixes its answer. This project has not been built, so the ratio of fact to forecast
+      is inverted. Each input below is labeled.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Every input, and its standing</caption>
+        <thead>
+          <tr><th>Input</th><th>Source</th><th>Standing</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Program, unit mix, GFA, FAR, parking</td><td>Board Report, SP #419 / SPLA24-00040</td><td>Fact</td></tr>
+          <tr><td>Land, $52,000,000</td><td>Deed 20230100013266, recorded 2023-11-14</td><td>Fact</td></tr>
+          <tr><td>Public obligations, $16,218,313</td><td>Board Report, conditions</td><td>Fact</td></tr>
+          <tr><td>Cap rate 5.45%, expenses $9,466, vacancy 5%</td><td>Arlington 2026 Guidebook, market tables</td><td>Fact</td></tr>
+          <tr><td>Land value $78,000 per rental unit</td><td>Arlington 2026 Guidebook</td><td>Fact</td></tr>
+          <tr><td>Four comparable trades, 2022&ndash;2026</td><td>Arlington County sales records</td><td>Fact</td></tr>
+          <tr><td>Rent, $3,789 per unit per month</td><td>Derived by the County&rsquo;s own method</td><td>Derived</td></tr>
+          <tr><td>Construction escalation, 53.4%</td><td>BLS index WPUIP2312001</td><td>Published</td></tr>
+          <tr><td>Rent growth, 3.0%</td><td>Below BLS CUSR0000SEHA at 4.23% and 3.98%</td><td>Published</td></tr>
+          <tr><td>SOFR 3.65%, 10-year Treasury 4.70%</td><td>Federal Reserve, 2026-08-24</td><td>Fact</td></tr>
+          <tr><td>Construction cost per square foot</td><td>The Highlands actual spend, escalated</td><td>Projection</td></tr>
+          <tr><td>Duration, lease-up pace, debt spread</td><td>&mdash;</td><td>Projection</td></tr>
+          <tr><td>Condominium pricing</td><td>&mdash;</td><td>Projection</td></tr>
+          <tr><td>Joint-venture tiers</td><td>&mdash;</td><td>Projection</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      The County record and the trade press disagree on the program. Reports describe an
+      82-unit condominium tower and 319 apartments. The Board Report states 73 and 311.
+      The model follows the record.
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Derivation</span>
+    <h2>Rent is derived, not assumed</h2>
+    <p>
+      Arlington publishes the method it uses to assess apartments. The model runs that
+      method backwards on a comparable building, which turns an assessed value into a
+      rent. The same approach carries the companion case.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Central Place, on the 2026 assessment roll</caption>
+        <tbody>
+          <tr><td>Assessed value, 377 units</td><td class="num">233,287,300</td></tr>
+          <tr><td>&times; guideline loaded cap, 5.45%</td><td class="num">12,714,158</td></tr>
+          <tr><td>Net operating income per unit</td><td class="num">33,725</td></tr>
+          <tr><td>+ guideline expenses per unit</td><td class="num">9,466</td></tr>
+          <tr><td>&divide; (1 &minus; 5% vacancy), per month</td><td class="num">3,789</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Current Rosslyn asking rents bracket that figure, at roughly $3,163 for a one-bedroom
+      and $4,667 for a two-bedroom. The rental product here averages 1,025 square feet.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The market</span>
+    <h2>What Rosslyn has actually paid</h2>
+    <p>
+      Four recorded trades set the frame. The model does not pick one. It derives value
+      from the County&rsquo;s guideline basis, then reports where the market sat against
+      that basis on each date.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Recorded Arlington multifamily transactions</caption>
+        <thead>
+          <tr><th>Asset</th><th>Date</th><th class="num">Price</th><th class="num">Units</th><th class="num">Per unit</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Aubrey</td><td>2022-05-17</td><td class="num">266,455,000</td><td class="num">331</td><td class="num">805,000</td></tr>
+          <tr><td>Evo</td><td>2022-05-17</td><td class="num">334,600,000</td><td class="num">455</td><td class="num">735,385</td></tr>
+          <tr><td>3275 Washington Blvd</td><td>2024-12-18</td><td class="num">158,300,000</td><td class="num">267</td><td class="num">592,884</td></tr>
+          <tr><td>Central Place</td><td>2026-07-21</td><td class="num">206,250,000</td><td class="num">377</td><td class="num">547,082</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Measured against the guideline basis, the market moved a long way in four years. The
+      Highlands towers sold at a premium of 32.1% and 32.3% in 2022. Central Place sold at
+      a discount of 11.6% in 2026. The model sets the factor at 1.00, the guideline basis
+      itself, and carries both observations as the range.
+    </p>
+
+    <div class="note">
+      Two further trades were examined and set aside. One prices to $7,170,476 per unit
+      because the units on that parcel form part of a larger transaction. The other prices
+      to $194,444 per unit and is inconsistent with every other observation. Neither is
+      evidence, and both are named so the exclusion is visible.
+    </div>
+
+    <p>
+      One recorded figure runs in the project&rsquo;s favor. Arlington&rsquo;s guideline
+      land value is $78,000 per rental unit for Metro high-rise. The 772 rental units imply
+      $60,216,000. The site was bought for $52,000,000, which is 13.6% below that basis.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The model</span>
+    <h2>What the language does here</h2>
+
+    <h3>Entitlement fixes timing, not just amount</h3>
+    <p>
+      The County ties each affordable-housing tranche to the first partial certificate of
+      occupancy for one tower. So the timing of $7,545,485 is entitlement fact. A model
+      that carries obligations as a single line loses that.
+    </p>
+
+    <h3>One model, two strategies</h3>
+    <p>
+      A model cannot choose a curve by name at run time, but it can weight one by an input.
+      The construction facility composes its repayment from two scenario curves. One
+      declaration therefore carries both exit strategies, and the run configuration selects
+      between them.
+    </p>
+
+<pre><code>waterfall <span class="cmt">// the facility repays from whichever curve the scenario selects</span>
+  max(0.0, curve_value("condo_proceeds", time.date)
+         + curve_value("exit_a_proceeds", time.date) * (1.0 - inputs.scenario_b)
+         + curve_value("refi_proceeds", time.date) * inputs.scenario_b)</code></pre>
+
+    <h3>The exit is derived, not stated</h3>
+    <p>
+      Value is stabilized net operating income at the exit date, over the guideline loaded
+      cap, times the market factor. Scenario A derives $734,980 per unit. Evo recorded
+      $735,385. That agreement is a check on the method, not a coincidence.
+    </p>
+
+    <h3>A lease-up sale is priced on stabilized income</h3>
+    <p>
+      At the scenario A exit the south tower is roughly 58% leased. A buyer prices what the
+      building will produce, not what it produces that month. In-place income understates
+      that sale by about $140M. The Highlands towers sold at 83% and 60% occupancy.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The strategies</span>
+    <h2>The holding period is the deal</h2>
+    <p>
+      The land, the building, the cost and the guideline basis are identical in both
+      columns. Only the exit strategy differs.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Two exit strategies over one set of facts</caption>
+        <thead>
+          <tr><th></th><th class="num">A &mdash; sell in lease-up</th><th class="num">B &mdash; hold five years</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Exit</td><td class="num">2031-10</td><td class="num">2037-06</td></tr>
+          <tr><td>Construction cost</td><td class="num">555,953,894</td><td class="num">555,953,894</td></tr>
+          <tr><td>Capitalized interest</td><td class="num">58,451,635</td><td class="num">70,146,419</td></tr>
+          <tr><td>Permanent loan</td><td class="num">&mdash;</td><td class="num">347,217,832</td></tr>
+          <tr><td>Exit value</td><td class="num">567,404,298</td><td class="num">670,867,718</td></tr>
+          <tr><td>Exit per unit</td><td class="num">734,980</td><td class="num">869,000</td></tr>
+          <tr><td>Net to equity</td><td class="num">28,591,606</td><td class="num">203,539,431</td></tr>
+          <tr><td>Equity multiple</td><td class="num">1.094x</td><td class="num">1.671x</td></tr>
+          <tr><td>Return</td><td class="num">2.02%</td><td class="num">6.13%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Scenario A follows what this sponsor and this partner did at The Highlands, where
+      both towers sold in lease-up and no permanent loan existed. On 2026 guideline
+      pricing, that strategy returns little more than the capital it consumed.
+    </p>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Reconciliation</span>
+    <h2>Two implementations, built separately</h2>
+    <p>
+      The spreadsheet came first. The CFDL model was written against it, and the two read
+      the same frozen inputs, so they agree by construction rather than by transcription.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <caption>Net to equity</caption>
+        <thead>
+          <tr><th>Scenario</th><th class="num">Spreadsheet</th><th class="num">CFDL</th><th class="num">Difference</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>A &mdash; sell in lease-up</td><td class="num">28,591,606</td><td class="num">28,591,605.61</td><td class="num exact">0.39</td></tr>
+          <tr><td>B &mdash; hold five years</td><td class="num">203,539,431</td><td class="num">203,539,430.96</td><td class="num exact">0.04</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      Two implementations of one specification that agree are evidence that the model is
+      built correctly. They are not evidence that the assumptions are right.
+    </div>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">Limits</span>
+    <h2>What this does not claim</h2>
+    <p>
+      This is an underwriting of a project that nobody has built, from public records.
+      It is not a statement of what Penzance expects to earn.
+    </p>
+    <ul>
+      <li>
+        The market factor is the first dial to move. The market has traded 32% above and
+        11.6% below the guideline basis inside four years.
+      </li>
+      <li>
+        Condominium pricing is the weakest input and carries the most weight. The 73 units
+        average 2,273 square feet, and no Rosslyn condominium of that size has traded
+        recently.
+      </li>
+      <li>
+        Scenario B exits at $869,000 per unit, above every recorded comparable. The figure
+        is 2037 dollars after eleven years of growth.
+      </li>
+      <li>
+        The joint-venture tiers state a structure, not the partnership&rsquo;s economics.
+        Those terms are private.
+      </li>
+      <li>
+        No net present value is reported. The model carries financing, and no source
+        document for this project states a discount rate.
+      </li>
+    </ul>
+  </section>
+
+  <hr>
+
+  <section>
+    <span class="eyebrow">The source</span>
+    <h2>The model in full</h2>
+    <p>
+      This is the whole model. It runs as written. Six curves declare a value for every
+      period of the 170-month grid, and those runs of figures are abridged here for length.
+    </p>
+
+    <details>
+      <summary>Show the model &mdash; 1260 lines of CFDL</summary>
+      <div class="scroll"><pre><code>version 0.1
+model &quot;penzance-one-rosslyn&quot; currency USD
+
+use pack &quot;cre&quot; version &quot;0.1.0&quot;
+
+// ONE ROSSLYN -- 1901 &amp; 1911 N Fort Myer Drive, Arlington, Virginia.
+// Penzance with The Baupost Group. Site plan SP #419, amendment SPLA24-00040,
+// approved 2025-07-19.
+//
+// The companion case, penzance_highlands, reconstructs a deal that COMPLETED.
+// This project is entitled and unbuilt: its program and its land are recorded
+// fact, its economics are forecast. The two cases are written to be read
+// together, and the contrast is the point.
+//
+// Sourcing, strongest first:
+//   program        Arlington County Board Report, SP #419 -- fact
+//   land           deed 20230100013266, 2023-11-14, $52,000,000 -- fact
+//   obligations    Board Report; the AHIF tranches are tied to certificates of
+//                  occupancy, so their TIMING is entitlement fact -- fact
+//   operations     Arlington 2026 Guidebook, MARKET Apartment Guidelines,
+//                  High-Rise 9+ (PCC 313), 2010+, Metro -- fact
+//   comparables    four recorded Arlington trades, 2022 to 2026 -- fact
+//   rent           derived by the County&#x27;s own method from a 2026 comparable
+//   escalation     BLS output-price index WPUIP2312001 -- published
+//   growth         3.0%/yr, below BLS CUSR0000SEHA at 10yr 4.23% and 3yr 3.98%
+//   cost, debt, pace, condominium pricing, JV tiers -- projection
+//
+// THE EXIT IS DERIVED, NOT PICKED. Value is stabilized NOI at the exit date&#x27;s
+// rent level over the County&#x27;s guideline loaded cap, times a stated market
+// factor. The factor is 1.00 -- the guideline basis itself. The two market
+// observations available bracket it: The Highlands sold at +32% to this basis
+// in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
+// would import a market call the record does not support.
+//
+// A lease-up sale is priced on STABILIZED NOI, not on in-place NOI. At the
+// scenario-A exit the south tower is roughly 58% leased; pricing that on
+// in-place income understates the sale by about $140M, and is not what a buyer
+// does. The Highlands towers sold at 83% and 60% occupancy.
+
+time calendar monthly from 2023-11 for 170
+
+// 0 = merchant build, 1 = build to core. Every scenario-dependent stream is
+// weighted by this, so one model carries both and run.json selects.
+assume scenario_b        = 1.0
+
+assume rent_per_unit     = 3789.0
+assume expenses_per_unit = 9466.0
+assume vacancy           = 0.05
+assume parking_per_space = 100.0
+assume growth            = 0.03
+assume cap_rate          = 0.0545
+assume loan_rate         = 0.064
+assume loan_commitment   = 333572336.11
+assume equity_commitment = 249668882.6
+assume pref_rate         = 0.08
+assume sponsor_share     = 0.10
+
+
+// Development cost by period, land and obligations included.
+// EVERY period is declared, including the zeros: a step curve is
+// flat-forward, so an omitted month holds the last draw forward.
+curve dev_cost {
+  2023-11: 52000000.0000
+  2023-12: 0.0000
+  2024-01: 0.0000
+  2024-02: 0.0000
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 0.0000
+  2037-12: 0.0000
+}
+
+
+// Rental units in occupancy, net of the 5% vacancy and
+// collection allowance the Guidebook states.
+curve units_occupied {
+  2023-11: 0.0000
+  2023-12: 0.0000
+  2024-01: 0.0000
+  2024-02: 0.0000
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 733.4000
+  2037-12: 733.4000
+}
+
+
+// Condominium sellout, net of selling costs.
+curve condo_proceeds {
+  2023-11: 0.0000
+  2023-12: 0.0000
+  2024-01: 0.0000
+  2024-02: 0.0000
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 0.0000
+  2037-12: 0.0000
+}
+
+// Cumulative development cost, which is what the equity commitment is
+// measured against.
+curve dev_cost_cum {
+  2023-11: 52000000.00
+  2023-12: 52000000.00
+  2024-01: 52000000.00
+  2024-02: 52000000.00
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 624172206.51
+  2037-12: 624172206.51
+}
+
+// Scenario A: the lease-up sale.
+curve exit_a_proceeds {
+  2023-11: 0.00
+  2023-12: 0.00
+  2024-01: 0.00
+  2024-02: 0.00
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 0.00
+  2037-12: 0.00
+}
+
+// Scenario B: permanent loan proceeds at stabilization.
+curve refi_proceeds {
+  2023-11: 0.00
+  2023-12: 0.00
+  2024-01: 0.00
+  2024-02: 0.00
+  // ... 164 further points, one per period, omitted for length
+  2037-11: 0.00
+  2037-12: 0.00
+}
+
+
+// ---------------------------------------------------------------- structure
+entity asset project : CRE.Asset.Portfolio
+entity asset ne : CRE.Asset.RealProperty { asset_class = &quot;condominium&quot;  part of asset.project }
+entity asset nw : CRE.Asset.RealProperty { asset_class = &quot;multifamily&quot;  part of asset.project }
+entity asset south : CRE.Asset.RealProperty { asset_class = &quot;multifamily&quot;  part of asset.project }
+
+entity party penzance : CRE.Party.Sponsor  { name = &quot;Penzance&quot; }
+entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot; }
+
+// FACT. Recorded 2023-11-14, deed 20230100013266, sales code &quot;4-Multiple RPCs&quot;,
+// so the price is the aggregate across all three parcels. The County&#x27;s own
+// guideline land value for Metro high-rise is $78,000 per rental unit, putting
+// 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
+stream cre.development on entity asset.project outflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category investing.capital.capex
+  amount = curve_value(&quot;dev_cost&quot;, time.date)
+}
+
+// ------------------------------------------------------------- operations
+// Rent is DERIVED: a comparable&#x27;s assessed value times the guideline loaded cap
+// gives the assessor&#x27;s own NOI; add back guideline expenses and gross up for
+// vacancy. Escalated from the Guidebook&#x27;s 2026-07 vintage, NOT frozen there --
+// this project delivers in 2030 and freezing 2026 dollars would understate it.
+stream cre.rent on entity asset.project inflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category operating.revenue.base_rent
+  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.rent_per_unit
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+}
+
+stream cre.parking on entity asset.project inflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category operating.revenue.other
+  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.parking_per_space * 0.5
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+}
+
+stream cre.opex on entity asset.project outflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category operating.expense.opex
+  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.expenses_per_unit / 12.0
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+}
+
+// The weakest input in the case, and it carries the most weight: the NE tower&#x27;s
+// 73 units average 2,273 sq ft, far larger than the Pierce units this is
+// anchored to, and no Rosslyn condominium of that size has traded recently.
+stream cre.condo_closings on entity asset.project inflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category investing.reversion
+  amount = curve_value(&quot;condo_proceeds&quot;, time.date)
+}
+
+// ------------------------------------------------------------- the facility
+// PROJECTION. No instrument is recorded. SOFR at 2026-08-24 was 3.65% (FRED);
+// the spread over it is a projection. Equity funds to its commitment first, the
+// facility draws the residual, and interest capitalizes into the balance.
+// Every recurrence reads only `prev`, curves and inputs -- never a stream --
+// which is what keeps it acyclic by construction.
+entity asset facility : Asset.Financial {
+  equity_funded init min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+                next min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+
+  interest init 0.0
+           next prev.asset.facility.balance * inputs.loan_rate / 12.0
+
+  draw init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
+       next min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+
+  // Proceeds are composed from the two scenario curves rather than one, because
+  // a curve name cannot be chosen at runtime but an input can weight it.
+  repay init 0.0
+        next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)),
+                 max(0.0, curve_value(&quot;condo_proceeds&quot;, time.date)
+                        + curve_value(&quot;exit_a_proceeds&quot;, time.date) * (1.0 - inputs.scenario_b)
+                        + curve_value(&quot;refi_proceeds&quot;, time.date) * inputs.scenario_b))
+
+  balance init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
+          next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+                      + prev.asset.facility.balance * inputs.loan_rate / 12.0
+                      - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)),
+                            max(0.0, curve_value(&quot;condo_proceeds&quot;, time.date)
+                                   + curve_value(&quot;exit_a_proceeds&quot;, time.date) * (1.0 - inputs.scenario_b)
+                                   + curve_value(&quot;refi_proceeds&quot;, time.date) * inputs.scenario_b)))
+}
+
+stream cre.loan_draw on entity asset.project inflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category financing.debt_proceeds
+  amount = asset.facility.draw
+}
+
+// Interest capitalizes: stated GROSS, an outflow against a matching draw, so
+// coverage stays measurable. The two legs net to zero in cash.
+stream cre.loan_interest on entity asset.project outflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category financing.interest
+  amount = asset.facility.interest
+}
+
+stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category financing.debt_proceeds
+  amount = asset.facility.interest
+}
+
+// A balance retired out of disposal proceeds is a reversion, not debt service:
+// folding it into debt service makes every coverage ratio in the period
+// meaningless. The cre pack says the same of a permanent loan&#x27;s balloon.
+stream cre.loan_repayment on entity asset.project outflow currency USD {
+  schedule every month start from 2023-11 to 2037-12
+  category investing.reversion
+  amount = asset.facility.repay
+}
+
+// ----------------------------------------------------- scenario A: the sale
+stream cre.exit_a on entity asset.project inflow currency USD {
+  schedule on 2031-10 end
+  category investing.reversion
+  amount = 567404297.94 * (1.0 - inputs.scenario_b)
+}
+
+// ------------------------------------------- scenario B: refinance and hold
+// Permanent debt at stabilization: the 10-year Treasury at 2026-08-24 was
+// 4.70% (FRED) and the spread over it is a projection. Sized at 60% of the
+// stabilized value, amortizing over 30 years.
+stream cre.refinance on entity asset.project inflow currency USD {
+  schedule on 2032-06 end
+  category financing.debt_proceeds
+  amount = 347217832.21 * inputs.scenario_b
+}
+
+stream cre.perm_debt_service on entity asset.project outflow currency USD {
+  schedule every month end from 2032-07 to 2037-06
+  category financing.debt_service
+  amount = 2183247.96 * inputs.scenario_b
+}
+
+stream cre.exit_b on entity asset.project inflow currency USD {
+  schedule on 2037-06 end
+  category investing.reversion
+  amount = 670867718.37 * inputs.scenario_b
+}
+
+stream cre.perm_payoff on entity asset.project outflow currency USD {
+  schedule on 2037-06 end
+  category investing.reversion
+  amount = 324846432.07 * inputs.scenario_b
+}
+</code></pre></div>
+    </details>
+  </section>
+
+  <footer>
+    Prepared with CFDL, a domain language for cash-flow models. This page is shared
+    privately and is access-controlled. Figures reflect the benchmark case as committed on
+    26 August 2026.
+  </footer>
+
+</div>
+</div>
+
+
+</body>
+</html>
