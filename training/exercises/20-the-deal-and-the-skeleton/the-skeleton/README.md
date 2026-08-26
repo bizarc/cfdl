@@ -1,6 +1,6 @@
 # First claims on the ground
 
-The grid, phases, and cast are declared. Add the deal's first two claims.
+The starter file declares the grid, phases, and cast. Add the deal's first two claims.
 
 1. Add the land closing: 5,500,000 at the start of January, a single-occurrence `start` stride.
 2. Add the construction program: a `cre.construction_stub` with seventeen draws of 700,000.

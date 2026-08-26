@@ -7,4 +7,4 @@ Add the reversion.
 
 Anchor: 1,550,000 / 0.0625 × 0.98 = 24,304,000.
 
-With the sale in, the deal's whole story is priced: IRR about 15.6%, equity multiple about 1.8x. Before you trust those numbers, do the chapter's sensitivity by hand — move the cap to 6.75% and predict the proceeds. The answer is why chapter 24 puts a distribution on this number.
+The sale prices the deal's whole story: IRR about 15.6%, equity multiple about 1.8x. Before you trust those numbers, do the chapter's sensitivity by hand — move the cap to 6.75% and predict the proceeds. The answer is why chapter 24 puts a distribution on this number.
