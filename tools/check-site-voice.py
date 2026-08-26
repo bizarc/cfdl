@@ -44,6 +44,7 @@ Usage: python3 tools/check-site-voice.py
 from __future__ import annotations
 
 import json
+import html
 import pathlib
 import re
 import sys
@@ -248,7 +249,32 @@ def sources() -> list[pathlib.Path]:
     # them are reader-facing the same way the examples are.
     found += sorted((REPO_ROOT / "learn" / "content").rglob("*.mdx"))
     found += sorted(REPO_ROOT.glob("training/exercises/*/*/README.md"))
+    # The private case pages are the most externally visible prose in the
+    # repository: they are written to be read by someone outside the project.
+    # They live in site/app rather than site/content, so nothing checked them
+    # until a reader found idiom and personification on a page in front of a
+    # client.
+    found += sorted(REPO_ROOT.glob("site/app/private/*/content.html"))
     return [p for p in found if p.exists()]
+
+
+_HTML_DROP = re.compile(r"<(details|style|script|pre)\b.*?</\1>", re.S)
+_HTML_TAG = re.compile(r"<[^>]+>")
+
+
+def _lines_of(path: pathlib.Path) -> list[str]:
+    """Lines of prose. An HTML page is stripped to its sentences first.
+
+    The collapsed model listing, the code blocks and the stylesheet are not
+    prose and are dropped whole; everything else keeps its line numbering as
+    closely as the markup allows.
+    """
+    text = path.read_text(encoding="utf-8")
+    if path.suffix != ".html":
+        return text.splitlines()
+    text = _HTML_DROP.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+    text = _HTML_TAG.sub(" ", text)
+    return [html.unescape(line) for line in text.splitlines()]
 
 
 def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
@@ -262,7 +288,7 @@ def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
     # `git clone …` in an install page is the instruction; flagging it as
     # narrative would mean deleting the only documented way to install.
     in_fence = False
-    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for n, line in enumerate(_lines_of(path), 1):
         if path.suffix == ".md" and line.lstrip().startswith("```"):
             in_fence = not in_fence
             continue

@@ -39,9 +39,9 @@ program, unit mix, GFA, FAR and parking. Deed 20230100013266 records the land
 basis of **$52,000,000** on 2023-11-14. Its sales code is "4-Multiple RPCs", so
 the price covers all three parcels.
 
-Public obligations total **$16,218,313**. Their timing is also entitlement
-fact. The County ties each AHIF tranche to the first partial certificate of
-occupancy for one tower.
+Public obligations total **$16,218,313**. The County ties each AHIF tranche to the first
+partial certificate of occupancy for its tower, so the model pays each one on that
+tower's date.
 
 The operating guidelines are the County's own. They come from the **2026
 Guidebook**, MARKET Apartment Guidelines, High-Rise 9+ (PCC 313), effective age
@@ -87,21 +87,23 @@ The model carries **two exit strategies over one set of facts**. The input
   into permanent debt at 60% of stabilized value over a 30-year amortization,
   and holds five years.
 
-A model cannot select a curve name at runtime, but it can weight one by an
-input. So the facility composes its repayment from two scenario curves. That is
-what lets one model carry both strategies.
+Both strategies run from one model, on one set of costs and one construction facility. The
+two columns below differ only in when the venture sells.
 
-**The engine derives the exit rather than states it.** The model declares a 12-month projection tail. The sale reads the twelve months of income after it, over the County's guideline loaded cap, times a stated market factor. Change the rent growth and the exit moves with it. The factor is **1.00**, which is the guideline basis
-itself.
+**The engine derives the exit rather than states it.** The model declares a 12-month
+projection tail. The sale is valued on the twelve months of income that follow it,
+divided by the County's guideline loaded cap and adjusted by a stated market factor.
+Change the rent growth and the exit changes with it.
+
+The factor is **1.00**, which is the guideline basis itself.
 
 Two observations bracket that factor, and the case carries both as a range. The
 Highlands sold at **+32.1% and +32.3%** to this basis in 2022. Central Place
 sold at **-11.6%** in 2026. Either one as the base would import a market call
 that the record does not support.
 
-A buyer prices a lease-up sale on **stabilized** NOI, not on in-place NOI. At
-the scenario-A exit the south tower is roughly 58% leased. In-place income
-understates that sale by about $140M.
+At the scenario-A exit the south tower is roughly 58% leased, so that sale is priced on
+stabilized income. In-place income would understate it by about $140M.
 
 ## The result
 

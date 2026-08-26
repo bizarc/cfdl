@@ -41,7 +41,7 @@ distinguishes a tutorial from a reference page.
 |---|---|---|
 | **A** | Procedural — the reader is doing something now | `site/content/docs/install/**`, `site/content/docs/getting-started.md`, `site/content/docs/troubleshooting.md`, `training/exercises/*/*/README.md`, `examples/language_tutorial/*/README.md` |
 | **B** | Reference and normative | `site/content/docs/reference/**`, `site/content/docs/specification/**`, `docs/0*.md`, `docs/1[2457]_*.md`, JSON schema `description` strings |
-| **C** | Conceptual and instructional | `site/content/docs/{concepts,object-model,language-guide,stochastic-modeling,faq,benchmarks}.md`, `site/content/docs/guides/**`, `site/content/docs/packs/**`, `learn/content/chapters/*.mdx`, `benchmarks/*/*/CASE.md` |
+| **C** | Conceptual and instructional | `site/content/docs/{concepts,object-model,language-guide,stochastic-modeling,faq,benchmarks}.md`, `site/content/docs/guides/**`, `site/content/docs/packs/**`, `learn/content/chapters/*.mdx`, `benchmarks/*/*/CASE.md`, `site/app/private/*/content.html` |
 | **D** | Marketing | `site/app/page.tsx`, `site/components/SiteFooter.tsx`, playground microcopy |
 
 A page edited at its source inherits the tier of the page it generates. The
@@ -54,6 +54,12 @@ non-negotiable. Tiers C and D exist mostly to record what is deliberately *not*
 constrained, so that a future gate does not fire on prose that is correct.
 
 ---
+
+The private case pages are Tier C. They explain a model to a reader outside the
+project, which is instructional work, and the reader is often the counterparty
+whose deal is being modeled. Marketing licence does not apply to them: an
+idiom, a personified model, or a sentence about what the language cannot do all
+cost more there than anywhere else on the site.
 
 ## 3. Rules
 
