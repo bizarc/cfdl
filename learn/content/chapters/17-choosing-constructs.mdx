@@ -6,7 +6,7 @@ order: 17
 track: core
 ---
 
-Part II gave you six ways to say things, and every working session now begins with the same silent decision: *which one is this claim?* Most modeling reviews that go badly go badly here — not wrong numbers but wrong *constructs*, economics that are technically computed and structurally illegible. This chapter makes the decision explicit: one sorting question, calibration through pairs, and the smells that tell you a claim has been poured into the wrong shape.
+Part II gave you six ways to say things. Every working session now begins with the same silent decision: *which one is this claim?* Most modeling reviews that go badly go badly here — not on wrong numbers but on wrong *constructs*, economics that are technically computed and structurally illegible. This chapter makes the decision explicit: one sorting question, calibration through pairs, and the smells that tell you a claim has been poured into the wrong shape.
 
 ## One question: what kind of claim is it?
 
@@ -25,13 +25,19 @@ The question is about the *claim*, never the computation — every construct her
 
 Frameworks calibrate on hard cases. Three pairs, each the same economics twice.
 
-**A declining balance: field, or stream arithmetic?** A loan balance *could* be an amount expression — `250000 - 4166.67 * time.t` — and for a strictly linear paydown the numbers even agree. But the expression version states "cash follows this formula," when the claim is "a quantity persists and moves by rule" — and the moment reality complicates (a sweep, a rate change, an event writing the balance), the formula version must be *re-derived* while the field's `next` absorbs the change in place. The tell that you chose wrong: an amount expression re-deriving history — anything shaped like `initial - payment * time.t` — is a recurrence flattened into a formula, and it breaks silently the first time any single period deviates.
+**A declining balance: field, or stream arithmetic?** A loan balance *could* be an amount expression — `250000 - 4166.67 * time.t` — and for a strictly linear paydown the numbers even agree. But the expression version states "cash follows this formula," when the claim is "a quantity persists and moves by rule." The moment reality complicates — a sweep, a rate change, an event writing the balance — you must *re-derive* the formula version, while the field's `next` absorbs the change in place.
 
-**A regime switch: event, or if-ladder?** Chapter 10's refinance could be written as `if(time.t < 12, 9500, 6200)` in one stream — same cash. The ladder buries the deal's most consequential moment inside arithmetic where no reviewer will find it, states no *reason* (the `12` is a naked number, not a condition), and cannot coordinate: when the switch also affects fees, covenants, and the exit, each expression carries its own copy of `time.t < 12`, and they drift. The event states the turning point once, with its trigger; guards subscribe. The tell: **the same condition appearing in two expressions** — a regime wearing an if-costume.
+The tell that you chose wrong is an amount expression re-deriving history. Anything shaped like `initial - payment * time.t` is a recurrence flattened into a formula, and it breaks silently the first time any single period deviates.
 
-**An entitlement: waterfall, or field-plus-paydown?** A deferred fee that accrues when cash is short and pays when cash allows *can* be built by hand: a field for the balance, a stream that pays `min(balance, available)`, careful ordering. Chapter 8 called this the smell it is. The waterfall's `owed.x - paid.x` states the entitlement *inside the priority structure that governs it* — who ranks where is visible, the pot cannot be double-spent, and the shortfall arithmetic is the construct's own guarantee rather than your reimplementation of it. The tell: **a field paired with a stream that tries to empty it, next to other claims on the same cash.** One claimant with no competition can stay a field; the moment cash is *contested*, priority is the claim, and priority is spelled waterfall.
+**A regime switch: event, or if-ladder?** Chapter 10's refinance could be written as `if(time.t < 12, 9500, 6200)` in one stream — same cash. The ladder fails three ways. It buries the deal's most consequential moment inside arithmetic, where no reviewer will find it. It states no *reason*: the `12` is a naked number, not a condition. And it cannot coordinate — when the switch also affects fees, covenants, and the exit, each expression carries its own copy of `time.t < 12`, and they drift. The event states the turning point once, with its trigger; guards subscribe. The tell: **the same condition appearing in two expressions** — a regime wearing an if-costume.
 
-The pairs share a moral worth stating once: the wrong construct is rarely wrong *today* — it is wrong at the first amendment, when the imitation has to be re-derived while the right construct absorbs the change.
+**An entitlement: waterfall, or field-plus-paydown?** A deferred fee that accrues when cash is short and pays when cash allows *can* be built by hand: a field for the balance, a stream that pays `min(balance, available)`, careful ordering. Chapter 8 called this the smell it is.
+
+The waterfall's `owed.x - paid.x` states the entitlement *inside the priority structure that governs it*. Who ranks where is visible, the pot cannot be double-spent, and the shortfall arithmetic is the construct's own guarantee rather than your reimplementation of it.
+
+The tell: **a field paired with a stream that tries to empty it, next to other claims on the same cash.** One claimant with no competition can stay a field. The moment cash is *contested*, priority is the claim, and priority is spelled waterfall.
+
+The pairs share a moral worth stating once. The wrong construct is rarely wrong *today*. It is wrong at the first amendment, when you must re-derive the imitation while the right construct absorbs the change.
 
 ## The smells, collected
 
@@ -48,7 +54,7 @@ None of these is a compile error, and that is the point of Part III: the compile
 
 ## What can go wrong
 
-**Construct maximalism.** The framework cuts both ways: a one-off consulting invoice does not need an event and a lifecycle field — it is a stream with a date, and dressing it up is smell 6 inverted. The sorting question includes a null answer; most claims are streams.
+**Construct maximalism.** The framework cuts both ways. A one-off consulting invoice does not need an event and a lifecycle field. It is a stream with a date, and dressing it up is smell 6 inverted. The sorting question includes a null answer; most claims are streams.
 
 **Refactoring without an invariant.** Moving a claim between constructs must not move cash. The method from the exercises you have already done: run before, refactor, run after, compare to the penny. A construct refactor with a changed total is two changes pretending to be one.
 

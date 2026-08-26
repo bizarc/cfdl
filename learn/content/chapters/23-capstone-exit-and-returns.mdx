@@ -6,7 +6,7 @@ order: 23
 track: core
 ---
 
-Every number so far has been rehearsal. Development deals live or die on the reversion — the sale that converts four years of claims into one wire — and this shortest chapter of the capstone adds the two lines that price it, then spends its weight where the judgment is: what those two lines assert, and how to interrogate the returns they produce.
+Every number so far has been rehearsal. Development deals live or die on the reversion: the sale that converts four years of claims into one wire. This shortest chapter of the capstone adds the two lines that price it, then spends its weight where the judgment is — what those two lines assert, and how to interrogate the returns they produce.
 
 ## The sale, with its window named
 
@@ -32,15 +32,23 @@ stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
 }
 ```
 
-Chapter 18's exit conventions, now as committed terms. The NOI basis is **forward** — the term's own name says so — because a buyer underwrites the year they are buying, and the 1,550,000 is *stated to match the modeled stabilized year*: check it against the results' final-year NOI, and record the check (it is this chapter's hand anchor). Stating the number rather than deriving it is a choice with a tradeoff — a stated window is visible and committee-editable but can drift from the model that surrounds it; the pack's `cre.exit_forward` derives the same window from the modeled streams instead, at the price of a projection tail. The exercise has you reconcile the two. Selling costs belong in every reversion that expects to survive diligence; the payoff is the takeout structure from chapter 22 completing itself — an IO loan returns its full principal, and it returns it *here*, against proceeds, exactly where the pack's balloon note said it belongs.
+Chapter 18's exit conventions, now as committed terms. The NOI basis is **forward**, as the term's own name says, because a buyer underwrites the year they are buying. The 1,550,000 is *stated to match the modeled stabilized year*. Check it against the results' final-year NOI, and record the check: it is this chapter's hand anchor.
 
-The sale lands at the *end* of the final period — the pack places it there deliberately, and after chapter 4 you know that placement is worth a full month of discounting on the deal's largest number.
+Stating the number rather than deriving it is a choice with a tradeoff. A stated window is visible and committee-editable, but it can drift from the model that surrounds it. The pack's `cre.exit_forward` derives the same window from the modeled streams instead, at the price of a projection tail. The exercise has you reconcile the two.
+
+Selling costs belong in every reversion that expects to survive diligence. The payoff is the takeout structure from chapter 22 completing itself: an IO loan returns its full principal, and it returns it *here*, against proceeds, exactly where the pack's balloon note said it belongs.
+
+The sale lands at the *end* of the final period, and the pack places it there deliberately. After chapter 4 you know that placement is worth a full month of discounting on the deal's largest number.
 
 ## What the numbers say
 
 Proceeds: 1,550,000 / 0.0625 × 0.98 = **24,304,000** — arithmetic you should do on paper before the engine confirms it. And with the reversion in, the deal finally has a bottom line: total about +8.6 million, **IRR 15.6%, equity multiple 1.8x** on roughly 8 million of equity over five years.
 
-Now interrogate them, because this is where chapter 3's discipline meets real stakes. **Where does the value sit?** Strip the exit from the total in your head: without the sale the deal is −6.2 million; the reversion is not the icing but most of the cake — which is the risk profile of all development, stated as one subtraction. **What is the IRR sensitive to?** Move the cap 50 basis points in your head before running it: at 6.75%, proceeds drop to about 22.5 million — call it 1.8 million of value, on a number nobody controls. **Is the multiple consistent with the IRR?** 1.8x over five years is roughly 15% and the model says 15.6% — the two metrics cross-check each other, and when they ever disagree wildly, timing (an early distribution, a late call) is the explanation to hunt.
+Now interrogate them, because this is where chapter 3's discipline meets real stakes. **Where does the value sit?** Strip the exit from the total in your head. Without the sale the deal is −6.2 million: the reversion is not the icing but most of the cake. That is the risk profile of all development, stated as one subtraction.
+
+**What is the IRR sensitive to?** Move the cap 50 basis points in your head before running it. At 6.75%, proceeds drop to about 22.5 million — call it 1.8 million of value, on a number nobody controls.
+
+**Is the multiple consistent with the IRR?** 1.8x over five years is roughly 15%, and the model says 15.6%. The two metrics cross-check each other. When they ever disagree wildly, hunt for timing: an early distribution, or a late call.
 
 That cap-rate subtraction is the whole argument for the final chapter: a deal whose value lives in one market number at one future date is not described by a point estimate, however carefully anchored.
 

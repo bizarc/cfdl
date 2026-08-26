@@ -6,11 +6,17 @@ order: 18
 track: core
 ---
 
-Several chapters have brushed against the same fact from different sides: the language's machinery *encodes finance*. The rate conversion in chapter 3, the `start`/`mid`/`end` placements in chapter 4, the TVM family in chapter 5 — each is a financial convention promoted into semantics. This chapter collects them and completes the set, because a modeler who knows *which conventions the machinery applies* can reconcile against any source; one who does not will spend afternoons chasing third-digit ghosts that were never errors at all.
+Several chapters have brushed against the same fact from different sides: the language's machinery *encodes finance*. The rate conversion in chapter 3, the `start`/`mid`/`end` placements in chapter 4, the TVM family in chapter 5 — each is a financial convention promoted into semantics. This chapter collects them and completes the set. A modeler who knows *which conventions the machinery applies* can reconcile against any source. One who does not will spend afternoons chasing third-digit ghosts that were never errors at all.
 
 ## Day counts: what a year is
 
-"8% per annum" is incomplete until you say what a year *is*. The market's answers disagree on purpose: **30/360** (every month 30 days — bonds and mortgages, chosen so level periods accrue level interest), **actual/360** (money markets — a real-day count over a short year, quietly yielding more than the quoted rate), **actual/365** and **actual/actual** (real days over real years). Between two dates, these bases produce accruals that differ by real money at scale.
+"8% per annum" is incomplete until you say what a year *is*. The market's answers disagree on purpose:
+
+- **30/360** — every month is 30 days. Bonds and mortgages use it, chosen so that level periods accrue level interest.
+- **actual/360** — a real-day count over a short year. Money markets use it, and it quietly yields more than the quoted rate.
+- **actual/365** and **actual/actual** — real days over real years.
+
+Between two dates, these bases produce accruals that differ by real money at scale.
 
 `year_frac` is where the model states its basis: the day-count-aware year fraction between two dates, the bridge from "a rate per annum" to "this period's accrual" on a daily-grain model. The discipline is the reconciliation rule from chapter 3 wearing its most common costume: **a basis-point-sized disagreement with a source is a convention gap before it is an error.** Find the source's basis, state the same one, and the gap closes exactly — or remains, and is now a finding.
 
@@ -18,7 +24,7 @@ Several chapters have brushed against the same fact from different sides: the la
 
 You have met this one twice — the discount conversion (`(1+r)^(1/12) − 1`, chapter 3) and the loan-document convention (`r/12`, chapter 5's exercise, worth −1,356 of NPV on a small loan). The general rule: **annual rates convert to periodic rates geometrically when they compound, and by division when a document says so.** Neither is "correct"; each is a claim, and the model's job is to state the one the deal makes.
 
-The same geometry governs **prepayment**. A pool quoted at 8 CPR (8% of balance prepaying per year) does not lose 8%/12 monthly; the monthly rate is the one that *compounds* to 8% — `1 − (1 − 0.08)^(1/12)`, about 0.69% — and `cpr_to_smm(0.08)` states exactly that conversion by its market name (single monthly mortality). Wherever an annual rate meets a finer grid — discounting, prepayment, default rates, growth — the divide-versus-compound question is waiting, and the third digit of your reconciliation depends on the answer.
+The same geometry governs **prepayment**. A pool quoted at 8 CPR — 8% of balance prepaying per year — does not lose 8%/12 monthly. The monthly rate is the one that *compounds* to 8%: `1 − (1 − 0.08)^(1/12)`, about 0.69%. `cpr_to_smm(0.08)` states exactly that conversion by its market name, single monthly mortality. Wherever an annual rate meets a finer grid — discounting, prepayment, default rates, growth — the divide-versus-compound question is waiting, and the third digit of your reconciliation depends on the answer.
 
 ## Placement as valuation: the annuity family, revisited
 
@@ -26,19 +32,31 @@ Chapter 4's `start`/`mid`/`end` trio is the machinery form of a valuation-course
 
 ## Declared schedules: depreciation as a table
 
-Some finance is not a formula but a *published table*. US tax depreciation (MACRS) is the canonical case: the five-year schedule is 20%, 32%, 19.2%, 11.52%, 11.52%, 5.76% — six numbers from a revenue procedure, not derivable, only citable. `macrs_rate(year, life)` reads the table by its public name, so a tax shield stream says `basis * macrs_rate(time.t / 12 + 1, 5)`-shaped things and a reviewer checks it against the same table you read. The principle generalizes: **when the source is a table, cite the table** — a curve for a quoted deck (chapter 7), `macrs_rate` for the tax code — rather than fitting a formula that agrees this year and drifts the next.
+Some finance is not a formula but a *published table*. US tax depreciation (MACRS) is the canonical case: the five-year schedule is 20%, 32%, 19.2%, 11.52%, 11.52%, 5.76% — six numbers from a revenue procedure, not derivable, only citable. `macrs_rate(year, life)` reads the table by its public name. A tax shield stream then takes the shape `basis * macrs_rate(time.t / 12 + 1, 5)`, and a reviewer checks it against the same table you read. The principle generalizes: **when the source is a table, cite the table.** Use a curve for a quoted deck (chapter 7) and `macrs_rate` for the tax code, rather than fit a formula that agrees this year and drifts the next.
 
 ## Exit conventions: what a cap rate divides
 
-A real-asset exit is one line — sale value = NOI / cap rate — hiding two conventions that move millions. **Which NOI?** Trailing (the year just ended) or forward (the year a buyer underwrites)? In a growing asset, forward NOI is higher, so the same cap rate on the two bases produces materially different proceeds — and offering documents choose deliberately. **Which cap rate?** The number is a market price, not a derived quantity, and its sensitivity is brutal at low rates: at a 5% cap, 25 basis points moves value by roughly five percent of the asset. The modeling consequences are direct: the NOI reference in an exit claim must *name its window* (the capstone's exit chapter does exactly this), and the cap rate belongs on the assumption page with a distribution around it (chapter 12) rather than buried as a constant — no single input in a real-estate model more deserves the Monte Carlo treatment.
+A real-asset exit is one line — sale value = NOI / cap rate — hiding two conventions that move millions. **Which NOI?** Trailing (the year just ended) or forward (the year a buyer underwrites)? In a growing asset, forward NOI is higher, so the same cap rate on the two bases produces materially different proceeds — and offering documents choose deliberately. **Which cap rate?** The number is a market price, not a derived quantity, and its sensitivity is brutal at low rates. At a 5% cap, 25 basis points moves value by roughly five percent of the asset.
+
+The modeling consequences are direct. The NOI reference in an exit claim must *name its window*, as the capstone's exit chapter does. The cap rate belongs on the assumption page with a distribution around it (chapter 12), not buried as a constant. No single input in a real-estate model more deserves the Monte Carlo treatment.
 
 ## Coverage: recompute, never average
 
-The rule promised in chapter 16. A coverage ratio — DSCR, interest cover, any test of the form *cash available over cash owed* — is a **ratio of sums, never a sum of ratios**. A quarter's DSCR is that quarter's NOI over that quarter's debt service, and a year's DSCR is the *year's* NOI over the *year's* service — not the average of four quarterly ratios, which weights lean quarters wrongly and can show compliance across a quarter that breached. The averaged breach from chapter 16 is this rule violated by grain; it can equally be violated by arithmetic at the right grain. In model terms: compute coverage from rolled-up flows at the grain the covenant tests, and when a document tests quarterly, the model's grid must be at least quarterly (grain and semantics, meeting exactly where the chapter said they would).
+The rule promised in chapter 16. A coverage ratio — DSCR, interest cover, any test of the form *cash available over cash owed* — is a **ratio of sums, never a sum of ratios**. A quarter's DSCR is that quarter's NOI over that quarter's debt service. A year's DSCR is the *year's* NOI over the *year's* service — never the average of four quarterly ratios. That average weights lean quarters wrongly, and it can show compliance across a quarter that breached. The averaged breach from chapter 16 is this rule violated by grain; it can equally be violated by arithmetic at the right grain.
+
+In model terms: compute coverage from rolled-up flows at the grain the covenant tests. When a document tests quarterly, the model's grid must be at least quarterly. Grain and semantics meet exactly where chapter 16 said they would.
 
 ## The collected discipline
 
-One habit unifies this chapter: **every convention is a claim, so state it where a reviewer will look.** The day-count basis in the expression that uses it; the rate conversion visible as arithmetic (`0.072 / 12` says the document's convention out loud); the placement keyword on the schedule; the NOI window named; the cap rate on the assumption page. The machinery will apply whatever convention you state, exactly — which is precisely why the stating is your job, and why "the model is wrong" so often decodes to "two right models disagree about a convention neither wrote down." Yours writes it down.
+One habit unifies this chapter: **every convention is a claim, so state it where a reviewer will look.**
+
+- The day-count basis, in the expression that uses it.
+- The rate conversion, visible as arithmetic — `0.072 / 12` says the document's convention out loud.
+- The placement keyword, on the schedule.
+- The NOI window, named.
+- The cap rate, on the assumption page.
+
+The machinery applies whatever convention you state, exactly. That is precisely why the stating is your job. It is also why "the model is wrong" so often decodes to "two right models disagree about a convention neither wrote down." Yours writes it down.
 
 ## Exercises
 
@@ -47,4 +65,4 @@ One habit unifies this chapter: **every convention is a claim, so state it where
 Then, on your own:
 
 1. Compute by hand: at 8 CPR, what fraction of a pool survives 24 months? (Answer shape: `(1−0.08)^2`.) Confirm against your exercise model's factor field, and then explain to yourself why `1 − 0.08/12 × 24` disagrees — that explanation is this chapter in one breath.
-2. Take chapter 12's Monte Carlo building and put the distribution where this chapter says it belongs: replace the exit-multiple LogNormal with a Normal on the *cap rate* (mean 5.5%, stdev 0.5%, clipped 4–7.5%) applied to a named NOI window. Compare the p05s. Cap-rate uncertainty is not symmetric in value space — you have just seen why.
+2. Put the distribution where this chapter says it belongs. In the Monte Carlo model you built in chapter 12, replace the exit-multiple LogNormal with a Normal on the *cap rate* — mean 5.5%, stdev 0.5%, clipped 4–7.5% — applied to a named NOI window. Compare the p05s. Cap-rate uncertainty is not symmetric in value space, and you have just seen why.

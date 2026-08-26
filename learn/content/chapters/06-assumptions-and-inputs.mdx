@@ -6,7 +6,7 @@ order: 6
 track: core
 ---
 
-By now your amounts read well but your numbers are scattered: a growth rate inside one expression, a fee inside another, a rate that appears twice. This chapter is about where numbers *live*. The language gives you three homes for a number — declared assumptions, run-time parameters, and observations — and choosing correctly among them is what makes one model serve a base case, a downside, a committee question, and a simulation without ever being edited.
+By now your amounts read well but your numbers are scattered: a growth rate inside one expression, a fee inside another, a rate that appears twice. This chapter is about where numbers *live*. The language gives you three homes for a number: declared assumptions, run-time parameters, and observations. Choosing correctly among them is what makes one model serve a base case, a downside, a committee question, and a simulation without ever being edited.
 
 ## Assumptions: the model's named claims
 
@@ -40,7 +40,7 @@ stream cafe.rent on entity asset.cafe outflow currency USD {
 }
 ```
 
-Look at what the block of `assume` lines has become: the model's *assumption page* — the first thing a reviewer reads, the only place a committee edit lands, and the complete list of what this model believes. Every number a person might question belongs here; the expressions below it hold structure, not opinions. An assumption can be an expression itself (`assume annual_revenue = inputs.monthly_covers * inputs.avg_ticket * 12`), so derived assumptions stay derived rather than pre-computed.
+Look at what the block of `assume` lines has become: the model's *assumption page*. It is the first thing a reviewer reads, the only place a committee edit lands, and the complete list of what this model believes. Every number a person might question belongs here; the expressions below it hold structure, not opinions. An assumption can be an expression itself (`assume annual_revenue = inputs.monthly_covers * inputs.avg_ticket * 12`), so derived assumptions stay derived rather than pre-computed.
 
 This is the discipline every good spreadsheet strives for with its "Inputs" tab in blue type — except here it is not a convention someone can drift from. A number buried in an expression is *visible* in review precisely because it is not in the assumption block, and the block is where your eye goes first.
 
@@ -52,7 +52,7 @@ An assumption can carry a distribution instead of a point:
 assume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])
 ```
 
-Read it as a widened claim: "growth is about 3%, give or take 1%, and never outside 0–8%." Four families exist — `Normal`, `LogNormal`, `Uniform`, `Triangular`, each with an optional `clip` — and chapter 12 is where they earn their keep in Monte Carlo. What matters *now* is the deterministic behavior: in an ordinary run, a distributed assumption resolves to its central value (a Normal to its mean, a Uniform to its midpoint, a Triangular to `(min + mode + max) / 3`). So you can state the uncertainty on day one, and your base case simply runs through the middle of it — one model, both readings, no edits between them.
+Read it as a widened claim: "growth is about 3%, give or take 1%, and never outside 0–8%." Four families exist — `Normal`, `LogNormal`, `Uniform`, and `Triangular` — each with an optional `clip`. Chapter 12 is where they earn their keep in Monte Carlo. What matters *now* is the deterministic behavior: in an ordinary run, a distributed assumption resolves to its central value. A Normal resolves to its mean, a Uniform to its midpoint, a Triangular to `(min + mode + max) / 3`. So you can state the uncertainty on day one, and your base case simply runs through the middle of it — one model, both readings, no edits between them.
 
 ## Parameters and observations: the run's side of the line
 
@@ -84,7 +84,7 @@ The complete decision, four tests long — apply them in order:
 1. **If a reviewer would question it** → an `assume`, on the assumption page. (Growth, margins, pricing, costs.)
 2. **If the answer varies per run, per scenario, per user** → `cfg.*`, in the run configuration. (Stress factors, toggles, the discount rate itself.)
 3. **If the world supplies it after the model is written** → `obs.*`. (Fixings, actuals, appraisals.)
-4. **If it is structure, not opinion** → leave it literal. (Twelve months in a year, a contractual `net 45`, a stated loan principal in a signed document.) Signed structure can itself be a formula — a rent escalating at "CPI plus 50 basis points" — and then the term states the formula: `escalation = curve_value("cpi", time.date) + 0.005`. What was agreed stays in the contract either way; only opinions move to the assumption page.
+4. **If it is structure, not opinion** → leave it literal. (Twelve months in a year, a contractual `net 45`, a stated loan principal in a signed document.) Signed structure can itself be a formula, such as a rent escalating at "CPI plus 50 basis points". The term then states that formula: `escalation = curve_value("cpi", time.date) + 0.005`. What was agreed stays in the contract either way; only opinions move to the assumption page.
 
 The failure mode this prevents has a familiar smell: the spreadsheet whose "inputs" tab is half the story, with the other half hard-coded in formulas nobody has opened since the analyst who wrote them left. Here, the four homes are syntactically distinct, so *where a number lives states what kind of number it is* — and the model documents its own epistemology.
 

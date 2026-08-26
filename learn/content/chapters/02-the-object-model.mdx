@@ -18,7 +18,7 @@ A model declares exactly one time grid:
 time calendar monthly from 2026-01 for 36
 ```
 
-This line fixes three decisions for the whole model. The **grain** — `monthly` here; `daily`, `quarterly`, and `annual` exist too — is the resolution of every period in the model. The **origin**, `2026-01`, is where period 0 starts. The **horizon**, `for 36`, is how many periods exist. Nothing can occur off the grid: a payment before the origin or after the horizon is not "clipped" or "ignored" — it is a compile error, because a claim about cash the model cannot represent is a claim the model should not silently accept.
+This line fixes three decisions for the whole model. The **grain** — `monthly` here; `daily`, `quarterly`, and `annual` exist too — is the resolution of every period in the model. The **origin**, `2026-01`, is where period 0 starts. The **horizon**, `for 36`, is how many periods exist. Nothing can occur off the grid. A payment before the origin or after the horizon is not "clipped" or "ignored" — it is a compile error. A claim about cash the model cannot represent is a claim the model should not silently accept.
 
 Choosing the grain is a modeling decision, not a formality, and it is consequential enough that Part III gives it a whole chapter. For now, one rule of thumb: model at the grain at which cash actually moves. Rent moves monthly; model months. A power contract that settles daily wants days, and an annual grid would average away exactly the variation being modeled.
 
@@ -43,7 +43,7 @@ entity asset tower : Asset.Real
 entity party lender : Party
 ```
 
-The **family** (`asset`, `party`) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it; contracts, in turn, check that they attach to entities of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
+The **family** (`asset`, `party`) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it. Contracts, in turn, check that they attach to an entity of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
 
 Entities can also nest — a building that is `part of` a portfolio, a unit that is `part of` a building — which gives roll-ups something real to roll up along. The capstone uses this; for now just know the structure is there.
 
@@ -87,7 +87,7 @@ Take the anatomy of one stream slowly, because every stream you ever write has e
 
 **The attachment** — `on entity asset.tower` — says whose cash this is. Attachment is what makes per-entity statements and roll-ups possible; a stream is never free-floating.
 
-**The direction** — `inflow` or `outflow` — is declared, not inferred from sign. Amounts are written positive; the direction says what they mean. This is a deliberate redundancy: when an expression later goes wrong and produces cash the wrong way, the declared direction is what lets the tooling notice the contradiction instead of quietly folding it into a total.
+**The direction** — `inflow` or `outflow` — is declared, not inferred from sign. Amounts are written positive; the direction says what they mean. The redundancy is deliberate. When an expression later goes wrong and produces cash the wrong way, the declared direction is what lets the tooling notice the contradiction, instead of quietly folding it into a total.
 
 **The currency** names the unit. Explicit per stream, so a model that mixes currencies has to say so where it happens.
 
@@ -101,7 +101,13 @@ One thing a stream is *not*: a total. `tower.rent` above is not "rent revenue of
 
 Notice what the complete model above reads like: a time grid with two phases, a cast of one, three claims about cash. Twenty lines, and a committee could read it aloud. Notice also what is *absent* — no cell references, no copied formulas, no answer anywhere in the file. The NPV of this building exists only when an engine runs the model, which means there is exactly one place the arithmetic can be wrong, and it is not your file.
 
-A useful exercise in reading any model, starting now: find the grid, count the cast, and classify every stream as one of the three kinds of claim it can be — *scheduled* (dates known, amount known: the fitout), *recurring* (dates patterned, amount ruled: the rent), or — the kind you have not met yet — *contingent* (existence itself depends on something: an option exercised, a covenant tripped). Part II closes the gap between the second and third kind.
+Start a habit now for reading any model. Find the grid, count the cast, then classify every stream as one of the three kinds of claim a stream can be:
+
+- **Scheduled** — dates known, amount known. The fitout.
+- **Recurring** — dates patterned, amount ruled. The rent.
+- **Contingent** — existence itself depends on something, such as an option exercised or a covenant tripped. You have not met this kind yet.
+
+Part II closes the gap between the second and third kind.
 
 ## What can go wrong
 

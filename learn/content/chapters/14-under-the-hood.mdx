@@ -6,7 +6,7 @@ order: 14
 track: deep
 ---
 
-The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold — why a compiled model cannot dangle a reference, why runs are byte-reproducible, why a circular series read is refused with its path named. The machinery is not incidental to the language's promises: each promise is a property of a specific stage, and knowing which stage answers which question makes you faster at diagnosing anything.
+The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold. Why can a compiled model not dangle a reference? Why are runs byte-reproducible? Why is a circular series read refused with its path named? The machinery is not incidental to the language's promises: each promise is a property of a specific stage, and knowing which stage answers which question makes you faster at diagnosing anything.
 
 ## The pipeline, stage by stage
 
@@ -19,17 +19,17 @@ A model goes from text to results through fixed stages, each with one job and on
 5. **Lowering and emission** produce the **IR** — the intermediate representation. Contracts expand into the streams they imply, every schedule becomes an explicit set of dated occurrences, every identifier gets a stable ID, and the whole is written as one JSON document against a published schema.
 6. **The engine** evaluates the IR under a run configuration and emits results — the other published schema.
 
-The division of labor explains a distinction you have already felt: everything *structural* fails before any number exists (stages 1–5), while everything *numerical* — a division by zero in some period, a `prev` read in period 0 — surfaces at evaluation. When something goes wrong, asking "which stage owns this?" is the fastest route to the fix, and the next chapter's diagnostic codes are organized along exactly this seam.
+The division of labor explains a distinction you have already felt. Everything *structural* fails before any number exists, in stages 1–5. Everything *numerical* surfaces at evaluation: a division by zero in some period, a `prev` read in period 0. When something goes wrong, asking "which stage owns this?" is the fastest route to the fix, and the next chapter's diagnostic codes are organized along exactly this seam.
 
 ## The IR: the model with nothing left implicit
 
-The IR deserves a moment of respect rather than a skim. It is the model after every convenience is expanded — names resolved, schedules enumerated, contract sugar lowered, defaults applied — a complete description of *what will be computed* with no reference to how it was written. Three practical consequences:
+The IR deserves a moment of respect rather than a skim. It is the model after every convenience is expanded: names resolved, schedules enumerated, contract sugar lowered, defaults applied. What remains is a complete description of *what will be computed*, with no reference to how it was written. Three practical consequences:
 
 **It is the audit artifact.** When a regulator, a counterparty, or a future you asks "what exactly did this model do," the IR is the answer, independent of source-file organization. Two differently-organized sources that mean the same model produce the same computation — chapter 13's split-is-pure-communication claim, made mechanical.
 
 **It is the interface.** The playground, the command line, the Python bindings, and any future surface all run IR. A tool that consumes or produces it speaks the language without parsing it.
 
-**It is diffable at the semantic level.** A source diff shows what you edited; an IR diff shows what *changed in meaning* — a reorganization produces an empty one, an assumption edit produces exactly the affected expressions. Reviewing consequential changes at both levels is a habit worth having for models that move money.
+**It is diffable at the semantic level.** A source diff shows what you edited; an IR diff shows what *changed in meaning*. A reorganization produces an empty IR diff. An assumption edit produces exactly the affected expressions. Reviewing consequential changes at both levels is a habit worth having for models that move money.
 
 The model also carries a **canonical hash** — a fingerprint of the IR, recorded in results. "Which model produced this number?" has a cryptographic answer, which is what lets a committee memo cite a model the way it cites a document version.
 
@@ -43,9 +43,11 @@ Reproducibility falls out of two further choices you have already met. Arithmeti
 
 Chapter 9 promised the story behind `series_sum`'s evaluation order. Here it is, in one breath.
 
-Every stream's reads are visible in its source — `series_sum("collections", ...)` names what it depends on — so the engine reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0: they evaluate first, in no particular order, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything it names is already **finished** — a series read never sees a half-computed number, because the ordering guarantees the whole series it reads was committed a wave earlier.
+Every stream's reads are visible in its source — `series_sum("collections", ...)` names what it depends on — so the engine reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0: they evaluate first, in no particular order, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything it names is already **finished**. A series read never sees a half-computed number, because the ordering guarantees the whole series it reads was committed a wave earlier.
 
-One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. Fee reads kicker, kicker reads fee — there is no wave either can go in, and the engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterating toward a fixed point, which is the same circularity the language refuses everywhere else. A cycle in a model is almost always a modeling error; when the economics genuinely loop (a fee on distributions that themselves net the fee), the fix is chapter 8's staging discipline — read the base quantity, or carry one side as a field that advances at period close. The wall is no longer "readers cannot read readers"; it is exactly the wall a spreadsheet gives you, and models that respect it are models whose evaluation you can narrate, wave by wave.
+One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. Fee reads kicker, kicker reads fee: there is no wave either can go in. The engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterate toward a fixed point. That is the same circularity the language refuses everywhere else.
+
+A cycle in a model is almost always a modeling error. When the economics genuinely loop — a fee on distributions that themselves net the fee — the fix is chapter 8's staging discipline: read the base quantity, or carry one side as a field that advances at period close. The wall is no longer "readers cannot read readers"; it is exactly the wall a spreadsheet gives you, and models that respect it are models whose evaluation you can narrate, wave by wave.
 
 ## Reading this back onto the promises
 

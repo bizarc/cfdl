@@ -12,7 +12,7 @@ This course teaches you to write those claims in CFDL, the Cash Flow Domain Lang
 
 ## What a spreadsheet actually stores
 
-A spreadsheet stores answers. Each cell holds a formula that produces one number for one period, and the model's logic exists only as the pattern those formulas make — a pattern you infer by clicking through cells one at a time.
+A spreadsheet stores answers. Each cell holds a formula that produces one number for one period. The model's logic exists only as the pattern those formulas make, and you infer that pattern by clicking through cells one at a time.
 
 That design has consequences that every practitioner has met:
 
@@ -53,7 +53,7 @@ That inversion — store the claims, derive the numbers — is what the rest of 
 
 **The model is reviewable.** A colleague reviews the statement `amount = 4200`, not seven hundred copies of a formula. When the rent assumption changes, the diff between versions is one line, and it is the line a reviewer should look at. Version control works on models the way it works on contracts: what changed is what is shown.
 
-**The model is checkable before it runs.** Because the claims are explicit, a compiler can hold them to account. A stream scheduled beyond the end of the time grid, a reference to an entity that was never declared, a contract missing a required term — each is refused, with a message naming the file, the line, and the fix. A spreadsheet cannot refuse anything; it computes whatever the cells happen to say. You will meet the compiler's refusals throughout this course, deliberately: they are half of how the language teaches you.
+**The model is checkable before it runs.** Because the claims are explicit, a compiler can hold them to account. It refuses a stream scheduled beyond the end of the time grid, a reference to an entity that was never declared, or a contract missing a required term. Each refusal names the file, the line, and the fix. A spreadsheet cannot refuse anything; it computes whatever the cells happen to say. You will meet the compiler's refusals throughout this course, deliberately: they are half of how the language teaches you.
 
 **The same model gives you the number and the distribution.** Uncertainty is part of the language, not an add-in. Later in the course you will replace a fixed assumption with a distribution and re-run the same file to get percentiles instead of a point estimate — same claims, same engine, wider question.
 
@@ -63,9 +63,9 @@ That inversion — store the claims, derive the numbers — is what the rest of 
 
 You will run models constantly, so it is worth knowing what the machine does with one. The pipeline has two halves.
 
-The **compiler** reads your source files, checks everything it can check without running — syntax, references, schedules against the time grid, contract terms against their pack's requirements — and emits an *intermediate representation* (IR): a complete, self-contained description of the model with every name resolved and every schedule made explicit. The IR is a boring, inspectable JSON document, and that is its virtue: it is the model with nothing left implicit.
+The **compiler** reads your source files and checks everything it can check without running: syntax, references, schedules against the time grid, and contract terms against their pack's requirements. It then emits an *intermediate representation* (IR) — a complete, self-contained description of the model, with every name resolved and every schedule made explicit. The IR is a boring, inspectable JSON document, and that is its virtue: it is the model with nothing left implicit.
 
-The **engine** takes the IR and a *run configuration* — the discount rate, the as-of date, scenario overrides, simulation settings — and produces *results*: the cash of every stream in every period, aggregates, metrics like NPV and IRR, and enough tracing to answer where any number came from. Chapter 3 is about reading these.
+The **engine** takes the IR and a *run configuration* — the discount rate, the as-of date, scenario overrides, simulation settings. From those it produces *results*: the cash of every stream in every period, aggregates, metrics like NPV and IRR, and enough tracing to answer where any number came from. Chapter 3 is about reading these.
 
 Two things about this split matter to you as an author. First, everything the compiler can catch is caught before any number is produced — a model that compiles has already survived every structural check the language knows how to make. Second, the run configuration lives *outside* the model, which is why one model can serve base case, downside, and simulation without being edited. Keeping "what is claimed" separate from "how it is run" is a discipline the language enforces for you.
 
@@ -73,7 +73,7 @@ Two things about this split matter to you as an author. First, everything the co
 
 CFDL is deliberately narrow. It describes dated cash flows and the structures that generate them — it is not a general programming language, and the things it refuses to do are as load-bearing as the things it does.
 
-It refuses to accept what it does not understand: there is no syntax that parses but silently does nothing. It refuses hidden state: an amount expression can read the model's declared assumptions, the clock, and the model's own published series, and nothing else — no file, no network, no wall-clock time, nothing that would make two runs differ. And it refuses to guess: an ambiguous schedule or a missing term is an error, never a default applied in silence.
+It refuses to accept what it does not understand: there is no syntax that parses but silently does nothing. It refuses hidden state: an amount expression can read the model's declared assumptions, the clock, and the model's own published series, and nothing else. No file, no network, no wall-clock time — nothing that would make two runs differ. And it refuses to guess: an ambiguous schedule or a missing term is an error, never a default applied in silence.
 
 For a modeler, these refusals are the point. Every behavior of the model traces to a line someone wrote, which means every number in the output traces to a claim someone made. Making that trace *legible* is most of what financial modeling discipline is, and here the discipline is the medium itself.
 
@@ -83,7 +83,7 @@ The course is five parts. Part I (you are here) builds the mental model: objects
 
 Chapters marked **deep dive** go into the machinery — the compiler's stages, the evaluation order, the diagnostic system. They are written for readers who want them; the core track never depends on them.
 
-One habit to start now: run everything. Every complete model in this course can be pasted into the playground at [cfdl.dev/playground](https://cfdl.dev/playground) and run against the real engine — and most code blocks have an "open in playground" button that does it in one click. The models are checked against the engine before a chapter ships, so if the text and the engine ever disagree, the engine is telling the truth and the text has a bug worth reporting.
+One habit to start now: run everything. Paste any complete model in this course into the playground at [cfdl.dev/playground](https://cfdl.dev/playground) and run it against the real engine. Most code blocks also carry an "open in playground" button that does this in one click. The models are checked against the engine before a chapter ships, so if the text and the engine ever disagree, the engine is telling the truth and the text has a bug worth reporting.
 
 ## Exercises
 

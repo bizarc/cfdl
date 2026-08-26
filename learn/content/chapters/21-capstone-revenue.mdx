@@ -6,7 +6,7 @@ order: 21
 track: core
 ---
 
-A building earns like a portfolio of promises, each on its own paper. This chapter writes Harbor Point's rent roll — five revenue claims and two deductions — almost entirely in the pack's vocabulary, because these are the standard leases chapter 19 said contracts exist for. Watch two things as it assembles: how each contract's *terms* carry exactly the numbers a leasing brief would state, and how the storylines stay separate — the reviewer who cares about the retail deal reads the retail contracts and nothing else.
+A building earns like a portfolio of promises, each on its own paper. This chapter writes Harbor Point's rent roll — five revenue claims and two deductions — almost entirely in the pack's vocabulary, because these are the standard leases chapter 19 said contracts exist for. Watch two things as it assembles. First, how each contract's *terms* carry exactly the numbers a leasing brief would state. Second, how the storylines stay separate: the reviewer who cares about the retail deal reads the retail contracts and nothing else.
 
 ## The anchor lease
 
@@ -21,7 +21,7 @@ contract cre.lease {
 }
 ```
 
-The pack's lease lowers to a rent stream over the term with chapter 9's ramp built in — `lease_up_months` *is* the `clamp` idiom, as a term. Twelve months from a July 2027 start puts stabilization at mid-2028, which is why the skeleton's phases drew the lease-up phase where they did: phases and terms telling the same story is not a coincidence to admire but a consistency to maintain.
+The pack's lease lowers to a rent stream over the term with chapter 9's ramp built in — `lease_up_months` *is* the `clamp` idiom, as a term. Twelve months from a July 2027 start puts stabilization at mid-2028, which is why the skeleton's phases drew the lease-up phase where they did. Phases and terms telling the same story is not a coincidence to admire. It is a consistency to maintain.
 
 ## The retail suite, at unit grain
 
@@ -46,7 +46,7 @@ contract cre.lease_unit.retail {
 }
 ```
 
-One contract, four streams in the lowering — and each is a lesson from earlier in the course arriving as a term. **Base rent** escalates 3% on lease anniversaries (the *stepped* claim from chapter 9, not the smooth one). **Abatement** books the three free months as their own deduction line rather than netting them invisibly into rent — gross potential revenue and the incentive both stay visible, which is how an institutional pro forma reports and how a reviewer audits a concession. **Recoveries** reimburse opex above the stop at the tenant's 20% share — zero in the base year by construction (the stop *equals* year-one opex), growing as opex escalates past it; a term sheet's most fiddly clause, five terms. **TI/LC** lands as capital on day one. The `.retail` suffix names this lease's streams (`cre.unit.base_rent.retail`), so a second suite later is another contract, not a renaming exercise.
+One contract, four streams in the lowering — and each is a lesson from earlier in the course arriving as a term. **Base rent** escalates 3% on lease anniversaries (the *stepped* claim from chapter 9, not the smooth one). **Abatement** books the three free months as their own deduction line, rather than net them invisibly into rent. Gross potential revenue and the incentive both stay visible, which is how an institutional pro forma reports and how a reviewer audits a concession. **Recoveries** reimburse opex above the stop at the tenant's 20% share. They are zero in the base year by construction, because the stop *equals* year-one opex, and they grow as opex escalates past it — a term sheet's most fiddly clause, in five terms. **TI/LC** lands as capital on day one. The `.retail` suffix names this lease's streams (`cre.unit.base_rent.retail`), so a second suite later is another contract, not a renaming exercise.
 
 ## Overage, other income, and the deductions
 
@@ -89,7 +89,7 @@ contract cre.vacancy_loss {
 }
 ```
 
-Percentage rent is chapter 9's guarded kicker as a contract — 6% of sales above the breakpoint, the guard inside the pack's `max(0, …)`. The vacancy allowance runs only from stabilization: during lease-up, vacancy is *in the ramp* — an allowance on top would double-count the same emptiness, which is precisely the kind of claim-overlap a reviewer reading storyline-by-storyline catches and a formula auditor does not.
+Percentage rent is chapter 9's guarded kicker as a contract — 6% of sales above the breakpoint, the guard inside the pack's `max(0, …)`. The vacancy allowance runs only from stabilization. During lease-up, vacancy is *in the ramp*, and an allowance on top would double-count the same emptiness. That is precisely the kind of claim-overlap a reviewer reading storyline-by-storyline catches, and a formula auditor does not.
 
 ## What the numbers say
 
@@ -99,7 +99,7 @@ Run the checkpoint. The office lease totals 5,657,500 — check the shape, not j
 
 **Terms that drift from the phases.** The lease starts at `2027-07` and the lease-up phase ends at `2028-06` — today those agree with `lease_up_months = 12`. Change one without the others and the model still compiles; only a reader notices the deal disagreeing with itself. Keep the story in one place (the phases) and derive where you can.
 
-**A vacancy allowance during lease-up.** The double-count described above — the single most common CRE pro forma error, and in this model it is impossible to make *silently* because the vacancy contract's term states where it applies.
+**A vacancy allowance during lease-up.** This is the double-count described above, and the single most common CRE pro forma error. In this model it is impossible to make *silently*, because the vacancy contract's term states where it applies.
 
 **A blended retail claim.** The alternative to `lease_unit.retail` was folding retail into the anchor's rent. Chapter 16's test said no — different behavior, different grain — and the free-rent negotiation that produced the abatement line is the evidence: you could not have stated it inside a blend.
 

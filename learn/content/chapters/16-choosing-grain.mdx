@@ -6,7 +6,7 @@ order: 16
 track: core
 ---
 
-Part II taught you the constructs; Part III is about the decisions the constructs cannot make for you. The first is made in a model's first line and is the hardest to reverse later: **grain**. It comes in two independent flavors — how finely to slice *time*, and how finely to slice *things* — and each choice is a claim about which differences in the world your model can express at all. Everything a grain cannot represent, the model does not merely simplify; it *asserts does not matter*.
+Part II taught you the constructs; Part III is about the decisions the constructs cannot make for you. The first is made in a model's first line and is the hardest to reverse later: **grain**. Grain comes in two independent flavors: how finely to slice *time*, and how finely to slice *things*. Each choice is a claim about which differences in the world your model can express at all. Everything a grain cannot represent, the model does not merely simplify; it *asserts does not matter*.
 
 ## Timeline grain: what each setting hides
 
@@ -16,11 +16,15 @@ The grid's cadence sets the resolution below which all timing becomes fiction. C
 
 **Quarterly** matches how funds report and how many credit documents test. It represents seasonality coarsely and still cannot see a monthly working-capital cycle.
 
-**Monthly** is the working default for deal models, and not by convention alone: it is the coarsest grain at which the commercial timing machinery — payment terms, lease starts, debt service, month-end rules — operates without distortion. Nearly every claim in Parts I–II was written monthly because nearly every claim *is* monthly: rent, payroll, interest.
+**Monthly** is the working default for deal models, and not by convention alone. It is the coarsest grain at which the commercial timing machinery operates without distortion: payment terms, lease starts, debt service, month-end rules. Nearly every claim in Parts I–II was written monthly because nearly every claim *is* monthly: rent, payroll, interest.
 
 **Daily** is for models that reconcile to settlement: business-day rolls, actual day counts, a servicer's remittance calendar. The cost is volume — thirty times the periods of monthly — paid in review attention. Daily is right when the *day* is the claim, wrong when it is merely available.
 
-Two principles pick the grain. First, chapter 4's rule, now with its full weight: **model at the grain at which cash actually moves** — the finest cadence at which any claim in the deal is made, not the finest you can imagine. Second, an asymmetry that resolves most close calls: **rolling up is free, slicing down is fabrication.** A monthly model produces exact quarterly and annual views — the annual rollup in every results document is precisely this. An annual model "made monthly" by dividing by twelve invents a smoothness the deal never claimed — the fictional flat months that hide exactly the crunch a monthly model exists to reveal. When torn between grains, take the finer one *for the model* and report at the coarser one; the reverse direction does not exist.
+Two principles pick the grain.
+
+First, chapter 4's rule, now with its full weight: **model at the grain at which cash actually moves.** That is the finest cadence at which any claim in the deal is made, not the finest you can imagine.
+
+Second, an asymmetry that resolves most close calls: **rolling up is free, slicing down is fabrication.** A monthly model produces exact quarterly and annual views, and the annual rollup in every results document is precisely this. An annual model "made monthly" by dividing by twelve invents a smoothness the deal never claimed — fictional flat months that hide exactly the crunch a monthly model exists to reveal. When torn between grains, take the finer one *for the model* and report at the coarser one; the reverse direction does not exist.
 
 The trap to know by name is the **averaged breach**: a deal that pays its debt comfortably *on the year* and misses it badly *in the quarter* the balloon payment lands. Annual grain does not hide that breach — it asserts the breach away. Chapter 18 returns to this as the coverage-ratio rule; here it is the canonical evidence that grain is a claim, not a preference.
 
@@ -28,15 +32,19 @@ The trap to know by name is the **averaged breach**: a deal that pays its debt c
 
 The second grain: is the office building one entity, or forty suites? Is the loan book one pool, or ten thousand loans? The constructs support both — the question is which the *deal* requires, and the test is behavioral:
 
-**Split entities where behavior differs; pool them where it does not.** Forty suites with different tenants, different expirations, different escalations are forty behaviors — model suites, because "the building's rent" is not one claim but forty claims with forty dates. Ten thousand consumer loans underwritten to the same box, prepaying by the same curve, are one behavior with scale — model the pool, with rate and factor fields (chapter 8) carrying the aggregate dynamics. The pool is not a shortcut version of the loan-level model; it is the *correct* model of a portfolio whose members are exchangeable, and the loan-level version of it adds ten thousand rows of noise around the same four assumptions.
+**Split entities where behavior differs; pool them where it does not.** Forty suites with different tenants, different expirations, and different escalations are forty behaviors. Model suites, because "the building's rent" is not one claim but forty claims with forty dates. Ten thousand consumer loans underwritten to the same box, prepaying by the same curve, are one behavior with scale. Model the pool, with rate and factor fields (chapter 8) carrying the aggregate dynamics.
 
-The language keeps the split cheap where you need it, in two ways you have met. **Hierarchy**: `part of` (chapter 2) makes suites members of the building, so entity-level cash and fields roll up along the same relation — you get the building view *and* the suite view from the suite-grain model, the timeline asymmetry again: fine grain rolls up free. **Mixed grain is legal and normal**: the capstone models a building's leases suite by suite while treating its operating expenses at the building level, because that is where each behavior lives. Entity grain is chosen per *storyline*, not once per model.
+The pool is not a shortcut version of the loan-level model. It is the *correct* model of a portfolio whose members are exchangeable, and the loan-level version adds ten thousand rows of noise around the same four assumptions.
 
-The behavioral test also tells you when to change your answer: the pool whose members *stop* being exchangeable — a large loan sours, one tenant becomes half the rent roll — has outgrown its grain, and the model should split the exception out (`part of` the same parent, beside the pool) rather than pretend the average still describes anyone.
+The language keeps the split cheap where you need it, in two ways you have met. **Hierarchy**: `part of` (chapter 2) makes suites members of the building, so entity-level cash and fields roll up along the same relation. You get the building view *and* the suite view from the suite-grain model. That is the timeline asymmetry again: fine grain rolls up free. **Mixed grain is legal and normal**: the capstone models a building's leases suite by suite while treating its operating expenses at the building level, because that is where each behavior lives. Entity grain is chosen per *storyline*, not once per model.
+
+The behavioral test also tells you when to change your answer. A pool whose members *stop* being exchangeable has outgrown its grain: a large loan sours, or one tenant becomes half the rent roll. Split the exception out — `part of` the same parent, beside the pool — rather than pretend the average still describes anyone.
 
 ## The cost of getting it wrong
 
-Wrong-grain models fail slowly, which is why the decision deserves this chapter. Too coarse, and the model accretes epicycles — the "monthly adjustment factor" rows, the side spreadsheet for the covenant test — each a patch over a claim the grid cannot make; eventually someone rebuilds it finer, under deadline, and reconciles for a week. Too fine, and review drowns: nobody hand-checks the anchor numbers (chapter 13, rule 5) in a daily model of a deal whose every real claim is monthly, so the fine grain *reduces* scrutiny while looking rigorous. Both failures are quiet, cumulative, and traceable to line one.
+Wrong-grain models fail slowly, which is why the decision deserves this chapter. Too coarse, and the model accretes epicycles: the "monthly adjustment factor" rows, the side spreadsheet for the covenant test. Each is a patch over a claim the grid cannot make. Eventually someone rebuilds the model finer, under deadline, and reconciles for a week.
+
+Too fine, and review drowns. Nobody hand-checks the anchor numbers (chapter 13, rule 5) in a daily model of a deal whose every real claim is monthly, so the fine grain *reduces* scrutiny while looking rigorous. Both failures are quiet, cumulative, and traceable to line one.
 
 The discipline, stated once: write down, before the first stream, the finest cadence at which any *document* in the deal states a claim, and the list of things whose *behavior* genuinely differs. That pair is your two grains. Every impulse to deviate from them later is either a new fact about the deal (change the grain, deliberately, as its own commit) or an impulse to decorate (decline it).
 

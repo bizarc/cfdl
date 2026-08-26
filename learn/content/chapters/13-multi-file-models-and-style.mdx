@@ -22,7 +22,9 @@ import "revenue.cfdl"
 import "financing.cfdl"
 ```
 
-An imported file contains declarations — entities, fields, streams, curves, assumptions, events, waterfalls — and no header: `version`, `model`, `time`, and `use pack` belong to the root alone, stated once for the whole model. Imports resolve relative to the file that declares them, must stay inside the model's directory, and may not form cycles — the compiler refuses an import loop or an escape from the model root by name, so a model is always a self-contained tree you can zip, send, and trust to compile identically elsewhere.
+An imported file contains declarations and no header. Entities, fields, streams, curves, assumptions, events, and waterfalls belong in an imported file. `version`, `model`, `time`, and `use pack` belong to the root alone, stated once for the whole model.
+
+Imports resolve relative to the file that declares them, must stay inside the model's directory, and may not form cycles. The compiler refuses an import loop or an escape from the model root, naming the offender. A model is therefore always a self-contained tree you can zip, send, and trust to compile identically elsewhere.
 
 Beyond that, placement is free: the model behaves *exactly* as if every file were concatenated. Declaration order never carries meaning — chapter 8 established that for rules; it is true globally — so splitting is purely an act of communication. Which is why the interesting question is not how to split, but *where*.
 

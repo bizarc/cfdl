@@ -42,11 +42,11 @@ event refi.trigger when time.t >= 12 {
 }
 ```
 
-An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression — here a date test, but it can read anything expressions read, so "when cumulative revenue passes the threshold" or "when the balance falls below target" are conditions of the same shape.
+An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression. Here it is a date test, but it can read anything expressions read. "When cumulative revenue passes the threshold" and "when the balance falls below target" are conditions of the same shape.
 
 The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is a stream with a guard.
 
-The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one: the event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it — `entity.status` being how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
+The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one. The event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it. `entity.status` is how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
 
 ## Options: the right, not the obligation
 
@@ -64,9 +64,11 @@ event refi.trigger when time.t >= 12 {
 }
 ```
 
-`payoff` is what exercising is worth, as an expression, evaluated at exercise time. The `exercise when` clause can hold the trigger rule itself; writing `exercise when false` and firing it from an event, as here, keeps *all* the deal's turning points in one place — a matter of style, and the style this course recommends once a model has more than one event.
+`payoff` is what exercising is worth, as an expression, evaluated at exercise time. The `exercise when` clause can hold the trigger rule itself. Writing `exercise when false` and firing it from an event, as here, keeps *all* the deal's turning points in one place. That is a matter of style, and it is the style this course recommends once a model has more than one event.
 
-The deliberate boundary to understand: exercise is **rule-based, not optimal**. The model exercises when the stated condition says so — period twelve, price above strike, whatever the deal documents say — not when a valuation engine decides exercise maximizes holder value. Optimal exercise (the American-option problem) requires a model *of the decision-maker*, with all the machinery and debatable assumptions that implies, and it is deliberately outside a language whose promise is that every behavior traces to a stated claim. What this means in practice: you state the exercise policy, and policy alternatives are scenarios — which is precisely how an investment committee actually discusses a renewal ("assume they renew at year five" / "assume they walk"), and chapter 12 shows the probabilistic version.
+The deliberate boundary to understand: exercise is **rule-based, not optimal**. The model exercises when the stated condition says so — period twelve, price above strike, whatever the deal documents say — not when a valuation engine decides exercise maximizes holder value. Optimal exercise — the American-option problem — requires a model *of the decision-maker*, with all the machinery and debatable assumptions that implies. It sits deliberately outside a language whose promise is that every behavior traces to a stated claim.
+
+What this means in practice: you state the exercise policy, and policy alternatives are scenarios. That is precisely how an investment committee actually discusses a renewal — "assume they renew at year five" against "assume they walk". Chapter 12 shows the probabilistic version.
 
 ## What can go wrong
 
@@ -74,7 +76,7 @@ The deliberate boundary to understand: exercise is **rule-based, not optimal**. 
 
 **Two events racing.** Two events, same period, both writing the same field — the model has claimed two regimes at once. Order-dependence is a smell here as it is everywhere; give the events mutually exclusive conditions and the question disappears.
 
-**A guard reading a field before anything sets it.** A lifecycle guard like `!= "refinanced"` works from period 0 because an unset field is simply not equal to the string. But an equality guard (`== "operating"`) on a field nothing has set yet is false forever — declare the starting regime as a fact field (`status = "operating"`) so the model states its initial condition instead of relying on absence.
+**A guard reading a field before anything sets it.** A lifecycle guard like `!= "refinanced"` works from period 0 because an unset field is simply not equal to the string. But an equality guard (`== "operating"`) on a field nothing has set yet is false forever. Declare the starting regime as a fact field, `status = "operating"`, so the model states its initial condition instead of relying on absence.
 
 ## Exercises
 
@@ -83,4 +85,4 @@ The deliberate boundary to understand: exercise is **rule-based, not optimal**. 
 Then, on your own:
 
 1. Move the refinance trigger from a date test to an economic one: fire when cumulative NOI passes 250,000 (`series_sum("ops.noi", 0, time.t)`). Predict the firing month by hand first — you know the NOI per month.
-2. Add a second event that *reverses* nothing: try writing a "de-refinance." The latch means the model refuses to express regime flapping — write down, in one sentence, why that refusal is a feature in a reviewed model.
+2. Add a second event that *reverses* nothing, by trying to write a "de-refinance." The latch means the model refuses to express regime flapping. Write down, in one sentence, why that refusal is a feature in a reviewed model.
