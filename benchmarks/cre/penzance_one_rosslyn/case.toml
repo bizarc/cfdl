@@ -1,0 +1,28 @@
+# Benchmark case: One Rosslyn, Arlington VA — Penzance / The Baupost Group.
+# Three towers over one podium on Arlington County site plan SP #419. The
+# companion case, penzance_highlands, reconstructs a deal that COMPLETED; this
+# one projects a deal that has not been built, so the ratio of recorded fact to
+# forecast is inverted. The two are written to be read together.
+#
+# Reference: an independent Excel implementation, built first. Both read the
+# same frozen input set, so they tie by construction rather than by
+# transcription. Reconciling them found three defects — see CASE.md.
+# Status: pending practitioner review.
+summary = "A 170-month ground-up development of 845 units in three towers: land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years."
+pack = "cre"
+period_tolerance = 0.01
+
+# `model.npv` is deliberately not asserted. The model carries financing streams,
+# so its NPV is a LEVERED one and would need a cost of equity rather than a
+# project rate; and no source document for this project states a discount rate.
+# The companion case and one_lincoln_street omit it for the same reason.
+#
+# The deterministic case is scenario B (build to core). Scenario A (merchant
+# build) is a named scenario in run.json, selected by `inputs.scenario_b`.
+
+[tolerance]
+"domain.cre.noi" = 0.01
+"domain.cre.egi" = 0.01
+"domain.cre.opex_total" = 0.01
+"domain.cre.debt_service" = 0.01
+"domain.cre.dscr" = 1.0e-6

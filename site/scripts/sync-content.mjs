@@ -621,6 +621,8 @@ const benchmarkTitles = {
   "cre/one_lincoln_street_contract":
     "CRE: office development, through the pack contract",
   "cre/penzance_highlands": "CRE: mixed-use development with a construction facility",
+  "cre/penzance_one_rosslyn":
+    "CRE: an entitled but unbuilt development, under two exit strategies",
   "cre/retail_strip": "CRE: retail strip with expense stops",
   "credit/americredit_2017_1": "Credit: auto ABS with a step-down and a turbo",
   "credit/auto_abs_speed_050": "Credit: auto ABS at 0.5x prepayment speed",
@@ -838,6 +840,7 @@ function formatMetricValue(value) {
 // URL, under the real parties' names, is not ours to do unilaterally.
 const benchmarkUnpublished = new Set([
   "cre/penzance_highlands",
+  "cre/penzance_one_rosslyn",
 ]);
 
 const publishedBenchmarkCount = benchCases.filter(

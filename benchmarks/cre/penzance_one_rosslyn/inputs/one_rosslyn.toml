@@ -1,0 +1,216 @@
+# One Rosslyn — 1901 & 1911 N Fort Myer Drive, Arlington VA
+# Penzance with The Baupost Group. Arlington County site plan SP #419,
+# amendment SPLA24-00040, approved 2025-07-19.
+#
+# THE POINT OF THIS CASE is the labelling. Its companion, penzance_highlands,
+# reconstructs a COMPLETED deal: land basis, both tower sale prices and 102
+# condominium closings are recorded, and the assumptions are bounded by them.
+# One Rosslyn has not been built. Its entitlement is fact and its economics are
+# forecast, so the ratio is inverted, and every line below says which it is.
+#
+#   FACT       — in the public record, cited to the document
+#   REPORTED   — stated in trade press, NOT verified against an instrument
+#   PROJECTION — our forecast. Nothing in the record fixes it.
+#   ANCHORED   — a projection calibrated to a recorded Highlands figure,
+#                escalated. Named separately because it is not free: the
+#                completed deal constrains it.
+
+[meta]
+name        = "One Rosslyn"
+site_plan   = "SP #419 (amendment SPLA24-00040; rezoning REZN25-00001)"
+address     = "1901 and 1911 N Fort Myer Drive, Arlington, VA"
+rpcs        = ["16-020-001", "16-020-002", "16-020-006"]
+approved    = 2025-07-19
+sponsor     = "Penzance"
+equity      = "The Baupost Group"
+
+# ---------------------------------------------------------------- entitlement
+# All FACT. Arlington County Board Report, REZN25-00001 / SPLA24-00041 /
+# SPLA24-00040, statistical summary at pp. 11-12.
+[program]
+site_area_sf              = 97_985.00     # FACT — 96,514.66 residential + 1,470.34 retail
+site_area_post_dedication = 97_520.00     # FACT — after 465 sq ft dedication
+far                       = 9.92          # FACT
+residential_gfa_sf        = 957_306.00    # FACT
+retail_gfa_sf             = 14_584.00     # FACT
+total_gfa_sf              = 971_890.00    # FACT
+dwelling_units            = 845           # FACT
+parking_spaces            = 429           # FACT — total off-street
+parking_gfa_sf            = 332_761.00    # FACT — gross parking area
+
+# Per tower. FACT, same table. Trade press reported 82 condominium units and
+# 319 in the northwest tower; the County record says 73 and 311. The record
+# governs.
+[program.ne_tower]                        # condominium — for sale
+units          = 73                       # FACT
+stories        = 23                       # FACT
+height_ft      = 253                      # FACT — from ASE 78.6'
+residential_sf = 165_916.00               # FACT
+retail_sf      = 0.0                      # FACT
+tenure         = "for_sale"
+
+[program.nw_tower]
+units          = 311                      # FACT
+stories        = 27                       # FACT
+height_ft      = 285                      # FACT
+residential_sf = 356_615.00               # FACT
+retail_sf      = 6_467.00                 # FACT
+tenure         = "rental"
+
+[program.s_tower]
+units          = 461                      # FACT
+stories        = 30                       # FACT
+height_ft      = 300                      # FACT
+residential_sf = 434_775.00               # FACT
+retail_sf      = 8_117.00                 # FACT
+tenure         = "rental"
+
+# ----------------------------------------------------------------------- land
+[land]
+acquired            = 2023-11-14          # FACT — recorded sale date, all three RPCs
+seller              = "JBG Smith"         # REPORTED
+purchase_price_usd  = 52_000_000          # FACT — Arlington County sales history,
+                                          # grantee ROSSLYN GATEWAY LLC, deed
+                                          # document 20230100013266, sales code
+                                          # "4-Multiple RPCs", so the price is the
+                                          # aggregate across all three parcels and
+                                          # is the whole-site basis.
+# Prior recorded sales of 1911 Fort Myer, same source: $33,700,000 on 2003-03-14
+# (deed 3475/2804) and $19,000,000 on 1997-04-14 (deed 2825/1990). FACT, unused.
+# FACT — Arlington County 2026 assessment roll, queried per RPC 2026-08-25.
+assessed_2026_1901  = 26_818_400          # FACT
+assessed_2026_1911  = 35_074_000          # FACT
+assessed_2026_moore =  4_893_600          # FACT
+assessed_2026_total = 66_786_000          # FACT — sum of the three
+# The recorded purchase is 77.9% of the 2026 assessed total. Stated, not used:
+# the model takes the recorded price as basis and the ratio is a check.
+
+# ------------------------------------------------------- public obligations
+# All FACT. Board Report pp. 20-21. These are cash, and the second group is
+# tranched against certificates of occupancy, so their TIMING is entitlement
+# fact rather than assumption — which is the part a spreadsheet usually loses.
+[obligations]
+ahif_base_density       = 3_672_828       # FACT — in lieu of ~17 on-site units
+ahif_additional_density = 7_545_485       # FACT — total of the three tranches
+ahif_tranche_ne         =   651_858       # FACT — at first partial CO, NE tower
+ahif_tranche_nw         = 2_777_096       # FACT — at first partial CO, NW tower
+ahif_tranche_s          = 4_116_531       # FACT — at first partial CO, S tower
+public_space_rmsa       = 2_000_000       # FACT — off-site, e.g. Gateway Park
+transportation_rmsa     = 3_000_000       # FACT — approximate, per Board Report
+leed                    = "Gold"          # FACT — plus 20% energy optimization
+
+# --------------------------------------------------------------- projections
+# Nothing below is in the record. This is the half of the case that the
+# Highlands reconstruction does not have to guess at.
+[schedule]
+construction_start  = "2026-12"             # REPORTED — "late 2026"
+construction_months = 42                  # PROJECTION — 971,890 sf over one
+                                          # podium, three towers, single phase
+delivery_ne         = "2030-06"             # PROJECTION
+delivery_nw         = "2030-06"             # PROJECTION
+delivery_s          = "2030-12"             # PROJECTION
+hold_months_after_stabilization = 12      # PROJECTION
+
+# ------------------------------------------- Rosslyn operating base (2026)
+# Arlington County, "2026 Guidebook: Commercial Market Analysis & Guidelines",
+# Department of Real Estate Assessments, April 2026 revision, MARKET Apartment
+# Guidelines, High-Rise 9+ stories (PCC 313), effective age 2010+, Metro.
+# Retrieved 2026-08-25.
+#
+# NOTE: the Guidebook carries a second, similar set of tables for COMMITTED
+# AFFORDABLE units (6.2% cap, $8,100 expenses, 3% vacancy). Those are not these.
+# The market tables govern a market-rate tower.
+[operating]
+cap_rate_metro_highrise = 0.0545          # FACT — 2010+, Metro
+expenses_per_unit       = 9_466           # FACT — $/unit/year, 2010+
+vacancy_collection      = 0.05            # FACT — includes rent loss and concessions
+parking_garage_low      = 50              # FACT — $/space/month
+parking_garage_high     = 150             # FACT — $/space/month
+land_value_per_unit     = 78_000          # FACT — mid/high-rise within a half-mile
+                                          # walk of Metro. One Rosslyn's 772 rental
+                                          # units imply $60,216,000 against a
+                                          # $52,000,000 recorded basis: the site was
+                                          # bought 13.6% BELOW County guideline.
+
+# Rent is DERIVED, not assumed, by the County's own method — the same method the
+# companion case uses. A comparable's assessed value times the guideline loaded
+# cap gives the assessor's NOI; adding back guideline expenses and grossing up
+# for vacancy gives rent. Applied to Central Place (below) on the 2026 roll:
+rent_per_unit_month     = 3_789           # DERIVED — $233,287,300 x 5.45% = NOI
+                                          # $33,725/unit; + $9,466 expenses; / 0.95.
+                                          # +7.6% on Highlands' Aubrey (2022, $3,522)
+                                          # and +15.8% on Evo ($3,273).
+
+# -------------------------------------------------- comparable transactions
+# All FACT, Arlington County sales records and the 2026 Guidebook's own sales
+# tables. A four-point series across two submarkets, not a single observation.
+[comps]
+# Rosslyn, pure multifamily. Both parcels class 313, one economic unit, no
+# office or retail absorbing the per-unit figure.
+central_place_price     = 206_250_000     # FACT — deed 20260100010398, 2026-07-21
+central_place_units     = 377             # FACT — 74 (RPC 16-038-014) + 303 (-019)
+central_place_per_unit  = 547_082         # FACT
+central_place_assessed  = 233_287_300     # FACT — 2026 roll; the trade is 88.4%
+                                          # of assessed, and assessed implies
+                                          # $618,799/unit.
+washington_blvd_price   = 158_300_000     # FACT — 3275 Washington Blvd, 2024-12-18
+washington_blvd_units   = 267             # FACT
+washington_blvd_per_unit = 592_884        # FACT
+# The companion case's own exits, confirmed independently in the 2026 Guidebook
+# sales table ("Cortland Rosslyn East/West", both 2022-05-17).
+evo_per_unit            = 735_385         # FACT — Guidebook; 455 units
+aubrey_per_unit         = 805_000         # FACT — Guidebook; 331 units
+#
+# 805,000 -> 735,385 -> 592,884 -> 547,082 from May 2022 to July 2026.
+# EXCLUDED, with reason: N Herndon St 2025-08-28 at $150,580,000 prices to
+# $7,170,476/unit because the 21 units on that parcel are part of a multi-parcel
+# trade; 1200 N Courthouse Rd 2026-06-16 at $194,444/unit is inconsistent with
+# every market observation and is likely affordable or a partial interest.
+# Neither is evidence; both are named so the exclusion is visible.
+
+# ------------------------------------------------------ construction basis
+# Anchored to the companion case's ACTUAL spend, escalated by published index.
+# Parking is priced per SPACE, not folded into a blended $/sf rate: Highlands
+# built 1,037 spaces for 890 units (1.17/unit) against One Rosslyn's 429 for
+# 845 (0.51/unit), and a blended rate charges this project for parking it does
+# not build.
+[construction]
+highlands_buildings_psf = 255.00          # FACT — $301,693,050 / 1,183,110 sf GFA
+highlands_parking_space = 32_000          # FACT — $33,184,000 / 1,037 spaces
+soft_ratio              = 0.180893        # FACT — ratio to hard, companion case
+contingency_ratio       = 0.053203        # FACT
+developer_fee_ratio     = 0.053736        # FACT
+# BLS producer price index, new multifamily/other nonresidential building
+# construction OUTPUT prices (series WPUIP2312001, via FRED, retrieved
+# 2026-08-25). An OUTPUT index, deliberately: the inputs index (WPUSI012011)
+# measures materials and assumes contractor margin and productivity move with
+# them, which overstates. Cross-checked against warehouse output (WPUIP2311101)
+# at 49.6% over the same window, so 53.4% is not an artefact of one series.
+escalation_realized     = 1.5340          # FACT — 2019-11 (Highlands construction
+                                          # midpoint) to 2026-07, published
+escalation_forward_rate = 0.0343          # PROJECTION — 36-month trailing CAGR on
+                                          # the same index, applied 2026-07 to the
+                                          # projected 2028-09 midpoint. Trailing
+                                          # 12-month is 7.20%, which would raise
+                                          # cost materially; 24-month is 4.87%.
+
+# ------------------------------------------------------------------ finance
+[finance]
+sofr                    = 0.0365          # FACT — 2026-08-24, FRED series SOFR
+ust10                   = 0.0470          # FACT — 2026-08-24, FRED series DGS10
+construction_spread     = 0.0275          # PROJECTION — no instrument is recorded
+loan_rate               = 0.0640          # PROJECTION — SOFR + spread. The
+                                          # companion case's facility priced at
+                                          # 6.50%, which is a sanity check rather
+                                          # than a source.
+ltc                     = 0.60            # PROJECTION
+
+# ------------------------------------------------------- condominium pricing
+# The WEAKEST input in the case, and the one doing the most work: it carries
+# roughly $129M of proceeds. Anchored to the companion case's 102 RECORDED
+# closings, but the NE tower's units are far larger (165,916 sf / 73 = 2,273 sf)
+# than Pierce's, and no Rosslyn condominium of this size has traded recently.
+[condo]
+pierce_gross            = 190_186_220     # FACT — 102 recorded closings
+pierce_per_unit         = 1_864_571       # FACT
+selling_cost            = 0.05            # PROJECTION
