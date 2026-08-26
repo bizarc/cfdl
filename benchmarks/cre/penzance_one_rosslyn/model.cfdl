@@ -43,6 +43,13 @@ time calendar monthly from 2023-11 for 170
 // weighted by this, so one model carries both and run.json selects.
 assume scenario_b        = 1.0
 
+// The market's premium or discount to the County's guideline basis. 1.00 IS
+// the guideline basis. The two observations available bracket it: The
+// Highlands sold at +32% to this basis in 2022, Central Place at -11.6% in
+// 2026. It scales the EXIT only. A lender sizes the permanent loan off the
+// appraised basis at stabilization, not off the price a later buyer pays.
+assume market_factor     = 1.0
+
 assume rent_per_unit     = 3789.0
 assume expenses_per_unit = 9466.0
 assume vacancy           = 0.05
@@ -1227,7 +1234,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 stream cre.exit_a on entity asset.project inflow currency USD {
   schedule on 2031-10 end
   category investing.reversion
-  amount = 567404297.94 * (1.0 - inputs.scenario_b)
+  amount = 567404297.94 * inputs.market_factor * (1.0 - inputs.scenario_b)
 }
 
 // ------------------------------------------- scenario B: refinance and hold
@@ -1249,7 +1256,7 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {
 stream cre.exit_b on entity asset.project inflow currency USD {
   schedule on 2037-06 end
   category investing.reversion
-  amount = 670867718.37 * inputs.scenario_b
+  amount = 670867718.37 * inputs.market_factor * inputs.scenario_b
 }
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {

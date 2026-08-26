@@ -16,6 +16,30 @@
       "parameters": {
         "inputs.scenario_b": 1.0
       }
+    },
+    "merchant_at_2026_discount": {
+      "parameters": {
+        "inputs.scenario_b": 0.0,
+        "inputs.market_factor": 0.884
+      }
+    },
+    "merchant_at_2022_premium": {
+      "parameters": {
+        "inputs.scenario_b": 0.0,
+        "inputs.market_factor": 1.321
+      }
+    },
+    "core_at_2026_discount": {
+      "parameters": {
+        "inputs.scenario_b": 1.0,
+        "inputs.market_factor": 0.884
+      }
+    },
+    "core_at_2022_premium": {
+      "parameters": {
+        "inputs.scenario_b": 1.0,
+        "inputs.market_factor": 1.321
+      }
     }
   }
 }
