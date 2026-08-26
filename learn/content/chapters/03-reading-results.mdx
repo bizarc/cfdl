@@ -6,7 +6,7 @@ order: 3
 track: core
 ---
 
-You now know what a model declares. This chapter is about the other side of the pipeline: what a run hands back, and how to read it like a practitioner — which means knowing not just where the NPV is, but how to challenge any number until it confesses where it came from.
+You now know what a model declares. This chapter is about the other side of the pipeline: what a run hands back, and how to read it like a practitioner. Reading it that way means more than knowing where the NPV is. It means knowing how to challenge any number until it confesses where it came from.
 
 A model to read results against — a small consulting practice, chosen because its numbers are easy to hold in your head:
 
@@ -58,7 +58,7 @@ NPV in this output is not "the" NPV of the model; it is the NPV *at the run's di
 
 Two conventions to fix in your head now, because every discrepancy-hunt you ever run will check them first:
 
-**Rate conversion.** The configured rate is annual; the grid here is monthly. The engine converts by compounding, `(1 + r)^(1/12) − 1`, not by dividing by twelve. At 8%, that is 0.643% per month, not 0.667%. A source that divides by twelve will disagree with your NPV in the third digit — and *neither of you is wrong*; you are using different claims about compounding, and the fix is to match the source's method deliberately (an exercise below does exactly this).
+**Rate conversion.** The configured rate is annual; the grid here is monthly. The engine converts by compounding, `(1 + r)^(1/12) − 1`, not by dividing by twelve. At 8%, that is 0.643% per month, not 0.667%. A source that divides by twelve will disagree with your NPV in the third digit, and *neither of you is wrong*. You are using different claims about compounding. The fix is to match the source's method deliberately, as an exercise below does.
 
 **Timing.** Cash is dated by its period on the grid; discounting measures from the as-of date. A model whose rent lands on the 1st versus the 15th versus month-end can carry the same totals and different NPVs. The schedule chapter in Part II gives you precise control over placement; what matters now is knowing that placement is a claim, and the results reflect it.
 
@@ -79,7 +79,7 @@ This four-step descent works because every layer of the output is derived from t
 
 Sooner or later — often on day one — you rebuild a model that already exists: an offering memo, a bank case, someone's workbook. Your total is 288,000 and theirs is 287,946, and someone asks you to "reconcile."
 
-The professional rule: **match the source's method, then match its answer.** The 54-dollar gap is never noise; it is a *method difference* — they divide the rate by twelve, they round each period to the dollar before summing, they place cash at month-end and you place it at month-start. Find the method difference, decide *on purpose* whether to adopt it, and record the decision in the model where the next reader will meet it.
+The professional rule: **match the source's method, then match its answer.** The 54-dollar gap is never noise. It is a *method difference*: they divide the rate by twelve, they round each period to the dollar before summing, or they place cash at month-end where you place it at month-start. Find the method difference, decide *on purpose* whether to adopt it, and record the decision in the model where the next reader will meet it.
 
 The language gives you the tools to adopt a source's method exactly. When a source rounds each period before aggregating, `round_to` in the amount expression reproduces *their* pennies instead of averaging the difference away. When an escalation compounds on an already-rounded prior value — spreadsheet-native behavior that a clean formula cannot reproduce — an entity field's rule (Part II) carries the rounded value forward the way the workbook did. A model that matches a source to the penny is a model whose every deviation from that source is now *visible and chosen* — which is the entire point of reconciliation.
 
@@ -97,7 +97,7 @@ The run configuration is a small JSON document that travels beside the model. Th
 }
 ```
 
-Configurations can also name **scenarios** — base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side — and simulation settings, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
+Configurations can also name **scenarios**: base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side. They carry simulation settings too, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
 
 ## What can go wrong
 

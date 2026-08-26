@@ -140,6 +140,21 @@ localized; **conforms** means no material finding.
 
 ### 4.1 Sentence length — `site` conforms, `learn` fails
 
+> **RESOLVED.** Both training rows were remediated — the exercise prompts under
+> register item 6, the chapters under item 12 after it was reopened (2026-08-25).
+> Current figures, from the same script:
+>
+> | Corpus | Mean | Median | p90 | Max | >20 words | >25 words |
+> |---|---|---|---|---|---|---|
+> | `learn/content/chapters` | 17.4 | 17 | 29 | 55 | 34% | 19% |
+> | `training` exercise prompts | 11.0 | 10 | 20 | 25 | 9% | 0% |
+>
+> The chapters' residual maximum is a measurement artefact, not prose: the
+> sentence splitter does not break on a period inside `**bold.**`, so it reports
+> some two-sentence runs as one. The longest genuine chapter sentence is 35
+> words. The figures below are the measurement that prompted the work and are
+> left as recorded.
+
 | Corpus | Mean | Median | p90 | Max | >20 words | >25 words |
 |---|---|---|---|---|---|---|
 | `site/content/docs` | 9.6 | 9 | 15 | 52 | 3% | 2% |
@@ -488,12 +503,24 @@ Ordered by value per unit of effort. Backlog items are appended to
 | 9 | ~~Convert `learn` procedural sections to imperative steps~~ **DONE** | Days | Four sections converted (ch. 3 descent, ch. 6 routing, ch. 12 distribution checks, ch. 13 style rules), five cross-references updated with them. Ch. 15 and ch. 19 were inspected and left alone: their steps were already condition-first imperatives, and rewriting conformant prose to satisfy an audit line would be churn |
 | 10 | ~~WCAG 2.2 AA assessment and remediation~~ **ASSESSED AND REMEDIATED** (`docs/23`) | Unknown until assessed | Five findings, all fixed and re-verified: the muted token failed contrast in both themes, the splitter lacked its ARIA value trio, scroll regions were keyboard-unreachable. Zero axe violations after. The human AT pass is backlog 7.35; conformance is not claimed until it runs |
 | 11 | ~~Extend `check-site-voice.py` with CFDL-CE rules~~ **DONE** | Days | The mechanical subset: retired spellings and synonyms load from `terminology.toml` at run time, plus number formats, `hit`, and contractions. The specifications are now checked too (CE rules only — the narrative exemption stands). Negative-tested: fires on each rule, exempts code spans, arithmetic `×`, and `ste-allow:` lines |
-| 12 | ~~Reduce `learn` sentence length toward the 25-word descriptive limit~~ **REMOVED** | Weeks | Closed without action, by decision (2026-08-14). The finding stands — 31% of chapter sentences exceed the descriptive limit — but the prose is long in the service of holding two ideas together, and shortening it mechanically trades pedagogy for conformance. Tier C's S1–S2 remain a target for new writing, not a debt to pay down |
+| 12 | ~~Reduce `learn` sentence length toward the 25-word descriptive limit~~ **DONE** | Weeks | Reopened 2026-08-25 after being closed without action on 2026-08-14, and done targeted rather than mechanically: only the 154 sentences over 35 words were rewritten, across 25 of the 27 chapters. Mean 20.7→17.4; over-25 share 31%→19%. No metaphor, italic thesis sentence, technical claim, or anchor number changed |
 
-Item 12 was removed from the register by decision rather than completed. The
-audit ranked it last because the chapters' long sentences hold two ideas in
-tension on purpose, and the owner agreed the trade was not worth making: the
-existing chapters keep their prose, and Tier C's sentence-length limits in
-`22_cfdl_controlled_english.md` apply to writing from here forward. With that,
-every item on this register is closed — ten done, one assessed with its human
-follow-up filed as backlog 7.35, one declined with its reason on the record.
+Item 12 was declined once and then done. The reasoning is worth keeping, because
+both decisions were defensible on the same evidence.
+
+The 2026-08-14 decision closed it without action: the chapters' long sentences
+hold two ideas in tension on purpose, and shortening them mechanically trades
+pedagogy for conformance. That objection is correct — for the 25-to-35-word
+band, where a sentence is genuinely one thought with a qualifier attached.
+
+The 2026-08-25 reopening accepted that objection and scoped around it. Above 35
+words the sentences were not paired ideas but three-clause pileups: a claim, a
+parenthetical, and an em-dash aside, stacked. The tail was rewritten and the
+band was left alone, so the 25-to-35 sentences the first decision protected are
+still there. Where a long sentence turned out to be an enumeration wearing prose
+clothes, it became a vertical list under S5 — day-count bases, the five
+waterfall step shapes, a diagnostic's parts, the four shipped packs.
+
+Tier C's S1–S2 remain a target rather than a gate threshold either way. With
+this, every item on the register is closed: eleven done, one assessed with its
+human follow-up filed as backlog 7.35.

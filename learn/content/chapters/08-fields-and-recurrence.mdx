@@ -23,7 +23,9 @@ entity asset tlb : Asset.Financial {
 }
 ```
 
-A **fact field** (`seniority = 1`) takes a literal and nothing else — it is a statement about the thing, checked against the pack's ontology when one is in play, so a misspelled field name fails at compile time. A **rule field** carries the recurrence: **`init`** is the value at the first period (an expression — a base case often needs `inputs.*`), and **`next`** is evaluated each subsequent period with **`prev`** bound to this field's own value one period ago. A computed "fact" (`occupancy = base * 0.95`) is deliberately illegal — a value that moves is a rule, and the syntax makes you say so.
+A **fact field** (`seniority = 1`) takes a literal and nothing else. It is a statement about the thing, checked against the pack's ontology when one is in play, so a misspelled field name fails at compile time.
+
+A **rule field** carries the recurrence. **`init`** is the value at the first period — an expression, since a base case often needs `inputs.*`. **`next`** is evaluated each subsequent period, with **`prev`** bound to this field's own value one period ago. A computed "fact" (`occupancy = base * 0.95`) is deliberately illegal — a value that moves is a rule, and the syntax makes you say so.
 
 There is a third way a field changes — an *event* writes it (`set entity asset.tower.use = "retail"`) — which chapter 10 takes up. Rule, then event, then reads: that ordering is fixed by the engine, so a rule computes the period's value, an event may overwrite it, and everything downstream sees what was committed.
 
@@ -59,7 +61,7 @@ stream senior.amortization on entity asset.senior outflow currency USD {
 }
 ```
 
-Read the interest amount aloud: "six percent on the average of what the period opened and closed with." In a spreadsheet, average-balance interest is the classic circular-reference trap; here it is one line, because *opening balance* is not a second quantity to declare — it is the same field, read one period back.
+Read the interest amount aloud: "six percent on the average of what the period opened and closed with." In a spreadsheet, average-balance interest is the classic circular-reference trap. Here it is one line, because *opening balance* is not a second quantity to declare. It is the same field, read one period back.
 
 ## Why cycles are impossible
 
@@ -67,7 +69,7 @@ The reads above are safe by construction, and the argument is worth owning becau
 
 The consequence: circular references — the spreadsheet's most notorious failure mode — are not detected and warned about; they are **unwritable**. Two rules may reference each other freely (each sees the other's *previous* value; last period is always finished), and declaration order carries no meaning. The iterative-solver dance ("enable circular references, set max iterations…") that infects interest-on-average-balance workbooks has no equivalent here; the grammar itself is the proof that evaluation is well-founded.
 
-The cost is one modeling discipline: genuine same-period simultaneity must be *staged*. A definition that truly needs this period's answer on both sides — price that depends on volume that depends on price — has to be restated as a rule off last period, or split across two fields, and either way the model *declares its convention*. That is the trade throughout this language: a construct that cannot express confusion, in exchange for saying what you mean.
+The cost is one modeling discipline: genuine same-period simultaneity must be *staged*. Some definitions truly need this period's answer on both sides: price that depends on volume that depends on price. Restate such a definition as a rule off last period, or split it across two fields. Either way, the model *declares its convention*. That is the trade throughout this language: a construct that cannot express confusion, in exchange for saying what you mean.
 
 ## The rounded-escalation case
 
@@ -102,13 +104,13 @@ Over six years, `100000 * pow(1.03, time.t)` and this rule drift apart by about 
 
 A field is **not cash**. A balance, an index, a counter — none of them appear in results as flows; they are the model's working memory, and only streams that *read* them produce cash. If you find yourself wanting a field's value to "land" somewhere, what you want is a stream whose amount reads the field.
 
-And a field is not the answer to everything sequenced. When the accumulating thing is *someone's entitlement* — arrears owed, a preferred return accruing until paid — the language has purpose-built constructs (`waterfall`'s `owed` and `paid`, chapter 11) that carry the entitlement *and* the payment against it together. Hand-building that from raw fields means re-proving what the waterfall already proves. The smell to notice: a field paired with a stream that tries to "pay it down."
+And a field is not the answer to everything sequenced. Sometimes the accumulating thing is *someone's entitlement*: arrears owed, or a preferred return accruing until paid. The language has purpose-built constructs for that — `waterfall`'s `owed` and `paid`, chapter 11 — which carry the entitlement *and* the payment against it together. Hand-building that from raw fields means re-proving what the waterfall already proves. The smell to notice: a field paired with a stream that tries to "pay it down."
 
 ## What can go wrong
 
 **Reading a current value inside a rule.** A `next` written in terms of another field's *current* value is refused — the environment simply has no such name at rule time. The error is the design working.
 
-**`prev` at the very first period.** There is no close before the first close, and a stream that reads `prev.asset.x.y` in period 0 is refused rather than handed a silent zero — schedule such streams from the second period on, as the average-balance example does.
+**`prev` at the very first period.** There is no close before the first close. A stream that reads `prev.asset.x.y` in period 0 is refused rather than handed a silent zero. Schedule such streams from the second period on, as the average-balance example does.
 
 **An `init` that contradicts the first payment.** The classic off-by-one: does the balance start at the principal, or principal less the first payment? `init` is the value at the first period, *before any `next` has run* — anchor it to a dated fact and hand-check periods 0 and 1, once, every time you write a balance.
 

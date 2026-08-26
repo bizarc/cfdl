@@ -13,7 +13,7 @@ import { firstChapter, getAllChapters, partGroups } from "@/lib/chapters";
 const BLURBS: Record<number, string> = {
   1: "Why a modeling language beats a spreadsheet for auditable deals, the object model — time, entities, streams — and how to read what a run gives you back.",
   2: "Streams, schedules, expressions, assumptions, curves, fields, events, options, waterfalls, and Monte Carlo — the full packless language, one construct at a time, each with runnable exercises.",
-  3: "The decisions the syntax can't make for you: choosing grain, choosing constructs, the finance semantics the language encodes, and when a domain pack earns its keep.",
+  3: "The decisions the syntax cannot make for you: choosing grain, choosing constructs, the finance semantics the language encodes, and when a domain pack earns its keep.",
   4: "One development deal carried end to end — skeleton, revenue, costs and financing, exit and returns, then scenarios, Monte Carlo, and an equity waterfall over the whole structure.",
   5: "The language on two pages, every CRE contract type with its terms, and notes for teaching the course.",
 };

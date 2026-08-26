@@ -6,7 +6,7 @@ order: 5
 track: core
 ---
 
-Every `amount =` you have written so far held a constant. Real claims are rarely constants — rent escalates, interest accrues on a balance, a fee is a percentage of something. The right side of `amount =` is an expression, evaluated once per scheduled occurrence, and this chapter is the working tour of that language: what an expression can see, what it can compute, and the habits that keep a model's intelligence legible.
+Every `amount =` you have written so far held a constant. Real claims are rarely constants — rent escalates, interest accrues on a balance, a fee is a percentage of something. The right side of `amount =` is an expression, evaluated once per scheduled occurrence. This chapter is the working tour of that language: what an expression can see, what it can compute, and the habits that keep a model's intelligence legible.
 
 ## What an expression can see
 
@@ -17,7 +17,7 @@ An expression evaluates inside a sealed environment. Every name it can read belo
 - **`cfg.*`** and **`obs.*`** — values supplied by the run configuration at run time: parameters and observations. Also next chapter.
 - **Entity fields** — facts and running quantities owned by the model's entities, read by path (`asset.tlb.balance`), with `prev.` reaching the prior period's value (chapter 8).
 
-And that is all. No file access, no wall-clock date, no environment variables, no randomness outside declared assumptions. The sealed environment is what makes a run reproducible, and it has a practical authoring consequence: if a number matters to the model, it must be *declared somewhere* — which is exactly where a reviewer will find it.
+And that is all. No file access, no wall-clock date, no environment variables, no randomness outside declared assumptions. The sealed environment is what makes a run reproducible, and it has a practical authoring consequence. If a number matters to the model, you must *declare it somewhere* — which is exactly where a reviewer will find it.
 
 ## Arithmetic you can trust
 

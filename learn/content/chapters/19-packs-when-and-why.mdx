@@ -18,7 +18,7 @@ use pack "cre" version "0.1.0"
 
 Four things arrive with it.
 
-**A typed vocabulary.** The base ontology (`Asset.Real`, `Party`, …) extends with domain types — `CRE.Asset.RealProperty`, `CRE.Asset.Unit`, `Credit.Asset.Tranche` — each declaring the fields its kind of thing carries. Your entities become checkable against domain knowledge: a misspelled field on a typed entity is a compile error with the pack's vocabulary in the message, and a contract can require that it attaches to the kind of thing it makes sense on.
+**A typed vocabulary.** The base ontology (`Asset.Real`, `Party`, …) extends with domain types — `CRE.Asset.RealProperty`, `CRE.Asset.Unit`, `Credit.Asset.Tranche` — each declaring the fields its kind of thing carries. Your entities become checkable against domain knowledge. A misspelled field on a typed entity is a compile error, with the pack's vocabulary in the message. A contract can also require that it attaches to the kind of thing it makes sense on.
 
 **Contracts.** The construct this course has mentioned since chapter 2 and can finally show. A contract states a *standard piece of domain economics* by its terms, and the pack lowers it into the streams you would otherwise write by hand:
 
@@ -33,17 +33,24 @@ contract cre.lease {
 
 Three lines. What they replace, you can write yourself by now: the rent stream, its monthly schedule over the term, the amount from the base rent. The pack's lowering does exactly that — visibly, in the IR, as ordinary streams — so a contract is *shorthand you can audit*, not a black box. Richer contracts carry richer terms: `cre.lease_up` states an occupancy ramp (the chapter-9 idiom, as terms), `cre.permanent_debt` a full amortizing loan, `credit.pool_level_pay` a pool that expands into six streams — interest, scheduled principal, prepayments, recoveries, servicing.
 
-**Domain validation.** The pack checks what the core language cannot know: a lease missing its base rent, an occupancy outside [0,1], an exit with no cap rate — refused at compile, in domain vocabulary, before any number exists. Your deal is reviewed against the domain's checklist every time it compiles.
+**Domain validation.** The pack checks what the core language cannot know: a lease missing its base rent, an occupancy outside [0,1], an exit with no cap rate. Each is refused at compile, in domain vocabulary, before any number exists. Your deal is reviewed against the domain's checklist every time it compiles.
 
-**Statements and metrics.** Because contracts declare what cash *is* — this stream is base rent, that one is debt service — the pack can categorize, subtotal, and derive: NOI, DSCR, EBITDA arrive in results as named metrics with lineage, and output organizes as the domain's statement rather than a flat list of streams. This is what your packless models' hand-designed name taxonomy was approximating; the pack makes it structural.
+**Statements and metrics.** Contracts declare what cash *is*: this stream is base rent, that one is debt service. So the pack can categorize, subtotal, and derive. NOI, DSCR, and EBITDA arrive in results as named metrics with lineage, and output organizes as the domain's statement rather than a flat list of streams. This is what your packless models' hand-designed name taxonomy was approximating; the pack makes it structural.
 
-Four packs ship — **cre** (leases, lease-up, vacancy, rollover, percentage rent, construction, permanent debt, three exit forms), **credit** (level-pay, IO-bullet, and floating pools; purchases), **energy** (PPA, merchant, storage, capacity, ITC/PTC, MACRS shields, debt), **opco** (revenue/opex/capex lines, working capital, term debt, cash taxes, three exit forms). The capstone lives in cre; the reference part tables its terms.
+Four packs ship:
+
+- **cre** — leases, lease-up, vacancy, rollover, percentage rent, construction, permanent debt, three exit forms.
+- **credit** — level-pay, IO-bullet, and floating pools; purchases.
+- **energy** — PPA, merchant, storage, capacity, ITC/PTC, MACRS shields, debt.
+- **opco** — revenue/opex/capex lines, working capital, term debt, cash taxes, three exit forms.
+
+The capstone lives in cre; the reference part tables its terms.
 
 ## When packless is the better choice
 
-The decision is not "packs when available." Packless wins in three real situations. **The deal is genuinely novel** — a structure the pack's contract list does not describe; forcing it through the nearest contract misstates the deal, and the core constructs exist precisely for this. **The model is pedagogical or exploratory** — you are finding out what the deal even is, and writing claims by hand is the finding out. **The economics deviate from standard in ways that matter** — a lease with a bespoke kicker the contract does not carry; though here the answer is often *mixed*: contracts for the standard bones, hand streams beside them for the bespoke flesh. Packs and hand streams compose freely in one model, and most mature models are exactly that mixture.
+The decision is not "packs when available." Packless wins in three real situations. **The deal is genuinely novel** — a structure the pack's contract list does not describe; forcing it through the nearest contract misstates the deal, and the core constructs exist precisely for this. **The model is pedagogical or exploratory** — you are finding out what the deal even is, and writing claims by hand is the finding out. **The economics deviate from standard in ways that matter** — a lease with a bespoke kicker the contract does not carry. Here the answer is often *mixed*: contracts for the standard bones, hand streams beside them for the bespoke flesh. Packs and hand streams compose freely in one model, and most mature models are exactly that mixture.
 
-The real cost of a pack is a dependency on its judgment: its lowering is the standard treatment, its validations are the standard checklist, and where your deal disagrees with standard you must notice the disagreement. The pack makes standard cheap; it cannot make your deal standard.
+The real cost of a pack is a dependency on its judgment. Its lowering is the standard treatment and its validations are the standard checklist. Where your deal disagrees with standard, you must notice the disagreement. The pack makes standard cheap; it cannot make your deal standard.
 
 ## Migration: the invariant refactor, again
 
@@ -58,7 +65,7 @@ The exercise below runs this migration on a small office model; the capstone the
 
 ## What can go wrong
 
-**A contract for a deal that is not that contract.** A term may hold what was agreed even when the agreement is a formula — `escalation = curve_value("cpi", time.date) + 0.005` states "CPI plus 50 basis points" directly, and free rent is a term of `cre.lease_unit`. The boundary is *structure*: a termination option, a payoff that depends on another instrument, a shape the contract's terms simply do not have. When the deal's structure is not the contract's structure, that mismatch is information: write the claims by hand.
+**A contract for a deal that is not that contract.** A term may hold what was agreed even when the agreement is a formula. `escalation = curve_value("cpi", time.date) + 0.005` states "CPI plus 50 basis points" directly, and free rent is a term of `cre.lease_unit`. The boundary is *structure*: a termination option, a payoff that depends on another instrument, a shape the contract's terms simply do not have. When the deal's structure is not the contract's structure, that mismatch is information: write the claims by hand.
 
 **Fighting the validation.** A pack refusal that seems wrong usually means your deal and the pack disagree about what is standard — which is worth knowing, not suppressing. Read the refusal as domain review, then decide deliberately: fix the model, or take that storyline packless.
 

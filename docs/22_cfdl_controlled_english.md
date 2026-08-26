@@ -70,11 +70,23 @@ stated; an unexplained divergence is a defect in this document.
 | S4 | One instruction per sentence | • | • | • | — |
 | S5 | Use a vertical list for more than one action | • | • | • | — |
 
-S1–S2, Tier C: this is a target, not a gate threshold. The audit found 31% of
-`learn` sentences over 25 words and ranked fixing it last, because those
-sentences are long in order to hold two ideas in tension and shortening them
-mechanically costs comprehension rather than buying it. Write shorter where
+S1–S2, Tier C: this is a target, not a gate threshold. Long sentences in the
+curriculum are often long in order to hold two ideas in tension, and splitting
+one of those costs comprehension rather than buying it. Write shorter where
 shorter is clearer. Do not split a sentence whose halves mean less apart.
+
+The 2026-08-25 chapter pass (register item 12) settled where that defence stops.
+It holds for a sentence in the 25-to-35-word band, which is usually one thought
+with a qualifier attached. It does not hold past roughly 35 words, where the
+sentence is a pileup of three clauses rather than a pair of ideas — a claim, a
+parenthetical, and an em-dash aside, stacked. Treat 35 words as the point where
+the burden shifts: below it, keep the sentence unless shorter is clearer; above
+it, split it unless you can say what the halves lose.
+
+One rewrite to reach for first. A long sentence that lists things — bases,
+shapes, parts, options, separated by commas or semicolons — is an enumeration
+wearing prose clothes, and S5's vertical list is both shorter and more
+scannable. That accounted for six of the pass's rewrites.
 
 ### 3.2 Voice and verbs
 
@@ -96,8 +108,15 @@ participial modifier: write "Use the CLI to compile the model", not "Using the
 CLI, compile the model".
 
 V6: the audit found 9 contractions in 70,438 words. This rule records existing
-practice rather than demanding a change. `can't` in `site/app/page.tsx` is the
-one violation.
+practice rather than demanding a change. The measured corpora now hold none, and
+the two `can't`s the audit named in TSX are both fixed — `site/app/page.tsx`, and
+`learn/app/page.tsx`, which the audit never measured (2026-08-25).
+
+TSX microcopy remains the estate's blind spot. `tools/check-site-voice.py` reads
+Markdown and MDX sources, so prose hardcoded in a component is checked by nobody;
+that is how a second `can't` survived the audit that reported the first. Anything
+user-facing written in a `.tsx` file is Tier D at minimum and still bound by W1–W3
+and V6.
 
 ### 3.3 Words
 

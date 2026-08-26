@@ -104,10 +104,10 @@ Three forms, one decision: where does the NOI come from?
 
 **`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap × (1 − selling_costs)`. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
-**`cre.exit_forward`** → `cre.exit.proceeds`, with forward NOI *derived* from the modeled streams over the twelve months after the sale date — cannot drift, cannot be committee-edited, requires a projection tail so the window has data. | Required: `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit_forward`** → `cre.exit.proceeds`, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data. | Required: `exit_cap`. Default: `selling_costs = 0`.
 
 All three settle at the *end* of the sale period — the full holding period discounts.
 
 ## Reading a term table like a reviewer
 
-Three habits, in closing. **Requireds are the pack's floor, not the deal's** — a lease can satisfy the table and still misstate your deal; the table tells you what the pack checks, chapter 19 told you what to do when your deal says more. **Defaults are claims** — `escalation = 0` unstated is still an escalation assumption, visible only here; state terms you relied on even when they equal the default. **Categories are where the money reports** — the parenthesized category on each stream is what NOI, DSCR, and the statements aggregate; when a metric looks wrong, the category trail is the four-step descent's first stop.
+Three habits, in closing. **Requireds are the pack's floor, not the deal's.** A lease can satisfy the table and still misstate your deal. The table tells you what the pack checks; chapter 19 told you what to do when your deal says more. **Defaults are claims** — `escalation = 0` unstated is still an escalation assumption, visible only here; state terms you relied on even when they equal the default. **Categories are where the money reports** — the parenthesized category on each stream is what NOI, DSCR, and the statements aggregate; when a metric looks wrong, the category trail is the four-step descent's first stop.

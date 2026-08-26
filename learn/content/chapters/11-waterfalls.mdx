@@ -6,7 +6,7 @@ order: 11
 track: core
 ---
 
-Every structured deal ends in the same question: *who gets paid, in what order, out of what?* A securitization's priority of payments, a fund's distribution clause, a JV's promote — all are the same shape: a pot of cash, a sequence of claims, each claim taking what it is owed until the pot runs out. Spreadsheets model this shape with their most fragile machinery — chains of `MIN(MAX(...))` cells where one wrong reference pays a junior claim ahead of a senior one. The language makes the shape a construct: the **waterfall**.
+Every structured deal ends in the same question: *who gets paid, in what order, out of what?* A securitization's priority of payments, a fund's distribution clause, and a JV's promote are all the same shape: a pot of cash, and a sequence of claims, each taking what it is owed until the pot runs out. Spreadsheets model this shape with their most fragile machinery — chains of `MIN(MAX(...))` cells where one wrong reference pays a junior claim ahead of a senior one. The language makes the shape a construct: the **waterfall**.
 
 ## Pot, steps, payees
 
@@ -40,7 +40,7 @@ waterfall trust.distribution on entity asset.trust {
 }
 ```
 
-A waterfall has a schedule (it distributes on dates, like any claim), a **pot** — the `from` expression, and `available` is the trust's own netted cash for the period, handed over by the engine the way `remaining` is — and ordered **steps**. Each step names itself, names its payee (an entity reference — this is where chapter 2's parties earn their place in the cast), and states what the step is *owed* as an ordinary expression.
+A waterfall has three parts. It has a **schedule**, because it distributes on dates like any claim. It has a **pot**, written as the `from` expression; `available` is the trust's own netted cash for the period, handed over by the engine the way `remaining` is. And it has ordered **steps**. Each step names itself, names its payee (an entity reference — this is where chapter 2's parties earn their place in the cast), and states what the step is *owed* as an ordinary expression.
 
 The engine applies one rule at every step: the step receives `min(max(0, owed), remaining)`. That single rule is the construct's guarantee — **the pot cannot go negative, and no step can be paid more than what survives the steps above it** — however any individual step is written. The seniority logic that a spreadsheet re-implements per cell, correctly or not, is here the meaning of the construct itself, proved once in the engine rather than per model. What is left after a step is `remaining`, and a final `= remaining` step sweeps the residual — the equity's position in one word.
 
@@ -58,7 +58,15 @@ pay senior_note         to asset.class_a = 55000
 pay junior_fee_deferred to party.manager = owed.junior_fee_current - paid.junior_fee_current
 ```
 
-Five expression shapes cover essentially every step a real priority of payments contains — a stated amount (`4500`), a capped amount (`min(fee, cap)`), pay-down-to-a-target (`balance - target`), an earlier step's shortfall (`owed.x - paid.x`), and the sweep (`remaining`). Learn to see any indenture's payment section as combinations of these five, and transcription becomes mechanical: read a clause, write a step, in document order. The model reads *in the same order the lawyer wrote* — which is what makes review by the person who negotiated the document possible at all.
+Five expression shapes cover essentially every step a real priority of payments contains:
+
+- A stated amount — `4500`.
+- A capped amount — `min(fee, cap)`.
+- Pay-down-to-a-target — `balance - target`.
+- An earlier step's shortfall — `owed.x - paid.x`.
+- The sweep — `remaining`.
+
+Learn to see any indenture's payment section as combinations of these five, and transcription becomes mechanical: read a clause, write a step, in document order. The model reads *in the same order the lawyer wrote*, which is what makes review by the person who negotiated the document possible at all.
 
 ## The promote: equity's waterfall
 
@@ -95,11 +103,13 @@ waterfall venture.split on entity asset.venture {
 }
 ```
 
-Note what `remaining * 0.20` does: a step's owed amount can *read the pot mid-flow*, so proportional splits fall out of the same five shapes. (A full promote with IRR hurdles and catch-up provisions is these pieces plus accrual fields — the capstone's final chapter builds one over the whole deal.) Waterfalls also **chain**: because steps publish as series, one waterfall's step can feed another's pot — a property-level distribution feeding a fund-level one — which is how multi-tier structures stay legible instead of collapsing into one giant priority list.
+Note what `remaining * 0.20` does: a step's owed amount can *read the pot mid-flow*, so proportional splits fall out of the same five shapes. A full promote with IRR hurdles and catch-up provisions is these pieces plus accrual fields, and the capstone's final chapter builds one over the whole deal.
+
+Waterfalls also **chain**. Because steps publish as series, one waterfall's step can feed another's pot — a property-level distribution feeding a fund-level one. That is how multi-tier structures stay legible instead of collapsing into one giant priority list.
 
 ## What the construct refuses
 
-No step can overdraw the pot, pay negatively (a step is a payment, not a clawback — a true clawback is cash the *other* way: a stream), or be referenced before it runs (`owed.x` looks *up* the priority list, never down — a forward reference is refused at compile). Each refusal corresponds to a way spreadsheet waterfalls actually fail; each is impossible to express rather than checked after the fact.
+No step can overdraw the pot. No step can pay negatively: a step is a payment, not a clawback, and a true clawback is cash the *other* way — a stream. And no step can be referenced before it runs, because `owed.x` looks *up* the priority list and never down; a forward reference is refused at compile. Each refusal corresponds to a way spreadsheet waterfalls actually fail; each is impossible to express rather than checked after the fact.
 
 ## What can go wrong
 

@@ -31,7 +31,13 @@ Nothing goes from zero to full instantly — buildings lease up, plants commissi
 amount = inputs.stabilized_rent * clamp(time.t / 18.0, 0.0, 1.0)
 ```
 
-Read the fraction as "months elapsed over months to stabilize." Variants are one edit each: a delayed ramp starts the clock later (`clamp((time.t - 6) / 18.0, 0.0, 1.0)` — nothing for six months, then the climb); a ramp *down* mirrors it (`1.0 - clamp(...)` — a sunset clause, a declining subsidy); an S-curve replaces the straight line when the deal justifies the sophistication. The ramp multiplies a *stabilized* claim, which keeps two assumptions a committee argues about separately — how much at full run-rate, and how long to get there — in two visibly separate places.
+Read the fraction as "months elapsed over months to stabilize." Variants are one edit each:
+
+- A delayed ramp starts the clock later: `clamp((time.t - 6) / 18.0, 0.0, 1.0)` gives nothing for six months, then the climb.
+- A ramp *down* mirrors it: `1.0 - clamp(...)` for a sunset clause or a declining subsidy.
+- An S-curve replaces the straight line when the deal justifies the sophistication.
+
+The ramp multiplies a *stabilized* claim. That keeps two assumptions a committee argues about separately — how much at full run-rate, and how long to get there — in two visibly separate places.
 
 ## The guard: active when
 
@@ -67,7 +73,7 @@ stream venue.percentage_rent on entity asset.venue outflow currency USD {
 }
 ```
 
-`active when` is a boolean expression; in periods where it is false the stream simply does not occur. You could bury the same logic in the amount (`if(cond, x, 0)`), and the engine would agree — but the guard states something the `if` hides: *this claim conditionally exists*, versus *this claim is sometimes zero*. A percentage-rent kicker, a covenant-triggered fee, an incentive that switches on — these exist conditionally, and writing the condition as a guard puts it where a reviewer looks for conditions rather than inside arithmetic. Notice too how the guard reads another stream: `series_sum` over the single period `time.t` is that period's revenue, and a wider window is a rolling test (`series_sum("venue.revenue", 0, time.t)` is revenue to date — a cumulative trigger). Either way the kicker's trigger and the revenue it taxes cannot drift apart, because there is one revenue stream and everything reads it.
+`active when` is a boolean expression; in periods where it is false the stream simply does not occur. You could bury the same logic in the amount, as `if(cond, x, 0)`, and the engine would agree. But the guard states something the `if` hides: *this claim conditionally exists*, versus *this claim is sometimes zero*. A percentage-rent kicker, a covenant-triggered fee, an incentive that switches on — these exist conditionally, and writing the condition as a guard puts it where a reviewer looks for conditions rather than inside arithmetic. Notice too how the guard reads another stream. `series_sum` over the single period `time.t` is that period's revenue. A wider window makes a rolling test: `series_sum("venue.revenue", 0, time.t)` is revenue to date, a cumulative trigger. Either way the kicker's trigger and the revenue it taxes cannot drift apart, because there is one revenue stream and everything reads it.
 
 ## Phase gating
 
@@ -78,7 +84,7 @@ Chapter 2 introduced phases as named spans; the idiom is letting them carry *all
 schedule every month from phase_start("operations") to phase_end("operations")
 ```
 
-Combined with `on phase_enter("…")` for one-shots (the demolition cost, the refinancing fee), a well-phased model concentrates every date into the phase declarations at the top. The payoff compounds with model size: when construction slips a quarter, a dateless model *re-derives itself* from one edited line — the schedules follow the phases, the ramps key off phase-relative clocks, and nothing else was ever told a date. The capstone's model is built this way from its first chapter, and slipping its timeline deliberately is one of that part's exercises.
+Combined with `on phase_enter("…")` for one-shots (the demolition cost, the refinancing fee), a well-phased model concentrates every date into the phase declarations at the top. The payoff compounds with model size. When construction slips a quarter, a dateless model *re-derives itself* from one edited line: the schedules follow the phases, the ramps key off phase-relative clocks, and nothing else was ever told a date. The capstone's model is built this way from its first chapter, and slipping its timeline deliberately is one of that part's exercises.
 
 ## Composing the kit
 
@@ -96,9 +102,9 @@ Phase gating in the schedule, a maturity guard, and an amount that is *stepped e
 
 ## What can go wrong
 
-**A ramp clock in integer time.** `time.t / 18` and `time.t / 18.0` agree here — arithmetic is decimal throughout — but write the denominator with the decimal point anyway: the reviewer reading `18.0` knows instantly a fraction was intended, not integer bucketing with `round_down`. Legibility is the habit even where the engine forgives.
+**A ramp clock in integer time.** `time.t / 18` and `time.t / 18.0` agree here, because arithmetic is decimal throughout. Write the denominator with the decimal point anyway. The reviewer reading `18.0` knows instantly that a fraction was intended, not integer bucketing with `round_down`. Legibility is the habit even where the engine forgives.
 
-**A guard that references what it gates.** `active when` on stream X cannot read X's own series — the condition would gate its own input. The refusal comes from the evaluation-order rule you will meet in the machinery chapter: streams evaluate in dependency order, and a stream reading its own output is a cycle — the one dependency no order can satisfy. Chains are fine to any depth (a fee may read a fee that reads revenue); only a genuine loop is refused, with its path named.
+**A guard that references what it gates.** `active when` on stream X cannot read X's own series — the condition would gate its own input. The refusal comes from the evaluation-order rule you will meet in the machinery chapter. Streams evaluate in dependency order, and a stream reading its own output is a cycle — the one dependency no order can satisfy. Chains are fine to any depth (a fee may read a fee that reads revenue); only a genuine loop is refused, with its path named.
 
 **Stepping on the wrong anniversary.** `round_down(time.t / 12, 0)` steps at periods 12, 24, 36 — anniversaries *of the model's origin*. A lease that bumps each January inside a model that starts in July steps at the wrong month. Phase-relative or date-based conditions fix it; the point is to notice that "annually" always means *from when*, and the model makes you answer.
 

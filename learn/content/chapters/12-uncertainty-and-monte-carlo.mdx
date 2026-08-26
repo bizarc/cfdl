@@ -6,7 +6,7 @@ order: 12
 track: core
 ---
 
-Chapter 6 let an assumption carry a distribution and promised the payoff later. This is later. A model whose inputs are distributions can answer the question every point estimate dodges: *how wrong could this be, and with what probability?* The same file that produced your base case produces the distribution around it — no second model, no bolted-on add-in, no copy that drifts.
+Chapter 6 let an assumption carry a distribution and promised the payoff later. This is later. A model whose inputs are distributions can answer the question every point estimate dodges: *how wrong could this be, and with what probability?* The same file that produced your base case produces the distribution around it. No second model, no bolted-on add-in, no copy that drifts.
 
 ## Distributions, and choosing among them
 
@@ -48,7 +48,7 @@ Notice the ramp now divides by a *distributed* `months_to_stabilize` — the unc
 
 ## Running trials
 
-The model can carry its own run policy as a statement — `run monte_carlo trials 2000 seed 42`, with both numbers required — or the run configuration can supply it, which wins when both exist and is where this course keeps it:
+The model can carry its own run policy as a statement: `run monte_carlo trials 2000 seed 42`, with both numbers required. The run configuration can supply it instead. The configuration wins when both exist, and it is where this course keeps it:
 
 ```json
 {
@@ -57,17 +57,17 @@ The model can carry its own run policy as a statement — `run monte_carlo trial
 }
 ```
 
-Each trial draws every distributed assumption once, runs the full model, and records the results; the output then reports, alongside your deterministic case, the distribution of every metric — mean, standard deviation, min and max, and percentiles from p01 to p99.
+Each trial draws every distributed assumption once, runs the full model, and records the results. The output then reports the distribution of every metric alongside your deterministic case: mean, standard deviation, min and max, and percentiles from p01 to p99.
 
-Two properties of the machinery matter to a practitioner. **The seed makes trials reproducible**: same model, same configuration, same two thousand paths, byte for byte, on any machine — "the p05 was −1.2 million" is a checkable statement in a committee memo, not a weather report. And **each assumption owns its own draw stream**, derived from the seed and the assumption independently — so adding a new distributed assumption does not reshuffle the draws of existing ones. Add a cost distribution and your rent paths stay *identical*, which means the change in the output is attributable to the assumption you added. Between-run comparability of this kind is exactly what add-in Monte Carlo tools quietly fail to provide.
+Two properties of the machinery matter to a practitioner. **The seed makes trials reproducible**: same model, same configuration, same two thousand paths, byte for byte, on any machine. "The p05 was −1.2 million" is a checkable statement in a committee memo, not a weather report. And **each assumption owns its own draw stream**, derived from the seed and the assumption independently — so adding a new distributed assumption does not reshuffle the draws of existing ones. Add a cost distribution and your rent paths stay *identical*, which means the change in the output is attributable to the assumption you added. Between-run comparability of this kind is exactly what add-in Monte Carlo tools quietly fail to provide.
 
 ## Reading a distribution like a practitioner
 
 The deterministic case runs through the distributions' central values, so the number the committee saw is still in the report, unchanged. Around it, the checks worth making on the percentiles, in the order they usually matter:
 
-1. **Check that the base case sits near the median.** If the deterministic NPV is far from p50, your central values and your distributions disagree about the deal — usually a skewed input (that LogNormal) pulling the mean away from the mode. Understand why before quoting either number.
+1. **Check that the base case sits near the median.** If the deterministic NPV is far from p50, your central values and your distributions disagree about the deal. The usual cause is a skewed input, such as that LogNormal, pulling the mean away from the mode. Understand why before quoting either number.
 2. **Read the p05, and decide whether the deal survives it.** The downside tail is the lender's and the risk committee's question. A deal with a fine mean and a fatal p05 is a different deal from one with the same mean and a boring p05; no point estimate distinguishes them.
-3. **Count the fraction of trials that go negative.** "Eleven percent of paths lose money" is the sentence that changes meetings — concrete, checkable, and impossible to produce from a base case and a downside case alone.
+3. **Count the fraction of trials that go negative.** "Eleven percent of paths lose money" is the sentence that changes meetings. It is concrete, it is checkable, and a base case plus a downside case cannot produce it.
 4. **Find the input that drives the spread.** Widen one distribution at a time and watch the output percentiles move. Ten minutes of this identifies the assumption worth diligence money — the one whose uncertainty actually propagates.
 
 ## Branching: when uncertainty is a fork, not a wobble
@@ -84,7 +84,7 @@ stream building.rollover_rent on entity asset.building inflow currency USD {
 }
 ```
 
-Each trial commits to one branch for its whole path — this is a *fork in the world*, not noise around a level — and the output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a year starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
+Each trial commits to one branch for its whole path. This is a *fork in the world*, not noise around a level. The output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a year starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
 
 ## What can go wrong
 

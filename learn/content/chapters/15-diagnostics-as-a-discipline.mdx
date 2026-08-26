@@ -6,11 +6,19 @@ order: 15
 track: deep
 ---
 
-The core track can skip this chapter, though it is the deep dive most worth not skipping. You have been *reading* refusals since chapter 2; this chapter is about reading them the way an experienced practitioner does — as a structured message from a specific stage, carrying a specific promise, pointing at a specific class of fix. The compiler's error output is not an obstacle course before the results appear. It is half the product: a model that moves money is validated by what it *refuses* as much as by what it computes.
+The core track can skip this chapter, though it is the deep dive most worth not skipping. You have been *reading* refusals since chapter 2. This chapter is about reading them the way an experienced practitioner does: as a structured message from a specific stage, carrying a specific promise, and pointing at a specific class of fix. The compiler's error output is not an obstacle course before the results appear. It is half the product: a model that moves money is validated by what it *refuses* as much as by what it computes.
 
 ## Anatomy of a refusal
 
-Every diagnostic carries the same parts: a **code** (`E2103`), a **severity**, a **message** stating the rule, the **file and span** — line and column, start to end — of the offending text, and where it helps, a **hint** naming the likely fix and **related locations** (the other end of an import cycle, the time grid a schedule overruns). Rendered on the command line:
+Every diagnostic carries the same parts:
+
+- A **code**, such as `E2103`.
+- A **severity**.
+- A **message** stating the rule.
+- The **file and span** of the offending text — line and column, start to end.
+- Where it helps, a **hint** naming the likely fix, and **related locations**: the other end of an import cycle, or the time grid a schedule overruns.
+
+Rendered on the command line:
 
 ```text
 error[E2103_SCHEDULE_OUT_OF_BOUNDS] revenue.cfdl:14:12
@@ -18,7 +26,9 @@ error[E2103_SCHEDULE_OUT_OF_BOUNDS] revenue.cfdl:14:12
   hint: the grid ends 2028-12; this schedule runs to 2029-12
 ```
 
-Two properties are worth trusting because they are designed, not accidental. **Codes are stable and never reused** — an `E2103` today is an `E2103` forever, so a team's internal notes ("we hit E1201 whenever someone splits the debt file") stay true, and tooling can key on codes without fear. **Messages name the rule, not just the symptom** — "must be a dotted qualified name (e.g. cre.lease.rent)" teaches the grammar in the error itself. When a message quotes your own model's vocabulary back at you — the schedule's dates, the phase's name — that is the compiler using the resolution work it has already done to make the refusal *about your model* rather than about syntax.
+Two properties are worth trusting because they are designed, not accidental. **Codes are stable and never reused.** An `E2103` today is an `E2103` forever. A team's internal notes ("we see E1201 whenever someone splits the debt file") stay true, and tooling can key on codes without fear.
+
+**Messages name the rule, not just the symptom.** "Must be a dotted qualified name (e.g. cre.lease.rent)" teaches the grammar in the error itself. Sometimes a message quotes your own model's vocabulary back at you — the schedule's dates, the phase's name. That is the compiler spending the resolution work it has already done to make the refusal *about your model* rather than about syntax.
 
 ## The taxonomy is a map of the pipeline
 
@@ -44,13 +54,13 @@ The debugging discipline this course has been building piecewise, assembled:
 2. **It compiles but a number is wrong: descend.** Chapter 3's four steps — which streams, which periods, which settings, then the claim. The wrongness is always *located*; the series tell you where.
 3. **It compiles but a number is missing: check existence gates.** A guard that is never true, an event that never fired, a schedule whose window is empty, a waterfall step starved by seniority. Missing cash is almost always a *condition*, not an amount.
 4. **Two runs disagree: diff configurations, then IRs.** Deterministic evaluation means disagreement has a cause in the inputs; the previous chapter gave you both diffs.
-5. **You and a colleague disagree: exchange model hash and seed.** If the hashes match and the numbers differ, the difference is configuration — and now the conversation is about a small JSON file, not about trust.
+5. **You and a colleague disagree: exchange model hash and seed.** If the hashes match and the numbers differ, the difference is configuration. The conversation is now about a small JSON file, not about trust.
 
-What has no place in the method: rerunning unchanged code hoping for different output (deterministic), sprinkling magnitude tweaks to "see what moves" (every claim is legible — read it), or deleting-and-retyping (the span already names the offending text). The habits imported from debugging nondeterministic systems are not merely wasted here; they destroy the audit trail of deliberate claims that is the model's whole value.
+Three habits have no place in the method. Do not rerun unchanged code hoping for different output; the engine is deterministic. Do not sprinkle magnitude tweaks to "see what moves"; every claim is legible, so read it. Do not delete and retype; the span already names the offending text. The habits imported from debugging nondeterministic systems are not merely wasted here; they destroy the audit trail of deliberate claims that is the model's whole value.
 
 ## Errors as curriculum
 
-A closing reframe for readers who teach or lead teams. Because every refusal states a rule, the set of diagnostics *is* a syllabus of the language's semantics — and deliberately triggering them is the fastest fluency drill available. The exercises in this course that said "break it on purpose" were building exactly this: a practitioner who has *seen* E1201's cycle report, E2103's overrun span, and the first-period `prev` refusal reads real errors the way a chess player reads a familiar position. Ten minutes of deliberate breakage per construct, once, is the cheapest expertise you will ever buy.
+A closing reframe for readers who teach or lead teams. Because every refusal states a rule, the set of diagnostics *is* a syllabus of the language's semantics — and deliberately triggering them is the fastest fluency drill available. The exercises in this course that said "break it on purpose" were building exactly this. A practitioner who has *seen* E1201's cycle report, E2103's overrun span, and the first-period `prev` refusal reads real errors the way a chess player reads a familiar position. Ten minutes of deliberate breakage per construct, once, is the cheapest expertise you will ever buy.
 
 ## On your own
 
