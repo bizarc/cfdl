@@ -34,8 +34,8 @@ assume pref_rate        = 0.08
 assume sponsor_share    = 0.10
 
 // Development cost per period and its running total. Declared as curves so
-// the facility's recurrence can read them: `next` sees curves, but never a
-// stream (docs/03 §3.1), and cost here is a pure function of time.
+// the facility's recurrence can read them. Cost here is a pure function of
+// time.
 //
 // EVERY period is declared, including the zeros. A step curve is
 // flat-forward (docs/03 §4): omit the quiet months and the last construction
@@ -574,7 +574,7 @@ stream cre.pierce_closings on entity asset.east inflow currency USD {
 
 // Cash available to repay the facility: condo closings net of selling costs,
 // plus the two tower sales net of cost of sale. Every period is declared, so
-// the step curve cannot hold a value forward into a quiet month.
+// a quiet month reads zero.
 curve loan_proceeds {
   2011-09: 0.0000
   2011-10: 0.0000
@@ -764,8 +764,7 @@ entity asset facility : Asset.Financial {
           next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value("dev_cost", time.date) - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date)) - min(inputs.equity_commitment, curve_value("dev_cost_cum", edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value("loan_proceeds", time.date))))
 }
 
-// Interest is capitalized, so it is never a cash line -- it is repaid inside
-// the principal repayment. That is the convention the reference workbook uses.
+// Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt_proceeds
@@ -799,10 +798,10 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 }
 
 // ------------------------------------------------------------ the JV capital
-// A development JV does not distribute while the deal is live. Cash accrues to
-// the venture and is split once, when the last unit closes, so the preference
-// and the capital are CUMULATIVE quantities carried as balances rather than
-// re-derived at the distribution -- 17_ordered_waterfall.md section 10.
+// Cash accrues to the venture and is split once, when the last unit closes.
+// The preference and the capital are therefore CUMULATIVE balances, carried
+// forward rather than re-derived at the distribution --
+// 17_ordered_waterfall.md section 10.
 //
 // Both partners fund pro rata and nothing is returned before the split, so the
 // two balances only grow. Their difference is the accrued preference.
@@ -834,7 +833,7 @@ entity asset jv : Asset.Financial {
 // would draw only the final month. The pot is the streams' own running sum
 // since inception instead -- cumulative net cash, after every cost, every draw
 // and the facility payoff. The waterfall is named outside the `cre.` prefix so
-// the selector cannot match its own steps (E1342).
+// the selector matches the deal's streams and no distribution step (E1342).
 //
 // There is no return-of-capital tier, and that is a property of the pot rather
 // than of the deal. Contributions are outflows inside the streams, so a running

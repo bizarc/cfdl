@@ -90,7 +90,9 @@
     text-align:left; padding:.44rem .8rem .44rem 0;
     border-bottom:1px solid var(--rule); vertical-align:baseline;
   }
-  th{font-weight:600; font-size:.76rem; letter-spacing:.03em; color:var(--muted)}
+  th{font-weight:600; font-size:.76rem; letter-spacing:.03em; color:var(--muted);
+     white-space:nowrap}
+  th.grp{text-align:center; border-bottom:1px solid var(--rule); padding-bottom:.3rem}
   td.num,th.num{
     text-align:right; font-family:var(--mono);
     font-variant-numeric:tabular-nums; padding-right:0;
@@ -272,16 +274,11 @@
     </p>
 
     <div class="note">
-      This case excludes two further trades. One prices to $7,170,476 per unit, because
-      the units on that parcel form part of a larger transaction. The other prices to
-      $194,444 per unit, and no other observation supports that level. Neither one is
-      evidence. This page names both, so the exclusion stays visible.
+      This case excludes two further trades. One prices to $7,170,476 per unit, because the units on that parcel form part of a larger transaction. The other prices to $194,444 per unit, which no other observation supports.
     </div>
 
     <p>
-      One recorded figure favors the project. Arlington sets a guideline land value of
-      $78,000 per rental unit for Metro high-rise. That values the 772 rental units at
-      $60,216,000. The sponsor paid $52,000,000, or 13.6% below that basis.
+      Arlington sets a guideline land value of $78,000 per rental unit for Metro high-rise. That values the 772 rental units at $60,216,000. The sponsor paid $52,000,000, or 13.6% below that basis.
     </p>
   </section>
 
@@ -293,12 +290,12 @@
 
     <h3>The County sets the timing, not only the amount</h3>
     <p>
-      The County ties each affordable-housing tranche to the first partial certificate of occupancy for one tower. The timing of $7,545,485 is therefore entitlement fact. The model pays each tranche on its own tower&rsquo;s date, so the cash lands when the condition is met.
+      The County ties each affordable-housing tranche to the first partial certificate of occupancy for its tower. The model pays each of the three on its own tower&rsquo;s date, so $7,545,485 moves as the buildings complete.
     </p>
 
     <h3>One model, two strategies</h3>
     <p>
-      Both strategies run from one model, on one set of costs and one construction facility. A single setting chooses the exit. So the two columns in the table below differ only in when the venture sells, and every other figure is held identical.
+      Both strategies run from one model, on one set of costs and one construction facility. The two columns in the table below differ only in when the venture sells. Every other figure is identical.
     </p>
 
 <pre><code>waterfall <span class="cmt">// the facility is repaid from condominium closings, then from the sale or the refinancing</span>
@@ -308,7 +305,7 @@
 
     <h3>The exit is derived, not stated</h3>
     <p>
-      The model declares a twelve-month projection tail. The sale reads the income of the year after it, over the guideline loaded cap, times the market factor. A purchaser underwrites the same year. Scenario A derives $734,980 per unit against Evo&rsquo;s recorded $735,385, which checks the method.
+      The sale is valued on the twelve months of income that follow it, divided by the guideline loaded cap and adjusted by the market factor. That is the year a purchaser underwrites. Scenario A produces $734,980 per unit. Evo sold at $735,385.
     </p>
 
     <h3>The south tower is 58% leased when scenario A sells</h3>
@@ -400,10 +397,14 @@
         <caption>Net to equity, by market factor</caption>
         <thead>
           <tr>
-            <th class="num">Factor</th>
-            <th class="num">A &mdash; net</th><th class="num">A &mdash; multiple</th><th class="num">A &mdash; return</th>
-            <th class="num">B &mdash; net</th><th class="num">B &mdash; multiple</th><th class="num">B &mdash; return</th>
-            <th>Basis</th>
+            <th rowspan="2" class="num">Factor</th>
+            <th colspan="3" class="grp">A &mdash; sell in lease-up</th>
+            <th colspan="3" class="grp">B &mdash; hold five years</th>
+            <th rowspan="2">Basis</th>
+          </tr>
+          <tr>
+            <th class="num">Net</th><th class="num">Multiple</th><th class="num">Return</th>
+            <th class="num">Net</th><th class="num">Multiple</th><th class="num">Return</th>
           </tr>
         </thead>
         <tbody>
@@ -417,7 +418,7 @@
     </div>
 
     <p>
-      Two readings follow. The merchant build breaks even at a factor near <strong>0.95</strong>. Below that it returns less than the capital it used, and at the level Central Place traded it loses $37M. The five-year hold clears its capital across the whole range, and returns 1.474x at the 2026 discount.
+      The merchant build breaks even at a factor near <strong>0.95</strong>. Below that it returns less than the capital it used, and at the level Central Place traded it loses $37M. The five-year hold clears its capital across the whole range, and returns 1.474x at the 2026 discount.
     </p>
 
     <div class="note">
@@ -541,9 +542,9 @@ use pack &quot;cre&quot; version &quot;0.1.0&quot;
 //   growth         3.0%/yr, below BLS CUSR0000SEHA at 10yr 4.23% and 3yr 3.98%
 //   cost, debt, pace, condominium pricing, JV tiers -- projection
 //
-// THE EXIT IS DERIVED, NOT PICKED. Value is stabilized NOI at the exit date&#x27;s
-// rent level over the County&#x27;s guideline loaded cap, times a stated market
-// factor. The factor is 1.00 -- the guideline basis itself. The two market
+// THE EXIT IS DERIVED, NOT PICKED. The sale is valued on the twelve months of
+// income that follow it, read from the projection tail, divided by the County&#x27;s
+// guideline loaded cap and adjusted by a stated market factor. The factor is 1.00 -- the guideline basis itself. The two market
 // observations available bracket it: The Highlands sold at +32% to this basis
 // in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
 // would import a market call the record does not support.
@@ -709,8 +710,8 @@ stream cre.condo_closings on entity asset.project inflow currency USD {
 // PROJECTION. No instrument is recorded. SOFR at 2026-08-24 was 3.65% (FRED);
 // the spread over it is a projection. Equity funds to its commitment first, the
 // facility draws the residual, and interest capitalizes into the balance.
-// Every recurrence reads only `prev`, curves and inputs -- never a stream --
-// which is what keeps it acyclic by construction.
+// Each recurrence reads `prev`, the cost curves and the inputs, so every month
+// resolves from the month before it.
 entity asset facility : Asset.Financial {
   equity_funded init min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
                 next min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
@@ -721,8 +722,8 @@ entity asset facility : Asset.Financial {
   draw init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
        next min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
 
-  // Proceeds are composed from the two scenario curves rather than one, because
-  // a curve name cannot be chosen at runtime but an input can weight it.
+  // The facility is repaid from condominium closings, then from whichever
+  // liquidity event the scenario reaches: the sale, or the refinancing.
   repay init 0.0
         next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)),
                  max(0.0, curve_value(&quot;condo_proceeds&quot;, time.date)

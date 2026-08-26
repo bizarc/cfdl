@@ -251,7 +251,7 @@
     <span class="eyebrow">The model</span>
     <h2>Four things this deal requires</h2>
     <p>
-      The model is 853 lines of CFDL. It runs on a monthly grid. Four parts of the deal drive most of it.
+      The model is 852 lines of CFDL. It runs on a monthly grid. Four parts of the deal drive most of it.
     </p>
 
     <h3>Carrying a balance across periods</h3>
@@ -432,15 +432,15 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td>4.46% &mdash; implied by the sale</td><td class="num">84,206,257</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>5.15% &mdash; county guideline</td><td class="num">71,816,575</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>6.00%</td><td class="num">57,945,142</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>8.00%</td><td class="num">30,519,327</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>10.00%</td><td class="num">9,058,409</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>11.02% &mdash; at the return</td><td class="num">219</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>12.00%</td><td class="num">&minus;7,770,385</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>15.00%</td><td class="num">&minus;26,500,927</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
-          <tr><td>20.00%</td><td class="num">&minus;46,033,231</td><td class="num">11.0161%</td><td class="num">2.0466&times;</td></tr>
+          <tr><td>4.46% &mdash; implied by the sale</td><td class="num">84,206,257</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>5.15% &mdash; county guideline</td><td class="num">71,816,575</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>6.00%</td><td class="num">57,945,142</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>8.00%</td><td class="num">30,519,327</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>10.00%</td><td class="num">9,058,409</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>11.02% &mdash; at the return</td><td class="num">219</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>12.00%</td><td class="num">&minus;7,770,385</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>15.00%</td><td class="num">&minus;26,500,927</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
+          <tr><td>20.00%</td><td class="num">&minus;46,033,231</td><td class="num">11.0161%</td><td class="num">2.0466x</td></tr>
         </tbody>
       </table>
     </div>
@@ -528,7 +528,7 @@
       distribution. It runs as written. Four curves declare a value for every period of the 160-month grid. This listing abridges those runs of figures for length. The model itself carries them in full.
     </p>
     <details>
-      <summary>Show the model &mdash; 853 lines of CFDL</summary>
+      <summary>Show the model &mdash; 852 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-highlands&quot; currency USD
 use pack &quot;cre&quot; version &quot;0.1.0&quot;
@@ -565,8 +565,8 @@ assume pref_rate        = 0.08
 assume sponsor_share    = 0.10
 
 // Development cost per period and its running total. Declared as curves so
-// the facility&#x27;s recurrence can read them: `next` sees curves, but never a
-// stream (docs/03 §3.1), and cost here is a pure function of time.
+// the facility&#x27;s recurrence can read them. Cost here is a pure function of
+// time.
 //
 // EVERY period is declared, including the zeros. A step curve is
 // flat-forward (docs/03 §4): omit the quiet months and the last construction
@@ -771,7 +771,7 @@ stream cre.pierce_closings on entity asset.east inflow currency USD {
 
 // Cash available to repay the facility: condo closings net of selling costs,
 // plus the two tower sales net of cost of sale. Every period is declared, so
-// the step curve cannot hold a value forward into a quiet month.
+// a quiet month reads zero.
 curve loan_proceeds {
   2011-09: 0.0000
   2011-10: 0.0000
@@ -808,8 +808,7 @@ entity asset facility : Asset.Financial {
           next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value(&quot;loan_proceeds&quot;, time.date))))
 }
 
-// Interest is capitalized, so it is never a cash line -- it is repaid inside
-// the principal repayment. That is the convention the reference workbook uses.
+// Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt_proceeds
@@ -843,10 +842,10 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 }
 
 // ------------------------------------------------------------ the JV capital
-// A development JV does not distribute while the deal is live. Cash accrues to
-// the venture and is split once, when the last unit closes, so the preference
-// and the capital are CUMULATIVE quantities carried as balances rather than
-// re-derived at the distribution -- 17_ordered_waterfall.md section 10.
+// Cash accrues to the venture and is split once, when the last unit closes.
+// The preference and the capital are therefore CUMULATIVE balances, carried
+// forward rather than re-derived at the distribution --
+// 17_ordered_waterfall.md section 10.
 //
 // Both partners fund pro rata and nothing is returned before the split, so the
 // two balances only grow. Their difference is the accrued preference.
@@ -878,7 +877,7 @@ entity asset jv : Asset.Financial {
 // would draw only the final month. The pot is the streams&#x27; own running sum
 // since inception instead -- cumulative net cash, after every cost, every draw
 // and the facility payoff. The waterfall is named outside the `cre.` prefix so
-// the selector cannot match its own steps (E1342).
+// the selector matches the deal&#x27;s streams and no distribution step (E1342).
 //
 // There is no return-of-capital tier, and that is a property of the pot rather
 // than of the deal. Contributions are outflows inside the streams, so a running
