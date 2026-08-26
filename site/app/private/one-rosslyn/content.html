@@ -162,7 +162,7 @@
     </p>
     <div class="byline">
       <span>Arlington County Site Plan #419</span>
-      <span>170 monthly periods</span>
+      <span>164 monthly periods</span>
       <span>2023&ndash;2037</span>
     </div>
   </header>
@@ -288,41 +288,32 @@
   <hr>
 
   <section>
-    <span class="eyebrow">The model</span>
-    <h2>What the language does here</h2>
+    <span class="eyebrow">The modeling</span>
+    <h2>Four things this deal requires</h2>
 
     <h3>The County sets the timing, not only the amount</h3>
     <p>
-      The County ties each affordable-housing tranche to the first partial certificate of
-      occupancy for one tower. The timing of $7,545,485 is therefore entitlement fact. A
-      single obligation line cannot record it.
+      The County ties each affordable-housing tranche to the first partial certificate of occupancy for one tower. The timing of $7,545,485 is therefore entitlement fact. The model pays each tranche on its own tower&rsquo;s date, so the cash lands when the condition is met.
     </p>
 
     <h3>One model, two strategies</h3>
     <p>
-      A model cannot choose a curve by name at run time, but it can weight one by an input.
-      The construction facility composes its repayment from two scenario curves. One
-      declaration therefore carries both exit strategies, and the run configuration selects
-      between them.
+      Both strategies run from one model, on one set of costs and one construction facility. A single setting chooses the exit. So the two columns in the table below differ only in when the venture sells, and every other figure is held identical.
     </p>
 
-<pre><code>waterfall <span class="cmt">// the facility repays from whichever curve the scenario selects</span>
+<pre><code>waterfall <span class="cmt">// the facility is repaid from condominium closings, then from the sale or the refinancing</span>
   max(0.0, curve_value("condo_proceeds", time.date)
          + curve_value("exit_a_proceeds", time.date) * (1.0 - inputs.scenario_b)
          + curve_value("refi_proceeds", time.date) * inputs.scenario_b)</code></pre>
 
     <h3>The exit is derived, not stated</h3>
     <p>
-      Value is stabilized net operating income at the exit date, over the guideline loaded
-      cap, times the market factor. Scenario A derives $734,980 per unit. Evo recorded
-      $735,385. That agreement is a check on the method, not a coincidence.
+      The model declares a twelve-month projection tail. The sale reads the income of the year after it, over the guideline loaded cap, times the market factor. A purchaser underwrites the same year. Scenario A derives $734,980 per unit against Evo&rsquo;s recorded $735,385, which checks the method.
     </p>
 
-    <h3>A lease-up sale is priced on stabilized income</h3>
+    <h3>The south tower is 58% leased when scenario A sells</h3>
     <p>
-      At the scenario A exit the south tower is roughly 58% leased. A buyer prices what the
-      building will produce, not what it produces that month. In-place income understates
-      that sale by about $140M. The Highlands towers sold at 83% and 60% occupancy.
+      At the scenario A exit the south tower is roughly 58% leased, so the sale is priced on stabilized income. In-place income would understate it by about $140M. The Highlands towers sold at 83% and 60% occupancy.
     </p>
   </section>
 
@@ -347,11 +338,11 @@
           <tr><td>Construction cost</td><td class="num">555,953,894</td><td class="num">555,953,894</td></tr>
           <tr><td>Capitalized interest</td><td class="num">58,451,635</td><td class="num">70,146,419</td></tr>
           <tr><td>Permanent loan</td><td class="num">&mdash;</td><td class="num">347,217,832</td></tr>
-          <tr><td>Exit value</td><td class="num">567,404,298</td><td class="num">670,867,718</td></tr>
-          <tr><td>Exit per unit</td><td class="num">734,980</td><td class="num">869,000</td></tr>
-          <tr><td>Net to equity</td><td class="num">28,591,606</td><td class="num">203,539,431</td></tr>
-          <tr><td>Equity multiple</td><td class="num">1.094x</td><td class="num">1.671x</td></tr>
-          <tr><td>Return</td><td class="num">2.02%</td><td class="num">6.13%</td></tr>
+          <tr><td>Exit value</td><td class="num">567,404,298</td><td class="num">691,127,415</td></tr>
+          <tr><td>Exit per unit</td><td class="num">734,980</td><td class="num">895,243</td></tr>
+          <tr><td>Net to equity</td><td class="num">28,591,606</td><td class="num">223,799,127</td></tr>
+          <tr><td>Equity multiple</td><td class="num">1.094x</td><td class="num">1.738x</td></tr>
+          <tr><td>Return</td><td class="num">2.02%</td><td class="num">6.65%</td></tr>
         </tbody>
       </table>
     </div>
@@ -381,7 +372,7 @@
         </thead>
         <tbody>
           <tr><td>A &mdash; sell in lease-up</td><td class="num">28,591,606</td><td class="num">28,591,605.61</td><td class="num exact">0.39</td></tr>
-          <tr><td>B &mdash; hold five years</td><td class="num">203,539,431</td><td class="num">203,539,430.96</td><td class="num exact">0.04</td></tr>
+          <tr><td>B &mdash; hold five years</td><td class="num">223,799,128</td><td class="num">223,799,127.44</td><td class="num exact">0.56</td></tr>
         </tbody>
       </table>
     </div>
@@ -416,20 +407,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td class="num">0.884</td><td class="num">&minus;37,227,293</td><td class="num">0.877x</td><td class="num">&minus;2.90%</td><td class="num">125,718,776</td><td class="num">1.415x</td><td class="num">4.22%</td><td>Central Place, 2026</td></tr>
-          <tr><td class="num">0.950</td><td class="num">221,391</td><td class="num">1.001x</td><td class="num">0.02%</td><td class="num">169,996,045</td><td class="num">1.561x</td><td class="num">5.35%</td><td>&mdash;</td></tr>
-          <tr><td class="num">1.000</td><td class="num">28,591,606</td><td class="num">1.094x</td><td class="num">2.02%</td><td class="num">203,539,431</td><td class="num">1.671x</td><td class="num">6.13%</td><td>guideline basis</td></tr>
-          <tr><td class="num">1.100</td><td class="num">85,332,035</td><td class="num">1.281x</td><td class="num">5.59%</td><td class="num">270,626,203</td><td class="num">1.892x</td><td class="num">7.52%</td><td>&mdash;</td></tr>
-          <tr><td class="num">1.321</td><td class="num">210,728,385</td><td class="num">1.695x</td><td class="num">12.00%</td><td class="num">418,887,969</td><td class="num">2.381x</td><td class="num">10.04%</td><td>The Highlands, 2022</td></tr>
+          <tr><td class="num">0.884</td><td class="num">&minus;37,227,293</td><td class="num">0.877x</td><td class="num">&minus;2.90%</td><td class="num">143,628,347</td><td class="num">1.474x</td><td class="num">4.70%</td><td>Central Place, 2026</td></tr>
+          <tr><td class="num">0.950</td><td class="num">221,391</td><td class="num">1.001x</td><td class="num">0.02%</td><td class="num">189,242,757</td><td class="num">1.624x</td><td class="num">5.81%</td><td>&mdash;</td></tr>
+          <tr><td class="num">1.000</td><td class="num">28,591,606</td><td class="num">1.094x</td><td class="num">2.02%</td><td class="num">223,799,127</td><td class="num">1.738x</td><td class="num">6.57%</td><td>guideline basis</td></tr>
+          <tr><td class="num">1.100</td><td class="num">85,332,035</td><td class="num">1.281x</td><td class="num">5.59%</td><td class="num">292,911,869</td><td class="num">1.966x</td><td class="num">7.94%</td><td>&mdash;</td></tr>
+          <tr><td class="num">1.321</td><td class="num">210,728,385</td><td class="num">1.695x</td><td class="num">12.00%</td><td class="num">445,651,028</td><td class="num">2.470x</td><td class="num">10.44%</td><td>The Highlands, 2022</td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      Two readings follow. The merchant build breaks even at a factor near
-      <strong>0.95</strong>. Below that it returns less than the capital it consumed, and
-      at the level Central Place traded it loses $37M. The five-year hold clears its
-      capital across the whole range, and still returns 1.415x at the 2026 discount.
+      Two readings follow. The merchant build breaks even at a factor near <strong>0.95</strong>. Below that it returns less than the capital it used, and at the level Central Place traded it loses $37M. The five-year hold clears its capital across the whole range, and returns 1.474x at the 2026 discount.
     </p>
 
     <div class="note">
@@ -449,8 +437,7 @@
     <span class="eyebrow">Sensitivity</span>
     <h2>Which numbers are structural, and which are conventions</h2>
     <p>
-      Present value depends on a rate somebody chooses. Return and multiple do not. The
-      table values the same cash flows at eight rates.
+      The table values the same cash flows at eight discount rates.
     </p>
 
     <div class="scroll">
@@ -460,23 +447,20 @@
           <tr><th class="num">Discount rate</th><th class="num">Net present value</th><th class="num">Return</th><th class="num">Multiple</th></tr>
         </thead>
         <tbody>
-          <tr><td class="num">4.00%</td><td class="num">50,294,087</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">5.00%</td><td class="num">24,601,947</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">6.00%</td><td class="num">2,595,298</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">6.1289%</td><td class="num">&minus;514</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">8.00%</td><td class="num">&minus;32,335,273</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">10.00%</td><td class="num">&minus;57,774,530</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">15.00%</td><td class="num">&minus;94,197,682</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
-          <tr><td class="num">20.00%</td><td class="num">&minus;108,426,736</td><td class="num">6.1289%</td><td class="num">1.6712x</td></tr>
+          <tr><td class="num">4.00%</td><td class="num">62,147,515</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">5.00%</td><td class="num">35,002,247</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">6.00%</td><td class="num">11,731,930</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">6.5696%</td><td class="num">30</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">8.00%</td><td class="num">&minus;25,258,397</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">10.00%</td><td class="num">&minus;52,267,303</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">15.00%</td><td class="num">&minus;91,197,858</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
+          <tr><td class="num">20.00%</td><td class="num">&minus;106,749,905</td><td class="num">6.5696%</td><td class="num">1.7380x</td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      Present value moves by $159 million across the range. Return and multiple do not move
-      at all, because the model solves them from the cash flows. The row at 6.1289% is the
-      arithmetic check: discount at the reported return and the value falls to
-      &minus;514 on a deal of $203 million.
+      Present value moves by $169 million across the range. Return and multiple do not move at all, because the model solves them from the cash flows. The row at 6.5696% is the arithmetic check: discount at the reported return and the value falls to 30 on a deal of $224 million.
     </p>
 
     <p>
@@ -505,8 +489,7 @@
         recently.
       </li>
       <li>
-        Scenario B exits at $869,000 per unit, above every recorded comparable. The figure
-        is 2037 dollars after eleven years of growth.
+        Scenario B exits at $895,243 per unit, above every recorded comparable. The figure is 2037 dollars after eleven years of growth.
       </li>
       <li>
         The joint-venture tiers state a structure, not the partnership&rsquo;s economics.
@@ -526,11 +509,11 @@
     <h2>The model in full</h2>
     <p>
       This is the whole model. It runs as written. Six curves declare a value for every
-      period of the 170-month grid, and those runs of figures are abridged here for length.
+      period of the 164-month grid, and those runs of figures are abridged here for length.
     </p>
 
     <details>
-      <summary>Show the model &mdash; 1267 lines of CFDL</summary>
+      <summary>Show the model &mdash; 1233 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-one-rosslyn&quot; currency USD
 
@@ -565,12 +548,11 @@ use pack &quot;cre&quot; version &quot;0.1.0&quot;
 // in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
 // would import a market call the record does not support.
 //
-// A lease-up sale is priced on STABILIZED NOI, not on in-place NOI. At the
-// scenario-A exit the south tower is roughly 58% leased; pricing that on
-// in-place income understates the sale by about $140M, and is not what a buyer
-// does. The Highlands towers sold at 83% and 60% occupancy.
+// At the scenario-A exit the south tower is roughly 58% leased, so that sale is
+// priced on stabilized NOI. In-place income would understate it by about $140M.
+// The Highlands towers sold at 83% and 60% occupancy.
 
-time calendar monthly from 2023-11 for 170
+time calendar monthly from 2023-11 for 164 project 12
 
 // 0 = merchant build, 1 = build to core. Every scenario-dependent stream is
 // weighted by this, so one model carries both and run.json selects.
@@ -604,9 +586,9 @@ curve dev_cost {
   2023-12: 0.0000
   2024-01: 0.0000
   2024-02: 0.0000
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 0.0000
-  2037-12: 0.0000
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 0.0000
+  2037-06: 0.0000
 }
 
 
@@ -617,9 +599,9 @@ curve units_occupied {
   2023-12: 0.0000
   2024-01: 0.0000
   2024-02: 0.0000
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 733.4000
-  2037-12: 733.4000
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 733.4000
+  2037-06: 733.4000
 }
 
 
@@ -629,9 +611,9 @@ curve condo_proceeds {
   2023-12: 0.0000
   2024-01: 0.0000
   2024-02: 0.0000
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 0.0000
-  2037-12: 0.0000
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 0.0000
+  2037-06: 0.0000
 }
 
 // Cumulative development cost, which is what the equity commitment is
@@ -641,9 +623,9 @@ curve dev_cost_cum {
   2023-12: 52000000.00
   2024-01: 52000000.00
   2024-02: 52000000.00
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 624172206.51
-  2037-12: 624172206.51
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 624172206.51
+  2037-06: 624172206.51
 }
 
 // Scenario A: the lease-up sale.
@@ -652,9 +634,9 @@ curve exit_a_proceeds {
   2023-12: 0.00
   2024-01: 0.00
   2024-02: 0.00
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 0.00
-  2037-12: 0.00
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 0.00
+  2037-06: 0.00
 }
 
 // Scenario B: permanent loan proceeds at stabilization.
@@ -663,9 +645,9 @@ curve refi_proceeds {
   2023-12: 0.00
   2024-01: 0.00
   2024-02: 0.00
-  // ... 164 further points, one per period, omitted for length
-  2037-11: 0.00
-  2037-12: 0.00
+  // ... 158 further points, one per period, omitted for length
+  2037-05: 0.00
+  2037-06: 0.00
 }
 
 
@@ -683,7 +665,7 @@ entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot
 // guideline land value for Metro high-rise is $78,000 per rental unit, putting
 // 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
 stream cre.development on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.capital.capex
   amount = curve_value(&quot;dev_cost&quot;, time.date)
 }
@@ -694,31 +676,31 @@ stream cre.development on entity asset.project outflow currency USD {
 // vacancy. Escalated from the Guidebook&#x27;s 2026-07 vintage, NOT frozen there --
 // this project delivers in 2030 and freezing 2026 dollars would understate it.
 stream cre.rent on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.revenue.base_rent
   amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.rent_per_unit
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
 }
 
 stream cre.parking on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.revenue.other
   amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.parking_per_space * 0.5
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
 }
 
 stream cre.opex on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.expense.opex
   amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.expenses_per_unit / 12.0
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t &lt;= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
 }
 
 // The weakest input in the case, and it carries the most weight: the NE tower&#x27;s
 // 73 units average 2,273 sq ft, far larger than the Pierce units this is
 // anchored to, and no Rosslyn condominium of that size has traded recently.
 stream cre.condo_closings on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.reversion
   amount = curve_value(&quot;condo_proceeds&quot;, time.date)
 }
@@ -757,7 +739,7 @@ entity asset facility : Asset.Financial {
 }
 
 stream cre.loan_draw on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.debt_proceeds
   amount = asset.facility.draw
 }
@@ -765,13 +747,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // Interest capitalizes: stated GROSS, an outflow against a matching draw, so
 // coverage stays measurable. The two legs net to zero in cash.
 stream cre.loan_interest on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.interest
   amount = asset.facility.interest
 }
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.debt_proceeds
   amount = asset.facility.interest
 }
@@ -780,7 +762,7 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {
 // folding it into debt service makes every coverage ratio in the period
 // meaningless. The cre pack says the same of a permanent loan&#x27;s balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.reversion
   amount = asset.facility.repay
 }
@@ -811,7 +793,10 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {
 stream cre.exit_b on entity asset.project inflow currency USD {
   schedule on 2037-06 end
   category investing.reversion
-  amount = 670867718.37 * inputs.market_factor * inputs.scenario_b
+  amount = (series_sum(&quot;cre.rent&quot;, time.t + 1, time.t + 12)
+          + series_sum(&quot;cre.parking&quot;, time.t + 1, time.t + 12)
+          + series_sum(&quot;cre.opex&quot;, time.t + 1, time.t + 12))
+         / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
 }
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {
