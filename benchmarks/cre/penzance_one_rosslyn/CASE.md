@@ -73,8 +73,8 @@ condominium pricing, growth, and the JV tiers.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 6 curves, 7 entities, 12 streams, 5 field recurrences, 2 scenarios |
-| Language features | `curve` lookups, entity field recurrences (`init`/`next`/`prev`), a scenario switch that weights streams through `inputs.*`, `pow` escalation from a stated index base, `part of` roll-up, `start` and `end` placement |
+| Declared | 6 curves, 7 entities, 12 streams, 5 field recurrences, 2 scenarios, a 12-month valuation tail |
+| Language features | `curve` lookups, entity field recurrences (`init`/`next`/`prev`), a scenario switch that weights streams through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation, `part of` roll-up, `start` and `end` placement |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, permanent refinance at stabilization, sale in lease-up |
 
 The model carries **two exit strategies over one set of facts**. The input
@@ -91,9 +91,7 @@ A model cannot select a curve name at runtime, but it can weight one by an
 input. So the facility composes its repayment from two scenario curves. That is
 what lets one model carry both strategies.
 
-**The model derives the exit rather than states it.** Value is stabilized NOI
-at the exit date's rent level, over the County's guideline loaded cap, times a
-stated market factor. The factor is **1.00**, which is the guideline basis
+**The engine derives the exit rather than states it.** The model declares a 12-month projection tail. The sale reads the twelve months of income after it, over the County's guideline loaded cap, times a stated market factor. Change the rent growth and the exit moves with it. The factor is **1.00**, which is the guideline basis
 itself.
 
 Two observations bracket that factor, and the case carries both as a range. The
@@ -115,11 +113,11 @@ Both scenarios tie to the workbook to under a dollar.
 | Construction cost | 555,953,894 | 555,953,894 |
 | Capitalized interest | 58,451,635 | 70,146,419 |
 | Permanent loan | — | 347,217,832 |
-| Exit value | 567,404,298 | 670,867,718 |
-| Exit per unit | 734,980 | 869,000 |
-| `model.total` | 28,591,606 | 203,539,431 |
-| `model.moic` | 1.094 | 1.671 |
-| `model.irr` | 2.02% | 6.13% |
+| Exit value | 567,404,298 | 691,127,415 |
+| Exit per unit | 734,980 | 895,243 |
+| `model.total` | 28,591,606 | 223,799,127 |
+| `model.moic` | 1.094 | 1.738 |
+| `model.irr` | 2.02% | 6.65% |
 
 Scenario A derives an exit of **$734,980 per unit**. Evo recorded **$735,385**,
 within 0.1%. Same submarket, same method, comparable product. That is a
@@ -127,7 +125,7 @@ cross-check rather than a coincidence.
 
 **The holding period is the deal.** The land, the building, the cost and the
 guideline basis are identical across both scenarios. A sale in lease-up returns
-1.09x. A five-year hold past stabilization returns 1.67x.
+1.09x. A five-year hold past stabilization returns 1.74x.
 
 ## The delta
 
@@ -146,10 +144,7 @@ the market factor first. It moves the answer more than any other single input.
 The NE tower's 73 units average 2,273 sq ft. The units that anchor them are far
 smaller. No Rosslyn condominium of that size has traded recently.
 
-**Scenario B exits at $869,000 per unit, above every recorded comparable.** The
-figure is 2037 dollars, after eleven years of growth. It follows from escalated
-NOI over the guideline cap, so it is internally consistent. It is also the
-figure most exposed to the growth rate and the market factor.
+**Scenario B exits at $895,243 per unit, above every recorded comparable.** The figure is 2037 dollars, after eleven years of growth. The engine derives it from the twelve months of income after the sale, over the guideline cap. It is the figure most exposed to the growth rate and the market factor.
 
 **The JV tiers are placeholders.** The Penzance and Baupost terms are private.
 The tier percentages state a structure, not the partnership's economics.

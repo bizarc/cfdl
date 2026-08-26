@@ -249,17 +249,14 @@
 
   <section>
     <span class="eyebrow">The model</span>
-    <h2>What the language does here</h2>
+    <h2>Four things this deal requires</h2>
     <p>
-      The model is 853 lines of CFDL. It runs on a monthly grid because interest accrues
-      monthly. Four features carry most of the work.
+      The model is 853 lines of CFDL. It runs on a monthly grid. Four parts of the deal drive most of it.
     </p>
 
     <h3>Carrying a balance across periods</h3>
     <p>
-      A construction loan balance depends on its own previous value. In CFDL that is a
-      field on the entity it describes. <code>prev</code> is the value at the last close.
-      A rule can read only completed values, so a circular reference cannot be written.
+      The facility balance depends on its own previous value: this month&rsquo;s interest accrues on last month&rsquo;s balance. The model states that directly, and reads <code>prev</code> for the value at the last close. Each month resolves from the month before it, so the balance is always well defined.
     </p>
 <pre><code>entity asset facility : Asset.Financial {
   <span class="cmt">// equity funds to its commitment first, then the loan draws</span>
@@ -272,8 +269,7 @@
 
     <h3>A recorded schedule of closings</h3>
     <p>
-      Every condominium closing is a declared point. The model reads the real absorption,
-      including the long tail through 2024 that a smooth assumption would hide.
+      Every condominium closing is a declared point, taken from the recorded sales. The model follows the real absorption, including the long tail of closings through 2024.
     </p>
 <pre><code>curve pierce_sellout {
   2021-08: 2056400.00
@@ -284,8 +280,7 @@
 
     <h3>An ordered priority of payments</h3>
     <p>
-      A distribution waterfall is a first-class construct. Steps pay in declaration order.
-      A step takes what is left if the pot is short, and one step must claim the residual.
+      The model states the partners&rsquo; payment priority once, in order, and a named partner takes the residual.
     </p>
 <pre><code>waterfall jv.distribution on entity asset.project {
   schedule on 2024-06 end
@@ -305,10 +300,7 @@
     <h3>Where in the period the cash falls</h3>
     <p>
       Rent received in January is not the same as rent received in September. CFDL
-      declares where in a period the cash falls, and discounts on that basis. The two
-      conventions differ by 13 basis points of return on this deal while leaving every
-      total identical. A model that reports only lifetime figures cannot distinguish
-      the two conventions.
+      declares where in a period the cash falls, and discounts on that basis. The two conventions differ by 13 basis points of return on this deal, and leave every total identical. The per-period series is what separates them, so this case asserts that series alongside the headline figures.
     </p>
   </section>
 
@@ -361,8 +353,7 @@
     <span class="eyebrow">The split</span>
     <h2>What each partner receives</h2>
     <p>
-      A development joint venture does not distribute while the deal is live. Cash accrues
-      to the venture and is split once, when the last condominium closes in June 2024. The preferred return and the contributed capital are therefore cumulative balances. Each balance advances month by month. The model does not recompute them at the distribution.
+      Cash accrues to the venture and is split once, when the last condominium closes in June 2024. The preferred return and the contributed capital are therefore cumulative balances. Each balance advances month by month. The model does not recompute them at the distribution.
     </p>
     <p>
       Two properties of the model follow from how the pot is defined. CFDL supplies

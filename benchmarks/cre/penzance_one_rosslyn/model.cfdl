@@ -32,12 +32,11 @@ use pack "cre" version "0.1.0"
 // in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
 // would import a market call the record does not support.
 //
-// A lease-up sale is priced on STABILIZED NOI, not on in-place NOI. At the
-// scenario-A exit the south tower is roughly 58% leased; pricing that on
-// in-place income understates the sale by about $140M, and is not what a buyer
-// does. The Highlands towers sold at 83% and 60% occupancy.
+// At the scenario-A exit the south tower is roughly 58% leased, so that sale is
+// priced on stabilized NOI. In-place income would understate it by about $140M.
+// The Highlands towers sold at 83% and 60% occupancy.
 
-time calendar monthly from 2023-11 for 170
+time calendar monthly from 2023-11 for 164 project 12
 
 // 0 = merchant build, 1 = build to core. Every scenario-dependent stream is
 // weighted by this, so one model carries both and run.json selects.
@@ -231,12 +230,6 @@ curve dev_cost {
   2037-04: 0.0000
   2037-05: 0.0000
   2037-06: 0.0000
-  2037-07: 0.0000
-  2037-08: 0.0000
-  2037-09: 0.0000
-  2037-10: 0.0000
-  2037-11: 0.0000
-  2037-12: 0.0000
 }
 
 
@@ -407,12 +400,6 @@ curve units_occupied {
   2037-04: 733.4000
   2037-05: 733.4000
   2037-06: 733.4000
-  2037-07: 733.4000
-  2037-08: 733.4000
-  2037-09: 733.4000
-  2037-10: 733.4000
-  2037-11: 733.4000
-  2037-12: 733.4000
 }
 
 
@@ -582,12 +569,6 @@ curve condo_proceeds {
   2037-04: 0.0000
   2037-05: 0.0000
   2037-06: 0.0000
-  2037-07: 0.0000
-  2037-08: 0.0000
-  2037-09: 0.0000
-  2037-10: 0.0000
-  2037-11: 0.0000
-  2037-12: 0.0000
 }
 
 // Cumulative development cost, which is what the equity commitment is
@@ -757,12 +738,6 @@ curve dev_cost_cum {
   2037-04: 624172206.51
   2037-05: 624172206.51
   2037-06: 624172206.51
-  2037-07: 624172206.51
-  2037-08: 624172206.51
-  2037-09: 624172206.51
-  2037-10: 624172206.51
-  2037-11: 624172206.51
-  2037-12: 624172206.51
 }
 
 // Scenario A: the lease-up sale.
@@ -931,12 +906,6 @@ curve exit_a_proceeds {
   2037-04: 0.00
   2037-05: 0.00
   2037-06: 0.00
-  2037-07: 0.00
-  2037-08: 0.00
-  2037-09: 0.00
-  2037-10: 0.00
-  2037-11: 0.00
-  2037-12: 0.00
 }
 
 // Scenario B: permanent loan proceeds at stabilization.
@@ -1105,12 +1074,6 @@ curve refi_proceeds {
   2037-04: 0.00
   2037-05: 0.00
   2037-06: 0.00
-  2037-07: 0.00
-  2037-08: 0.00
-  2037-09: 0.00
-  2037-10: 0.00
-  2037-11: 0.00
-  2037-12: 0.00
 }
 
 
@@ -1128,7 +1091,7 @@ entity party baupost  : CRE.Party.Investor { name = "The Baupost Group" }
 // guideline land value for Metro high-rise is $78,000 per rental unit, putting
 // 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
 stream cre.development on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.capital.capex
   amount = curve_value("dev_cost", time.date)
 }
@@ -1139,31 +1102,31 @@ stream cre.development on entity asset.project outflow currency USD {
 // vacancy. Escalated from the Guidebook's 2026-07 vintage, NOT frozen there --
 // this project delivers in 2030 and freezing 2026 dollars would understate it.
 stream cre.rent on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.revenue.base_rent
   amount = curve_value("units_occupied", time.date) * inputs.rent_per_unit
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t <= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b > 0.5, 1.0, if(time.t <= 95, 1.0, 0.0))
 }
 
 stream cre.parking on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.revenue.other
   amount = curve_value("units_occupied", time.date) * inputs.parking_per_space * 0.5
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t <= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b > 0.5, 1.0, if(time.t <= 95, 1.0, 0.0))
 }
 
 stream cre.opex on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2038-06
   category operating.expense.opex
   amount = curve_value("units_occupied", time.date) * inputs.expenses_per_unit / 12.0
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(time.t <= 95 + inputs.scenario_b * 68, 1.0, 0.0)
+         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b > 0.5, 1.0, if(time.t <= 95, 1.0, 0.0))
 }
 
 // The weakest input in the case, and it carries the most weight: the NE tower's
 // 73 units average 2,273 sq ft, far larger than the Pierce units this is
 // anchored to, and no Rosslyn condominium of that size has traded recently.
 stream cre.condo_closings on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.reversion
   amount = curve_value("condo_proceeds", time.date)
 }
@@ -1202,7 +1165,7 @@ entity asset facility : Asset.Financial {
 }
 
 stream cre.loan_draw on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.debt_proceeds
   amount = asset.facility.draw
 }
@@ -1210,13 +1173,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // Interest capitalizes: stated GROSS, an outflow against a matching draw, so
 // coverage stays measurable. The two legs net to zero in cash.
 stream cre.loan_interest on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.interest
   amount = asset.facility.interest
 }
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category financing.debt_proceeds
   amount = asset.facility.interest
 }
@@ -1225,7 +1188,7 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {
 // folding it into debt service makes every coverage ratio in the period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-12
+  schedule every month start from 2023-11 to 2037-06
   category investing.reversion
   amount = asset.facility.repay
 }
@@ -1256,7 +1219,10 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {
 stream cre.exit_b on entity asset.project inflow currency USD {
   schedule on 2037-06 end
   category investing.reversion
-  amount = 670867718.37 * inputs.market_factor * inputs.scenario_b
+  amount = (series_sum("cre.rent", time.t + 1, time.t + 12)
+          + series_sum("cre.parking", time.t + 1, time.t + 12)
+          + series_sum("cre.opex", time.t + 1, time.t + 12))
+         / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
 }
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {

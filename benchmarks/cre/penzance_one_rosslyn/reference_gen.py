@@ -24,13 +24,15 @@ T = tomllib.load(open(CASE / "inputs" / "one_rosslyn.toml", "rb"))
 PR, LAND, OB = T["program"], T["land"], T["obligations"]
 OP, CP, CN, FI, CD = T["operating"], T["comps"], T["construction"], T["finance"], T["condo"]
 
-M0, N = dt.date(2023, 11, 1), 170
+M0 = dt.date(2023, 11, 1)
+PROJECT = 12               # valuation tail: the year of income the sale is priced on
 T_START, T_MONTHS = 37, 42
 T_END = T_START + T_MONTHS - 1
 T_NE, T_NW, T_S = 79, 79, 85
 LEASEUP = 18
 T_STAB = T_S + LEASEUP
 A_EXIT, B_REFI, B_EXIT = T_S + 10, T_STAB, T_STAB + 60
+N = B_EXIT + 1             # the cash horizon closes on the scenario B sale
 CONDO0, CONDO_M = T_NE, 24
 GROWTH, MARKET_FACTOR = 0.03, 1.00
 PERM_SPREAD, PERM_LTV, PERM_AMORT = 0.0175, 0.60, 30
@@ -97,7 +99,7 @@ def stabilized_value(t):
 
 A_VALUE, B_VALUE = stabilized_value(A_EXIT), stabilized_value(B_EXIT)
 A_EXIT_T, B_EXIT_T = A_EXIT, B_EXIT
-HELD = f"if(time.t <= {A_EXIT} + inputs.scenario_b * {B_EXIT - A_EXIT}, 1.0, 0.0)"
+HELD = f"if(inputs.scenario_b > 0.5, 1.0, if(time.t <= {A_EXIT}, 1.0, 0.0))"
 
 PERM_RATE = FI["ust10"] + PERM_SPREAD
 PERM_PRINCIPAL = stabilized_value(B_REFI) * PERM_LTV
@@ -146,12 +148,11 @@ use pack "cre" version "0.1.0"
 // in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
 // would import a market call the record does not support.
 //
-// A lease-up sale is priced on STABILIZED NOI, not on in-place NOI. At the
-// scenario-A exit the south tower is roughly 58% leased; pricing that on
-// in-place income understates the sale by about $140M, and is not what a buyer
-// does. The Highlands towers sold at 83% and 60% occupancy.
+// At the scenario-A exit the south tower is roughly 58% leased, so that sale is
+// priced on stabilized NOI. In-place income would understate it by about $140M.
+// The Highlands towers sold at 83% and 60% occupancy.
 
-time calendar monthly from {ym(0)} for {N}
+time calendar monthly from {ym(0)} for {N} project {PROJECT}
 
 // 0 = merchant build, 1 = build to core. Every scenario-dependent stream is
 // weighted by this, so one model carries both and run.json selects.
@@ -236,21 +237,21 @@ stream cre.development on entity asset.project outflow currency USD {{
 // vacancy. Escalated from the Guidebook's 2026-07 vintage, NOT frozen there --
 // this project delivers in 2030 and freezing 2026 dollars would understate it.
 stream cre.rent on entity asset.project inflow currency USD {{
-  schedule every month start from {ym(0)} to {ym(N-1)}
+  schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.revenue.base_rent
   amount = curve_value("units_occupied", time.date) * inputs.rent_per_unit
          * pow(1.0 + inputs.growth, (time.t - {BASE_T}) / 12.0) * {HELD}
 }}
 
 stream cre.parking on entity asset.project inflow currency USD {{
-  schedule every month start from {ym(0)} to {ym(N-1)}
+  schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.revenue.other
   amount = curve_value("units_occupied", time.date) * inputs.parking_per_space * 0.5
          * pow(1.0 + inputs.growth, (time.t - {BASE_T}) / 12.0) * {HELD}
 }}
 
 stream cre.opex on entity asset.project outflow currency USD {{
-  schedule every month start from {ym(0)} to {ym(N-1)}
+  schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.expense.opex
   amount = curve_value("units_occupied", time.date) * inputs.expenses_per_unit / 12.0
          * pow(1.0 + inputs.growth, (time.t - {BASE_T}) / 12.0) * {HELD}
@@ -353,7 +354,10 @@ stream cre.perm_debt_service on entity asset.project outflow currency USD {{
 stream cre.exit_b on entity asset.project inflow currency USD {{
   schedule on {ym(B_EXIT)} end
   category investing.reversion
-  amount = {B_VALUE:.2f} * inputs.market_factor * inputs.scenario_b
+  amount = (series_sum("cre.rent", time.t + 1, time.t + 12)
+          + series_sum("cre.parking", time.t + 1, time.t + 12)
+          + series_sum("cre.opex", time.t + 1, time.t + 12))
+         / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
 }}
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {{
