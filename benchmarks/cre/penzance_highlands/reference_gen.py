@@ -51,8 +51,8 @@ time calendar monthly from {ym(0)} for {N}
 // Two towers over one shared podium and one construction facility:
 //   east  = Pierce (104 for-sale condos) + Evo (455 rental)
 //   west  = Aubrey (331 rental)
-// The for-sale and rental product share a basis, which is what makes this
-// deal worth modeling rather than a generic development.
+// The for-sale and rental product share a basis. Their costs are therefore not
+// separable, which is the modeling problem this case addresses.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
 // sellout are recorded fact — Arlington's site-plan record, deed register,
@@ -81,7 +81,7 @@ w("// Development cost per period and its running total. Declared as curves so\n
   "//\n"
   "// EVERY period is declared, including the zeros. A step curve is\n"
   "// flat-forward (docs/03 §4): omit the quiet months and the last construction\n"
-  "// draw is held forever, which compounds into a balance that never stops.\n"
+  "// draw is held forward indefinitely and the balance compounds without end.\n"
   "curve dev_cost {")
 for t in range(N):
     w(f"  {ym(t)}: {cost_at(t):.4f}")
@@ -306,7 +306,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 // purchase: the venture is formed to build, and the land it is capitalized
 // with earns nothing for the seven years before there is anything to build.
 // Compounding that $67M from 2011 instead consumes the entire promote, which
-// is how the assumption announced itself.
+// is how the assumption was identified.
 entity asset jv : Asset.Financial {
   // The facility's equity funding one period back, so a month's contribution
   // can be differenced without reaching two periods behind.

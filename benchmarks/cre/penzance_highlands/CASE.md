@@ -43,8 +43,8 @@ placeholders rather than the real split.
 The distribution is a **once-at-end** waterfall, at the final condominium
 closing in 2024-06. A development JV does not distribute while the deal is
 live, so the preferred return and the capital are cumulative balances the
-venture carries, per `docs/17` §10. Two consequences follow from the pot rather
-than from the deal. `available` is *this period's* netted cash, which on a
+venture carries, per `docs/17` §10. Two properties of the model follow from how the pot is
+defined. `available` is *this period's* netted cash, which on a
 once-at-end schedule is one month rather than the deal, so the pot is
 `series_sum("cre.*", 0, time.t)` — the streams' own running sum. And there is no
 return-of-capital tier: contributions are outflows inside those streams, so the
@@ -70,11 +70,12 @@ independent.
 
 Every cost curve declares **every** period, including the zeros. A step curve is
 flat-forward, so omitting the quiet months holds the last construction draw
-forward for ever and the balance never stops compounding.
+forward indefinitely and the balance never stops compounding.
 
 ## The result
 
-The facility ties to the workbook to the cent:
+The facility figures tie to the workbook exactly; `model.irr` agrees to the
+sixth decimal, the precision at which the engine publishes it:
 
 | | |
 |---|---|
