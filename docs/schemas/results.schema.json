@@ -335,11 +335,11 @@
               },
               "amount": {
                 "type": "number",
-                "description": "Cash moved, for a waterfall step."
+                "description": "What the step allocated. Allocated, not transferred: a waterfall is an ordered allocation over a pot, deciding what each step is entitled to out of what remains. Whether that cash physically settles is a question the language does not model."
               },
               "pot_before": {
                 "type": "number",
-                "description": "The pot before the step took from it, so a short pot is visible as the reason a payee got less than it was owed."
+                "description": "The pot before the step drew on it, so a short pot is visible as the reason a step was allocated less than it was owed."
               },
               "pot_after": {
                 "type": "number"

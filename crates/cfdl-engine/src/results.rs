@@ -701,7 +701,13 @@ pub struct JournalEntry {
     pub from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
-    /// Cash moved, for a waterfall step.
+    /// What the step ALLOCATED, for a waterfall step.
+    ///
+    /// Allocated, not transferred. A waterfall is an ordered allocation over a
+    /// pot (`docs/17`): it decides what each step is entitled to out of what
+    /// remains. Whether that cash then physically settles is a different
+    /// question the language does not model, and calling this "paid" would
+    /// claim it does.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub amount: Option<f64>,
     /// The pot before and after the step took from it, so a short pot is
