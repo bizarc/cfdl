@@ -105,13 +105,16 @@ Asked first of model SOURCE, the answer looked like two benchmarks — the
 forward-income exit in `penzance_one_rosslyn` and the expense stop's base year
 in `mit_rentleg_plaza`, exactly the two constructs `docs/28` §7 migrates. Asked
 of the compiled IR, by `cfdl_engine::walk_eligibility` over the blessed corpus,
-it is **six fixtures and three causes** — and the difference is the finding:
+it is **five fixtures and two causes** — and the difference is the finding:
 
 | cause | models | window |
 | --- | --- | --- |
 | the CRE pack's `cre.exit_forward` lowering | `cre_office_two_tenant`, `pack_cadence_cre_{annual,monthly,quarterly}` | `[time.t + 1 .. time.t + 12]` |
 | an absolute base year | `cre_derived_lines` | `cre.opex.line[24..24]` |
-| ~~an absolute window in a waterfall pot~~ | ~~`waterfall_nested_split`~~ | fixed, see below |
+
+A third cause was found and removed rather than recorded: `waterfall_nested_split`
+read an absolute window from a waterfall pot, which `docs/17` §4 forbids. See
+below.
 
 **The forward-income exit is a PACK CONTRACT, not a benchmark.** A scan of
 model source cannot see it, because the read lives in the pack's lowering rule
