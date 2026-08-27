@@ -130,7 +130,24 @@ payments to payees, so a waterfall cannot read its own output
 (`distributions.rs`). And steps evaluate in declaration order over a single
 running pot that cannot go negative (`docs/17`).
 
-## 6. Events: repetition becomes a policy
+**The pot becomes carried state.** Today the pot is an expression evaluated
+at each scheduled period — `available` is that period's netted cash, and
+Highlands accumulates only because its author wrote a cumulative window for
+a distribution that happens once. That formulation double-counts on any
+waterfall that distributes more than once over accumulated cash, unless the
+author hand-subtracts prior distributions, and undistributed residue does
+not carry unless the expression says so. Under the walk the pot is a
+balance: each period it grows by the declared inflow, at a scheduled
+distribution the steps draw it down, and what they do not take **remains in
+the pot** for the next scheduled date. `pot(t) = pot(t−1) + inflow(t) −
+distributed(t)`, journaled at every change. Deferral is state — the same
+principle the reserve account already embodies in every structured-finance
+engine — and it gives `docs/13` §7.41's check a cleaner object: the pot
+names what flows in, and the balance is auditable per period. A declared
+one-shot pot expression stays legal and means what it says; `available`
+stays the single-period default.
+
+## 6. Events and the state machine
 
 Under the walk, the latch stops being an architectural necessity and becomes
 one trigger policy. An event declares whether it fires once (today's latch,
@@ -138,13 +155,63 @@ the default, unchanged) or on every period its condition holds. A repeatable
 event is what a covenant that breaches and cures, a plant that curtails and
 restarts, and a unit that goes delinquent and current again all need; today
 they must be bare fields, unchecked and absent from the transition record
-(`docs/13` §7.36). The declared re-entrant state machine that §7.36 sketches
-is the companion construct, not part of M1; the walk is what makes it
-implementable.
+(`docs/13` §7.36). The walk makes the checked form buildable, and this
+milestone builds it.
 
 Timing is unchanged and is worth stating: an event's write at `t` is visible
 to period `t`'s streams (step 1 before step 2), which is the shipped behavior
 — occupancy set in July changes July's revenue.
+
+### 6.1 The declared machine
+
+A lifecycle today is a set of state names — declared by a pack in
+`types.toml`, checked by `active in state` (a misspelling is `E1332`) — with
+no edges: any event may write any declared state at any time, and a regime
+that returns cannot use the vocabulary at all because the latch fires once.
+The machine completes the declaration. Wherever a lifecycle is declared, its
+**transitions** are declared beside its states: which state may move to
+which, re-enterable edges included. `leased → delinquent → leased` is two
+edges, walked as many times as the deal's history walks them.
+
+The rules, all of which reuse walk machinery rather than adding any:
+
+1. **An undeclared transition is refused.** At compile where the write is
+   statable (`set … status = <literal>`), at run with the edge named where
+   it is not. Today's unconstrained write becomes the diagnostic §7.36 asks
+   for: the states and edges are reviewable in one place, and an absent edge
+   is an error rather than a silent overwrite.
+2. **Transitions are driven by events**, with the walk's semantics —
+   evaluated once per period, in declaration order, guards reading state as
+   the period opened and series strictly backward (§4). A cash-driven edge
+   is now expressible: *delinquent when last period's rent came in under
+   the amount due* is a guard on a settled series, and *current again when
+   it resumed* is the return edge.
+3. **Every transition is journaled** (§8): period, entity, edge taken, the
+   event that drove it, and the values its guard read. The transition
+   record that exists today becomes the machine's audit trail; a regime is
+   never again a bare field whose flips the record cannot see.
+4. **`active in state` is unchanged** and already re-entry-safe: the
+   per-period active flags the state walk hands the streams stage
+   (`EventSim.stream_active`) are level-checked each period, so a stream
+   gated on `leased` turns off during delinquency and back on after cure
+   with no new mechanism.
+5. **Truly linear time keeps its constructs.** Calendar-fixed eras are
+   phases; condition-driven regimes are machine states. The machine does
+   not replace phases and phases do not gain edges.
+
+### 6.2 Schedules anchored to a transition
+
+A schedule today anchors to calendar dates or phase boundaries, both fixed
+at compile. The machine adds the third anchor: a state entry. `from
+state_enter(<entity>, <state>) for <n> periods` resolves its membership
+during the walk — the entry period is settled state by the time any stream
+reads it, so the anchor is causal and cycle-free by the same argument as
+every backward read. This is what "18 months of construction from whenever
+construction starts" needs, and with it the delayed-construction option is
+fully expressible: the event enters the state whenever its trigger fires,
+the schedule hangs off the entry, and the deal's activity window carves
+itself out of the grid. A re-entered state re-anchors: each entry starts its
+own window, which is what a second delinquency's cure period means.
 
 ## 7. The valuation plane, and the priced exception
 
@@ -197,9 +264,19 @@ For any model with no cash-into-logic edge — every model that compiles today
 — the walk's schedule is a reordering of independent work, and the results
 must be **byte-identical**. The full golden suite is the proof obligation: it
 passes unchanged, with no re-blessing, or the walk has a defect. Models that
-do couple cash into logic are new expressiveness, pinned by new fixtures: the
-delinquency probe, the lagged sweep, the re-entrant regime, and a
-once-at-end waterfall read by a later balance.
+do couple cash into logic are new expressiveness, pinned by new fixtures:
+the delinquency machine breaching and curing twice on realised rent; the
+lagged sweep; a once-at-end waterfall read by a later balance; the
+accumulated pot drawn down across two scheduled distributions with residue
+carried; and a state-anchored construction schedule delayed by an event and
+re-anchored on re-entry.
+
+One collapse caveat is owned rather than hidden: a waterfall that
+distributes every period from `available` is unchanged under the pot
+balance, but a shipped model whose author worked around the old pot — a
+cumulative window with hand-subtracted prior distributions — keeps its
+declared expression and its old meaning. The balance semantics apply to
+pots declared as balances; nothing re-interprets an expression.
 
 Performance holds for the same reason. The schedule is static — computed
 once from the dependency graph, replayed per scenario and per Monte Carlo
@@ -215,12 +292,12 @@ compile- or load-time refusals, so a reordering defect cannot hide behind a
 silent zero — and **mutation testing** over the engine, so the suite provably
 notices when evaluation changes.
 
-M1 is the walk, the read rules, the two migrations, and the journal. It is
-not: the contract runtime behind `activate contract` (M2, §7.40i); declared
-re-entrant machines (§7.36); multiple instances of one pack contract type
-(F.3); state-anchored schedules ("for 18 months from state entry"); typed
-pack-declared actions; or optimal exercise, which stays deferred past v1 and
-which this design exists to make possible later.
+M1 is the walk, the read rules, the two migrations, the declared state
+machine with its transition anchor (§6), the pot as carried state (§5), and
+the journal. It is not: the contract runtime behind `activate contract`
+(M2, §7.40i); multiple instances of one pack contract type (F.3); typed
+pack-declared actions; or optimal exercise, which stays deferred past v1
+and which this design exists to make possible later.
 
 ## 11. Cross-references
 

@@ -14,10 +14,15 @@ The causal stages (state, events, streams, distributions) advance one period
 at a time and settle in a fixed order within each period; the results stage
 is named the valuation plane and keeps forward reads. Logic reads realised
 cash strictly backward, so the cell graph is acyclic by construction and
-cycles stay refused, never iterated. Waterfalls keep schedule sovereignty
-over declared pots; the latch becomes a trigger policy; the journal becomes
-the execution trace, with every action's outcome recorded. For every model
-with no cash-into-logic edge the results must be byte-identical — the golden
+cycles stay refused, never iterated. Waterfalls keep schedule sovereignty,
+and the pot becomes carried state: it grows by the declared inflow each
+period, scheduled distributions draw it down, and residue carries. The
+lifecycle gains its edges: declared, re-enterable transitions where an
+undeclared edge is refused, driven by events whose latch becomes a trigger
+policy, with a third schedule anchor — a state entry — so a delayed
+construction hangs its window off the transition. The journal becomes the
+execution trace, with every action's outcome recorded. For every model with
+no cash-into-logic edge the results must be byte-identical — the golden
 suite is the proof obligation. Pre-work unchanged: loud failure for
 unbindable series reads (7.71), and mutation testing.
 
