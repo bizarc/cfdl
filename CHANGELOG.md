@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: docs/29 — the period walk's implementation plan, and backlog 7.72
+
+The plan that realizes docs/28, in seven dependency-ordered phases: the
+loud-fail and mutation gates; the journal (independent, may ship first);
+the walk itself, gated on the collapse property — full golden suite
+byte-identical, mutation baseline held, wall-clock within noise; the read
+rules; the account; the state machine; the migrations; the documentation
+surface. Three decisions stay open and each names who settles it.
+
+New backlog entry 7.72: a participant's realised return has no construct —
+measuring what a payee actually earned means hand-assembling their streams
+outside the language. Gated on the account (docs/28 §5.1), whose per-party
+journal is the input the metric folds over; rides on 7.25's declared
+metrics. Backlog: 40 items.
+
 ### Changed: docs/28 §5 — the account, where carried cash lives
 
 The pot-as-balance paragraph becomes the account construct: a declared cash

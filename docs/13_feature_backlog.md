@@ -1796,3 +1796,32 @@ running inert today.
 Related: §5.2 (what a recurrence may read), §7.10 (a truncated series view),
 §7.38 (a misspelled series reads as zero — same silence, misspelled name
 rather than unbindable environment).
+
+### 7.72 A participant's realised return has no construct
+
+**What could not be expressed:** the return a party actually earned — IRR or
+MoIC on the cash that reached them, dated when it reached them. The model
+computes `model.irr` on the deal's net cash; a waterfall attributes each
+step's payment to a payee; and there the trail stops. To measure Baupost's
+return on the Highlands JV, an analyst must hand-assemble the payee's
+streams — capital in, preferred out, residual out — and run the arithmetic
+outside the language, against results the language already holds.
+
+**What forced the discovery:** the account design (`docs/28` §5.1). A
+party-owned account is cash allocated to a participant, journaled per period
+— which is exactly the cash-flow vector a participant-level IRR discounts.
+Once the account exists, the metric is a fold over its journal, and the gap
+becomes visible as a missing valuation-plane construct rather than a missing
+mechanism.
+
+**The shape, if it earns its place:** a declared metric (§7.25 is the
+construct this would ride on) scoped to a party or a party-owned account —
+`metric baupost_irr = irr(party.baupost)` — computed in the valuation plane
+over the journaled receipts and contributions, published with the same
+lineage as any series. Related: §7.43 (results do not say which entity owns
+a stream — ownership is the same attribution question one layer down), and
+`docs/28` §5 (the account, whose journal is the input).
+
+Do not build this before the account ships; the hand-assembled version is
+the workaround until then, and building the metric on payee streams rather
+than accounts would bake in the attribution problem §7.43 records.
