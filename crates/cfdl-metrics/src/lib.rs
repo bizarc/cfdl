@@ -341,6 +341,7 @@ mod tests {
                 metrics,
                 series: BTreeMap::new(),
                 transitions: Vec::new(),
+                journal: Vec::new(),
                 annual_rollup: None,
                 errors: None,
             },
