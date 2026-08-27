@@ -217,3 +217,142 @@ fn first_difference(blessed: &serde_json::Value, produced: &serde_json::Value) -
     }
     walk("", blessed, produced).unwrap_or_else(|| "documents differ".to_string())
 }
+
+/// WHICH MODELS CAN BE WALKED, asserted rather than tabulated.
+///
+/// `docs/29` §2.0 measured the corpus by hand before the period walk was
+/// designed: a period walk cannot serve a read that reaches forward, because
+/// at period 3 there is no period 24. This pins that measurement in code, so
+/// the table in the plan cannot quietly go stale and a new forward-reading
+/// model cannot arrive unnoticed.
+///
+/// The expected set is exactly the two constructs `docs/28` §7 migrates to the
+/// valuation plane — the forward-income exit and the expense stop's base year
+/// — plus the two fixtures carrying an absolute window. Everything else in the
+/// corpus reads cumulatively BACKWARD (`[0..time.t]`), which a walk serves
+/// exactly; that distinction is what makes the collapse property reachable.
+#[test]
+fn only_the_known_models_read_forward() {
+    let root = repo_root();
+    let corpus = corpus(&root);
+    assert!(corpus.len() >= 100, "corpus not found: {}", corpus.len());
+
+    let mut forward: Vec<String> = Vec::new();
+    for (name, (ir_path, _, _)) in &corpus {
+        let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
+        match cfdl_engine::walk_eligibility(&raw) {
+            Ok(None) => {}
+            Ok(Some(_)) => forward.push(name.clone()),
+            Err(err) => panic!("{name}: eligibility could not be computed: {err}"),
+        }
+    }
+
+    // Measured, not assumed. Three causes, and the second is the one a scan of
+    // model source cannot find:
+    //
+    //   cre_derived_lines      an absolute base year, `cre.opex.line[24..24]`
+    //   cre_office_two_tenant  \ the CRE pack's `cre.exit_forward` lowering,
+    //   pack_cadence_cre_*     /  which reads `[time.t + 1 .. time.t + 12]`
+    //
+    // `waterfall_nested_split` was here and is not any more. Its pot was
+    // written `[0..5]`, an absolute window, where `docs/17` §4 says a pot is
+    // THIS PERIOD'S cash — the constant was the single distribution date's
+    // period index, so it now reads `[0..time.t]` and says what it means. No
+    // published number moved.
+    let expected = [
+        "cre_derived_lines",
+        "cre_office_two_tenant",
+        "pack_cadence_cre_annual",
+        "pack_cadence_cre_monthly",
+        "pack_cadence_cre_quarterly",
+    ];
+    assert_eq!(
+        forward, expected,
+        "the set of forward-reading fixtures changed. If a new model reads \
+         forward, `docs/29` §2.0 and `docs/28` §7 both describe what happens to \
+         it — add it here deliberately, not by blessing a diff."
+    );
+}
+
+/// THE COLLAPSE PROPERTY, on every model that can be walked.
+///
+/// `docs/29` phase 2 rests on one claim: evaluating a period at a time computes
+/// what evaluating a column at a time computes. That claim is checkable, and
+/// this checks it — both orders, every blessed model, every stream, every
+/// period, compared exactly.
+///
+/// It is worth more than the goldens for this purpose. A golden says the engine
+/// still produces the blessed numbers; this says the two ORDERS agree, which is
+/// the property the reorder actually needs and the one a golden cannot see
+/// while only one order runs in production.
+///
+/// Models that read forward are skipped rather than failed: at period 3 there
+/// is no period 24, so the walk is inapplicable there, not wrong. Which models
+/// those are is pinned by `only_the_known_models_read_forward`.
+#[test]
+fn walk_matches_the_column_order() {
+    let root = repo_root();
+    let corpus = corpus(&root);
+    assert!(corpus.len() >= 100, "corpus not found: {}", corpus.len());
+
+    let mut compared = 0usize;
+    let mut skipped = 0usize;
+    let mut failures: Vec<String> = Vec::new();
+
+    for (name, (ir_path, _, run_config)) in &corpus {
+        let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
+        let config = match run_config {
+            Some(path) => cfdl_engine::run_config_from_json_file(path, 0.0, None)
+                .unwrap_or_else(|err| panic!("{name}: run config: {err}")),
+            None => cfdl_engine::RunConfig {
+                discount_rate: 0.10,
+                ..Default::default()
+            },
+        };
+        match cfdl_engine::compare_evaluation_orders(&raw, config) {
+            Err(err) => failures.push(format!("{name}: {err}")),
+            Ok(None) => skipped += 1,
+            Ok(Some((column, walked))) => {
+                compared += 1;
+                if column.len() != walked.len() {
+                    failures.push(format!(
+                        "{name}: {} streams by column, {} by walk",
+                        column.len(),
+                        walked.len()
+                    ));
+                    continue;
+                }
+                for (stream, col_values) in &column {
+                    let Some(walk_values) = walked.get(stream) else {
+                        failures.push(format!("{name}: the walk produced no '{stream}'"));
+                        continue;
+                    };
+                    for (t, (c, w)) in col_values.iter().zip(walk_values).enumerate() {
+                        // Exactly equal, not approximately: the two orders step
+                        // the same `StreamPlan`, so any difference is a defect
+                        // in the ordering rather than in the arithmetic.
+                        if c != w {
+                            failures.push(format!(
+                                "{name}: '{stream}' period {t}: column {c}, walk {w}"
+                            ));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} disagreement(s) between the two evaluation orders ({compared} models compared, \
+         {skipped} skipped as forward-reading):\n  {}",
+        failures.len(),
+        failures.join("\n  ")
+    );
+    assert!(
+        compared >= 95,
+        "only {compared} models were comparable; the walk should apply to nearly all of them"
+    );
+    println!("walk == column on {compared} models; {skipped} skipped as forward-reading");
+}

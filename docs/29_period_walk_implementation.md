@@ -96,6 +96,66 @@ recommends retiring the action rather than building its runtime.
 
 ## Phase 2 — the walk (the reorder; blocks all new expressiveness)
 
+**2.0 What actually reads forward — measured, and then measured again.**
+
+A period walk cannot serve a forward read: at period 3 there is no period 24.
+So the first question is how much of the corpus reads ahead of itself.
+
+Asked first of model SOURCE, the answer looked like two benchmarks — the
+forward-income exit in `penzance_one_rosslyn` and the expense stop's base year
+in `mit_rentleg_plaza`, exactly the two constructs `docs/28` §7 migrates. Asked
+of the compiled IR, by `cfdl_engine::walk_eligibility` over the blessed corpus,
+it is **five fixtures and two causes** — and the difference is the finding:
+
+| cause | models | window |
+| --- | --- | --- |
+| the CRE pack's `cre.exit_forward` lowering | `cre_office_two_tenant`, `pack_cadence_cre_{annual,monthly,quarterly}` | `[time.t + 1 .. time.t + 12]` |
+| an absolute base year | `cre_derived_lines` | `cre.opex.line[24..24]` |
+
+A third cause was found and removed rather than recorded: `waterfall_nested_split`
+read an absolute window from a waterfall pot, which `docs/17` §4 forbids. See
+below.
+
+**The forward-income exit is a PACK CONTRACT, not a benchmark.** A scan of
+model source cannot see it, because the read lives in the pack's lowering rule
+rather than in anything a modeller wrote — so every model using
+`cre.exit_forward` reads forward, present and future. That widens `docs/28`
+§7's migration from "one benchmark" to "one pack contract, and every model that
+uses it", which is a different piece of work and is why it is written down here
+rather than discovered in phase 6.
+
+**A waterfall never reads forward, and the reference says so.** `docs/17` §4:
+a waterfall "reads period-close state, because the pot it allocates is THIS
+PERIOD'S cash and the balances it measures are this period's balances." The
+schema does not enforce it — `Waterfall.source` and `WaterfallStep.amount` are
+plain `Expr` — and the engine cannot detect it, because by the time the
+distribution stage runs the whole series column exists, so a forward window
+succeeds silently. `waterfall_nested_split` had a pot written `[0..5]`, an
+absolute window, where the constant was its single distribution date's period
+index; it now reads `[0..time.t]` and says what it means, with no published
+number moved. The walk closes the gap by construction: under a period walk a
+forward pot read is impossible rather than merely disallowed.
+
+A waterfall's pot and steps do have to be CHECKED, though, and they are not in
+`ir.streams` — a streams-only eligibility check called that fixture walkable.
+
+**A cumulative window is not a forward read.** `[0..time.t]` — the Highlands
+pot, the auto-ABS cumulative prepayment — reads only what has already
+happened, and a walk serves it exactly. Two shapes had to be taught before
+that came out right, and both were reported as forward until they were:
+the compiler normalises `0` to `0.0`, and the OpCo pack writes a
+trailing-twelve-month window as `time.t - 12.0 + 1.0`, which is `t - 11`.
+Reading only the first term refused the walk for every LBO model in the corpus.
+
+The classifier is conservative by construction: a shape it does not recognise
+is forward, because a walk that guesses wrong reads a cell that does not exist
+yet. A positive literal is forward for the same reason — `24` is behind `t`
+from period 25 and ahead of it before, and static analysis cannot know which.
+
+`only_the_known_models_read_forward` in `golden_corpus.rs` pins the set, so
+this table cannot quietly go stale and a new forward-reading model cannot
+arrive unnoticed.
+
 **2.1 Dependency extraction over guards and recurrences.** The existing
 `series_references`/`selector_matches` machinery runs over event guards and
 field `next` expressions, producing the cell-level edges of §4.
@@ -110,7 +170,29 @@ scenario and per trial.
 read of a not-yet-computed cell is a loud engine error, never a substituted
 null — phase 0.1's discipline applied inside the engine.
 
-**2.4 The fold.** Streams and scheduled waterfalls move inside the walk
+**2.4 The fold — the streams half is built.** `evaluate_stream` is now
+`plan_stream` plus `StreamPlan::step`, and the column order is a loop over
+`step` rather than a second implementation, so the two orders share one
+arithmetic by construction. `walk_streams` is the period-major order, and
+`walk_matches_the_column_order` compares the two over the blessed corpus:
+**exactly equal on 105 models, every stream and every period**, with the five
+forward-reading models skipped as inapplicable rather than failed. That is the
+collapse property measured rather than argued, and it is worth more than the
+goldens for this purpose — a golden says the engine still produces the blessed
+numbers, this says the two ORDERS agree, which a golden cannot see while only
+one order runs in production.
+
+**The grid is not the deal.** A model may declare ten years and have activity
+in two: `time` sets the grid the walk steps, and a stream's schedule decides
+which periods it is present in. Most cells are inert and cost nothing, because
+`settles_at` answers from the prepared schedule. The same is true one stage
+along — a waterfall scheduled on one date near the end of a hold does nothing
+in the other periods, which its `runs_in` mask already answers. What is NOT yet
+free is the store snapshot, taken per (period, wave) where the column order
+takes it per wave; §2.3 is where that is fixed, and until then `walk_streams`
+is exercised by the equivalence test rather than run in production.
+
+**What remains of 2.4.** Streams and scheduled waterfalls move inside the walk
 that `state.rs` already performs: per period — state settles, streams
 evaluate, waterfalls whose schedule names the period distribute, journal
 appends. The `EventSim` seam becomes two-way: realised per-period amounts

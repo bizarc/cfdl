@@ -592,6 +592,276 @@ struct StreamDeps {
     computed: bool,
     /// The literal read patterns, as written — globs included.
     refs: Vec<String>,
+    /// Reads a window that can reach at or beyond the current period's future.
+    ///
+    /// A period walk can serve a read only if everything it reaches has
+    /// already happened, so this is what decides whether a model can be
+    /// walked. `docs/29` §2.0 measured the corpus: two benchmarks and two
+    /// fixtures read forward, and they are exactly the two constructs
+    /// `docs/28` §7 migrates to the valuation plane. Everything else reads
+    /// cumulatively backward, which a walk serves exactly.
+    reads_forward: bool,
+}
+
+/// Can this model be evaluated one period at a time?
+///
+/// The question the period walk asks before it runs. `None` means yes;
+/// `Some(reason)` names the first stream that reads forward, so a refusal or a
+/// routing decision can say which construct forced it.
+///
+/// Not yet a routing decision: until `docs/28` §4's backward reads land, no
+/// model couples cash into logic, so the walk and the column order agree
+/// wherever both can run. This is the predicate that will choose between them,
+/// and the one the equivalence test uses to know which fixtures to compare.
+/// Each stream's series dependencies, the reads it makes and whether any
+/// window reaches forward. Extracted so the walk's eligibility query and the
+/// wave ordering compute it the same way rather than twice.
+fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
+    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
+    for stream in &ir.streams {
+        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
+        // amount. `active when series_sum(...) > 0` on a stream whose amount
+        // happens not to use one was once handed an empty series map, and its
+        // guard then failed — warned, evaluated FALSE, and the stream silently
+        // produced nothing at all. An expression that fails to compile
+        // contributes nothing here; `evaluate_stream` warns about it later.
+        let probe = |src: &str| -> (bool, bool) {
+            cfdl_expr::compile_expr(src)
+                .map(|c| {
+                    (
+                        cfdl_expr::uses_series(&c),
+                        cfdl_expr::has_computed_series_name(&c),
+                    )
+                })
+                .unwrap_or((false, false))
+        };
+        // A window reaching forward is measured over the same expressions the
+        // reads are extracted from, so a guard cannot smuggle one past.
+        let forward = |src: &str| -> bool {
+            cfdl_expr::series_windows(src).iter().any(|w| {
+                !(cfdl_expr::window_bound_is_backward(&w.from_src)
+                    && cfdl_expr::window_bound_is_backward(&w.to_src))
+            })
+        };
+        let (mut uses, mut computed) = probe(&stream.amount.src);
+        let mut refs = cfdl_expr::series_references(&stream.amount.src);
+        let mut reads_forward = forward(&stream.amount.src);
+        if let Some(guard) = &stream.active_when {
+            let (guard_uses, guard_computed) = probe(&guard.src);
+            uses |= guard_uses;
+            computed |= guard_computed;
+            refs.extend(cfdl_expr::series_references(&guard.src));
+            reads_forward |= forward(&guard.src);
+        }
+        deps.push(StreamDeps {
+            uses,
+            computed,
+            refs,
+            reads_forward,
+        });
+    }
+    deps
+}
+
+/// The streams stage, one period at a time — the walk of `docs/28` §3.
+///
+/// Produces exactly what the column loop produces: each stream's full column,
+/// stepped from the same `StreamPlan`, so the two orders share one arithmetic
+/// rather than agreeing by inspection. What differs is only the order the cells
+/// are computed in, and that order is the point — a period's state can read an
+/// earlier period's realised cash once `docs/28` §4 admits the reads, which the
+/// column order can never allow because it finishes each stream before starting
+/// the next.
+///
+/// Waterfalls are not here. They are their own stage over cash this one has
+/// already produced (`docs/17` §4).
+///
+/// COST, STATED. The expression environment takes an `Arc<BTreeMap<..>>`, so a
+/// wave that reads earlier waves needs the store sealed — and under the walk
+/// that seal moves per (period, wave) rather than per wave. On the deepest
+/// schedules in the corpus that is hundreds of clones of the whole store.
+/// `docs/29` §2.3 is where that is fixed, by a store that represents a
+/// partially built column instead of being copied; until then this path is
+/// exercised by `walk_matches_the_column_order` rather than run in production.
+#[allow(clippy::too_many_arguments)]
+fn walk_streams(
+    ir: &Ir,
+    config: &RunConfig,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    event_sim: &EventSim,
+    state_values: &BTreeMap<String, Vec<f64>>,
+    waves: &[usize],
+    warnings: &mut Vec<String>,
+) -> Result<BTreeMap<String, Vec<f64>>, EngineError> {
+    let max_wave = waves.iter().copied().max().unwrap_or(0);
+    let mut plans = Vec::with_capacity(ir.streams.len());
+    for stream in &ir.streams {
+        plans.push(plan_stream(ir, stream, timeline, warnings)?);
+    }
+    let mut full: BTreeMap<String, Vec<f64>> = ir
+        .streams
+        .iter()
+        .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
+        .collect();
+
+    // THE GRID IS NOT THE DEAL. A model may declare ten years and have activity
+    // in two of them: `time` sets the grid the walk steps, and a stream's
+    // schedule decides which of those periods it is present in. Most cells are
+    // therefore inert, and the walk must not pay for them — the store snapshot
+    // below is the only per-period cost that is not already proportional to
+    // what is scheduled, so it is taken only when a wave has something to do.
+    for t in 0..timeline.len() {
+        for wave in 0..=max_wave {
+            let wave_is_active =
+                (0..ir.streams.len()).any(|idx| waves[idx] == wave && plans[idx].settles_at(t));
+            if !wave_is_active {
+                continue;
+            }
+            // Wave 0 reads no series, so what it is handed cannot matter; every
+            // later wave sees this period's earlier waves and every completed
+            // period before it.
+            let snapshot = (wave > 0).then(|| Arc::new(full.clone()));
+            for (idx, stream) in ir.streams.iter().enumerate() {
+                if waves[idx] != wave || !plans[idx].settles_at(t) {
+                    continue;
+                }
+                let mut refused: Vec<usize> = Vec::new();
+                let value = plans[idx].step(
+                    ir,
+                    config,
+                    t,
+                    timeline,
+                    base_inputs,
+                    event_sim,
+                    state_values,
+                    snapshot.as_ref(),
+                    warnings,
+                    &mut refused,
+                );
+                if let Some(column) = full.get_mut(&stream.name) {
+                    column[t] = value;
+                }
+            }
+        }
+    }
+    Ok(full)
+}
+
+/// Each stream's column, keyed by stream name.
+pub type StreamColumns = BTreeMap<String, Vec<f64>>;
+
+/// Both evaluation orders over one model, for comparison.
+///
+/// The collapse property of `docs/29` phase 2 is a claim that the walk computes
+/// what the column order computes. This runs both and hands back each stream's
+/// column from each, so a test can assert it on the whole blessed corpus rather
+/// than on reasoning.
+///
+/// Returns `Ok(None)` when the model reads forward and the walk therefore
+/// cannot run it — the walk is not wrong there, it is inapplicable, and the
+/// caller should skip rather than fail.
+pub fn compare_evaluation_orders(
+    raw_ir: &str,
+    config: RunConfig,
+) -> Result<Option<(StreamColumns, StreamColumns)>, EngineError> {
+    let ir: Ir = serde_json::from_str(raw_ir)?;
+    let deps = stream_deps(&ir);
+    if walk_ineligible_reason(&ir, &deps).is_some() {
+        return Ok(None);
+    }
+    let total_periods = ir.time.periods as usize + ir.time.projection as usize;
+    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
+    let mut warnings = Vec::new();
+    let base_inputs = assumption_inputs(&ir, &mut warnings)?;
+    let (state_values, event_sim) =
+        simulate_state(&ir, &config, &timeline, &base_inputs, &mut warnings);
+    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
+    let waves = assign_waves(&stream_names, &deps)?;
+
+    // The column order, as the engine runs it.
+    let mut column: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    let max_wave = waves.iter().copied().max().unwrap_or(0);
+    for wave in 0..=max_wave {
+        let snapshot = (wave > 0).then(|| Arc::new(column.clone()));
+        for (idx, stream) in ir.streams.iter().enumerate() {
+            if waves[idx] != wave {
+                continue;
+            }
+            let mut refused = Vec::new();
+            let values = evaluate_stream(
+                &ir,
+                &config,
+                stream,
+                &timeline,
+                &base_inputs,
+                &event_sim,
+                &state_values,
+                snapshot.as_ref(),
+                &mut warnings,
+                &mut refused,
+            )?;
+            column.insert(stream.name.clone(), values);
+        }
+    }
+
+    let walked = walk_streams(
+        &ir,
+        &config,
+        &timeline,
+        &base_inputs,
+        &event_sim,
+        &state_values,
+        &waves,
+        &mut warnings,
+    )?;
+    Ok(Some((column, walked)))
+}
+
+pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
+    let ir: Ir = serde_json::from_str(raw_ir)?;
+    let deps = stream_deps(&ir);
+    Ok(walk_ineligible_reason(&ir, &deps))
+}
+
+fn walk_ineligible_reason(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
+    for (stream, dep) in ir.streams.iter().zip(deps) {
+        if dep.reads_forward {
+            return Some(format!(
+                "stream '{}' reads a series window that can reach beyond the current period",
+                stream.name
+            ));
+        }
+    }
+    // A WATERFALL'S STEPS READ SERIES TOO, and they are not in `ir.streams`.
+    // `waterfall_nested_split` reads `[0..5]` from a step, which a
+    // streams-only check reported as walkable — the fund waterfall composition
+    // of `docs/17` is exactly where an absolute window is natural.
+    let reaches_forward = |src: &str| -> bool {
+        cfdl_expr::series_windows(src).iter().any(|w| {
+            !(cfdl_expr::window_bound_is_backward(&w.from_src)
+                && cfdl_expr::window_bound_is_backward(&w.to_src))
+        })
+    };
+    for waterfall in &ir.waterfalls {
+        {
+            if reaches_forward(&waterfall.source.src) {
+                return Some(format!(
+                    "waterfall '{}' draws from a pot whose window can reach beyond the current period",
+                    waterfall.name
+                ));
+            }
+        }
+        for step in &waterfall.steps {
+            if reaches_forward(&step.amount.src) {
+                return Some(format!(
+                    "waterfall '{}' step '{}' reads a series window that can reach beyond the current period",
+                    waterfall.name, step.name
+                ));
+            }
+        }
+    }
+    None
 }
 
 /// Assign each stream the wave it evaluates in: 0 for streams that read no
@@ -772,38 +1042,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // `series_sum("cre.unit.recoveries.*", ...)` and an exact lookup of the
     // pattern found nothing — measured on `mit_rentleg_plaza`, an exit price
     // $116,440 lower with no diagnostic.
-    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
-    for stream in &ir.streams {
-        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
-        // amount. `active when series_sum(...) > 0` on a stream whose amount
-        // happens not to use one was once handed an empty series map, and its
-        // guard then failed — warned, evaluated FALSE, and the stream silently
-        // produced nothing at all. An expression that fails to compile
-        // contributes nothing here; `evaluate_stream` warns about it later.
-        let probe = |src: &str| -> (bool, bool) {
-            cfdl_expr::compile_expr(src)
-                .map(|c| {
-                    (
-                        cfdl_expr::uses_series(&c),
-                        cfdl_expr::has_computed_series_name(&c),
-                    )
-                })
-                .unwrap_or((false, false))
-        };
-        let (mut uses, mut computed) = probe(&stream.amount.src);
-        let mut refs = cfdl_expr::series_references(&stream.amount.src);
-        if let Some(guard) = &stream.active_when {
-            let (guard_uses, guard_computed) = probe(&guard.src);
-            uses |= guard_uses;
-            computed |= guard_computed;
-            refs.extend(cfdl_expr::series_references(&guard.src));
-        }
-        deps.push(StreamDeps {
-            uses,
-            computed,
-            refs,
-        });
-    }
+    let deps = stream_deps(ir);
     let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
     let waves = assign_waves(&stream_names, &deps)?;
     let max_wave = waves.iter().copied().max().unwrap_or(0);
@@ -2529,6 +2768,7 @@ mod series_wave_tests {
             uses,
             computed,
             refs: refs.iter().map(|r| r.to_string()).collect(),
+            reads_forward: false,
         }
     }
 
