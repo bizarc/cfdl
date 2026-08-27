@@ -148,7 +148,29 @@ payments to payees, so a waterfall cannot read its own output
 (`distributions.rs`). And steps evaluate in declaration order over a single
 running pot that cannot go negative (`docs/17`).
 
-### 5.1 The account
+### 5.1 The account — what the pot becomes
+
+**Three words are in play, and only one survives as a construct.**
+
+| term | what it is | after this |
+| --- | --- | --- |
+| `available` | this period's netted stream cash for the entity | **kept, unchanged** |
+| pot | the cash a distribution allocates, whatever `from` supplies | **retired as a term**; an account is the accumulated cash |
+| `remaining` | what is left as each step draws | unchanged |
+
+The original text of this section said "the pot becomes carried state", and
+that is what an ACCOUNT is: the accumulating thing stops being called a pot.
+`remaining` still tracks the draw-down within one distribution, and `from`
+still says where the cash comes from — but what it names is an account, so
+there is nothing left for the word "pot" to denote that a reader needs.
+
+**`available` is kept, and it is not what an account replaces.** It means this
+period's netted cash and continues to; an ACCOUNT is the ACCUMULATED cash
+available. The two answer different questions — "what arrived this period" and
+"what has built up" — and a monthly-distributing structure wants the first
+while a quarterly or at-exit one wants the second. Keeping `available` is also
+what lets every waterfall in the corpus compile untouched, so phase 4 is
+ADDITIVE rather than a migration.
 
 Carried cash gets the industry's own object. In a real deal cash does not
 sit in a pot; it sits in **named accounts** — collection account, reserve
@@ -163,14 +185,17 @@ account <name> [owned by <party-ref>] {
 ```
 
 An account is a declared cash location with a balance. **Ownership is
-optional**: a general account belongs to the structure (a collection
-account, a reserve); a party-owned account holds cash *allocated to that
-participant but not yet paid out*, which is what a per-payee distribution
-account is. What a participant is **owed** is not an account: owed is a
-receivable, and receivables stay entity fields (Highlands' `unreturned`),
-exactly as shipped. An account holds cash that exists; a field records
-cash that is due. Conflating the two is the classic waterfall modeling
-defect, and the type system keeps them apart.
+optional**: a general account belongs to the structure — a collection account,
+a reserve — and a party-owned account holds what has been ALLOCATED to that
+party.
+
+**A party-owned account is not an obligation.** It holds cash that exists, in a
+location that party owns; once the rules allocate, the cash is theirs and
+nobody owes it. That is what keeps the model free of liabilities: what is
+still owed under the rules is not in any account, it is simply not yet
+allocated. Allocating is moving cash from the structure's account into a
+party's, which is also why this stays a record of ALLOCATION rather than of
+physical transfer — whether the cash ever leaves the deal is not modelled.
 
 The balance law, applied at each period of the walk:
 
