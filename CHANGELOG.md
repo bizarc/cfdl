@@ -8,6 +8,19 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: docs/28 — the period walk, M1's evaluation-order specification
+
+The causal stages (state, events, streams, distributions) advance one period
+at a time and settle in a fixed order within each period; the results stage
+is named the valuation plane and keeps forward reads. Logic reads realised
+cash strictly backward, so the cell graph is acyclic by construction and
+cycles stay refused, never iterated. Waterfalls keep schedule sovereignty
+over declared pots; the latch becomes a trigger policy; the journal becomes
+the execution trace, with every action's outcome recorded. For every model
+with no cash-into-logic edge the results must be byte-identical — the golden
+suite is the proof obligation. Pre-work unchanged: loud failure for
+unbindable series reads (7.71), and mutation testing.
+
 ### Backlog: an event cannot see realised cash, and the failure is silent
 
 New entry 7.71, from three probe models. A guard reading a stream by bare path
