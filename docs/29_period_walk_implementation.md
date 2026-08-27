@@ -196,18 +196,27 @@ up to 744 — 372 times the copying, on a cost already paid twenty thousand
 times. That is the difference between the walk being usable in production and
 not.
 
-The fix is interior mutability behind `Env.series`: a reader sees a column
-being filled rather than a copy of one, and nothing is copied per period at
-all. Cycles remain refused as they are today — the wave ordering is unchanged,
-and this changes only how a wave's output becomes visible.
+**The fix is smaller than "a store" makes it sound.** Streams already just
+read streams: `Env.series` is an `Arc<BTreeMap<String, Vec<f64>>>` handed to
+each env as a refcount bump, and its own comment records why — copying the
+series into every env "made this the hot spot of a run". Reading is free
+already.
 
-**A second per-trial cost belongs with it.** §2.2 says the schedule is
-"computed once and replayed per scenario and per trial", and today it is not:
-`plan_stream` compiles every stream's amount and guard inside
-`run_deterministic`, which Monte Carlo calls per trial. Twenty thousand trials
-recompile the same expressions twenty thousand times. Hoisting the plan out of
-the per-trial path belongs in this section, because it is the same shape of
-defect and the same fix — prepare once, replay.
+What costs is making a NEWLY WRITTEN value visible, because the map is
+immutable by design, so the engine rebuilds it whenever the visible set
+changes. And that rebuild is avoidable: **the map's keys never change.** Every
+stream name is known before evaluation begins, and only the value at index `t`
+moves as the walk proceeds. Allocate every column once, share them, write
+cells in place — every holder of the `Arc` sees the write, and nothing is
+copied at any point. Cycles remain refused exactly as today: the wave ordering
+is untouched, and this changes only how a wave's output becomes visible.
+
+**The grid is built once, and so is everything else that does not vary.**
+`run_deterministic` rebuilds the timeline, recompiles every amount and guard,
+and recomputes every schedule — and Monte Carlo calls it per trial. None of
+that varies across trials; only the sampled parameter overrides do. Twenty
+thousand trials rebuild one grid twenty thousand times. Prepare the timeline
+and the stream plans once, replay them per trial, and vary only the inputs.
 
 **2.4 The fold — the streams half is built.** `evaluate_stream` is now
 `plan_stream` plus `StreamPlan::step`, and the column order is a loop over
