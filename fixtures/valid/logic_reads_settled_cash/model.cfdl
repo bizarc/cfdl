@@ -1,0 +1,39 @@
+version 0.1
+model "logic-reads-settled-cash"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A UNIT GOES DELINQUENT WHEN LAST PERIOD'S RENT CAME IN SHORT.
+//
+// The case this whole reorder exists for, and for most of the language's life
+// it could not be written. Events settled over the whole timeline before any
+// stream had a value, so a guard reading cash bound nothing: the engine warned
+// once per period, substituted `false`, and published a run in which the event
+// simply never fired (`docs/13` §7.71).
+//
+// Under the period walk (`docs/28` §3) a period's state settles with every
+// earlier period's cash already in the store, so the guard reads history that
+// has actually happened. Rent stops after June; the guard sees July's shortfall
+// when it settles August, and the unit moves to downtime — which the rent
+// stream's own `active in state` then keeps off.
+//
+// STRICTLY BACKWARD, and that is what keeps it sound. `time.t - 1` is settled;
+// `time.t` is not, because logic settles before this period's cash exists. At
+// period 0 the window is empty and reads nothing, which is the right answer:
+// no rent has been received before the model began.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  category operating.revenue.base_rent
+  amount = 100
+  active in state leased
+}
+
+event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
+  set entity asset.suite.status = "downtime"
+}

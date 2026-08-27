@@ -297,6 +297,7 @@ fn walk_matches_the_column_order() {
 
     let mut compared = 0usize;
     let mut skipped = 0usize;
+    let mut walk_only = 0usize;
     let mut failures: Vec<String> = Vec::new();
 
     for (name, (ir_path, _, run_config)) in &corpus {
@@ -309,6 +310,26 @@ fn walk_matches_the_column_order() {
                 ..Default::default()
             },
         };
+        // A MODEL WHOSE LOGIC READS CASH IS NOT EXPRESSIBLE IN BOTH ORDERS.
+        // The column order settles all state before any stream has a value, so
+        // the read binds nothing there and the model means something different
+        // — which is exactly the expressiveness the walk adds (`docs/28` §4).
+        // Comparing the two would assert that a new capability changes nothing,
+        // which is the opposite of what it is for.
+        let ir_value: serde_json::Value = serde_json::from_str(&raw).expect("blessed IR parses");
+        let logic_reads_cash = ["events", "options"].iter().any(|key| {
+            ir_value[key]
+                .as_array()
+                .is_some_and(|xs| xs.iter().any(|x| x.to_string().contains("series_")))
+        }) || ir_value["entities"].as_array().is_some_and(|xs| {
+            xs.iter()
+                .any(|e| e["rules"].to_string().contains("series_"))
+        });
+        if logic_reads_cash {
+            walk_only += 1;
+            continue;
+        }
+
         match cfdl_engine::compare_evaluation_orders(&raw, config) {
             Err(err) => failures.push(format!("{name}: {err}")),
             Ok(None) => skipped += 1,
@@ -354,5 +375,8 @@ fn walk_matches_the_column_order() {
         compared >= 95,
         "only {compared} models were comparable; the walk should apply to nearly all of them"
     );
-    println!("walk == column on {compared} models; {skipped} skipped as forward-reading");
+    println!(
+        "walk == column on {compared} models; {skipped} skipped as forward-reading, \
+         {walk_only} as walk-only (their logic reads cash)"
+    );
 }

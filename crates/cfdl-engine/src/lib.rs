@@ -147,8 +147,13 @@ fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
     let mut offences: Vec<String> = Vec::new();
 
     let mut check = |src: &str, site: String| {
-        if let Some(func) = cfdl_expr::series_call(src) {
-            offences.push(format!("{site} calls `{func}`"));
+        // Narrowed in phase 3: settled history is readable, this period and
+        // the future are not. `docs/28` §4.
+        if let Some(w) = cfdl_expr::series_windows(src)
+            .into_iter()
+            .find(|w| !cfdl_expr::window_bound_is_strictly_backward(&w.to_src))
+        {
+            offences.push(format!("{site} reads `{}` to `{}`", w.name, w.to_src));
         }
     };
 
@@ -187,10 +192,10 @@ fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
         return Ok(());
     }
     Err(EngineError::SeriesReadInLogic(format!(
-        "logic cannot read a stream: {}. An event's guard and action values, a field's rule, \
-         and an option's election and payoff are all evaluated before any stream has a value, \
-         so the read binds nothing. Drive the logic from a field, a curve, `time.*` or \
-         `inputs.*`, or read the cash from a stream, a waterfall or the results layer.",
+        "logic cannot read this period or later: {}. An event's guard and action values, a \
+         field's rule, and an option's election and payoff all settle before this period's \
+         cash exists, so only settled history is readable — end the window at `time.t - 1` \
+         or earlier.",
         offences.join("; ")
     )))
 }
@@ -728,7 +733,7 @@ pub fn compare_evaluation_orders(
     // The walk: state settles, then that period's streams, one period at a
     // time.
     let mut walk_warnings = Vec::new();
-    let (_state_values, _event_sim, walked) =
+    let (_state_values, _event_sim, walked, _refusals) =
         walk_periods(&ir, &config, &prep, &base_inputs, &mut walk_warnings);
     Ok(Some((column, walked)))
 }
@@ -738,7 +743,12 @@ pub type StreamColumns = BTreeMap<String, Vec<f64>>;
 
 /// What one pass over the grid settles: field values, the event record, and
 /// each stream's column.
-type WalkOutput = (BTreeMap<String, Vec<f64>>, EventSim, StreamColumns);
+type WalkOutput = (
+    BTreeMap<String, Vec<f64>>,
+    EventSim,
+    StreamColumns,
+    BTreeMap<String, Vec<usize>>,
+);
 
 /// THE PERIOD WALK. One period at a time: state settles, then that period's
 /// streams evaluate against it.
@@ -773,10 +783,17 @@ fn walk_periods(
         .iter()
         .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
         .collect();
+    let mut refusals: BTreeMap<String, Vec<usize>> = BTreeMap::new();
 
     for t in 0..timeline.len() {
+        // 0. THE CASH ALREADY SETTLED, handed over before this period's state
+        //    is computed. `docs/28` §4: logic reads at or before `t - 1`, and
+        //    the store holds exactly that, because periods `0..t` are done and
+        //    period `t` has not started.
+        walk.observe_cash(Arc::new(full.clone()));
+
         // 1. STATE SETTLES. Fields take this period's candidates and events
-        //    overwrite them, exactly as the whole-timeline order does.
+        //    overwrite them — now able to test cash that has already arrived.
         walk.step(ir, config, t, &timeline[t], timeline, base_inputs, warnings);
 
         // 2. THIS PERIOD'S STREAMS, against the state just settled. The borrow
@@ -812,12 +829,18 @@ fn walk_periods(
                 if let Some(column) = full.get_mut(&stream.name) {
                     column[t] = value;
                 }
+                if !refused.is_empty() {
+                    refusals
+                        .entry(stream.name.clone())
+                        .or_default()
+                        .extend(refused);
+                }
             }
         }
     }
 
     let (state_values, event_sim) = walk.finish(ir);
-    (state_values, event_sim, full)
+    (state_values, event_sim, full, refusals)
 }
 
 pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
@@ -987,6 +1010,10 @@ pub(crate) struct ModelPrep<'a> {
     plans: Vec<StreamPlan<'a>>,
     /// Each stream's evaluation wave, from the dependency graph.
     waves: Vec<usize>,
+    /// Why this model cannot be walked, when it cannot: a window somewhere
+    /// reaches past the period being computed, and a walk has no such period
+    /// yet. `None` means the walk runs it.
+    walk_ineligible: Option<String>,
 }
 
 /// Compile and schedule a model once, for every run that follows.
@@ -1000,10 +1027,12 @@ fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep
     for stream in &ir.streams {
         plans.push(plan_stream(ir, stream, &timeline, warnings)?);
     }
+    let walk_ineligible = walk_ineligible_reason(ir, &deps);
     Ok(ModelPrep {
         timeline,
         plans,
         waves,
+        walk_ineligible,
     })
 }
 
@@ -1037,8 +1066,26 @@ fn run_deterministic(
     // state's `next` reads only `prev`, curves, inputs and time — never a
     // stream, never an event, never an option — so nothing an event or option
     // does can reach back into a state.
-    let (state_values, event_sim) =
-        simulate_state(ir, config, &timeline, &base_inputs, &mut warnings);
+    // THE WALK, WHERE THE MODEL ALLOWS IT. A period walk cannot serve a window
+    // that reaches past the period being computed, so a forward-reading model
+    // keeps the column order; everything else settles a period at a time, which
+    // is what lets a guard read cash that has already arrived (`docs/28` §4).
+    // The two orders compute the same numbers — `walk_matches_the_column_order`
+    // asserts it on the blessed corpus — so this changes what a model may SAY,
+    // not what any existing model reports.
+    let walked_columns: Option<BTreeMap<String, Vec<f64>>>;
+    let walked_refusals: BTreeMap<String, Vec<usize>>;
+    let (state_values, event_sim) = if prep.walk_ineligible.is_none() {
+        let (sv, es, columns, refusals) =
+            walk_periods(ir, config, prep, &base_inputs, &mut warnings);
+        walked_columns = Some(columns);
+        walked_refusals = refusals;
+        (sv, es)
+    } else {
+        walked_columns = None;
+        walked_refusals = BTreeMap::new();
+        simulate_state(ir, config, &timeline, &base_inputs, &mut warnings)
+    };
     let transitions = event_sim.transitions.clone();
     // The journal opens with what the state stage did and grows as each later
     // stage acts, so its order is the order the run happened in.
@@ -1099,21 +1146,34 @@ fn run_deterministic(
             let mut activation_refused: Vec<usize> = Vec::new();
             let plan = &prep.plans[idx];
             let mut values = vec![0.0_f64; timeline.len()];
-            for (pay_idx, slot) in values.iter_mut().enumerate() {
-                *slot = plan.step(
-                    ir,
-                    config,
-                    pay_idx,
-                    &timeline,
-                    &base_inputs,
-                    &event_sim.entity_state,
-                    &event_sim.stream_active,
-                    &state_values,
-                    snapshot.as_ref(),
-                    &mut warnings,
-                    &mut activation_refused,
-                    None,
-                );
+            if let Some(columns) = &walked_columns {
+                // The walk already evaluated every period of this stream, in
+                // the order that let the state stage see the cash. Recomputing
+                // here would be the same arithmetic twice.
+                if let Some(column) = columns.get(&stream.name) {
+                    values.clone_from(column);
+                }
+                activation_refused = walked_refusals
+                    .get(&stream.name)
+                    .cloned()
+                    .unwrap_or_default();
+            } else {
+                for (pay_idx, slot) in values.iter_mut().enumerate() {
+                    *slot = plan.step(
+                        ir,
+                        config,
+                        pay_idx,
+                        &timeline,
+                        &base_inputs,
+                        &event_sim.entity_state,
+                        &event_sim.stream_active,
+                        &state_values,
+                        snapshot.as_ref(),
+                        &mut warnings,
+                        &mut activation_refused,
+                        None,
+                    );
+                }
             }
             // ONE ROW PER STREAM, at the first period the refusal bit. An
             // activation persists forward, so a per-period row would repeat
@@ -2360,6 +2420,10 @@ mod tests {
 
     /// The IR the compiler will no longer emit, run directly.
     ///
+    /// Narrowed in phase 3: this guard reads the CURRENT period, which stays
+    /// refused. Settled history — `time.t - 1` and earlier — is now legal, and
+    /// `fixtures/valid/logic_reads_settled_cash` is where that is pinned.
+    ///
     /// `E1134_SERIES_READ_IN_LOGIC` refuses this in every model written in
     /// CFDL, which is why no fixture can carry it: the compiler stops first.
     /// The engine still accepts IR from the WASM, server and Python paths,
@@ -2403,8 +2467,8 @@ mod tests {
         );
         // The message must name WHERE, or it sends the reader hunting.
         assert!(
-            message.contains("event 'vacate' guard") && message.contains("series_sum"),
-            "message should name the site and the call: {message}"
+            message.contains("event 'vacate' guard") && message.contains("ops.revenue"),
+            "message should name the site and the read: {message}"
         );
     }
 

@@ -1,0 +1,94 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "recurrence-reads-settled-cash",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "25e2dcf6b842bdfd68d77edc067f5580",
+      "symbol": "asset.property",
+      "type": "Asset.Financial",
+      "fields": {
+        "base_rent": "100000.0"
+      },
+      "rules": {
+        "occupancy": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.80"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev + series_sum(\"rent.total\", time.t - 1, time.t - 1) / 10000000.0"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "a348ab4ad64610caace5a40617aa4d87",
+      "name": "rent.total",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.property.occupancy * asset.property.base_rent"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 23,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+version 0.1
+model "recurrence-reads-settled-cash"
+time calendar monthly from 2026-01 for 12
+
+// A FIELD'S RULE READS THE CASH THAT ARRIVED.
+//
+// Occupancy rises with realised revenue. Before the period walk this nulled
+// the whole expression — the series read bound nothing, the substituted zero
+// propagated through `prev`, and occupancy collapsed to 0.0 from period 1 with
+// the run still reporting ok (`docs/13` §7.71).
+//
+// Now the rule reads settled history, strictly backward: at period `t` the
+// cash of `t - 1` has already been computed by the walk. The circularity that
+// makes this look dangerous is not there — occupancy at `t` depends on revenue
+// at `t - 1`, which depended on occupancy at `t - 1`. Every edge points
+// backward, so there is nothing to solve and nothing to iterate.
+
+entity asset property : Asset.Financial {
+  occupancy init 0.80 next prev + series_sum("rent.total", time.t - 1, time.t - 1) / 10000000.0
+  base_rent = 100000.0
+}
+
+stream rent.total on entity asset.property inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = asset.property.occupancy * asset.property.base_rent
+}
