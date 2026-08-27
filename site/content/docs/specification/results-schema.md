@@ -296,6 +296,83 @@ against it by `make results-schema`.
               }
             }
           }
+        },
+        "journal": {
+          "type": "array",
+          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. Flat on purpose — one row per act — so a golden asserts on lines, a reviewer greps for a stream name, and this schema checks one row type. Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "date",
+              "actor",
+              "action",
+              "target",
+              "outcome"
+            ],
+            "properties": {
+              "period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "date": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string",
+                "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "set",
+                  "activate_stream",
+                  "deactivate_stream",
+                  "activate_contract",
+                  "deactivate_contract",
+                  "exercise_option",
+                  "pay"
+                ]
+              },
+              "target": {
+                "type": "string",
+                "description": "What was acted on — a field path, a stream name, or a step and its payee."
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "applied",
+                  "declined",
+                  "overridden",
+                  "ignored",
+                  "failed"
+                ],
+                "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Cash moved, for a waterfall step."
+              },
+              "pot_before": {
+                "type": "number",
+                "description": "The pot before the step took from it, so a short pot is visible as the reason a payee got less than it was owed."
+              },
+              "pot_after": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string",
+                "description": "Why, when the outcome is not `applied`."
+              }
+            }
+          }
         }
       }
     },
