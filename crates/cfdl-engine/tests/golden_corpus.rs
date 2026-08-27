@@ -217,3 +217,56 @@ fn first_difference(blessed: &serde_json::Value, produced: &serde_json::Value) -
     }
     walk("", blessed, produced).unwrap_or_else(|| "documents differ".to_string())
 }
+
+/// WHICH MODELS CAN BE WALKED, asserted rather than tabulated.
+///
+/// `docs/29` §2.0 measured the corpus by hand before the period walk was
+/// designed: a period walk cannot serve a read that reaches forward, because
+/// at period 3 there is no period 24. This pins that measurement in code, so
+/// the table in the plan cannot quietly go stale and a new forward-reading
+/// model cannot arrive unnoticed.
+///
+/// The expected set is exactly the two constructs `docs/28` §7 migrates to the
+/// valuation plane — the forward-income exit and the expense stop's base year
+/// — plus the two fixtures carrying an absolute window. Everything else in the
+/// corpus reads cumulatively BACKWARD (`[0..time.t]`), which a walk serves
+/// exactly; that distinction is what makes the collapse property reachable.
+#[test]
+fn only_the_known_models_read_forward() {
+    let root = repo_root();
+    let corpus = corpus(&root);
+    assert!(corpus.len() >= 100, "corpus not found: {}", corpus.len());
+
+    let mut forward: Vec<String> = Vec::new();
+    for (name, (ir_path, _, _)) in &corpus {
+        let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
+        match cfdl_engine::walk_eligibility(&raw) {
+            Ok(None) => {}
+            Ok(Some(_)) => forward.push(name.clone()),
+            Err(err) => panic!("{name}: eligibility could not be computed: {err}"),
+        }
+    }
+
+    // Measured, not assumed. Three causes, and the second is the one a scan of
+    // model source cannot find:
+    //
+    //   cre_derived_lines      an absolute base year, `cre.opex.line[24..24]`
+    //   cre_office_two_tenant  \
+    //   pack_cadence_cre_*      > the CRE pack's `cre.exit_forward` lowering,
+    //                          /  which reads `[time.t + 1 .. time.t + 12]`
+    //   waterfall_nested_split an absolute window in a waterfall STEP
+    let expected = [
+        "cre_derived_lines",
+        "cre_office_two_tenant",
+        "pack_cadence_cre_annual",
+        "pack_cadence_cre_monthly",
+        "pack_cadence_cre_quarterly",
+        "waterfall_nested_split",
+    ];
+    assert_eq!(
+        forward, expected,
+        "the set of forward-reading fixtures changed. If a new model reads \
+         forward, `docs/29` §2.0 and `docs/28` §7 both describe what happens to \
+         it — add it here deliberately, not by blessing a diff."
+    );
+}

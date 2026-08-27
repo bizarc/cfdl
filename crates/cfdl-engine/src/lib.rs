@@ -592,6 +592,121 @@ struct StreamDeps {
     computed: bool,
     /// The literal read patterns, as written — globs included.
     refs: Vec<String>,
+    /// Reads a window that can reach at or beyond the current period's future.
+    ///
+    /// A period walk can serve a read only if everything it reaches has
+    /// already happened, so this is what decides whether a model can be
+    /// walked. `docs/29` §2.0 measured the corpus: two benchmarks and two
+    /// fixtures read forward, and they are exactly the two constructs
+    /// `docs/28` §7 migrates to the valuation plane. Everything else reads
+    /// cumulatively backward, which a walk serves exactly.
+    reads_forward: bool,
+}
+
+/// Can this model be evaluated one period at a time?
+///
+/// The question the period walk asks before it runs. `None` means yes;
+/// `Some(reason)` names the first stream that reads forward, so a refusal or a
+/// routing decision can say which construct forced it.
+///
+/// Not yet a routing decision: until `docs/28` §4's backward reads land, no
+/// model couples cash into logic, so the walk and the column order agree
+/// wherever both can run. This is the predicate that will choose between them,
+/// and the one the equivalence test uses to know which fixtures to compare.
+/// Each stream's series dependencies, the reads it makes and whether any
+/// window reaches forward. Extracted so the walk's eligibility query and the
+/// wave ordering compute it the same way rather than twice.
+fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
+    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
+    for stream in &ir.streams {
+        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
+        // amount. `active when series_sum(...) > 0` on a stream whose amount
+        // happens not to use one was once handed an empty series map, and its
+        // guard then failed — warned, evaluated FALSE, and the stream silently
+        // produced nothing at all. An expression that fails to compile
+        // contributes nothing here; `evaluate_stream` warns about it later.
+        let probe = |src: &str| -> (bool, bool) {
+            cfdl_expr::compile_expr(src)
+                .map(|c| {
+                    (
+                        cfdl_expr::uses_series(&c),
+                        cfdl_expr::has_computed_series_name(&c),
+                    )
+                })
+                .unwrap_or((false, false))
+        };
+        // A window reaching forward is measured over the same expressions the
+        // reads are extracted from, so a guard cannot smuggle one past.
+        let forward = |src: &str| -> bool {
+            cfdl_expr::series_windows(src).iter().any(|w| {
+                !(cfdl_expr::window_bound_is_backward(&w.from_src)
+                    && cfdl_expr::window_bound_is_backward(&w.to_src))
+            })
+        };
+        let (mut uses, mut computed) = probe(&stream.amount.src);
+        let mut refs = cfdl_expr::series_references(&stream.amount.src);
+        let mut reads_forward = forward(&stream.amount.src);
+        if let Some(guard) = &stream.active_when {
+            let (guard_uses, guard_computed) = probe(&guard.src);
+            uses |= guard_uses;
+            computed |= guard_computed;
+            refs.extend(cfdl_expr::series_references(&guard.src));
+            reads_forward |= forward(&guard.src);
+        }
+        deps.push(StreamDeps {
+            uses,
+            computed,
+            refs,
+            reads_forward,
+        });
+    }
+    deps
+}
+
+pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
+    let ir: Ir = serde_json::from_str(raw_ir)?;
+    let deps = stream_deps(&ir);
+    Ok(walk_ineligible_reason(&ir, &deps))
+}
+
+fn walk_ineligible_reason(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
+    for (stream, dep) in ir.streams.iter().zip(deps) {
+        if dep.reads_forward {
+            return Some(format!(
+                "stream '{}' reads a series window that can reach beyond the current period",
+                stream.name
+            ));
+        }
+    }
+    // A WATERFALL'S STEPS READ SERIES TOO, and they are not in `ir.streams`.
+    // `waterfall_nested_split` reads `[0..5]` from a step, which a
+    // streams-only check reported as walkable — the fund waterfall composition
+    // of `docs/17` is exactly where an absolute window is natural.
+    let reaches_forward = |src: &str| -> bool {
+        cfdl_expr::series_windows(src).iter().any(|w| {
+            !(cfdl_expr::window_bound_is_backward(&w.from_src)
+                && cfdl_expr::window_bound_is_backward(&w.to_src))
+        })
+    };
+    for waterfall in &ir.waterfalls {
+        {
+            if reaches_forward(&waterfall.source.src) {
+                return Some(format!(
+                    "waterfall '{}' draws from a pot whose window can reach beyond the current period",
+                    waterfall.name
+                ));
+            }
+        }
+        for step in &waterfall.steps {
+            if reaches_forward(&step.amount.src) {
+                return Some(format!(
+                    "waterfall '{}' step '{}' reads a series window that can reach beyond the current period",
+                    waterfall.name, step.name
+                ));
+            }
+        }
+    }
+    None
 }
 
 /// Assign each stream the wave it evaluates in: 0 for streams that read no
@@ -772,38 +887,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // `series_sum("cre.unit.recoveries.*", ...)` and an exact lookup of the
     // pattern found nothing — measured on `mit_rentleg_plaza`, an exit price
     // $116,440 lower with no diagnostic.
-    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
-    for stream in &ir.streams {
-        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
-        // amount. `active when series_sum(...) > 0` on a stream whose amount
-        // happens not to use one was once handed an empty series map, and its
-        // guard then failed — warned, evaluated FALSE, and the stream silently
-        // produced nothing at all. An expression that fails to compile
-        // contributes nothing here; `evaluate_stream` warns about it later.
-        let probe = |src: &str| -> (bool, bool) {
-            cfdl_expr::compile_expr(src)
-                .map(|c| {
-                    (
-                        cfdl_expr::uses_series(&c),
-                        cfdl_expr::has_computed_series_name(&c),
-                    )
-                })
-                .unwrap_or((false, false))
-        };
-        let (mut uses, mut computed) = probe(&stream.amount.src);
-        let mut refs = cfdl_expr::series_references(&stream.amount.src);
-        if let Some(guard) = &stream.active_when {
-            let (guard_uses, guard_computed) = probe(&guard.src);
-            uses |= guard_uses;
-            computed |= guard_computed;
-            refs.extend(cfdl_expr::series_references(&guard.src));
-        }
-        deps.push(StreamDeps {
-            uses,
-            computed,
-            refs,
-        });
-    }
+    let deps = stream_deps(ir);
     let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
     let waves = assign_waves(&stream_names, &deps)?;
     let max_wave = waves.iter().copied().max().unwrap_or(0);
@@ -2529,6 +2613,7 @@ mod series_wave_tests {
             uses,
             computed,
             refs: refs.iter().map(|r| r.to_string()).collect(),
+            reads_forward: false,
         }
     }
 

@@ -1273,3 +1273,244 @@ mod tests {
         assert_eq!(eval(&compiled, &env).unwrap(), Value::Decimal(10.0));
     }
 }
+
+/// One `series_sum`/`series_avg` read, as written: the series it names and the
+/// two window bounds, each still source text.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SeriesWindow {
+    pub name: String,
+    pub from_src: String,
+    pub to_src: String,
+}
+
+/// Every series read in an expression, with its window.
+///
+/// `series_references` answers WHICH series an expression reads, which is what
+/// the wave ordering needs. This answers WHEN it reads them, which is what a
+/// period walk needs: at period 3 there is no period 24, so a bound that can
+/// exceed `time.t` decides whether a model can be walked at all.
+///
+/// Bounds are returned as source rather than parsed, because the question asked
+/// of them (`can this exceed t`) is answered by `window_bound_is_backward`
+/// below and is deliberately conservative — a shape it does not recognise is
+/// treated as forward.
+pub fn series_windows(src: &str) -> Vec<SeriesWindow> {
+    let mut out = Vec::new();
+    let bytes = src.as_bytes();
+    for func in ["series_sum", "series_avg"] {
+        let mut from = 0usize;
+        while let Some(rel) = src[from..].find(func) {
+            let after = from + rel + func.len();
+            from = after;
+            let mut i = after;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'(' {
+                continue;
+            }
+            i += 1;
+            while i < bytes.len() && (bytes[i] as char).is_whitespace() {
+                i += 1;
+            }
+            if i >= bytes.len() || bytes[i] != b'"' {
+                continue;
+            }
+            i += 1;
+            let name_start = i;
+            while i < bytes.len() && bytes[i] != b'"' {
+                i += 1;
+            }
+            if i >= bytes.len() {
+                continue;
+            }
+            let name = src[name_start..i].to_string();
+            i += 1;
+            // Two comma-separated arguments follow, to the call's closing
+            // paren. Nesting is tracked so `max(time.t - 1, 0)` counts as one
+            // argument rather than two.
+            let mut args: Vec<String> = Vec::new();
+            let mut depth = 0i32;
+            let mut arg_start = None::<usize>;
+            while i < bytes.len() {
+                let c = bytes[i] as char;
+                match c {
+                    ',' if depth == 0 => {
+                        if let Some(a) = arg_start.take() {
+                            args.push(src[a..i].trim().to_string());
+                        }
+                    }
+                    '(' | '[' => depth += 1,
+                    ')' | ']' if depth == 0 => {
+                        if let Some(a) = arg_start.take() {
+                            args.push(src[a..i].trim().to_string());
+                        }
+                        break;
+                    }
+                    ')' | ']' => depth -= 1,
+                    _ if !c.is_whitespace() && arg_start.is_none() => arg_start = Some(i),
+                    _ => {}
+                }
+                i += 1;
+            }
+            if args.len() >= 2 {
+                out.push(SeriesWindow {
+                    name,
+                    from_src: args[0].clone(),
+                    to_src: args[1].clone(),
+                });
+            }
+        }
+    }
+    out
+}
+
+/// Is this window bound provably at or before the current period?
+///
+/// A period walk can serve a read only if everything it reaches has already
+/// happened. Recognised backward shapes, and nothing else:
+///
+/// * `time.t` — the current period. Same-period stream reads are ordered
+///   within the period by the same dependency graph that orders columns today.
+/// * `time.t - <non-negative literal>` — strictly earlier.
+/// * `0` — the model's first period, at or before every `t`.
+/// * `max(<backward>, <backward>)` / `min(...)` — backward if both arms are.
+///
+/// Everything else is forward, INCLUDING a positive literal: `24` is behind t
+/// once the run reaches period 25 and ahead of it before then, and a static
+/// check cannot know which. That conservatism is deliberate — it is what makes
+/// `cre.opex.line[24..24]`, the expense stop's base year, report as forward.
+pub fn window_bound_is_backward(src: &str) -> bool {
+    let s = src.trim();
+    // A NUMERIC LITERAL AT OR BELOW ZERO. Written `0` and emitted `0.0` — the
+    // compiler normalises integer literals to floats, so matching only the
+    // source spelling reported every cumulative window in the corpus as
+    // forward.
+    if let Ok(n) = s.parse::<f64>() {
+        return n <= 0.0;
+    }
+    // `time.t` PLUS A CHAIN OF SIGNED LITERALS, backward when the net offset
+    // is at or below zero. The OpCo pack lowers a trailing-twelve-month window
+    // as `time.t - 12.0 + 1.0`, which is `t - 11` and plainly backward; reading
+    // only the first term reported it as forward and would have refused the
+    // walk for every LBO model in the corpus.
+    if let Some(rest) = s.strip_prefix("time.t") {
+        let mut rest = rest.trim();
+        let mut net = 0.0_f64;
+        while !rest.is_empty() {
+            let (sign, tail) = match rest.as_bytes()[0] {
+                b'+' => (1.0, &rest[1..]),
+                b'-' => (-1.0, &rest[1..]),
+                _ => return false,
+            };
+            let tail = tail.trim_start();
+            // The literal runs to the next sign or the end.
+            let end = tail
+                .find(['+', '-'])
+                .unwrap_or(tail.len());
+            let Ok(v) = tail[..end].trim().parse::<f64>() else {
+                return false;
+            };
+            net += sign * v;
+            rest = tail[end..].trim();
+        }
+        return net <= 0.0;
+    }
+    for f in ["max", "min"] {
+        if let Some(rest) = s.strip_prefix(f) {
+            let rest = rest.trim();
+            if let Some(inner) = rest.strip_prefix('(').and_then(|r| r.strip_suffix(')')) {
+                // One level of splitting is enough for the shapes that occur;
+                // anything deeper falls through to `false`, which is safe.
+                let mut depth = 0i32;
+                let mut parts = Vec::new();
+                let mut start = 0usize;
+                for (idx, c) in inner.char_indices() {
+                    match c {
+                        '(' => depth += 1,
+                        ')' => depth -= 1,
+                        ',' if depth == 0 => {
+                            parts.push(&inner[start..idx]);
+                            start = idx + 1;
+                        }
+                        _ => {}
+                    }
+                }
+                parts.push(&inner[start..]);
+                if parts.len() == 2 {
+                    return parts.iter().all(|p| window_bound_is_backward(p));
+                }
+            }
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod window_tests {
+    use super::*;
+
+    fn backward(src: &str) -> bool {
+        let ws = series_windows(src);
+        assert_eq!(ws.len(), 1, "expected one window in {src}: {ws:?}");
+        window_bound_is_backward(&ws[0].from_src) && window_bound_is_backward(&ws[0].to_src)
+    }
+
+    #[test]
+    fn a_cumulative_window_is_backward() {
+        // The Highlands pot and the auto-ABS cumulative prepayment. Everything
+        // they read has already happened, so a walk serves them exactly — and
+        // most of what looks alarming in the corpus is this shape.
+        assert!(backward(r#"series_sum("cre.*", 0, time.t)"#));
+        assert!(backward(
+            r#"series_sum("credit.pool.prepay.*", 0, time.t - 1)"#
+        ));
+        assert!(backward(r#"series_sum("cre.rent", time.t, time.t)"#));
+    }
+
+    #[test]
+    fn a_clamped_lagged_window_is_backward() {
+        // The spelling `docs/28` §4 makes legal for a guard: strictly the
+        // previous period, clamped so period 0 has a referent.
+        assert!(backward(
+            r#"series_sum("cre.rent", max(time.t - 1, 0), max(time.t - 1, 0))"#
+        ));
+    }
+
+    #[test]
+    fn a_forward_window_is_not() {
+        // One Rosslyn's forward-income exit reads twelve periods ahead.
+        assert!(!backward(
+            r#"series_sum("cre.rent", time.t + 1, time.t + 12)"#
+        ));
+    }
+
+    #[test]
+    fn a_positive_literal_bound_is_forward() {
+        // CONSERVATIVE ON PURPOSE. `24` is behind `t` once the run reaches
+        // period 25 and ahead of it before then, and a static check cannot
+        // know which — so the expense stop's base year reports as forward,
+        // which is the answer that keeps a walk correct.
+        assert!(!backward(r#"series_sum("cre.opex.line", 24, 24)"#));
+        assert!(!backward(r#"series_sum("f.gp", 0, 5)"#));
+    }
+
+    #[test]
+    fn a_shape_it_does_not_recognise_is_forward() {
+        // Unrecognised must mean forward, never backward: a walk that guesses
+        // wrong reads a cell that does not exist yet.
+        assert!(!window_bound_is_backward("inputs.base_year"));
+        assert!(!window_bound_is_backward("time.t * 2"));
+        assert!(!window_bound_is_backward("time.t + inputs.lag"));
+    }
+
+    #[test]
+    fn windows_are_extracted_with_their_names() {
+        let ws =
+            series_windows(r#"series_sum("a.b", 0, time.t) + series_avg("c.d", time.t, time.t)"#);
+        assert_eq!(ws.len(), 2);
+        assert_eq!(ws[0].name, "a.b");
+        assert_eq!(ws[1].name, "c.d");
+        assert_eq!(ws[1].from_src, "time.t");
+    }
+}

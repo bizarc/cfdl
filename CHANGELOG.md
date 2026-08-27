@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: which models can be walked, and the forward reads that answer it
+
+Phase 2.0 of `docs/29_period_walk_implementation.md`. A period walk cannot
+serve a read that reaches forward — at period 3 there is no period 24 — so
+before the walk is built, the corpus is measured for reads ahead of `time.t`.
+`cfdl_expr::series_windows` extracts each read with its window bounds and
+`window_bound_is_backward` classifies them; `cfdl_engine::walk_eligibility`
+answers the question for a model.
+
+**Asked of model source the answer was two benchmarks. Asked of the compiled
+IR it is six fixtures and three causes**, and the difference is the finding:
+the forward-income exit is the CRE pack's `cre.exit_forward` LOWERING, reading
+`[time.t + 1 .. time.t + 12]`, so every model using that contract reads
+forward and no scan of model source can see it. That widens `docs/28` §7's
+migration from one benchmark to one pack contract and every model that uses
+it. A waterfall's STEPS read series too, and are not in `ir.streams`, which is
+how an absolute `[0..5]` window looked walkable.
+
+Two shapes had to be taught before the cumulative windows came out right, and
+both reported as forward until they were: the compiler normalises `0` to
+`0.0`, and the OpCo pack writes a trailing-twelve-month window as
+`time.t - 12.0 + 1.0`, which is `t - 11`. Reading only the first term refused
+the walk for every LBO model in the corpus.
+
+The classifier is conservative by construction — an unrecognised shape is
+forward, because a walk that guesses wrong reads a cell that does not exist
+yet — and `only_the_known_models_read_forward` pins the measured set so the
+plan's table cannot go stale.
+
 ### Added: Monte Carlo says when each act happened, and how often — 7.18 closed
 
 `monte_carlo.journal` publishes one row per distinct act with the share of
