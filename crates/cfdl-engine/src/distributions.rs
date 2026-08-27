@@ -94,8 +94,12 @@ pub(crate) fn run_waterfalls(
     // finishes, which makes the dependency an order rather than a graph — the
     // same rule steps inside a waterfall already follow.
     let mut visible: BTreeMap<String, Vec<f64>> = stream_series.clone();
+    // PREPARED ONCE: which periods each waterfall distributes in, and a
+    // column per step. A waterfall scheduled on one date near the end of a
+    // hold does nothing in the other periods, and the walk should ask a
+    // boolean rather than rebuild a schedule to find that out.
+    let mut runs_in_all: Vec<Vec<bool>> = Vec::with_capacity(ir.waterfalls.len());
     for waterfall in &ir.waterfalls {
-        let shared = Arc::new(visible.clone());
         // Which periods this waterfall runs in. No schedule means every
         // period, the cadence a distribution date usually has.
         let mut hits = vec![Vec::new(); periods];
@@ -120,10 +124,29 @@ pub(crate) fn run_waterfalls(
             );
         }
 
-        for (t, runs) in runs_in.iter().enumerate().take(periods) {
-            if !runs {
+        runs_in_all.push(runs_in);
+    }
+
+    // PERIOD-MAJOR, waterfalls in declaration order within each period.
+    //
+    // A waterfall stays its own stage over cash the streams produced
+    // (`docs/17` §4); what moves is WHEN the stage runs. Computing a
+    // distribution at its own period, rather than in a pass after all time,
+    // is what lets a later period read what was actually paid — the balance
+    // of a tranche under a short pot reduces by what it received, not by
+    // what it was owed, which is how sequential-pay works and what backlog
+    // 5.2 records seven class balances duplicating today.
+    //
+    // Composition still holds: an earlier waterfall's steps join `visible`
+    // as they are paid, so a later one reads them at this period. A
+    // waterfall cannot read its OWN steps — `E1342` refuses that at compile
+    // time, so visibility here cannot be abused.
+    for t in 0..periods {
+        for (w_idx, waterfall) in ir.waterfalls.iter().enumerate() {
+            if !runs_in_all[w_idx][t] {
                 continue;
             }
+            let shared = Arc::new(visible.clone());
             let date = &timeline[t];
             let mut env = build_base_env(ir, config, t, date, base_inputs);
             env.curves = curves.clone();
@@ -222,14 +245,16 @@ pub(crate) fn run_waterfalls(
                 }
                 journal.push(entry);
             }
-        }
-        // This waterfall's steps become visible to the next one.
-        for step in &waterfall.steps {
-            let key = format!("{}.{}", waterfall.name, step.name);
-            if let Some(values) = out.get(&key) {
-                visible.insert(key, values.clone());
+            // Paid, and therefore visible to the next waterfall this period.
+            for step in &waterfall.steps {
+                let key = format!("{}.{}", waterfall.name, step.name);
+                if let Some(values) = out.get(&key) {
+                    let column = visible.entry(key).or_insert_with(|| vec![0.0; periods]);
+                    column[t] = values[t];
+                }
             }
         }
     }
+
     out
 }

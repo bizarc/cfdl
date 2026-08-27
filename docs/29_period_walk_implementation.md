@@ -252,11 +252,25 @@ it: `E1134` still refuses a series read in logic, so no model can ask. Phase 3
 narrows that refusal to FORWARD reads only, and this loop is what makes it
 narrowable rather than absolute.
 
-**Waterfalls remain their own stage**, over cash the walk has produced
-(`docs/17` §4). Moving them inside the period loop is what
-`prev.<waterfall>.<step>` will need — a balance reading what a waterfall
-actually paid — and is the one piece of §2.4 still outstanding. It is not
-needed for phase 3's guard reads, which are satisfied by stream cash alone.
+**Waterfalls are their own stage, and now run at their own period.** Those are
+different things, and only the second changed: a waterfall still allocates cash
+the streams already produced (`docs/17` §4) and stream evaluation still does not
+know it exists. What moved is WHEN the stage runs — at its place inside the
+period rather than in a pass after all time.
+
+It has to. Under a short pot a tranche is paid less than it is owed, and its
+balance must reduce by what it RECEIVED rather than by what it was scheduled;
+that is how sequential-pay works, and for a balance at `t` to read a payment
+from `t-1` the waterfall at `t-1` must already have run. Backlog 5.2 records
+`americredit_2017_1` duplicating its step-down expression across seven class
+balances for exactly this reason. `prev.<waterfall>.<step>` is what closes it,
+and it stays strictly backward, so no cycle appears.
+
+Composition survives the reorder: an earlier waterfall's steps join the visible
+store as they are paid, so a later one reads them at the same period —
+`waterfall_nested_split` distributes three waterfalls at one date and still
+ties. A waterfall cannot read its OWN steps, which `E1342` refuses at compile
+time, so runtime visibility cannot be abused to get around it.
 
 - Files: `crates/cfdl-engine/src/{lib,state,streams,distributions}.rs`.
 - Gate — **the collapse property, and it is hard**: the full golden suite
