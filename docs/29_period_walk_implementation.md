@@ -221,33 +221,42 @@ question is not reasoned about a fourth time: the store is not the cost, the
 environment is, and the fix is a per-stream minimal environment rather than a
 new storage type.
 
-**2.4 The fold — the streams half is built.** `evaluate_stream` is now
-`plan_stream` plus `StreamPlan::step`, and the column order is a loop over
-`step` rather than a second implementation, so the two orders share one
-arithmetic by construction. `walk_streams` is the period-major order, and
-`walk_matches_the_column_order` compares the two over the blessed corpus:
-**exactly equal on 105 models, every stream and every period**, with the five
-forward-reading models skipped as inapplicable rather than failed. That is the
-collapse property measured rather than argued, and it is worth more than the
-goldens for this purpose — a golden says the engine still produces the blessed
-numbers, this says the two ORDERS agree, which a golden cannot see while only
-one order runs in production.
+**2.4 The fold — built.**
 
-**The grid is not the deal.** A model may declare ten years and have activity
-in two: `time` sets the grid the walk steps, and a stream's schedule decides
-which periods it is present in. Most cells are inert and cost nothing, because
-`settles_at` answers from the prepared schedule. The same is true one stage
-along — a waterfall scheduled on one date near the end of a hold does nothing
-in the other periods, which its `runs_in` mask already answers. What is NOT yet
-free is the store snapshot, taken per (period, wave) where the column order
-takes it per wave; §2.3 is where that is fixed, and until then `walk_streams`
-is exercised by the equivalence test rather than run in production.
+The period loop of `docs/28` §3 exists and is driven: `walk_periods` settles
+state for period `t`, then evaluates that period's streams against it, then
+advances. Three refactors made it possible and none of them changed a number:
 
-**What remains of 2.4.** Streams and scheduled waterfalls move inside the walk
-that `state.rs` already performs: per period — state settles, streams
-evaluate, waterfalls whose schedule names the period distribute, journal
-appends. The `EventSim` seam becomes two-way: realised per-period amounts
-flow back into the walk's record.
+* `evaluate_stream` split into `plan_stream` and `StreamPlan::step`;
+* the state stage split into `prepare_state_walk`, `StateWalk::step` and
+  `StateWalk::finish`, so it can be advanced a period at a time rather than
+  run to completion first;
+* a stream stopped taking a finished `EventSim` and started taking the two
+  pieces it reads — the settled entity state and the stream-active mask — so a
+  walk can supply them while the state stage is still advancing and the column
+  order can supply them from a completed one.
+
+Both orders are loops over the same `step`, so they cannot compute different
+numbers by construction, and `walk_matches_the_column_order` shows it:
+**exactly equal on 105 models**, every stream and every period, with the five
+forward-reading models skipped as inapplicable.
+
+**The seam is two-way, and it needs no interior mutability.** Within a period
+the state stage reads the store and the streams stage writes it — but
+sequentially, because state settles completely before streams evaluate. That
+is why §2.3's store was unnecessary for correctness as well as for speed.
+
+**What this makes possible, and does not yet do.** State at period `t` now
+settles with every earlier period's cash already in the store. Nothing reads
+it: `E1134` still refuses a series read in logic, so no model can ask. Phase 3
+narrows that refusal to FORWARD reads only, and this loop is what makes it
+narrowable rather than absolute.
+
+**Waterfalls remain their own stage**, over cash the walk has produced
+(`docs/17` §4). Moving them inside the period loop is what
+`prev.<waterfall>.<step>` will need — a balance reading what a waterfall
+actually paid — and is the one piece of §2.4 still outstanding. It is not
+needed for phase 3's guard reads, which are satisfied by stream cash alone.
 
 - Files: `crates/cfdl-engine/src/{lib,state,streams,distributions}.rs`.
 - Gate — **the collapse property, and it is hard**: the full golden suite

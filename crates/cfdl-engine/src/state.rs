@@ -52,6 +52,14 @@ pub struct TransitionRecord {
     pub event: String,
 }
 
+/// What a stream reads of the state a period has settled: the field values,
+/// the entity state per period, and the stream-active mask.
+pub(crate) type SettledState<'a> = (
+    &'a BTreeMap<String, Vec<f64>>,
+    &'a [BTreeMap<String, BTreeMap<String, ExprValue>>],
+    &'a BTreeMap<String, Vec<bool>>,
+);
+
 /// A field's rule, compiled once and stepped every period.
 struct Prepared {
     /// `<entity>.<field>` — the path the field is read by.
@@ -105,6 +113,16 @@ pub(crate) struct StateWalk {
 }
 
 impl StateWalk {
+    /// The state settled so far, as the two pieces a stream reads.
+    ///
+    /// Handed out BETWEEN periods, never during one: the state stage settles a
+    /// period completely before the streams stage evaluates it, so the two
+    /// borrows are sequential and the seam needs no interior mutability to be
+    /// two-way.
+    pub(crate) fn settled(&self) -> SettledState<'_> {
+        (&self.values, &self.entity_state, &self.stream_active)
+    }
+
     /// Settle one period: this period's field candidates, then the events and
     /// options that may overwrite them, then the column.
     #[allow(clippy::too_many_arguments)]

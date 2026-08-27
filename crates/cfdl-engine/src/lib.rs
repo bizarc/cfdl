@@ -673,108 +673,15 @@ fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
     deps
 }
 
-/// The streams stage, one period at a time — the walk of `docs/28` §3.
-///
-/// Produces exactly what the column loop produces: each stream's full column,
-/// stepped from the same `StreamPlan`, so the two orders share one arithmetic
-/// rather than agreeing by inspection. What differs is only the order the cells
-/// are computed in, and that order is the point — a period's state can read an
-/// earlier period's realised cash once `docs/28` §4 admits the reads, which the
-/// column order can never allow because it finishes each stream before starting
-/// the next.
-///
-/// Waterfalls are not here. They are their own stage over cash this one has
-/// already produced (`docs/17` §4).
-///
-/// COST, STATED. The expression environment takes an `Arc<BTreeMap<..>>`, so a
-/// wave that reads earlier waves needs the store sealed — and under the walk
-/// that seal moves per (period, wave) rather than per wave. On the deepest
-/// schedules in the corpus that is hundreds of clones of the whole store.
-/// `docs/29` §2.3 is where that is fixed, by a store that represents a
-/// partially built column instead of being copied; until then this path is
-/// exercised by `walk_matches_the_column_order` rather than run in production.
-#[allow(clippy::too_many_arguments)]
-fn walk_streams(
-    ir: &Ir,
-    config: &RunConfig,
-    timeline: &[Date],
-    base_inputs: &BTreeMap<String, f64>,
-    event_sim: &EventSim,
-    state_values: &BTreeMap<String, Vec<f64>>,
-    waves: &[usize],
-    warnings: &mut Vec<String>,
-) -> Result<BTreeMap<String, Vec<f64>>, EngineError> {
-    let max_wave = waves.iter().copied().max().unwrap_or(0);
-    let mut plans = Vec::with_capacity(ir.streams.len());
-    for stream in &ir.streams {
-        plans.push(plan_stream(ir, stream, timeline, warnings)?);
-    }
-    let mut full: BTreeMap<String, Vec<f64>> = ir
-        .streams
-        .iter()
-        .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
-        .collect();
-
-    // THE GRID IS NOT THE DEAL. A model may declare ten years and have activity
-    // in two of them: `time` sets the grid the walk steps, and a stream's
-    // schedule decides which of those periods it is present in. Most cells are
-    // therefore inert, and the walk must not pay for them — the store snapshot
-    // below is the only per-period cost that is not already proportional to
-    // what is scheduled, so it is taken only when a wave has something to do.
-    for t in 0..timeline.len() {
-        for wave in 0..=max_wave {
-            let wave_is_active =
-                (0..ir.streams.len()).any(|idx| waves[idx] == wave && plans[idx].settles_at(t));
-            if !wave_is_active {
-                continue;
-            }
-            // Wave 0 reads no series, so what it is handed cannot matter; every
-            // later wave sees this period's earlier waves and every completed
-            // period before it.
-            let snapshot = (wave > 0).then(|| Arc::new(full.clone()));
-            for (idx, stream) in ir.streams.iter().enumerate() {
-                if waves[idx] != wave || !plans[idx].settles_at(t) {
-                    continue;
-                }
-                let mut refused: Vec<usize> = Vec::new();
-                let value = plans[idx].step(
-                    ir,
-                    config,
-                    t,
-                    timeline,
-                    base_inputs,
-                    &event_sim.entity_state,
-                    &event_sim.stream_active,
-                    state_values,
-                    snapshot.as_ref(),
-                    warnings,
-                    &mut refused,
-                    // Under the walk the columns are filled as it advances, so
-                    // a read past this period would read an allocation.
-                    Some(t),
-                );
-                if let Some(column) = full.get_mut(&stream.name) {
-                    column[t] = value;
-                }
-            }
-        }
-    }
-    Ok(full)
-}
-
-/// Each stream's column, keyed by stream name.
-pub type StreamColumns = BTreeMap<String, Vec<f64>>;
-
 /// Both evaluation orders over one model, for comparison.
 ///
-/// The collapse property of `docs/29` phase 2 is a claim that the walk computes
-/// what the column order computes. This runs both and hands back each stream's
-/// column from each, so a test can assert it on the whole blessed corpus rather
+/// The collapse property of phase 2 is a claim that the walk computes what the
+/// column order computes. This runs both and hands back each stream's column
+/// from each, so a test can assert it over the whole blessed corpus rather
 /// than on reasoning.
 ///
-/// Returns `Ok(None)` when the model reads forward and the walk therefore
-/// cannot run it — the walk is not wrong there, it is inapplicable, and the
-/// caller should skip rather than fail.
+/// `Ok(None)` when the model reads forward and the walk cannot run it — not
+/// wrong there, inapplicable, so the caller skips rather than fails.
 pub fn compare_evaluation_orders(
     raw_ir: &str,
     config: RunConfig,
@@ -784,22 +691,21 @@ pub fn compare_evaluation_orders(
     if walk_ineligible_reason(&ir, &deps).is_some() {
         return Ok(None);
     }
-    let total_periods = ir.time.periods as usize + ir.time.projection as usize;
-    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
     let mut warnings = Vec::new();
+    let prep = prepare_model(&ir, &mut warnings)?;
+    let timeline = prep.timeline.clone();
     let base_inputs = assumption_inputs(&ir, &mut warnings)?;
+
+    // The column order: all state first, then each stream over the whole
+    // timeline, in dependency waves.
     let (state_values, event_sim) =
         simulate_state(&ir, &config, &timeline, &base_inputs, &mut warnings);
-    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
-    let waves = assign_waves(&stream_names, &deps)?;
-
-    // The column order, as the engine runs it.
-    let mut column: BTreeMap<String, Vec<f64>> = BTreeMap::new();
-    let max_wave = waves.iter().copied().max().unwrap_or(0);
+    let mut column: StreamColumns = BTreeMap::new();
+    let max_wave = prep.waves.iter().copied().max().unwrap_or(0);
     for wave in 0..=max_wave {
         let snapshot = (wave > 0).then(|| Arc::new(column.clone()));
         for (idx, stream) in ir.streams.iter().enumerate() {
-            if waves[idx] != wave {
+            if prep.waves[idx] != wave {
                 continue;
             }
             let mut refused = Vec::new();
@@ -819,17 +725,99 @@ pub fn compare_evaluation_orders(
         }
     }
 
-    let walked = walk_streams(
-        &ir,
-        &config,
-        &timeline,
-        &base_inputs,
-        &event_sim,
-        &state_values,
-        &waves,
-        &mut warnings,
-    )?;
+    // The walk: state settles, then that period's streams, one period at a
+    // time.
+    let mut walk_warnings = Vec::new();
+    let (_state_values, _event_sim, walked) =
+        walk_periods(&ir, &config, &prep, &base_inputs, &mut walk_warnings);
     Ok(Some((column, walked)))
+}
+
+/// Each stream's column, keyed by stream name.
+pub type StreamColumns = BTreeMap<String, Vec<f64>>;
+
+/// What one pass over the grid settles: field values, the event record, and
+/// each stream's column.
+type WalkOutput = (BTreeMap<String, Vec<f64>>, EventSim, StreamColumns);
+
+/// THE PERIOD WALK. One period at a time: state settles, then that period's
+/// streams evaluate against it.
+///
+/// This is `docs/28` §3, and it is the point of phase 2. The column order
+/// finishes each stream over the whole timeline before starting the next, so a
+/// period's state can never see cash — the state stage has already run to
+/// completion by then. Here state at period `t` is settled with every earlier
+/// period's cash already in the store, which is what makes `docs/28` §4's
+/// backward reads expressible at all.
+///
+/// Nothing exercises that yet: `E1134` still refuses a series read in logic,
+/// so no model can ask. Phase 3 relaxes it to refuse only FORWARD reads, and
+/// this loop is what makes the refusal narrowable rather than absolute.
+///
+/// Waterfalls are not here. They remain their own stage over cash this one has
+/// produced (`docs/17` §4); moving them inside is what `prev.<waterfall>.<step>`
+/// will need, and is the remaining piece of §2.4.
+#[allow(clippy::too_many_arguments)]
+fn walk_periods(
+    ir: &Ir,
+    config: &RunConfig,
+    prep: &ModelPrep<'_>,
+    base_inputs: &BTreeMap<String, f64>,
+    warnings: &mut Vec<String>,
+) -> WalkOutput {
+    let timeline = &prep.timeline;
+    let max_wave = prep.waves.iter().copied().max().unwrap_or(0);
+    let mut walk = prepare_state_walk(ir, timeline, warnings);
+    let mut full: BTreeMap<String, Vec<f64>> = ir
+        .streams
+        .iter()
+        .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
+        .collect();
+
+    for t in 0..timeline.len() {
+        // 1. STATE SETTLES. Fields take this period's candidates and events
+        //    overwrite them, exactly as the whole-timeline order does.
+        walk.step(ir, config, t, &timeline[t], timeline, base_inputs, warnings);
+
+        // 2. THIS PERIOD'S STREAMS, against the state just settled. The borrow
+        //    of the walk ends with the period, so the next `step` may take it
+        //    mutably again — sequential, not simultaneous.
+        let (field_values, entity_state, stream_active) = walk.settled();
+        for wave in 0..=max_wave {
+            let wave_is_active = (0..ir.streams.len())
+                .any(|idx| prep.waves[idx] == wave && prep.plans[idx].settles_at(t));
+            if !wave_is_active {
+                continue;
+            }
+            let snapshot = (wave > 0).then(|| Arc::new(full.clone()));
+            for (idx, stream) in ir.streams.iter().enumerate() {
+                if prep.waves[idx] != wave || !prep.plans[idx].settles_at(t) {
+                    continue;
+                }
+                let mut refused: Vec<usize> = Vec::new();
+                let value = prep.plans[idx].step(
+                    ir,
+                    config,
+                    t,
+                    timeline,
+                    base_inputs,
+                    entity_state,
+                    stream_active,
+                    field_values,
+                    snapshot.as_ref(),
+                    warnings,
+                    &mut refused,
+                    Some(t),
+                );
+                if let Some(column) = full.get_mut(&stream.name) {
+                    column[t] = value;
+                }
+            }
+        }
+    }
+
+    let (state_values, event_sim) = walk.finish(ir);
+    (state_values, event_sim, full)
 }
 
 pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
