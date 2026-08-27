@@ -103,6 +103,10 @@ impl<'a> StreamPlan<'a> {
         series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
         warnings: &mut Vec<String>,
         activation_refused: &mut Vec<usize>,
+        // The last period whose series values exist. `None` when the columns
+        // are finished, which is the column order; `Some(t)` under a walk,
+        // where reading past `t` would read an allocation rather than a value.
+        series_available_to: Option<usize>,
     ) -> f64 {
         let event_mask = event_sim.stream_active.get(&self.stream.name);
         let mut settled = 0.0_f64;
@@ -133,6 +137,7 @@ impl<'a> StreamPlan<'a> {
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
+            env.series_available_to = series_available_to;
             let active_value = eval_bool_expr(
                 &self.active_expr,
                 &env,
@@ -263,6 +268,7 @@ pub(crate) fn evaluate_stream(
             series,
             warnings,
             activation_refused,
+            None,
         );
     }
     Ok(values)

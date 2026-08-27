@@ -218,8 +218,16 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     }
     let config = config;
 
-    let base_run = run_deterministic(ir, &config)?;
-    let mut warnings = base_run.warnings.clone();
+    // ONCE PER MODEL, not once per run: the base run, every scenario and
+    // every Monte Carlo trial share one grid, one set of compiled expressions
+    // and one set of schedules.
+    let mut prep_warnings: Vec<String> = Vec::new();
+    let prep = prepare_model(ir, &mut prep_warnings)?;
+    let base_run = run_deterministic(ir, &config, &prep)?;
+    // Preparation happens once, so its warnings are emitted once — they belong
+    // to the run that publishes them rather than being repeated per trial.
+    let mut warnings = prep_warnings.clone();
+    warnings.extend(base_run.warnings.clone());
 
     let deterministic = DeterministicSection {
         status: "ok".to_string(),
@@ -250,6 +258,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 monte_carlo: None,
                 valuation_grain: None,
             },
+            &prep,
         )?;
         warnings.extend(scenario_run.warnings);
         // A scenario is a FULL deterministic run — `run_deterministic` above
@@ -344,6 +353,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                     monte_carlo: None,
                     valuation_grain: None,
                 },
+                &prep,
             )?;
             warnings.extend(trial_run.warnings);
             npv_values.push(trial_run.npv);
@@ -738,6 +748,9 @@ fn walk_streams(
                     snapshot.as_ref(),
                     warnings,
                     &mut refused,
+                    // Under the walk the columns are filled as it advances, so
+                    // a read past this period would read an allocation.
+                    Some(t),
                 );
                 if let Some(column) = full.get_mut(&stream.name) {
                     column[t] = value;
@@ -971,14 +984,53 @@ fn assign_waves(names: &[&str], deps: &[StreamDeps]) -> Result<Vec<usize>, Engin
     Ok(depth)
 }
 
-fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutput, EngineError> {
+/// Everything about a model that does not vary from one run to the next.
+///
+/// THE GRID IS BUILT ONCE. Monte Carlo runs the whole deterministic engine per
+/// trial, and a trial varies only its sampled inputs — not the calendar, not
+/// the expressions, not the schedules. Rebuilding those per trial meant twenty
+/// thousand trials compiling one model twenty thousand times, and `docs/29`
+/// §2.2 already said the schedule is "computed once and replayed per scenario
+/// and per trial" while the code did the opposite.
+pub(crate) struct ModelPrep<'a> {
+    timeline: Vec<Date>,
+    /// Compiled amounts, guards and schedules, in `ir.streams` order.
+    plans: Vec<StreamPlan<'a>>,
+    /// Each stream's evaluation wave, from the dependency graph.
+    waves: Vec<usize>,
+}
+
+/// Compile and schedule a model once, for every run that follows.
+fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep<'a>, EngineError> {
+    let total_periods = ir.time.periods as usize + ir.time.projection as usize;
+    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
+    let deps = stream_deps(ir);
+    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
+    let waves = assign_waves(&stream_names, &deps)?;
+    let mut plans = Vec::with_capacity(ir.streams.len());
+    for stream in &ir.streams {
+        plans.push(plan_stream(ir, stream, &timeline, warnings)?);
+    }
+    Ok(ModelPrep {
+        timeline,
+        plans,
+        waves,
+    })
+}
+
+fn run_deterministic(
+    ir: &Ir,
+    config: &RunConfig,
+    prep: &ModelPrep<'_>,
+) -> Result<DeterministicRunOutput, EngineError> {
     // Cash horizon vs full evaluation window: the projection tail
     // (`time ... project <n>`) is computed so series_sum/series_avg can read
     // past the horizon (e.g. forward NOI at exit), but contributes nothing to
     // cash results, totals, or NPV.
     let cash_periods = ir.time.periods as usize;
-    let total_periods = cash_periods + ir.time.projection as usize;
-    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
+    // The grid, the compiled expressions and the schedules come from the
+    // preparation, which happens once per model rather than once per run.
+    let timeline = prep.timeline.clone();
     let periods = cash_periods;
 
     let mut warnings = Vec::new();
@@ -1042,9 +1094,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // `series_sum("cre.unit.recoveries.*", ...)` and an exact lookup of the
     // pattern found nothing — measured on `mit_rentleg_plaza`, an exit price
     // $116,440 lower with no diagnostic.
-    let deps = stream_deps(ir);
-    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
-    let waves = assign_waves(&stream_names, &deps)?;
+    let waves = &prep.waves;
     let max_wave = waves.iter().copied().max().unwrap_or(0);
 
     let mut full_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
@@ -1058,18 +1108,23 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 continue;
             }
             let mut activation_refused: Vec<usize> = Vec::new();
-            let values = evaluate_stream(
-                ir,
-                config,
-                stream,
-                &timeline,
-                &base_inputs,
-                &event_sim,
-                &state_values,
-                snapshot.as_ref(),
-                &mut warnings,
-                &mut activation_refused,
-            )?;
+            let plan = &prep.plans[idx];
+            let mut values = vec![0.0_f64; timeline.len()];
+            for (pay_idx, slot) in values.iter_mut().enumerate() {
+                *slot = plan.step(
+                    ir,
+                    config,
+                    pay_idx,
+                    &timeline,
+                    &base_inputs,
+                    &event_sim,
+                    &state_values,
+                    snapshot.as_ref(),
+                    &mut warnings,
+                    &mut activation_refused,
+                    None,
+                );
+            }
             // ONE ROW PER STREAM, at the first period the refusal bit. An
             // activation persists forward, so a per-period row would repeat
             // the same fact for the rest of the run.
@@ -2700,7 +2755,12 @@ mod assumption_order_tests {
             ("efficiency", "0.85"),
             ("net_sf", "inputs.gross_sf * inputs.efficiency"),
         ]);
-        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        let out = run_deterministic(
+            &ir,
+            &RunConfig::default(),
+            &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
+        )
+        .expect("resolves");
         assert_eq!(out.resolved_inputs["net_sf"], 8500.0);
         assert!(out.warnings.is_empty(), "{:?}", out.warnings);
     }
@@ -2711,7 +2771,12 @@ mod assumption_order_tests {
     fn order_follows_dependencies_not_names() {
         // `alpha` reads `zulu`, so the alphabetical walk meets it first.
         let ir = ir_with(&[("alpha", "inputs.zulu * 3.0"), ("zulu", "7.0")]);
-        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        let out = run_deterministic(
+            &ir,
+            &RunConfig::default(),
+            &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
+        )
+        .expect("resolves");
         assert_eq!(out.resolved_inputs["alpha"], 21.0);
     }
 
@@ -2721,7 +2786,12 @@ mod assumption_order_tests {
             ("gross_sf", "inputs.net_sf / 2.0"),
             ("net_sf", "inputs.gross_sf * 0.85"),
         ]);
-        let err = run_deterministic(&ir, &RunConfig::default()).expect_err("no order exists");
+        let err = run_deterministic(
+            &ir,
+            &RunConfig::default(),
+            &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
+        )
+        .expect_err("no order exists");
         match err {
             EngineError::AssumptionCycle(msg) => {
                 assert!(msg.contains("cyclic assumptions"), "{msg}");
@@ -2738,7 +2808,12 @@ mod assumption_order_tests {
     #[test]
     fn a_non_assumption_name_is_not_a_dependency() {
         let ir = ir_with(&[("net_sf", "100.0"), ("unused", "5.0")]);
-        let out = run_deterministic(&ir, &RunConfig::default()).expect("resolves");
+        let out = run_deterministic(
+            &ir,
+            &RunConfig::default(),
+            &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
+        )
+        .expect("resolves");
         assert_eq!(out.resolved_inputs["net_sf"], 100.0);
     }
 }
@@ -2882,7 +2957,12 @@ mod series_wave_tests {
     #[test]
     fn a_depth_two_chain_evaluates_in_order() {
         let ir = chain_ir("derived.a");
-        let out = run_deterministic(&ir, &RunConfig::default()).expect("chain evaluates");
+        let out = run_deterministic(
+            &ir,
+            &RunConfig::default(),
+            &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
+        )
+        .expect("chain evaluates");
         // base = [100, 100, 100]; a = cumsum(base) = [100, 200, 300];
         // b = cumsum(a) = [100, 300, 600]. b's total is 1000 only if a was
         // complete when b evaluated.
@@ -2905,8 +2985,12 @@ mod series_wave_tests {
         let mut ir = chain_ir("derived.a");
         // Rewire: derived.a reads derived.b, closing the loop.
         ir.streams[1].amount.src = "series_sum(\"derived.b\", 0, time.t)".to_string();
-        let err = run_deterministic(&ir, &RunConfig::default())
-            .expect_err("a circular read has no order");
+        // REFUSED AT PREPARATION, which is where the wave ordering is now
+        // computed — once per model rather than once per run, so a Monte Carlo
+        // does not rediscover the same cycle on every trial.
+        let Err(err) = prepare_model(&ir, &mut Vec::new()) else {
+            panic!("a circular read has no order");
+        };
         match err {
             EngineError::SeriesCycle(msg) => {
                 assert!(msg.contains("cyclic series reads"), "{msg}");

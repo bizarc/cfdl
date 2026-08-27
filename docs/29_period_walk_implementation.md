@@ -166,9 +166,60 @@ coupled subgraphs get the per-period interleave. Cross-time cycles are
 refused with the path named. The schedule is computed once and replayed per
 scenario and per trial.
 
-**2.3 The store.** Series storage represents partially-built columns; a
-read of a not-yet-computed cell is a loud engine error, never a substituted
-null — phase 0.1's discipline applied inside the engine.
+**2.3 Two halves, and only one of them was real.**
+
+This section asked for two things and read as one. The correctness half is
+built; the performance half is not, and the measurement says it should not be.
+
+**BUILT — a cell that has not been computed is not a zero.** Under a walk the
+columns are allocated for the whole grid and filled as it advances, so a read
+reaching past the current period finds the zero the column was allocated with:
+a plausible number with nothing to see, which is exactly the defect `E1134`
+refuses one layer out. `ExprEnv::series_available_to` marks how far the columns
+are filled — `None` for the column order, whose columns are finished, and
+`Some(t)` under the walk — and a window reaching past it is refused rather
+than clamped. Clamping is what would make a forward read look like a small
+number instead of a mistake. Three tests in `cfdl-expr` pin it: refused past
+the watermark, served within it, and unchanged when there is no watermark.
+
+**NOT BUILT — the store.**
+
+*Revised twice, and the second revision is the measurement. This asked for
+series storage representing a partially built column, so the walk would not
+copy the store per (period, wave). The copying is real; its cost is not.*
+
+**The controlled measurement.** One model, 5,000 trials, run twice: once as
+written, once with its cross-stream reads replaced by a constant so no snapshot
+is ever consulted. **10.78s against 10.74s.** The snapshot copying — the whole
+justification for a store — is inside the noise.
+
+An earlier comparison appeared to show cross-stream reads costing 12x. It was
+confounded: the two models differed in size (6 periods x 1 stream against
+36 x 4), so it measured cells, not copying. Recorded because the wrong number
+was persuasive.
+
+**Where the time actually goes.** Dropping 4 streams to 1 takes 10.74s to
+5.66s, so about 9.4 microseconds per accrual and roughly 63% of the run in the
+per-accrual path; the remaining ~4s is per-trial work outside it. The suspect
+in that path is `build_expr_env`, which constructs the WHOLE environment for
+one stream at one period: it re-parses every curve point's date string,
+rebuilds every quantile, re-clones every input name, and re-scans every
+parameter override — then throws it away.
+
+**And the deeper point is not that this is repeated, but that it is
+UNCONDITIONAL.** A stream whose amount is `5000` needs no curves, no
+quantiles and no inputs, and is handed all of them. What an expression
+references is already known — it is how the wave graph is built — so a plan
+can carry an environment holding only the roots its stream actually names,
+built once. That is a different and better fix from hoisting invariants,
+because it makes the cost proportional to what a model uses rather than to
+what it declares.
+
+**None of this is built, and none of it is blocking.** The walk is not on the
+production path, so nothing is slow because of it. The note exists so the
+question is not reasoned about a fourth time: the store is not the cost, the
+environment is, and the fix is a per-stream minimal environment rather than a
+new storage type.
 
 **2.4 The fold — the streams half is built.** `evaluate_stream` is now
 `plan_stream` plus `StreamPlan::step`, and the column order is a loop over
