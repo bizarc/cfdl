@@ -1,0 +1,270 @@
+{
+  "results_version": "0.3",
+  "model_hash": "0f50f65fa9286c570a90a68a93948dad079e77c8f1ab3194083508ff52f7d05a",
+  "ledger_hash": "452ae706671e90b8f96ef9274ffa27738f8fc5d557d28d271f46819202baca5c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.property.total": {
+        "amount": 1014600.241056,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1014600.241056,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1014600.241056,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.551546,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 12.0,
+      "stream.rent.total.total": {
+        "amount": 1014600.241056,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.property.occupancy": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          0.8,
+          0.808,
+          0.81608,
+          0.8242408,
+          0.832483208,
+          0.84080804008,
+          0.8492161204808,
+          0.857708281685608,
+          0.866285364502464,
+          0.8749482181474887,
+          0.8836977003289639,
+          0.8925346773322536
+        ]
+      },
+      "entity.asset.property.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 80000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 81608.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 82424.08,
+            "currency": "USD"
+          },
+          {
+            "amount": 83248.3208,
+            "currency": "USD"
+          },
+          {
+            "amount": 84080.804008,
+            "currency": "USD"
+          },
+          {
+            "amount": 84921.612048,
+            "currency": "USD"
+          },
+          {
+            "amount": 85770.828169,
+            "currency": "USD"
+          },
+          {
+            "amount": 86628.53645,
+            "currency": "USD"
+          },
+          {
+            "amount": 87494.821815,
+            "currency": "USD"
+          },
+          {
+            "amount": 88369.770033,
+            "currency": "USD"
+          },
+          {
+            "amount": 89253.467733,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 80000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 81608.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 82424.08,
+            "currency": "USD"
+          },
+          {
+            "amount": 83248.3208,
+            "currency": "USD"
+          },
+          {
+            "amount": 84080.804008,
+            "currency": "USD"
+          },
+          {
+            "amount": 84921.612048,
+            "currency": "USD"
+          },
+          {
+            "amount": 85770.828169,
+            "currency": "USD"
+          },
+          {
+            "amount": 86628.53645,
+            "currency": "USD"
+          },
+          {
+            "amount": 87494.821815,
+            "currency": "USD"
+          },
+          {
+            "amount": 88369.770033,
+            "currency": "USD"
+          },
+          {
+            "amount": 89253.467733,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.rent.total": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 80000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80800.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 81608.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 82424.08,
+            "currency": "USD"
+          },
+          {
+            "amount": 83248.3208,
+            "currency": "USD"
+          },
+          {
+            "amount": 84080.804008,
+            "currency": "USD"
+          },
+          {
+            "amount": 84921.612048,
+            "currency": "USD"
+          },
+          {
+            "amount": 85770.828169,
+            "currency": "USD"
+          },
+          {
+            "amount": 86628.53645,
+            "currency": "USD"
+          },
+          {
+            "amount": 87494.821815,
+            "currency": "USD"
+          },
+          {
+            "amount": 88369.770033,
+            "currency": "USD"
+          },
+          {
+            "amount": 89253.467733,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1014600.241056,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.rent.total": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1014600.241056,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

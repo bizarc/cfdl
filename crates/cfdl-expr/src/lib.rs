@@ -336,6 +336,45 @@ pub fn series_call(src: &str) -> Option<&'static str> {
     None
 }
 
+/// Is this bound provably at or before the PREVIOUS period?
+///
+/// Stricter than `window_bound_is_backward`, and the difference is the whole
+/// of `docs/28` §4. A stream may read another stream at the current period —
+/// the wave ordering settles which of them goes first, and a derived line like
+/// NOI is exactly that read. LOGIC may not: an event's guard and a field's
+/// rule are evaluated before this period's cash exists, so the only cash they
+/// can see is cash that has already settled.
+///
+/// Recognised: `time.t - k` for a literal `k` of at least 1. Nothing else — a
+/// bare literal is not provably before `t`, because at period 0 nothing is.
+pub fn window_bound_is_strictly_backward(src: &str) -> bool {
+    let s = src.trim();
+    let Some(rest) = s.strip_prefix("time.t") else {
+        return false;
+    };
+    let mut rest = rest.trim();
+    if rest.is_empty() {
+        // `time.t` itself is THIS period, which is what this refuses.
+        return false;
+    }
+    let mut net = 0.0_f64;
+    while !rest.is_empty() {
+        let (sign, tail) = match rest.as_bytes()[0] {
+            b'+' => (1.0, &rest[1..]),
+            b'-' => (-1.0, &rest[1..]),
+            _ => return false,
+        };
+        let tail = tail.trim_start();
+        let end = tail.find(['+', '-']).unwrap_or(tail.len());
+        let Ok(v) = tail[..end].trim().parse::<f64>() else {
+            return false;
+        };
+        net += sign * v;
+        rest = tail[end..].trim();
+    }
+    net <= -1.0
+}
+
 /// The series names an expression reads, as written.
 ///
 /// Only literal first arguments — `series_sum("a.b", ...)` — which is what a
@@ -666,6 +705,16 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         // a small number instead of a mistake.
         if let Some(available_to) = self.env.series_available_to {
             if to > available_to as i64 {
+                return None;
+            }
+            // BEFORE THE MODEL BEGAN IS NOT ZERO EITHER. A strictly backward
+            // window at the first period lies entirely before the grid, and
+            // summing it to 0 would make "last period's rent was short" true
+            // of a period that never had rent due. The language already takes
+            // this position for a field: `E1129_PREV_IN_FIRST_PERIOD` refuses
+            // a read of the period before the first one rather than calling it
+            // zero.
+            if to < 0 {
                 return None;
             }
         }
@@ -1521,6 +1570,24 @@ mod window_tests {
         assert!(!window_bound_is_backward("inputs.base_year"));
         assert!(!window_bound_is_backward("time.t * 2"));
         assert!(!window_bound_is_backward("time.t + inputs.lag"));
+    }
+
+    #[test]
+    fn logic_may_read_only_settled_history() {
+        // The spelling `docs/28` §4 makes legal: last period's realised cash.
+        assert!(window_bound_is_strictly_backward("time.t - 1"));
+        assert!(window_bound_is_strictly_backward("time.t - 12"));
+        assert!(window_bound_is_strictly_backward("time.t - 12.0 + 1.0"));
+        // THIS period is not settled history. A stream may read it, because
+        // the wave ordering settles who goes first; logic runs before any of
+        // it exists.
+        assert!(!window_bound_is_strictly_backward("time.t"));
+        assert!(!window_bound_is_strictly_backward("time.t + 1"));
+        // A bare literal is not provably before `t` — at period 0 nothing is.
+        assert!(!window_bound_is_strictly_backward("0"));
+        assert!(!window_bound_is_strictly_backward("24"));
+        // And `time.t - 12.0 + 12.0` is `t`, not before it.
+        assert!(!window_bound_is_strictly_backward("time.t - 12.0 + 12.0"));
     }
 
     #[test]

@@ -14,7 +14,7 @@ then results (`cfdl-engine/src/lib.rs`, the orchestrator comment). This order
 makes one whole class of models inexpressible: any model in which realised
 cash feeds back into the model's own logic. A unit cannot go delinquent
 because rent was not received. A balance cannot move by what a waterfall
-actually paid without restating the waterfall's input. An option cannot
+was allocated to it without restating the waterfall's input. An option cannot
 exercise on realised income.
 
 This document specifies the replacement: the **period walk**. The causal
@@ -122,10 +122,25 @@ pot its author declares — including an accumulated one.
 thirteen-year hold, from `series_sum("cre.*", 0, time.t)`: every dollar the
 deal produced. The walk changes when a waterfall is *computed*, never when it
 *distributes*. Computing the 2024-06 distribution at period 2024-06, rather
-than in a stage after all time, is what lets a later period read what was
-paid — `prev.<waterfall>.<step>`, the symmetric extension of
-`prev.<entity>.<field>`, strictly backward and cycle-free by the same
-argument.
+than in a stage after all time, is what lets a later period read what a step was
+ALLOCATED.
+
+**And that needs no new construct.** A waterfall step already publishes as the
+series `<waterfall>.<step>`, so a note's balance reads its allocation the way
+it reads anything else — `series_sum("dist.principal_a1", time.t - 1, time.t
+- 1)` — strictly backward, under §4's rule. Two shapes were considered and
+both are wrong. `prev.<waterfall>.<step>` has the liability reaching into the
+waterfall to discover what happened to it, and the liability does not own the
+allocation. A step that decrements a balance has the waterfall reaching the
+other way, and a step is not a debit: it is A CLAIM ON CASH FLOWS UNDER RULES
+AT TIMES, not a posting engine. The waterfall allocates and publishes; the
+balance reads. Neither owns the other.
+
+**Composition between waterfalls is the rare case.** A structure has one
+waterfall with many steps far more often than it has two waterfalls feeding
+each other, and step order within a waterfall is already carried by the
+`paid.`/`owed.` bindings. Machinery that complicates the common case to serve
+the rare one is the wrong trade.
 
 Two existing separations are preserved unchanged. The pot is built from
 streams only, kept distinct from the results-layer fold that attributes

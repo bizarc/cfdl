@@ -152,12 +152,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         for field in &entity.fields {
             for (clause, slot) in [("init", Some(&field.init)), ("next", field.next.as_ref())] {
                 let Some(slot) = slot else { continue };
-                if let Some(func) = cfdl_expr::series_call(&slot.src) {
+                if let Some(window) = unreadable_window(&slot.src) {
                     diagnostics.push(ValidationDiagnostic {
                         code: SERIES_READ_IN_LOGIC,
                         message: series_read_message(
-                            func,
-                            &format!("Field '{symbol}.{}' reads it in '{clause}'", field.name),
+                            &window,
+                            &format!("Field '{symbol}.{}' in '{clause}'", field.name),
                         ),
                         file: source_stmt.file.clone(),
                         span: slot.span,
@@ -201,12 +201,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     for source_stmt in &output.source_statements {
         match &source_stmt.statement {
             Stmt::Event(event) => {
-                if let Some(func) = cfdl_expr::series_call(&event.when) {
+                if let Some(window) = unreadable_window(&event.when) {
                     diagnostics.push(ValidationDiagnostic {
                         code: SERIES_READ_IN_LOGIC,
                         message: series_read_message(
-                            func,
-                            &format!("event '{}' reads it in its guard", event.name),
+                            &window,
+                            &format!("event '{}' guard", event.name),
                         ),
                         file: source_stmt.file.clone(),
                         span: event.span,
@@ -221,15 +221,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                         value,
                     } = action
                     {
-                        if let Some(func) = cfdl_expr::series_call(value) {
+                        if let Some(window) = unreadable_window(value) {
                             diagnostics.push(ValidationDiagnostic {
                                 code: SERIES_READ_IN_LOGIC,
                                 message: series_read_message(
-                                    func,
-                                    &format!(
-                                        "event '{}' reads it writing '{entity}.{field}'",
-                                        event.name
-                                    ),
+                                    &window,
+                                    &format!("event '{}' writing '{entity}.{field}'", event.name),
                                 ),
                                 file: source_stmt.file.clone(),
                                 span: event.span,
@@ -246,12 +243,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                     ("exercise when", opt.exercise_when.as_deref()),
                     ("payoff", opt.payoff.as_deref()),
                 ] {
-                    if let Some(func) = src.and_then(cfdl_expr::series_call) {
+                    if let Some(window) = src.and_then(unreadable_window) {
                         diagnostics.push(ValidationDiagnostic {
                             code: SERIES_READ_IN_LOGIC,
                             message: series_read_message(
-                                func,
-                                &format!("option '{}' reads it in '{clause}'", opt.name),
+                                &window,
+                                &format!("option '{}' in '{clause}'", opt.name),
                             ),
                             file: source_stmt.file.clone(),
                             span: opt.span,
@@ -795,15 +792,29 @@ fn references_prev_other_than_field(src: &str) -> bool {
 /// series read there binds nothing.
 const SERIES_READ_IN_LOGIC: &str = "E1134_SERIES_READ_IN_LOGIC";
 
-/// Names the call, the site, and the two ways out.
+/// The first window in this expression that logic may not read, if any.
 ///
-/// The message says what the read WOULD have done, because the failure it
-/// replaces was silent: `docs/13` §7.71 measured a guard that never fires and
-/// a recurrence that collapses its whole expression to zero, both on models
-/// that compiled and ran clean.
-fn series_read_message(func: &str, site: &str) -> String {
+/// NARROWED IN PHASE 3. This used to refuse every series read from logic,
+/// because the engine settled all state before any stream had a value. Under
+/// the period walk the state of period `t` settles with every earlier
+/// period's cash already in the store, so SETTLED HISTORY is readable and a
+/// covenant may test the rent that actually arrived.
+///
+/// What stays refused is this period and the future. A stream may read another
+/// stream at the current period — the wave ordering settles which goes first,
+/// and a derived line like NOI is exactly that — but logic runs before any of
+/// this period's cash exists, and reading ahead of `t` is not causal at all.
+fn unreadable_window(src: &str) -> Option<cfdl_expr::SeriesWindow> {
+    cfdl_expr::series_windows(src)
+        .into_iter()
+        .find(|w| !cfdl_expr::window_bound_is_strictly_backward(&w.to_src))
+}
+
+/// Names the read, the site, and the spelling that works.
+fn series_read_message(window: &cfdl_expr::SeriesWindow, site: &str) -> String {
     format!(
-        "`{func}` reads a stream, and logic cannot: {site}. An event's guard, a field's rule and an option's election are evaluated where no stream has a value, so the read would bind nothing and the expression around it would evaluate to zero — silently. Drive the logic from a field, a curve, `time.*` or `inputs.*`, or read the cash from a stream, a waterfall or the results layer, which see stream values."
+        "{site} reads `{}` over a window ending at `{}`, which is this period or later. Logic settles BEFORE this period's cash exists, so only history it can already see is readable: end the window at `time.t - 1` or earlier. A stream, a waterfall and the results layer do see the current period.",
+        window.name, window.to_src
     )
 }
 

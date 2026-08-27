@@ -110,9 +110,21 @@ pub(crate) struct StateWalk {
     compiled_events: Vec<Option<cfdl_expr::CompiledExpr>>,
     compiled_options: Vec<Option<(cfdl_expr::CompiledExpr, cfdl_expr::CompiledExpr)>>,
     periods: usize,
+    /// Cash that has already settled, for logic to read.
+    ///
+    /// `docs/28` §4: an event's guard and a field's rule may read a stream at
+    /// or before the PREVIOUS period. The walk fills this as it advances; under
+    /// the column order it stays empty, because there the state stage runs
+    /// before any stream has a value and there is nothing to offer.
+    settled_cash: Arc<BTreeMap<String, Vec<f64>>>,
 }
 
 impl StateWalk {
+    /// Hand the walk the cash settled so far, before stepping the next period.
+    pub(crate) fn observe_cash(&mut self, cash: Arc<BTreeMap<String, Vec<f64>>>) {
+        self.settled_cash = cash;
+    }
+
     /// The state settled so far, as the two pieces a stream reads.
     ///
     /// Handed out BETWEEN periods, never during one: the state stage settles a
@@ -172,6 +184,12 @@ impl StateWalk {
             }
 
             let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
+            // SETTLED HISTORY ONLY. The watermark is the previous period, so a
+            // guard reaching this period or later is refused by the engine
+            // rather than reading a cell the walk has not computed — the same
+            // discipline `E1134` applies at compile time.
+            env.series = Arc::clone(&self.settled_cash);
+            env.series_available_to = Some(t.saturating_sub(1));
             // A RULE MAY READ A LITERAL FIELD. It is a constant, so there is no
             // ordering question and nothing to sequence — `amortization = 10.0`
             // means the same thing in every period.
@@ -222,6 +240,12 @@ impl StateWalk {
         let mut env = build_base_env(ir, config, t, date, base_inputs);
         bind_states(&mut env, &self.values, t);
         bind_all_entity_state(&mut env, &pre_state);
+        // AN EVENT'S GUARD AND AN OPTION'S ELECTION READ SETTLED CASH, at or
+        // before the previous period (`docs/28` §4). The watermark is `t - 1`,
+        // so a read reaching this period is refused by the engine rather than
+        // finding a cell the walk has not computed.
+        env.series = Arc::clone(&self.settled_cash);
+        env.series_available_to = Some(t.saturating_sub(1));
         for (event_idx, event) in ir.events.iter().enumerate() {
             if self.event_fired[event_idx] {
                 continue;
@@ -715,6 +739,7 @@ pub(crate) fn prepare_state_walk(
         compiled_events,
         compiled_options,
         periods,
+        settled_cash: Arc::default(),
     }
 }
 
