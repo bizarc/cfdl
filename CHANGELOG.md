@@ -8,6 +8,20 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: docs/28 §5 — the account, where carried cash lives
+
+The pot-as-balance paragraph becomes the account construct: a declared cash
+location — general, or owned by a party for cash allocated but not yet paid
+— with a per-period balance law. A negative inflow lowers the balance with
+no floor, because an account fed a deal's whole net cash IS the deal's
+cumulative position; what is floored is the draw. Steps may pay to an
+account (the reserve pattern), waterfalls may draw from one, and logic
+reads `prev.<account>` strictly backward. Owed is not held: receivables
+stay entity fields. Carryover is opt-in by declaration — `available` and
+`remaining` keep their shipped indenture meanings, so the collapse property
+holds by construction. Fixture list extended: reserve fund-and-release,
+trapped-cash cure, the cumulative-sum identity, Highlands via an account.
+
 ### Added: docs/28 — the period walk, M1's evaluation-order specification
 
 The causal stages (state, events, streams, distributions) advance one period
