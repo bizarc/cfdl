@@ -78,8 +78,16 @@ declined / overridden — a stream activation losing to `active when` is
 recorded); waterfall allocations per step with pot before and after; option
 elections. Additive keys in the results schema, so existing consumers keep
 working; goldens re-blessed deliberately for the new keys, nothing else
-moving. Monte Carlo emits per-trial aggregates over the same record, which
-closes `docs/13` §7.18.
+moving. Monte Carlo summarises the same record — one row per act with the
+share of trials it occurred in and the distribution over the period it FIRST
+did, rather than the per-trial log §7.18 rules out — which closes `docs/13`
+§7.18.
+
+**Shipped.** `deterministic.journal` and `monte_carlo.journal`, with
+`fixtures/valid/journal_action_outcomes` pinning five outcomes and
+`fixtures/valid/monte_carlo_journal` pinning both halves of the summary. The
+sixth outcome, `ignored`, is unreachable from a model — see §7.73, which
+recommends retiring the action rather than building its runtime.
 
 - Files: `crates/cfdl-engine/src/{state,streams,distributions,results}.rs`,
   `docs/06` and `docs/schemas` (results schema), `tools/check-results-schema`.

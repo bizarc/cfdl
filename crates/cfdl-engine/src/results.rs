@@ -752,6 +752,44 @@ impl JournalEntry {
     }
 }
 
+/// What a stochastic run asks of the journal: not the trail, the DISTRIBUTION.
+///
+/// `docs/13` §7.18 settles the shape and rules out the obvious one. A per-trial
+/// log is trials x acts of output and nobody reads ten thousand copies of the
+/// same sequence. The question a stochastic run actually asks is WHEN something
+/// happens and HOW OFTEN — so each distinct act gets one row, and the row's
+/// size is bounded by the model rather than by the trial count.
+#[derive(Debug, Clone, Serialize)]
+pub struct JournalTrialSummary {
+    /// The act's identity, matching the deterministic journal's own fields, so
+    /// a reader can line a summary up against a single run's trail.
+    pub actor: String,
+    pub action: String,
+    pub target: String,
+    pub outcome: String,
+    /// Trials in which this act occurred at least once.
+    pub trials_occurred: u32,
+    /// That count over the trials run — the share `docs/13` §7.18 asks for.
+    pub share: f64,
+    /// Over the trials where it occurred, the period it FIRST did.
+    ///
+    /// A latched event fires once, so this is its timing distribution. For an
+    /// act that recurs — a waterfall step on a schedule — it is the first
+    /// occurrence, which is the same question asked of a repeating thing.
+    pub first_period: PeriodDistribution,
+}
+
+/// A distribution over periods, reported the way the NPV aggregate is.
+#[derive(Debug, Clone, Serialize)]
+pub struct PeriodDistribution {
+    pub min: usize,
+    pub p10: usize,
+    pub median: usize,
+    pub p90: usize,
+    pub max: usize,
+    pub mean: f64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct MonteCarloSection {
     pub status: String,
@@ -759,6 +797,11 @@ pub struct MonteCarloSection {
     pub seed: u64,
     pub metrics: BTreeMap<String, MetricSummary>,
     pub trial_summaries: Vec<MonteCarloTrialSummary>,
+    /// One row per distinct act, summarising when and how often it occurred
+    /// across the trials. Omitted when no trial recorded any act, so a model
+    /// with no events, options or waterfalls is unchanged. `docs/13` §7.18.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub journal: Vec<JournalTrialSummary>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aggregates: Option<MonteCarloAggregates>,
     #[serde(skip_serializing_if = "Option::is_none")]

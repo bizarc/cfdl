@@ -1,0 +1,37 @@
+version 0.1
+model "monte-carlo-journal"
+time calendar monthly from 2026-01 for 12
+
+// WHEN DOES IT HAPPEN, AND HOW OFTEN — the question a stochastic run asks of
+// the journal, and the one a per-trial log answers badly.
+//
+// `docs/13` §7.18 ruled out the obvious shape: trials x acts of output, and
+// nobody reads ten thousand copies of the same sequence. What a reader wants
+// is the DISTRIBUTION over the period each act first occurred, and the share
+// of trials in which it occurred at all. `monte_carlo.journal` publishes that,
+// one row per distinct act, bounded by the model rather than the trial count.
+//
+// The balance falls 40 a period from 1,000, reaching 560 by the end of the
+// twelve-month horizon. The covenant level is sampled between 200 and 800, so
+// a draw above 560 breaches inside the horizon and a draw below it never does.
+// Both halves of the summary are therefore exercised by one model: the breach
+// occurs in SOME trials, not all, and when it occurs the period varies with
+// the draw. The seed is stated, so it is reproducible and can be a golden.
+
+assume covenant_level ~ Uniform(min=200, max=800)
+
+entity asset pool : Asset.Financial {
+  balance  init 1000.0 next max(0.0, prev - 40.0)
+  fee_rate init 0.02
+}
+
+event breach when asset.pool.balance <= inputs.covenant_level {
+  set entity asset.pool.fee_rate = 0.05
+}
+
+stream credit.fee on entity asset.pool inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = asset.pool.balance * asset.pool.fee_rate
+}
+
+run monte_carlo trials 40 seed 20260827

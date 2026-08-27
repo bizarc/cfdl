@@ -461,6 +461,87 @@ against it by `make results-schema`.
           "items": {
             "$ref": "#/$defs/RuntimeError"
           }
+        },
+        "journal": {
+          "type": "array",
+          "description": "When each act happened across the trials, and how often — the question a stochastic run asks of the journal. A per-trial log is the wrong shape: trials x acts of output, and nobody reads ten thousand copies of the same sequence. So each distinct act gets one row, bounded by the model rather than the trial count, carrying the share of trials in which it occurred and the distribution over the period it FIRST did. Omitted when no trial recorded any act.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "actor",
+              "action",
+              "target",
+              "outcome",
+              "trials_occurred",
+              "share",
+              "first_period"
+            ],
+            "properties": {
+              "actor": {
+                "type": "string",
+                "description": "The act's identity, matching the deterministic journal's own fields so a summary lines up against a single run's trail."
+              },
+              "action": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string"
+              },
+              "trials_occurred": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Trials in which this act occurred at least once."
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "first_period": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "min",
+                  "p10",
+                  "median",
+                  "p90",
+                  "max",
+                  "mean"
+                ],
+                "description": "Over the trials where the act occurred, the period it first did. Quantiles are nearest-rank order statistics rather than interpolated, because a quantile of periods should be a period: \"the covenant first broke around month 9\", not month 9.5. The mean stays fractional, being explicitly an average rather than an observation.",
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "p10": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "median": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "p90": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "mean": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

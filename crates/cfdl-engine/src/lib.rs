@@ -291,6 +291,12 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
 
     let monte_carlo = if let Some(monte_carlo_config) = &config.monte_carlo {
         let mut trial_summaries = Vec::with_capacity(monte_carlo_config.trial_count as usize);
+        // ACT IDENTITY -> the period it first occurred, one entry per trial that
+        // saw it. Keyed rather than accumulated per trial, because §7.18's
+        // objection to a per-trial log is its size: this map is bounded by the
+        // model's acts, not by the trial count.
+        let mut journal_firsts: BTreeMap<(String, String, String, String), Vec<usize>> =
+            BTreeMap::new();
         let mut npv_values = Vec::with_capacity(monte_carlo_config.trial_count as usize);
         for trial in 0..monte_carlo_config.trial_count {
             let mut trial_overrides = config.parameter_overrides.clone();
@@ -341,6 +347,23 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
             )?;
             warnings.extend(trial_run.warnings);
             npv_values.push(trial_run.npv);
+
+            // FIRST occurrence per act in THIS trial, so a repeating act
+            // contributes one period rather than one per period.
+            let mut seen_this_trial: BTreeMap<(String, String, String, String), usize> =
+                BTreeMap::new();
+            for entry in &trial_run.journal {
+                let key = (
+                    entry.actor.clone(),
+                    entry.action.clone(),
+                    entry.target.clone(),
+                    entry.outcome.clone(),
+                );
+                seen_this_trial.entry(key).or_insert(entry.period);
+            }
+            for (key, period) in seen_this_trial {
+                journal_firsts.entry(key).or_default().push(period);
+            }
 
             let mut trial_metrics = BTreeMap::new();
             trial_metrics.insert(
@@ -410,18 +433,38 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
             );
         }
 
+        let trials_run = monte_carlo_config.trial_count.max(1) as f64;
+        let journal_summary: Vec<JournalTrialSummary> = journal_firsts
+            .into_iter()
+            .map(|((actor, action, target, outcome), mut periods)| {
+                periods.sort_unstable();
+                let occurred = periods.len();
+                JournalTrialSummary {
+                    actor,
+                    action,
+                    target,
+                    outcome,
+                    trials_occurred: occurred as u32,
+                    share: round_share(occurred as f64 / trials_run),
+                    first_period: period_distribution(&periods),
+                }
+            })
+            .collect();
+
         MonteCarloSection {
             status: "ok".to_string(),
             trials: monte_carlo_config.trial_count,
             seed: monte_carlo_config.seed,
             metrics,
             trial_summaries,
+            journal: journal_summary,
             aggregates,
             errors: None,
         }
     } else {
         MonteCarloSection {
             status: "not_run".to_string(),
+            journal: Vec::new(),
             trials: 1,
             seed: 0,
             metrics: BTreeMap::new(),

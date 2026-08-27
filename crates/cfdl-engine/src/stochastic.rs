@@ -160,3 +160,42 @@ pub(crate) fn probability_negative(values: &[f64]) -> f64 {
     let negatives = values.iter().filter(|value| **value < 0.0).count();
     negatives as f64 / values.len() as f64
 }
+
+/// A period distribution over a SORTED, non-empty list of first occurrences.
+///
+/// Periods are integers and a quantile of them should be a period, not a
+/// fraction of one: "the covenant first broke around month 9" is the answer,
+/// and 9.5 would be a month that does not exist. So this takes the
+/// nearest-rank order statistic rather than interpolating, which is also what
+/// makes `min` and `max` come out as themselves. The mean is left fractional,
+/// because a mean is explicitly an average rather than an observation.
+pub(crate) fn period_distribution(sorted: &[usize]) -> PeriodDistribution {
+    debug_assert!(sorted.windows(2).all(|w| w[0] <= w[1]), "must be sorted");
+    let n = sorted.len();
+    // Nearest-rank: the smallest value at or above the quantile's position.
+    let at = |q: f64| -> usize {
+        if n == 0 {
+            return 0;
+        }
+        let idx = ((q * n as f64).ceil() as usize).saturating_sub(1);
+        sorted[idx.min(n - 1)]
+    };
+    PeriodDistribution {
+        min: sorted.first().copied().unwrap_or(0),
+        p10: at(0.10),
+        median: at(0.50),
+        p90: at(0.90),
+        max: sorted.last().copied().unwrap_or(0),
+        mean: if n == 0 {
+            0.0
+        } else {
+            round_share(sorted.iter().sum::<usize>() as f64 / n as f64)
+        },
+    }
+}
+
+/// A share or a mean period, to six places — enough to read and stable across
+/// platforms, which a bare f64 division is not guaranteed to be in its tail.
+pub(crate) fn round_share(value: f64) -> f64 {
+    (value * 1_000_000.0).round() / 1_000_000.0
+}

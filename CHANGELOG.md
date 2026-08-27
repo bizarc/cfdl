@@ -8,6 +8,48 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: Monte Carlo says when each act happened, and how often — 7.18 closed
+
+`monte_carlo.journal` publishes one row per distinct act with the share of
+trials in which it occurred and the distribution over the period it FIRST did.
+7.18 ruled out the shape everyone reaches for first — a per-trial log is
+trials x acts of output, and nobody reads ten thousand copies of the same
+sequence — and asked for the distribution instead. This is that: bounded by
+the model's acts rather than by the trial count.
+
+`fixtures/valid/monte_carlo_journal` exercises both halves in one model. A
+balance falls 40 a period from 1,000, reaching 560 over a twelve-month
+horizon, against a covenant level sampled between 200 and 800: a draw above
+560 breaches inside the horizon and a draw below never does. The covenant
+breaks in 13 of 40 trials (32.5%, against a theoretical 40% — within sampling
+noise at that count), and where it breaks the first breach spans periods 6 to
+11 with a median of 8.
+
+Quantiles are nearest-rank rather than interpolated, because a quantile of
+periods should be a period: "the covenant first broke around month 9", not
+month 9.5. The mean stays fractional, being explicitly an average.
+
+Closes backlog 7.18. Backlog: 40 items.
+
+### Backlog: 7.73 — `activate contract` is the wrong grain
+
+Found while journaling action outcomes: the `ignored` outcome that
+`activate`/`deactivate contract` produces cannot be reached from a model,
+because a contract carries only its type and the reference does not resolve
+(§7.63). The deeper problem is the grain — a contract is a COLLECTION of
+streams, and forbearance (principal stops, interest accrues), termination with
+a fee, and the end of a draw period all need per-stream answers that one
+switch cannot give.
+
+The granular mechanism already exists twice over: `deactivate stream`, blocked
+only by §7.50's unaddressable generated names; and better, a lifecycle state
+with each stream declaring the states it is active in — declarative, checked,
+level-triggered, and journaled under `docs/28` §6.1. The entry recommends
+retiring the action rather than building a runtime for it, which also retires
+the `ignored` outcome the journal carries.
+
+Backlog: 40 items.
+
 ### Added: the journal — what the model did, and whether each thing happened
 
 `deterministic.journal` records every causal act with its outcome:
