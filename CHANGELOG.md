@@ -8,6 +8,40 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: docs/28 — the period walk, M1's evaluation-order specification
+
+The causal stages (state, events, streams, distributions) advance one period
+at a time and settle in a fixed order within each period; the results stage
+is named the valuation plane and keeps forward reads. Logic reads realised
+cash strictly backward, so the cell graph is acyclic by construction and
+cycles stay refused, never iterated. Waterfalls keep schedule sovereignty,
+and the pot becomes carried state: it grows by the declared inflow each
+period, scheduled distributions draw it down, and residue carries. The
+lifecycle gains its edges: declared, re-enterable transitions where an
+undeclared edge is refused, driven by events whose latch becomes a trigger
+policy, with a third schedule anchor — a state entry — so a delayed
+construction hangs its window off the transition. The journal becomes the
+execution trace, with every action's outcome recorded. For every model with
+no cash-into-logic edge the results must be byte-identical — the golden
+suite is the proof obligation. Pre-work unchanged: loud failure for
+unbindable series reads (7.71), and mutation testing.
+
+### Backlog: an event cannot see realised cash, and the failure is silent
+
+New entry 7.71, from three probe models. A guard reading a stream by bare path
+is refused loudly at IR load; the same read spelled `series_sum(name, t, t)`
+compiles, runs, and the event is silently inert — and so is the strictly
+backward spelling, `series_sum(name, t-1, t-1)`, which reads only settled
+history and is cycle-free by the `prev` argument. A field recurrence reading a
+series nulls its whole expression and the run reports ok. The cause is the
+stage order: state and events complete over the whole timeline before any
+stream value exists, so at guard time even the past has not been computed. The
+entry asks for a loud refusal now (7.38's argument, one environment over) and
+records the per-period interleave under which the lagged spelling becomes
+legal.
+
+Backlog: 39 items.
+
 ### Backlog: three items closed, three narrowed to what actually remains
 
 Closed. **7.15** — both stated reasons are false: One Lincoln Street exercises
