@@ -22,13 +22,53 @@ from §7.71 land as `fixtures/invalid/`, which is the test.
   (load-time backstop), `docs/08` (diagnostics).
 - Gate: the probes fail loudly; full suite green.
 
-**0.2 Mutation testing over the engine.** `cargo-mutants` (or equivalent)
-over `cfdl-engine`, a `make mutants` target, and a blessed baseline: the
-surviving-mutant list is reviewed and recorded, not zero by fiat. The point
-is that phase 2's reorder cannot pass the suite by accident.
+**0.2 A Rust-side guard for the engine — the gate phase 2 actually needs.**
 
-- Gate: baseline recorded in the repo; CI runs the target on the engine
-  crate at least on demand.
+*Revised. This was specified as "mutation testing over the engine, with a
+blessed baseline". That was the wrong instrument, and the revision records
+why rather than quietly dropping it.*
+
+The concern behind it is real: phase 2's collapse property says every blessed
+number is unchanged, and "the goldens pass" only means that if the goldens
+would notice. But mutation testing is an expensive way to ask that question —
+860 mutants in `cfdl-engine`, hours of wall-clock, and a 2.4 GB tree copy per
+parallel job, which does not fit on the machines this project is built on. It
+also answers only whether the TESTS notice a change; the benchmarks tied to
+published figures answer whether the NUMBERS are right, which matters more and
+which mutation testing cannot do.
+
+What phase 2 needs, and what this phase delivers, is the guard itself:
+`crates/cfdl-engine/tests/golden_corpus.rs` runs all 108 blessed fixtures
+in-process — `gold/ir` in, `gold/results` byte-compared — in about three
+seconds, inside `make ci`. Before it, `cargo test -p cfdl-engine` was 27 unit
+tests over a 2,200-line engine in 0.01 seconds, and the engine's real suite
+was reachable only from a shell script. That is the durable deliverable, and
+it makes the collapse property checkable on every commit rather than once.
+
+**What one exploratory run found, before the tooling was removed.** It is not
+in the repository and is not runnable here — a 2.4 GB tree copy per parallel
+job does not fit these machines — but three real gaps it surfaced are now
+closed by fixtures and tests, which is where the value belongs:
+
+- the annual valuation grain's dispatch had no end-to-end coverage, though its
+  arithmetic was unit-tested → `valid/valuation_grain_annual`;
+- the model-declared `run monte_carlo` path had none, because every Monte
+  Carlo fixture supplied the mode in `run.json` →
+  `valid/run_declared_monte_carlo`;
+- `trials 0` was accepted by a parser whose own message said positive, so a
+  model could ask for Monte Carlo, compile, run, and publish no Monte Carlo
+  section → `invalid/run_monte_carlo_zero_trials`, plus a unit test for the
+  engine's IR-level guard, which no model can reach any more.
+
+The lesson worth keeping is not the technique but the question it asked: when
+a change's success criterion is the ABSENCE of a difference, check that
+something would have noticed. The cheap way to do that during phase 2 is by
+hand and per hypothesis — break the reorder deliberately in the specific way
+you fear (evaluate events after streams; put the lag off by one) and confirm a
+golden fails. That is minutes, tests exactly the risk, and needs no tooling.
+
+- Gate: `cargo test --all` covers the engine against the whole blessed corpus,
+  and `make ci` runs it.
 
 ## Phase 1 — the journal (independent of the walk; may ship first)
 
@@ -70,8 +110,9 @@ flow back into the walk's record.
 
 - Files: `crates/cfdl-engine/src/{lib,state,streams,distributions}.rs`.
 - Gate — **the collapse property, and it is hard**: the full golden suite
-  byte-identical with no re-blessing; the mutation baseline does not
-  regress; benchmark wall-clock within noise of the shipped engine on the
+  byte-identical with no re-blessing, asserted by `golden_corpus.rs` in
+  `cargo test` as well as by the shell runner; every external benchmark still
+  ties to its published figures; benchmark wall-clock within noise on the
   REMIC fleet (the deepest schedules) and the Monte Carlo cases (the
   hottest loop).
 

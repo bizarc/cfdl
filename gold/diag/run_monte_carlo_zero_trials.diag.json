@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Expected positive integer after 'trials'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 23,
+      "start_col": 24,
+      "end_line": 23,
+      "end_col": 24
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1864,6 +1864,69 @@ mod tests {
         );
     }
 
+    /// A DECLARED RUN MODE IS PICKED UP ONLY WHEN IT IS A USABLE ONE.
+    ///
+    /// `compute_results` reads `ir.runs` for a Monte Carlo run when the run
+    /// config asks for none. Both halves of that condition were untestable
+    /// from source: the parser now refuses `trials 0`
+    /// (`invalid/run_monte_carlo_zero_trials`), and no grammar puts a trial
+    /// count on a `run deterministic`. Hand-written IR can do both, which is
+    /// the only place the guard is reachable — and mutation testing found it
+    /// by surviving `> 0` → `>= 0` and `&&` → `||` with nothing to tell them
+    /// apart (`docs/30`).
+    #[test]
+    fn a_declared_run_needs_a_kind_and_a_positive_trial_count() {
+        fn ir_with_run(kind: &str, trials: u64) -> String {
+            format!(
+                r#"{{
+                "model": {{ "name": "declared_run", "currency": "USD" }},
+                "time": {{ "calendar": "monthly", "start": "2026-01-01", "periods": 2 }},
+                "entities": [ {{ "symbol": "asset.a", "rules": {{}} }} ],
+                "runs": [ {{ "kind": "{kind}", "trials": {trials}, "seed": 7 }} ],
+                "streams": [
+                    {{
+                        "name": "ops.revenue",
+                        "owner": {{ "symbol": "asset.a" }},
+                        "direction": "inflow",
+                        "schedule": {{ "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" }},
+                        "amount": {{ "lang": "cfdl", "src": "100.0" }},
+                        "active_when": {{ "lang": "cfdl", "src": "true" }}
+                    }}
+                ]
+            }}"#
+            )
+        }
+
+        // The usable case: honoured, with the declared trial count and seed.
+        let results = run_from_json_str(&ir_with_run("monte_carlo", 4), RunConfig::default())
+            .expect("a declared monte_carlo run is honoured");
+        assert_eq!(
+            results.monte_carlo.status, "ok",
+            "a declared monte_carlo run should actually run"
+        );
+        assert_eq!(
+            results.monte_carlo.trials, 4,
+            "the declared trial count is what runs"
+        );
+
+        // Zero trials is not a run. `>= 0` would set one up with no trials.
+        let results = run_from_json_str(&ir_with_run("monte_carlo", 0), RunConfig::default())
+            .expect("zero trials runs deterministically, not as an error");
+        assert_eq!(
+            results.monte_carlo.status, "not_run",
+            "a monte_carlo run of zero trials is not a run and must not be set up"
+        );
+
+        // A trial count on a run that is not Monte Carlo is not a Monte Carlo
+        // run. `||` would treat this one as if it were.
+        let results = run_from_json_str(&ir_with_run("deterministic", 4), RunConfig::default())
+            .expect("a deterministic run with a stray trial count still runs");
+        assert_eq!(
+            results.monte_carlo.status, "not_run",
+            "only a run whose kind is monte_carlo may set one up"
+        );
+    }
+
     /// The IR the compiler will no longer emit, run directly.
     ///
     /// `E1134_SERIES_READ_IN_LOGIC` refuses this in every model written in

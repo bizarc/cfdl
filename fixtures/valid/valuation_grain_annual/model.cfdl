@@ -1,0 +1,32 @@
+version 0.1
+model "valuation-grain-annual"
+time calendar monthly from 2026-01 for 24
+
+// A RUN VALUES AT THE ANNUAL GRAIN, and the engine dispatches on it.
+//
+// `"valuation_grain": "annual"` sums cash into calendar years and discounts
+// each bucket once at the ANNUAL rate — the convention published sources use,
+// and the capability `mit_rentleg_plaza` needed when a 1.3% gap turned out to
+// be the model's calendar silently deciding its valuation convention.
+//
+// The arithmetic under it was unit-tested (`npv_at_grain` against the two
+// grains). The WIRING was not: no fixture and no benchmark run configuration
+// set the key, so the match arm that reads it could be DELETED and every
+// blessed number stayed the same. Mutation testing found exactly that
+// (`docs/30`) — a published capability whose dispatch nothing exercised.
+//
+// Two years of level monthly cash makes the grain's effect visible rather
+// than incidental: 24 payments discounted at their own fractional years is a
+// different number from two annual buckets discounted once each.
+
+entity asset property : Asset.Financial
+
+stream ops.rent on entity asset.property inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 10000
+}
+
+stream ops.expense on entity asset.property outflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 3000
+}

@@ -8,6 +8,55 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: the engine's blessed corpus in `cargo test`, and three gaps it closed
+
+`crates/cfdl-engine/tests/golden_corpus.rs` runs all 108 blessed fixtures
+in-process — `gold/ir` in, `gold/results` compared — in about three seconds,
+inside `make ci`. Before it, `cargo test -p cfdl-engine` was 27 unit tests
+over a 2,200-line engine in 0.01 seconds, and the engine's real suite was
+reachable only from `tools/golden-runner`. This is what makes `docs/28`'s
+collapse property — every blessed number unchanged — checkable on every
+commit.
+
+Three real gaps are closed with it:
+
+- **The annual valuation grain's dispatch had no end-to-end coverage.** The
+  arithmetic under it was unit-tested; nothing set `"valuation_grain":
+  "annual"` in any fixture or benchmark, so the match arm reading it could be
+  deleted with every blessed number unmoved. `valid/valuation_grain_annual`
+  pins it — two years of level cash, where the grain moves the NPV 4.3%
+  (145,785.12 against 152,351.97), and the annual figure is hand-checkable as
+  84,000/1.1 + 84,000/1.21.
+- **A model-declared Monte Carlo run had none.** `run monte_carlo trials N
+  seed S` is specified in `docs/01` §15.1 and read from the IR when the run
+  config asks for no Monte Carlo of its own; every existing MC fixture
+  supplied the mode in `run.json` instead, so the pickup path was exercised by
+  no model. `valid/run_declared_monte_carlo` declares everything in source —
+  `assume ~` distributions, trials and seed — leaving `run.json` a discount
+  rate.
+- **`trials 0` was accepted by a parser whose own message says positive.**
+  `parse::<u64>()` took it, the engine's `trials > 0` guard then declined to
+  set the run up, and a model asking for Monte Carlo compiled, ran, and
+  published no Monte Carlo section with nothing saying why. Now refused
+  (`invalid/run_monte_carlo_zero_trials`), with the engine's IR-level guard
+  covered by a unit test since no model can reach it any more.
+
+### Removed: the mutation-testing pre-work, and what it taught before it went
+
+`docs/29` phase 0.2 specified a blessed mutation baseline over the engine.
+Removed, with the reasoning recorded rather than dropped. The concern was
+right — "the goldens pass" is only evidence if the goldens would notice a
+change — but 860 mutants, hours of wall-clock and a 2.4 GB tree copy per
+parallel job do not fit the machines this project is built on, and the
+technique answers only whether the TESTS notice, where the external benchmarks
+tied to published figures answer whether the NUMBERS are right. No target, no
+baseline register, no gate.
+
+Its findings are kept, as fixtures and tests: the three above. And the
+question it asked is kept in the plan — when a change's success criterion is
+the absence of a difference, check that something would have noticed; during
+phase 2 that is done by hand, per hypothesis, in minutes.
+
 ### Added: logic that reads a stream is refused, and 7.71's "silent" claim is corrected
 
 `E1134_SERIES_READ_IN_LOGIC` refuses `series_sum`/`series_avg` in an event's
@@ -37,9 +86,9 @@ recorded in 7.71, `docs/28` §1 and `docs/29` §0.1.
 ### Added: docs/29 — the period walk's implementation plan, and backlog 7.72
 
 The plan that realizes docs/28, in seven dependency-ordered phases: the
-loud-fail and mutation gates; the journal (independent, may ship first);
-the walk itself, gated on the collapse property — full golden suite
-byte-identical, mutation baseline held, wall-clock within noise; the read
+loud-fail gate and the engine's Rust-side guard; the journal (independent,
+may ship first); the walk itself, gated on the collapse property — full
+golden suite byte-identical, wall-clock within noise; the read
 rules; the account; the state machine; the migrations; the documentation
 surface. Three decisions stay open and each names who settles it.
 
@@ -79,7 +128,7 @@ construction hangs its window off the transition. The journal becomes the
 execution trace, with every action's outcome recorded. For every model with
 no cash-into-logic edge the results must be byte-identical — the golden
 suite is the proof obligation. Pre-work unchanged: loud failure for
-unbindable series reads (7.71), and mutation testing.
+unbindable series reads (7.71), and a Rust-side guard for the engine.
 
 ### Backlog: an event cannot see realised cash, and the failure is silent
 

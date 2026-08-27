@@ -353,8 +353,9 @@ schedule lookup, not the cost of evaluation.
 Before the walk is touched, two gates from the roadmap: **loud failure for
 unbindable series reads** — the three inert spellings of §7.71 become
 compile-time refusals, so a reordering defect cannot hide behind a substituted
-zero and a warning nobody reads — and **mutation testing** over the engine, so
-the suite provably notices when evaluation changes.
+zero and a warning nobody reads — and **a Rust-side guard for the engine**, so
+the collapse property is checkable on every commit rather than from a shell
+script: `golden_corpus.rs` runs the whole blessed corpus in `cargo test`.
 
 M1 is the walk, the read rules, the two migrations, the declared state
 machine with its transition anchor (§6), the account construct (§5), and

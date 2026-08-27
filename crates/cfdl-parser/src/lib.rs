@@ -2512,8 +2512,16 @@ impl<'a> Parser<'a> {
                 let _ = self.bump();
                 let _ = self.expect_keyword(Keyword::Trials, "'trials'")?;
                 let trials_tok = self.bump();
+                // POSITIVE, which is what the message below has always said.
+                // `parse::<u64>()` accepted `0`, and the engine then declined
+                // to set up the run because its trial count was not greater
+                // than zero — so `run monte_carlo trials 0 seed 1` compiled,
+                // ran, and published no Monte Carlo section, with nothing
+                // saying why. Found by mutation testing (`docs/30`): the
+                // engine's `trials > 0` guard had no case that could tell it
+                // from `>= 0`.
                 let trials = match trials_tok.kind {
-                    TokenKind::Number(ref n) => n.parse::<u64>().ok(),
+                    TokenKind::Number(ref n) => n.parse::<u64>().ok().filter(|n| *n > 0),
                     _ => None,
                 };
                 if trials.is_none() {

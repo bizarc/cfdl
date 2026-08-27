@@ -1,0 +1,106 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "run-declared-monte-carlo",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "a891aa65cc648d1159772a587ea85620",
+      "symbol": "asset.borrower",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {
+      "rent": {
+        "dist": {
+          "kind": "Uniform",
+          "params": {
+            "max": 1100.0,
+            "min": 900.0
+          }
+        },
+        "name": "rent",
+        "type": "Decimal"
+      },
+      "vacancy": {
+        "dist": {
+          "kind": "Triangular",
+          "params": {
+            "max": 0.15,
+            "min": 0.0,
+            "mode": 0.05
+          }
+        },
+        "name": "vacancy",
+        "type": "Decimal"
+      }
+    }
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "b7cd694d8df450fc86519943600c464b",
+      "name": "lease.rent",
+      "owner": {
+        "symbol": "asset.borrower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.rent * (1.0 - inputs.vacancy)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "monte_carlo",
+      "trials": 8,
+      "seed": 424242
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
