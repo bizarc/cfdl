@@ -483,35 +483,6 @@ Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
 and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
 registration to download.
 
-### 7.18 Monte Carlo carries no transition log
-
-*Belongs with language and engine (section 5).*
-
-`deterministic.transitions` publishes the entity-state trajectory — period,
-entity, field, from, to, and the firing event — which made transitions
-assertable for the first time. Monte Carlo publishes none.
-
-**A per-trial log is the wrong shape.** It would be trials x transitions of
-output, and nobody reads ten thousand copies of the same sequence. The question
-a stochastic run actually asks is *when* something happens, not whether it
-happened in trial 4,127:
-
-- the distribution over the period each event first fired, and
-- the share of trials in which it fired at all.
-
-Both are summaries over the per-trial logs the engine already builds and throws
-away, so the work is in choosing the summary rather than in collecting the data.
-
-Found while building the deterministic log (task: transition log). Recorded
-rather than built because the useful artifact is a distribution, which is a
-different feature from a trail — not a smaller version of one.
-
-Two details already settled by the deterministic side and worth carrying over:
-a transition is recorded even when the value does not change, because the
-question is whether the event fired; and visibility is two rules, not one — an
-event or option guard reads the state as the period opened, a stream reads it as
-the period closed.
-
 ### 7.19 The lexer reserves words the canonical grammar admits
 
 *Belongs with language and packs (section 5).*
@@ -1845,3 +1816,55 @@ a stream — ownership is the same attribution question one layer down), and
 Do not build this before the account ships; the hand-assembled version is
 the workaround until then, and building the metric on payee streams rather
 than accounts would bake in the attribution problem §7.43 records.
+
+### 7.73 `activate contract` is the wrong grain, and the right one is already declared
+
+**What forced the discovery:** journaling every action's outcome (§7.71's
+sibling work, `docs/28` §8) meant pinning the `ignored` outcome that
+`activate`/`deactivate contract` produces. It could not be pinned from a model
+at all: a contract carries only its TYPE, so `deactivate contract cre.lease` is
+`E1303_UNRESOLVED_CONTRACT_REF` — there is no instance to resolve (§7.63). The
+action parses, lowers, and is unreachable.
+
+**And the grain is wrong, which matters more than the naming.** A contract is
+not one behaviour; it is a COLLECTION OF STREAMS. `cre.lease` lowers to base
+rent, recoveries and abatement; a construction facility lowers to draws and
+interest. All-or-nothing activation cannot express what the real cases need:
+
+* **Forbearance.** Principal stops; interest keeps accruing. One contract, two
+  streams, opposite answers.
+* **Early termination with a fee.** Base rent stops; a termination payment
+  flows; recoveries continue to a true-up.
+* **A facility at the end of its draw period.** Draws stop; the balance
+  amortizes.
+
+Each of those is a per-stream answer, and a contract-level switch gives one
+answer for all of them.
+
+**The granular mechanism exists and is not the action vocabulary.** Two
+routes, and the second is better:
+
+1. `deactivate stream <name>` is already per-stream. What blocks it is §7.50 —
+   a modeller cannot NAME the streams a contract produced, so the addressable
+   thing is unaddressable. Fix §7.50 and the granularity arrives without a new
+   construct.
+2. Better, and already in the language: **a lifecycle state, with each stream
+   declaring the states it is active in.** Forbearance becomes a state; the
+   interest stream is `active in state current, forbearance` and the principal
+   stream is `active in state current`. That is declarative rather than
+   imperative, it is CHECKED (`E1332` refuses a misspelled state), it is
+   level-triggered so it can end as well as begin, and under the declared
+   machine of `docs/28` §6.1 every transition is journaled. An imperative
+   `deactivate` has none of those properties.
+
+**So the recommendation is to retire the action, not implement it.** §7.40i's
+"contract gating" should be re-specified as (a) §7.50's addressable stream
+names and (b) state-gating through the declared machine — and
+`activate`/`deactivate contract` removed from the grammar rather than given a
+runtime, on this file's own standard: a construct with no case behind it and a
+better spelling available is not capability, it is surface. Removing it also
+retires the `ignored` outcome the journal currently has to carry.
+
+What would reopen it: a document describing a contract-level switch that is
+genuinely all-or-nothing AND cannot be said as a state. None of the three cases
+above is one.

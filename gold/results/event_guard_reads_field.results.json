@@ -190,6 +190,18 @@
         "to": "0.05",
         "event": "covenant_breach"
       }
+    ],
+    "journal": [
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "actor": "event:covenant_breach",
+        "action": "set",
+        "target": "asset.pool.fee_rate",
+        "outcome": "applied",
+        "from": "0.02",
+        "to": "0.05"
+      }
     ]
   },
   "scenarios": {

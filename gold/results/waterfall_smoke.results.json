@@ -625,6 +625,272 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "servicing -> party.servicer",
+        "outcome": "applied",
+        "amount": 12.5,
+        "pot_before": 1000.0,
+        "pot_after": 987.5
+      },
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_fees -> party.trustee",
+        "outcome": "applied",
+        "amount": 3.0,
+        "pot_before": 987.5,
+        "pot_after": 984.5
+      },
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_interest -> asset.class_a",
+        "outcome": "applied",
+        "amount": 6.25,
+        "pot_before": 984.5,
+        "pot_after": 978.25
+      },
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_target -> asset.class_a",
+        "outcome": "applied",
+        "amount": 50.0,
+        "pot_before": 978.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_excess -> party.trustee",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 928.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 0,
+        "date": "2017-02-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "residual -> party.certificate",
+        "outcome": "applied",
+        "amount": 928.25,
+        "pot_before": 928.25,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "servicing -> party.servicer",
+        "outcome": "applied",
+        "amount": 12.5,
+        "pot_before": 1000.0,
+        "pot_after": 987.5
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_fees -> party.trustee",
+        "outcome": "applied",
+        "amount": 3.0,
+        "pot_before": 987.5,
+        "pot_after": 984.5
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_interest -> asset.class_a",
+        "outcome": "applied",
+        "amount": 6.25,
+        "pot_before": 984.5,
+        "pot_after": 978.25
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_target -> asset.class_a",
+        "outcome": "applied",
+        "amount": 50.0,
+        "pot_before": 978.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_excess -> party.trustee",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 928.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 1,
+        "date": "2017-03-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "residual -> party.certificate",
+        "outcome": "applied",
+        "amount": 928.25,
+        "pot_before": 928.25,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "servicing -> party.servicer",
+        "outcome": "applied",
+        "amount": 12.5,
+        "pot_before": 1000.0,
+        "pot_after": 987.5
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_fees -> party.trustee",
+        "outcome": "applied",
+        "amount": 3.0,
+        "pot_before": 987.5,
+        "pot_after": 984.5
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_interest -> asset.class_a",
+        "outcome": "applied",
+        "amount": 6.25,
+        "pot_before": 984.5,
+        "pot_after": 978.25
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_target -> asset.class_a",
+        "outcome": "applied",
+        "amount": 50.0,
+        "pot_before": 978.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_excess -> party.trustee",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 928.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 2,
+        "date": "2017-04-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "residual -> party.certificate",
+        "outcome": "applied",
+        "amount": 928.25,
+        "pot_before": 928.25,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "servicing -> party.servicer",
+        "outcome": "applied",
+        "amount": 12.5,
+        "pot_before": 1000.0,
+        "pot_after": 987.5
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_fees -> party.trustee",
+        "outcome": "applied",
+        "amount": 3.0,
+        "pot_before": 987.5,
+        "pot_after": 984.5
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_interest -> asset.class_a",
+        "outcome": "applied",
+        "amount": 6.25,
+        "pot_before": 984.5,
+        "pot_after": 978.25
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "class_a_target -> asset.class_a",
+        "outcome": "applied",
+        "amount": 50.0,
+        "pot_before": 978.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "trustee_excess -> party.trustee",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 928.25,
+        "pot_after": 928.25
+      },
+      {
+        "period": 3,
+        "date": "2017-05-01",
+        "actor": "waterfall:abs.distribution",
+        "action": "pay",
+        "target": "residual -> party.certificate",
+        "outcome": "applied",
+        "amount": 928.25,
+        "pot_before": 928.25,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {

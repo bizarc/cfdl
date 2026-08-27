@@ -194,6 +194,18 @@
         "to": "550",
         "event": "partial_liquidation"
       }
+    ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "event:partial_liquidation",
+        "action": "set",
+        "target": "asset.loan.balance",
+        "outcome": "applied",
+        "from": "800",
+        "to": "550"
+      }
     ]
   },
   "scenarios": {

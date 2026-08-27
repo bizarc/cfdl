@@ -286,6 +286,83 @@ against it by `make results-schema`.
               }
             }
           }
+        },
+        "journal": {
+          "type": "array",
+          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. Flat on purpose — one row per act — so a golden asserts on lines, a reviewer greps for a stream name, and this schema checks one row type. Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period",
+              "date",
+              "actor",
+              "action",
+              "target",
+              "outcome"
+            ],
+            "properties": {
+              "period": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "date": {
+                "type": "string"
+              },
+              "actor": {
+                "type": "string",
+                "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "set",
+                  "activate_stream",
+                  "deactivate_stream",
+                  "activate_contract",
+                  "deactivate_contract",
+                  "exercise_option",
+                  "pay"
+                ]
+              },
+              "target": {
+                "type": "string",
+                "description": "What was acted on — a field path, a stream name, or a step and its payee."
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "applied",
+                  "declined",
+                  "overridden",
+                  "ignored",
+                  "failed"
+                ],
+                "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
+              },
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Cash moved, for a waterfall step."
+              },
+              "pot_before": {
+                "type": "number",
+                "description": "The pot before the step took from it, so a short pot is visible as the reason a payee got less than it was owed."
+              },
+              "pot_after": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string",
+                "description": "Why, when the outcome is not `applied`."
+              }
+            }
+          }
         }
       }
     },
@@ -383,6 +460,87 @@ against it by `make results-schema`.
           "type": "array",
           "items": {
             "$ref": "#/$defs/RuntimeError"
+          }
+        },
+        "journal": {
+          "type": "array",
+          "description": "When each act happened across the trials, and how often — the question a stochastic run asks of the journal. A per-trial log is the wrong shape: trials x acts of output, and nobody reads ten thousand copies of the same sequence. So each distinct act gets one row, bounded by the model rather than the trial count, carrying the share of trials in which it occurred and the distribution over the period it FIRST did. Omitted when no trial recorded any act.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "actor",
+              "action",
+              "target",
+              "outcome",
+              "trials_occurred",
+              "share",
+              "first_period"
+            ],
+            "properties": {
+              "actor": {
+                "type": "string",
+                "description": "The act's identity, matching the deterministic journal's own fields so a summary lines up against a single run's trail."
+              },
+              "action": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string"
+              },
+              "trials_occurred": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Trials in which this act occurred at least once."
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "first_period": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "min",
+                  "p10",
+                  "median",
+                  "p90",
+                  "max",
+                  "mean"
+                ],
+                "description": "Over the trials where the act occurred, the period it first did. Quantiles are nearest-rank order statistics rather than interpolated, because a quantile of periods should be a period: \"the covenant first broke around month 9\", not month 9.5. The mean stays fractional, being explicitly an average rather than an observation.",
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "p10": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "median": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "p90": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "mean": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
           }
         }
       }

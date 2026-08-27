@@ -394,7 +394,64 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_preference -> party.lp",
+        "outcome": "applied",
+        "amount": 14693280.768,
+        "pot_before": 30000000.0,
+        "pot_after": 15306719.232
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "gp_catchup -> party.gp",
+        "outcome": "applied",
+        "amount": 1564426.922667,
+        "pot_before": 15306719.232,
+        "pot_after": 13742292.309333
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_catchup -> party.lp",
+        "outcome": "applied",
+        "amount": 1564426.922667,
+        "pot_before": 13742292.309333,
+        "pot_after": 12177865.386666
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "gp_promote -> party.gp",
+        "outcome": "applied",
+        "amount": 2435573.077333,
+        "pot_before": 12177865.386666,
+        "pot_after": 9742292.309333
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_residual -> party.lp",
+        "outcome": "applied",
+        "amount": 9742292.309333,
+        "pot_before": 9742292.309333,
+        "pot_after": 0.0
+      }
+    ]
   },
   "scenarios": {
     "status": "ok",

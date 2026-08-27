@@ -318,6 +318,18 @@
         "to": "repositioning",
         "event": "start_repositioning"
       }
+    ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "event:start_repositioning",
+        "action": "set",
+        "target": "asset.tower.status",
+        "outcome": "applied",
+        "from": "operating",
+        "to": "repositioning"
+      }
     ]
   },
   "scenarios": {

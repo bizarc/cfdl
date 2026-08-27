@@ -79,6 +79,10 @@ pub(crate) fn run_waterfalls(
     available_by_entity: &BTreeMap<String, Vec<f64>>,
     config: &RunConfig,
     warnings: &mut Vec<String>,
+    // One row per step that ran, carrying the pot before and after it took.
+    // A payee that got less than it was owed is then visible as a short pot
+    // rather than inferable from the amount alone (`docs/28` §8).
+    journal: &mut Vec<JournalEntry>,
 ) -> BTreeMap<String, Vec<f64>> {
     let periods = timeline.len();
     let mut out: BTreeMap<String, Vec<f64>> = BTreeMap::new();
@@ -166,6 +170,7 @@ pub(crate) fn run_waterfalls(
             let mut paid: BTreeMap<String, ExprValue> = BTreeMap::new();
             let mut owed: BTreeMap<String, ExprValue> = BTreeMap::new();
             for step in &waterfall.steps {
+                let pot_before = remaining;
                 let mut step_env = env.clone();
                 step_env.remaining = Some(ExprValue::Decimal(remaining));
                 step_env.paid = paid.clone();
@@ -196,6 +201,26 @@ pub(crate) fn run_waterfalls(
                 if let Some(series) = out.get_mut(&format!("{}.{}", waterfall.name, step.name)) {
                     series[t] = round_amount(takes);
                 }
+                let short = takes + f64::EPSILON < wants;
+                let mut entry = JournalEntry::new(
+                    t,
+                    &timeline[t].to_string(),
+                    format!("waterfall:{}", waterfall.name),
+                    "pay",
+                    format!("{} -> {}", step.name, step.payee),
+                    if short { "overridden" } else { "applied" },
+                );
+                entry.amount = Some(round_amount(takes));
+                entry.pot_before = Some(round_amount(pot_before));
+                entry.pot_after = Some(remaining);
+                if short {
+                    entry.note = Some(format!(
+                        "the pot was short: the step was owed {} and took {}",
+                        round_amount(wants),
+                        round_amount(takes)
+                    ));
+                }
+                journal.push(entry);
             }
         }
         // This waterfall's steps become visible to the next one.

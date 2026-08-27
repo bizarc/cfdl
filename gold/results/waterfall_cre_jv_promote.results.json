@@ -417,7 +417,64 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 3,
+        "date": "2003-01-01",
+        "actor": "waterfall:jv.distribution",
+        "action": "pay",
+        "target": "msgw_preference -> party.msgw",
+        "outcome": "applied",
+        "amount": 23933542.5,
+        "pot_before": 300000000.0,
+        "pot_after": 276066457.5
+      },
+      {
+        "period": 3,
+        "date": "2003-01-01",
+        "actor": "waterfall:jv.distribution",
+        "action": "pay",
+        "target": "strs_preference -> party.strs",
+        "outcome": "applied",
+        "amount": 215401882.5,
+        "pot_before": 276066457.5,
+        "pot_after": 60664575.0
+      },
+      {
+        "period": 3,
+        "date": "2003-01-01",
+        "actor": "waterfall:jv.distribution",
+        "action": "pay",
+        "target": "msgw_residual -> party.msgw",
+        "outcome": "applied",
+        "amount": 20625955.5,
+        "pot_before": 60664575.0,
+        "pot_after": 40038619.5
+      },
+      {
+        "period": 3,
+        "date": "2003-01-01",
+        "actor": "waterfall:jv.distribution",
+        "action": "pay",
+        "target": "strs_residual -> party.strs",
+        "outcome": "applied",
+        "amount": 30938933.25,
+        "pot_before": 40038619.5,
+        "pot_after": 9099686.25
+      },
+      {
+        "period": 3,
+        "date": "2003-01-01",
+        "actor": "waterfall:jv.distribution",
+        "action": "pay",
+        "target": "cpa_residual -> party.cpa",
+        "outcome": "applied",
+        "amount": 9099686.25,
+        "pot_before": 9099686.25,
+        "pot_after": 0.0
+      }
+    ]
   },
   "scenarios": {
     "status": "ok",

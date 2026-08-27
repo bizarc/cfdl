@@ -643,7 +643,97 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_preference -> party.lp",
+        "outcome": "applied",
+        "amount": 14693280.768,
+        "pot_before": 30000000.0,
+        "pot_after": 15306719.232
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "gp_catchup -> party.gp",
+        "outcome": "applied",
+        "amount": 1173320.192,
+        "pot_before": 15306719.232,
+        "pot_after": 14133399.04
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "gp_promote -> party.gp",
+        "outcome": "applied",
+        "amount": 2826679.808,
+        "pot_before": 14133399.04,
+        "pot_after": 11306719.232
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_residual -> party.lp",
+        "outcome": "applied",
+        "amount": 11306719.232,
+        "pot_before": 11306719.232,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:firm.carry_allocation",
+        "action": "pay",
+        "target": "team_pool -> party.team",
+        "outcome": "applied",
+        "amount": 1600000.0,
+        "pot_before": 4000000.0,
+        "pot_after": 2400000.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:firm.carry_allocation",
+        "action": "pay",
+        "target": "firm_share -> asset.mgmt_co",
+        "outcome": "applied",
+        "amount": 2400000.0,
+        "pot_before": 2400000.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:firm.owner_split",
+        "action": "pay",
+        "target": "stakes_strip -> party.stakes",
+        "outcome": "applied",
+        "amount": 480000.0,
+        "pot_before": 2400000.0,
+        "pot_after": 1920000.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:firm.owner_split",
+        "action": "pay",
+        "target": "founder_share -> party.founders",
+        "outcome": "applied",
+        "amount": 1920000.0,
+        "pot_before": 1920000.0,
+        "pot_after": 0.0
+      }
+    ]
   },
   "scenarios": {
     "status": "not_run",

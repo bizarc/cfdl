@@ -27,6 +27,12 @@ pub(crate) struct EventSim {
     /// and a case could not assert that a transition happened at all. The
     /// audit trail is the point — if and when something occurred.
     pub(crate) transitions: Vec<TransitionRecord>,
+    /// Every causal act, with what became of it. `docs/28` §8.
+    ///
+    /// Distinct from `transitions`, which records field CHANGES: an action
+    /// that was declined, ignored or overridden changes nothing and so has
+    /// nowhere else to appear.
+    pub(crate) journal: Vec<JournalEntry>,
 }
 
 /// One state change: when, to what, from what, and what caused it.
@@ -191,6 +197,7 @@ pub(crate) fn simulate_state(
     let mut stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
     let mut option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut transitions: Vec<TransitionRecord> = Vec::new();
+    let mut journal: Vec<JournalEntry> = Vec::new();
     let mut event_fired = vec![false; ir.events.len()];
     let mut option_exercised = vec![false; ir.options.len()];
     let mut forced_exercise: Vec<String> = Vec::new();
@@ -366,10 +373,21 @@ pub(crate) fn simulate_state(
                                         date: date.to_string(),
                                         entity: entity.symbol.clone(),
                                         field: field.clone(),
-                                        from: before,
-                                        to: after,
+                                        from: before.clone(),
+                                        to: after.clone(),
                                         event: event.name.clone(),
                                     });
+                                    journal.push(
+                                        JournalEntry::new(
+                                            t,
+                                            &date.to_string(),
+                                            format!("event:{}", event.name),
+                                            "set",
+                                            rule_key.clone(),
+                                            "applied",
+                                        )
+                                        .with_change(before, after),
+                                    );
                                     continue;
                                 }
                                 let slot = current_state.entry(entity.symbol.clone()).or_default();
@@ -384,42 +402,126 @@ pub(crate) fn simulate_state(
                                     date: date.to_string(),
                                     entity: entity.symbol.clone(),
                                     field: field.clone(),
-                                    from: before,
-                                    to: after,
+                                    from: before.clone(),
+                                    to: after.clone(),
                                     event: event.name.clone(),
                                 });
+                                journal.push(
+                                    JournalEntry::new(
+                                        t,
+                                        &date.to_string(),
+                                        format!("event:{}", event.name),
+                                        "set",
+                                        format!("{}.{}", entity.symbol, field),
+                                        "applied",
+                                    )
+                                    .with_change(before, after),
+                                );
                             }
-                            Err(err) => warnings.push(format!(
-                                "Event '{}' set {}.{} failed [{}]: {}; skipped.",
-                                event.name, entity.symbol, field, err.code, err.message
-                            )),
+                            Err(err) => {
+                                warnings.push(format!(
+                                    "Event '{}' set {}.{} failed [{}]: {}; skipped.",
+                                    event.name, entity.symbol, field, err.code, err.message
+                                ));
+                                journal.push(
+                                    JournalEntry::new(
+                                        t,
+                                        &date.to_string(),
+                                        format!("event:{}", event.name),
+                                        "set",
+                                        format!("{}.{}", entity.symbol, field),
+                                        "failed",
+                                    )
+                                    .with_note(format!("[{}] {}", err.code, err.message)),
+                                );
+                            }
                         }
                     }
                     "ActivateStream" => {
                         if let Some(stream) = &action.stream {
                             current_active.insert(stream.clone(), true);
+                            // `applied` HERE MEANS THE MASK MOVED, not that the
+                            // stream will pay: the stream's own `active when`
+                            // is a second gate, and `streams.rs` rewrites this
+                            // row to `overridden` for the periods it refuses.
+                            journal.push(JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("event:{}", event.name),
+                                "activate_stream",
+                                stream.clone(),
+                                "applied",
+                            ));
                         }
                     }
                     "DeactivateStream" => {
                         if let Some(stream) = &action.stream {
                             current_active.insert(stream.clone(), false);
+                            journal.push(JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("event:{}", event.name),
+                                "deactivate_stream",
+                                stream.clone(),
+                                "applied",
+                            ));
                         }
                     }
-                    "ActivateContract" | "DeactivateContract" => {
+                    kind @ ("ActivateContract" | "DeactivateContract") => {
                         warnings.push(format!(
                             "Event '{}': contract activation is not executed by the engine yet; action ignored.",
                             event.name
                         ));
+                        journal.push(
+                            JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("event:{}", event.name),
+                                if kind == "ActivateContract" {
+                                    "activate_contract"
+                                } else {
+                                    "deactivate_contract"
+                                },
+                                action.contract.clone().unwrap_or_default(),
+                                "ignored",
+                            )
+                            .with_note(
+                                "the engine has no contract runtime yet; docs/29 M2 (backlog 7.40i)",
+                            ),
+                        );
                     }
                     "ExerciseOption" => {
                         if let Some(option) = &action.option {
                             forced_exercise.push(option.clone());
+                            // Whether it is HELD is decided below, against
+                            // `exercisable in`; this row records the request.
+                            journal.push(JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("event:{}", event.name),
+                                "exercise_option",
+                                option.clone(),
+                                "applied",
+                            ));
                         }
                     }
-                    other => warnings.push(format!(
-                        "Event '{}': unknown action kind '{other}'; ignored.",
-                        event.name
-                    )),
+                    other => {
+                        warnings.push(format!(
+                            "Event '{}': unknown action kind '{other}'; ignored.",
+                            event.name
+                        ));
+                        journal.push(
+                            JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("event:{}", event.name),
+                                other,
+                                String::new(),
+                                "ignored",
+                            )
+                            .with_note("unknown action kind"),
+                        );
+                    }
                 }
             }
         }
@@ -455,6 +557,22 @@ pub(crate) fn simulate_state(
                             "Option '{}' was forced outside its exercisable phase '{phase_name}'; not exercised.",
                             option.name
                         ));
+                        // An option outside its window is not one anyone holds,
+                        // so an event cannot exercise it. The request was
+                        // journaled as made; this is what became of it.
+                        journal.push(
+                            JournalEntry::new(
+                                t,
+                                &date.to_string(),
+                                format!("option:{}", option.name),
+                                "exercise_option",
+                                option.name.clone(),
+                                "declined",
+                            )
+                            .with_note(format!(
+                                "forced outside its exercisable phase '{phase_name}'; an option outside its window is not one anyone holds"
+                            )),
+                        );
                     }
                     continue;
                 }
@@ -474,6 +592,21 @@ pub(crate) fn simulate_state(
                 continue;
             }
             option_exercised[option_idx] = true;
+            journal.push(
+                JournalEntry::new(
+                    t,
+                    &date.to_string(),
+                    format!("option:{}", option.name),
+                    "exercise_option",
+                    option.name.clone(),
+                    "applied",
+                )
+                .with_note(if forced {
+                    "forced by an event, inside its exercisable window"
+                } else {
+                    "its own `exercise when` held"
+                }),
+            );
             let mut payoff_values = vec![0.0_f64; periods];
             match cfdl_expr::eval(payoff, env) {
                 Ok(ExprValue::Decimal(v)) => payoff_values[t] = v,
@@ -521,6 +654,7 @@ pub(crate) fn simulate_state(
             stream_active,
             option_cash,
             transitions,
+            journal,
         },
     )
 }

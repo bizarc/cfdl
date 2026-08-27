@@ -818,6 +818,150 @@
         "event": "field_threshold"
       }
     ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "event:field_threshold",
+        "action": "set",
+        "target": "asset.pool.fee_rate",
+        "outcome": "applied",
+        "from": "0.02",
+        "to": "0.05"
+      },
+      {
+        "period": 0,
+        "date": "2017-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_fee_rate -> party.investor",
+        "outcome": "applied",
+        "amount": 20000.0,
+        "pot_before": 256281.093912,
+        "pot_after": 236281.093912
+      },
+      {
+        "period": 0,
+        "date": "2017-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_cash_flag -> party.investor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 236281.093912,
+        "pot_after": 236281.093912
+      },
+      {
+        "period": 0,
+        "date": "2017-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 236281.093912,
+        "pot_before": 236281.093912,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_fee_rate -> party.investor",
+        "outcome": "applied",
+        "amount": 20000.0,
+        "pot_before": 256281.093912,
+        "pot_after": 236281.093912
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_cash_flag -> party.investor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 236281.093912,
+        "pot_after": 236281.093912
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 236281.093912,
+        "pot_before": 236281.093912,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_fee_rate -> party.investor",
+        "outcome": "applied",
+        "amount": 50000.0,
+        "pot_before": 256281.093912,
+        "pot_after": 206281.093912
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_cash_flag -> party.investor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 206281.093912,
+        "pot_after": 206281.093912
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 206281.093912,
+        "pot_before": 206281.093912,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2017-04-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_fee_rate -> party.investor",
+        "outcome": "applied",
+        "amount": 50000.0,
+        "pot_before": 256281.093912,
+        "pot_after": 206281.093912
+      },
+      {
+        "period": 3,
+        "date": "2017-04-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "reads_cash_flag -> party.investor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 206281.093912,
+        "pot_after": 206281.093912
+      },
+      {
+        "period": 3,
+        "date": "2017-04-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 206281.093912,
+        "pot_before": 206281.093912,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {

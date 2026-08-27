@@ -1,0 +1,71 @@
+version 0.1
+model "journal-action-outcomes"
+time calendar monthly from 2026-01 for 12
+
+// WHAT DID THE MODEL DO, AND DID EACH THING HAPPEN.
+//
+// `deterministic.transitions` records field CHANGES. An action that was
+// declined, ignored, or done and then overridden changes nothing, so it
+// appeared nowhere — and the worst of those was silent. This fixture pins one
+// row of each outcome the journal can report (`docs/28` §8).
+//
+// The case that motivated it: an event activates a stream whose own
+// `active when` is false. Both gates must pass, so the activation does not
+// turn the stream on — measured before the journal existed, the modeller got a
+// zero series, no warning, and nothing in the results saying an activation had
+// been refused.
+
+phase early from 2026-01 to 2026-06
+phase late  from 2026-07 to 2026-12
+
+entity asset bldg : Asset.Financial {
+  expanded init 0.0
+}
+
+// APPLIED: a field write, which `transitions` also records.
+// APPLIED: a stream deactivation, which takes effect.
+// OVERRIDDEN: an activation against a stream that declares itself off.
+// DECLINED: an option forced outside its exercisable window.
+//
+// The sixth outcome, IGNORED, cannot be reached from a model at all:
+// `activate contract` needs a contract to name, and a contract carries only
+// its TYPE — `deactivate contract cre.lease` is `E1303_UNRESOLVED_CONTRACT_REF`
+// because there is no instance to resolve (backlog 7.63). So the action parses,
+// lowers, and is unreachable, which sequences 7.63 before 7.40i's contract
+// runtime: the runtime needs something to name. It is covered by an engine
+// unit test against hand-written IR instead.
+event expand when time.t >= 6 {
+  set entity asset.bldg.expanded = 1.0
+  deactivate stream ops.baseline
+  activate stream capex.floor2
+  exercise option renewal
+}
+
+// Turns on when the event writes the field — the ordinary path, and the
+// contrast that makes the overridden row meaningful.
+stream rent.floor2 on entity asset.bldg inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 5000
+  active when asset.bldg.expanded >= 1.0
+}
+
+// Declares itself off for the whole run. The event's activation cannot
+// override that, and the journal says so once, with a count.
+stream capex.floor2 on entity asset.bldg outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 20000
+  active when 0 > 1
+}
+
+// Runs until the event deactivates it.
+stream ops.baseline on entity asset.bldg inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+// Exercisable only in `early`, and the event fires in `late` — so the forced
+// exercise is declined rather than performed.
+option renewal on entity asset.bldg type Option.Renewal exercisable in early {
+  exercise when 0 > 1
+  payoff 250
+}
