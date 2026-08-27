@@ -55,12 +55,18 @@ event field_threshold when asset.pool.running <= asset.pool.trigger_level {
   set entity asset.pool.fee_rate = 0.05
 }
 
-// Never fires. Interest is below the trigger in every period, and the guard
-// cannot see it: events are simulated before any stream is evaluated.
-event cash_threshold when series_sum("credit.pool.interest.*", time.t, time.t)
-                         < asset.pool.cash_trigger {
-  set entity asset.pool.cash_flag = 1.0
-}
+// A GUARD READING A STREAM used to live here, and never fired: events are
+// simulated before any stream is evaluated, so the read bound nothing and the
+// comparison was false in every period. It is now refused
+// (`E1134_SERIES_READ_IN_LOGIC`, pinned by `invalid/series_read_in_guard`)
+// rather than pinned as behavior — a limitation documented by a fixture that
+// runs clean is a limitation a model author meets by getting wrong numbers.
+//
+// `cash_flag` stays at its `init` of 0.0, which is what it did with the event
+// present, so this fixture's numbers are unchanged and `reads_cash_flag` still
+// pays nothing. When the period walk lands (`docs/28` §4), the SETTLED form of
+// that read — at or before the previous period — becomes legal, and the
+// same-period form above stays refused.
 
 waterfall dist on entity asset.pool {
   schedule every month from 2017-01 to 2017-04

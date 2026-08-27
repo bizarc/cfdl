@@ -152,6 +152,17 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         for field in &entity.fields {
             for (clause, slot) in [("init", Some(&field.init)), ("next", field.next.as_ref())] {
                 let Some(slot) = slot else { continue };
+                if let Some(func) = cfdl_expr::series_call(&slot.src) {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: SERIES_READ_IN_LOGIC,
+                        message: series_read_message(
+                            func,
+                            &format!("Field '{symbol}.{}' reads it in '{clause}'", field.name),
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: slot.span,
+                    });
+                }
                 if reads_moving_field(&slot.src, &rule_fields) {
                     diagnostics.push(ValidationDiagnostic {
                         code: "E1127_FIELD_RULE_READS_FIELD",
@@ -177,6 +188,75 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                     span: field.span,
                 });
             }
+        }
+    }
+
+    // AN EVENT'S GUARD AND AN OPTION'S ELECTION CANNOT READ A STREAM either,
+    // for the same reason a field's rule cannot. `docs/28` §4 is where this
+    // becomes an ordering rule rather than a prohibition: under the period walk
+    // a guard may read a stream's SETTLED history, at or before the previous
+    // period. Same-period and forward reads stay refused — acting on cash that
+    // has not happened is not causal — so this check narrows there rather than
+    // disappearing.
+    for source_stmt in &output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Event(event) => {
+                if let Some(func) = cfdl_expr::series_call(&event.when) {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: SERIES_READ_IN_LOGIC,
+                        message: series_read_message(
+                            func,
+                            &format!("event '{}' reads it in its guard", event.name),
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: event.span,
+                    });
+                }
+                // An action's value is evaluated in the same environment the
+                // guard is, so a series read there binds nothing either.
+                for action in &event.actions {
+                    if let cfdl_parser::EventAction::SetEntityField { entity, field, value } =
+                        action
+                    {
+                        if let Some(func) = cfdl_expr::series_call(value) {
+                            diagnostics.push(ValidationDiagnostic {
+                                code: SERIES_READ_IN_LOGIC,
+                                message: series_read_message(
+                                    func,
+                                    &format!(
+                                        "event '{}' reads it writing '{entity}.{field}'",
+                                        event.name
+                                    ),
+                                ),
+                                file: source_stmt.file.clone(),
+                                span: event.span,
+                            });
+                        }
+                    }
+                }
+            }
+            Stmt::Option(opt) => {
+                // The election and the payoff are evaluated in the same
+                // environment, in the same pre-pass, so neither can bind a
+                // series (`cfdl-engine/src/state.rs`).
+                for (clause, src) in [
+                    ("exercise when", opt.exercise_when.as_deref()),
+                    ("payoff", opt.payoff.as_deref()),
+                ] {
+                    if let Some(func) = src.and_then(cfdl_expr::series_call) {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: SERIES_READ_IN_LOGIC,
+                            message: series_read_message(
+                                func,
+                                &format!("option '{}' reads it in '{clause}'", opt.name),
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: opt.span,
+                        });
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
@@ -705,6 +785,23 @@ fn references_prev_other_than_field(src: &str) -> bool {
         rest = &from[4..];
     }
     false
+}
+
+/// A series read where no stream value exists. One code for the three sites,
+/// because it is one rule: logic is evaluated before the period's cash, so a
+/// series read there binds nothing.
+const SERIES_READ_IN_LOGIC: &str = "E1134_SERIES_READ_IN_LOGIC";
+
+/// Names the call, the site, and the two ways out.
+///
+/// The message says what the read WOULD have done, because the failure it
+/// replaces was silent: `docs/13` §7.71 measured a guard that never fires and
+/// a recurrence that collapses its whole expression to zero, both on models
+/// that compiled and ran clean.
+fn series_read_message(func: &str, site: &str) -> String {
+    format!(
+        "`{func}` reads a stream, and logic cannot: {site}. An event's guard, a field's rule and an option's election are evaluated where no stream has a value, so the read would bind nothing and the expression around it would evaluate to zero — silently. Drive the logic from a field, a curve, `time.*` or `inputs.*`, or read the cash from a stream, a waterfall or the results layer, which see stream values."
+    )
 }
 
 /// Does this expression read a field that MOVES — one carrying a rule?

@@ -8,6 +8,32 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: logic that reads a stream is refused, and 7.71's "silent" claim is corrected
+
+`E1134_SERIES_READ_IN_LOGIC` refuses `series_sum`/`series_avg` in an event's
+guard or action value, a field's `init`/`next`, and an option's election or
+payoff. All are evaluated before any stream has a value, so the read binds
+nothing: a guard gets `false` and never fires, a rule gets `0` and `prev`
+carries the collapse for the rest of the run. Phase 0.1 of
+`docs/29_period_walk_implementation.md`, and the gate the period walk's
+reorder needs before it is attempted. The three probe models from `docs/13`
+§7.71 land as `fixtures/invalid/`, including the lagged spelling that §7.71
+and `docs/28` §4 make legal later — it is refused now rather than inert, and
+moves to `valid/` when the walk lands.
+
+**And the entry it implements was wrong about one thing.** 7.71 claimed these
+failures were silent. They are not: the engine emits one warning per period
+naming the read and the substitution. What is true is narrower and is now
+what the entry says — the run reports `status: ok`, the exit code is 0, the
+CLI prints nothing, and the warnings live inside the results document.
+`tools/benchmark-runner.py` fails on engine warnings; the golden runner does
+not, and `fixtures/valid/evaluation_order` carried four of them in its
+blessed golden for the life of the fixture, with a comment presenting the
+guard that never fired as expected behaviour. That fixture's dead event is
+removed: `cash_flag` stayed at its `init` either way, so no published number
+moves — the IR shrinks, and the four warnings go with it. The correction is
+recorded in 7.71, `docs/28` §1 and `docs/29` §0.1.
+
 ### Added: docs/29 — the period walk's implementation plan, and backlog 7.72
 
 The plan that realizes docs/28, in seven dependency-ordered phases: the

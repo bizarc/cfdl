@@ -9,8 +9,9 @@ into `docs/28` unless said otherwise.
 
 ## Phase 0 — the gates (pre-work; blocks everything)
 
-**0.1 Loud failure for unbindable series reads.** The three silent
-spellings of `docs/13` §7.71 become refusals: `series_sum`/`series_avg` in
+**0.1 Loud failure for unbindable series reads.** The three inert spellings
+of `docs/13` §7.71 — each of which today warns per period and publishes wrong
+numbers under `status: ok` — become refusals: `series_sum`/`series_avg` in
 an event guard or a field recurrence is refused at compile where the
 validator can see it, and at IR load otherwise, with the read named — the
 same family as the bare-path `E5002`. New diagnostics, registered in the
@@ -58,7 +59,7 @@ refused with the path named. The schedule is computed once and replayed per
 scenario and per trial.
 
 **2.3 The store.** Series storage represents partially-built columns; a
-read of a not-yet-computed cell is a loud engine error, never a silent
+read of a not-yet-computed cell is a loud engine error, never a substituted
 null — phase 0.1's discipline applied inside the engine.
 
 **2.4 The fold.** Streams and scheduled waterfalls move inside the walk

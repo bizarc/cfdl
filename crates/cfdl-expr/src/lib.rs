@@ -287,6 +287,44 @@ pub fn root_references(src: &str, root: &str) -> Vec<String> {
     found
 }
 
+/// The first series function an expression source calls, if any.
+///
+/// For the read sites that cannot bind one. A stream, a waterfall and the
+/// valuation layer all see other streams; an event's guard, a field's rule and
+/// an option's election do not — they are evaluated where no stream value
+/// exists, so the read resolves to nothing and the expression around it
+/// evaluates to zero or to false with nothing to see. `docs/13` §7.71 measured
+/// all three: a guard never fires and a recurrence collapses, both in silence,
+/// while the same read spelled as a bare path is refused. This is what makes
+/// the three agree.
+///
+/// A source scan, in the same idiom and for the same reason as
+/// `series_references` below: one scanner, so the compiler and the engine
+/// cannot drift into disagreeing about what a model says.
+pub fn series_call(src: &str) -> Option<&'static str> {
+    for func in ["series_sum", "series_avg"] {
+        let mut from = 0usize;
+        while let Some(rel) = src[from..].find(func) {
+            let at = from + rel;
+            let before_ok = at == 0
+                || !src[..at]
+                    .chars()
+                    .next_back()
+                    .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '.');
+            from = at + func.len();
+            if !before_ok {
+                continue;
+            }
+            // A name that is not called is not a read: `series_sum` alone is
+            // not valid in the dialect, and matching it would report a phantom.
+            if src[from..].trim_start().starts_with('(') {
+                return Some(func);
+            }
+        }
+    }
+    None
+}
+
 /// The series names an expression reads, as written.
 ///
 /// Only literal first arguments — `series_sum("a.b", ...)` — which is what a

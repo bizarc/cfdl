@@ -1,0 +1,39 @@
+version 0.1
+model "series-read-in-guard"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// AN EVENT'S GUARD CANNOT READ A STREAM.
+//
+// The unit should go to downtime when rent stops arriving, which is how a
+// servicer behaves. Events are simulated before any stream is evaluated, so
+// the read binds nothing and the comparison is false in every period.
+//
+// Measured before this was refused: rent is 0 from July, the guard's
+// condition is plainly true, and the event NEVER FIRES —
+// `deterministic.transitions` is null. The engine did report it, once per
+// period, in `deterministic.warnings`: "series `cre.rent` is not available in
+// this context; using false". That is a precise message in a place a modeller
+// reading numbers does not look — the run reports `status: ok`, the CLI
+// prints nothing, and the exit code is 0.
+//
+// The evidence that a warning is not enough is in this repository:
+// `valid/evaluation_order` carried four of these warnings in its blessed
+// golden, describing a guard that never fired, and no gate objected. A
+// condition that produces wrong numbers is an error.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  category operating.revenue.base_rent
+  amount = 100
+  active in state leased
+}
+
+event vacate when series_sum("cre.rent", time.t, time.t) < 50 {
+  set entity asset.suite.status = "downtime"
+}

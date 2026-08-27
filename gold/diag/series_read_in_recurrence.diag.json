@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1134_SERIES_READ_IN_LOGIC",
+    "severity": "error",
+    "message": "`series_sum` reads a stream, and logic cannot: Field 'asset.property.occupancy' reads it in 'next'. An event's guard, a field's rule and an option's election are evaluated where no stream has a value, so the read would bind nothing and the expression around it would evaluate to zero — silently. Drive the logic from a field, a curve, `time.*` or `inputs.*`, or read the cash from a stream, a waterfall or the results layer, which see stream values.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 23,
+      "end_line": 22,
+      "end_col": 95
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

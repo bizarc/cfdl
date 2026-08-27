@@ -473,6 +473,7 @@ dependencies = [
 name = "cfdl-validate"
 version = "0.7.0"
 dependencies = [
+ "cfdl-expr",
  "cfdl-lexer",
  "cfdl-parser",
  "cfdl-resolver",
