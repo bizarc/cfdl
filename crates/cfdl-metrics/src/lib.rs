@@ -356,6 +356,7 @@ mod tests {
                 seed: 0,
                 metrics: BTreeMap::new(),
                 trial_summaries: vec![],
+                journal: Vec::new(),
                 aggregates: None,
                 errors: None,
             },
