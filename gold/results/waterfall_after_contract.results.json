@@ -916,6 +916,74 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2018-10-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 197514.546773,
+        "pot_before": 197514.546773,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2018-11-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 198502.119507,
+        "pot_before": 198502.119507,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2018-12-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 199494.630104,
+        "pot_before": 199494.630104,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2019-01-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 200492.103255,
+        "pot_before": 200492.103255,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2019-02-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 201494.563771,
+        "pot_before": 201494.563771,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2019-03-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "note_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 202502.03659,
+        "pot_before": 202502.03659,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {

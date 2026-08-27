@@ -363,7 +363,42 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "mgmt_proceeds -> party.mgmt",
+        "outcome": "applied",
+        "amount": 1800000.0,
+        "pot_before": 30000000.0,
+        "pot_after": 28200000.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "sponsor_proceeds -> party.sponsor",
+        "outcome": "applied",
+        "amount": 4800000.0,
+        "pot_before": 28200000.0,
+        "pot_after": 23400000.0
+      },
+      {
+        "period": 5,
+        "date": "2025-01-01",
+        "actor": "waterfall:fund.distribution",
+        "action": "pay",
+        "target": "lp_proceeds -> party.lp",
+        "outcome": "applied",
+        "amount": 23400000.0,
+        "pot_before": 23400000.0,
+        "pot_after": 0.0
+      }
+    ]
   },
   "scenarios": {
     "status": "not_run",

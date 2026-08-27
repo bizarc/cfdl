@@ -226,6 +226,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         metrics: base_run.metrics.clone(),
         series: base_run.series,
         transitions: base_run.transitions.clone(),
+        journal: base_run.journal.clone(),
         annual_rollup: base_run.annual_rollup,
         errors: None,
     };
@@ -500,6 +501,7 @@ struct DeterministicRunOutput {
     npv: f64,
     annual_rollup: Option<AnnualRollupSection>,
     transitions: Vec<TransitionRecord>,
+    journal: Vec<JournalEntry>,
 }
 
 /// The distinct unresolved names a run's warnings report.
@@ -683,6 +685,23 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
     // does can reach back into a state.
     let (state_values, event_sim) =
         simulate_state(ir, config, &timeline, &base_inputs, &mut warnings);
+    let transitions = event_sim.transitions.clone();
+    // The journal opens with what the state stage did and grows as each later
+    // stage acts, so its order is the order the run happened in.
+    let mut journal = event_sim.journal.clone();
+    // THE MASK DEFAULTS TO TRUE, so "the mask is on" does not mean an event
+    // turned it on — a stream nothing ever touched has an all-true mask. Only
+    // a period at or after an actual `activate stream` can be an activation
+    // that `active when` then refused, so the first such period per stream is
+    // the threshold the streams stage measures against.
+    let first_activation: BTreeMap<String, usize> = journal
+        .iter()
+        .filter(|entry| entry.action == "activate_stream" && entry.outcome == "applied")
+        .fold(BTreeMap::new(), |mut acc, entry| {
+            let slot = acc.entry(entry.target.clone()).or_insert(entry.period);
+            *slot = (*slot).min(entry.period);
+            acc
+        });
     let mut stream_series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     // Each stream's placement in its period, published on the series so a
     // consumer holding results.json can recompute the time-weighted metrics
@@ -756,6 +775,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
             if waves[idx] != wave {
                 continue;
             }
+            let mut activation_refused: Vec<usize> = Vec::new();
             let values = evaluate_stream(
                 ir,
                 config,
@@ -766,7 +786,37 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
                 &state_values,
                 snapshot.as_ref(),
                 &mut warnings,
+                &mut activation_refused,
             )?;
+            // ONE ROW PER STREAM, at the first period the refusal bit. An
+            // activation persists forward, so a per-period row would repeat
+            // the same fact for the rest of the run.
+            let activated_at = first_activation.get(&stream.name).copied();
+            let activation_refused: Vec<usize> = match activated_at {
+                Some(from) => activation_refused
+                    .into_iter()
+                    .filter(|idx| *idx >= from)
+                    .collect(),
+                None => Vec::new(),
+            };
+            if let Some(&first) = activation_refused.first() {
+                let count = activation_refused.len();
+                journal.push(
+                    JournalEntry::new(
+                        first,
+                        &timeline[first].to_string(),
+                        format!("stream:{}", stream.name),
+                        "activate_stream",
+                        stream.name.clone(),
+                        "overridden",
+                    )
+                    .with_note(format!(
+                        "an event activated this stream and its own `active when` was \
+                         false for {count} scheduled period(s) from this one; both \
+                         gates must pass, so the activation did not turn it on"
+                    )),
+                );
+            }
             warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
             let offset = discount_offset(&stream.schedule, &ir.time.calendar);
             stream_offsets.insert(stream.name.clone(), offset);
@@ -966,6 +1016,7 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         &available_by_entity,
         config,
         &mut warnings,
+        &mut journal,
     );
 
     let mut series_map = BTreeMap::new();
@@ -1382,8 +1433,8 @@ fn run_deterministic(ir: &Ir, config: &RunConfig) -> Result<DeterministicRunOutp
         )));
     }
 
-    let transitions = event_sim.transitions.clone();
     Ok(DeterministicRunOutput {
+        journal,
         warnings,
         resolved_inputs: base_inputs,
         metrics,
@@ -1861,6 +1912,59 @@ mod tests {
         assert!(
             (amount - expected).abs() < 1e-9,
             "{key}: expected {expected}, got {amount}"
+        );
+    }
+
+    /// AN ACTION THE ENGINE DOES NOT EXECUTE IS JOURNALED AS `ignored`.
+    ///
+    /// `activate contract` parses and lowers, and the engine has no contract
+    /// runtime yet. It cannot be reached from a model: a contract carries only
+    /// its type, so `deactivate contract cre.lease` is
+    /// `E1303_UNRESOLVED_CONTRACT_REF` — there is no instance to name (backlog
+    /// 7.63, which therefore sequences before 7.40i's runtime). Hand-written IR
+    /// is the only way in, and the only way to test that the results say what
+    /// happened rather than staying silent.
+    #[test]
+    fn a_contract_action_is_journaled_as_ignored() {
+        let ir = r#"{
+            "model": { "name": "contract_action", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "events": [
+                {
+                    "name": "terminate",
+                    "when": { "lang": "cfdl", "src": "time.t >= 1" },
+                    "actions": [ { "kind": "DeactivateContract", "contract": "cre.lease" } ]
+                }
+            ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let results =
+            run_from_json_str(ir, RunConfig::default()).expect("an ignored action is not an error");
+        let row = results
+            .deterministic
+            .journal
+            .iter()
+            .find(|entry| entry.action == "deactivate_contract")
+            .expect("the action must appear in the journal even though it did nothing");
+        assert_eq!(row.outcome, "ignored");
+        assert_eq!(row.target, "cre.lease");
+        assert!(
+            row.note
+                .as_deref()
+                .is_some_and(|n| n.contains("contract runtime")),
+            "the row must say why it did nothing: {:?}",
+            row.note
         );
     }
 

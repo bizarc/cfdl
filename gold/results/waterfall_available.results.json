@@ -265,6 +265,74 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2017-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "senior -> party.investor",
+        "outcome": "applied",
+        "amount": 250.0,
+        "pot_before": 400.0,
+        "pot_after": 150.0
+      },
+      {
+        "period": 0,
+        "date": "2017-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 150.0,
+        "pot_before": 150.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "senior -> party.investor",
+        "outcome": "applied",
+        "amount": 250.0,
+        "pot_before": 400.0,
+        "pot_after": 150.0
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 150.0,
+        "pot_before": 150.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "senior -> party.investor",
+        "outcome": "applied",
+        "amount": 250.0,
+        "pot_before": 400.0,
+        "pot_after": 150.0
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.investor",
+        "outcome": "applied",
+        "amount": 150.0,
+        "pot_before": 150.0,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "model.net_cash_flow": {

@@ -328,7 +328,18 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 1,
+        "date": "2027-01-01",
+        "actor": "option:mgmt_pool",
+        "action": "exercise_option",
+        "target": "mgmt_pool",
+        "outcome": "applied",
+        "note": "its own `exercise when` held"
+      }
+    ]
   },
   "scenarios": {
     "status": "not_run",

@@ -209,7 +209,18 @@
           }
         ]
       }
-    }
+    },
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:call_at_120",
+        "action": "exercise_option",
+        "target": "call_at_120",
+        "outcome": "applied",
+        "note": "its own `exercise when` held"
+      }
+    ]
   },
   "scenarios": {
     "status": "not_run",

@@ -645,10 +645,111 @@ pub struct DeterministicSection {
     /// the model has none, so a model without events is unchanged.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub transitions: Vec<TransitionRecord>,
+    /// Every causal act the run performed, with what happened to it.
+    ///
+    /// `transitions` answers "did this field change". The journal answers the
+    /// question a reviewer actually asks — WHAT DID THE MODEL DO, and did each
+    /// thing it was asked to do happen. An action that was declined or
+    /// overridden appears here; before this it appeared nowhere, which is how
+    /// an `activate stream` that lost to the stream's own `active when` could
+    /// leave no trace at all.
+    ///
+    /// Omitted when empty, so a model with no events, options or waterfalls
+    /// publishes exactly what it published before. `docs/28` §8.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub journal: Vec<JournalEntry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub annual_rollup: Option<AnnualRollupSection>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<Vec<RuntimeError>>,
+}
+
+/// One causal act, in the order the engine performed it.
+///
+/// FLAT ON PURPOSE. A nested shape (event → its actions → their outcomes)
+/// reads better as a tree and worse as evidence: a golden asserts on lines, a
+/// reviewer greps for a stream name, and the schema gate checks one row type.
+/// So each row is one act, carrying who did it and what became of it.
+#[derive(Debug, Clone, Serialize)]
+pub struct JournalEntry {
+    pub period: usize,
+    pub date: String,
+    /// Who acted, qualified by kind: `event:covenant_breach`,
+    /// `waterfall:jv.distribution`, `option:renewal`. Qualified because a
+    /// waterfall and an event may share a name and the log must not conflate
+    /// them.
+    pub actor: String,
+    /// What was attempted: `set`, `activate_stream`, `deactivate_stream`,
+    /// `activate_contract`, `deactivate_contract`, `exercise_option`, `pay`.
+    pub action: String,
+    /// What it acted on — a field path, a stream name, a step and its payee.
+    pub target: String,
+    /// What became of it. `applied` is the only one that changed anything:
+    ///
+    /// * `applied` — done, and the model reflects it.
+    /// * `declined` — refused for a stated reason, e.g. an option outside its
+    ///   `exercisable in` window, which is not an option anyone holds.
+    /// * `overridden` — done, then lost to a stronger declaration. A stream
+    ///   activation is `overridden` when the stream's own `active when` is
+    ///   false for that period: both gates must pass, so the event cannot turn
+    ///   on what the model says is off.
+    /// * `ignored` — the engine does not execute this action yet
+    ///   (`activate contract`, until the contract runtime of `docs/29` M2).
+    /// * `failed` — the action's own expression did not evaluate.
+    pub outcome: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    /// Cash moved, for a waterfall step.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub amount: Option<f64>,
+    /// The pot before and after the step took from it, so a short pot is
+    /// visible as the reason a payee got less than it was owed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pot_before: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pot_after: Option<f64>,
+    /// Why, when the outcome is not `applied`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+impl JournalEntry {
+    pub(crate) fn new(
+        period: usize,
+        date: &str,
+        actor: String,
+        action: &str,
+        target: String,
+        outcome: &str,
+    ) -> Self {
+        Self {
+            period,
+            date: date.to_string(),
+            actor,
+            action: action.to_string(),
+            target,
+            outcome: outcome.to_string(),
+            from: None,
+            to: None,
+            amount: None,
+            pot_before: None,
+            pot_after: None,
+            note: None,
+        }
+    }
+
+    pub(crate) fn with_note(mut self, note: impl Into<String>) -> Self {
+        self.note = Some(note.into());
+        self
+    }
+
+    pub(crate) fn with_change(mut self, from: Option<String>, to: String) -> Self {
+        self.from = from;
+        self.to = Some(to);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -1,0 +1,243 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "journal-action-outcomes",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [
+    {
+      "id": "19527ed6cdc42166d89f0da2acf8a2ab",
+      "name": "early",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-06-01"
+      }
+    },
+    {
+      "id": "0c563b32df9a36dae9f6cb944d6b2b27",
+      "name": "late",
+      "range": {
+        "start": "2026-07-01",
+        "end": "2026-12-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "ff342b712471e8f5c6eb90140aa565dc",
+      "symbol": "asset.bldg",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "expanded": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "d3d14ca845337c2641bcf7d3259e1c61",
+      "name": "capex.floor2",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "20000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "0.0 > 1.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 54,
+          "start_col": 1,
+          "end_line": 58,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "448bad00394e221371a10462c3b046c2",
+      "name": "ops.baseline",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 61,
+          "start_col": 1,
+          "end_line": 64,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c81b2b369f2271d9ba4ce25884da9844",
+      "name": "rent.floor2",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "asset.bldg.expanded >= 1.0"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 50,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.bldg"
+          },
+          "field": "expanded",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "1.0"
+          }
+        },
+        {
+          "kind": "DeactivateStream",
+          "stream": "ops.baseline"
+        },
+        {
+          "kind": "ActivateStream",
+          "stream": "capex.floor2"
+        },
+        {
+          "kind": "ExerciseOption",
+          "option": "renewal"
+        }
+      ],
+      "id": "514e696358bcee3071d42011b33c1b36",
+      "name": "expand",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 42,
+          "start_col": 1,
+          "start_line": 37
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "time.t >= 6"
+      }
+    }
+  ],
+  "options": [
+    {
+      "exercisable_in_phase": "early",
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "0 > 1"
+      },
+      "id": "8376ffe8a992a186197e0b3a00321b95",
+      "name": "renewal",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "payoff": {
+        "lang": "cfdl",
+        "src": "250"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 71,
+          "start_col": 1,
+          "start_line": 68
+        }
+      },
+      "type": "Option.Renewal"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

@@ -327,6 +327,28 @@
         "to": "leased",
         "event": "reletting"
       }
+    ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "event:expiry",
+        "action": "set",
+        "target": "asset.suite.status",
+        "outcome": "applied",
+        "from": "leased",
+        "to": "downtime"
+      },
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "actor": "event:reletting",
+        "action": "set",
+        "target": "asset.suite.status",
+        "outcome": "applied",
+        "from": "downtime",
+        "to": "leased"
+      }
     ]
   },
   "scenarios": {

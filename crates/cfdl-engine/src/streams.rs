@@ -62,6 +62,10 @@ pub(crate) fn evaluate_stream(
     states: &BTreeMap<String, Vec<f64>>,
     series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
     warnings: &mut Vec<String>,
+    // Periods where an event turned this stream ON and the stream's own
+    // `active when` then refused it. Collected rather than warned so the
+    // journal can say so once, with a count, instead of once per period.
+    activation_refused: &mut Vec<usize>,
 ) -> Result<Vec<f64>, EngineError> {
     if let Some(lang) = &stream.amount.lang {
         if lang != "cfdl" {
@@ -143,6 +147,14 @@ pub(crate) fn evaluate_stream(
                 warnings,
             );
             if !active_value {
+                // BOTH GATES MUST PASS. An event's `activate stream` moves the
+                // mask; `active when` is the stream's own declaration and is
+                // not overridden by an event — so the activation had no
+                // effect for this period, which is a fact the journal owes
+                // the reader (`docs/28` §8).
+                if event_mask.is_some_and(|mask| mask[idx]) {
+                    activation_refused.push(idx);
+                }
                 continue;
             }
             let amount = if let Some(override_value) = stream_amount_override(config, &stream.name)

@@ -280,6 +280,42 @@
         "event": "refi_trigger"
       }
     ],
+    "journal": [
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "event:refi_trigger",
+        "action": "set",
+        "target": "asset.senior.status",
+        "outcome": "applied",
+        "to": "refinanced"
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "event:refi_trigger",
+        "action": "deactivate_stream",
+        "target": "loan.debt_service",
+        "outcome": "applied"
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "event:refi_trigger",
+        "action": "exercise_option",
+        "target": "refi_savings",
+        "outcome": "applied"
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "option:refi_savings",
+        "action": "exercise_option",
+        "target": "refi_savings",
+        "outcome": "applied",
+        "note": "forced by an event, inside its exercisable window"
+      }
+    ],
     "annual_rollup": {
       "series": {
         "model.net_cash_flow": {
