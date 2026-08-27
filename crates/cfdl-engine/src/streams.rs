@@ -115,9 +115,19 @@ impl<'a> StreamPlan<'a> {
                     continue;
                 }
             }
-            let mut env =
-                build_expr_env(ir, Some(self.stream), config, idx, &timeline[idx], base_inputs);
-            apply_entity_state(&mut env, &event_sim.entity_state[idx], &self.stream.owner.symbol);
+            let mut env = build_expr_env(
+                ir,
+                Some(self.stream),
+                config,
+                idx,
+                &timeline[idx],
+                base_inputs,
+            );
+            apply_entity_state(
+                &mut env,
+                &event_sim.entity_state[idx],
+                &self.stream.owner.symbol,
+            );
             bind_states(&mut env, states, idx);
             bind_all_entity_state(&mut env, &event_sim.entity_state[idx]);
             if let Some(series) = series {

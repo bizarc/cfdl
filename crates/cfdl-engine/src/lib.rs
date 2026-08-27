@@ -713,8 +713,8 @@ fn walk_streams(
     // what is scheduled, so it is taken only when a wave has something to do.
     for t in 0..timeline.len() {
         for wave in 0..=max_wave {
-            let wave_is_active = (0..ir.streams.len())
-                .any(|idx| waves[idx] == wave && plans[idx].settles_at(t));
+            let wave_is_active =
+                (0..ir.streams.len()).any(|idx| waves[idx] == wave && plans[idx].settles_at(t));
             if !wave_is_active {
                 continue;
             }

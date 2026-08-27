@@ -1405,9 +1405,7 @@ pub fn window_bound_is_backward(src: &str) -> bool {
             };
             let tail = tail.trim_start();
             // The literal runs to the next sign or the end.
-            let end = tail
-                .find(['+', '-'])
-                .unwrap_or(tail.len());
+            let end = tail.find(['+', '-']).unwrap_or(tail.len());
             let Ok(v) = tail[..end].trim().parse::<f64>() else {
                 return false;
             };
