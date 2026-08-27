@@ -166,7 +166,23 @@ coupled subgraphs get the per-period interleave. Cross-time cycles are
 refused with the path named. The schedule is computed once and replayed per
 scenario and per trial.
 
-**2.3 The store — measured, and NOT built.**
+**2.3 Two halves, and only one of them was real.**
+
+This section asked for two things and read as one. The correctness half is
+built; the performance half is not, and the measurement says it should not be.
+
+**BUILT — a cell that has not been computed is not a zero.** Under a walk the
+columns are allocated for the whole grid and filled as it advances, so a read
+reaching past the current period finds the zero the column was allocated with:
+a plausible number with nothing to see, which is exactly the defect `E1134`
+refuses one layer out. `ExprEnv::series_available_to` marks how far the columns
+are filled — `None` for the column order, whose columns are finished, and
+`Some(t)` under the walk — and a window reaching past it is refused rather
+than clamped. Clamping is what would make a forward read look like a small
+number instead of a mistake. Three tests in `cfdl-expr` pin it: refused past
+the watermark, served within it, and unchanged when there is no watermark.
+
+**NOT BUILT — the store.**
 
 *Revised twice, and the second revision is the measurement. This asked for
 series storage representing a partially built column, so the walk would not

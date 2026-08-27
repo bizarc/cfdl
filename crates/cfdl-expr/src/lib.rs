@@ -64,6 +64,16 @@ pub struct ExprEnv {
     /// stream's full series into each one made this the hot spot of a run.
     /// `Arc` makes handing it over a refcount bump. Nothing mutates it.
     pub series: Arc<BTreeMap<String, Vec<f64>>>,
+    /// The last period whose series values exist, when the columns are being
+    /// filled rather than finished.
+    ///
+    /// The column order computes a stream's whole series before anything reads
+    /// it, so every cell is real and this stays `None`. A PERIOD WALK does not:
+    /// at period 3 the cells past 3 are allocated but not computed, and a read
+    /// of one would find the zero they were allocated with — a wrong number
+    /// with nothing to see, which is the defect `E1134` refuses one layer out.
+    /// Set to the current period, a read reaching past it is refused instead.
+    pub series_available_to: Option<usize>,
     /// Which arithmetic the expressions in this run evaluate under.
     ///
     /// Decimal is the default and is what every published number uses. A run
@@ -162,6 +172,7 @@ impl ExprEnv {
             paid: BTreeMap::new(),
             owed: BTreeMap::new(),
             series: Arc::default(),
+            series_available_to: None,
             curves: BTreeMap::new(),
             quantiles: BTreeMap::new(),
         }
@@ -648,6 +659,16 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         // included). The divisor for series_avg is the REQUESTED window
         // length, so a window that extends past the data averages the
         // available amounts over the full window.
+        // A CELL THAT HAS NOT BEEN COMPUTED IS NOT A ZERO. Under a walk the
+        // columns are allocated for the whole grid and filled as it advances,
+        // so reading past the watermark would read the allocation. Refused
+        // rather than clamped: clamping is what makes a forward read look like
+        // a small number instead of a mistake.
+        if let Some(available_to) = self.env.series_available_to {
+            if to > available_to as i64 {
+                return None;
+            }
+        }
         let mut total = 0.0_f64;
         for series in matched {
             let lo = from.max(0) as usize;
@@ -1510,5 +1531,82 @@ mod window_tests {
         assert_eq!(ws[0].name, "a.b");
         assert_eq!(ws[1].name, "c.d");
         assert_eq!(ws[1].from_src, "time.t");
+    }
+}
+
+#[cfg(test)]
+mod partial_column_tests {
+    use super::*;
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    fn env_with_series(available_to: Option<usize>) -> ExprEnv {
+        let mut env = ExprEnv::empty();
+        let mut series = BTreeMap::new();
+        // A column allocated for six periods, computed only through period 2.
+        series.insert(
+            "ops.rent".to_string(),
+            vec![10.0, 10.0, 10.0, 0.0, 0.0, 0.0],
+        );
+        env.series = Arc::new(series);
+        env.series_available_to = available_to;
+        env
+    }
+
+    /// The whole point: a cell that has not been computed is not a zero.
+    ///
+    /// Under a walk the columns are allocated for the entire grid and filled as
+    /// it advances. Reading past the watermark would find the allocation — a
+    /// plausible small number with nothing to see, which is the failure
+    /// `E1134` refuses one layer out. It must be refused here too.
+    #[test]
+    fn a_read_past_the_watermark_is_refused() {
+        let env = env_with_series(Some(2));
+        let out = eval(
+            &compile_expr(r#"series_sum("ops.rent", 0, 4)"#).expect("compiles"),
+            &env,
+        );
+        assert!(
+            out.is_err(),
+            "a window reaching period 4 with only 0..2 computed must be refused, got {out:?}"
+        );
+    }
+
+    /// And a read INSIDE the watermark still works, or the guard would make the
+    /// walk useless rather than safe.
+    #[test]
+    fn a_read_within_the_watermark_is_served() {
+        let env = env_with_series(Some(2));
+        let out = eval(
+            &compile_expr(r#"series_sum("ops.rent", 0, 2)"#).expect("compiles"),
+            &env,
+        )
+        .expect("within the computed range");
+        match out {
+            Value::Decimal(v) => assert!(
+                (v.to_string().parse::<f64>().unwrap_or(f64::NAN) - 30.0).abs() < 1e-9,
+                "got {v}"
+            ),
+            other => panic!("expected a number, got {other:?}"),
+        }
+    }
+
+    /// With no watermark the columns are finished — the column order — and the
+    /// clamping behaviour it has always had is unchanged.
+    #[test]
+    fn without_a_watermark_nothing_changes() {
+        let env = env_with_series(None);
+        let out = eval(
+            &compile_expr(r#"series_sum("ops.rent", 0, 4)"#).expect("compiles"),
+            &env,
+        )
+        .expect("finished columns read as before");
+        match out {
+            Value::Decimal(v) => assert!(
+                (v.to_string().parse::<f64>().unwrap_or(f64::NAN) - 30.0).abs() < 1e-9,
+                "got {v}"
+            ),
+            other => panic!("expected a number, got {other:?}"),
+        }
     }
 }

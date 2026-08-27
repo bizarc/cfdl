@@ -748,6 +748,9 @@ fn walk_streams(
                     snapshot.as_ref(),
                     warnings,
                     &mut refused,
+                    // Under the walk the columns are filled as it advances, so
+                    // a read past this period would read an allocation.
+                    Some(t),
                 );
                 if let Some(column) = full.get_mut(&stream.name) {
                     column[t] = value;
@@ -1119,6 +1122,7 @@ fn run_deterministic(
                     snapshot.as_ref(),
                     &mut warnings,
                     &mut activation_refused,
+                    None,
                 );
             }
             // ONE ROW PER STREAM, at the first period the refusal bit. An
