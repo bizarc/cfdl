@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Backlog: an event cannot see realised cash, and the failure is silent
+
+New entry 7.71, from three probe models. A guard reading a stream by bare path
+is refused loudly at IR load; the same read spelled `series_sum(name, t, t)`
+compiles, runs, and the event is silently inert — and so is the strictly
+backward spelling, `series_sum(name, t-1, t-1)`, which reads only settled
+history and is cycle-free by the `prev` argument. A field recurrence reading a
+series nulls its whole expression and the run reports ok. The cause is the
+stage order: state and events complete over the whole timeline before any
+stream value exists, so at guard time even the past has not been computed. The
+entry asks for a loud refusal now (7.38's argument, one environment over) and
+records the per-period interleave under which the lagged spelling becomes
+legal.
+
+Backlog: 39 items.
+
 ### Backlog: three items closed, three narrowed to what actually remains
 
 Closed. **7.15** — both stated reasons are false: One Lincoln Street exercises

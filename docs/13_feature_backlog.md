@@ -1741,3 +1741,58 @@ compile-time scalar record stays for the literal case or is replaced.
 Open this before any further pack contract consumes a quantile. Shipping a
 second one against an audit record that does not work would make the gap
 structural rather than a known debt.
+
+### 7.71 An event cannot see realised cash, and three of the four spellings fail in silence
+
+**What could not be expressed:** a unit whose lifecycle responds to the cash it
+did or did not produce — "when rent is not received, the unit goes delinquent."
+The forward direction works today and is worth stating first: an event writes a
+field or a lifecycle state, streams read it in the same period, and a family
+selector totals the contributions. A probe with two units and an `active in
+state leased` square-footage stream saw occupancy step 0.60 to 1.00 the month
+the second unit leased, with the transition published. State flowing into cash
+is settled machinery. Cash flowing into state is not, and how it fails is the
+entry.
+
+**Four spellings were probed; one fails loudly.** A guard reading the stream by
+bare path (`when cre.rent == 0`) is refused at IR load: `unresolved name:
+'cre.rent' is not declared`. The other three compile, run to completion, and
+publish plausible results:
+
+- **A guard reading the same-period amount** — `when series_sum("cre.rent",
+  time.t, time.t) < 50` — never fires. The rent series is zero for half the
+  run; `deterministic.transitions` is null.
+- **A guard reading SETTLED HISTORY** — `series_sum("cre.rent", time.t - 1,
+  time.t - 1)`, the strictly-backward read that is cycle-free by the same
+  argument as `prev` — also never fires, in the same silence. This is the
+  spelling that a truncated series view (§7.10) or a per-period interleave
+  would make legal, which makes its silent inertness the worst of the three: a
+  model written in the idiom the language is moving toward runs today and does
+  nothing.
+- **A recurrence reading a series** — `occupancy init 0.80 next prev +
+  series_sum("rent.total", time.t - 1, time.t - 1) / 1e7` — nulls the whole
+  expression: occupancy collapses to 0.0 from period 1, revenue with it, and
+  the run reports ok.
+
+**Why even history is invisible.** The engine is stage-wise, not period-wise:
+state and events complete over the WHOLE timeline before the streams stage
+begins (`cfdl-engine/src/lib.rs`, the orchestrator comment). At guard time no
+stream value exists for any period — the past has not been computed yet. So the
+lagged read is not blocked by acyclicity, which it satisfies; it is blocked by
+execution order alone.
+
+**The ask, in two stages.** First, the same-family gate that already catches
+the bare path should catch the series functions: a `series_sum`/`series_avg` in
+an event guard or a field recurrence is a read the environment will never bind,
+and should be refused at compile or load with the read named — this is §7.38's
+argument, one environment over. Second, the lagged spelling should eventually
+become LEGAL rather than loud: a per-period interleave (settle state at t
+reading streams up to t−1, then evaluate streams at t against that state)
+serves both directions — state into cash same-period, cash into state strictly
+backward — and stays cycle-free by construction, with no fixed-point iteration.
+Until the second stage ships, the first is what keeps tomorrow's idiom from
+running inert today.
+
+Related: §5.2 (what a recurrence may read), §7.10 (a truncated series view),
+§7.38 (a misspelled series reads as zero — same silence, misspelled name
+rather than unbindable environment).
