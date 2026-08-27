@@ -86,6 +86,7 @@ struct Prepared {
 /// but does not own — the IR, the config, the timeline, the resolved inputs —
 /// is passed to `step`.
 pub(crate) struct StateWalk {
+    // Read by the walk between periods; see `entity_state_so_far`.
     values: BTreeMap<String, Vec<f64>>,
     prepared: Vec<Prepared>,
     entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>>,
@@ -537,13 +538,12 @@ impl StateWalk {
 /// guard then reads the SAME frozen pre-state plus this period's candidates
 /// (the synchronous rule — declaration order is not semantics); writes settle
 /// the column. `prev` at t+1 reads what settled.
-pub(crate) fn simulate_state(
+/// Compile and lay out the state stage, ready to be stepped.
+pub(crate) fn prepare_state_walk(
     ir: &Ir,
-    config: &RunConfig,
     timeline: &[Date],
-    base_inputs: &BTreeMap<String, f64>,
     warnings: &mut Vec<String>,
-) -> (BTreeMap<String, Vec<f64>>, EventSim) {
+) -> StateWalk {
     // No early exit on "no rules": a model with events and no fields still
     // needs the walk, which the fields-only version of this pass could skip.
     let mut values: BTreeMap<String, Vec<f64>> = BTreeMap::new();
@@ -681,7 +681,7 @@ pub(crate) fn simulate_state(
         })
         .collect();
 
-    let mut walk = StateWalk {
+    StateWalk {
         values,
         prepared,
         entity_state,
@@ -697,43 +697,62 @@ pub(crate) fn simulate_state(
         compiled_events,
         compiled_options,
         periods,
-    };
+    }
+}
+
+/// Settle every period, then publish. The whole-timeline order.
+pub(crate) fn simulate_state(
+    ir: &Ir,
+    config: &RunConfig,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    warnings: &mut Vec<String>,
+) -> (BTreeMap<String, Vec<f64>>, EventSim) {
+    let mut walk = prepare_state_walk(ir, timeline, warnings);
     for (t, date) in timeline.iter().enumerate() {
         walk.step(ir, config, t, date, timeline, base_inputs, warnings);
     }
-    let StateWalk {
-        values,
-        entity_state,
-        stream_active,
-        mut option_cash,
-        transitions,
-        journal,
-        ..
-    } = walk;
+    walk.finish(ir)
+}
 
-    // AN UNEXERCISED OPTION PUBLISHES ZERO, NOT NOTHING.
-    //
-    // `option_cash` was only written on exercise, so an option that stayed out
-    // of the money produced no series at all — a consumer could not tell "did
-    // not exercise" from "does not exist", and a case could not assert a
-    // NON-exercise, which is half of what an option model has to prove.
-    //
-    // Seeded after the loop rather than before it so `option_cash` keeps
-    // meaning "exercised" while the timeline runs.
-    for option in &ir.options {
-        option_cash
-            .entry(option.name.clone())
-            .or_insert_with(|| vec![0.0; periods]);
-    }
-
-    (
-        values,
-        EventSim {
+impl StateWalk {
+    /// Publish what the walk settled.
+    pub(crate) fn finish(self, ir: &Ir) -> (BTreeMap<String, Vec<f64>>, EventSim) {
+        let StateWalk {
+            values,
             entity_state,
             stream_active,
-            option_cash,
+            mut option_cash,
             transitions,
             journal,
-        },
-    )
+            periods,
+            ..
+        } = self;
+
+        // AN UNEXERCISED OPTION PUBLISHES ZERO, NOT NOTHING.
+        //
+        // `option_cash` was only written on exercise, so an option that stayed out
+        // of the money produced no series at all — a consumer could not tell "did
+        // not exercise" from "does not exist", and a case could not assert a
+        // NON-exercise, which is half of what an option model has to prove.
+        //
+        // Seeded after the loop rather than before it so `option_cash` keeps
+        // meaning "exercised" while the timeline runs.
+        for option in &ir.options {
+            option_cash
+                .entry(option.name.clone())
+                .or_insert_with(|| vec![0.0; periods]);
+        }
+
+        (
+            values,
+            EventSim {
+                entity_state,
+                stream_active,
+                option_cash,
+                transitions,
+                journal,
+            },
+        )
+    }
 }

@@ -98,7 +98,13 @@ impl<'a> StreamPlan<'a> {
         pay_idx: usize,
         timeline: &[Date],
         base_inputs: &BTreeMap<String, f64>,
-        event_sim: &EventSim,
+        // The state this period sees, passed as the two pieces a stream reads
+        // rather than as a finished `EventSim`. A walk supplies them while the
+        // state stage is still advancing; the column order supplies them from
+        // a completed one. Neither can tell the difference, which is what lets
+        // one stream implementation serve both.
+        entity_state: &[BTreeMap<String, BTreeMap<String, ExprValue>>],
+        stream_active: &BTreeMap<String, Vec<bool>>,
         states: &BTreeMap<String, Vec<f64>>,
         series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
         warnings: &mut Vec<String>,
@@ -108,7 +114,7 @@ impl<'a> StreamPlan<'a> {
         // where reading past `t` would read an allocation rather than a value.
         series_available_to: Option<usize>,
     ) -> f64 {
-        let event_mask = event_sim.stream_active.get(&self.stream.name);
+        let event_mask = stream_active.get(&self.stream.name);
         let mut settled = 0.0_f64;
         let Some(accruals) = self.accruals.get(pay_idx) else {
             return 0.0;
@@ -127,13 +133,9 @@ impl<'a> StreamPlan<'a> {
                 &timeline[idx],
                 base_inputs,
             );
-            apply_entity_state(
-                &mut env,
-                &event_sim.entity_state[idx],
-                &self.stream.owner.symbol,
-            );
+            apply_entity_state(&mut env, &entity_state[idx], &self.stream.owner.symbol);
             bind_states(&mut env, states, idx);
-            bind_all_entity_state(&mut env, &event_sim.entity_state[idx]);
+            bind_all_entity_state(&mut env, &entity_state[idx]);
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
@@ -263,7 +265,8 @@ pub(crate) fn evaluate_stream(
             pay_idx,
             timeline,
             base_inputs,
-            event_sim,
+            &event_sim.entity_state,
+            &event_sim.stream_active,
             states,
             series,
             warnings,
