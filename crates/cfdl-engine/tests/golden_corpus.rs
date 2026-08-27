@@ -273,3 +273,86 @@ fn only_the_known_models_read_forward() {
          it — add it here deliberately, not by blessing a diff."
     );
 }
+
+/// THE COLLAPSE PROPERTY, on every model that can be walked.
+///
+/// `docs/29` phase 2 rests on one claim: evaluating a period at a time computes
+/// what evaluating a column at a time computes. That claim is checkable, and
+/// this checks it — both orders, every blessed model, every stream, every
+/// period, compared exactly.
+///
+/// It is worth more than the goldens for this purpose. A golden says the engine
+/// still produces the blessed numbers; this says the two ORDERS agree, which is
+/// the property the reorder actually needs and the one a golden cannot see
+/// while only one order runs in production.
+///
+/// Models that read forward are skipped rather than failed: at period 3 there
+/// is no period 24, so the walk is inapplicable there, not wrong. Which models
+/// those are is pinned by `only_the_known_models_read_forward`.
+#[test]
+fn walk_matches_the_column_order() {
+    let root = repo_root();
+    let corpus = corpus(&root);
+    assert!(corpus.len() >= 100, "corpus not found: {}", corpus.len());
+
+    let mut compared = 0usize;
+    let mut skipped = 0usize;
+    let mut failures: Vec<String> = Vec::new();
+
+    for (name, (ir_path, _, run_config)) in &corpus {
+        let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
+        let config = match run_config {
+            Some(path) => cfdl_engine::run_config_from_json_file(path, 0.0, None)
+                .unwrap_or_else(|err| panic!("{name}: run config: {err}")),
+            None => cfdl_engine::RunConfig {
+                discount_rate: 0.10,
+                ..Default::default()
+            },
+        };
+        match cfdl_engine::compare_evaluation_orders(&raw, config) {
+            Err(err) => failures.push(format!("{name}: {err}")),
+            Ok(None) => skipped += 1,
+            Ok(Some((column, walked))) => {
+                compared += 1;
+                if column.len() != walked.len() {
+                    failures.push(format!(
+                        "{name}: {} streams by column, {} by walk",
+                        column.len(),
+                        walked.len()
+                    ));
+                    continue;
+                }
+                for (stream, col_values) in &column {
+                    let Some(walk_values) = walked.get(stream) else {
+                        failures.push(format!("{name}: the walk produced no '{stream}'"));
+                        continue;
+                    };
+                    for (t, (c, w)) in col_values.iter().zip(walk_values).enumerate() {
+                        // Exactly equal, not approximately: the two orders step
+                        // the same `StreamPlan`, so any difference is a defect
+                        // in the ordering rather than in the arithmetic.
+                        if c != w {
+                            failures.push(format!(
+                                "{name}: '{stream}' period {t}: column {c}, walk {w}"
+                            ));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} disagreement(s) between the two evaluation orders ({compared} models compared, \
+         {skipped} skipped as forward-reading):\n  {}",
+        failures.len(),
+        failures.join("\n  ")
+    );
+    assert!(
+        compared >= 95,
+        "only {compared} models were comparable; the walk should apply to nearly all of them"
+    );
+    println!("walk == column on {compared} models; {skipped} skipped as forward-reading");
+}

@@ -167,7 +167,29 @@ scenario and per trial.
 read of a not-yet-computed cell is a loud engine error, never a substituted
 null — phase 0.1's discipline applied inside the engine.
 
-**2.4 The fold.** Streams and scheduled waterfalls move inside the walk
+**2.4 The fold — the streams half is built.** `evaluate_stream` is now
+`plan_stream` plus `StreamPlan::step`, and the column order is a loop over
+`step` rather than a second implementation, so the two orders share one
+arithmetic by construction. `walk_streams` is the period-major order, and
+`walk_matches_the_column_order` compares the two over the blessed corpus:
+**exactly equal on 105 models, every stream and every period**, with the five
+forward-reading models skipped as inapplicable rather than failed. That is the
+collapse property measured rather than argued, and it is worth more than the
+goldens for this purpose — a golden says the engine still produces the blessed
+numbers, this says the two ORDERS agree, which a golden cannot see while only
+one order runs in production.
+
+**The grid is not the deal.** A model may declare ten years and have activity
+in two: `time` sets the grid the walk steps, and a stream's schedule decides
+which periods it is present in. Most cells are inert and cost nothing, because
+`settles_at` answers from the prepared schedule. The same is true one stage
+along — a waterfall scheduled on one date near the end of a hold does nothing
+in the other periods, which its `runs_in` mask already answers. What is NOT yet
+free is the store snapshot, taken per (period, wave) where the column order
+takes it per wave; §2.3 is where that is fixed, and until then `walk_streams`
+is exercised by the equivalence test rather than run in production.
+
+**What remains of 2.4.** Streams and scheduled waterfalls move inside the walk
 that `state.rs` already performs: per period — state settles, streams
 evaluate, waterfalls whose schedule names the period distribute, journal
 appends. The `EventSim` seam becomes two-way: realised per-period amounts

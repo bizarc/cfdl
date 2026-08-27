@@ -75,6 +75,16 @@ pub(crate) struct StreamPlan<'a> {
 }
 
 impl<'a> StreamPlan<'a> {
+    /// Does anything settle at this period?
+    ///
+    /// The grid is not the deal: a ten-year model with two years of activity
+    /// leaves most cells empty, and a walk that steps the whole grid must be
+    /// able to tell an empty cell apart from a computed zero without paying to
+    /// find out.
+    pub(crate) fn settles_at(&self, pay_idx: usize) -> bool {
+        self.accruals.get(pay_idx).is_some_and(|a| !a.is_empty())
+    }
+
     /// One period of this stream: what settles at `pay_idx`.
     ///
     /// Reads the same gates in the same order as the column path — the event
