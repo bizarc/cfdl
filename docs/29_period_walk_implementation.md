@@ -170,6 +170,45 @@ scenario and per trial.
 read of a not-yet-computed cell is a loud engine error, never a substituted
 null — phase 0.1's discipline applied inside the engine.
 
+**Why this is a prerequisite and not a tuning pass.** The expression
+environment takes an `Arc<BTreeMap<..>>`, so making newly written values
+visible means replacing the map. The column order does that once per wave; the
+walk must do it per (period, wave), because a later wave reads what an earlier
+one wrote IN THIS PERIOD.
+
+Two facts turn that from a cost into a blocker.
+
+**A same-period cross-stream read is the normal case, not an exception.** It is
+what a derived line IS, and the packs generate one for every model using the
+contract — no model author has to write it. `cre.vacancy_loss` tracks the rent
+roll; the management fee reads base rent, recoveries and vacancy together; the
+CRE exit reads eight stream families at once; `opco.taxes.cash` reads revenue
+and opex; the OpCo exit multiple reads trailing revenue and opex;
+`credit.pool.*` feeds every tranche. NOI, EGI, cash taxes and an exit multiple
+are all cross-stream reads by definition. Counting how many fixtures happen to
+have one measures the fixtures, not the domains.
+
+**Monte Carlo runs the whole deterministic engine once per trial.** So every
+per-run cost is multiplied by the trial count, and `docs/01` §15.1's own
+example is `run monte_carlo trials 20000 seed 42`. On a 372-period model with
+two waves the column order takes about two snapshots per run and the walk takes
+up to 744 — 372 times the copying, on a cost already paid twenty thousand
+times. That is the difference between the walk being usable in production and
+not.
+
+The fix is interior mutability behind `Env.series`: a reader sees a column
+being filled rather than a copy of one, and nothing is copied per period at
+all. Cycles remain refused as they are today — the wave ordering is unchanged,
+and this changes only how a wave's output becomes visible.
+
+**A second per-trial cost belongs with it.** §2.2 says the schedule is
+"computed once and replayed per scenario and per trial", and today it is not:
+`plan_stream` compiles every stream's amount and guard inside
+`run_deterministic`, which Monte Carlo calls per trial. Twenty thousand trials
+recompile the same expressions twenty thousand times. Hoisting the plan out of
+the per-trial path belongs in this section, because it is the same shape of
+defect and the same fix — prepare once, replay.
+
 **2.4 The fold — the streams half is built.** `evaluate_stream` is now
 `plan_stream` plus `StreamPlan::step`, and the column order is a loop over
 `step` rather than a second implementation, so the two orders share one
